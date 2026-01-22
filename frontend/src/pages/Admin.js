@@ -931,6 +931,18 @@ server {
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedDomain(domain);
+                                setConfigDialogOpen(true);
+                              }}
+                              title="Nginx Configuratie"
+                            >
+                              <FileText className="w-3 h-3 mr-1" />
+                              Config
+                            </Button>
                             {!domain.verified && (
                               <Button
                                 size="sm"
