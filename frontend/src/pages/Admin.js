@@ -540,13 +540,16 @@ export default function Admin() {
                     <tr className="border-b">
                       <th className="text-left py-3 px-4 font-medium">Klant</th>
                       <th className="text-left py-3 px-4 font-medium">Status</th>
+                      <th className="text-left py-3 px-4 font-medium">Domein</th>
                       <th className="text-left py-3 px-4 font-medium">Geldig tot</th>
                       <th className="text-left py-3 px-4 font-medium">Totaal Betaald</th>
                       <th className="text-left py-3 px-4 font-medium">Acties</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCustomers.map((customer) => (
+                    {filteredCustomers.map((customer) => {
+                      const customerDomains = domains.filter(d => d.user_id === customer.id);
+                      return (
                       <tr key={customer.id} className="border-b hover:bg-accent/50">
                         <td className="py-3 px-4">
                           <div>
