@@ -1361,7 +1361,7 @@ async def delete_kasgeld_transaction(kasgeld_id: str, current_user: dict = Depen
 # ==================== ONDERHOUD (MAINTENANCE) ROUTES ====================
 
 @api_router.post("/maintenance", response_model=MaintenanceResponse)
-async def create_maintenance(maintenance_data: MaintenanceCreate, current_user: dict = Depends(get_current_user)):
+async def create_maintenance(maintenance_data: MaintenanceCreate, current_user: dict = Depends(get_current_active_user)):
     # Verify apartment exists
     apt = await db.apartments.find_one(
         {"id": maintenance_data.apartment_id, "user_id": current_user["id"]},
@@ -1391,7 +1391,7 @@ async def create_maintenance(maintenance_data: MaintenanceCreate, current_user: 
     )
 
 @api_router.get("/maintenance", response_model=List[MaintenanceResponse])
-async def get_maintenance_records(current_user: dict = Depends(get_current_user)):
+async def get_maintenance_records(current_user: dict = Depends(get_current_active_user)):
     records = await db.maintenance.find(
         {"user_id": current_user["id"]},
         {"_id": 0}
@@ -1408,7 +1408,7 @@ async def get_maintenance_records(current_user: dict = Depends(get_current_user)
     return [MaintenanceResponse(**r) for r in records]
 
 @api_router.get("/maintenance/{maintenance_id}", response_model=MaintenanceResponse)
-async def get_maintenance_record(maintenance_id: str, current_user: dict = Depends(get_current_user)):
+async def get_maintenance_record(maintenance_id: str, current_user: dict = Depends(get_current_active_user)):
     record = await db.maintenance.find_one(
         {"id": maintenance_id, "user_id": current_user["id"]},
         {"_id": 0}
@@ -1422,7 +1422,7 @@ async def get_maintenance_record(maintenance_id: str, current_user: dict = Depen
     return MaintenanceResponse(**record)
 
 @api_router.put("/maintenance/{maintenance_id}", response_model=MaintenanceResponse)
-async def update_maintenance(maintenance_id: str, maintenance_data: MaintenanceUpdate, current_user: dict = Depends(get_current_user)):
+async def update_maintenance(maintenance_id: str, maintenance_data: MaintenanceUpdate, current_user: dict = Depends(get_current_active_user)):
     update_data = {k: v for k, v in maintenance_data.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="Geen gegevens om bij te werken")
@@ -1442,14 +1442,14 @@ async def update_maintenance(maintenance_id: str, maintenance_data: MaintenanceU
     return MaintenanceResponse(**record)
 
 @api_router.delete("/maintenance/{maintenance_id}")
-async def delete_maintenance(maintenance_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_maintenance(maintenance_id: str, current_user: dict = Depends(get_current_active_user)):
     result = await db.maintenance.delete_one({"id": maintenance_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Onderhoudsrecord niet gevonden")
     return {"message": "Onderhoudsrecord verwijderd"}
 
 @api_router.get("/maintenance/apartment/{apartment_id}", response_model=List[MaintenanceResponse])
-async def get_apartment_maintenance(apartment_id: str, current_user: dict = Depends(get_current_user)):
+async def get_apartment_maintenance(apartment_id: str, current_user: dict = Depends(get_current_active_user)):
     records = await db.maintenance.find(
         {"apartment_id": apartment_id, "user_id": current_user["id"]},
         {"_id": 0}
