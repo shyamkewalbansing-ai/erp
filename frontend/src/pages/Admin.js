@@ -256,7 +256,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/${domain}/privkey.pem;
     
     # Frontend (React build)
-    root /home/cloudpanel/htdocs/surirentals/frontend/build;
+    root /home/cloudpanel/htdocs/facturatie/frontend/build;
     index index.html;
     
     # API routes naar backend
