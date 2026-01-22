@@ -11,6 +11,12 @@ import {
   getAdminSubscriptions,
   deleteSubscriptionPayment,
   downloadSubscriptionReceipt,
+  adminResetPassword,
+  adminUpdateCustomer,
+  getAdminDomains,
+  createCustomDomain,
+  verifyCustomDomain,
+  deleteCustomDomain,
   formatCurrency 
 } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
