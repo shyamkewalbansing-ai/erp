@@ -844,7 +844,7 @@ async def delete_payment(payment_id: str, current_user: dict = Depends(get_curre
 # ==================== DEPOSIT ROUTES ====================
 
 @api_router.post("/deposits", response_model=DepositResponse)
-async def create_deposit(deposit_data: DepositCreate, current_user: dict = Depends(get_current_user)):
+async def create_deposit(deposit_data: DepositCreate, current_user: dict = Depends(get_current_active_user)):
     # Verify tenant and apartment
     tenant = await db.tenants.find_one({"id": deposit_data.tenant_id, "user_id": current_user["id"]}, {"_id": 0})
     if not tenant:
@@ -878,7 +878,7 @@ async def create_deposit(deposit_data: DepositCreate, current_user: dict = Depen
     )
 
 @api_router.get("/deposits", response_model=List[DepositResponse])
-async def get_deposits(current_user: dict = Depends(get_current_user)):
+async def get_deposits(current_user: dict = Depends(get_current_active_user)):
     deposits = await db.deposits.find(
         {"user_id": current_user["id"]},
         {"_id": 0}
@@ -901,7 +901,7 @@ async def get_deposits(current_user: dict = Depends(get_current_user)):
     return [DepositResponse(**d) for d in deposits]
 
 @api_router.put("/deposits/{deposit_id}", response_model=DepositResponse)
-async def update_deposit(deposit_id: str, deposit_data: DepositUpdate, current_user: dict = Depends(get_current_user)):
+async def update_deposit(deposit_id: str, deposit_data: DepositUpdate, current_user: dict = Depends(get_current_active_user)):
     update_data = {k: v for k, v in deposit_data.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="Geen gegevens om bij te werken")
@@ -923,7 +923,7 @@ async def update_deposit(deposit_id: str, deposit_data: DepositUpdate, current_u
     return DepositResponse(**deposit)
 
 @api_router.delete("/deposits/{deposit_id}")
-async def delete_deposit(deposit_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_deposit(deposit_id: str, current_user: dict = Depends(get_current_active_user)):
     result = await db.deposits.delete_one({"id": deposit_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Borg niet gevonden")
