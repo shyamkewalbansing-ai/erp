@@ -15,7 +15,8 @@ import {
   X,
   ChevronRight,
   Crown,
-  Package
+  Package,
+  Settings
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
