@@ -11,6 +11,8 @@ import Deposits from "./pages/Deposits";
 import Kasgeld from "./pages/Kasgeld";
 import Onderhoud from "./pages/Onderhoud";
 import Werknemers from "./pages/Werknemers";
+import Abonnement from "./pages/Abonnement";
+import Admin from "./pages/Admin";
 import Layout from "./components/Layout";
 import "@/App.css";
 
@@ -28,6 +30,53 @@ const ProtectedRoute = ({ children }) => {
   
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+  
+  return children;
+};
+
+// Subscription Protected Route - requires active subscription
+const SubscriptionRoute = ({ children }) => {
+  const { user, loading, hasActiveSubscription } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // If subscription is not active, redirect to subscription page
+  if (!hasActiveSubscription()) {
+    return <Navigate to="/abonnement" replace />;
+  }
+  
+  return children;
+};
+
+// Admin Route - requires superadmin role
+const AdminRoute = ({ children }) => {
+  const { user, loading, isSuperAdmin } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (!isSuperAdmin()) {
+    return <Navigate to="/dashboard" replace />;
   }
   
   return children;
@@ -70,14 +119,40 @@ function App() {
             <ProtectedRoute><Layout /></ProtectedRoute>
           }>
             <Route index element={<Navigate to="/dashboard" replace />} />
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="tenants" element={<Tenants />} />
-            <Route path="apartments" element={<Apartments />} />
-            <Route path="payments" element={<Payments />} />
-            <Route path="deposits" element={<Deposits />} />
-            <Route path="kasgeld" element={<Kasgeld />} />
-            <Route path="onderhoud" element={<Onderhoud />} />
-            <Route path="werknemers" element={<Werknemers />} />
+            
+            {/* Subscription page is always accessible for logged-in users */}
+            <Route path="abonnement" element={<Abonnement />} />
+            
+            {/* Admin page only for superadmin */}
+            <Route path="admin" element={
+              <AdminRoute><Admin /></AdminRoute>
+            } />
+            
+            {/* These routes require active subscription */}
+            <Route path="dashboard" element={
+              <SubscriptionRoute><Dashboard /></SubscriptionRoute>
+            } />
+            <Route path="tenants" element={
+              <SubscriptionRoute><Tenants /></SubscriptionRoute>
+            } />
+            <Route path="apartments" element={
+              <SubscriptionRoute><Apartments /></SubscriptionRoute>
+            } />
+            <Route path="payments" element={
+              <SubscriptionRoute><Payments /></SubscriptionRoute>
+            } />
+            <Route path="deposits" element={
+              <SubscriptionRoute><Deposits /></SubscriptionRoute>
+            } />
+            <Route path="kasgeld" element={
+              <SubscriptionRoute><Kasgeld /></SubscriptionRoute>
+            } />
+            <Route path="onderhoud" element={
+              <SubscriptionRoute><Onderhoud /></SubscriptionRoute>
+            } />
+            <Route path="werknemers" element={
+              <SubscriptionRoute><Werknemers /></SubscriptionRoute>
+            } />
           </Route>
           
           {/* Catch all */}
