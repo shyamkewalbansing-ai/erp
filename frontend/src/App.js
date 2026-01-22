@@ -160,9 +160,12 @@ function App() {
             {/* Subscription page is always accessible for logged-in customers */}
             <Route path="abonnement" element={<CustomerOnlyRoute><Abonnement /></CustomerOnlyRoute>} />
             
-            {/* Admin page only for superadmin */}
+            {/* Admin pages only for superadmin */}
             <Route path="admin" element={
               <AdminRoute><Admin /></AdminRoute>
+            } />
+            <Route path="instellingen" element={
+              <AdminRoute><Instellingen /></AdminRoute>
             } />
             
             {/* These routes require active subscription (customers only) */}
