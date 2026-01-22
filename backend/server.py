@@ -624,12 +624,19 @@ async def get_deposits(current_user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).to_list(1000)
     
-    # Add tenant and apartment names
+    # Batch fetch tenant and apartment names to avoid N+1 queries
+    tenant_ids = list(set(d["tenant_id"] for d in deposits))
+    apt_ids = list(set(d["apartment_id"] for d in deposits))
+    
+    tenants = await db.tenants.find({"id": {"$in": tenant_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    apts = await db.apartments.find({"id": {"$in": apt_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    
+    tenant_map = {t["id"]: t["name"] for t in tenants}
+    apt_map = {a["id"]: a["name"] for a in apts}
+    
     for deposit in deposits:
-        tenant = await db.tenants.find_one({"id": deposit["tenant_id"]}, {"_id": 0, "name": 1})
-        apt = await db.apartments.find_one({"id": deposit["apartment_id"]}, {"_id": 0, "name": 1})
-        deposit["tenant_name"] = tenant["name"] if tenant else None
-        deposit["apartment_name"] = apt["name"] if apt else None
+        deposit["tenant_name"] = tenant_map.get(deposit["tenant_id"])
+        deposit["apartment_name"] = apt_map.get(deposit["apartment_id"])
     
     return [DepositResponse(**d) for d in deposits]
 
