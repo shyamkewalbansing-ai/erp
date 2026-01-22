@@ -2089,6 +2089,279 @@ async def generate_subscription_receipt_pdf(subscription_id: str, current_user: 
 
 # ==================== USER SUBSCRIPTION ROUTES ====================
 
+# ==================== PROFILE/SETTINGS ROUTES ====================
+
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    company_name: Optional[str] = None
+
+@api_router.put("/profile/password")
+async def change_own_password(password_data: PasswordChange, current_user: dict = Depends(get_current_user)):
+    """Change own password"""
+    
+    # Verify current password
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
+    if not verify_password(password_data.current_password, user["password"]):
+        raise HTTPException(status_code=400, detail="Huidig wachtwoord is onjuist")
+    
+    if len(password_data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Nieuw wachtwoord moet minimaal 6 tekens zijn")
+    
+    # Update password
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"password": hash_password(password_data.new_password)}}
+    )
+    
+    return {"message": "Wachtwoord succesvol gewijzigd"}
+
+@api_router.put("/profile")
+async def update_own_profile(profile_data: ProfileUpdate, current_user: dict = Depends(get_current_user)):
+    """Update own profile (name, email, company_name)"""
+    
+    update_fields = {}
+    
+    if profile_data.name:
+        update_fields["name"] = profile_data.name
+    
+    if profile_data.email:
+        # Check if email is already in use by another user
+        existing = await db.users.find_one(
+            {"email": profile_data.email, "id": {"$ne": current_user["id"]}},
+            {"_id": 0}
+        )
+        if existing:
+            raise HTTPException(status_code=400, detail="E-mailadres is al in gebruik")
+        update_fields["email"] = profile_data.email
+    
+    if profile_data.company_name is not None:
+        update_fields["company_name"] = profile_data.company_name
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="Geen gegevens om te wijzigen")
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": update_fields}
+    )
+    
+    # Return updated user
+    updated_user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "password": 0})
+    return updated_user
+
+@api_router.get("/profile")
+async def get_own_profile(current_user: dict = Depends(get_current_user)):
+    """Get own profile"""
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "password": 0})
+    return user
+
+# ==================== ADMIN: CUSTOMER PROFILE MANAGEMENT ====================
+
+class AdminPasswordReset(BaseModel):
+    new_password: str
+
+class AdminCustomerUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    company_name: Optional[str] = None
+
+@api_router.put("/admin/customers/{user_id}/password")
+async def admin_reset_customer_password(user_id: str, password_data: AdminPasswordReset, current_user: dict = Depends(get_superadmin)):
+    """Reset a customer's password - superadmin only"""
+    
+    if len(password_data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Wachtwoord moet minimaal 6 tekens zijn")
+    
+    result = await db.users.update_one(
+        {"id": user_id, "role": "customer"},
+        {"$set": {"password": hash_password(password_data.new_password)}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Klant niet gevonden")
+    
+    return {"message": "Wachtwoord succesvol gereset"}
+
+@api_router.put("/admin/customers/{user_id}/profile")
+async def admin_update_customer_profile(user_id: str, profile_data: AdminCustomerUpdate, current_user: dict = Depends(get_superadmin)):
+    """Update a customer's profile - superadmin only"""
+    
+    update_fields = {}
+    
+    if profile_data.name:
+        update_fields["name"] = profile_data.name
+    
+    if profile_data.email:
+        # Check if email is already in use
+        existing = await db.users.find_one(
+            {"email": profile_data.email, "id": {"$ne": user_id}},
+            {"_id": 0}
+        )
+        if existing:
+            raise HTTPException(status_code=400, detail="E-mailadres is al in gebruik")
+        update_fields["email"] = profile_data.email
+    
+    if profile_data.company_name is not None:
+        update_fields["company_name"] = profile_data.company_name
+    
+    if not update_fields:
+        raise HTTPException(status_code=400, detail="Geen gegevens om te wijzigen")
+    
+    result = await db.users.update_one(
+        {"id": user_id, "role": "customer"},
+        {"$set": update_fields}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Klant niet gevonden")
+    
+    return {"message": "Klantgegevens succesvol bijgewerkt"}
+
+# ==================== CUSTOM DOMAIN ROUTES ====================
+
+class CustomDomainCreate(BaseModel):
+    domain: str
+    user_id: str
+
+class CustomDomainResponse(BaseModel):
+    id: str
+    user_id: str
+    domain: str
+    status: str  # pending, active, error
+    verified: bool
+    dns_record_type: str
+    dns_record_value: str
+    created_at: str
+    verified_at: Optional[str] = None
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+
+# Get server IP for DNS configuration
+SERVER_IP = "185.199.108.153"  # Placeholder - this should be the actual server IP
+
+@api_router.post("/admin/domains", response_model=CustomDomainResponse)
+async def create_custom_domain(domain_data: CustomDomainCreate, current_user: dict = Depends(get_superadmin)):
+    """Add a custom domain for a customer - superadmin only"""
+    
+    # Validate domain format
+    domain = domain_data.domain.lower().strip()
+    if not domain or "." not in domain:
+        raise HTTPException(status_code=400, detail="Ongeldig domeinformaat")
+    
+    # Remove http/https if present
+    domain = domain.replace("http://", "").replace("https://", "").replace("www.", "").rstrip("/")
+    
+    # Check if domain already exists
+    existing = await db.custom_domains.find_one({"domain": domain}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="Dit domein is al in gebruik")
+    
+    # Check if customer exists
+    customer = await db.users.find_one({"id": domain_data.user_id, "role": "customer"}, {"_id": 0})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Klant niet gevonden")
+    
+    domain_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    domain_doc = {
+        "id": domain_id,
+        "user_id": domain_data.user_id,
+        "domain": domain,
+        "status": "pending",
+        "verified": False,
+        "dns_record_type": "A",
+        "dns_record_value": SERVER_IP,
+        "created_at": now.isoformat(),
+        "verified_at": None
+    }
+    
+    await db.custom_domains.insert_one(domain_doc)
+    
+    return CustomDomainResponse(
+        **domain_doc,
+        user_name=customer["name"],
+        user_email=customer["email"]
+    )
+
+@api_router.get("/admin/domains", response_model=List[CustomDomainResponse])
+async def get_all_custom_domains(current_user: dict = Depends(get_superadmin)):
+    """Get all custom domains - superadmin only"""
+    
+    domains = await db.custom_domains.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Batch fetch user info
+    user_ids = list(set(d["user_id"] for d in domains))
+    users = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(1000)
+    user_map = {u["id"]: {"name": u["name"], "email": u["email"]} for u in users}
+    
+    result = []
+    for domain in domains:
+        user_info = user_map.get(domain["user_id"], {})
+        result.append(CustomDomainResponse(
+            **domain,
+            user_name=user_info.get("name"),
+            user_email=user_info.get("email")
+        ))
+    
+    return result
+
+@api_router.put("/admin/domains/{domain_id}/verify")
+async def verify_custom_domain(domain_id: str, current_user: dict = Depends(get_superadmin)):
+    """Mark a custom domain as verified - superadmin only"""
+    
+    now = datetime.now(timezone.utc)
+    
+    result = await db.custom_domains.update_one(
+        {"id": domain_id},
+        {"$set": {
+            "status": "active",
+            "verified": True,
+            "verified_at": now.isoformat()
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Domein niet gevonden")
+    
+    return {"message": "Domein geverifieerd en geactiveerd"}
+
+@api_router.delete("/admin/domains/{domain_id}")
+async def delete_custom_domain(domain_id: str, current_user: dict = Depends(get_superadmin)):
+    """Delete a custom domain - superadmin only"""
+    
+    result = await db.custom_domains.delete_one({"id": domain_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Domein niet gevonden")
+    
+    return {"message": "Domein verwijderd"}
+
+@api_router.get("/admin/domains/customer/{user_id}", response_model=List[CustomDomainResponse])
+async def get_customer_domains(user_id: str, current_user: dict = Depends(get_superadmin)):
+    """Get custom domains for a specific customer - superadmin only"""
+    
+    domains = await db.custom_domains.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    
+    customer = await db.users.find_one({"id": user_id}, {"_id": 0, "name": 1, "email": 1})
+    
+    result = []
+    for domain in domains:
+        result.append(CustomDomainResponse(
+            **domain,
+            user_name=customer["name"] if customer else None,
+            user_email=customer["email"] if customer else None
+        ))
+    
+    return result
+
+# ==================== USER SUBSCRIPTION ROUTES ====================
+
 @api_router.get("/subscription/status")
 async def get_subscription_status_api(current_user: dict = Depends(get_current_user)):
     """Get current user's subscription status"""
