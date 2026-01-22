@@ -59,6 +59,15 @@ export default function Login() {
       {/* Right side - Form */}
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md animate-fade-in">
+          {/* Logo */}
+          <div className="mb-8">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+              alt="Facturatie N.V." 
+              className="h-6 w-auto"
+            />
+          </div>
+
           {/* Header */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-foreground mb-2">Welkom terug</h2>
