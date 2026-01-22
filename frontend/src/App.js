@@ -18,7 +18,7 @@ import "@/App.css";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isSuperAdmin } = useAuth();
   
   if (loading) {
     return (
@@ -35,9 +35,9 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Subscription Protected Route - requires active subscription
+// Subscription Protected Route - requires active subscription (customers only)
 const SubscriptionRoute = ({ children }) => {
-  const { user, loading, hasActiveSubscription } = useAuth();
+  const { user, loading, hasActiveSubscription, isSuperAdmin } = useAuth();
   
   if (loading) {
     return (
@@ -49,6 +49,11 @@ const SubscriptionRoute = ({ children }) => {
   
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+  
+  // Superadmin should not access customer pages - redirect to admin
+  if (isSuperAdmin()) {
+    return <Navigate to="/admin" replace />;
   }
   
   // If subscription is not active, redirect to subscription page
