@@ -1195,6 +1195,206 @@ export default function Admin() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={resetPasswordDialogOpen} onOpenChange={setResetPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Wachtwoord Resetten</DialogTitle>
+            <DialogDescription>
+              Reset het wachtwoord voor {selectedCustomer?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nieuw Wachtwoord</Label>
+              <Input
+                type="password"
+                placeholder="Minimaal 6 tekens"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                data-testid="reset-password-input"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setResetPasswordDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleResetPassword} disabled={activating}>
+              {activating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bezig...
+                </>
+              ) : (
+                <>
+                  <Key className="w-4 h-4 mr-2" />
+                  Wachtwoord Resetten
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Customer Dialog */}
+      <Dialog open={editCustomerDialogOpen} onOpenChange={setEditCustomerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Klant Bewerken</DialogTitle>
+            <DialogDescription>
+              Wijzig de gegevens van {selectedCustomer?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Naam</Label>
+              <Input
+                value={editForm.name}
+                onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                placeholder="Naam"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>E-mail</Label>
+              <Input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                placeholder="email@voorbeeld.com"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Bedrijfsnaam (optioneel)</Label>
+              <Input
+                value={editForm.company_name}
+                onChange={(e) => setEditForm({...editForm, company_name: e.target.value})}
+                placeholder="Bedrijfsnaam"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditCustomerDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleEditCustomer} disabled={activating}>
+              {activating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bezig...
+                </>
+              ) : (
+                <>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Opslaan
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Domain Dialog */}
+      <Dialog open={addDomainDialogOpen} onOpenChange={setAddDomainDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Domein Toevoegen</DialogTitle>
+            <DialogDescription>
+              Voeg een custom domein toe voor een klant
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Domein</Label>
+              <Input
+                value={newDomain.domain}
+                onChange={(e) => setNewDomain({...newDomain, domain: e.target.value})}
+                placeholder="bijv. mijnverhuur.nl"
+              />
+              <p className="text-xs text-muted-foreground">
+                Zonder http:// of www.
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Klant</Label>
+              <Select 
+                value={newDomain.user_id} 
+                onValueChange={(v) => setNewDomain({...newDomain, user_id: v})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer een klant" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.name} ({customer.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddDomainDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleAddDomain} disabled={activating}>
+              {activating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bezig...
+                </>
+              ) : (
+                <>
+                  <Globe className="w-4 h-4 mr-2" />
+                  Toevoegen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Domain Dialog */}
+      <Dialog open={deleteDomainDialogOpen} onOpenChange={setDeleteDomainDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Domein Verwijderen</DialogTitle>
+            <DialogDescription>
+              Weet u zeker dat u het domein <strong>{selectedDomain?.domain}</strong> wilt verwijderen?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDomainDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteDomain} disabled={activating}>
+              {activating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bezig...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Verwijderen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
