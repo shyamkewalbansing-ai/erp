@@ -100,6 +100,20 @@ export const deleteSalary = (id) => api.delete(`/salaries/${id}`);
 // Wisselkoers (Exchange Rate)
 export const getExchangeRate = () => api.get('/exchange-rate');
 
+// Subscription
+export const getSubscriptionStatus = () => api.get('/subscription/status');
+export const requestSubscription = () => api.post('/subscription/request');
+
+// Admin - Customers
+export const getAdminDashboard = () => api.get('/admin/dashboard');
+export const getAdminCustomers = () => api.get('/admin/customers');
+export const deactivateCustomer = (userId) => api.delete(`/admin/customers/${userId}`);
+
+// Admin - Subscriptions
+export const getAdminSubscriptions = () => api.get('/admin/subscriptions');
+export const activateSubscription = (data) => api.post('/admin/subscriptions', data);
+export const getSubscriptionRequests = () => api.get('/admin/subscription-requests');
+
 // Format currency in EUR
 export const formatCurrencyEUR = (amount) => {
   return `€ ${new Intl.NumberFormat('nl-NL', {
