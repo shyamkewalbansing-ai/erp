@@ -62,11 +62,19 @@ export default function Layout() {
         {/* Logo */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center">
-            <img 
-              src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-              alt="Facturatie N.V." 
-              className="h-5 w-auto"
-            />
+            {user?.logo && !isSuperAdmin() ? (
+              <img 
+                src={user.logo} 
+                alt="Bedrijfslogo" 
+                className="h-8 w-auto max-w-[140px] object-contain"
+              />
+            ) : (
+              <img 
+                src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+                alt="Facturatie N.V." 
+                className="h-5 w-auto"
+              />
+            )}
           </div>
         </div>
 
