@@ -119,6 +119,25 @@ export const getSubscriptionRequests = () => api.get('/admin/subscription-reques
 export const downloadSubscriptionReceipt = (subscriptionId) => 
   api.get(`/admin/subscriptions/${subscriptionId}/pdf`, { responseType: 'blob' });
 
+// Admin - Customer Profile Management
+export const adminResetPassword = (userId, newPassword) => 
+  api.put(`/admin/customers/${userId}/password`, { new_password: newPassword });
+export const adminUpdateCustomer = (userId, data) => 
+  api.put(`/admin/customers/${userId}/profile`, data);
+
+// Admin - Custom Domains
+export const getAdminDomains = () => api.get('/admin/domains');
+export const createCustomDomain = (data) => api.post('/admin/domains', data);
+export const verifyCustomDomain = (domainId) => api.put(`/admin/domains/${domainId}/verify`);
+export const deleteCustomDomain = (domainId) => api.delete(`/admin/domains/${domainId}`);
+export const getCustomerDomains = (userId) => api.get(`/admin/domains/customer/${userId}`);
+
+// Profile/Settings
+export const getProfile = () => api.get('/profile');
+export const updateProfile = (data) => api.put('/profile', data);
+export const changePassword = (currentPassword, newPassword) => 
+  api.put('/profile/password', { current_password: currentPassword, new_password: newPassword });
+
 // Format currency in EUR
 export const formatCurrencyEUR = (amount) => {
   return `€ ${new Intl.NumberFormat('nl-NL', {
