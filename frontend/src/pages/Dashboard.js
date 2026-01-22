@@ -72,11 +72,11 @@ export default function Dashboard() {
       bgColor: stats?.total_outstanding > 0 ? 'bg-orange-50' : 'bg-accent',
     },
     {
-      label: 'Totaal Huurders',
-      value: stats?.total_tenants || 0,
-      icon: Users,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50',
+      label: 'Kasgeld Saldo',
+      value: formatCurrency(stats?.total_kasgeld || 0),
+      icon: Banknote,
+      color: stats?.total_kasgeld >= 0 ? 'text-green-600' : 'text-red-600',
+      bgColor: stats?.total_kasgeld >= 0 ? 'bg-green-50' : 'bg-red-50',
     },
     {
       label: 'Borg in beheer',
