@@ -934,6 +934,312 @@ async def delete_deposit(deposit_id: str, current_user: dict = Depends(get_curre
 
 # ==================== RECEIPT/PDF ROUTES ====================
 
+def create_modern_receipt_pdf(payment, tenant, apt, user, payment_id):
+    """Create a modern styled receipt PDF"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    from reportlab.lib.units import cm, mm
+    from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+    from reportlab.platypus import HRFlowable
+    
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=A4, 
+        rightMargin=1.5*cm, 
+        leftMargin=1.5*cm, 
+        topMargin=1.5*cm, 
+        bottomMargin=1.5*cm
+    )
+    
+    # Colors
+    PRIMARY_GREEN = colors.HexColor('#0caf60')
+    DARK_TEXT = colors.HexColor('#1a1a1a')
+    GRAY_TEXT = colors.HexColor('#666666')
+    LIGHT_GRAY = colors.HexColor('#f5f5f5')
+    WHITE = colors.white
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'InvoiceTitle',
+        parent=styles['Heading1'],
+        fontSize=32,
+        textColor=DARK_TEXT,
+        fontName='Helvetica-Bold',
+        spaceAfter=0,
+        alignment=TA_RIGHT
+    )
+    
+    company_style = ParagraphStyle(
+        'CompanyName',
+        parent=styles['Normal'],
+        fontSize=18,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        spaceAfter=5
+    )
+    
+    section_header = ParagraphStyle(
+        'SectionHeader',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        spaceAfter=8,
+        spaceBefore=15
+    )
+    
+    normal_text = ParagraphStyle(
+        'NormalText',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=DARK_TEXT,
+        fontName='Helvetica',
+        leading=14
+    )
+    
+    small_text = ParagraphStyle(
+        'SmallText',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=GRAY_TEXT,
+        fontName='Helvetica',
+        leading=12
+    )
+    
+    bold_text = ParagraphStyle(
+        'BoldText',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=DARK_TEXT,
+        fontName='Helvetica-Bold'
+    )
+    
+    total_style = ParagraphStyle(
+        'TotalStyle',
+        parent=styles['Normal'],
+        fontSize=16,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        alignment=TA_RIGHT
+    )
+    
+    elements = []
+    
+    # Company name from user
+    company_name = user.get("company_name") if user and user.get("company_name") else "Facturatie N.V."
+    
+    # === HEADER SECTION ===
+    # Create header table with logo/company on left and KWITANTIE on right
+    header_data = []
+    
+    # Left side: Logo or Company name
+    left_content = []
+    if user and user.get("logo"):
+        try:
+            logo_data = user["logo"]
+            if "," in logo_data:
+                logo_data = logo_data.split(",")[1]
+            logo_bytes = base64.b64decode(logo_data)
+            logo_buffer = BytesIO(logo_bytes)
+            logo_img = Image(logo_buffer, width=4*cm, height=2*cm)
+            left_content.append(logo_img)
+        except Exception as e:
+            logger.error(f"Error adding logo: {e}")
+            left_content.append(Paragraph(company_name, company_style))
+    else:
+        left_content.append(Paragraph(company_name, company_style))
+    
+    left_content.append(Paragraph("Verhuurbeheersysteem", small_text))
+    
+    # Right side: KWITANTIE title
+    right_content = [Paragraph("KWITANTIE", title_style)]
+    
+    header_table = Table(
+        [[left_content, right_content]],
+        colWidths=[10*cm, 7*cm]
+    )
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+    ]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 15))
+    
+    # Green line separator
+    elements.append(HRFlowable(width="100%", thickness=3, color=PRIMARY_GREEN, spaceBefore=5, spaceAfter=15))
+    
+    # === INVOICE DETAILS ROW ===
+    receipt_num = payment_id[:8].upper()
+    issue_date = payment.get("payment_date", "-")
+    
+    details_data = [
+        [
+            Paragraph("<b>Kwitantie Nr:</b>", normal_text),
+            Paragraph(receipt_num, bold_text),
+            Paragraph("<b>Datum:</b>", normal_text),
+            Paragraph(issue_date, bold_text)
+        ]
+    ]
+    details_table = Table(details_data, colWidths=[3*cm, 5*cm, 3*cm, 6*cm])
+    details_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    elements.append(details_table)
+    elements.append(Spacer(1, 20))
+    
+    # === CLIENT AND PROPERTY INFO ===
+    tenant_name = tenant["name"] if tenant else "Onbekend"
+    tenant_phone = tenant.get("phone", "-") if tenant else "-"
+    tenant_email = tenant.get("email", "-") if tenant else "-"
+    tenant_address = tenant.get("address", "-") if tenant else "-"
+    
+    apt_name = apt["name"] if apt else "Onbekend"
+    apt_address = apt.get("address", "-") if apt else "-"
+    
+    info_left = [
+        [Paragraph("GEFACTUREERD AAN", section_header)],
+        [Paragraph(f"<b>{tenant_name}</b>", normal_text)],
+        [Paragraph(f"Tel: {tenant_phone}", small_text)],
+        [Paragraph(f"Email: {tenant_email}", small_text)],
+        [Paragraph(f"Adres: {tenant_address}", small_text)],
+    ]
+    
+    info_right = [
+        [Paragraph("APPARTEMENT", section_header)],
+        [Paragraph(f"<b>{apt_name}</b>", normal_text)],
+        [Paragraph(f"Adres: {apt_address}", small_text)],
+        [Paragraph("", small_text)],
+        [Paragraph("", small_text)],
+    ]
+    
+    info_table = Table(
+        [[Table(info_left), Table(info_right)]],
+        colWidths=[9*cm, 8*cm]
+    )
+    info_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 25))
+    
+    # === ITEMS TABLE ===
+    payment_type_labels = {
+        "rent": "Huur",
+        "deposit": "Borg",
+        "other": "Overig"
+    }
+    payment_type = payment_type_labels.get(payment.get("payment_type", ""), payment.get("payment_type", "Betaling"))
+    period_text = f"{payment.get('period_month', '-')}/{payment.get('period_year', '-')}" if payment.get('period_month') else "-"
+    description = payment.get("description") or f"{payment_type} betaling"
+    amount = payment.get("amount", 0)
+    
+    # Table header
+    table_header = ['NR', 'OMSCHRIJVING', 'TYPE', 'PERIODE', 'BEDRAG']
+    
+    # Table data
+    table_data = [
+        table_header,
+        ['1', description, payment_type, period_text, format_currency(amount)]
+    ]
+    
+    items_table = Table(table_data, colWidths=[1.5*cm, 7*cm, 3*cm, 2.5*cm, 3*cm])
+    items_table.setStyle(TableStyle([
+        # Header style
+        ('BACKGROUND', (0, 0), (-1, 0), DARK_TEXT),
+        ('TEXTCOLOR', (0, 0), (-1, 0), WHITE),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('TOPPADDING', (0, 0), (-1, 0), 12),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        
+        # Data rows
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 10),
+        ('BACKGROUND', (0, 1), (-1, 1), LIGHT_GRAY),
+        ('ALIGN', (0, 1), (0, -1), 'CENTER'),
+        ('ALIGN', (-1, 1), (-1, -1), 'RIGHT'),
+        
+        # Grid
+        ('LINEBELOW', (0, 0), (-1, 0), 1, PRIMARY_GREEN),
+        ('LINEBELOW', (0, -1), (-1, -1), 1, colors.HexColor('#e0e0e0')),
+    ]))
+    elements.append(items_table)
+    elements.append(Spacer(1, 20))
+    
+    # === TOTALS SECTION ===
+    totals_data = [
+        ['Subtotaal:', format_currency(amount)],
+        ['BTW (0%):', format_currency(0)],
+        ['', ''],
+        ['TOTAAL:', format_currency(amount)],
+    ]
+    
+    totals_table = Table(totals_data, colWidths=[10*cm, 4*cm, 3*cm])
+    totals_table.setStyle(TableStyle([
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 2), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, 2), 10),
+        ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 3), (-1, 3), 14),
+        ('TEXTCOLOR', (0, 3), (-1, 3), PRIMARY_GREEN),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 3), (-1, 3), 10),
+        ('LINEABOVE', (0, 3), (-1, 3), 2, PRIMARY_GREEN),
+    ]))
+    
+    # Wrap totals in a table to align right
+    totals_wrapper = Table([[totals_table]], colWidths=[17*cm])
+    totals_wrapper.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, 0), 'RIGHT'),
+    ]))
+    elements.append(totals_wrapper)
+    elements.append(Spacer(1, 30))
+    
+    # === PAYMENT INFO ===
+    elements.append(Paragraph("Betaalmethode", section_header))
+    elements.append(Paragraph("Contant / Bankoverschrijving", normal_text))
+    elements.append(Spacer(1, 20))
+    
+    # === THANK YOU ===
+    elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#e0e0e0'), spaceBefore=10, spaceAfter=15))
+    
+    thank_you_style = ParagraphStyle(
+        'ThankYou',
+        parent=styles['Normal'],
+        fontSize=14,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        alignment=TA_CENTER,
+        spaceAfter=10
+    )
+    elements.append(Paragraph("Bedankt voor uw betaling!", thank_you_style))
+    
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=GRAY_TEXT,
+        fontName='Helvetica',
+        alignment=TA_CENTER
+    )
+    elements.append(Paragraph(f"Dit document is gegenereerd door {company_name}", footer_style))
+    elements.append(Paragraph("Bewaar deze kwitantie als bewijs van betaling.", footer_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
 @api_router.get("/receipts/{payment_id}/pdf")
 async def generate_receipt_pdf(payment_id: str, current_user: dict = Depends(get_current_active_user)):
     # Get payment data
@@ -947,92 +1253,11 @@ async def generate_receipt_pdf(payment_id: str, current_user: dict = Depends(get
     tenant = await db.tenants.find_one({"id": payment["tenant_id"]}, {"_id": 0})
     apt = await db.apartments.find_one({"id": payment["apartment_id"]}, {"_id": 0})
     
-    # Get user logo
+    # Get user logo and company name
     user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "logo": 1, "company_name": 1})
     
-    # Create PDF
-    buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
-    
-    styles = getSampleStyleSheet()
-    title_style = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=24,
-        spaceAfter=30,
-        textColor=colors.HexColor('#0caf60')
-    )
-    
-    elements = []
-    
-    # Add customer logo if available
-    if user and user.get("logo"):
-        try:
-            logo_data = user["logo"]
-            # Remove data:image/xxx;base64, prefix
-            if "," in logo_data:
-                logo_data = logo_data.split(",")[1]
-            logo_bytes = base64.b64decode(logo_data)
-            logo_buffer = BytesIO(logo_bytes)
-            logo_img = Image(logo_buffer, width=4*cm, height=2*cm)
-            logo_img.hAlign = 'LEFT'
-            elements.append(logo_img)
-            elements.append(Spacer(1, 10))
-        except Exception as e:
-            logger.error(f"Error adding logo to PDF: {e}")
-    
-    # Header
-    elements.append(Paragraph("KWITANTIE", title_style))
-    company_name = user.get("company_name") if user and user.get("company_name") else "Facturatie N.V."
-    elements.append(Paragraph(f"<b>{company_name}</b> - Verhuurbeheersysteem", styles['Normal']))
-    elements.append(Spacer(1, 20))
-    
-    # Receipt info
-    receipt_data = [
-        ["Kwitantie Nr:", payment_id[:8].upper()],
-        ["Datum:", payment["payment_date"]],
-        ["", ""],
-        ["HUURDER GEGEVENS", ""],
-        ["Naam:", tenant["name"] if tenant else "Onbekend"],
-        ["Telefoon:", tenant["phone"] if tenant else ""],
-        ["", ""],
-        ["APPARTEMENT", ""],
-        ["Naam:", apt["name"] if apt else "Onbekend"],
-        ["Adres:", apt["address"] if apt else ""],
-        ["", ""],
-        ["BETALING", ""],
-        ["Type:", payment["payment_type"].capitalize()],
-        ["Periode:", f"{payment.get('period_month', '-')}/{payment.get('period_year', '-')}" if payment.get('period_month') else "-"],
-        ["Bedrag:", format_currency(payment["amount"])],
-        ["", ""],
-        ["Omschrijving:", payment.get("description") or "-"],
-    ]
-    
-    table = Table(receipt_data, colWidths=[5*cm, 10*cm])
-    table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('FONTNAME', (0, 3), (0, 3), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 7), (0, 7), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 11), (0, 11), 'Helvetica-Bold'),
-        ('TEXTCOLOR', (0, 3), (0, 3), colors.HexColor('#0caf60')),
-        ('TEXTCOLOR', (0, 7), (0, 7), colors.HexColor('#0caf60')),
-        ('TEXTCOLOR', (0, 11), (0, 11), colors.HexColor('#0caf60')),
-        ('FONTNAME', (1, 14), (1, 14), 'Helvetica-Bold'),
-        ('FONTSIZE', (1, 14), (1, 14), 14),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-    ]))
-    
-    elements.append(table)
-    elements.append(Spacer(1, 40))
-    
-    # Footer
-    elements.append(Paragraph("_" * 50, styles['Normal']))
-    elements.append(Paragraph("Handtekening Verhuurder", styles['Normal']))
-    
-    doc.build(elements)
-    buffer.seek(0)
+    # Create modern PDF
+    buffer = create_modern_receipt_pdf(payment, tenant, apt, user, payment_id)
     
     return StreamingResponse(
         buffer,
