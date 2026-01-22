@@ -92,11 +92,20 @@ export default function Dashboard() {
   return (
     <div className="space-y-8" data-testid="dashboard">
       {/* Page Header */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Overzicht van uw verhuurportfolio
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            Overzicht van uw verhuurportfolio
+          </p>
+        </div>
+        {user?.logo && (
+          <img 
+            src={user.logo} 
+            alt="Bedrijfslogo" 
+            className="h-12 w-auto max-w-[150px] object-contain hidden sm:block"
+          />
+        )}
       </div>
 
       {/* Stats Grid */}
