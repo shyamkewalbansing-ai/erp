@@ -199,11 +199,19 @@ export default function Layout() {
           >
             <Menu className="w-5 h-5" />
           </Button>
-          <img 
-            src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-            alt="Facturatie N.V." 
-            className="h-4 w-auto"
-          />
+          {user?.logo && !isSuperAdmin() ? (
+            <img 
+              src={user.logo} 
+              alt="Bedrijfslogo" 
+              className="h-6 w-auto max-w-[100px] object-contain"
+            />
+          ) : (
+            <img 
+              src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+              alt="Facturatie N.V." 
+              className="h-4 w-auto"
+            />
+          )}
         </header>
 
         {/* Page content */}
