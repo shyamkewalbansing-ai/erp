@@ -988,6 +988,167 @@ async def get_tenant_balance(tenant_id: str, current_user: dict = Depends(get_cu
         "payments": payments
     }
 
+# ==================== KASGELD (CASH FUND) ROUTES ====================
+
+@api_router.post("/kasgeld", response_model=KasgeldResponse)
+async def create_kasgeld_transaction(kasgeld_data: KasgeldCreate, current_user: dict = Depends(get_current_user)):
+    kasgeld_id = str(uuid.uuid4())
+    kasgeld_doc = {
+        "id": kasgeld_id,
+        "amount": kasgeld_data.amount,
+        "transaction_type": kasgeld_data.transaction_type,
+        "description": kasgeld_data.description,
+        "transaction_date": kasgeld_data.transaction_date,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "user_id": current_user["id"]
+    }
+    
+    await db.kasgeld.insert_one(kasgeld_doc)
+    
+    return KasgeldResponse(**kasgeld_doc)
+
+@api_router.get("/kasgeld", response_model=KasgeldBalanceResponse)
+async def get_kasgeld(current_user: dict = Depends(get_current_user)):
+    # Get all kasgeld transactions
+    transactions = await db.kasgeld.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("transaction_date", -1).to_list(1000)
+    
+    # Calculate totals
+    total_deposits = sum(t["amount"] for t in transactions if t["transaction_type"] == "deposit")
+    total_withdrawals = sum(t["amount"] for t in transactions if t["transaction_type"] == "withdrawal")
+    
+    # Get total maintenance costs
+    maintenance_records = await db.maintenance.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0, "cost": 1}
+    ).to_list(1000)
+    total_maintenance_costs = sum(m["cost"] for m in maintenance_records)
+    
+    # Total balance = deposits - withdrawals - maintenance costs
+    total_balance = total_deposits - total_withdrawals - total_maintenance_costs
+    
+    return KasgeldBalanceResponse(
+        total_balance=total_balance,
+        total_deposits=total_deposits,
+        total_withdrawals=total_withdrawals,
+        total_maintenance_costs=total_maintenance_costs,
+        transactions=[KasgeldResponse(**t) for t in transactions]
+    )
+
+@api_router.delete("/kasgeld/{kasgeld_id}")
+async def delete_kasgeld_transaction(kasgeld_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.kasgeld.delete_one({"id": kasgeld_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Transactie niet gevonden")
+    return {"message": "Transactie verwijderd"}
+
+# ==================== ONDERHOUD (MAINTENANCE) ROUTES ====================
+
+@api_router.post("/maintenance", response_model=MaintenanceResponse)
+async def create_maintenance(maintenance_data: MaintenanceCreate, current_user: dict = Depends(get_current_user)):
+    # Verify apartment exists
+    apt = await db.apartments.find_one(
+        {"id": maintenance_data.apartment_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not apt:
+        raise HTTPException(status_code=404, detail="Appartement niet gevonden")
+    
+    maintenance_id = str(uuid.uuid4())
+    maintenance_doc = {
+        "id": maintenance_id,
+        "apartment_id": maintenance_data.apartment_id,
+        "category": maintenance_data.category,
+        "description": maintenance_data.description,
+        "cost": maintenance_data.cost,
+        "maintenance_date": maintenance_data.maintenance_date,
+        "status": maintenance_data.status,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "user_id": current_user["id"]
+    }
+    
+    await db.maintenance.insert_one(maintenance_doc)
+    
+    return MaintenanceResponse(
+        **maintenance_doc,
+        apartment_name=apt["name"]
+    )
+
+@api_router.get("/maintenance", response_model=List[MaintenanceResponse])
+async def get_maintenance_records(current_user: dict = Depends(get_current_user)):
+    records = await db.maintenance.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("maintenance_date", -1).to_list(1000)
+    
+    # Batch fetch apartment names
+    apt_ids = list(set(r["apartment_id"] for r in records))
+    apts = await db.apartments.find({"id": {"$in": apt_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    apt_map = {a["id"]: a["name"] for a in apts}
+    
+    for record in records:
+        record["apartment_name"] = apt_map.get(record["apartment_id"])
+    
+    return [MaintenanceResponse(**r) for r in records]
+
+@api_router.get("/maintenance/{maintenance_id}", response_model=MaintenanceResponse)
+async def get_maintenance_record(maintenance_id: str, current_user: dict = Depends(get_current_user)):
+    record = await db.maintenance.find_one(
+        {"id": maintenance_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not record:
+        raise HTTPException(status_code=404, detail="Onderhoudsrecord niet gevonden")
+    
+    apt = await db.apartments.find_one({"id": record["apartment_id"]}, {"_id": 0, "name": 1})
+    record["apartment_name"] = apt["name"] if apt else None
+    
+    return MaintenanceResponse(**record)
+
+@api_router.put("/maintenance/{maintenance_id}", response_model=MaintenanceResponse)
+async def update_maintenance(maintenance_id: str, maintenance_data: MaintenanceUpdate, current_user: dict = Depends(get_current_user)):
+    update_data = {k: v for k, v in maintenance_data.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Geen gegevens om bij te werken")
+    
+    result = await db.maintenance.update_one(
+        {"id": maintenance_id, "user_id": current_user["id"]},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Onderhoudsrecord niet gevonden")
+    
+    record = await db.maintenance.find_one({"id": maintenance_id}, {"_id": 0})
+    apt = await db.apartments.find_one({"id": record["apartment_id"]}, {"_id": 0, "name": 1})
+    record["apartment_name"] = apt["name"] if apt else None
+    
+    return MaintenanceResponse(**record)
+
+@api_router.delete("/maintenance/{maintenance_id}")
+async def delete_maintenance(maintenance_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.maintenance.delete_one({"id": maintenance_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Onderhoudsrecord niet gevonden")
+    return {"message": "Onderhoudsrecord verwijderd"}
+
+@api_router.get("/maintenance/apartment/{apartment_id}", response_model=List[MaintenanceResponse])
+async def get_apartment_maintenance(apartment_id: str, current_user: dict = Depends(get_current_user)):
+    records = await db.maintenance.find(
+        {"apartment_id": apartment_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("maintenance_date", -1).to_list(1000)
+    
+    apt = await db.apartments.find_one({"id": apartment_id}, {"_id": 0, "name": 1})
+    apt_name = apt["name"] if apt else None
+    
+    for record in records:
+        record["apartment_name"] = apt_name
+    
+    return [MaintenanceResponse(**r) for r in records]
+
 # Include the router in the main app
 app.include_router(api_router)
 
