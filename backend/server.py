@@ -921,7 +921,13 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
     kasgeld_withdrawals = sum(t["amount"] for t in kasgeld_transactions if t["transaction_type"] == "withdrawal")
     maintenance_costs = await db.maintenance.find({"user_id": user_id}, {"_id": 0, "cost": 1}).to_list(1000)
     total_maintenance = sum(m["cost"] for m in maintenance_costs)
-    total_kasgeld = kasgeld_deposits - kasgeld_withdrawals - total_maintenance
+    
+    # Get all payments (huurbetalingen) for kasgeld calculation
+    all_payments = await db.payments.find({"user_id": user_id}, {"_id": 0, "amount": 1}).to_list(1000)
+    total_all_payments = sum(p["amount"] for p in all_payments)
+    
+    # Total kasgeld = deposits + all payments - withdrawals - maintenance
+    total_kasgeld = kasgeld_deposits + total_all_payments - kasgeld_withdrawals - total_maintenance
     
     return DashboardStats(
         total_apartments=total_apartments,
