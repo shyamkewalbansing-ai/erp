@@ -61,7 +61,12 @@ import {
   Trash2,
   FileText,
   UserPlus,
-  Download
+  Download,
+  Key,
+  Edit,
+  Globe,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 
 export default function Admin() {
