@@ -60,11 +60,17 @@ async def health_check():
 
 # ==================== MODELS ====================
 
+# Subscription Constants
+SUBSCRIPTION_PRICE_SRD = 3500.0
+SUBSCRIPTION_DAYS = 30
+SUPER_ADMIN_EMAIL = "admin@surirentals.sr"  # Default super admin
+
 # User Models
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
     name: str
+    company_name: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -74,12 +80,51 @@ class UserResponse(BaseModel):
     id: str
     email: str
     name: str
+    company_name: Optional[str] = None
+    role: str  # 'superadmin', 'customer'
+    subscription_status: str  # 'active', 'expired', 'trial', 'none'
+    subscription_end_date: Optional[str] = None
     created_at: str
 
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+
+# Subscription Models
+class SubscriptionCreate(BaseModel):
+    user_id: str
+    months: int = 1
+    payment_method: str  # 'cash', 'bank_transfer', 'other'
+    payment_reference: Optional[str] = None
+    notes: Optional[str] = None
+
+class SubscriptionResponse(BaseModel):
+    id: str
+    user_id: str
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    amount: float
+    months: int
+    start_date: str
+    end_date: str
+    payment_method: str
+    payment_reference: Optional[str] = None
+    notes: Optional[str] = None
+    status: str  # 'active', 'expired'
+    created_at: str
+
+class CustomerResponse(BaseModel):
+    id: str
+    email: str
+    name: str
+    company_name: Optional[str] = None
+    role: str
+    subscription_status: str
+    subscription_end_date: Optional[str] = None
+    created_at: str
+    total_paid: float
+    last_payment_date: Optional[str] = None
 
 # Tenant Models
 class TenantCreate(BaseModel):
