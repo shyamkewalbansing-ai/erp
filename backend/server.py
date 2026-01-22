@@ -913,6 +913,14 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
                 reminder_type="overdue" if days_overdue > 0 else "upcoming"
             ))
     
+    # Calculate kasgeld balance
+    kasgeld_transactions = await db.kasgeld.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
+    kasgeld_deposits = sum(t["amount"] for t in kasgeld_transactions if t["transaction_type"] == "deposit")
+    kasgeld_withdrawals = sum(t["amount"] for t in kasgeld_transactions if t["transaction_type"] == "withdrawal")
+    maintenance_costs = await db.maintenance.find({"user_id": user_id}, {"_id": 0, "cost": 1}).to_list(1000)
+    total_maintenance = sum(m["cost"] for m in maintenance_costs)
+    total_kasgeld = kasgeld_deposits - kasgeld_withdrawals - total_maintenance
+    
     return DashboardStats(
         total_apartments=total_apartments,
         occupied_apartments=occupied_apartments,
@@ -921,6 +929,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
         total_income_this_month=total_income,
         total_outstanding=total_outstanding,
         total_deposits_held=total_deposits,
+        total_kasgeld=total_kasgeld,
         recent_payments=recent_payments,
         reminders=reminders
     )
