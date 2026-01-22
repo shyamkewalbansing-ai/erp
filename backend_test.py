@@ -371,6 +371,182 @@ class SuriRentalsAPITester:
             print(f"   Balance: {response.get('balance', 0)}")
         return success
 
+    def test_create_kasgeld_deposit(self):
+        """Test creating a kasgeld deposit transaction"""
+        kasgeld_data = {
+            "amount": 5000.00,
+            "transaction_type": "deposit",
+            "description": "Maandelijkse kasstorting",
+            "transaction_date": datetime.now().strftime('%Y-%m-%d')
+        }
+        
+        success, response = self.run_test(
+            "Create Kasgeld Deposit",
+            "POST",
+            "kasgeld",
+            200,
+            data=kasgeld_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources['kasgeld'].append(response['id'])
+            print(f"   Created kasgeld transaction ID: {response['id']}")
+            return True
+        return False
+
+    def test_create_kasgeld_withdrawal(self):
+        """Test creating a kasgeld withdrawal transaction"""
+        kasgeld_data = {
+            "amount": 500.00,
+            "transaction_type": "withdrawal",
+            "description": "Kas opname voor materialen",
+            "transaction_date": datetime.now().strftime('%Y-%m-%d')
+        }
+        
+        success, response = self.run_test(
+            "Create Kasgeld Withdrawal",
+            "POST",
+            "kasgeld",
+            200,
+            data=kasgeld_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources['kasgeld'].append(response['id'])
+            print(f"   Created kasgeld withdrawal ID: {response['id']}")
+            return True
+        return False
+
+    def test_get_kasgeld(self):
+        """Test getting kasgeld balance and transactions"""
+        success, response = self.run_test(
+            "Get Kasgeld Balance",
+            "GET",
+            "kasgeld",
+            200
+        )
+        
+        if success:
+            balance = response.get('total_balance', 0)
+            deposits = response.get('total_deposits', 0)
+            withdrawals = response.get('total_withdrawals', 0)
+            maintenance_costs = response.get('total_maintenance_costs', 0)
+            transactions_count = len(response.get('transactions', []))
+            print(f"   Balance: {balance}, Deposits: {deposits}, Withdrawals: {withdrawals}")
+            print(f"   Maintenance costs: {maintenance_costs}, Transactions: {transactions_count}")
+            return True
+        return False
+
+    def test_create_maintenance(self):
+        """Test creating a maintenance record"""
+        if not self.created_resources['apartments']:
+            print("⚠️  Skipping maintenance creation - no apartment created")
+            return True
+            
+        maintenance_data = {
+            "apartment_id": self.created_resources['apartments'][0],
+            "category": "kraan",
+            "description": "Lekkende kraan gerepareerd in de keuken",
+            "cost": 150.00,
+            "maintenance_date": datetime.now().strftime('%Y-%m-%d'),
+            "status": "completed"
+        }
+        
+        success, response = self.run_test(
+            "Create Maintenance Record",
+            "POST",
+            "maintenance",
+            200,
+            data=maintenance_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources['maintenance'].append(response['id'])
+            print(f"   Created maintenance record ID: {response['id']}")
+            print(f"   Cost {maintenance_data['cost']} should be deducted from kasgeld")
+            return True
+        return False
+
+    def test_get_maintenance(self):
+        """Test getting all maintenance records"""
+        success, response = self.run_test(
+            "Get Maintenance Records",
+            "GET",
+            "maintenance",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} maintenance records")
+            return True
+        return False
+
+    def test_update_maintenance(self):
+        """Test updating a maintenance record"""
+        if not self.created_resources['maintenance']:
+            print("⚠️  Skipping maintenance update - no maintenance record created")
+            return True
+            
+        maintenance_id = self.created_resources['maintenance'][0]
+        update_data = {
+            "description": "Lekkende kraan gerepareerd in de keuken - UPDATED",
+            "cost": 175.00,
+            "status": "completed"
+        }
+        
+        success, response = self.run_test(
+            "Update Maintenance Record",
+            "PUT",
+            f"maintenance/{maintenance_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            print(f"   Updated maintenance record: {response.get('description', '')}")
+            return True
+        return False
+
+    def test_delete_kasgeld_transaction(self):
+        """Test deleting a kasgeld transaction"""
+        if not self.created_resources['kasgeld']:
+            print("⚠️  Skipping kasgeld deletion - no kasgeld transaction created")
+            return True
+            
+        kasgeld_id = self.created_resources['kasgeld'][0]
+        
+        success, response = self.run_test(
+            "Delete Kasgeld Transaction",
+            "DELETE",
+            f"kasgeld/{kasgeld_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Deleted kasgeld transaction: {kasgeld_id}")
+            return True
+        return False
+
+    def test_delete_maintenance(self):
+        """Test deleting a maintenance record"""
+        if not self.created_resources['maintenance']:
+            print("⚠️  Skipping maintenance deletion - no maintenance record created")
+            return True
+            
+        maintenance_id = self.created_resources['maintenance'][0]
+        
+        success, response = self.run_test(
+            "Delete Maintenance Record",
+            "DELETE",
+            f"maintenance/{maintenance_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Deleted maintenance record: {maintenance_id}")
+            return True
+        return False
+
 def main():
     print("🏠 SuriRentals API Testing Suite")
     print("=" * 50)
