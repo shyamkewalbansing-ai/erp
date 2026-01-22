@@ -743,6 +743,140 @@ export default function Admin() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Domains Tab */}
+        <TabsContent value="domains">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Globe className="w-5 h-5" />
+                    Custom Domeinen
+                  </CardTitle>
+                  <CardDescription>Beheer custom domeinen voor klanten</CardDescription>
+                </div>
+                <Button onClick={() => setAddDomainDialogOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Domein Toevoegen
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {/* DNS Info Box */}
+              <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <h4 className="font-semibold text-blue-600 mb-2">DNS Configuratie</h4>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Klanten moeten een A-record aanmaken bij hun domeinprovider:
+                </p>
+                <div className="flex items-center gap-2 bg-background p-2 rounded font-mono text-sm">
+                  <span className="text-muted-foreground">Type:</span>
+                  <span className="font-semibold">A</span>
+                  <span className="text-muted-foreground ml-4">Waarde:</span>
+                  <span className="font-semibold">185.199.108.153</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="ml-auto"
+                    onClick={() => copyToClipboard('185.199.108.153')}
+                  >
+                    <Copy className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4 font-medium">Domein</th>
+                      <th className="text-left py-3 px-4 font-medium">Klant</th>
+                      <th className="text-left py-3 px-4 font-medium">Status</th>
+                      <th className="text-left py-3 px-4 font-medium">Aangemaakt</th>
+                      <th className="text-left py-3 px-4 font-medium">Acties</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {domains.map((domain) => (
+                      <tr key={domain.id} className="border-b hover:bg-accent/50">
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <Globe className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-medium">{domain.domain}</span>
+                            <a 
+                              href={`https://${domain.domain}`} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground hover:text-primary"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div>
+                            <p className="font-medium">{domain.user_name || 'Onbekend'}</p>
+                            <p className="text-sm text-muted-foreground">{domain.user_email}</p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          {domain.verified ? (
+                            <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Actief
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+                              <Clock className="w-3 h-3 mr-1" />
+                              In Afwachting
+                            </Badge>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm">
+                            {new Date(domain.created_at).toLocaleDateString('nl-NL')}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            {!domain.verified && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleVerifyDomain(domain.id)}
+                                disabled={activating}
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Verifiëren
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                setSelectedDomain(domain);
+                                setDeleteDomainDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {domains.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                          Geen domeinen gevonden
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Create Customer Dialog */}
