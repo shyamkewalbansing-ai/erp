@@ -237,6 +237,48 @@ export default function Admin() {
     toast.success('Gekopieerd naar klembord');
   };
 
+  const generateNginxConfig = (domain) => {
+    return `# Nginx configuratie voor ${domain}
+# Voeg dit toe in CloudPanel of maak een nieuwe site aan
+
+server {
+    listen 80;
+    server_name ${domain} www.${domain};
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name ${domain} www.${domain};
+    
+    # SSL certificaat (via CloudPanel Let's Encrypt)
+    ssl_certificate /etc/letsencrypt/live/${domain}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${domain}/privkey.pem;
+    
+    # Frontend (React build)
+    root /home/cloudpanel/htdocs/surirentals/frontend/build;
+    index index.html;
+    
+    # API routes naar backend
+    location /api/ {
+        proxy_pass http://127.0.0.1:8001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+    
+    # Frontend routes (React Router)
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    
+    # Gzip compressie
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript;
+}`;
+
   const handleActivateSubscription = async () => {
     if (!selectedCustomer) return;
     
