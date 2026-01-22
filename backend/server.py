@@ -1229,7 +1229,7 @@ async def get_tenant_balance(tenant_id: str, current_user: dict = Depends(get_cu
 # ==================== KASGELD (CASH FUND) ROUTES ====================
 
 @api_router.post("/kasgeld", response_model=KasgeldResponse)
-async def create_kasgeld_transaction(kasgeld_data: KasgeldCreate, current_user: dict = Depends(get_current_user)):
+async def create_kasgeld_transaction(kasgeld_data: KasgeldCreate, current_user: dict = Depends(get_current_active_user)):
     kasgeld_id = str(uuid.uuid4())
     kasgeld_doc = {
         "id": kasgeld_id,
@@ -1246,7 +1246,7 @@ async def create_kasgeld_transaction(kasgeld_data: KasgeldCreate, current_user: 
     return KasgeldResponse(**kasgeld_doc)
 
 @api_router.get("/kasgeld", response_model=KasgeldBalanceResponse)
-async def get_kasgeld(current_user: dict = Depends(get_current_user)):
+async def get_kasgeld(current_user: dict = Depends(get_current_active_user)):
     # Get all manual kasgeld transactions
     manual_transactions = await db.kasgeld.find(
         {"user_id": current_user["id"]},
@@ -1352,7 +1352,7 @@ async def get_kasgeld(current_user: dict = Depends(get_current_user)):
     )
 
 @api_router.delete("/kasgeld/{kasgeld_id}")
-async def delete_kasgeld_transaction(kasgeld_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_kasgeld_transaction(kasgeld_id: str, current_user: dict = Depends(get_current_active_user)):
     result = await db.kasgeld.delete_one({"id": kasgeld_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Transactie niet gevonden")
