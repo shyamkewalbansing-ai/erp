@@ -2242,7 +2242,7 @@ class CustomDomainResponse(BaseModel):
     user_email: Optional[str] = None
 
 # Get server IP for DNS configuration
-SERVER_IP = "185.199.108.153"  # Placeholder - this should be the actual server IP
+SERVER_IP = "72.62.174.117"  # CloudPanel server IP
 
 @api_router.post("/admin/domains", response_model=CustomDomainResponse)
 async def create_custom_domain(domain_data: CustomDomainCreate, current_user: dict = Depends(get_superadmin)):
