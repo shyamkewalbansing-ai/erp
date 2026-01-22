@@ -151,6 +151,16 @@ echo -e "${GREEN}✓ Frontend gebouwd${NC}"
 
 echo ""
 echo -e "${YELLOW}Stap 7/8: Systemd service aanmaken...${NC}"
+
+# Detecteer de juiste user (surirentals of clp)
+if id "surirentals" &>/dev/null; then
+    SERVICE_USER="surirentals"
+elif id "clp" &>/dev/null; then
+    SERVICE_USER="clp"
+else
+    SERVICE_USER="www-data"
+fi
+
 sudo tee /etc/systemd/system/surirentals.service > /dev/null << EOF
 [Unit]
 Description=SuriRentals Backend API
@@ -158,8 +168,8 @@ After=network.target mongod.service
 
 [Service]
 Type=simple
-User=clp
-Group=clp
+User=$SERVICE_USER
+Group=$SERVICE_USER
 WorkingDirectory=$BACKEND_DIR
 Environment="PATH=$BACKEND_DIR/venv/bin"
 ExecStart=$BACKEND_DIR/venv/bin/uvicorn server:app --host 127.0.0.1 --port 8001 --workers 4
