@@ -809,12 +809,20 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("created_at", -1).to_list(5)
     
+    # Batch fetch tenant and apartment names for recent payments
+    recent_tenant_ids = list(set(p["tenant_id"] for p in recent_payments_cursor))
+    recent_apt_ids = list(set(p["apartment_id"] for p in recent_payments_cursor))
+    
+    recent_tenants = await db.tenants.find({"id": {"$in": recent_tenant_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    recent_apts = await db.apartments.find({"id": {"$in": recent_apt_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(100)
+    
+    recent_tenant_map = {t["id"]: t["name"] for t in recent_tenants}
+    recent_apt_map = {a["id"]: a["name"] for a in recent_apts}
+    
     recent_payments = []
     for payment in recent_payments_cursor:
-        tenant = await db.tenants.find_one({"id": payment["tenant_id"]}, {"_id": 0, "name": 1})
-        apt = await db.apartments.find_one({"id": payment["apartment_id"]}, {"_id": 0, "name": 1})
-        payment["tenant_name"] = tenant["name"] if tenant else None
-        payment["apartment_name"] = apt["name"] if apt else None
+        payment["tenant_name"] = recent_tenant_map.get(payment["tenant_id"])
+        payment["apartment_name"] = recent_apt_map.get(payment["apartment_id"])
         recent_payments.append(PaymentResponse(**payment))
     
     # Generate reminders for unpaid rent
