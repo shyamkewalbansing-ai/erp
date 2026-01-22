@@ -1,82 +1,59 @@
 <analysis>**original_problem_statement:**
-The user requested a SaaS application for managing apartment rentals in Suriname. The application should use the Surinamese Dollar (SRD) as the currency.
+The user requested a SaaS application for managing apartment rentals in Suriname, using SRD as the currency. The platform should support tenant, apartment, payment, and financial management (Kasgeld). A key requirement is a multi-tenant SaaS model with a Super Admin role to manage customer subscriptions, which cost SRD 3,500 per month. Subsequent requests added features for the superadmin to manage customers (create, edit, delete, reset passwords), and a custom domain mapping feature for customers. The user also requested a rebranding of the application from SuriRentals to Facturatie N.V..
 
 **PRODUCT REQUIREMENTS:**
--   **Core Rental Management:**
-    -   Manage tenants (add, edit, delete, view).
-    -   Manage apartments, including their status (available/occupied).
-    -   Track tenant payments, identifying who has paid and who has outstanding balances.
-    -   Manage security deposits.
-    -   Generate receipts for payments.
--   **Financial Management:**
-    -   A Kasgeld (cash fund) feature to manage operational cash.
-    -   The Kasgeld should be automatically funded by incoming rent payments.
-    -   A feature to track maintenance costs for apartments, with expenses deducted from the Kasgeld.
--   **Employee Management:**
-    -   Manage a list of employees.
-    -   Process salary payments for employees, with salaries deducted from the Kasgeld.
--   **Currency Conversion:**
-    -   A feature on the Kasgeld page to convert the SRD balance to EUR using the current daily exchange rate.
--   **SaaS Model:**
-    -   Implement a subscription-based system.
-    -   A Super Admin role with the ability to manage customer accounts.
-    -   Customer accounts that require an active subscription of SRD 3,500 per month to use the application.
+-   **Core Rental Management (For Customers):** Manage tenants, apartments, payments, deposits, maintenance costs, and employee salaries.
+-   **Financial Management (For Customers):** A Kasgeld (cash fund) automatically funded by rent and debited for expenses, with SRD-to-EUR conversion.
+-   **SaaS Subscription Model:**
+    -   A Super Admin role with a dedicated dashboard to manage customers and subscriptions.
+    -   Customer accounts have a 3-day trial upon registration.
+    -   After the trial, access is blocked until the superadmin manually activates the subscription.
+    -   Superadmin can create, edit, and delete customers and their subscriptions.
+    -   Superadmin can generate PDF receipts for subscription payments.
+-   **User & Profile Management:** All users can change their own profile info (name, email) and password.
+-   **Custom Domains:** Customers can map their own domain name to the application via an A record. The superadmin manages these domains.
+-   **Branding:** The application should be branded as Facturatie N.V..
 
 **User's preferred language**: Dutch
 
 **what currently exists?**
-A full-stack application with a FastAPI backend and React frontend has been developed. It includes:
--   JWT-based authentication (register/login).
--   CRUD functionalities for tenants, apartments, payments, and deposits.
--   Dashboard with key statistics.
--   **Kasgeld (Cash Fund):** Automatically receives funds from rent payments.
--   **Maintenance Module:** Tracks repair costs deducted from the Kasgeld.
--   **Employee Module:** Manages employees and salary payments deducted from the Kasgeld.
--   **Currency Conversion:** A feature to convert SRD to EUR on the Kasgeld page using a live exchange rate API.
--   The application has been prepared for deployment by adding a  endpoint and optimizing database queries (fixing N+1 issues).
+A complete full-stack application (FastAPI backend, React frontend) has been built. All core rental management features for customers are implemented. The multi-tenant SaaS model is fully functional, including a 3-day trial for new users and a comprehensive superadmin dashboard to manage customers, subscriptions, and custom domains. A key feature is an automated installation script () created to simplify deployment on the user's CloudPanel server, which was debugged over several interactions. The application is functionally complete based on all requests, except for the final rebranding task.
 
 **Last working item**:
-    - Last item agent was working: The agent was implementing the SaaS subscription model. This involved adding , , and  to the user model in the backend, and updating the  dependency to check for an active subscription before granting access to API endpoints. The work is mid-implementation.
-    - Status: IN PROGRESS
+    - Last item agent was working: The user requested to rebrand the application from SuriRentals to Facturatie N.V..
+    - Status: NOT STARTED
     - Agent Testing Done: N
-    - Which testing method agent to use? both
+    - Which testing method agent to use? frontend testing agent
     - User Testing Done: N
 
+**All Pending/In progress Issue list**:
+- None.
+
 **In progress Task List**:
-  - Task 1:  (P0) Complete the SaaS Subscription Model Implementation
-  
- Task Detail:
-  - Task 1: Complete the SaaS Subscription Model Implementation
-     - Where to resume: The agent has modified the backend user model and authentication dependencies. The next steps are:
-        1.  Create the API endpoints for the  role to manage users and their subscriptions (e.g., list users, activate/deactivate subscriptions) in .
-        2.  Create a new Admin Dashboard page on the frontend for these management tasks.
-        3.  Implement logic on the frontend to restrict access for users with an inactive subscription, possibly redirecting them to a payment/subscription page.
-     - What will be achieved with this? This will transform the application from a single-user system to a multi-tenant SaaS platform, which is a core requirement from the user.
-     - Status:  IN PROGRESS
-     - Should Test frontend/backend/both after fix? both
-     - Blocked on something: No.
+- None.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - (P1) **Create Admin-only API endpoints**: Implement routes in  for the  to list, activate, and deactivate customer subscriptions.
-    - (P1) **Build Super Admin Frontend**: Create a new page (e.g., ) where the superadmin can view and manage all customer accounts.
+    - (P0) **Rebrand Application to Facturatie N.V.**: Search and replace all occurrences of SuriRentals across the entire frontend codebase, particularly in layout components, page titles, and static text. Verify the logo and name change in files like , , and .
 
     Future Tasks:
-    - (P2) **Automate Subscription Payments**: Integrate a payment gateway (e.g., Stripe) to handle the recurring SRD 3,500 monthly subscription fee.
-    - (P2) **PDF Receipt Generation**: The initial request included creating receipts (kwitantie maken). Currently, payments are tracked, but there is no functionality to generate a downloadable PDF receipt. This needs to be implemented.
-    - (P3) **Email Notifications**: Add email reminders for tenants about upcoming rent payments. The current implementation only shows reminders on the dashboard.
+    - (P1) **Automate Subscription Payments**: Integrate a payment gateway like Stripe to handle the recurring SRD 3,500 monthly subscription fee, removing the need for manual activation by the superadmin.
+    - (P1) **PDF Receipt Generation for Rent Payments**: The original request included generating receipts (kwitantie maken) for tenant rent payments. The current implementation only generates PDF receipts for SaaS subscription payments. This feature for the customer-facing side is still missing.
+    - (P2) **Email Notifications**: Implement automated email reminders for tenants about upcoming rent due dates.
 
 **Completed work in this session**
-- **Full-Stack Application Base**: Built the entire rental management app from scratch.
-- **Authentication**: Implemented JWT-based user registration and login.
-- **Core CRUD Features**: Created modules for Tenants, Apartments, Payments, and Deposits.
-- **Kasgeld (Cash Fund) Feature**: Implemented a cash fund that is automatically updated with rent payments and reduced by maintenance and salary costs. (, ).
-- **Maintenance & Employee Management**: Added features to track maintenance costs and manage employee salaries, both linked to the Kasgeld. (, ).
-- **Currency Conversion**: Integrated a live exchange rate API to show EUR equivalent on the Kasgeld page. ().
-- **Deployment Readiness**: Added a  endpoint and resolved N+1 query issues to ensure smooth deployment. ().
+- **SaaS Subscription Model**: Implemented a full multi-tenant system with a superadmin and customer roles.
+- **3-Day Trial Period**: New customers are automatically placed on a 3-day trial.
+- **Superadmin Dashboard**: Built a comprehensive admin page () for the superadmin to manage the entire SaaS platform.
+- **Full Customer Management**: Superadmin can create, view, edit, delete, activate, and deactivate customer accounts.
+- **Subscription & Payment Management**: Superadmin can view subscription payment history, generate PDF receipts for payments, and delete payment records.
+- **User Profile & Security**: Implemented features for all users to change their profile information and password (), and for the superadmin to reset customer passwords.
+- **Custom Domain Feature**: Created a system for customers to use their own domain. The admin dashboard provides DNS instructions (with the user's server IP) and an Nginx configuration generator to simplify setup.
+- **Role-Based Access Control**: Refined the application to strictly separate superadmin and customer views and permissions. Superadmins are automatically redirected to the admin dashboard and cannot access rental management features.
+- **Automated Installation Script**: Created and extensively debugged a shell script () to automate the entire deployment process on the user's CloudPanel server, including dependency installation and service configuration.
 
 **Earlier issues found/mentioned but not fixed**
-   - None
+   - **PDF Receipt for Rent Payments**: The initial requirement to generate PDF receipts for tenants' rent payments was not implemented. The agent built PDF generation for the superadmin's subscription payments instead. This is now listed under Future Tasks.
 
 **Known issue recurrence from previous fork**
   - None
@@ -85,81 +62,81 @@ A full-stack application with a FastAPI backend and React frontend has been deve
 
 
 **Key Technical Concepts**
-- **Backend**: FastAPI, Asynchronous MongoDB with , Pydantic, JWT authentication.
-- **Frontend**: React, React Router, Axios for data fetching, Tailwind CSS, Shadcn/UI for components.
+- **Backend**: FastAPI, Motor, Pydantic, JWT.  was added for PDF generation.
+- **Frontend**: React, React Router, Axios, Tailwind CSS, Shadcn/UI. Features heavy conditional rendering based on user role ( vs. ).
 - **Database**: MongoDB.
-- **External APIs**:  for currency conversion.
+- **Deployment**: A custom shell script () was created to automate deployment on a CloudPanel server using  and Nginx.
 
 **key DB schema**
   - **users**: 
-  - **tenants**: 
-  - **apartments**: 
-  - **payments**: 
-  - **kasgeld_transactions**: 
-  - **employees**: 
-  - **salary_payments**: 
+  - **domains**: (New Collection) 
+  - **subscriptions**: (New Collection, implicitly managed within ) 
+  - (Other collections like , , , etc. remain unchanged)
 
 **changes in tech stack**
-  -  was added to the backend to make HTTP requests to the exchange rate API.
+  -  was added to  for PDF generation.
 
 **All files of reference**
-- : Contains the entire backend logic, including models, routes, and authentication. Has been heavily modified to add all features.
-- : The main router for the frontend application.
-- : The main layout component, including the sidebar navigation.
-- : Contains all the API call definitions for the frontend.
-- : This directory contains all the view components for the different features of the application.
+- : Heavily modified to add all admin, user management, and custom domain endpoints.
+- : New file. A large, complex component that serves as the superadmin's main interface.
+- : New file for user profile and password settings.
+- : Modified with advanced role-based routing logic.
+- : Modified for role-based navigation.
+- : New file. A critical shell script for deploying the application on the user's server.
 
 **Areas that need refactoring**:
-- The backend logic in  is monolithic. It should be refactored into a standard FastAPI project structure, separating routers, models, and business logic (services/crud) into different files for better maintainability.
+- **Critical:** The frontend component at  is over 1500 lines long. It is extremely fragile and difficult to maintain. It should be broken down into smaller, more manageable components for each piece of functionality (e.g., , , ).
+- **High:** The backend in  remains a large monolith. It should be broken down into separate files for routers, models, and services to improve maintainability, especially with the addition of extensive admin logic.
 
 **key api endpoints**
-- 
-- , , ,  (Full CRUD)
--  (GET balance, POST transactions)
--  (CRUD)
--  (CRUD),  (POST)
--  (GET)
--  (GET)
+- , , , , , 
+- , 
 
 **Critical Info for New Agent**
-- The agent is in the middle of a significant refactor to add a SaaS subscription model. The backend user model and auth checks have been partially updated. This task must be completed.
-- All user communication MUST be in **Dutch**.
-- The entire backend is in a single file: .
-- The application currency is SRD (Surinamese Dollar).
+- The user's primary goal is to self-host the application on their CloudPanel server. The  script is the main tool for this. Any changes must be compatible with this script.
+- The user has limited technical expertise, so instructions and interactions must be kept simple and clear.
+- The immediate task is a simple rebranding from SuriRentals to Facturatie N.V.. This is a high-priority cosmetic change for the user.
+- The  frontend file is very brittle. Be extremely careful when making changes to it and strongly consider refactoring it if any significant modifications are requested in that area.
 
 **documents and test reports created in this job**
-  - /app/memory/PRD.md
-  - /app/test_reports/iteration_1.json
-  - /app/test_reports/iteration_2.json
-  - /app/test_reports/iteration_3.json
+  - /app/memory/PRD.md (updated)
+  - /app/test_reports/iteration_4.json
+  - /app/install.sh (new)
+  - /app/INSTALLATIE.md (new)
 
-**Last 10 User Messages and any pending HUMAN messages** 
- 1.  **Request (In Progress):** ik wil niet dat dit gratis is er moet een saas account hebben zoals superadmin en dat een abonoment laten maken voor klanten die kunnen registeren en gebruiken 3500 srd per maand zo een pakket (I don't want this to be free, there should be a SaaS account like superadmin and create a subscription for customers who can register and use it for 3500 SRD per month).
- 2.  **Request (Completed):** kun je ook een functie zetten bij de kasgeld srd naar euro omrekenen met de dag koers van suriname zeg maar een knop bij zetten zo dat je kan zien hoveel inkomsten ook in euro te zien is kunt u nog een functie erbij willen zetten werknemers beheren en loon betalingen uitvoeren aan de werknemers geld word afgetrokken van de kasgeld (Can you also add a function to convert SRD to Euro in the cash fund... and another function to manage employees and execute salary payments... money is deducted from the cash fund).
- 3.  **Action (Handled):** User asked to run the deployment agent.
- 4.  **Action (Handled):** User asked to run the deployment agent again.
- 5.  **Question (Answered):** hoe kan deze app downloaden en op mijn server installeren (How can I download this app and install it on my server?).
- 6.  **Summary (Acknowledged):** Agent confirmed successful implementation of automatic Kasgeld funding.
- 7.  **Request (Completed):** kasgeld staat 0 SRD maar kasgeld moet automatis gevuld worden als huurders betalen (The cash fund is 0 SRD, but it should be automatically filled when tenants pay).
- 8.  **Summary (Acknowledged):** Agent finished implementing the Kasgeld and Onderhoud (Maintenance) features.
- 9.  **Action (Handled):** User called deployment agent.
- 10. **Request (Completed):** ik wil ook een functie bij willen voegen als er iets stuk gaat binnen de appartementen... (I also want to add a function for when something in the apartments breaks...).
+**Last 10 User Messages and any pending HUMAN messages**
+1.  **Request (Current):** SuriRentals logo veranderen naar Facturatie N.V. (Change SuriRentals logo to Facturatie N.V.). - **Status: Pending**
+2.  **Confirmation:** User confirmed the first registered user becomes superadmin. - **Status: Done**
+3.  **Bug Report:** het werkt alleen ik zie geen superadmin account die de saas beheerd (it works but I don't see a superadmin account that manages the saas). - **Status: Resolved**
+4.  **Error Report:** Unknown command: "error"
+
+To see a list of supported npm commands, run:
+  npm help in the wrong directory. - **Status: Resolved**
+5.  **Error Report:** . - **Status: Resolved**
+6.  **Error Report:**  command failed. - **Status: Resolved**
+7.  **Error Report:** . - **Status: Resolved**
+8.  **Confirmation:** User confirmed they will run the provided  and  commands. - **Status: Done**
+9.  **Bug Report:** . - **Status: Resolved**
+10. **Bug Report:** . - **Status: Resolved**
 
 **Project Health Check:**
-- Broken: The authentication and authorization flow is partially implemented for the SaaS model and might not function correctly until the feature is complete.
-- Mocked: None.
+- **Broken:** None. The application is functional.
+- **Mocked:** None.
+- **Fragile:**  is extremely large and prone to breaking.  is a large monolith.
 
 **3rd Party Integrations**
-- **Exchange Rate API:**  for live SRD to EUR conversion. No API key is required.
+- **Exchange Rate API:**  (no key required).
+- **ReportLab:** Python library for PDF generation (installed via pip).
 
 **Testing status**
   - Testing agent used after significant changes: YES
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
-  - Known regressions: []
+  - Known regressions: None
 
 **Credentials to test flow:**
-New users can be created through the registration page. No fixed credentials are required.
+- **Superadmin:** The first user to register on a fresh deployment becomes the superadmin. Alternatively, registering with the email  will grant superadmin rights. A common test credential used was  / .
+- **Customer:** Any subsequent user registration will create a customer account with a 3-day trial.
 
 **What agent forgot to execute**
-- **PDF Receipt Generation:** The original problem statement mentioned kwitantie maken (generate receipts). While payment tracking is implemented, the functionality to generate and download a PDF receipt for a payment was never built. This is a missing piece of the initial request.</analysis>
+- The agent has not yet started the final user request to rebrand the application to Facturatie N.V..</analysis>
