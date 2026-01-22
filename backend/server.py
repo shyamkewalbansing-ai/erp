@@ -1100,10 +1100,10 @@ async def get_kasgeld(current_user: dict = Depends(get_current_user)):
     ).to_list(1000)
     
     # Batch fetch tenant and apartment names for payments
-    tenant_ids = list(set(p["tenant_id"] for p in payments))
-    apt_ids = list(set(p["apartment_id"] for p in payments))
-    tenants = await db.tenants.find({"id": {"$in": tenant_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
-    apts = await db.apartments.find({"id": {"$in": apt_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    tenant_ids = list(set(p["tenant_id"] for p in payments)) if payments else []
+    apt_ids = list(set(p["apartment_id"] for p in payments)) if payments else []
+    tenants = await db.tenants.find({"id": {"$in": tenant_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000) if tenant_ids else []
+    apts = await db.apartments.find({"id": {"$in": apt_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000) if apt_ids else []
     tenant_map = {t["id"]: t["name"] for t in tenants}
     apt_map = {a["id"]: a["name"] for a in apts}
     
@@ -1121,8 +1121,20 @@ async def get_kasgeld(current_user: dict = Depends(get_current_user)):
     ).to_list(1000)
     total_maintenance_costs = sum(m["cost"] for m in maintenance_records)
     
-    # Total balance = deposits + payments - withdrawals - maintenance costs
-    total_balance = total_deposits + total_payments - total_withdrawals - total_maintenance_costs
+    # Get total salary payments
+    salary_payments = await db.salaries.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(1000)
+    total_salary_payments = sum(s["amount"] for s in salary_payments)
+    
+    # Batch fetch employee names for salary payments
+    employee_ids = list(set(s["employee_id"] for s in salary_payments)) if salary_payments else []
+    employees = await db.employees.find({"id": {"$in": employee_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000) if employee_ids else []
+    employee_map = {e["id"]: e["name"] for e in employees}
+    
+    # Total balance = deposits + payments - withdrawals - maintenance costs - salaries
+    total_balance = total_deposits + total_payments - total_withdrawals - total_maintenance_costs - total_salary_payments
     
     # Combine all transactions for display
     all_transactions = []
@@ -1151,6 +1163,21 @@ async def get_kasgeld(current_user: dict = Depends(get_current_user)):
             source="payment"
         ))
     
+    # Add salary payments as transactions (negative)
+    for s in salary_payments:
+        employee_name = employee_map.get(s["employee_id"], "Onbekend")
+        
+        all_transactions.append(KasgeldResponse(
+            id=s["id"],
+            amount=s["amount"],
+            transaction_type="salary",
+            description=f"Salaris {employee_name} - {s['period_month']}/{s['period_year']}",
+            transaction_date=s["payment_date"],
+            created_at=s["created_at"],
+            user_id=s["user_id"],
+            source="salary"
+        ))
+    
     # Sort all transactions by date (newest first)
     all_transactions.sort(key=lambda x: x.transaction_date, reverse=True)
     
@@ -1160,6 +1187,7 @@ async def get_kasgeld(current_user: dict = Depends(get_current_user)):
         total_payments=total_payments,
         total_withdrawals=total_withdrawals,
         total_maintenance_costs=total_maintenance_costs,
+        total_salary_payments=total_salary_payments,
         transactions=all_transactions
     )
 
