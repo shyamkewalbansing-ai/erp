@@ -77,6 +77,7 @@ function App() {
             <Route path="deposits" element={<Deposits />} />
             <Route path="kasgeld" element={<Kasgeld />} />
             <Route path="onderhoud" element={<Onderhoud />} />
+            <Route path="werknemers" element={<Werknemers />} />
           </Route>
           
           {/* Catch all */}
