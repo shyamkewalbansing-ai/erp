@@ -1644,6 +1644,287 @@ async def get_exchange_rate():
         source="fallback"
     )
 
+# ==================== ADMIN/SUPERADMIN ROUTES ====================
+
+@api_router.get("/admin/dashboard", response_model=AdminDashboardStats)
+async def get_admin_dashboard(current_user: dict = Depends(get_superadmin)):
+    """Get admin dashboard statistics - superadmin only"""
+    
+    # Get all customers (excluding superadmin)
+    all_users = await db.users.find(
+        {"role": "customer"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    total_customers = len(all_users)
+    active_subscriptions = 0
+    expired_subscriptions = 0
+    
+    for user in all_users:
+        status, _, _ = get_subscription_status(user)
+        if status in ("active", "trial"):
+            active_subscriptions += 1
+        elif status == "expired":
+            expired_subscriptions += 1
+    
+    # Get all subscription payments
+    all_subscriptions = await db.subscriptions.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    total_revenue = sum(s["amount"] for s in all_subscriptions)
+    
+    # Revenue this month
+    now = datetime.now(timezone.utc)
+    first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).isoformat()
+    
+    revenue_this_month = sum(
+        s["amount"] for s in all_subscriptions 
+        if s["created_at"] >= first_of_month
+    )
+    
+    # Recent subscriptions with user info
+    recent_subscriptions = []
+    for sub in all_subscriptions[:10]:
+        user = await db.users.find_one({"id": sub["user_id"]}, {"_id": 0, "name": 1, "email": 1})
+        recent_subscriptions.append(SubscriptionResponse(
+            **sub,
+            user_name=user["name"] if user else None,
+            user_email=user["email"] if user else None
+        ))
+    
+    return AdminDashboardStats(
+        total_customers=total_customers,
+        active_subscriptions=active_subscriptions,
+        expired_subscriptions=expired_subscriptions,
+        total_revenue=total_revenue,
+        revenue_this_month=revenue_this_month,
+        recent_subscriptions=recent_subscriptions
+    )
+
+@api_router.get("/admin/customers", response_model=List[CustomerResponse])
+async def get_all_customers(current_user: dict = Depends(get_superadmin)):
+    """Get all customers - superadmin only"""
+    
+    customers = await db.users.find(
+        {"role": "customer"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    result = []
+    for customer in customers:
+        # Get total paid from subscriptions
+        subscriptions = await db.subscriptions.find(
+            {"user_id": customer["id"]},
+            {"_id": 0, "amount": 1, "created_at": 1}
+        ).sort("created_at", -1).to_list(100)
+        
+        total_paid = sum(s["amount"] for s in subscriptions)
+        last_payment_date = subscriptions[0]["created_at"] if subscriptions else None
+        
+        status, end_date, _ = get_subscription_status(customer)
+        
+        result.append(CustomerResponse(
+            id=customer["id"],
+            email=customer["email"],
+            name=customer["name"],
+            company_name=customer.get("company_name"),
+            role=customer["role"],
+            subscription_status=status,
+            subscription_end_date=end_date,
+            created_at=customer["created_at"],
+            total_paid=total_paid,
+            last_payment_date=last_payment_date
+        ))
+    
+    return result
+
+@api_router.post("/admin/subscriptions", response_model=SubscriptionResponse)
+async def activate_subscription(sub_data: SubscriptionCreate, current_user: dict = Depends(get_superadmin)):
+    """Activate or extend a customer subscription - superadmin only"""
+    
+    # Find the customer
+    customer = await db.users.find_one({"id": sub_data.user_id, "role": "customer"}, {"_id": 0})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Klant niet gevonden")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Calculate new end date
+    current_end = customer.get("subscription_end_date")
+    if current_end:
+        try:
+            current_end_dt = datetime.fromisoformat(current_end.replace("Z", "+00:00"))
+            if current_end_dt > now:
+                # Extend from current end date
+                start_date = current_end_dt
+            else:
+                # Start from now
+                start_date = now
+        except:
+            start_date = now
+    else:
+        start_date = now
+    
+    end_date = start_date + timedelta(days=SUBSCRIPTION_DAYS * sub_data.months)
+    
+    # Create subscription record
+    sub_id = str(uuid.uuid4())
+    sub_doc = {
+        "id": sub_id,
+        "user_id": sub_data.user_id,
+        "amount": SUBSCRIPTION_PRICE_SRD * sub_data.months,
+        "months": sub_data.months,
+        "start_date": start_date.isoformat(),
+        "end_date": end_date.isoformat(),
+        "payment_method": sub_data.payment_method,
+        "payment_reference": sub_data.payment_reference,
+        "notes": sub_data.notes,
+        "status": "active",
+        "created_at": now.isoformat()
+    }
+    
+    await db.subscriptions.insert_one(sub_doc)
+    
+    # Update user's subscription end date
+    await db.users.update_one(
+        {"id": sub_data.user_id},
+        {"$set": {
+            "subscription_end_date": end_date.isoformat(),
+            "is_trial": False
+        }}
+    )
+    
+    return SubscriptionResponse(
+        **sub_doc,
+        user_name=customer["name"],
+        user_email=customer["email"]
+    )
+
+@api_router.get("/admin/subscriptions", response_model=List[SubscriptionResponse])
+async def get_all_subscriptions(current_user: dict = Depends(get_superadmin)):
+    """Get all subscription payments - superadmin only"""
+    
+    subscriptions = await db.subscriptions.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    # Batch fetch user names
+    user_ids = list(set(s["user_id"] for s in subscriptions))
+    users = await db.users.find({"id": {"$in": user_ids}}, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(1000)
+    user_map = {u["id"]: {"name": u["name"], "email": u["email"]} for u in users}
+    
+    result = []
+    for sub in subscriptions:
+        user_info = user_map.get(sub["user_id"], {})
+        result.append(SubscriptionResponse(
+            **sub,
+            user_name=user_info.get("name"),
+            user_email=user_info.get("email")
+        ))
+    
+    return result
+
+@api_router.delete("/admin/customers/{user_id}")
+async def deactivate_customer(user_id: str, current_user: dict = Depends(get_superadmin)):
+    """Deactivate a customer's subscription - superadmin only"""
+    
+    result = await db.users.update_one(
+        {"id": user_id, "role": "customer"},
+        {"$set": {
+            "subscription_end_date": datetime.now(timezone.utc).isoformat(),
+            "is_trial": False
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Klant niet gevonden")
+    
+    return {"message": "Abonnement gedeactiveerd"}
+
+# ==================== USER SUBSCRIPTION ROUTES ====================
+
+@api_router.get("/subscription/status")
+async def get_subscription_status_api(current_user: dict = Depends(get_current_user)):
+    """Get current user's subscription status"""
+    
+    status, end_date, is_trial = get_subscription_status(current_user)
+    
+    # Calculate days remaining
+    days_remaining = 0
+    if end_date:
+        try:
+            end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+            days_remaining = max(0, (end_dt - datetime.now(timezone.utc)).days)
+        except:
+            pass
+    
+    # Get subscription history
+    history = []
+    if current_user.get("role") != "superadmin":
+        subs = await db.subscriptions.find(
+            {"user_id": current_user["id"]},
+            {"_id": 0}
+        ).sort("created_at", -1).to_list(100)
+        history = subs
+    
+    return {
+        "status": status,
+        "is_trial": is_trial,
+        "end_date": end_date,
+        "days_remaining": days_remaining,
+        "price_per_month": SUBSCRIPTION_PRICE_SRD,
+        "history": history
+    }
+
+@api_router.post("/subscription/request")
+async def request_subscription(current_user: dict = Depends(get_current_user)):
+    """Request subscription activation (for bank transfer payment)"""
+    
+    if current_user.get("role") == "superadmin":
+        raise HTTPException(status_code=400, detail="Superadmin heeft geen abonnement nodig")
+    
+    # Create a pending subscription request
+    request_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    request_doc = {
+        "id": request_id,
+        "user_id": current_user["id"],
+        "user_name": current_user["name"],
+        "user_email": current_user["email"],
+        "amount": SUBSCRIPTION_PRICE_SRD,
+        "status": "pending",
+        "created_at": now.isoformat()
+    }
+    
+    await db.subscription_requests.insert_one(request_doc)
+    
+    return {
+        "message": "Abonnementsverzoek verzonden. Maak de betaling over naar het opgegeven rekeningnummer en neem contact op met de beheerder.",
+        "request_id": request_id,
+        "amount": SUBSCRIPTION_PRICE_SRD,
+        "bank_info": {
+            "bank": "De Surinaamsche Bank",
+            "rekening": "123456789",
+            "naam": "SuriRentals BV",
+            "omschrijving": f"Abonnement {current_user['email']}"
+        }
+    }
+
+@api_router.get("/admin/subscription-requests")
+async def get_subscription_requests(current_user: dict = Depends(get_superadmin)):
+    """Get pending subscription requests - superadmin only"""
+    
+    requests = await db.subscription_requests.find(
+        {"status": "pending"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return requests
+
 # Include the router in the main app
 app.include_router(api_router)
 
