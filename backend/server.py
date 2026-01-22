@@ -1020,15 +1020,32 @@ async def create_kasgeld_transaction(kasgeld_data: KasgeldCreate, current_user: 
 
 @api_router.get("/kasgeld", response_model=KasgeldBalanceResponse)
 async def get_kasgeld(current_user: dict = Depends(get_current_user)):
-    # Get all kasgeld transactions
-    transactions = await db.kasgeld.find(
+    # Get all manual kasgeld transactions
+    manual_transactions = await db.kasgeld.find(
         {"user_id": current_user["id"]},
         {"_id": 0}
-    ).sort("transaction_date", -1).to_list(1000)
+    ).to_list(1000)
     
-    # Calculate totals
-    total_deposits = sum(t["amount"] for t in transactions if t["transaction_type"] == "deposit")
-    total_withdrawals = sum(t["amount"] for t in transactions if t["transaction_type"] == "withdrawal")
+    # Get all payments (huurbetalingen) - these count as income to kasgeld
+    payments = await db.payments.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Batch fetch tenant and apartment names for payments
+    tenant_ids = list(set(p["tenant_id"] for p in payments))
+    apt_ids = list(set(p["apartment_id"] for p in payments))
+    tenants = await db.tenants.find({"id": {"$in": tenant_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    apts = await db.apartments.find({"id": {"$in": apt_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    tenant_map = {t["id"]: t["name"] for t in tenants}
+    apt_map = {a["id"]: a["name"] for a in apts}
+    
+    # Calculate totals from manual transactions
+    total_deposits = sum(t["amount"] for t in manual_transactions if t["transaction_type"] == "deposit")
+    total_withdrawals = sum(t["amount"] for t in manual_transactions if t["transaction_type"] == "withdrawal")
+    
+    # Calculate total from payments (all payments go to kasgeld)
+    total_payments = sum(p["amount"] for p in payments)
     
     # Get total maintenance costs
     maintenance_records = await db.maintenance.find(
@@ -1037,15 +1054,46 @@ async def get_kasgeld(current_user: dict = Depends(get_current_user)):
     ).to_list(1000)
     total_maintenance_costs = sum(m["cost"] for m in maintenance_records)
     
-    # Total balance = deposits - withdrawals - maintenance costs
-    total_balance = total_deposits - total_withdrawals - total_maintenance_costs
+    # Total balance = deposits + payments - withdrawals - maintenance costs
+    total_balance = total_deposits + total_payments - total_withdrawals - total_maintenance_costs
+    
+    # Combine all transactions for display
+    all_transactions = []
+    
+    # Add manual transactions
+    for t in manual_transactions:
+        all_transactions.append(KasgeldResponse(
+            **t,
+            source="manual"
+        ))
+    
+    # Add payments as transactions
+    for p in payments:
+        tenant_name = tenant_map.get(p["tenant_id"], "Onbekend")
+        apt_name = apt_map.get(p["apartment_id"], "")
+        payment_type_label = "Huur" if p["payment_type"] == "rent" else "Borg" if p["payment_type"] == "deposit" else "Overig"
+        
+        all_transactions.append(KasgeldResponse(
+            id=p["id"],
+            amount=p["amount"],
+            transaction_type="payment",
+            description=f"{payment_type_label} van {tenant_name} - {apt_name}",
+            transaction_date=p["payment_date"],
+            created_at=p["created_at"],
+            user_id=p["user_id"],
+            source="payment"
+        ))
+    
+    # Sort all transactions by date (newest first)
+    all_transactions.sort(key=lambda x: x.transaction_date, reverse=True)
     
     return KasgeldBalanceResponse(
         total_balance=total_balance,
         total_deposits=total_deposits,
+        total_payments=total_payments,
         total_withdrawals=total_withdrawals,
         total_maintenance_costs=total_maintenance_costs,
-        transactions=[KasgeldResponse(**t) for t in transactions]
+        transactions=all_transactions
     )
 
 @api_router.delete("/kasgeld/{kasgeld_id}")
