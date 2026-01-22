@@ -214,15 +214,17 @@ class KasgeldCreate(BaseModel):
 class KasgeldResponse(BaseModel):
     id: str
     amount: float
-    transaction_type: str
+    transaction_type: str  # 'deposit', 'withdrawal', 'payment' (huurbetalingen)
     description: Optional[str] = None
     transaction_date: str
     created_at: str
     user_id: str
+    source: Optional[str] = None  # 'manual' or 'payment'
 
 class KasgeldBalanceResponse(BaseModel):
     total_balance: float
     total_deposits: float
+    total_payments: float  # Inkomsten uit huurbetalingen
     total_withdrawals: float
     total_maintenance_costs: float
     transactions: List[KasgeldResponse]
