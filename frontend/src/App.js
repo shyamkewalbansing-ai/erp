@@ -124,17 +124,17 @@ function App() {
           <Route path="/" element={
             <ProtectedRoute><Layout /></ProtectedRoute>
           }>
-            <Route index element={<Navigate to="/dashboard" replace />} />
+            <Route index element={<SmartRedirect />} />
             
-            {/* Subscription page is always accessible for logged-in users */}
-            <Route path="abonnement" element={<Abonnement />} />
+            {/* Subscription page is always accessible for logged-in customers */}
+            <Route path="abonnement" element={<CustomerOnlyRoute><Abonnement /></CustomerOnlyRoute>} />
             
             {/* Admin page only for superadmin */}
             <Route path="admin" element={
               <AdminRoute><Admin /></AdminRoute>
             } />
             
-            {/* These routes require active subscription */}
+            {/* These routes require active subscription (customers only) */}
             <Route path="dashboard" element={
               <SubscriptionRoute><Dashboard /></SubscriptionRoute>
             } />
