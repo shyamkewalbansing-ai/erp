@@ -39,14 +39,6 @@ export default function Login() {
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        {/* Logo on photo */}
-        <div className="absolute top-8 left-8 z-10">
-          <img 
-            src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-            alt="Facturatie N.V." 
-            className="h-12 w-auto brightness-0 invert"
-          />
-        </div>
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
           <h2 className="text-4xl font-bold mb-4">Beheer uw vastgoed met gemak</h2>
           <p className="text-lg text-white/80">
