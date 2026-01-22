@@ -987,8 +987,21 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
     all_payments = await db.payments.find({"user_id": user_id}, {"_id": 0, "amount": 1}).to_list(1000)
     total_all_payments = sum(p["amount"] for p in all_payments)
     
-    # Total kasgeld = deposits + all payments - withdrawals - maintenance
-    total_kasgeld = kasgeld_deposits + total_all_payments - kasgeld_withdrawals - total_maintenance
+    # Get salary payments for kasgeld calculation
+    all_salaries = await db.salaries.find({"user_id": user_id}, {"_id": 0, "amount": 1, "period_month": 1, "period_year": 1}).to_list(1000)
+    total_all_salaries = sum(s["amount"] for s in all_salaries)
+    
+    # Total kasgeld = deposits + all payments - withdrawals - maintenance - salaries
+    total_kasgeld = kasgeld_deposits + total_all_payments - kasgeld_withdrawals - total_maintenance - total_all_salaries
+    
+    # Get employee stats
+    total_employees = await db.employees.count_documents({"user_id": user_id, "status": "active"})
+    
+    # Salary this month
+    total_salary_this_month = sum(
+        s["amount"] for s in all_salaries 
+        if s.get("period_month") == now.month and s.get("period_year") == now.year
+    )
     
     return DashboardStats(
         total_apartments=total_apartments,
@@ -999,6 +1012,8 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
         total_outstanding=total_outstanding,
         total_deposits_held=total_deposits,
         total_kasgeld=total_kasgeld,
+        total_employees=total_employees,
+        total_salary_this_month=total_salary_this_month,
         recent_payments=recent_payments,
         reminders=reminders
     )
