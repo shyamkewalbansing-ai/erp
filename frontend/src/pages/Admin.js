@@ -278,6 +278,7 @@ server {
     gzip on;
     gzip_types text/plain text/css application/json application/javascript;
 }`;
+  };
 
   const handleActivateSubscription = async () => {
     if (!selectedCustomer) return;
