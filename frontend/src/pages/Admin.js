@@ -132,14 +132,108 @@ export default function Admin() {
       setRequests(requestsRes.data);
       setSubscriptions(subscriptionsRes.data);
       setDomains(domainsRes.data);
-      setCustomers(customersRes.data);
-      setRequests(requestsRes.data);
-      setSubscriptions(subscriptionsRes.data);
     } catch (error) {
       toast.error('Fout bij het laden van gegevens');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Password reset handler
+  const handleResetPassword = async () => {
+    if (!selectedCustomer || !newPassword) return;
+    
+    if (newPassword.length < 6) {
+      toast.error('Wachtwoord moet minimaal 6 tekens zijn');
+      return;
+    }
+    
+    setActivating(true);
+    try {
+      await adminResetPassword(selectedCustomer.id, newPassword);
+      toast.success(`Wachtwoord gereset voor ${selectedCustomer.name}`);
+      setResetPasswordDialogOpen(false);
+      setSelectedCustomer(null);
+      setNewPassword('');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij resetten');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  // Edit customer handler
+  const handleEditCustomer = async () => {
+    if (!selectedCustomer) return;
+    
+    setActivating(true);
+    try {
+      await adminUpdateCustomer(selectedCustomer.id, editForm);
+      toast.success(`Klant ${editForm.name} bijgewerkt`);
+      setEditCustomerDialogOpen(false);
+      setSelectedCustomer(null);
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij bijwerken');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  // Domain handlers
+  const handleAddDomain = async () => {
+    if (!newDomain.domain || !newDomain.user_id) {
+      toast.error('Vul alle velden in');
+      return;
+    }
+    
+    setActivating(true);
+    try {
+      await createCustomDomain(newDomain);
+      toast.success('Domein toegevoegd');
+      setAddDomainDialogOpen(false);
+      setNewDomain({ domain: '', user_id: '' });
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij toevoegen');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleVerifyDomain = async (domainId) => {
+    setActivating(true);
+    try {
+      await verifyCustomDomain(domainId);
+      toast.success('Domein geverifieerd');
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verifiëren');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleDeleteDomain = async () => {
+    if (!selectedDomain) return;
+    
+    setActivating(true);
+    try {
+      await deleteCustomDomain(selectedDomain.id);
+      toast.success('Domein verwijderd');
+      setDeleteDomainDialogOpen(false);
+      setSelectedDomain(null);
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Gekopieerd naar klembord');
   };
 
   const handleActivateSubscription = async () => {
