@@ -63,6 +63,7 @@ async def health_check():
 # Subscription Constants
 SUBSCRIPTION_PRICE_SRD = 3500.0
 SUBSCRIPTION_DAYS = 30
+TRIAL_DAYS = 3
 SUPER_ADMIN_EMAIL = "admin@surirentals.sr"  # Default super admin
 
 # User Models
@@ -405,22 +406,26 @@ def create_token(user_id: str, email: str) -> str:
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 def get_subscription_status(user: dict) -> tuple:
-    """Check subscription status and return (status, end_date)"""
+    """Check subscription status and return (status, end_date, is_trial)"""
     if user.get("role") == "superadmin":
-        return "active", None
+        return "active", None, False
     
     end_date = user.get("subscription_end_date")
+    is_trial = user.get("is_trial", False)
+    
     if not end_date:
-        return "none", None
+        return "none", None, False
     
     try:
         end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
         if end_dt > datetime.now(timezone.utc):
-            return "active", end_date
+            if is_trial:
+                return "trial", end_date, True
+            return "active", end_date, False
         else:
-            return "expired", end_date
+            return "expired", end_date, is_trial
     except:
-        return "none", None
+        return "none", None, False
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
@@ -433,9 +438,10 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             raise HTTPException(status_code=401, detail="Gebruiker niet gevonden")
         
         # Update subscription status
-        status, end_date = get_subscription_status(user)
+        status, end_date, is_trial = get_subscription_status(user)
         user["subscription_status"] = status
         user["subscription_end_date"] = end_date
+        user["is_trial"] = is_trial
         
         return user
     except jwt.ExpiredSignatureError:
@@ -444,18 +450,19 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(status_code=401, detail="Ongeldige token")
 
 async def get_current_active_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Get current user and verify they have an active subscription"""
+    """Get current user and verify they have an active subscription or trial"""
     user = await get_current_user(credentials)
     
     # Superadmin always has access
     if user.get("role") == "superadmin":
         return user
     
-    # Check subscription
-    if user.get("subscription_status") != "active":
+    # Check subscription - allow both active and trial
+    status = user.get("subscription_status")
+    if status not in ("active", "trial"):
         raise HTTPException(
             status_code=403, 
-            detail="Uw abonnement is verlopen of niet actief. Neem contact op met de beheerder."
+            detail="Uw abonnement is verlopen. Ga naar Abonnement om uw account te activeren."
         )
     
     return user
