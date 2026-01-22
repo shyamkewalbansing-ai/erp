@@ -566,9 +566,17 @@ def main():
         ("Get Payments", tester.test_get_payments),
         ("Create Deposit", tester.test_create_deposit),
         ("Get Deposits", tester.test_get_deposits),
+        ("Create Kasgeld Deposit", tester.test_create_kasgeld_deposit),
+        ("Create Kasgeld Withdrawal", tester.test_create_kasgeld_withdrawal),
+        ("Get Kasgeld Balance", tester.test_get_kasgeld),
+        ("Create Maintenance", tester.test_create_maintenance),
+        ("Get Maintenance", tester.test_get_maintenance),
+        ("Update Maintenance", tester.test_update_maintenance),
         ("Dashboard Stats", tester.test_get_dashboard),
         ("Download Receipt", tester.test_download_receipt),
         ("Tenant Balance", tester.test_tenant_balance),
+        ("Delete Kasgeld Transaction", tester.test_delete_kasgeld_transaction),
+        ("Delete Maintenance", tester.test_delete_maintenance),
     ]
     
     failed_tests = []
