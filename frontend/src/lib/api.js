@@ -30,11 +30,10 @@ api.interceptors.response.use(
 
 // Format currency
 export const formatCurrency = (amount) => {
-  return new Intl.NumberFormat('nl-SR', {
-    style: 'currency',
-    currency: 'SRD',
+  return `SRD ${new Intl.NumberFormat('nl-NL', {
     minimumFractionDigits: 2,
-  }).format(amount);
+    maximumFractionDigits: 2,
+  }).format(amount)}`;
 };
 
 // Dashboard
