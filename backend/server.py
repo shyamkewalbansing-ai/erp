@@ -2248,91 +2248,256 @@ async def generate_subscription_receipt_pdf(subscription_id: str, current_user: 
     # Get customer data
     customer = await db.users.find_one({"id": subscription["user_id"]}, {"_id": 0})
     
+    # Colors
+    PRIMARY_GREEN = colors.HexColor('#0caf60')
+    DARK_TEXT = colors.HexColor('#1a1a1a')
+    GRAY_TEXT = colors.HexColor('#666666')
+    LIGHT_GRAY = colors.HexColor('#f5f5f5')
+    WHITE = colors.white
+    
     # Create PDF
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=A4, 
+        rightMargin=1.5*cm, 
+        leftMargin=1.5*cm, 
+        topMargin=1.5*cm, 
+        bottomMargin=1.5*cm
+    )
     
     styles = getSampleStyleSheet()
+    
     title_style = ParagraphStyle(
-        'CustomTitle',
+        'InvoiceTitle',
         parent=styles['Heading1'],
-        fontSize=24,
-        spaceAfter=30,
-        textColor=colors.HexColor('#0caf60')
+        fontSize=28,
+        textColor=DARK_TEXT,
+        fontName='Helvetica-Bold',
+        spaceAfter=0,
+        alignment=TA_RIGHT
+    )
+    
+    company_style = ParagraphStyle(
+        'CompanyName',
+        parent=styles['Normal'],
+        fontSize=18,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        spaceAfter=5
+    )
+    
+    section_header = ParagraphStyle(
+        'SectionHeader',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        spaceAfter=8,
+        spaceBefore=15
+    )
+    
+    normal_text = ParagraphStyle(
+        'NormalText',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=DARK_TEXT,
+        fontName='Helvetica',
+        leading=14
+    )
+    
+    small_text = ParagraphStyle(
+        'SmallText',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=GRAY_TEXT,
+        fontName='Helvetica',
+        leading=12
+    )
+    
+    bold_text = ParagraphStyle(
+        'BoldText',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=DARK_TEXT,
+        fontName='Helvetica-Bold'
     )
     
     elements = []
     
-    # Header
-    elements.append(Paragraph("ABONNEMENT KWITANTIE", title_style))
-    elements.append(Paragraph(f"<b>Facturatie N.V.</b> - Verhuurbeheersysteem", styles['Normal']))
+    # === HEADER ===
+    header_data = [
+        [
+            [Paragraph("Facturatie N.V.", company_style), Paragraph("Verhuurbeheersysteem", small_text)],
+            [Paragraph("ABONNEMENT<br/>KWITANTIE", title_style)]
+        ]
+    ]
+    header_table = Table(header_data, colWidths=[10*cm, 7*cm])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+    ]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 15))
+    elements.append(HRFlowable(width="100%", thickness=3, color=PRIMARY_GREEN, spaceBefore=5, spaceAfter=15))
+    
+    # === RECEIPT DETAILS ===
+    receipt_num = subscription["id"][:8].upper()
+    issue_date = subscription["created_at"][:10]
+    
+    details_data = [
+        [
+            Paragraph("<b>Kwitantie Nr:</b>", normal_text),
+            Paragraph(receipt_num, bold_text),
+            Paragraph("<b>Datum:</b>", normal_text),
+            Paragraph(issue_date, bold_text)
+        ]
+    ]
+    details_table = Table(details_data, colWidths=[3*cm, 5*cm, 3*cm, 6*cm])
+    details_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    elements.append(details_table)
     elements.append(Spacer(1, 20))
     
-    # Payment method translation
+    # === CUSTOMER INFO ===
+    customer_name = customer["name"] if customer else "Onbekend"
+    customer_email = customer.get("email", "-") if customer else "-"
+    customer_company = customer.get("company_name", "-") if customer else "-"
+    
+    info_left = [
+        [Paragraph("KLANT GEGEVENS", section_header)],
+        [Paragraph(f"<b>{customer_name}</b>", normal_text)],
+        [Paragraph(f"Email: {customer_email}", small_text)],
+        [Paragraph(f"Bedrijf: {customer_company}", small_text)],
+    ]
+    
+    info_right = [
+        [Paragraph("ABONNEMENT PERIODE", section_header)],
+        [Paragraph(f"<b>{subscription.get('months', 1)} maand(en)</b>", normal_text)],
+        [Paragraph(f"Start: {subscription['start_date'][:10]}", small_text)],
+        [Paragraph(f"Einde: {subscription['end_date'][:10]}", small_text)],
+    ]
+    
+    info_table = Table(
+        [[Table(info_left), Table(info_right)]],
+        colWidths=[9*cm, 8*cm]
+    )
+    info_table.setStyle(TableStyle([('VALIGN', (0, 0), (-1, -1), 'TOP')]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 25))
+    
+    # === ITEMS TABLE ===
     payment_method_labels = {
         "bank_transfer": "Bankoverschrijving",
         "cash": "Contant",
         "other": "Anders"
     }
+    payment_method = payment_method_labels.get(subscription.get("payment_method", ""), subscription.get("payment_method", "-"))
     
-    # Receipt info
-    receipt_data = [
-        ["Kwitantie Nr:", subscription["id"][:8].upper()],
-        ["Datum:", subscription["created_at"][:10]],
-        ["", ""],
-        ["KLANT GEGEVENS", ""],
-        ["Naam:", customer["name"] if customer else "Onbekend"],
-        ["E-mail:", customer["email"] if customer else ""],
-        ["Bedrijf:", customer.get("company_name") or "-"],
-        ["", ""],
-        ["ABONNEMENT DETAILS", ""],
-        ["Periode:", f"{subscription['months']} maand(en)"],
-        ["Startdatum:", subscription["start_date"][:10]],
-        ["Einddatum:", subscription["end_date"][:10]],
-        ["", ""],
-        ["BETALING", ""],
-        ["Methode:", payment_method_labels.get(subscription["payment_method"], subscription["payment_method"])],
-        ["Referentie:", subscription.get("payment_reference") or "-"],
-        ["Bedrag:", format_currency(subscription["amount"])],
-        ["", ""],
-        ["Opmerkingen:", subscription.get("notes") or "-"],
+    table_header = ['NR', 'OMSCHRIJVING', 'PERIODE', 'METHODE', 'BEDRAG']
+    table_data = [
+        table_header,
+        ['1', f"Abonnement Facturatie N.V.", f"{subscription.get('months', 1)} maand(en)", payment_method, format_currency(subscription["amount"])]
     ]
     
-    table = Table(receipt_data, colWidths=[5*cm, 10*cm])
-    table.setStyle(TableStyle([
-        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('FONTNAME', (0, 3), (0, 3), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 8), (0, 8), 'Helvetica-Bold'),
-        ('FONTNAME', (0, 13), (0, 13), 'Helvetica-Bold'),
-        ('TEXTCOLOR', (0, 3), (0, 3), colors.HexColor('#0caf60')),
-        ('TEXTCOLOR', (0, 8), (0, 8), colors.HexColor('#0caf60')),
-        ('TEXTCOLOR', (0, 13), (0, 13), colors.HexColor('#0caf60')),
-        ('FONTNAME', (1, 16), (1, 16), 'Helvetica-Bold'),
-        ('FONTSIZE', (1, 16), (1, 16), 14),
+    items_table = Table(table_data, colWidths=[1.5*cm, 6*cm, 3*cm, 3.5*cm, 3*cm])
+    items_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), DARK_TEXT),
+        ('TEXTCOLOR', (0, 0), (-1, 0), WHITE),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('TOPPADDING', (0, 0), (-1, 0), 12),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 10),
+        ('BACKGROUND', (0, 1), (-1, 1), LIGHT_GRAY),
+        ('ALIGN', (0, 1), (0, -1), 'CENTER'),
+        ('ALIGN', (-1, 1), (-1, -1), 'RIGHT'),
+        ('LINEBELOW', (0, 0), (-1, 0), 1, PRIMARY_GREEN),
+        ('LINEBELOW', (0, -1), (-1, -1), 1, colors.HexColor('#e0e0e0')),
+    ]))
+    elements.append(items_table)
+    elements.append(Spacer(1, 20))
+    
+    # === TOTALS ===
+    totals_data = [
+        ['Subtotaal:', format_currency(subscription["amount"])],
+        ['BTW (0%):', format_currency(0)],
+        ['', ''],
+        ['TOTAAL:', format_currency(subscription["amount"])],
+    ]
+    
+    totals_table = Table(totals_data, colWidths=[10*cm, 4*cm, 3*cm])
+    totals_table.setStyle(TableStyle([
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 2), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, 2), 10),
+        ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 3), (-1, 3), 14),
+        ('TEXTCOLOR', (0, 3), (-1, 3), PRIMARY_GREEN),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 3), (-1, 3), 10),
+        ('LINEABOVE', (0, 3), (-1, 3), 2, PRIMARY_GREEN),
     ]))
     
-    elements.append(table)
-    elements.append(Spacer(1, 40))
+    totals_wrapper = Table([[totals_table]], colWidths=[17*cm])
+    totals_wrapper.setStyle(TableStyle([('ALIGN', (0, 0), (0, 0), 'RIGHT')]))
+    elements.append(totals_wrapper)
+    elements.append(Spacer(1, 20))
     
-    # Footer
-    elements.append(Paragraph("_" * 50, styles['Normal']))
-    elements.append(Paragraph("Facturatie N.V. Administratie", styles['Normal']))
-    elements.append(Spacer(1, 10))
-    elements.append(Paragraph("<i>Dit document dient als bewijs van betaling voor het Facturatie N.V. abonnement.</i>", styles['Normal']))
+    # === PAYMENT REFERENCE ===
+    if subscription.get("payment_reference"):
+        elements.append(Paragraph("Betaalreferentie", section_header))
+        elements.append(Paragraph(subscription["payment_reference"], normal_text))
+        elements.append(Spacer(1, 10))
+    
+    if subscription.get("notes"):
+        elements.append(Paragraph("Opmerkingen", section_header))
+        elements.append(Paragraph(subscription["notes"], small_text))
+        elements.append(Spacer(1, 10))
+    
+    # === FOOTER ===
+    elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#e0e0e0'), spaceBefore=20, spaceAfter=15))
+    
+    thank_you_style = ParagraphStyle(
+        'ThankYou',
+        parent=styles['Normal'],
+        fontSize=14,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        alignment=TA_CENTER,
+        spaceAfter=10
+    )
+    elements.append(Paragraph("Bedankt voor uw abonnement!", thank_you_style))
+    
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=GRAY_TEXT,
+        fontName='Helvetica',
+        alignment=TA_CENTER
+    )
+    elements.append(Paragraph("Dit document is gegenereerd door Facturatie N.V.", footer_style))
+    elements.append(Paragraph("Bewaar deze kwitantie als bewijs van betaling.", footer_style))
     
     doc.build(elements)
     buffer.seek(0)
     
-    customer_name = customer["name"].replace(" ", "_") if customer else "klant"
+    customer_name_safe = customer["name"].replace(" ", "_") if customer else "klant"
     
     return StreamingResponse(
         buffer,
         media_type="application/pdf",
         headers={
-            "Content-Disposition": f"attachment; filename=abonnement_kwitantie_{customer_name}_{subscription['id'][:8]}.pdf"
+            "Content-Disposition": f"attachment; filename=abonnement_kwitantie_{customer_name_safe}_{subscription['id'][:8]}.pdf"
         }
     )
 
