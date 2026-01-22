@@ -1,7 +1,8 @@
-# SuriRentals - Product Requirements Document
+# Facturatie N.V. - Product Requirements Document
 
 ## Original Problem Statement
 SaaS programma maken voor verhuur van appartementen in Suriname met valuta in SRD (Surinaamse Dollar).
+De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 
 ### Core Requirements
 - Beheren van huurders
@@ -28,9 +29,17 @@ SaaS programma maken voor verhuur van appartementen in Suriname met valuta in SR
 
 ## What's Been Implemented (January 2026)
 
-### SaaS Subscription System ✅ (NEW)
+### Rebranding ✅ (22 Jan 2026)
+- [x] Applicatie gerebrand van "SuriRentals" naar "Facturatie N.V."
+- [x] Nieuw logo (FACTURATE) geïmplementeerd op alle pagina's
+- [x] Logo zichtbaar op Login, Register en Dashboard/Sidebar
+- [x] Alle tekstuele verwijzingen bijgewerkt (frontend en backend)
+- [x] PDF kwitanties bijgewerkt met nieuwe naam
+- [x] Page title bijgewerkt naar "Facturatie N.V. | Verhuurbeheer"
+
+### SaaS Subscription System ✅
 - [x] 3-dagen gratis proefperiode bij registratie
-- [x] Eerste gebruiker of admin@surirentals.sr wordt automatisch superadmin
+- [x] Eerste gebruiker of admin@facturatie.sr wordt automatisch superadmin
 - [x] Super Admin Dashboard met klantstatistieken
 - [x] Klantenbeheer (lijst, zoeken, activeren, deactiveren)
 - [x] Abonnement activatie door admin (SRD 3.500/maand)
@@ -160,7 +169,7 @@ SaaS programma maken voor verhuur van appartementen in Suriname met valuta in SR
 - GET /api/exchange-rate
 
 ## Test Credentials
-- **Superadmin**: admin@surirentals.sr / admin123
+- **Superadmin**: admin@facturatie.sr / admin123
 - **Test Klant**: nieuw@test.com / test123
 
 ## SaaS Business Model
