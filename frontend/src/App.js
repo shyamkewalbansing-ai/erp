@@ -87,9 +87,9 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-// Public Route - redirect to dashboard if logged in
+// Public Route - redirect to appropriate page if logged in
 const PublicRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, loading, isSuperAdmin } = useAuth();
   
   if (loading) {
     return (
@@ -100,7 +100,8 @@ const PublicRoute = ({ children }) => {
   }
   
   if (user) {
-    return <Navigate to="/dashboard" replace />;
+    // Superadmin goes to admin page, customers go to dashboard
+    return <Navigate to={isSuperAdmin() ? "/admin" : "/dashboard"} replace />;
   }
   
   return children;
