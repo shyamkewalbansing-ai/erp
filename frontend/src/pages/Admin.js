@@ -593,7 +593,7 @@ server {
                     {filteredCustomers.map((customer) => {
                       const customerDomains = domains.filter(d => d.user_id === customer.id);
                       return (
-                      <tr key={customer.id} className="border-b hover:bg-accent/50">
+                        <tr key={customer.id} className="border-b hover:bg-accent/50">
                         <td className="py-3 px-4">
                           <div>
                             <p className="font-medium">{customer.name}</p>
