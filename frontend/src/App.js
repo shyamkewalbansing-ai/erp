@@ -107,6 +107,36 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
+// Smart redirect based on user role
+const SmartRedirect = () => {
+  const { isSuperAdmin } = useAuth();
+  return <Navigate to={isSuperAdmin() ? "/admin" : "/dashboard"} replace />;
+};
+
+// Customer only route - superadmin cannot access
+const CustomerOnlyRoute = ({ children }) => {
+  const { user, loading, isSuperAdmin } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  // Superadmin should not access customer pages
+  if (isSuperAdmin()) {
+    return <Navigate to="/admin" replace />;
+  }
+  
+  return children;
+};
+
 function App() {
   return (
     <AuthProvider>
