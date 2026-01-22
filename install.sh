@@ -21,18 +21,35 @@ echo "║     Versie 1.0 - CloudPanel                ║"
 echo "╚════════════════════════════════════════════╝"
 echo -e "${NC}"
 
-# Variabelen - PAS DEZE AAN
-read -p "Voer uw domein in (bijv. surirentals.uwdomein.com): " DOMAIN
-read -p "Voer een veilig JWT wachtwoord in (minimaal 32 tekens): " JWT_SECRET
-
-if [ ${#JWT_SECRET} -lt 32 ]; then
-    JWT_SECRET=$(openssl rand -hex 32)
-    echo -e "${YELLOW}JWT Secret automatisch gegenereerd: $JWT_SECRET${NC}"
-fi
-
-INSTALL_DIR="/home/cloudpanel/htdocs/surirentals"
+# Detecteer huidige map (waar het script wordt uitgevoerd)
+INSTALL_DIR="$(pwd)"
 BACKEND_DIR="$INSTALL_DIR/backend"
 FRONTEND_DIR="$INSTALL_DIR/frontend"
+
+echo -e "${GREEN}Installatie map: $INSTALL_DIR${NC}"
+echo ""
+
+# Controleer of backend en frontend mappen bestaan
+if [ ! -d "$BACKEND_DIR" ]; then
+    echo -e "${RED}FOUT: Backend map niet gevonden: $BACKEND_DIR${NC}"
+    echo -e "Zorg ervoor dat u het script uitvoert in de surirentals hoofdmap."
+    exit 1
+fi
+
+if [ ! -d "$FRONTEND_DIR" ]; then
+    echo -e "${RED}FOUT: Frontend map niet gevonden: $FRONTEND_DIR${NC}"
+    echo -e "Zorg ervoor dat u het script uitvoert in de surirentals hoofdmap."
+    exit 1
+fi
+
+# Variabelen - VRAAG AAN GEBRUIKER
+read -p "Voer uw domein in (bijv. surirentals.facturatie.sr): " DOMAIN
+read -p "Voer een veilig JWT wachtwoord in (of druk Enter voor automatisch): " JWT_SECRET
+
+if [ -z "$JWT_SECRET" ] || [ ${#JWT_SECRET} -lt 32 ]; then
+    JWT_SECRET=$(openssl rand -hex 32)
+    echo -e "${YELLOW}JWT Secret automatisch gegenereerd${NC}"
+fi
 
 echo ""
 echo -e "${YELLOW}Stap 1/8: Systeem updaten...${NC}"
