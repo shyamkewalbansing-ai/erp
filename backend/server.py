@@ -492,6 +492,15 @@ async def register(user_data: UserCreate):
     is_superadmin = user_count == 0 or user_data.email == SUPER_ADMIN_EMAIL
     
     user_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    # New customers get a 3-day trial
+    trial_end_date = None
+    is_trial = False
+    if not is_superadmin:
+        trial_end_date = (now + timedelta(days=TRIAL_DAYS)).isoformat()
+        is_trial = True
+    
     user_doc = {
         "id": user_id,
         "email": user_data.email,
@@ -499,15 +508,16 @@ async def register(user_data: UserCreate):
         "name": user_data.name,
         "company_name": user_data.company_name,
         "role": "superadmin" if is_superadmin else "customer",
-        "subscription_end_date": None,  # New customers have no subscription
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "subscription_end_date": trial_end_date,
+        "is_trial": is_trial,
+        "created_at": now.isoformat()
     }
     
     await db.users.insert_one(user_doc)
     
     token = create_token(user_id, user_data.email)
     
-    status, end_date = get_subscription_status(user_doc)
+    status, end_date, _ = get_subscription_status(user_doc)
     
     return TokenResponse(
         access_token=token,
@@ -531,7 +541,7 @@ async def login(credentials: UserLogin):
     
     token = create_token(user["id"], user["email"])
     
-    status, end_date = get_subscription_status(user)
+    status, end_date, _ = get_subscription_status(user)
     
     return TokenResponse(
         access_token=token,
