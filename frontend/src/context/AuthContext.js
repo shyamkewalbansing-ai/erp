@@ -31,6 +31,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/auth/me`);
+      setUser(response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error refreshing user:', error);
+      return null;
+    }
+  };
+
   const login = async (email, password) => {
     const response = await axios.post(`${API_URL}/auth/login`, { email, password });
     const { access_token, user: userData } = response.data;
@@ -43,8 +54,13 @@ export const AuthProvider = ({ children }) => {
     return userData;
   };
 
-  const register = async (name, email, password) => {
-    const response = await axios.post(`${API_URL}/auth/register`, { name, email, password });
+  const register = async (name, email, password, company_name) => {
+    const response = await axios.post(`${API_URL}/auth/register`, { 
+      name, 
+      email, 
+      password,
+      company_name 
+    });
     const { access_token, user: userData } = response.data;
     
     localStorage.setItem('token', access_token);
@@ -62,8 +78,30 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Check if user has active subscription
+  const hasActiveSubscription = () => {
+    if (!user) return false;
+    if (user.role === 'superadmin') return true;
+    return user.subscription_status === 'active' || user.subscription_status === 'trial';
+  };
+
+  // Check if user is superadmin
+  const isSuperAdmin = () => {
+    return user?.role === 'superadmin';
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, token }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      loading, 
+      login, 
+      register, 
+      logout, 
+      token,
+      refreshUser,
+      hasActiveSubscription,
+      isSuperAdmin
+    }}>
       {children}
     </AuthContext.Provider>
   );
