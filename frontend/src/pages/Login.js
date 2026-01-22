@@ -44,7 +44,7 @@ export default function Login() {
           <img 
             src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
             alt="Facturatie N.V." 
-            className="h-10 w-auto brightness-0 invert"
+            className="h-12 w-auto brightness-0 invert"
           />
         </div>
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
@@ -64,7 +64,7 @@ export default function Login() {
             <img 
               src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
               alt="Facturatie N.V." 
-              className="h-9 w-auto"
+              className="h-12 w-auto"
             />
           </div>
 
