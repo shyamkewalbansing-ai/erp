@@ -480,12 +480,19 @@ async def register(user_data: UserCreate):
     if existing:
         raise HTTPException(status_code=400, detail="E-mailadres is al geregistreerd")
     
+    # Check if this is the first user or superadmin email
+    user_count = await db.users.count_documents({})
+    is_superadmin = user_count == 0 or user_data.email == SUPER_ADMIN_EMAIL
+    
     user_id = str(uuid.uuid4())
     user_doc = {
         "id": user_id,
         "email": user_data.email,
         "password": hash_password(user_data.password),
         "name": user_data.name,
+        "company_name": user_data.company_name,
+        "role": "superadmin" if is_superadmin else "customer",
+        "subscription_end_date": None,  # New customers have no subscription
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
@@ -493,12 +500,18 @@ async def register(user_data: UserCreate):
     
     token = create_token(user_id, user_data.email)
     
+    status, end_date = get_subscription_status(user_doc)
+    
     return TokenResponse(
         access_token=token,
         user=UserResponse(
             id=user_id,
             email=user_data.email,
             name=user_data.name,
+            company_name=user_data.company_name,
+            role=user_doc["role"],
+            subscription_status=status,
+            subscription_end_date=end_date,
             created_at=user_doc["created_at"]
         )
     )
@@ -511,12 +524,18 @@ async def login(credentials: UserLogin):
     
     token = create_token(user["id"], user["email"])
     
+    status, end_date = get_subscription_status(user)
+    
     return TokenResponse(
         access_token=token,
         user=UserResponse(
             id=user["id"],
             email=user["email"],
             name=user["name"],
+            company_name=user.get("company_name"),
+            role=user.get("role", "customer"),
+            subscription_status=status,
+            subscription_end_date=end_date,
             created_at=user["created_at"]
         )
     )
@@ -527,6 +546,10 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         id=current_user["id"],
         email=current_user["email"],
         name=current_user["name"],
+        company_name=current_user.get("company_name"),
+        role=current_user.get("role", "customer"),
+        subscription_status=current_user.get("subscription_status", "none"),
+        subscription_end_date=current_user.get("subscription_end_date"),
         created_at=current_user["created_at"]
     )
 
