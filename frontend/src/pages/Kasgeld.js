@@ -142,7 +142,7 @@ export default function Kasgeld() {
       </div>
 
       {/* Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="card-hover">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -164,7 +164,25 @@ export default function Kasgeld() {
         <Card className="card-hover">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Totaal Stortingen
+              Huurinkomsten
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <span className="text-2xl font-bold text-primary">
+                {formatCurrency(kasgeldData?.total_payments || 0)}
+              </span>
+              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
+                <CreditCard className="w-5 h-5 text-primary" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-hover">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Extra Stortingen
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -182,7 +200,7 @@ export default function Kasgeld() {
         <Card className="card-hover">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Totaal Opnames
+              Opnames
             </CardTitle>
           </CardHeader>
           <CardContent>
