@@ -7,6 +7,8 @@ import {
   Building2, 
   CreditCard, 
   Wallet,
+  Banknote,
+  Wrench,
   LogOut,
   Menu,
   X,
@@ -20,6 +22,8 @@ const navItems = [
   { to: '/apartments', icon: Building2, label: 'Appartementen' },
   { to: '/payments', icon: CreditCard, label: 'Betalingen' },
   { to: '/deposits', icon: Wallet, label: 'Borg' },
+  { to: '/kasgeld', icon: Banknote, label: 'Kasgeld' },
+  { to: '/onderhoud', icon: Wrench, label: 'Onderhoud' },
 ];
 
 export default function Layout() {
