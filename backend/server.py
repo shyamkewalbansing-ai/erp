@@ -1844,6 +1844,249 @@ async def deactivate_customer(user_id: str, current_user: dict = Depends(get_sup
     
     return {"message": "Abonnement gedeactiveerd"}
 
+# Admin: Create customer
+class AdminCustomerCreate(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    company_name: Optional[str] = None
+    activate_subscription: bool = False
+    subscription_months: int = 1
+    payment_method: str = "bank_transfer"
+    payment_reference: Optional[str] = None
+
+@api_router.post("/admin/customers", response_model=CustomerResponse)
+async def create_customer(customer_data: AdminCustomerCreate, current_user: dict = Depends(get_superadmin)):
+    """Create a new customer - superadmin only"""
+    
+    # Check if user exists
+    existing = await db.users.find_one({"email": customer_data.email}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="E-mailadres is al geregistreerd")
+    
+    user_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    # Calculate subscription end date
+    subscription_end_date = None
+    is_trial = False
+    
+    if customer_data.activate_subscription:
+        subscription_end_date = (now + timedelta(days=SUBSCRIPTION_DAYS * customer_data.subscription_months)).isoformat()
+    else:
+        # Give 3-day trial by default
+        subscription_end_date = (now + timedelta(days=TRIAL_DAYS)).isoformat()
+        is_trial = True
+    
+    user_doc = {
+        "id": user_id,
+        "email": customer_data.email,
+        "password": hash_password(customer_data.password),
+        "name": customer_data.name,
+        "company_name": customer_data.company_name,
+        "role": "customer",
+        "subscription_end_date": subscription_end_date,
+        "is_trial": is_trial,
+        "created_at": now.isoformat()
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # If subscription is activated, create subscription record
+    total_paid = 0.0
+    if customer_data.activate_subscription:
+        sub_id = str(uuid.uuid4())
+        amount = SUBSCRIPTION_PRICE_SRD * customer_data.subscription_months
+        sub_doc = {
+            "id": sub_id,
+            "user_id": user_id,
+            "amount": amount,
+            "months": customer_data.subscription_months,
+            "start_date": now.isoformat(),
+            "end_date": subscription_end_date,
+            "payment_method": customer_data.payment_method,
+            "payment_reference": customer_data.payment_reference,
+            "notes": "Aangemaakt door admin",
+            "status": "active",
+            "created_at": now.isoformat()
+        }
+        await db.subscriptions.insert_one(sub_doc)
+        total_paid = amount
+    
+    status, end_date, _ = get_subscription_status(user_doc)
+    
+    return CustomerResponse(
+        id=user_id,
+        email=customer_data.email,
+        name=customer_data.name,
+        company_name=customer_data.company_name,
+        role="customer",
+        subscription_status=status,
+        subscription_end_date=end_date,
+        created_at=user_doc["created_at"],
+        total_paid=total_paid,
+        last_payment_date=now.isoformat() if customer_data.activate_subscription else None
+    )
+
+@api_router.delete("/admin/customers/{user_id}/permanent")
+async def delete_customer_permanent(user_id: str, current_user: dict = Depends(get_superadmin)):
+    """Permanently delete a customer and all their data - superadmin only"""
+    
+    # Check if customer exists
+    customer = await db.users.find_one({"id": user_id, "role": "customer"}, {"_id": 0})
+    if not customer:
+        raise HTTPException(status_code=404, detail="Klant niet gevonden")
+    
+    # Delete all customer data
+    await db.users.delete_one({"id": user_id})
+    await db.subscriptions.delete_many({"user_id": user_id})
+    await db.subscription_requests.delete_many({"user_id": user_id})
+    
+    # Also delete customer's rental data
+    await db.tenants.delete_many({"user_id": user_id})
+    await db.apartments.delete_many({"user_id": user_id})
+    await db.payments.delete_many({"user_id": user_id})
+    await db.deposits.delete_many({"user_id": user_id})
+    await db.kasgeld.delete_many({"user_id": user_id})
+    await db.maintenance.delete_many({"user_id": user_id})
+    await db.employees.delete_many({"user_id": user_id})
+    await db.salaries.delete_many({"user_id": user_id})
+    
+    return {"message": f"Klant {customer['name']} en alle gegevens permanent verwijderd"}
+
+@api_router.delete("/admin/subscriptions/{subscription_id}")
+async def delete_subscription_payment(subscription_id: str, current_user: dict = Depends(get_superadmin)):
+    """Delete a subscription payment record - superadmin only"""
+    
+    # Get the subscription first to adjust the user's end date
+    subscription = await db.subscriptions.find_one({"id": subscription_id}, {"_id": 0})
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Abonnementsbetaling niet gevonden")
+    
+    # Delete the subscription
+    await db.subscriptions.delete_one({"id": subscription_id})
+    
+    # Recalculate user's subscription end date based on remaining subscriptions
+    user_id = subscription["user_id"]
+    remaining_subs = await db.subscriptions.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("end_date", -1).to_list(1)
+    
+    if remaining_subs:
+        # Set end date to the latest remaining subscription
+        new_end_date = remaining_subs[0]["end_date"]
+    else:
+        # No subscriptions left, set to expired
+        new_end_date = datetime.now(timezone.utc).isoformat()
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"subscription_end_date": new_end_date, "is_trial": False}}
+    )
+    
+    return {"message": "Abonnementsbetaling verwijderd"}
+
+@api_router.get("/admin/subscriptions/{subscription_id}/pdf")
+async def generate_subscription_receipt_pdf(subscription_id: str, current_user: dict = Depends(get_superadmin)):
+    """Generate PDF receipt for subscription payment - superadmin only"""
+    
+    # Get subscription data
+    subscription = await db.subscriptions.find_one({"id": subscription_id}, {"_id": 0})
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Abonnementsbetaling niet gevonden")
+    
+    # Get customer data
+    customer = await db.users.find_one({"id": subscription["user_id"]}, {"_id": 0})
+    
+    # Create PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        spaceAfter=30,
+        textColor=colors.HexColor('#0caf60')
+    )
+    
+    elements = []
+    
+    # Header
+    elements.append(Paragraph("ABONNEMENT KWITANTIE", title_style))
+    elements.append(Paragraph(f"<b>SuriRentals</b> - Verhuurbeheersysteem", styles['Normal']))
+    elements.append(Spacer(1, 20))
+    
+    # Payment method translation
+    payment_method_labels = {
+        "bank_transfer": "Bankoverschrijving",
+        "cash": "Contant",
+        "other": "Anders"
+    }
+    
+    # Receipt info
+    receipt_data = [
+        ["Kwitantie Nr:", subscription["id"][:8].upper()],
+        ["Datum:", subscription["created_at"][:10]],
+        ["", ""],
+        ["KLANT GEGEVENS", ""],
+        ["Naam:", customer["name"] if customer else "Onbekend"],
+        ["E-mail:", customer["email"] if customer else ""],
+        ["Bedrijf:", customer.get("company_name") or "-"],
+        ["", ""],
+        ["ABONNEMENT DETAILS", ""],
+        ["Periode:", f"{subscription['months']} maand(en)"],
+        ["Startdatum:", subscription["start_date"][:10]],
+        ["Einddatum:", subscription["end_date"][:10]],
+        ["", ""],
+        ["BETALING", ""],
+        ["Methode:", payment_method_labels.get(subscription["payment_method"], subscription["payment_method"])],
+        ["Referentie:", subscription.get("payment_reference") or "-"],
+        ["Bedrag:", format_currency(subscription["amount"])],
+        ["", ""],
+        ["Opmerkingen:", subscription.get("notes") or "-"],
+    ]
+    
+    table = Table(receipt_data, colWidths=[5*cm, 10*cm])
+    table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('FONTNAME', (0, 3), (0, 3), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 8), (0, 8), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 13), (0, 13), 'Helvetica-Bold'),
+        ('TEXTCOLOR', (0, 3), (0, 3), colors.HexColor('#0caf60')),
+        ('TEXTCOLOR', (0, 8), (0, 8), colors.HexColor('#0caf60')),
+        ('TEXTCOLOR', (0, 13), (0, 13), colors.HexColor('#0caf60')),
+        ('FONTNAME', (1, 16), (1, 16), 'Helvetica-Bold'),
+        ('FONTSIZE', (1, 16), (1, 16), 14),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    
+    elements.append(table)
+    elements.append(Spacer(1, 40))
+    
+    # Footer
+    elements.append(Paragraph("_" * 50, styles['Normal']))
+    elements.append(Paragraph("SuriRentals Administratie", styles['Normal']))
+    elements.append(Spacer(1, 10))
+    elements.append(Paragraph("<i>Dit document dient als bewijs van betaling voor het SuriRentals abonnement.</i>", styles['Normal']))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    customer_name = customer["name"].replace(" ", "_") if customer else "klant"
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=abonnement_kwitantie_{customer_name}_{subscription['id'][:8]}.pdf"
+        }
+    )
+
 # ==================== USER SUBSCRIPTION ROUTES ====================
 
 @api_router.get("/subscription/status")
