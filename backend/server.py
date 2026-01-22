@@ -51,7 +51,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Health check endpoint (required for Kubernetes deployment)
+# Define at app level before any other routes
 @app.get("/health")
+@app.get("/healthz")
+@app.get("/")
 async def health_check():
     return {"status": "healthy"}
 
