@@ -25,14 +25,17 @@ export default function Instellingen() {
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const fileInputRef = useRef(null);
   
   // Profile form
   const [profile, setProfile] = useState({
     name: '',
     email: '',
-    company_name: ''
+    company_name: '',
+    logo: null
   });
   
   // Password form
@@ -52,12 +55,72 @@ export default function Instellingen() {
       setProfile({
         name: response.data.name || '',
         email: response.data.email || '',
-        company_name: response.data.company_name || ''
+        company_name: response.data.company_name || '',
+        logo: response.data.logo || null
       });
     } catch (error) {
       toast.error('Fout bij het laden van profiel');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogoUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Check file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Logo is te groot. Maximum 2MB toegestaan.');
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Alleen afbeeldingen zijn toegestaan');
+      return;
+    }
+
+    setUploadingLogo(true);
+
+    try {
+      // Convert to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const base64Data = e.target.result;
+          await uploadLogo(base64Data);
+          setProfile(prev => ({ ...prev, logo: base64Data }));
+          toast.success('Logo succesvol geüpload');
+          if (refreshUser) {
+            await refreshUser();
+          }
+        } catch (error) {
+          toast.error(error.response?.data?.detail || 'Fout bij het uploaden');
+        } finally {
+          setUploadingLogo(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      toast.error('Fout bij het lezen van bestand');
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleDeleteLogo = async () => {
+    setUploadingLogo(true);
+    try {
+      await deleteLogo();
+      setProfile(prev => ({ ...prev, logo: null }));
+      toast.success('Logo succesvol verwijderd');
+      if (refreshUser) {
+        await refreshUser();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij het verwijderen');
+    } finally {
+      setUploadingLogo(false);
     }
   };
 
