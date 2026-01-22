@@ -403,11 +403,17 @@ async def get_apartments(current_user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).to_list(1000)
     
-    # Add tenant names
-    for apt in apartments:
-        if apt.get("tenant_id"):
-            tenant = await db.tenants.find_one({"id": apt["tenant_id"]}, {"_id": 0, "name": 1})
-            apt["tenant_name"] = tenant["name"] if tenant else None
+    # Batch fetch tenant names to avoid N+1 queries
+    tenant_ids = [apt["tenant_id"] for apt in apartments if apt.get("tenant_id")]
+    if tenant_ids:
+        tenants = await db.tenants.find(
+            {"id": {"$in": tenant_ids}},
+            {"_id": 0, "id": 1, "name": 1}
+        ).to_list(1000)
+        tenant_map = {t["id"]: t["name"] for t in tenants}
+        for apt in apartments:
+            if apt.get("tenant_id"):
+                apt["tenant_name"] = tenant_map.get(apt["tenant_id"])
     
     return [ApartmentResponse(**apt) for apt in apartments]
 
