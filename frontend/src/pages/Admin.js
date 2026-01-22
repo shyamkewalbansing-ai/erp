@@ -509,6 +509,7 @@ export default function Admin() {
         <TabsList>
           <TabsTrigger value="customers">Klanten</TabsTrigger>
           <TabsTrigger value="payments">Betalingen</TabsTrigger>
+          <TabsTrigger value="domains">Domeinen</TabsTrigger>
         </TabsList>
 
         {/* Customers Tab */}
