@@ -18,7 +18,9 @@ class SuriRentalsAPITester:
             'payments': [],
             'deposits': [],
             'kasgeld': [],
-            'maintenance': []
+            'maintenance': [],
+            'employees': [],
+            'salaries': []
         }
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
