@@ -1,0 +1,149 @@
+{
+  "identity": {
+    "persona": "E1 - The Anti-AI Designer",
+    "philosophy": "Fusion over Imitation. Emotion First. Content is King.",
+    "anti_patterns": [
+      "Purple/Teal generic SaaS gradients",
+      "Inter font everywhere",
+      "Centered layouts without tension",
+      "Gradient overload (>20%)"
+    ]
+  },
+  "theme_strategy": {
+    "default_theme": "light",
+    "rationale": "Property management involves contracts, invoices, and data tables. A 'Paper/Physical' aesthetic (Light Mode) builds trust and readability. Dark mode is available for power users.",
+    "primary_color": "#0caf60",
+    "palette_archetype": "Organic & Earthy (Trust, Growth) + Swiss Utility (Data)",
+    "colors": {
+      "light": {
+        "background": "#fdfcf8",
+        "foreground": "#1a1c1a",
+        "card": "#ffffff",
+        "card_foreground": "#1a1c1a",
+        "primary": "#0caf60",
+        "primary_foreground": "#ffffff",
+        "secondary": "#f2f0e9",
+        "secondary_foreground": "#2c3e2c",
+        "muted": "#f2f0e9",
+        "muted_foreground": "#6b7280",
+        "accent": "#e8f5e9",
+        "accent_foreground": "#0caf60",
+        "border": "#e5e7eb",
+        "input": "#f3f4f6",
+        "ring": "#0caf60"
+      },
+      "dark": {
+        "background": "#0a0a0a",
+        "foreground": "#fdfcf8",
+        "card": "#121212",
+        "card_foreground": "#fdfcf8",
+        "primary": "#0caf60",
+        "primary_foreground": "#ffffff",
+        "secondary": "#1f2937",
+        "secondary_foreground": "#fdfcf8",
+        "muted": "#1f2937",
+        "muted_foreground": "#9ca3af",
+        "accent": "#1f2937",
+        "accent_foreground": "#0caf60",
+        "border": "#27272a",
+        "input": "#27272a",
+        "ring": "#0caf60"
+      }
+    }
+  },
+  "typography": {
+    "strategy": "The Soft Utility",
+    "headings": {
+      "family": "Outfit, sans-serif",
+      "weights": ["500", "700"],
+      "usage": "Use for all H1-H4. Tight tracking (-0.02em).",
+      "cdn_import": "@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap');"
+    },
+    "body": {
+      "family": "Plus Jakarta Sans, sans-serif",
+      "weights": ["400", "500", "600"],
+      "usage": "Use for all body text, tables, and UI elements. Excellent legibility for numbers (SRD currency).",
+      "cdn_import": "@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');"
+    }
+  },
+  "layout_system": {
+    "spacing_scale": "Tailwind Scale (p-1 to p-64)",
+    "container_padding": "p-6 or p-8 for internal containers",
+    "grids": {
+      "dashboard": {
+        "name": "Bento Mode B (High Density)",
+        "columns": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+        "gap": "gap-4 or gap-6",
+        "rules": "Every pixel utilized. Use h-full on children. No jagged bottoms."
+      },
+      "marketing": {
+        "name": "Tetris Mode A (Asymmetry)",
+        "columns": "grid-cols-1 md:grid-cols-8 lg:grid-cols-12",
+        "gap": "gap-8 to gap-12",
+        "rules": "Never fill 100% perfectly. Leave breathing room."
+      }
+    }
+  },
+  "components": {
+    "strategy": "Hybrid",
+    "rules": [
+      "Use Shadcn for interactive logic (Forms, Select, Datepicker, Dialogs).",
+      "Use raw HTML/Tailwind for structural layout (Sections, Grids).",
+      "Customize Shadcn components to remove the 'Vercel default' look.",
+      "Cards: Use 'Tracing Beam' style for active states, 'Glassmorphism' for sticky headers."
+    ],
+    "specific_overrides": {
+      "Button": "Pill-shaped or sharp edges. No default rounded-md.",
+      "Card": "Flat background, 1px subtle border, no shadow by default. Hover: Lift + Shadow.",
+      "Input": "Background #f3f4f6 (Light) / #27272a (Dark). Border-transparent focus:ring-2."
+    }
+  },
+  "visual_enhancers": {
+    "textures": "Subtle grain overlay on the main background to kill digital flatness.",
+    "glassmorphism": "Use for sticky headers: bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-b border-white/20.",
+    "gradients": "NO full-screen gradients. Use subtle mesh gradients in specific 'hero' areas only.",
+    "shadows": "Layered shadows (ambient + direct).",
+    "borders": "Crisp edges via semi-transparent borders."
+  },
+  "motion": {
+    "library": "framer-motion",
+    "transitions": "transition: transform 0.2s ease, opacity 0.2s ease (NO transition: all)",
+    "page_load": "Staggered entrance for dashboard widgets.",
+    "micro_interactions": "Buttons scale down slightly (0.98) on click."
+  },
+  "assets": {
+    "icons": "lucide-react (Default)",
+    "images": {
+      "login_hero": {
+        "url": "https://images.unsplash.com/photo-1758548157747-285c7012db5b?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Modern minimalist apartment interior",
+        "usage": "Full height split-screen on Login/Register page."
+      },
+      "dashboard_placeholder_1": {
+        "url": "https://images.unsplash.com/photo-1757439402190-99b73ac8e807?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Modern kitchen with island",
+        "usage": "Widget background or property card example."
+      },
+      "handing_keys": {
+        "url": "https://images.pexels.com/photos/8292791/pexels-photo-8292791.jpeg",
+        "alt": "Property manager handing keys",
+        "usage": "Onboarding or 'Add Property' empty state."
+      },
+      "happy_tenants": {
+        "url": "https://images.pexels.com/photos/8962337/pexels-photo-8962337.jpeg",
+        "alt": "Happy diverse tenants",
+        "usage": "Tenant management section empty state or promo."
+      }
+    }
+  },
+  "universal_guidelines": [
+    "DO NOT use 'text-align: center' on the main App container.",
+    "DO NOT use generic AI emojis (🤖, 🚀) as icons.",
+    "Ensure all interactive elements have 'data-testid'.",
+    "Use 'sonner' for toasts.",
+    "Use 'recharts' for data visualization (customized to match theme).",
+    "Currency formatting: 'SRD 1.250,00' (Dutch format).",
+    "Language: Interface is English but designed to accommodate Dutch text expansion."
+  ],
+  "instructions_to_main_agent": "You are building a Rental Management SaaS. Focus on the 'Dashboard' and 'Tenants' pages first. Use the defined color palette strictly. Implement the 'Bento' grid for the dashboard. Ensure the 'Login' page uses the split-screen layout with the provided image. Use 'Outfit' for all headings and 'Plus Jakarta Sans' for body text."
+}
