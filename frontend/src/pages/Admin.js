@@ -1499,6 +1499,55 @@ server {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Nginx Config Dialog */}
+      <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Nginx Configuratie voor {selectedDomain?.domain}</DialogTitle>
+            <DialogDescription>
+              Kopieer deze configuratie en voeg toe in CloudPanel
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="bg-accent/50 p-4 rounded-lg">
+              <h4 className="font-semibold mb-2">Stappen in CloudPanel:</h4>
+              <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
+                <li>Ga naar CloudPanel → Sites → Add Site</li>
+                <li>Vul het domein in: <strong>{selectedDomain?.domain}</strong></li>
+                <li>Kies "Reverse Proxy" of "Static Site"</li>
+                <li>Vraag SSL certificaat aan (Let's Encrypt)</li>
+                <li>Pas de Nginx configuratie aan met onderstaande code</li>
+              </ol>
+            </div>
+            
+            <div className="relative">
+              <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-auto max-h-[300px] text-xs">
+                {selectedDomain && generateNginxConfig(selectedDomain.domain)}
+              </pre>
+              <Button
+                className="absolute top-2 right-2"
+                size="sm"
+                onClick={() => {
+                  if (selectedDomain) {
+                    copyToClipboard(generateNginxConfig(selectedDomain.domain));
+                  }
+                }}
+              >
+                <Copy className="w-3 h-3 mr-1" />
+                Kopieer
+              </Button>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>
+              Sluiten
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
