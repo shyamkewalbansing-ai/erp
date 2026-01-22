@@ -9,6 +9,7 @@ import {
   Wallet,
   Banknote,
   Wrench,
+  Users2,
   LogOut,
   Menu,
   X,
@@ -24,6 +25,7 @@ const navItems = [
   { to: '/deposits', icon: Wallet, label: 'Borg' },
   { to: '/kasgeld', icon: Banknote, label: 'Kasgeld' },
   { to: '/onderhoud', icon: Wrench, label: 'Onderhoud' },
+  { to: '/werknemers', icon: Users2, label: 'Werknemers' },
 ];
 
 export default function Layout() {
