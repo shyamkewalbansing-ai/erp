@@ -228,6 +228,7 @@ class KasgeldBalanceResponse(BaseModel):
     total_payments: float  # Inkomsten uit huurbetalingen
     total_withdrawals: float
     total_maintenance_costs: float
+    total_salary_payments: float  # Salarisbetalingen
     transactions: List[KasgeldResponse]
 
 # Onderhoud (Maintenance) Models
