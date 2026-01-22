@@ -762,7 +762,7 @@ async def remove_tenant(apartment_id: str, current_user: dict = Depends(get_curr
 # ==================== PAYMENT ROUTES ====================
 
 @api_router.post("/payments", response_model=PaymentResponse)
-async def create_payment(payment_data: PaymentCreate, current_user: dict = Depends(get_current_user)):
+async def create_payment(payment_data: PaymentCreate, current_user: dict = Depends(get_current_active_user)):
     # Verify tenant and apartment
     tenant = await db.tenants.find_one({"id": payment_data.tenant_id, "user_id": current_user["id"]}, {"_id": 0})
     if not tenant:
@@ -796,7 +796,7 @@ async def create_payment(payment_data: PaymentCreate, current_user: dict = Depen
     )
 
 @api_router.get("/payments", response_model=List[PaymentResponse])
-async def get_payments(current_user: dict = Depends(get_current_user)):
+async def get_payments(current_user: dict = Depends(get_current_active_user)):
     payments = await db.payments.find(
         {"user_id": current_user["id"]},
         {"_id": 0}
@@ -819,7 +819,7 @@ async def get_payments(current_user: dict = Depends(get_current_user)):
     return [PaymentResponse(**p) for p in payments]
 
 @api_router.get("/payments/{payment_id}", response_model=PaymentResponse)
-async def get_payment(payment_id: str, current_user: dict = Depends(get_current_user)):
+async def get_payment(payment_id: str, current_user: dict = Depends(get_current_active_user)):
     payment = await db.payments.find_one(
         {"id": payment_id, "user_id": current_user["id"]},
         {"_id": 0}
@@ -835,7 +835,7 @@ async def get_payment(payment_id: str, current_user: dict = Depends(get_current_
     return PaymentResponse(**payment)
 
 @api_router.delete("/payments/{payment_id}")
-async def delete_payment(payment_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_payment(payment_id: str, current_user: dict = Depends(get_current_active_user)):
     result = await db.payments.delete_one({"id": payment_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
