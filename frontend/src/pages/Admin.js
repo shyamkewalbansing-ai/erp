@@ -76,9 +76,11 @@ export default function Admin() {
   const [customers, setCustomers] = useState([]);
   const [requests, setRequests] = useState([]);
   const [subscriptions, setSubscriptions] = useState([]);
+  const [domains, setDomains] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [selectedSubscription, setSelectedSubscription] = useState(null);
+  const [selectedDomain, setSelectedDomain] = useState(null);
   
   // Dialog states
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
@@ -86,12 +88,19 @@ export default function Admin() {
   const [deleteCustomerDialogOpen, setDeleteCustomerDialogOpen] = useState(false);
   const [createCustomerDialogOpen, setCreateCustomerDialogOpen] = useState(false);
   const [deletePaymentDialogOpen, setDeletePaymentDialogOpen] = useState(false);
+  const [resetPasswordDialogOpen, setResetPasswordDialogOpen] = useState(false);
+  const [editCustomerDialogOpen, setEditCustomerDialogOpen] = useState(false);
+  const [addDomainDialogOpen, setAddDomainDialogOpen] = useState(false);
+  const [deleteDomainDialogOpen, setDeleteDomainDialogOpen] = useState(false);
   
   // Form states
   const [activating, setActivating] = useState(false);
   const [months, setMonths] = useState('1');
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
   const [paymentReference, setPaymentReference] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [editForm, setEditForm] = useState({ name: '', email: '', company_name: '' });
+  const [newDomain, setNewDomain] = useState({ domain: '', user_id: '' });
   
   // Create customer form
   const [newCustomer, setNewCustomer] = useState({
@@ -111,13 +120,18 @@ export default function Admin() {
 
   const loadData = async () => {
     try {
-      const [dashboardRes, customersRes, requestsRes, subscriptionsRes] = await Promise.all([
+      const [dashboardRes, customersRes, requestsRes, subscriptionsRes, domainsRes] = await Promise.all([
         getAdminDashboard(),
         getAdminCustomers(),
         getSubscriptionRequests(),
-        getAdminSubscriptions()
+        getAdminSubscriptions(),
+        getAdminDomains()
       ]);
       setStats(dashboardRes.data);
+      setCustomers(customersRes.data);
+      setRequests(requestsRes.data);
+      setSubscriptions(subscriptionsRes.data);
+      setDomains(domainsRes.data);
       setCustomers(customersRes.data);
       setRequests(requestsRes.data);
       setSubscriptions(subscriptionsRes.data);
