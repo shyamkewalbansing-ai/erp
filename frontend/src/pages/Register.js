@@ -48,7 +48,7 @@ export default function Register() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
-          <h2 className="text-4xl font-bold mb-4">Start vandaag met SuriRentals</h2>
+          <h2 className="text-4xl font-bold mb-4">Start vandaag met Facturatie N.V.</h2>
           <p className="text-lg text-white/80">
             Maak een gratis account aan en begin direct met het beheren 
             van uw vastgoedportfolio. U krijgt 3 dagen gratis proefperiode!
@@ -60,14 +60,12 @@ export default function Register() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md animate-fade-in">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-bold text-xl text-foreground">SuriRentals</h1>
-              <p className="text-sm text-muted-foreground">Verhuurbeheer</p>
-            </div>
+          <div className="flex items-center mb-8">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+              alt="Facturatie N.V." 
+              className="h-12 w-auto"
+            />
           </div>
 
           {/* Header */}

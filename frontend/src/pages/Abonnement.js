@@ -86,7 +86,7 @@ export default function Abonnement() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Abonnement</h1>
-        <p className="text-muted-foreground">Beheer uw SuriRentals abonnement</p>
+        <p className="text-muted-foreground">Beheer uw Facturatie N.V. abonnement</p>
       </div>
 
       {/* Warning banner for expired subscriptions */}
@@ -98,7 +98,7 @@ export default function Abonnement() {
               <div>
                 <h3 className="font-semibold text-red-500">Abonnement Verlopen</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Uw abonnement is verlopen. Activeer uw abonnement om weer toegang te krijgen tot alle functies van SuriRentals.
+                  Uw abonnement is verlopen. Activeer uw abonnement om weer toegang te krijgen tot alle functies van Facturatie N.V.
                 </p>
               </div>
             </div>
@@ -166,7 +166,7 @@ export default function Abonnement() {
               <Building2 className="w-5 h-5" />
               Abonnementspakket
             </CardTitle>
-            <CardDescription>Volledige toegang tot SuriRentals</CardDescription>
+            <CardDescription>Volledige toegang tot Facturatie N.V.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="text-center py-4">
@@ -237,7 +237,7 @@ export default function Abonnement() {
               
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Naam</span>
-                <span className="font-medium">SuriRentals BV</span>
+                <span className="font-medium">Facturatie N.V.</span>
               </div>
               
               <div className="flex justify-between items-center">

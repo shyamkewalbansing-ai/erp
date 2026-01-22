@@ -52,14 +52,12 @@ export default function Login() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md animate-fade-in">
           {/* Logo */}
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-bold text-xl text-foreground">SuriRentals</h1>
-              <p className="text-sm text-muted-foreground">Verhuurbeheer</p>
-            </div>
+          <div className="flex items-center mb-8">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+              alt="Facturatie N.V." 
+              className="h-12 w-auto"
+            />
           </div>
 
           {/* Header */}

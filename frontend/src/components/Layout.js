@@ -62,13 +62,11 @@ export default function Layout() {
         {/* Logo */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="font-bold text-lg text-foreground">SuriRentals</h1>
-              <p className="text-xs text-muted-foreground">Verhuurbeheer</p>
-            </div>
+            <img 
+              src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+              alt="Facturatie N.V." 
+              className="h-10 w-auto"
+            />
           </div>
         </div>
 
@@ -193,10 +191,11 @@ export default function Layout() {
           >
             <Menu className="w-5 h-5" />
           </Button>
-          <div className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-primary" />
-            <span className="font-bold">SuriRentals</span>
-          </div>
+          <img 
+            src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+            alt="Facturatie N.V." 
+            className="h-8 w-auto"
+          />
         </header>
 
         {/* Page content */}
