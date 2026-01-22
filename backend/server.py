@@ -840,8 +840,6 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
         )
         
         if not paid_this_month:
-            tenant = await db.tenants.find_one({"id": apt["tenant_id"]}, {"_id": 0, "name": 1})
-            
             # Assume rent is due on the 1st of each month
             due_date = first_of_month
             days_overdue = (now - due_date).days
@@ -849,7 +847,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
             reminders.append(ReminderResponse(
                 id=str(uuid.uuid4()),
                 tenant_id=apt["tenant_id"],
-                tenant_name=tenant["name"] if tenant else "Onbekend",
+                tenant_name=occupied_tenant_map.get(apt["tenant_id"], "Onbekend"),
                 apartment_id=apt["id"],
                 apartment_name=apt["name"],
                 amount_due=apt["rent_amount"],
