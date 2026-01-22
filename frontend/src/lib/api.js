@@ -107,12 +107,17 @@ export const requestSubscription = () => api.post('/subscription/request');
 // Admin - Customers
 export const getAdminDashboard = () => api.get('/admin/dashboard');
 export const getAdminCustomers = () => api.get('/admin/customers');
+export const createAdminCustomer = (data) => api.post('/admin/customers', data);
 export const deactivateCustomer = (userId) => api.delete(`/admin/customers/${userId}`);
+export const deleteCustomerPermanent = (userId) => api.delete(`/admin/customers/${userId}/permanent`);
 
 // Admin - Subscriptions
 export const getAdminSubscriptions = () => api.get('/admin/subscriptions');
 export const activateSubscription = (data) => api.post('/admin/subscriptions', data);
+export const deleteSubscriptionPayment = (subscriptionId) => api.delete(`/admin/subscriptions/${subscriptionId}`);
 export const getSubscriptionRequests = () => api.get('/admin/subscription-requests');
+export const downloadSubscriptionReceipt = (subscriptionId) => 
+  api.get(`/admin/subscriptions/${subscriptionId}/pdf`, { responseType: 'blob' });
 
 // Format currency in EUR
 export const formatCurrencyEUR = (amount) => {
