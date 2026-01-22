@@ -54,13 +54,35 @@ else
 fi
 
 echo ""
-echo -e "${YELLOW}Stap 3/8: Python 3.11 installeren...${NC}"
-if ! command -v python3.11 &> /dev/null; then
-    sudo apt install -y python3.11 python3.11-venv python3-pip
-    echo -e "${GREEN}✓ Python 3.11 geïnstalleerd${NC}"
+echo -e "${YELLOW}Stap 3/8: Python installeren...${NC}"
+
+# Check welke Python beschikbaar is
+if command -v python3.11 &> /dev/null; then
+    PYTHON_CMD="python3.11"
+    echo -e "${GREEN}✓ Python 3.11 gevonden${NC}"
+elif command -v python3.10 &> /dev/null; then
+    PYTHON_CMD="python3.10"
+    echo -e "${GREEN}✓ Python 3.10 gevonden${NC}"
+elif command -v python3.9 &> /dev/null; then
+    PYTHON_CMD="python3.9"
+    echo -e "${GREEN}✓ Python 3.9 gevonden${NC}"
+elif command -v python3 &> /dev/null; then
+    PYTHON_CMD="python3"
+    echo -e "${GREEN}✓ Python 3 gevonden${NC}"
 else
-    echo -e "${GREEN}✓ Python 3.11 is al geïnstalleerd${NC}"
+    echo -e "${YELLOW}Python niet gevonden, installeren via deadsnakes PPA...${NC}"
+    sudo apt install -y software-properties-common
+    sudo add-apt-repository -y ppa:deadsnakes/ppa
+    sudo apt update
+    sudo apt install -y python3.11 python3.11-venv python3.11-dev
+    PYTHON_CMD="python3.11"
+    echo -e "${GREEN}✓ Python 3.11 geïnstalleerd${NC}"
 fi
+
+# Installeer venv als dat nog niet bestaat
+sudo apt install -y python3-venv python3-pip -qq 2>/dev/null || true
+
+echo -e "${GREEN}✓ Python is klaar (${PYTHON_CMD})${NC}"
 
 echo ""
 echo -e "${YELLOW}Stap 4/8: Node.js 20 installeren...${NC}"
