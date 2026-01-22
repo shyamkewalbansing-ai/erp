@@ -564,6 +564,36 @@ export default function Admin() {
                           {getStatusBadge(customer.subscription_status)}
                         </td>
                         <td className="py-3 px-4">
+                          {customerDomains.length > 0 ? (
+                            <div className="space-y-1">
+                              {customerDomains.map((domain) => (
+                                <div key={domain.id} className="flex items-center gap-2">
+                                  <Globe className="w-3 h-3 text-muted-foreground" />
+                                  <span className="text-sm font-medium">{domain.domain}</span>
+                                  {domain.verified ? (
+                                    <CheckCircle className="w-3 h-3 text-green-500" />
+                                  ) : (
+                                    <Clock className="w-3 h-3 text-yellow-500" />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-muted-foreground h-7 px-2"
+                              onClick={() => {
+                                setNewDomain({ domain: '', user_id: customer.id });
+                                setAddDomainDialogOpen(true);
+                              }}
+                            >
+                              <Plus className="w-3 h-3 mr-1" />
+                              Domein
+                            </Button>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
                           {customer.subscription_end_date ? (
                             <span className="text-sm">
                               {new Date(customer.subscription_end_date).toLocaleDateString('nl-NL')}
