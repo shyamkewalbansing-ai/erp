@@ -1466,7 +1466,7 @@ async def get_apartment_maintenance(apartment_id: str, current_user: dict = Depe
 # ==================== WERKNEMERS (EMPLOYEES) ROUTES ====================
 
 @api_router.post("/employees", response_model=EmployeeResponse)
-async def create_employee(employee_data: EmployeeCreate, current_user: dict = Depends(get_current_user)):
+async def create_employee(employee_data: EmployeeCreate, current_user: dict = Depends(get_current_active_user)):
     employee_id = str(uuid.uuid4())
     employee_doc = {
         "id": employee_id,
@@ -1486,7 +1486,7 @@ async def create_employee(employee_data: EmployeeCreate, current_user: dict = De
     return EmployeeResponse(**employee_doc)
 
 @api_router.get("/employees", response_model=List[EmployeeResponse])
-async def get_employees(current_user: dict = Depends(get_current_user)):
+async def get_employees(current_user: dict = Depends(get_current_active_user)):
     employees = await db.employees.find(
         {"user_id": current_user["id"]},
         {"_id": 0}
@@ -1494,7 +1494,7 @@ async def get_employees(current_user: dict = Depends(get_current_user)):
     return [EmployeeResponse(**e) for e in employees]
 
 @api_router.get("/employees/{employee_id}", response_model=EmployeeResponse)
-async def get_employee(employee_id: str, current_user: dict = Depends(get_current_user)):
+async def get_employee(employee_id: str, current_user: dict = Depends(get_current_active_user)):
     employee = await db.employees.find_one(
         {"id": employee_id, "user_id": current_user["id"]},
         {"_id": 0}
@@ -1504,7 +1504,7 @@ async def get_employee(employee_id: str, current_user: dict = Depends(get_curren
     return EmployeeResponse(**employee)
 
 @api_router.put("/employees/{employee_id}", response_model=EmployeeResponse)
-async def update_employee(employee_id: str, employee_data: EmployeeUpdate, current_user: dict = Depends(get_current_user)):
+async def update_employee(employee_id: str, employee_data: EmployeeUpdate, current_user: dict = Depends(get_current_active_user)):
     update_data = {k: v for k, v in employee_data.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="Geen gegevens om bij te werken")
@@ -1521,7 +1521,7 @@ async def update_employee(employee_id: str, employee_data: EmployeeUpdate, curre
     return EmployeeResponse(**employee)
 
 @api_router.delete("/employees/{employee_id}")
-async def delete_employee(employee_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_employee(employee_id: str, current_user: dict = Depends(get_current_active_user)):
     result = await db.employees.delete_one({"id": employee_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
