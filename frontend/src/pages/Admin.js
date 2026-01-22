@@ -798,24 +798,40 @@ export default function Admin() {
             <CardContent>
               {/* DNS Info Box */}
               <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                <h4 className="font-semibold text-blue-600 mb-2">DNS Configuratie</h4>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Klanten moeten een A-record aanmaken bij hun domeinprovider:
+                <h4 className="font-semibold text-blue-600 mb-2">DNS Configuratie voor Klanten</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Klanten moeten een <strong>A-record</strong> aanmaken bij hun domeinprovider (bijv. Cloudflare, GoDaddy, TransIP):
                 </p>
-                <div className="flex items-center gap-2 bg-background p-2 rounded font-mono text-sm">
-                  <span className="text-muted-foreground">Type:</span>
-                  <span className="font-semibold">A</span>
-                  <span className="text-muted-foreground ml-4">Waarde:</span>
-                  <span className="font-semibold">185.199.108.153</span>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="ml-auto"
-                    onClick={() => copyToClipboard('185.199.108.153')}
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
+                <div className="bg-background p-3 rounded border space-y-2">
+                  <div className="flex items-center gap-4">
+                    <span className="text-muted-foreground text-sm w-20">Type:</span>
+                    <span className="font-mono font-semibold">A</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-muted-foreground text-sm w-20">Naam:</span>
+                    <span className="font-mono font-semibold">@ of www</span>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-muted-foreground text-sm w-20">Waarde:</span>
+                    <span className="font-mono font-semibold text-primary">72.62.174.117</span>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-6"
+                      onClick={() => copyToClipboard('72.62.174.117')}
+                    >
+                      <Copy className="w-3 h-3 mr-1" />
+                      Kopieer
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-muted-foreground text-sm w-20">TTL:</span>
+                    <span className="font-mono font-semibold">3600</span>
+                  </div>
                 </div>
+                <p className="text-xs text-muted-foreground mt-3">
+                  ⚠️ Na het instellen van de DNS moet u in CloudPanel een nieuwe site aanmaken voor dit domein en een SSL certificaat configureren.
+                </p>
               </div>
 
               <div className="overflow-x-auto">
