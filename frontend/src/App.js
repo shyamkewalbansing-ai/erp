@@ -13,6 +13,7 @@ import Onderhoud from "./pages/Onderhoud";
 import Werknemers from "./pages/Werknemers";
 import Abonnement from "./pages/Abonnement";
 import Admin from "./pages/Admin";
+import Instellingen from "./pages/Instellingen";
 import Layout from "./components/Layout";
 import "@/App.css";
 
