@@ -85,4 +85,27 @@ export const updateMaintenance = (id, data) => api.put(`/maintenance/${id}`, dat
 export const deleteMaintenance = (id) => api.delete(`/maintenance/${id}`);
 export const getApartmentMaintenance = (apartmentId) => api.get(`/maintenance/apartment/${apartmentId}`);
 
+// Werknemers (Employees)
+export const getEmployees = () => api.get('/employees');
+export const getEmployee = (id) => api.get(`/employees/${id}`);
+export const createEmployee = (data) => api.post('/employees', data);
+export const updateEmployee = (id, data) => api.put(`/employees/${id}`, data);
+export const deleteEmployee = (id) => api.delete(`/employees/${id}`);
+
+// Salaris (Salary Payments)
+export const getSalaries = () => api.get('/salaries');
+export const createSalary = (data) => api.post('/salaries', data);
+export const deleteSalary = (id) => api.delete(`/salaries/${id}`);
+
+// Wisselkoers (Exchange Rate)
+export const getExchangeRate = () => api.get('/exchange-rate');
+
+// Format currency in EUR
+export const formatCurrencyEUR = (amount) => {
+  return `€ ${new Intl.NumberFormat('nl-NL', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount)}`;
+};
+
 export default api;
