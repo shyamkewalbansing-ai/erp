@@ -322,7 +322,7 @@ async def create_tenant(tenant_data: TenantCreate, current_user: dict = Depends(
     }
     
     await db.tenants.insert_one(tenant_doc)
-    del tenant_doc["_id"] if "_id" in tenant_doc else None
+    tenant_doc.pop("_id", None)
     
     return TenantResponse(**tenant_doc)
 
