@@ -720,7 +720,7 @@ server {
                         </td>
                       </tr>
                     );
-                    })}
+                  })}
                     {filteredCustomers.length === 0 && (
                       <tr>
                         <td colSpan={5} className="py-8 text-center text-muted-foreground">
