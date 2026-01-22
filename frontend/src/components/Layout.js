@@ -106,7 +106,8 @@ export default function Layout() {
             </NavLink>
           )}
 
-          {navItems.map((item) => (
+          {/* Customer navigation - only for non-superadmin users */}
+          {!isSuperAdmin() && customerNavItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -120,7 +121,7 @@ export default function Layout() {
             </NavLink>
           ))}
 
-          {/* Subscription link - for customers */}
+          {/* Subscription link - for customers only */}
           {!isSuperAdmin() && (
             <NavLink
               to="/abonnement"
