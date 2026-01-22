@@ -99,8 +99,8 @@ echo ""
 echo -e "${YELLOW}Stap 5/8: Backend configureren...${NC}"
 cd $BACKEND_DIR
 
-# Virtual environment
-python3.11 -m venv venv
+# Virtual environment maken met beschikbare Python
+$PYTHON_CMD -m venv venv
 source venv/bin/activate
 
 # Dependencies
