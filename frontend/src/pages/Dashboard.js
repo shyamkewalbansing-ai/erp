@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../context/AuthContext';
 import { getDashboard, formatCurrency } from '../lib/api';
 import { toast } from 'sonner';
 import { 
@@ -15,6 +16,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
