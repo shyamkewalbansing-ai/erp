@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getProfile, updateProfile, changePassword } from '../lib/api';
+import { getProfile, updateProfile, changePassword, uploadLogo, deleteLogo } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -15,7 +15,10 @@ import {
   Loader2,
   Eye,
   EyeOff,
-  Shield
+  Shield,
+  ImageIcon,
+  Upload,
+  Trash2
 } from 'lucide-react';
 
 export default function Instellingen() {
