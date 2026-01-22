@@ -95,16 +95,27 @@ export default function Layout() {
         <nav className="flex-1 p-4 space-y-1">
           {/* Admin link - only for superadmin */}
           {isSuperAdmin() && (
-            <NavLink
-              to="/admin"
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-              data-testid="nav-admin"
-            >
-              <Crown className="w-5 h-5" />
-              <span>Beheerder</span>
-              <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>
-            </NavLink>
+            <>
+              <NavLink
+                to="/admin"
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                data-testid="nav-admin"
+              >
+                <Crown className="w-5 h-5" />
+                <span>Beheerder</span>
+                <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>
+              </NavLink>
+              <NavLink
+                to="/instellingen"
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                data-testid="nav-instellingen"
+              >
+                <Settings className="w-5 h-5" />
+                <span>Instellingen</span>
+              </NavLink>
+            </>
           )}
 
           {/* Customer navigation - only for non-superadmin users */}
