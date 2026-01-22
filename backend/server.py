@@ -1275,6 +1275,187 @@ async def get_apartment_maintenance(apartment_id: str, current_user: dict = Depe
     
     return [MaintenanceResponse(**r) for r in records]
 
+# ==================== WERKNEMERS (EMPLOYEES) ROUTES ====================
+
+@api_router.post("/employees", response_model=EmployeeResponse)
+async def create_employee(employee_data: EmployeeCreate, current_user: dict = Depends(get_current_user)):
+    employee_id = str(uuid.uuid4())
+    employee_doc = {
+        "id": employee_id,
+        "name": employee_data.name,
+        "position": employee_data.position,
+        "phone": employee_data.phone,
+        "email": employee_data.email,
+        "salary": employee_data.salary,
+        "start_date": employee_data.start_date,
+        "status": "active",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "user_id": current_user["id"]
+    }
+    
+    await db.employees.insert_one(employee_doc)
+    
+    return EmployeeResponse(**employee_doc)
+
+@api_router.get("/employees", response_model=List[EmployeeResponse])
+async def get_employees(current_user: dict = Depends(get_current_user)):
+    employees = await db.employees.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(1000)
+    return [EmployeeResponse(**e) for e in employees]
+
+@api_router.get("/employees/{employee_id}", response_model=EmployeeResponse)
+async def get_employee(employee_id: str, current_user: dict = Depends(get_current_user)):
+    employee = await db.employees.find_one(
+        {"id": employee_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not employee:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    return EmployeeResponse(**employee)
+
+@api_router.put("/employees/{employee_id}", response_model=EmployeeResponse)
+async def update_employee(employee_id: str, employee_data: EmployeeUpdate, current_user: dict = Depends(get_current_user)):
+    update_data = {k: v for k, v in employee_data.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Geen gegevens om bij te werken")
+    
+    result = await db.employees.update_one(
+        {"id": employee_id, "user_id": current_user["id"]},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    
+    employee = await db.employees.find_one({"id": employee_id}, {"_id": 0})
+    return EmployeeResponse(**employee)
+
+@api_router.delete("/employees/{employee_id}")
+async def delete_employee(employee_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.employees.delete_one({"id": employee_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    return {"message": "Werknemer verwijderd"}
+
+# ==================== SALARIS (SALARY) ROUTES ====================
+
+@api_router.post("/salaries", response_model=SalaryPaymentResponse)
+async def create_salary_payment(salary_data: SalaryPaymentCreate, current_user: dict = Depends(get_current_user)):
+    # Verify employee exists
+    employee = await db.employees.find_one(
+        {"id": salary_data.employee_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not employee:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    
+    salary_id = str(uuid.uuid4())
+    salary_doc = {
+        "id": salary_id,
+        "employee_id": salary_data.employee_id,
+        "amount": salary_data.amount,
+        "payment_date": salary_data.payment_date,
+        "period_month": salary_data.period_month,
+        "period_year": salary_data.period_year,
+        "description": salary_data.description,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "user_id": current_user["id"]
+    }
+    
+    await db.salaries.insert_one(salary_doc)
+    
+    return SalaryPaymentResponse(
+        **salary_doc,
+        employee_name=employee["name"]
+    )
+
+@api_router.get("/salaries", response_model=List[SalaryPaymentResponse])
+async def get_salary_payments(current_user: dict = Depends(get_current_user)):
+    salaries = await db.salaries.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("payment_date", -1).to_list(1000)
+    
+    # Batch fetch employee names
+    employee_ids = list(set(s["employee_id"] for s in salaries))
+    employees = await db.employees.find({"id": {"$in": employee_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    employee_map = {e["id"]: e["name"] for e in employees}
+    
+    for salary in salaries:
+        salary["employee_name"] = employee_map.get(salary["employee_id"])
+    
+    return [SalaryPaymentResponse(**s) for s in salaries]
+
+@api_router.delete("/salaries/{salary_id}")
+async def delete_salary_payment(salary_id: str, current_user: dict = Depends(get_current_user)):
+    result = await db.salaries.delete_one({"id": salary_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Salarisbetaling niet gevonden")
+    return {"message": "Salarisbetaling verwijderd"}
+
+# ==================== WISSELKOERS (EXCHANGE RATE) ROUTES ====================
+
+# Cache for exchange rate (to avoid too many API calls)
+exchange_rate_cache = {
+    "rate": None,
+    "last_updated": None
+}
+
+@api_router.get("/exchange-rate", response_model=ExchangeRateResponse)
+async def get_exchange_rate():
+    """Get current SRD to EUR exchange rate"""
+    now = datetime.now(timezone.utc)
+    
+    # Check if cache is valid (less than 1 hour old)
+    if exchange_rate_cache["rate"] and exchange_rate_cache["last_updated"]:
+        cache_age = (now - exchange_rate_cache["last_updated"]).total_seconds()
+        if cache_age < 3600:  # 1 hour
+            return ExchangeRateResponse(
+                srd_to_eur=exchange_rate_cache["rate"],
+                eur_to_srd=1 / exchange_rate_cache["rate"],
+                last_updated=exchange_rate_cache["last_updated"].isoformat(),
+                source="cached"
+            )
+    
+    # Try to fetch from external API
+    try:
+        async with httpx.AsyncClient() as client:
+            # Using exchangerate-api.com (free tier)
+            response = await client.get(
+                "https://api.exchangerate-api.com/v4/latest/EUR",
+                timeout=10.0
+            )
+            if response.status_code == 200:
+                data = response.json()
+                # SRD rate from EUR
+                eur_to_srd = data.get("rates", {}).get("SRD", 38.5)
+                srd_to_eur = 1 / eur_to_srd
+                
+                # Update cache
+                exchange_rate_cache["rate"] = srd_to_eur
+                exchange_rate_cache["last_updated"] = now
+                
+                return ExchangeRateResponse(
+                    srd_to_eur=srd_to_eur,
+                    eur_to_srd=eur_to_srd,
+                    last_updated=now.isoformat(),
+                    source="live"
+                )
+    except Exception as e:
+        logger.warning(f"Failed to fetch exchange rate: {e}")
+    
+    # Fallback to approximate rate if API fails
+    # Current approximate rate: 1 EUR ≈ 38.5 SRD (December 2024)
+    fallback_eur_to_srd = 38.5
+    return ExchangeRateResponse(
+        srd_to_eur=1 / fallback_eur_to_srd,
+        eur_to_srd=fallback_eur_to_srd,
+        last_updated=now.isoformat(),
+        source="fallback"
+    )
+
 # Include the router in the main app
 app.include_router(api_router)
 
