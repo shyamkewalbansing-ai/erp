@@ -154,6 +154,19 @@ export default function Layout() {
               )}
             </NavLink>
           )}
+
+          {/* Settings link - for customers only */}
+          {!isSuperAdmin() && (
+            <NavLink
+              to="/instellingen"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              data-testid="nav-instellingen-customer"
+            >
+              <Settings className="w-5 h-5" />
+              <span>Instellingen</span>
+            </NavLink>
+          )}
         </nav>
 
         {/* User section */}
