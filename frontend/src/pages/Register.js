@@ -5,12 +5,13 @@ import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Building2, Mail, Lock, User, ArrowRight } from 'lucide-react';
+import { Building2, Mail, Lock, User, ArrowRight, Briefcase } from 'lucide-react';
 
 export default function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -26,8 +27,8 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await register(name, email, password);
-      toast.success('Account aangemaakt!');
+      await register(name, email, password, companyName || undefined);
+      toast.success('Account aangemaakt! U heeft 3 dagen gratis proefperiode.');
       navigate('/dashboard');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Registratie mislukt');
@@ -50,7 +51,7 @@ export default function Register() {
           <h2 className="text-4xl font-bold mb-4">Start vandaag met SuriRentals</h2>
           <p className="text-lg text-white/80">
             Maak een gratis account aan en begin direct met het beheren 
-            van uw vastgoedportfolio.
+            van uw vastgoedportfolio. U krijgt 3 dagen gratis proefperiode!
           </p>
         </div>
       </div>
@@ -73,12 +74,12 @@ export default function Register() {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-foreground mb-2">Account aanmaken</h2>
             <p className="text-muted-foreground">
-              Vul uw gegevens in om te beginnen
+              Vul uw gegevens in om te beginnen. 3 dagen gratis proefperiode!
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Volledige naam</Label>
               <div className="relative">
@@ -92,6 +93,22 @@ export default function Register() {
                   className="pl-10 h-12 bg-input border-transparent focus:border-primary"
                   required
                   data-testid="register-name"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="company">Bedrijfsnaam (optioneel)</Label>
+              <div className="relative">
+                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="company"
+                  type="text"
+                  placeholder="Uw bedrijfsnaam"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  className="pl-10 h-12 bg-input border-transparent focus:border-primary"
+                  data-testid="register-company"
                 />
               </div>
             </div>
