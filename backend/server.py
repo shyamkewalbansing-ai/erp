@@ -542,12 +542,19 @@ async def get_payments(current_user: dict = Depends(get_current_user)):
         {"_id": 0}
     ).sort("payment_date", -1).to_list(1000)
     
-    # Add tenant and apartment names
+    # Batch fetch tenant and apartment names to avoid N+1 queries
+    tenant_ids = list(set(p["tenant_id"] for p in payments))
+    apt_ids = list(set(p["apartment_id"] for p in payments))
+    
+    tenants = await db.tenants.find({"id": {"$in": tenant_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    apts = await db.apartments.find({"id": {"$in": apt_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    
+    tenant_map = {t["id"]: t["name"] for t in tenants}
+    apt_map = {a["id"]: a["name"] for a in apts}
+    
     for payment in payments:
-        tenant = await db.tenants.find_one({"id": payment["tenant_id"]}, {"_id": 0, "name": 1})
-        apt = await db.apartments.find_one({"id": payment["apartment_id"]}, {"_id": 0, "name": 1})
-        payment["tenant_name"] = tenant["name"] if tenant else None
-        payment["apartment_name"] = apt["name"] if apt else None
+        payment["tenant_name"] = tenant_map.get(payment["tenant_id"])
+        payment["apartment_name"] = apt_map.get(payment["apartment_id"])
     
     return [PaymentResponse(**p) for p in payments]
 
