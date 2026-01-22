@@ -35,7 +35,7 @@ JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 
 # Create the main app
-app = FastAPI(title="SuriRentals API", version="1.0.0")
+app = FastAPI(title="Facturatie N.V. API", version="1.0.0")
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
@@ -64,7 +64,7 @@ async def health_check():
 SUBSCRIPTION_PRICE_SRD = 3500.0
 SUBSCRIPTION_DAYS = 30
 TRIAL_DAYS = 3
-SUPER_ADMIN_EMAIL = "admin@surirentals.sr"  # Default super admin
+SUPER_ADMIN_EMAIL = "admin@facturatie.sr"  # Default super admin
 
 # User Models
 class UserCreate(BaseModel):
@@ -961,7 +961,7 @@ async def generate_receipt_pdf(payment_id: str, current_user: dict = Depends(get
     
     # Header
     elements.append(Paragraph("KWITANTIE", title_style))
-    elements.append(Paragraph(f"<b>SuriRentals</b> - Verhuurbeheersysteem", styles['Normal']))
+    elements.append(Paragraph(f"<b>Facturatie N.V.</b> - Verhuurbeheersysteem", styles['Normal']))
     elements.append(Spacer(1, 20))
     
     # Receipt info
@@ -2016,7 +2016,7 @@ async def generate_subscription_receipt_pdf(subscription_id: str, current_user: 
     
     # Header
     elements.append(Paragraph("ABONNEMENT KWITANTIE", title_style))
-    elements.append(Paragraph(f"<b>SuriRentals</b> - Verhuurbeheersysteem", styles['Normal']))
+    elements.append(Paragraph(f"<b>Facturatie N.V.</b> - Verhuurbeheersysteem", styles['Normal']))
     elements.append(Spacer(1, 20))
     
     # Payment method translation
@@ -2070,9 +2070,9 @@ async def generate_subscription_receipt_pdf(subscription_id: str, current_user: 
     
     # Footer
     elements.append(Paragraph("_" * 50, styles['Normal']))
-    elements.append(Paragraph("SuriRentals Administratie", styles['Normal']))
+    elements.append(Paragraph("Facturatie N.V. Administratie", styles['Normal']))
     elements.append(Spacer(1, 10))
-    elements.append(Paragraph("<i>Dit document dient als bewijs van betaling voor het SuriRentals abonnement.</i>", styles['Normal']))
+    elements.append(Paragraph("<i>Dit document dient als bewijs van betaling voor het Facturatie N.V. abonnement.</i>", styles['Normal']))
     
     doc.build(elements)
     buffer.seek(0)
@@ -2425,7 +2425,7 @@ async def request_subscription(current_user: dict = Depends(get_current_user)):
         "bank_info": {
             "bank": "De Surinaamsche Bank",
             "rekening": "123456789",
-            "naam": "SuriRentals BV",
+            "naam": "Facturatie N.V.",
             "omschrijving": f"Abonnement {current_user['email']}"
         }
     }
