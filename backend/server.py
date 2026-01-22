@@ -569,7 +569,8 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         role=current_user.get("role", "customer"),
         subscription_status=current_user.get("subscription_status", "none"),
         subscription_end_date=current_user.get("subscription_end_date"),
-        created_at=current_user["created_at"]
+        created_at=current_user["created_at"],
+        logo=current_user.get("logo")
     )
 
 # ==================== TENANT ROUTES ====================
