@@ -92,6 +92,7 @@ export default function Admin() {
   const [editCustomerDialogOpen, setEditCustomerDialogOpen] = useState(false);
   const [addDomainDialogOpen, setAddDomainDialogOpen] = useState(false);
   const [deleteDomainDialogOpen, setDeleteDomainDialogOpen] = useState(false);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
   
   // Form states
   const [activating, setActivating] = useState(false);
