@@ -636,7 +636,7 @@ async def delete_tenant(tenant_id: str, current_user: dict = Depends(get_current
 # ==================== APARTMENT ROUTES ====================
 
 @api_router.post("/apartments", response_model=ApartmentResponse)
-async def create_apartment(apt_data: ApartmentCreate, current_user: dict = Depends(get_current_user)):
+async def create_apartment(apt_data: ApartmentCreate, current_user: dict = Depends(get_current_active_user)):
     apt_id = str(uuid.uuid4())
     apt_doc = {
         "id": apt_id,
@@ -657,7 +657,7 @@ async def create_apartment(apt_data: ApartmentCreate, current_user: dict = Depen
     return ApartmentResponse(**apt_doc)
 
 @api_router.get("/apartments", response_model=List[ApartmentResponse])
-async def get_apartments(current_user: dict = Depends(get_current_user)):
+async def get_apartments(current_user: dict = Depends(get_current_active_user)):
     apartments = await db.apartments.find(
         {"user_id": current_user["id"]},
         {"_id": 0}
@@ -678,7 +678,7 @@ async def get_apartments(current_user: dict = Depends(get_current_user)):
     return [ApartmentResponse(**apt) for apt in apartments]
 
 @api_router.get("/apartments/{apartment_id}", response_model=ApartmentResponse)
-async def get_apartment(apartment_id: str, current_user: dict = Depends(get_current_user)):
+async def get_apartment(apartment_id: str, current_user: dict = Depends(get_current_active_user)):
     apt = await db.apartments.find_one(
         {"id": apartment_id, "user_id": current_user["id"]},
         {"_id": 0}
@@ -693,7 +693,7 @@ async def get_apartment(apartment_id: str, current_user: dict = Depends(get_curr
     return ApartmentResponse(**apt)
 
 @api_router.put("/apartments/{apartment_id}", response_model=ApartmentResponse)
-async def update_apartment(apartment_id: str, apt_data: ApartmentUpdate, current_user: dict = Depends(get_current_user)):
+async def update_apartment(apartment_id: str, apt_data: ApartmentUpdate, current_user: dict = Depends(get_current_active_user)):
     update_data = {k: v for k, v in apt_data.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="Geen gegevens om bij te werken")
@@ -715,14 +715,14 @@ async def update_apartment(apartment_id: str, apt_data: ApartmentUpdate, current
     return ApartmentResponse(**apt)
 
 @api_router.delete("/apartments/{apartment_id}")
-async def delete_apartment(apartment_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_apartment(apartment_id: str, current_user: dict = Depends(get_current_active_user)):
     result = await db.apartments.delete_one({"id": apartment_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Appartement niet gevonden")
     return {"message": "Appartement verwijderd"}
 
 @api_router.post("/apartments/{apartment_id}/assign-tenant")
-async def assign_tenant(apartment_id: str, tenant_id: str, current_user: dict = Depends(get_current_user)):
+async def assign_tenant(apartment_id: str, tenant_id: str, current_user: dict = Depends(get_current_active_user)):
     # Verify apartment exists
     apt = await db.apartments.find_one(
         {"id": apartment_id, "user_id": current_user["id"]},
@@ -748,7 +748,7 @@ async def assign_tenant(apartment_id: str, tenant_id: str, current_user: dict = 
     return {"message": "Huurder toegewezen aan appartement"}
 
 @api_router.post("/apartments/{apartment_id}/remove-tenant")
-async def remove_tenant(apartment_id: str, current_user: dict = Depends(get_current_user)):
+async def remove_tenant(apartment_id: str, current_user: dict = Depends(get_current_active_user)):
     result = await db.apartments.update_one(
         {"id": apartment_id, "user_id": current_user["id"]},
         {"$set": {"tenant_id": None, "status": "available"}}
