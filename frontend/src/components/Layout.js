@@ -20,7 +20,8 @@ import {
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 
-const navItems = [
+// Navigation items for customers only (not for superadmin)
+const customerNavItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/tenants', icon: Users, label: 'Huurders' },
   { to: '/apartments', icon: Building2, label: 'Appartementen' },
