@@ -945,6 +945,9 @@ async def generate_receipt_pdf(payment_id: str, current_user: dict = Depends(get
     tenant = await db.tenants.find_one({"id": payment["tenant_id"]}, {"_id": 0})
     apt = await db.apartments.find_one({"id": payment["apartment_id"]}, {"_id": 0})
     
+    # Get user logo
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "logo": 1, "company_name": 1})
+    
     # Create PDF
     buffer = BytesIO()
     doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
@@ -960,9 +963,26 @@ async def generate_receipt_pdf(payment_id: str, current_user: dict = Depends(get
     
     elements = []
     
+    # Add customer logo if available
+    if user and user.get("logo"):
+        try:
+            logo_data = user["logo"]
+            # Remove data:image/xxx;base64, prefix
+            if "," in logo_data:
+                logo_data = logo_data.split(",")[1]
+            logo_bytes = base64.b64decode(logo_data)
+            logo_buffer = BytesIO(logo_bytes)
+            logo_img = Image(logo_buffer, width=4*cm, height=2*cm)
+            logo_img.hAlign = 'LEFT'
+            elements.append(logo_img)
+            elements.append(Spacer(1, 10))
+        except Exception as e:
+            logger.error(f"Error adding logo to PDF: {e}")
+    
     # Header
     elements.append(Paragraph("KWITANTIE", title_style))
-    elements.append(Paragraph(f"<b>Facturatie N.V.</b> - Verhuurbeheersysteem", styles['Normal']))
+    company_name = user.get("company_name") if user and user.get("company_name") else "Facturatie N.V."
+    elements.append(Paragraph(f"<b>{company_name}</b> - Verhuurbeheersysteem", styles['Normal']))
     elements.append(Spacer(1, 20))
     
     # Receipt info
