@@ -87,6 +87,7 @@ class UserResponse(BaseModel):
     subscription_status: str  # 'active', 'expired', 'trial', 'none'
     subscription_end_date: Optional[str] = None
     created_at: str
+    logo: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str
