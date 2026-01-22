@@ -65,7 +65,7 @@ export default function Layout() {
             <img 
               src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
               alt="Facturatie N.V." 
-              className="h-10 w-auto"
+              className="h-7 w-auto"
             />
           </div>
         </div>
@@ -194,7 +194,7 @@ export default function Layout() {
           <img 
             src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
             alt="Facturatie N.V." 
-            className="h-8 w-auto"
+            className="h-6 w-auto"
           />
         </header>
 

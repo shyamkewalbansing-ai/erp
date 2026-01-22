@@ -64,7 +64,7 @@ export default function Register() {
             <img 
               src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
               alt="Facturatie N.V." 
-              className="h-12 w-auto"
+              className="h-8 w-auto"
             />
           </div>
 
