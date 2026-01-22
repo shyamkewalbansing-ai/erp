@@ -218,6 +218,83 @@ export default function Instellingen() {
         </CardContent>
       </Card>
 
+      {/* Company Logo - Only for customers */}
+      {user?.role !== 'superadmin' && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <ImageIcon className="w-5 h-5 text-primary" />
+              <CardTitle>Bedrijfslogo</CardTitle>
+            </div>
+            <CardDescription>
+              Upload uw logo voor de sidebar, dashboard en PDF kwitanties (max 2MB)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Logo Preview */}
+              <div className="flex items-center gap-4">
+                <div className="w-24 h-24 rounded-lg border-2 border-dashed border-border flex items-center justify-center bg-accent/30 overflow-hidden">
+                  {profile.logo ? (
+                    <img 
+                      src={profile.logo} 
+                      alt="Bedrijfslogo" 
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {profile.logo ? 'Uw huidige logo' : 'Nog geen logo geüpload'}
+                  </p>
+                  <div className="flex gap-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleLogoUpload}
+                      accept="image/*"
+                      className="hidden"
+                      data-testid="logo-input"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingLogo}
+                      data-testid="upload-logo-btn"
+                    >
+                      {uploadingLogo ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                      )}
+                      {profile.logo ? 'Wijzigen' : 'Uploaden'}
+                    </Button>
+                    {profile.logo && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDeleteLogo}
+                        disabled={uploadingLogo}
+                        className="text-destructive hover:text-destructive"
+                        data-testid="delete-logo-btn"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Verwijderen
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Profile Settings */}
       <Card>
         <CardHeader>
