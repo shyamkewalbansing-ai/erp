@@ -8,6 +8,8 @@ import Tenants from "./pages/Tenants";
 import Apartments from "./pages/Apartments";
 import Payments from "./pages/Payments";
 import Deposits from "./pages/Deposits";
+import Kasgeld from "./pages/Kasgeld";
+import Onderhoud from "./pages/Onderhoud";
 import Layout from "./components/Layout";
 import "@/App.css";
 
