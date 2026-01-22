@@ -573,7 +573,35 @@ export default function Admin() {
                           <span className="font-medium">{formatCurrency(customer.total_paid)}</span>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedCustomer(customer);
+                                setEditForm({
+                                  name: customer.name,
+                                  email: customer.email,
+                                  company_name: customer.company_name || ''
+                                });
+                                setEditCustomerDialogOpen(true);
+                              }}
+                              title="Bewerken"
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedCustomer(customer);
+                                setNewPassword('');
+                                setResetPasswordDialogOpen(true);
+                              }}
+                              title="Wachtwoord Resetten"
+                            >
+                              <Key className="w-3 h-3" />
+                            </Button>
                             <Button
                               size="sm"
                               variant="outline"
@@ -582,9 +610,9 @@ export default function Admin() {
                                 setActivateDialogOpen(true);
                               }}
                               data-testid={`activate-btn-${customer.id}`}
+                              title="Abonnement Activeren"
                             >
-                              <Plus className="w-3 h-3 mr-1" />
-                              Activeren
+                              <Plus className="w-3 h-3" />
                             </Button>
                             {(customer.subscription_status === 'active' || customer.subscription_status === 'trial') && (
                               <Button
@@ -595,9 +623,9 @@ export default function Admin() {
                                   setSelectedCustomer(customer);
                                   setDeactivateDialogOpen(true);
                                 }}
+                                title="Abonnement Stoppen"
                               >
-                                <XCircle className="w-3 h-3 mr-1" />
-                                Stop
+                                <XCircle className="w-3 h-3" />
                               </Button>
                             )}
                             <Button
@@ -608,6 +636,7 @@ export default function Admin() {
                                 setDeleteCustomerDialogOpen(true);
                               }}
                               data-testid={`delete-btn-${customer.id}`}
+                              title="Verwijderen"
                             >
                               <Trash2 className="w-3 h-3" />
                             </Button>
