@@ -932,7 +932,7 @@ async def delete_deposit(deposit_id: str, current_user: dict = Depends(get_curre
 # ==================== RECEIPT/PDF ROUTES ====================
 
 @api_router.get("/receipts/{payment_id}/pdf")
-async def generate_receipt_pdf(payment_id: str, current_user: dict = Depends(get_current_user)):
+async def generate_receipt_pdf(payment_id: str, current_user: dict = Depends(get_current_active_user)):
     # Get payment data
     payment = await db.payments.find_one(
         {"id": payment_id, "user_id": current_user["id"]},
@@ -1022,7 +1022,7 @@ async def generate_receipt_pdf(payment_id: str, current_user: dict = Depends(get
 # ==================== DASHBOARD ROUTES ====================
 
 @api_router.get("/dashboard", response_model=DashboardStats)
-async def get_dashboard(current_user: dict = Depends(get_current_user)):
+async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     user_id = current_user["id"]
     
     # Get apartment stats
@@ -1166,7 +1166,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
 # ==================== TENANT BALANCE ROUTES ====================
 
 @api_router.get("/tenants/{tenant_id}/balance")
-async def get_tenant_balance(tenant_id: str, current_user: dict = Depends(get_current_user)):
+async def get_tenant_balance(tenant_id: str, current_user: dict = Depends(get_current_active_user)):
     tenant = await db.tenants.find_one(
         {"id": tenant_id, "user_id": current_user["id"]},
         {"_id": 0}
