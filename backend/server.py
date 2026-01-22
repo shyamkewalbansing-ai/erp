@@ -1530,7 +1530,7 @@ async def delete_employee(employee_id: str, current_user: dict = Depends(get_cur
 # ==================== SALARIS (SALARY) ROUTES ====================
 
 @api_router.post("/salaries", response_model=SalaryPaymentResponse)
-async def create_salary_payment(salary_data: SalaryPaymentCreate, current_user: dict = Depends(get_current_user)):
+async def create_salary_payment(salary_data: SalaryPaymentCreate, current_user: dict = Depends(get_current_active_user)):
     # Verify employee exists
     employee = await db.employees.find_one(
         {"id": salary_data.employee_id, "user_id": current_user["id"]},
@@ -1560,7 +1560,7 @@ async def create_salary_payment(salary_data: SalaryPaymentCreate, current_user: 
     )
 
 @api_router.get("/salaries", response_model=List[SalaryPaymentResponse])
-async def get_salary_payments(current_user: dict = Depends(get_current_user)):
+async def get_salary_payments(current_user: dict = Depends(get_current_active_user)):
     salaries = await db.salaries.find(
         {"user_id": current_user["id"]},
         {"_id": 0}
@@ -1577,7 +1577,7 @@ async def get_salary_payments(current_user: dict = Depends(get_current_user)):
     return [SalaryPaymentResponse(**s) for s in salaries]
 
 @api_router.delete("/salaries/{salary_id}")
-async def delete_salary_payment(salary_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_salary_payment(salary_id: str, current_user: dict = Depends(get_current_active_user)):
     result = await db.salaries.delete_one({"id": salary_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Salarisbetaling niet gevonden")
