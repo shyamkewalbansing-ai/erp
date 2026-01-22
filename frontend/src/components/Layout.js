@@ -13,9 +13,12 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronRight
+  ChevronRight,
+  Crown,
+  Package
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { Badge } from './ui/badge';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -29,7 +32,7 @@ const navItems = [
 ];
 
 export default function Layout() {
-  const { user, logout } = useAuth();
+  const { user, logout, hasActiveSubscription, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -37,6 +40,10 @@ export default function Layout() {
     logout();
     navigate('/login');
   };
+
+  const isSubscriptionActive = hasActiveSubscription();
+  const showTrialBadge = user?.subscription_status === 'trial';
+  const showExpiredBadge = user?.subscription_status === 'expired';
 
   return (
     <div className="app-container grain-overlay">
@@ -63,14 +70,47 @@ export default function Layout() {
           </div>
         </div>
 
+        {/* Subscription Status Banner */}
+        {!isSuperAdmin() && (showTrialBadge || showExpiredBadge) && (
+          <div className={`mx-4 mt-4 p-3 rounded-lg ${showExpiredBadge ? 'bg-red-500/10 border border-red-500/20' : 'bg-blue-500/10 border border-blue-500/20'}`}>
+            <div className="flex items-center gap-2">
+              <Package className={`w-4 h-4 ${showExpiredBadge ? 'text-red-500' : 'text-blue-500'}`} />
+              <span className={`text-xs font-medium ${showExpiredBadge ? 'text-red-500' : 'text-blue-500'}`}>
+                {showExpiredBadge ? 'Abonnement verlopen' : 'Proefperiode'}
+              </span>
+            </div>
+            <NavLink 
+              to="/abonnement" 
+              className="text-xs text-muted-foreground hover:underline mt-1 block"
+              onClick={() => setSidebarOpen(false)}
+            >
+              {showExpiredBadge ? 'Activeer nu →' : 'Bekijk details →'}
+            </NavLink>
+          </div>
+        )}
+
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
+          {/* Admin link - only for superadmin */}
+          {isSuperAdmin() && (
+            <NavLink
+              to="/admin"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              data-testid="nav-admin"
+            >
+              <Crown className="w-5 h-5" />
+              <span>Beheerder</span>
+              <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>
+            </NavLink>
+          )}
+
           {navItems.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''}`}
               data-testid={`nav-${item.label.toLowerCase()}`}
             >
               <item.icon className="w-5 h-5" />
@@ -78,6 +118,22 @@ export default function Layout() {
               <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />
             </NavLink>
           ))}
+
+          {/* Subscription link - for customers */}
+          {!isSuperAdmin() && (
+            <NavLink
+              to="/abonnement"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              data-testid="nav-abonnement"
+            >
+              <Package className="w-5 h-5" />
+              <span>Abonnement</span>
+              {showExpiredBadge && (
+                <Badge className="ml-auto text-[10px] bg-red-500/10 text-red-500 border-red-500/20">!</Badge>
+              )}
+            </NavLink>
+          )}
         </nav>
 
         {/* User section */}
@@ -93,6 +149,12 @@ export default function Layout() {
               <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
             </div>
           </div>
+          {isSuperAdmin() && (
+            <Badge className="mb-3 w-full justify-center bg-primary/10 text-primary border-primary/20">
+              <Crown className="w-3 h-3 mr-1" />
+              Super Admin
+            </Badge>
+          )}
           <Button 
             variant="ghost" 
             className="w-full justify-start text-muted-foreground hover:text-destructive"
