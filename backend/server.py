@@ -573,7 +573,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 # ==================== TENANT ROUTES ====================
 
 @api_router.post("/tenants", response_model=TenantResponse)
-async def create_tenant(tenant_data: TenantCreate, current_user: dict = Depends(get_current_user)):
+async def create_tenant(tenant_data: TenantCreate, current_user: dict = Depends(get_current_active_user)):
     tenant_id = str(uuid.uuid4())
     tenant_doc = {
         "id": tenant_id,
@@ -592,7 +592,7 @@ async def create_tenant(tenant_data: TenantCreate, current_user: dict = Depends(
     return TenantResponse(**tenant_doc)
 
 @api_router.get("/tenants", response_model=List[TenantResponse])
-async def get_tenants(current_user: dict = Depends(get_current_user)):
+async def get_tenants(current_user: dict = Depends(get_current_active_user)):
     tenants = await db.tenants.find(
         {"user_id": current_user["id"]}, 
         {"_id": 0}
@@ -600,7 +600,7 @@ async def get_tenants(current_user: dict = Depends(get_current_user)):
     return [TenantResponse(**t) for t in tenants]
 
 @api_router.get("/tenants/{tenant_id}", response_model=TenantResponse)
-async def get_tenant(tenant_id: str, current_user: dict = Depends(get_current_user)):
+async def get_tenant(tenant_id: str, current_user: dict = Depends(get_current_active_user)):
     tenant = await db.tenants.find_one(
         {"id": tenant_id, "user_id": current_user["id"]},
         {"_id": 0}
@@ -610,7 +610,7 @@ async def get_tenant(tenant_id: str, current_user: dict = Depends(get_current_us
     return TenantResponse(**tenant)
 
 @api_router.put("/tenants/{tenant_id}", response_model=TenantResponse)
-async def update_tenant(tenant_id: str, tenant_data: TenantUpdate, current_user: dict = Depends(get_current_user)):
+async def update_tenant(tenant_id: str, tenant_data: TenantUpdate, current_user: dict = Depends(get_current_active_user)):
     update_data = {k: v for k, v in tenant_data.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="Geen gegevens om bij te werken")
@@ -627,7 +627,7 @@ async def update_tenant(tenant_id: str, tenant_data: TenantUpdate, current_user:
     return TenantResponse(**tenant)
 
 @api_router.delete("/tenants/{tenant_id}")
-async def delete_tenant(tenant_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_tenant(tenant_id: str, current_user: dict = Depends(get_current_active_user)):
     result = await db.tenants.delete_one({"id": tenant_id, "user_id": current_user["id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Huurder niet gevonden")
