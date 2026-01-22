@@ -364,6 +364,15 @@ class ExchangeRateResponse(BaseModel):
     last_updated: str
     source: str
 
+# Admin Dashboard Models
+class AdminDashboardStats(BaseModel):
+    total_customers: int
+    active_subscriptions: int
+    expired_subscriptions: int
+    total_revenue: float
+    revenue_this_month: float
+    recent_subscriptions: List[SubscriptionResponse]
+
 # Dashboard Models
 class DashboardStats(BaseModel):
     total_apartments: int
