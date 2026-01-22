@@ -10,6 +10,7 @@ import Payments from "./pages/Payments";
 import Deposits from "./pages/Deposits";
 import Kasgeld from "./pages/Kasgeld";
 import Onderhoud from "./pages/Onderhoud";
+import Werknemers from "./pages/Werknemers";
 import Layout from "./components/Layout";
 import "@/App.css";
 
