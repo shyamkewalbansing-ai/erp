@@ -796,6 +796,11 @@ async def get_dashboard(current_user: dict = Depends(get_current_user)):
     total_rent_due = sum(apt["rent_amount"] for apt in occupied_apts)
     total_outstanding = max(0, total_rent_due - total_income)
     
+    # Batch fetch tenant names for occupied apartments (used in reminders)
+    occupied_tenant_ids = [apt["tenant_id"] for apt in occupied_apts if apt.get("tenant_id")]
+    occupied_tenants = await db.tenants.find({"id": {"$in": occupied_tenant_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    occupied_tenant_map = {t["id"]: t["name"] for t in occupied_tenants}
+    
     # Get total deposits held
     deposits = await db.deposits.find(
         {"user_id": user_id, "status": "held"},
