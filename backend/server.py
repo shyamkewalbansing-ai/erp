@@ -404,6 +404,24 @@ def create_token(user_id: str, email: str) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
+def get_subscription_status(user: dict) -> tuple:
+    """Check subscription status and return (status, end_date)"""
+    if user.get("role") == "superadmin":
+        return "active", None
+    
+    end_date = user.get("subscription_end_date")
+    if not end_date:
+        return "none", None
+    
+    try:
+        end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+        if end_dt > datetime.now(timezone.utc):
+            return "active", end_date
+        else:
+            return "expired", end_date
+    except:
+        return "none", None
+
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
@@ -413,11 +431,41 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         user = await db.users.find_one({"id": user_id}, {"_id": 0})
         if not user:
             raise HTTPException(status_code=401, detail="Gebruiker niet gevonden")
+        
+        # Update subscription status
+        status, end_date = get_subscription_status(user)
+        user["subscription_status"] = status
+        user["subscription_end_date"] = end_date
+        
         return user
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token verlopen")
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Ongeldige token")
+
+async def get_current_active_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current user and verify they have an active subscription"""
+    user = await get_current_user(credentials)
+    
+    # Superadmin always has access
+    if user.get("role") == "superadmin":
+        return user
+    
+    # Check subscription
+    if user.get("subscription_status") != "active":
+        raise HTTPException(
+            status_code=403, 
+            detail="Uw abonnement is verlopen of niet actief. Neem contact op met de beheerder."
+        )
+    
+    return user
+
+async def get_superadmin(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Verify current user is superadmin"""
+    user = await get_current_user(credentials)
+    if user.get("role") != "superadmin":
+        raise HTTPException(status_code=403, detail="Alleen voor beheerders")
+    return user
 
 def format_currency(amount: float) -> str:
     """Format amount as SRD currency"""
