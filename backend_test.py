@@ -549,6 +549,216 @@ class SuriRentalsAPITester:
             return True
         return False
 
+    def test_exchange_rate_api(self):
+        """Test exchange rate endpoint"""
+        success, response = self.run_test(
+            "Get Exchange Rate",
+            "GET",
+            "exchange-rate",
+            200
+        )
+        if success:
+            print(f"   SRD to EUR: {response.get('srd_to_eur', 'N/A')}")
+            print(f"   EUR to SRD: {response.get('eur_to_srd', 'N/A')}")
+            print(f"   Source: {response.get('source', 'N/A')}")
+        return success
+
+    def test_create_employee(self):
+        """Test creating an employee"""
+        employee_data = {
+            "name": "Test Werknemer",
+            "position": "Schoonmaker",
+            "phone": "+597 123 4567",
+            "email": "test@example.com",
+            "salary": 2500.0,
+            "start_date": "2024-01-01"
+        }
+        
+        success, response = self.run_test(
+            "Create Employee",
+            "POST",
+            "employees",
+            200,
+            data=employee_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources['employees'].append(response['id'])
+            print(f"   Created employee ID: {response['id']}")
+            print(f"   Name: {response.get('name')}, Position: {response.get('position')}")
+            print(f"   Salary: {response.get('salary')}")
+            return True
+        return False
+
+    def test_get_employees(self):
+        """Test getting all employees"""
+        success, response = self.run_test(
+            "Get Employees List",
+            "GET",
+            "employees",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} employees")
+            for emp in response:
+                print(f"   - {emp.get('name')} ({emp.get('position')}) - {emp.get('status')}")
+            return True
+        return False
+
+    def test_update_employee(self):
+        """Test updating an employee"""
+        if not self.created_resources['employees']:
+            print("⚠️  Skipping employee update - no employee created")
+            return True
+            
+        employee_id = self.created_resources['employees'][0]
+        update_data = {
+            "salary": 2800.0,
+            "position": "Senior Schoonmaker"
+        }
+        
+        success, response = self.run_test(
+            "Update Employee",
+            "PUT",
+            f"employees/{employee_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            print(f"   Updated employee: {response.get('name')}")
+            print(f"   New salary: {response.get('salary')}")
+            return True
+        return False
+
+    def test_create_salary_payment(self):
+        """Test creating a salary payment"""
+        if not self.created_resources['employees']:
+            print("⚠️  Skipping salary payment - no employee created")
+            return True
+
+        employee_id = self.created_resources['employees'][0]
+        
+        salary_data = {
+            "employee_id": employee_id,
+            "amount": 2500.0,
+            "payment_date": datetime.now().strftime("%Y-%m-%d"),
+            "period_month": datetime.now().month,
+            "period_year": datetime.now().year,
+            "description": "Test salary payment"
+        }
+        
+        success, response = self.run_test(
+            "Create Salary Payment",
+            "POST",
+            "salaries",
+            200,
+            data=salary_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources['salaries'].append(response['id'])
+            print(f"   Created salary payment ID: {response['id']}")
+            print(f"   Amount: {response.get('amount')} for {response.get('employee_name')}")
+            print(f"   Period: {response.get('period_month')}/{response.get('period_year')}")
+            return True
+        return False
+
+    def test_get_salaries(self):
+        """Test getting all salary payments"""
+        success, response = self.run_test(
+            "Get Salary Payments",
+            "GET",
+            "salaries",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} salary payments")
+            for salary in response:
+                print(f"   - {salary.get('employee_name')}: {salary.get('amount')} ({salary.get('period_month')}/{salary.get('period_year')})")
+            return True
+        return False
+
+    def test_kasgeld_after_salary(self):
+        """Test that salary payments affect kasgeld balance"""
+        success, response = self.run_test(
+            "Get Kasgeld After Salary Payment",
+            "GET",
+            "kasgeld",
+            200
+        )
+        
+        if success:
+            balance = response.get('total_balance', 0)
+            salary_payments = response.get('total_salary_payments', 0)
+            print(f"   Kasgeld balance: {balance}")
+            print(f"   Total salary payments: {salary_payments}")
+            
+            # Check if salary transactions appear in kasgeld
+            transactions = response.get('transactions', [])
+            salary_transactions = [t for t in transactions if t.get('transaction_type') == 'salary']
+            print(f"   Salary transactions in kasgeld: {len(salary_transactions)}")
+            return True
+        return False
+
+    def test_dashboard_with_employees(self):
+        """Test dashboard includes employee data"""
+        success, response = self.run_test(
+            "Get Dashboard with Employee Data",
+            "GET",
+            "dashboard",
+            200
+        )
+        
+        if success:
+            print(f"   Total employees: {response.get('total_employees', 'N/A')}")
+            print(f"   Total kasgeld: {response.get('total_kasgeld', 'N/A')}")
+            print(f"   Salary this month: {response.get('total_salary_this_month', 'N/A')}")
+            return True
+        return False
+
+    def test_delete_salary_payment(self):
+        """Test deleting a salary payment"""
+        if not self.created_resources['salaries']:
+            print("⚠️  Skipping salary deletion - no salary payment created")
+            return True
+            
+        salary_id = self.created_resources['salaries'][0]
+        
+        success, response = self.run_test(
+            "Delete Salary Payment",
+            "DELETE",
+            f"salaries/{salary_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Deleted salary payment: {salary_id}")
+            return True
+        return False
+
+    def test_delete_employee(self):
+        """Test deleting an employee"""
+        if not self.created_resources['employees']:
+            print("⚠️  Skipping employee deletion - no employee created")
+            return True
+            
+        employee_id = self.created_resources['employees'][0]
+        
+        success, response = self.run_test(
+            "Delete Employee",
+            "DELETE",
+            f"employees/{employee_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Deleted employee: {employee_id}")
+            return True
+        return False
+
 def main():
     print("🏠 SuriRentals API Testing Suite")
     print("=" * 50)
