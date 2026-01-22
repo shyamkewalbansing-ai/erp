@@ -204,6 +204,57 @@ class ReminderResponse(BaseModel):
     days_overdue: int
     reminder_type: str  # 'upcoming', 'overdue'
 
+# Kasgeld (Cash Fund) Models
+class KasgeldCreate(BaseModel):
+    amount: float
+    transaction_type: str  # 'deposit' (storting), 'withdrawal' (opname)
+    description: Optional[str] = None
+    transaction_date: str
+
+class KasgeldResponse(BaseModel):
+    id: str
+    amount: float
+    transaction_type: str
+    description: Optional[str] = None
+    transaction_date: str
+    created_at: str
+    user_id: str
+
+class KasgeldBalanceResponse(BaseModel):
+    total_balance: float
+    total_deposits: float
+    total_withdrawals: float
+    total_maintenance_costs: float
+    transactions: List[KasgeldResponse]
+
+# Onderhoud (Maintenance) Models
+class MaintenanceCreate(BaseModel):
+    apartment_id: str
+    category: str  # 'wc', 'kraan', 'douche', 'keuken', 'verven', 'kasten', 'overig'
+    description: str
+    cost: float
+    maintenance_date: str
+    status: str = "completed"  # 'pending', 'in_progress', 'completed'
+
+class MaintenanceUpdate(BaseModel):
+    category: Optional[str] = None
+    description: Optional[str] = None
+    cost: Optional[float] = None
+    maintenance_date: Optional[str] = None
+    status: Optional[str] = None
+
+class MaintenanceResponse(BaseModel):
+    id: str
+    apartment_id: str
+    apartment_name: Optional[str] = None
+    category: str
+    description: str
+    cost: float
+    maintenance_date: str
+    status: str
+    created_at: str
+    user_id: str
+
 # Dashboard Models
 class DashboardStats(BaseModel):
     total_apartments: int
@@ -213,6 +264,7 @@ class DashboardStats(BaseModel):
     total_income_this_month: float
     total_outstanding: float
     total_deposits_held: float
+    total_kasgeld: float
     recent_payments: List[PaymentResponse]
     reminders: List[ReminderResponse]
 
