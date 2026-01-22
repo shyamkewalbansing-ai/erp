@@ -51,6 +51,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Health check endpoint (required for Kubernetes deployment)
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
+
 # ==================== MODELS ====================
 
 # User Models
