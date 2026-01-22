@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getKasgeld, createKasgeld, deleteKasgeld, formatCurrency } from '../lib/api';
+import { getKasgeld, createKasgeld, deleteKasgeld, getExchangeRate, formatCurrency, formatCurrencyEUR } from '../lib/api';
 import { toast } from 'sonner';
 import { 
   Banknote, 
@@ -9,7 +9,10 @@ import {
   Wrench,
   Trash2,
   Calendar,
-  CreditCard
+  CreditCard,
+  Users2,
+  RefreshCw,
+  Euro
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -47,10 +50,14 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
+import { Switch } from '../components/ui/switch';
 
 export default function Kasgeld() {
   const [kasgeldData, setKasgeldData] = useState(null);
+  const [exchangeRate, setExchangeRate] = useState(null);
+  const [showInEuro, setShowInEuro] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadingRate, setLoadingRate] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
@@ -62,17 +69,34 @@ export default function Kasgeld() {
   });
 
   useEffect(() => {
-    fetchKasgeld();
+    fetchData();
   }, []);
 
-  const fetchKasgeld = async () => {
+  const fetchData = async () => {
     try {
-      const response = await getKasgeld();
-      setKasgeldData(response.data);
+      const [kasgeldRes, rateRes] = await Promise.all([
+        getKasgeld(),
+        getExchangeRate()
+      ]);
+      setKasgeldData(kasgeldRes.data);
+      setExchangeRate(rateRes.data);
     } catch (error) {
-      toast.error('Fout bij laden kasgeld');
+      toast.error('Fout bij laden gegevens');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshExchangeRate = async () => {
+    setLoadingRate(true);
+    try {
+      const response = await getExchangeRate();
+      setExchangeRate(response.data);
+      toast.success('Wisselkoers bijgewerkt');
+    } catch (error) {
+      toast.error('Fout bij ophalen wisselkoers');
+    } finally {
+      setLoadingRate(false);
     }
   };
 
@@ -86,7 +110,7 @@ export default function Kasgeld() {
       toast.success(formData.transaction_type === 'deposit' ? 'Storting toegevoegd' : 'Opname geregistreerd');
       setShowModal(false);
       resetForm();
-      fetchKasgeld();
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij opslaan');
     }
@@ -98,7 +122,7 @@ export default function Kasgeld() {
       toast.success('Transactie verwijderd');
       setShowDeleteDialog(false);
       setSelectedTransaction(null);
-      fetchKasgeld();
+      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
     }
@@ -111,6 +135,18 @@ export default function Kasgeld() {
       description: '',
       transaction_date: new Date().toISOString().split('T')[0],
     });
+  };
+
+  const convertToEuro = (srdAmount) => {
+    if (!exchangeRate) return 0;
+    return srdAmount * exchangeRate.srd_to_eur;
+  };
+
+  const displayAmount = (amount) => {
+    if (showInEuro && exchangeRate) {
+      return formatCurrencyEUR(convertToEuro(amount));
+    }
+    return formatCurrency(amount);
   };
 
   if (loading) {
@@ -128,21 +164,68 @@ export default function Kasgeld() {
         <div>
           <h1 className="page-title">Kasgeld</h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Beheer uw kasgeld voor onderhoud en andere uitgaven
+            Beheer uw kasgeld voor onderhoud en salarisbetalingen
           </p>
         </div>
-        <Button 
-          onClick={() => { resetForm(); setShowModal(true); }}
-          className="rounded-full bg-primary hover:bg-primary/90"
-          data-testid="add-kasgeld-btn"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Transactie toevoegen
-        </Button>
+        <div className="flex items-center gap-4">
+          {/* Euro Toggle */}
+          <div className="flex items-center gap-2 bg-card border border-border rounded-lg px-3 py-2">
+            <span className="text-sm text-muted-foreground">SRD</span>
+            <Switch
+              checked={showInEuro}
+              onCheckedChange={setShowInEuro}
+              data-testid="euro-toggle"
+            />
+            <Euro className="w-4 h-4 text-blue-600" />
+            <span className="text-sm text-muted-foreground">EUR</span>
+          </div>
+          <Button 
+            onClick={() => { resetForm(); setShowModal(true); }}
+            className="rounded-full bg-primary hover:bg-primary/90"
+            data-testid="add-kasgeld-btn"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Transactie toevoegen
+          </Button>
+        </div>
       </div>
 
+      {/* Exchange Rate Info */}
+      {exchangeRate && (
+        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+          <CardContent className="pt-4 pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Euro className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-blue-600 font-medium">Huidige Wisselkoers</p>
+                  <p className="text-lg font-bold text-blue-700">
+                    1 EUR = {exchangeRate.eur_to_srd.toFixed(2)} SRD
+                  </p>
+                  <p className="text-xs text-blue-500">
+                    Bron: {exchangeRate.source === 'live' ? 'Live koers' : exchangeRate.source === 'cached' ? 'Gecached' : 'Geschatte koers'}
+                  </p>
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={refreshExchangeRate}
+                disabled={loadingRate}
+                className="border-blue-300 text-blue-600 hover:bg-blue-100"
+              >
+                <RefreshCw className={`w-4 h-4 mr-2 ${loadingRate ? 'animate-spin' : ''}`} />
+                Vernieuwen
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Balance Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <Card className="card-hover">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -151,8 +234,8 @@ export default function Kasgeld() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <span className={`text-2xl font-bold ${kasgeldData?.total_balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
-                {formatCurrency(kasgeldData?.total_balance || 0)}
+              <span className={`text-xl font-bold ${kasgeldData?.total_balance >= 0 ? 'text-primary' : 'text-destructive'}`}>
+                {displayAmount(kasgeldData?.total_balance || 0)}
               </span>
               <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
                 <Banknote className="w-5 h-5 text-primary" />
@@ -169,8 +252,8 @@ export default function Kasgeld() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-primary">
-                {formatCurrency(kasgeldData?.total_payments || 0)}
+              <span className="text-xl font-bold text-primary">
+                {displayAmount(kasgeldData?.total_payments || 0)}
               </span>
               <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
                 <CreditCard className="w-5 h-5 text-primary" />
@@ -187,8 +270,8 @@ export default function Kasgeld() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-green-600">
-                {formatCurrency(kasgeldData?.total_deposits || 0)}
+              <span className="text-xl font-bold text-green-600">
+                {displayAmount(kasgeldData?.total_deposits || 0)}
               </span>
               <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center">
                 <ArrowUpCircle className="w-5 h-5 text-green-600" />
@@ -205,8 +288,8 @@ export default function Kasgeld() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-orange-600">
-                {formatCurrency(kasgeldData?.total_withdrawals || 0)}
+              <span className="text-xl font-bold text-orange-600">
+                {displayAmount(kasgeldData?.total_withdrawals || 0)}
               </span>
               <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">
                 <ArrowDownCircle className="w-5 h-5 text-orange-600" />
@@ -218,16 +301,34 @@ export default function Kasgeld() {
         <Card className="card-hover">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Onderhoudskosten
+              Onderhoud
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-blue-600">
-                {formatCurrency(kasgeldData?.total_maintenance_costs || 0)}
+              <span className="text-xl font-bold text-blue-600">
+                {displayAmount(kasgeldData?.total_maintenance_costs || 0)}
               </span>
               <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
                 <Wrench className="w-5 h-5 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="card-hover">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              Salarissen
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <span className="text-xl font-bold text-purple-600">
+                {displayAmount(kasgeldData?.total_salary_payments || 0)}
+              </span>
+              <div className="w-10 h-10 rounded-full bg-purple-50 flex items-center justify-center">
+                <Users2 className="w-5 h-5 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -256,6 +357,9 @@ export default function Kasgeld() {
                   const isPayment = transaction.transaction_type === 'payment';
                   const isDeposit = transaction.transaction_type === 'deposit';
                   const isWithdrawal = transaction.transaction_type === 'withdrawal';
+                  const isSalary = transaction.transaction_type === 'salary';
+                  
+                  const isIncome = isPayment || isDeposit;
                   
                   return (
                     <TableRow key={transaction.id}>
@@ -269,20 +373,23 @@ export default function Kasgeld() {
                         <span className={`status-badge ${
                           isPayment ? 'bg-primary/10 text-primary' :
                           isDeposit ? 'bg-green-50 text-green-600' : 
+                          isSalary ? 'bg-purple-50 text-purple-600' :
                           'bg-orange-50 text-orange-600'
                         }`}>
-                          {isPayment ? 'Huurbetaling' : isDeposit ? 'Storting' : 'Opname'}
+                          {isPayment ? 'Huurbetaling' : 
+                           isDeposit ? 'Storting' : 
+                           isSalary ? 'Salaris' : 'Opname'}
                         </span>
                       </TableCell>
                       <TableCell>{transaction.description || '-'}</TableCell>
                       <TableCell className={`text-right font-semibold ${
-                        isWithdrawal ? 'text-orange-600' : 'text-green-600'
+                        isIncome ? 'text-green-600' : 'text-orange-600'
                       }`}>
-                        {isWithdrawal ? '-' : '+'}
-                        {formatCurrency(transaction.amount)}
+                        {isIncome ? '+' : '-'}
+                        {displayAmount(transaction.amount)}
                       </TableCell>
                       <TableCell>
-                        {/* Only allow delete for manual transactions, not payments */}
+                        {/* Only allow delete for manual transactions */}
                         {transaction.source === 'manual' && (
                           <Button 
                             variant="ghost" 
