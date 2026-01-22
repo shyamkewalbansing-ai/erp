@@ -252,42 +252,51 @@ export default function Kasgeld() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {kasgeldData.transactions.map((transaction) => (
-                  <TableRow key={transaction.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        {transaction.transaction_date}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`status-badge ${
-                        transaction.transaction_type === 'deposit' 
-                          ? 'bg-green-50 text-green-600' 
-                          : 'bg-orange-50 text-orange-600'
+                {kasgeldData.transactions.map((transaction) => {
+                  const isPayment = transaction.transaction_type === 'payment';
+                  const isDeposit = transaction.transaction_type === 'deposit';
+                  const isWithdrawal = transaction.transaction_type === 'withdrawal';
+                  
+                  return (
+                    <TableRow key={transaction.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          {transaction.transaction_date}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`status-badge ${
+                          isPayment ? 'bg-primary/10 text-primary' :
+                          isDeposit ? 'bg-green-50 text-green-600' : 
+                          'bg-orange-50 text-orange-600'
+                        }`}>
+                          {isPayment ? 'Huurbetaling' : isDeposit ? 'Storting' : 'Opname'}
+                        </span>
+                      </TableCell>
+                      <TableCell>{transaction.description || '-'}</TableCell>
+                      <TableCell className={`text-right font-semibold ${
+                        isWithdrawal ? 'text-orange-600' : 'text-green-600'
                       }`}>
-                        {transaction.transaction_type === 'deposit' ? 'Storting' : 'Opname'}
-                      </span>
-                    </TableCell>
-                    <TableCell>{transaction.description || '-'}</TableCell>
-                    <TableCell className={`text-right font-semibold ${
-                      transaction.transaction_type === 'deposit' ? 'text-green-600' : 'text-orange-600'
-                    }`}>
-                      {transaction.transaction_type === 'deposit' ? '+' : '-'}
-                      {formatCurrency(transaction.amount)}
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={() => { setSelectedTransaction(transaction); setShowDeleteDialog(true); }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        {isWithdrawal ? '-' : '+'}
+                        {formatCurrency(transaction.amount)}
+                      </TableCell>
+                      <TableCell>
+                        {/* Only allow delete for manual transactions, not payments */}
+                        {transaction.source === 'manual' && (
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => { setSelectedTransaction(transaction); setShowDeleteDialog(true); }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           ) : (
