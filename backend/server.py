@@ -2100,6 +2100,9 @@ class ProfileUpdate(BaseModel):
     email: Optional[EmailStr] = None
     company_name: Optional[str] = None
 
+class LogoUpload(BaseModel):
+    logo_data: str  # Base64 encoded image data
+
 @api_router.put("/profile/password")
 async def change_own_password(password_data: PasswordChange, current_user: dict = Depends(get_current_user)):
     """Change own password"""
