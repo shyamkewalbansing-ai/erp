@@ -2163,6 +2163,39 @@ async def get_own_profile(current_user: dict = Depends(get_current_user)):
     user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "password": 0})
     return user
 
+@api_router.post("/profile/logo")
+async def upload_logo(logo_data: LogoUpload, current_user: dict = Depends(get_current_user)):
+    """Upload company logo - max 2MB"""
+    
+    # Check base64 data size (roughly 1.37x the original file size)
+    # 2MB = 2 * 1024 * 1024 bytes, base64 adds ~37% overhead
+    max_size = 2 * 1024 * 1024 * 1.37
+    if len(logo_data.logo_data) > max_size:
+        raise HTTPException(status_code=400, detail="Logo is te groot. Maximum 2MB toegestaan.")
+    
+    # Validate it's a valid base64 image
+    if not logo_data.logo_data.startswith("data:image/"):
+        raise HTTPException(status_code=400, detail="Ongeldig afbeeldingsformaat")
+    
+    # Store the logo in the user document
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"logo": logo_data.logo_data}}
+    )
+    
+    return {"message": "Logo succesvol geüpload", "logo": logo_data.logo_data}
+
+@api_router.delete("/profile/logo")
+async def delete_logo(current_user: dict = Depends(get_current_user)):
+    """Delete company logo"""
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$unset": {"logo": ""}}
+    )
+    
+    return {"message": "Logo succesvol verwijderd"}
+
 # ==================== ADMIN: CUSTOMER PROFILE MANAGEMENT ====================
 
 class AdminPasswordReset(BaseModel):
