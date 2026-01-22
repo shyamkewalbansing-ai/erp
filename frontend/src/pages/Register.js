@@ -60,13 +60,13 @@ export default function Register() {
       <div className="flex-1 flex items-center justify-center p-8 bg-background">
         <div className="w-full max-w-md animate-fade-in">
           {/* Logo */}
-          <div className="flex flex-col items-start mb-8">
+          <div className="flex items-center gap-1.5 mb-8">
             <img 
               src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
               alt="Facturatie N.V." 
               className="h-6 w-auto"
             />
-            <p className="text-xs text-muted-foreground mt-1">Verhuurbeheer</p>
+            <span className="text-xl font-bold text-foreground">N.V.</span>
           </div>
 
           {/* Header */}

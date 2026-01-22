@@ -61,13 +61,13 @@ export default function Layout() {
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
         {/* Logo */}
         <div className="p-6 border-b border-border">
-          <div className="flex flex-col items-start gap-1">
+          <div className="flex items-center gap-1.5">
             <img 
               src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
               alt="Facturatie N.V." 
               className="h-5 w-auto"
             />
-            <p className="text-xs text-muted-foreground">Verhuurbeheer</p>
+            <span className="text-lg font-bold text-foreground">N.V.</span>
           </div>
         </div>
 
@@ -192,13 +192,13 @@ export default function Layout() {
           >
             <Menu className="w-5 h-5" />
           </Button>
-          <div className="flex flex-col items-start">
+          <div className="flex items-center gap-1">
             <img 
               src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
               alt="Facturatie N.V." 
               className="h-4 w-auto"
             />
-            <span className="text-[10px] text-muted-foreground">Verhuurbeheer</span>
+            <span className="text-sm font-bold text-foreground">N.V.</span>
           </div>
         </header>
 
