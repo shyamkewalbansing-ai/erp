@@ -42,8 +42,8 @@ export default function Register() {
       {/* Left side - Image */}
       <div className="hidden lg:flex lg:w-1/2 relative">
         <img
-          src="https://images.pexels.com/photos/8292791/pexels-photo-8292791.jpeg"
-          alt="Property manager"
+          src="https://images.unsplash.com/photo-1758548157747-285c7012db5b?crop=entropy&cs=srgb&fm=jpg&q=85"
+          alt="Modern apartment"
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
