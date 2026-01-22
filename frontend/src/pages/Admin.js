@@ -3,9 +3,14 @@ import { useAuth } from '../context/AuthContext';
 import { 
   getAdminDashboard, 
   getAdminCustomers, 
+  createAdminCustomer,
   activateSubscription, 
   deactivateCustomer,
+  deleteCustomerPermanent,
   getSubscriptionRequests,
+  getAdminSubscriptions,
+  deleteSubscriptionPayment,
+  downloadSubscriptionReceipt,
   formatCurrency 
 } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
@@ -13,6 +18,7 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { Checkbox } from '../components/ui/checkbox';
 import { 
   Dialog,
   DialogContent,
@@ -28,6 +34,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../components/ui/select';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../components/ui/tabs';
 import { toast } from 'sonner';
 import { 
   Users, 
@@ -40,7 +52,10 @@ import {
   Plus,
   Loader2,
   AlertTriangle,
-  Building2
+  Trash2,
+  FileText,
+  UserPlus,
+  Download
 } from 'lucide-react';
 
 export default function Admin() {
@@ -49,14 +64,35 @@ export default function Admin() {
   const [stats, setStats] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [subscriptions, setSubscriptions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedSubscription, setSelectedSubscription] = useState(null);
+  
+  // Dialog states
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
+  const [deleteCustomerDialogOpen, setDeleteCustomerDialogOpen] = useState(false);
+  const [createCustomerDialogOpen, setCreateCustomerDialogOpen] = useState(false);
+  const [deletePaymentDialogOpen, setDeletePaymentDialogOpen] = useState(false);
+  
+  // Form states
   const [activating, setActivating] = useState(false);
   const [months, setMonths] = useState('1');
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
   const [paymentReference, setPaymentReference] = useState('');
+  
+  // Create customer form
+  const [newCustomer, setNewCustomer] = useState({
+    name: '',
+    email: '',
+    password: '',
+    company_name: '',
+    activate_subscription: false,
+    subscription_months: 1,
+    payment_method: 'bank_transfer',
+    payment_reference: ''
+  });
 
   useEffect(() => {
     loadData();
@@ -64,14 +100,16 @@ export default function Admin() {
 
   const loadData = async () => {
     try {
-      const [dashboardRes, customersRes, requestsRes] = await Promise.all([
+      const [dashboardRes, customersRes, requestsRes, subscriptionsRes] = await Promise.all([
         getAdminDashboard(),
         getAdminCustomers(),
-        getSubscriptionRequests()
+        getSubscriptionRequests(),
+        getAdminSubscriptions()
       ]);
       setStats(dashboardRes.data);
       setCustomers(customersRes.data);
       setRequests(requestsRes.data);
+      setSubscriptions(subscriptionsRes.data);
     } catch (error) {
       toast.error('Fout bij het laden van gegevens');
     } finally {
@@ -121,6 +159,90 @@ export default function Admin() {
     }
   };
 
+  const handleDeleteCustomer = async () => {
+    if (!selectedCustomer) return;
+    
+    setActivating(true);
+    try {
+      await deleteCustomerPermanent(selectedCustomer.id);
+      toast.success(`Klant ${selectedCustomer.name} permanent verwijderd`);
+      setDeleteCustomerDialogOpen(false);
+      setSelectedCustomer(null);
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleCreateCustomer = async () => {
+    if (!newCustomer.name || !newCustomer.email || !newCustomer.password) {
+      toast.error('Vul alle verplichte velden in');
+      return;
+    }
+    
+    setActivating(true);
+    try {
+      await createAdminCustomer({
+        ...newCustomer,
+        subscription_months: parseInt(newCustomer.subscription_months)
+      });
+      toast.success(`Klant ${newCustomer.name} aangemaakt`);
+      setCreateCustomerDialogOpen(false);
+      setNewCustomer({
+        name: '',
+        email: '',
+        password: '',
+        company_name: '',
+        activate_subscription: false,
+        subscription_months: 1,
+        payment_method: 'bank_transfer',
+        payment_reference: ''
+      });
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleDeletePayment = async () => {
+    if (!selectedSubscription) return;
+    
+    setActivating(true);
+    try {
+      await deleteSubscriptionPayment(selectedSubscription.id);
+      toast.success('Betaling verwijderd');
+      setDeletePaymentDialogOpen(false);
+      setSelectedSubscription(null);
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleDownloadReceipt = async (subscription) => {
+    try {
+      const response = await downloadSubscriptionReceipt(subscription.id);
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `kwitantie_${subscription.user_name?.replace(' ', '_') || 'klant'}_${subscription.id.slice(0, 8)}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success('PDF gedownload');
+    } catch (error) {
+      toast.error('Fout bij downloaden PDF');
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'active':
@@ -161,9 +283,15 @@ export default function Admin() {
   return (
     <div className="space-y-6" data-testid="admin-page">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Beheerder Dashboard</h1>
-        <p className="text-muted-foreground">Beheer klanten en abonnementen</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Beheerder Dashboard</h1>
+          <p className="text-muted-foreground">Beheer klanten en abonnementen</p>
+        </div>
+        <Button onClick={() => setCreateCustomerDialogOpen(true)} data-testid="create-customer-btn">
+          <UserPlus className="w-4 h-4 mr-2" />
+          Klant Aanmaken
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -257,109 +385,349 @@ export default function Admin() {
         </Card>
       )}
 
-      {/* Customers List */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle>Klanten</CardTitle>
-              <CardDescription>Overzicht van alle geregistreerde klanten</CardDescription>
-            </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+      {/* Tabs for Customers and Payments */}
+      <Tabs defaultValue="customers" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="customers">Klanten</TabsTrigger>
+          <TabsTrigger value="payments">Betalingen</TabsTrigger>
+        </TabsList>
+
+        {/* Customers Tab */}
+        <TabsContent value="customers">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle>Klanten</CardTitle>
+                  <CardDescription>Overzicht van alle geregistreerde klanten</CardDescription>
+                </div>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Zoeken..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9 w-full sm:w-[250px]"
+                    data-testid="customer-search"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4 font-medium">Klant</th>
+                      <th className="text-left py-3 px-4 font-medium">Status</th>
+                      <th className="text-left py-3 px-4 font-medium">Geldig tot</th>
+                      <th className="text-left py-3 px-4 font-medium">Totaal Betaald</th>
+                      <th className="text-left py-3 px-4 font-medium">Acties</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCustomers.map((customer) => (
+                      <tr key={customer.id} className="border-b hover:bg-accent/50">
+                        <td className="py-3 px-4">
+                          <div>
+                            <p className="font-medium">{customer.name}</p>
+                            <p className="text-sm text-muted-foreground">{customer.email}</p>
+                            {customer.company_name && (
+                              <p className="text-xs text-muted-foreground">{customer.company_name}</p>
+                            )}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          {getStatusBadge(customer.subscription_status)}
+                        </td>
+                        <td className="py-3 px-4">
+                          {customer.subscription_end_date ? (
+                            <span className="text-sm">
+                              {new Date(customer.subscription_end_date).toLocaleDateString('nl-NL')}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">-</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-medium">{formatCurrency(customer.total_paid)}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSelectedCustomer(customer);
+                                setActivateDialogOpen(true);
+                              }}
+                              data-testid={`activate-btn-${customer.id}`}
+                            >
+                              <Plus className="w-3 h-3 mr-1" />
+                              Activeren
+                            </Button>
+                            {(customer.subscription_status === 'active' || customer.subscription_status === 'trial') && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-orange-500 border-orange-500/20 hover:bg-orange-500/10"
+                                onClick={() => {
+                                  setSelectedCustomer(customer);
+                                  setDeactivateDialogOpen(true);
+                                }}
+                              >
+                                <XCircle className="w-3 h-3 mr-1" />
+                                Stop
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                setSelectedCustomer(customer);
+                                setDeleteCustomerDialogOpen(true);
+                              }}
+                              data-testid={`delete-btn-${customer.id}`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredCustomers.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                          Geen klanten gevonden
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Payments Tab */}
+        <TabsContent value="payments">
+          <Card>
+            <CardHeader>
+              <CardTitle>Betalingsgeschiedenis</CardTitle>
+              <CardDescription>Alle abonnementsbetalingen</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="text-left py-3 px-4 font-medium">Klant</th>
+                      <th className="text-left py-3 px-4 font-medium">Bedrag</th>
+                      <th className="text-left py-3 px-4 font-medium">Periode</th>
+                      <th className="text-left py-3 px-4 font-medium">Methode</th>
+                      <th className="text-left py-3 px-4 font-medium">Datum</th>
+                      <th className="text-left py-3 px-4 font-medium">Acties</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {subscriptions.map((sub) => (
+                      <tr key={sub.id} className="border-b hover:bg-accent/50">
+                        <td className="py-3 px-4">
+                          <div>
+                            <p className="font-medium">{sub.user_name || 'Onbekend'}</p>
+                            <p className="text-sm text-muted-foreground">{sub.user_email}</p>
+                          </div>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-medium text-primary">{formatCurrency(sub.amount)}</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm">{sub.months} maand(en)</span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant="outline" className="capitalize">
+                            {sub.payment_method === 'bank_transfer' ? 'Bank' : 
+                             sub.payment_method === 'cash' ? 'Contant' : sub.payment_method}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="text-sm">
+                            {new Date(sub.created_at).toLocaleDateString('nl-NL')}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleDownloadReceipt(sub)}
+                              data-testid={`download-receipt-${sub.id}`}
+                            >
+                              <Download className="w-3 h-3 mr-1" />
+                              PDF
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                setSelectedSubscription(sub);
+                                setDeletePaymentDialogOpen(true);
+                              }}
+                              data-testid={`delete-payment-${sub.id}`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {subscriptions.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                          Geen betalingen gevonden
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+
+      {/* Create Customer Dialog */}
+      <Dialog open={createCustomerDialogOpen} onOpenChange={setCreateCustomerDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nieuwe Klant Aanmaken</DialogTitle>
+            <DialogDescription>
+              Voeg een nieuwe klant toe aan het systeem
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Naam *</Label>
               <Input
-                placeholder="Zoeken..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-full sm:w-[250px]"
-                data-testid="customer-search"
+                placeholder="Volledige naam"
+                value={newCustomer.name}
+                onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
+                data-testid="new-customer-name"
               />
             </div>
+
+            <div className="space-y-2">
+              <Label>E-mail *</Label>
+              <Input
+                type="email"
+                placeholder="email@voorbeeld.com"
+                value={newCustomer.email}
+                onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})}
+                data-testid="new-customer-email"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Wachtwoord *</Label>
+              <Input
+                type="password"
+                placeholder="Minimaal 6 tekens"
+                value={newCustomer.password}
+                onChange={(e) => setNewCustomer({...newCustomer, password: e.target.value})}
+                data-testid="new-customer-password"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Bedrijfsnaam (optioneel)</Label>
+              <Input
+                placeholder="Bedrijfsnaam"
+                value={newCustomer.company_name}
+                onChange={(e) => setNewCustomer({...newCustomer, company_name: e.target.value})}
+              />
+            </div>
+
+            <div className="flex items-center space-x-2 pt-2">
+              <Checkbox
+                id="activate"
+                checked={newCustomer.activate_subscription}
+                onCheckedChange={(checked) => setNewCustomer({...newCustomer, activate_subscription: checked})}
+              />
+              <Label htmlFor="activate" className="cursor-pointer">
+                Direct abonnement activeren (anders 3 dagen proef)
+              </Label>
+            </div>
+
+            {newCustomer.activate_subscription && (
+              <>
+                <div className="space-y-2">
+                  <Label>Aantal maanden</Label>
+                  <Select 
+                    value={String(newCustomer.subscription_months)} 
+                    onValueChange={(v) => setNewCustomer({...newCustomer, subscription_months: parseInt(v)})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1 maand - {formatCurrency(3500)}</SelectItem>
+                      <SelectItem value="3">3 maanden - {formatCurrency(10500)}</SelectItem>
+                      <SelectItem value="6">6 maanden - {formatCurrency(21000)}</SelectItem>
+                      <SelectItem value="12">12 maanden - {formatCurrency(42000)}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Betaalmethode</Label>
+                  <Select 
+                    value={newCustomer.payment_method} 
+                    onValueChange={(v) => setNewCustomer({...newCustomer, payment_method: v})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bank_transfer">Bankoverschrijving</SelectItem>
+                      <SelectItem value="cash">Contant</SelectItem>
+                      <SelectItem value="other">Anders</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Betaalreferentie (optioneel)</Label>
+                  <Input
+                    placeholder="Bijv. transactienummer"
+                    value={newCustomer.payment_reference}
+                    onChange={(e) => setNewCustomer({...newCustomer, payment_reference: e.target.value})}
+                  />
+                </div>
+              </>
+            )}
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium">Klant</th>
-                  <th className="text-left py-3 px-4 font-medium">Status</th>
-                  <th className="text-left py-3 px-4 font-medium">Geldig tot</th>
-                  <th className="text-left py-3 px-4 font-medium">Totaal Betaald</th>
-                  <th className="text-left py-3 px-4 font-medium">Acties</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCustomers.map((customer) => (
-                  <tr key={customer.id} className="border-b hover:bg-accent/50">
-                    <td className="py-3 px-4">
-                      <div>
-                        <p className="font-medium">{customer.name}</p>
-                        <p className="text-sm text-muted-foreground">{customer.email}</p>
-                        {customer.company_name && (
-                          <p className="text-xs text-muted-foreground">{customer.company_name}</p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      {getStatusBadge(customer.subscription_status)}
-                    </td>
-                    <td className="py-3 px-4">
-                      {customer.subscription_end_date ? (
-                        <span className="text-sm">
-                          {new Date(customer.subscription_end_date).toLocaleDateString('nl-NL')}
-                        </span>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="font-medium">{formatCurrency(customer.total_paid)}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSelectedCustomer(customer);
-                            setActivateDialogOpen(true);
-                          }}
-                          data-testid={`activate-btn-${customer.id}`}
-                        >
-                          <Plus className="w-3 h-3 mr-1" />
-                          Activeren
-                        </Button>
-                        {customer.subscription_status === 'active' && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => {
-                              setSelectedCustomer(customer);
-                              setDeactivateDialogOpen(true);
-                            }}
-                            data-testid={`deactivate-btn-${customer.id}`}
-                          >
-                            <XCircle className="w-3 h-3 mr-1" />
-                            Stop
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {filteredCustomers.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="py-8 text-center text-muted-foreground">
-                      Geen klanten gevonden
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateCustomerDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleCreateCustomer} disabled={activating}>
+              {activating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bezig...
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Aanmaken
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Activate Dialog */}
       <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
@@ -437,9 +805,9 @@ export default function Admin() {
       <Dialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Abonnement Deactiveren</DialogTitle>
+            <DialogTitle>Abonnement Stoppen</DialogTitle>
             <DialogDescription>
-              Weet u zeker dat u het abonnement van {selectedCustomer?.name} wilt deactiveren?
+              Weet u zeker dat u het abonnement van {selectedCustomer?.name} wilt stoppen?
               De klant verliest direct toegang tot de applicatie.
             </DialogDescription>
           </DialogHeader>
@@ -457,7 +825,87 @@ export default function Admin() {
               ) : (
                 <>
                   <XCircle className="w-4 h-4 mr-2" />
-                  Deactiveren
+                  Stoppen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Customer Dialog */}
+      <Dialog open={deleteCustomerDialogOpen} onOpenChange={setDeleteCustomerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-500">Klant Permanent Verwijderen</DialogTitle>
+            <DialogDescription>
+              <span className="text-red-500 font-semibold">WAARSCHUWING:</span> Dit verwijdert {selectedCustomer?.name} en ALLE bijbehorende gegevens permanent:
+              <ul className="list-disc list-inside mt-2 text-sm">
+                <li>Account en abonnementsgegevens</li>
+                <li>Alle huurders</li>
+                <li>Alle appartementen</li>
+                <li>Alle betalingen en borg</li>
+                <li>Alle onderhouds- en personeelsgegevens</li>
+              </ul>
+              <p className="mt-2 font-semibold">Dit kan niet ongedaan worden gemaakt!</p>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteCustomerDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteCustomer} disabled={activating}>
+              {activating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bezig...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Permanent Verwijderen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Payment Dialog */}
+      <Dialog open={deletePaymentDialogOpen} onOpenChange={setDeletePaymentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Betaling Verwijderen</DialogTitle>
+            <DialogDescription>
+              Weet u zeker dat u deze betaling wilt verwijderen?
+              {selectedSubscription && (
+                <div className="mt-2 p-3 bg-accent rounded-lg">
+                  <p><strong>Klant:</strong> {selectedSubscription.user_name}</p>
+                  <p><strong>Bedrag:</strong> {formatCurrency(selectedSubscription.amount)}</p>
+                  <p><strong>Datum:</strong> {new Date(selectedSubscription.created_at).toLocaleDateString('nl-NL')}</p>
+                </div>
+              )}
+              <p className="mt-2 text-sm text-muted-foreground">
+                Let op: Het abonnement van de klant wordt aangepast op basis van resterende betalingen.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletePaymentDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button variant="destructive" onClick={handleDeletePayment} disabled={activating}>
+              {activating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bezig...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Verwijderen
                 </>
               )}
             </Button>
