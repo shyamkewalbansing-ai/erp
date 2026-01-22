@@ -72,4 +72,17 @@ export const createDeposit = (data) => api.post('/deposits', data);
 export const updateDeposit = (id, data) => api.put(`/deposits/${id}`, data);
 export const deleteDeposit = (id) => api.delete(`/deposits/${id}`);
 
+// Kasgeld (Cash Fund)
+export const getKasgeld = () => api.get('/kasgeld');
+export const createKasgeld = (data) => api.post('/kasgeld', data);
+export const deleteKasgeld = (id) => api.delete(`/kasgeld/${id}`);
+
+// Onderhoud (Maintenance)
+export const getMaintenance = () => api.get('/maintenance');
+export const getMaintenanceRecord = (id) => api.get(`/maintenance/${id}`);
+export const createMaintenance = (data) => api.post('/maintenance', data);
+export const updateMaintenance = (id, data) => api.put(`/maintenance/${id}`, data);
+export const deleteMaintenance = (id) => api.delete(`/maintenance/${id}`);
+export const getApartmentMaintenance = (apartmentId) => api.get(`/maintenance/apartment/${apartmentId}`);
+
 export default api;
