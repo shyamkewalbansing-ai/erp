@@ -258,6 +258,63 @@ class MaintenanceResponse(BaseModel):
     created_at: str
     user_id: str
 
+# Werknemer (Employee) Models
+class EmployeeCreate(BaseModel):
+    name: str
+    position: str  # functie
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    salary: float  # maandelijks salaris
+    start_date: str
+
+class EmployeeUpdate(BaseModel):
+    name: Optional[str] = None
+    position: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    salary: Optional[float] = None
+    status: Optional[str] = None
+
+class EmployeeResponse(BaseModel):
+    id: str
+    name: str
+    position: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    salary: float
+    start_date: str
+    status: str  # 'active', 'inactive'
+    created_at: str
+    user_id: str
+
+# Salaris (Salary Payment) Models
+class SalaryPaymentCreate(BaseModel):
+    employee_id: str
+    amount: float
+    payment_date: str
+    period_month: int
+    period_year: int
+    description: Optional[str] = None
+
+class SalaryPaymentResponse(BaseModel):
+    id: str
+    employee_id: str
+    employee_name: Optional[str] = None
+    amount: float
+    payment_date: str
+    period_month: int
+    period_year: int
+    description: Optional[str] = None
+    created_at: str
+    user_id: str
+
+# Exchange Rate Models
+class ExchangeRateResponse(BaseModel):
+    srd_to_eur: float
+    eur_to_srd: float
+    last_updated: str
+    source: str
+
 # Dashboard Models
 class DashboardStats(BaseModel):
     total_apartments: int
@@ -268,6 +325,8 @@ class DashboardStats(BaseModel):
     total_outstanding: float
     total_deposits_held: float
     total_kasgeld: float
+    total_employees: int
+    total_salary_this_month: float
     recent_payments: List[PaymentResponse]
     reminders: List[ReminderResponse]
 
