@@ -1940,6 +1940,8 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
             "outstanding_amount": 0,
             "outstanding_months": [],
             "partial_payments": [],
+            "maintenance_costs": [],
+            "total_maintenance": 0,
             "suggestion": None
         }
     
@@ -1948,6 +1950,29 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
         {"tenant_id": tenant_id, "apartment_id": apt["id"], "user_id": current_user["id"], "payment_type": "rent"},
         {"_id": 0, "period_month": 1, "period_year": 1, "amount": 1, "payment_date": 1}
     ).to_list(1000)
+    
+    # Get maintenance costs for this apartment that tenant must pay
+    maintenance_records = await db.maintenance.find(
+        {"apartment_id": apt["id"], "user_id": current_user["id"], "cost_type": "tenant"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Calculate total maintenance costs
+    category_labels = {
+        'wc': 'WC/Toilet', 'kraan': 'Kraan', 'douche': 'Douche',
+        'keuken': 'Keuken', 'kasten': 'Kasten', 'verven': 'Verven', 'overig': 'Overig'
+    }
+    maintenance_costs = []
+    total_maintenance = 0
+    for m in maintenance_records:
+        total_maintenance += m["cost"]
+        maintenance_costs.append({
+            "id": m["id"],
+            "date": m["maintenance_date"],
+            "category": category_labels.get(m.get("category", "overig"), "Onderhoud"),
+            "description": m.get("description", ""),
+            "cost": m["cost"]
+        })
     
     # Create payment lookup: (year, month) -> total paid for that period
     payment_totals = {}
