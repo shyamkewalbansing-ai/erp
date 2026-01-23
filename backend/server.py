@@ -2335,6 +2335,8 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
                 "rent_amount": rent_due,
                 "maintenance_cost": maintenance_due,
                 "maintenance_items": apt_maintenance["items"] if is_first_month and maintenance_due > 0 else [],
+                "loan_amount": loan_due,
+                "loan_items": tenant_loans["items"] if is_first_month and loan_due > 0 else [],
                 "amount_due": amount_due,
                 "amount_paid": amount_paid,
                 "remaining": max(0, remaining),
