@@ -207,6 +207,9 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 - GET /api/deposits/{deposit_id}/refund-pdf - Borg terugbetaling PDF
 - GET /api/tenants/{tenant_id}/balance - Huurder saldo incl. borg
 - GET /api/exchange-rate
+- GET /api/invoices - Facturen overzicht
+- GET/POST/PUT/DELETE /api/loans - Leningen CRUD
+- GET /api/tenants/{tenant_id}/loans - Leningen per huurder (voor dropdown)
 
 ## Test Credentials
 - **Superadmin**: admin@facturatie.sr / admin123
