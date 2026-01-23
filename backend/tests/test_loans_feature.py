@@ -423,7 +423,7 @@ class TestFacturenPage:
         data = response.json()
         assert "summary" in data, "Response should have 'summary' key"
         summary = data["summary"]
-        required_summary_fields = ["total_amount", "paid_amount", "outstanding_amount"]
+        required_summary_fields = ["total_amount", "paid_amount", "unpaid_amount"]
         for field in required_summary_fields:
             assert field in summary, f"Missing summary field: {field}"
         print(f"✓ Invoices summary verified: {summary}")
