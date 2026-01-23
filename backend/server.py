@@ -510,6 +510,7 @@ class DashboardStats(BaseModel):
     total_tenants: int
     total_income_this_month: float
     total_outstanding: float
+    total_outstanding_loans: float = 0  # Openstaande leningen
     total_deposits_held: float
     total_kasgeld: float
     total_employees: int
