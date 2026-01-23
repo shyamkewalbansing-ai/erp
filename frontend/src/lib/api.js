@@ -46,6 +46,7 @@ export const createTenant = (data) => api.post('/tenants', data);
 export const updateTenant = (id, data) => api.put(`/tenants/${id}`, data);
 export const deleteTenant = (id) => api.delete(`/tenants/${id}`);
 export const getTenantBalance = (id) => api.get(`/tenants/${id}/balance`);
+export const getTenantOutstanding = (id) => api.get(`/tenants/${id}/outstanding`);
 
 // Apartments
 export const getApartments = () => api.get('/apartments');
