@@ -68,10 +68,11 @@ export default function Dashboard() {
     },
     {
       label: 'Openstaand',
-      value: formatCurrency(stats?.total_outstanding || 0),
+      value: formatCurrency((stats?.total_outstanding || 0) + (stats?.total_outstanding_loans || 0)),
       icon: CreditCard,
-      color: stats?.total_outstanding > 0 ? 'text-orange-600' : 'text-primary',
-      bgColor: stats?.total_outstanding > 0 ? 'bg-orange-50' : 'bg-accent',
+      color: (stats?.total_outstanding || 0) + (stats?.total_outstanding_loans || 0) > 0 ? 'text-orange-600' : 'text-primary',
+      bgColor: (stats?.total_outstanding || 0) + (stats?.total_outstanding_loans || 0) > 0 ? 'bg-orange-50' : 'bg-accent',
+      subtitle: stats?.total_outstanding_loans > 0 ? `incl. leningen ${formatCurrency(stats.total_outstanding_loans)}` : undefined,
     },
     {
       label: 'Kasgeld Saldo',
