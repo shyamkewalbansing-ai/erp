@@ -7,6 +7,7 @@ import {
   getSalaries,
   createSalary,
   deleteSalary,
+  downloadPayslip,
   formatCurrency 
 } from '../lib/api';
 import { toast } from 'sonner';
@@ -22,7 +23,8 @@ import {
   Briefcase,
   Calendar,
   Banknote,
-  DollarSign
+  DollarSign,
+  FileText
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
