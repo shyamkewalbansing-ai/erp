@@ -195,9 +195,11 @@ export default function Payments() {
     });
   };
 
-  // Get tenant's apartment
-  const handleTenantChange = (tenantId) => {
+  // Get tenant's apartment and outstanding info
+  const handleTenantChange = async (tenantId) => {
     setFormData({ ...formData, tenant_id: tenantId, apartment_id: '' });
+    setOutstandingInfo(null);
+    
     const apt = apartments.find(a => a.tenant_id === tenantId);
     if (apt) {
       setFormData(prev => ({ 
@@ -206,6 +208,27 @@ export default function Payments() {
         apartment_id: apt.id,
         amount: apt.rent_amount.toString()
       }));
+      
+      // Fetch outstanding info
+      setLoadingOutstanding(true);
+      try {
+        const response = await getTenantOutstanding(tenantId);
+        setOutstandingInfo(response.data);
+        
+        // If there are outstanding months, suggest the oldest one
+        if (response.data.outstanding_months?.length > 0) {
+          const oldest = response.data.outstanding_months[0];
+          setFormData(prev => ({
+            ...prev,
+            period_month: oldest.month,
+            period_year: oldest.year
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching outstanding info:', error);
+      } finally {
+        setLoadingOutstanding(false);
+      }
     }
   };
 
