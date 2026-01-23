@@ -92,12 +92,23 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 ### Onderhoud (Maintenance)
 - [x] Onderhoudskosten per appartement
 - [x] Categorieën (WC, kraan, douche, keuken, verven, kasten, overig)
-- [x] Kosten automatisch afgetrokken van Kasgeld
+- [x] Kosten toewijzing: Kasgeld (verhuurder) of Huurder
+- [x] Alleen 'kasgeld' type kosten afgetrokken van Kasgeld
+- [x] Onderhoud transacties zichtbaar in Kasgeld historie
 
 ### Werknemers (Employees)
 - [x] CRUD voor werknemers
 - [x] Salarisbetalingen registreren
 - [x] Salaris automatisch afgetrokken van Kasgeld
+- [x] PDF loonstrook downloaden per salarisbetaling
+- [x] Salaris transacties zichtbaar in Kasgeld historie
+
+### Borg (Deposits) Management
+- [x] Borg registreren
+- [x] Status tracking (in beheer, terugbetaald, deels terugbetaald)
+- [x] Borg terugbetalen
+- [x] PDF terugbetaling bevestiging downloaden
+- [x] Borg zichtbaar in huurder saldo overzicht ("Bekijk Saldo")
 
 ### Dashboard
 - [x] Totaal appartementen / bezet / beschikbaar
