@@ -2257,6 +2257,9 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
         # Get maintenance costs for this apartment (tenant pays)
         apt_maintenance = maintenance_by_apartment.get(apt["id"], {"total": 0, "items": []})
         
+        # Get loan balance for this tenant
+        tenant_loans = loans_by_tenant.get(apt["tenant_id"], {"total": 0, "paid": 0, "remaining": 0, "items": []})
+        
         # Determine start date (from apartment creation or assignment)
         try:
             created = apt.get("created_at", "")
@@ -2271,10 +2274,12 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
         year = start_dt.year
         month = start_dt.month
         
-        # Track cumulative balance for this tenant (including maintenance)
+        # Track cumulative balance for this tenant (including maintenance and loans)
         cumulative_balance = 0.0
         # Add maintenance costs to starting balance
         cumulative_balance += apt_maintenance["total"]
+        # Add loan balance to starting balance
+        cumulative_balance += tenant_loans["remaining"]
         
         tenant_invoices = []
         is_first_month = True
@@ -2285,9 +2290,10 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
             
             # Calculate amounts
             rent_due = apt["rent_amount"]
-            # Only add maintenance to first month's invoice display
+            # Only add maintenance and loans to first month's invoice display
             maintenance_due = apt_maintenance["total"] if is_first_month else 0
-            amount_due = rent_due + maintenance_due
+            loan_due = tenant_loans["remaining"] if is_first_month else 0
+            amount_due = rent_due + maintenance_due + loan_due
             amount_paid = sum(p["amount"] for p in period_payments)
             remaining = amount_due - amount_paid
             
