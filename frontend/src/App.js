@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import Tenants from "./pages/Tenants";
 import Apartments from "./pages/Apartments";
 import Payments from "./pages/Payments";
+import Facturen from "./pages/Facturen";
 import Deposits from "./pages/Deposits";
 import Kasgeld from "./pages/Kasgeld";
 import Onderhoud from "./pages/Onderhoud";
