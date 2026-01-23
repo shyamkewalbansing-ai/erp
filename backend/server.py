@@ -1916,6 +1916,263 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
         reminders=reminders
     )
 
+# ==================== NOTIFICATIONS ROUTES ====================
+
+class NotificationItem(BaseModel):
+    id: str
+    type: str  # 'rent_due', 'outstanding_balance', 'contract_expiring', 'loan_outstanding', 'salary_due'
+    title: str
+    message: str
+    priority: str  # 'high', 'medium', 'low'
+    related_id: Optional[str] = None
+    related_name: Optional[str] = None
+    amount: Optional[float] = None
+    due_date: Optional[str] = None
+
+class NotificationsResponse(BaseModel):
+    total: int
+    high_priority: int
+    notifications: List[NotificationItem]
+
+@api_router.get("/notifications", response_model=NotificationsResponse)
+async def get_notifications(current_user: dict = Depends(get_current_active_user)):
+    """Get all notifications and reminders for the current user"""
+    user_id = current_user["id"]
+    notifications = []
+    now = datetime.now(timezone.utc)
+    current_month = now.month
+    current_year = now.year
+    
+    # Get user settings for due dates
+    user_settings = await db.users.find_one({"id": user_id}, {"_id": 0, "rent_due_day": 1, "grace_period_days": 1})
+    rent_due_day = user_settings.get("rent_due_day", 1) if user_settings else 1
+    grace_period_days = user_settings.get("grace_period_days", 5) if user_settings else 5
+    
+    # === 1. RENT PAYMENT REMINDERS ===
+    # Get occupied apartments
+    occupied_apts = await db.apartments.find(
+        {"user_id": user_id, "status": "occupied"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Get rent payments for current month
+    rent_payments = await db.payments.find(
+        {"user_id": user_id, "payment_type": "rent"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Get tenant info
+    tenant_ids = list(set(apt.get("tenant_id") for apt in occupied_apts if apt.get("tenant_id")))
+    tenants = await db.tenants.find({"id": {"$in": tenant_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    tenant_map = {t["id"]: t["name"] for t in tenants}
+    
+    for apt in occupied_apts:
+        if not apt.get("tenant_id"):
+            continue
+        
+        # Check if rent paid this month
+        paid_this_month = any(
+            p["apartment_id"] == apt["id"] and 
+            p.get("period_month") == current_month and 
+            p.get("period_year") == current_year
+            for p in rent_payments
+        )
+        
+        if not paid_this_month:
+            try:
+                due_date = now.replace(day=rent_due_day)
+            except ValueError:
+                due_date = now.replace(day=28)
+            
+            days_since_due = (now - due_date).days
+            is_overdue = days_since_due > grace_period_days
+            
+            tenant_name = tenant_map.get(apt["tenant_id"], "Onbekend")
+            
+            notifications.append(NotificationItem(
+                id=str(uuid.uuid4()),
+                type="rent_due",
+                title="Huur niet betaald" if is_overdue else "Huur herinnering",
+                message=f"{tenant_name} - {apt['name']}: Huur van {now.strftime('%B %Y')} nog niet ontvangen",
+                priority="high" if is_overdue else "medium",
+                related_id=apt["tenant_id"],
+                related_name=tenant_name,
+                amount=apt["rent_amount"],
+                due_date=due_date.strftime("%Y-%m-%d")
+            ))
+    
+    # === 2. OUTSTANDING BALANCE REMINDERS ===
+    for apt in occupied_apts:
+        if not apt.get("tenant_id"):
+            continue
+        
+        tenant_id = apt["tenant_id"]
+        tenant_name = tenant_map.get(tenant_id, "Onbekend")
+        
+        # Calculate outstanding for this tenant
+        tenant_payments = [p for p in rent_payments if p["tenant_id"] == tenant_id and p["payment_type"] == "rent"]
+        total_paid = sum(p["amount"] for p in tenant_payments)
+        
+        # Get tenant start (from first payment or apartment assignment)
+        if tenant_payments:
+            first_payment = min(tenant_payments, key=lambda x: x["payment_date"])
+            try:
+                first_date = datetime.fromisoformat(first_payment["payment_date"].replace("Z", "+00:00"))
+            except:
+                first_date = now
+        else:
+            first_date = now
+        
+        months_rented = max(1, (now.year - first_date.year) * 12 + (now.month - first_date.month) + 1)
+        total_due = months_rented * apt["rent_amount"]
+        balance = total_due - total_paid
+        
+        if balance > apt["rent_amount"]:  # More than 1 month outstanding
+            notifications.append(NotificationItem(
+                id=str(uuid.uuid4()),
+                type="outstanding_balance",
+                title="Openstaand saldo",
+                message=f"{tenant_name} heeft een openstaand saldo van meer dan 1 maand huur",
+                priority="high",
+                related_id=tenant_id,
+                related_name=tenant_name,
+                amount=balance,
+                due_date=None
+            ))
+    
+    # === 3. CONTRACT EXPIRING REMINDERS ===
+    contracts = await db.contracts.find(
+        {"user_id": user_id, "status": "signed"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    for contract in contracts:
+        if contract.get("end_date"):
+            try:
+                end_date = datetime.fromisoformat(contract["end_date"])
+                days_until_expiry = (end_date - now).days
+                
+                if 0 <= days_until_expiry <= 30:  # Expiring within 30 days
+                    tenant = await db.tenants.find_one({"id": contract["tenant_id"]}, {"_id": 0, "name": 1})
+                    tenant_name = tenant["name"] if tenant else "Onbekend"
+                    
+                    notifications.append(NotificationItem(
+                        id=str(uuid.uuid4()),
+                        type="contract_expiring",
+                        title="Contract verloopt binnenkort",
+                        message=f"Contract van {tenant_name} verloopt over {days_until_expiry} dagen",
+                        priority="high" if days_until_expiry <= 7 else "medium",
+                        related_id=contract["id"],
+                        related_name=tenant_name,
+                        amount=None,
+                        due_date=contract["end_date"]
+                    ))
+                elif days_until_expiry < 0:  # Already expired
+                    tenant = await db.tenants.find_one({"id": contract["tenant_id"]}, {"_id": 0, "name": 1})
+                    tenant_name = tenant["name"] if tenant else "Onbekend"
+                    
+                    notifications.append(NotificationItem(
+                        id=str(uuid.uuid4()),
+                        type="contract_expiring",
+                        title="Contract verlopen",
+                        message=f"Contract van {tenant_name} is {abs(days_until_expiry)} dagen geleden verlopen",
+                        priority="high",
+                        related_id=contract["id"],
+                        related_name=tenant_name,
+                        amount=None,
+                        due_date=contract["end_date"]
+                    ))
+            except:
+                pass
+    
+    # === 4. OUTSTANDING LOAN REMINDERS ===
+    loans = await db.loans.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
+    loan_ids = [l["id"] for l in loans]
+    
+    if loan_ids:
+        loan_payments = await db.payments.find(
+            {"loan_id": {"$in": loan_ids}, "payment_type": "loan"},
+            {"_id": 0, "loan_id": 1, "amount": 1}
+        ).to_list(1000)
+        
+        loan_payments_map = {}
+        for lp in loan_payments:
+            lid = lp.get("loan_id")
+            if lid:
+                loan_payments_map[lid] = loan_payments_map.get(lid, 0) + lp["amount"]
+        
+        for loan in loans:
+            paid = loan_payments_map.get(loan["id"], 0)
+            remaining = loan["amount"] - paid
+            
+            if remaining > 0:
+                tenant = await db.tenants.find_one({"id": loan["tenant_id"]}, {"_id": 0, "name": 1})
+                tenant_name = tenant["name"] if tenant else "Onbekend"
+                
+                # Calculate days since loan
+                try:
+                    loan_date = datetime.fromisoformat(loan["loan_date"])
+                    days_since_loan = (now - loan_date).days
+                except:
+                    days_since_loan = 0
+                
+                priority = "high" if days_since_loan > 60 else ("medium" if days_since_loan > 30 else "low")
+                
+                notifications.append(NotificationItem(
+                    id=str(uuid.uuid4()),
+                    type="loan_outstanding",
+                    title="Openstaande lening",
+                    message=f"{tenant_name} heeft nog SRD {remaining:,.2f} openstaande lening",
+                    priority=priority,
+                    related_id=loan["id"],
+                    related_name=tenant_name,
+                    amount=remaining,
+                    due_date=loan["loan_date"]
+                ))
+    
+    # === 5. SALARY PAYMENT REMINDERS ===
+    employees = await db.employees.find(
+        {"user_id": user_id, "status": "active"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    if employees:
+        salaries = await db.salaries.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
+        
+        for emp in employees:
+            # Check if salary paid this month
+            paid_this_month = any(
+                s["employee_id"] == emp["id"] and
+                s.get("period_month") == current_month and
+                s.get("period_year") == current_year
+                for s in salaries
+            )
+            
+            if not paid_this_month and now.day >= 25:  # Reminder after 25th of month
+                notifications.append(NotificationItem(
+                    id=str(uuid.uuid4()),
+                    type="salary_due",
+                    title="Loon uitbetalen",
+                    message=f"Loon van {emp['name']} voor {now.strftime('%B %Y')} nog niet uitbetaald",
+                    priority="medium" if now.day < 28 else "high",
+                    related_id=emp["id"],
+                    related_name=emp["name"],
+                    amount=emp.get("salary"),
+                    due_date=None
+                ))
+    
+    # Sort notifications by priority
+    priority_order = {"high": 0, "medium": 1, "low": 2}
+    notifications.sort(key=lambda x: priority_order.get(x.priority, 3))
+    
+    high_priority = len([n for n in notifications if n.priority == "high"])
+    
+    return NotificationsResponse(
+        total=len(notifications),
+        high_priority=high_priority,
+        notifications=notifications
+    )
+
 # ==================== TENANT BALANCE ROUTES ====================
 
 @api_router.get("/tenants/{tenant_id}/balance")
