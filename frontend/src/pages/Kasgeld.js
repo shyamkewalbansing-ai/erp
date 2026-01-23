@@ -341,7 +341,7 @@ export default function Kasgeld() {
           <CardTitle>Transactiegeschiedenis</CardTitle>
         </CardHeader>
         <CardContent>
-          {kasgeldData?.transactions?.length > 0 ? (
+          {kasgeldData?.transactions?.filter(t => t.transaction_type !== 'payment').length > 0 ? (
             <Table>
               <TableHeader>
                 <TableRow>
