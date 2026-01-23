@@ -901,6 +901,12 @@ async def create_payment(payment_data: PaymentCreate, current_user: dict = Depen
     if not apt:
         raise HTTPException(status_code=404, detail="Appartement niet gevonden")
     
+    # If loan payment, verify loan exists
+    if payment_data.payment_type == "loan" and payment_data.loan_id:
+        loan = await db.loans.find_one({"id": payment_data.loan_id, "user_id": current_user["id"]}, {"_id": 0})
+        if not loan:
+            raise HTTPException(status_code=404, detail="Lening niet gevonden")
+    
     payment_id = str(uuid.uuid4())
     payment_doc = {
         "id": payment_id,
@@ -912,6 +918,7 @@ async def create_payment(payment_data: PaymentCreate, current_user: dict = Depen
         "description": payment_data.description,
         "period_month": payment_data.period_month,
         "period_year": payment_data.period_year,
+        "loan_id": payment_data.loan_id,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "user_id": current_user["id"]
     }
