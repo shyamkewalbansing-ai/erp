@@ -196,7 +196,8 @@ export default function Facturen() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Alle status</SelectItem>
-            <SelectItem value="paid">Betaald</SelectItem>
+            <SelectItem value="paid">Volledig Betaald</SelectItem>
+            <SelectItem value="partial">Gedeeltelijk</SelectItem>
             <SelectItem value="unpaid">Openstaand</SelectItem>
           </SelectContent>
         </Select>
@@ -221,7 +222,9 @@ export default function Facturen() {
           <span className="text-muted-foreground">Gefilterd: </span>
           <span className="font-medium">{filteredSummary.total} facturen</span>
           <span className="text-muted-foreground"> • </span>
-          <span className="text-green-600">{filteredSummary.paid} betaald ({formatCurrency(filteredSummary.paidAmount)})</span>
+          <span className="text-green-600">{filteredSummary.paid} betaald</span>
+          <span className="text-muted-foreground"> • </span>
+          <span className="text-blue-600">{filteredSummary.partial} gedeeltelijk</span>
           <span className="text-muted-foreground"> • </span>
           <span className="text-orange-600">{filteredSummary.unpaid} openstaand ({formatCurrency(filteredSummary.unpaidAmount)})</span>
         </div>
