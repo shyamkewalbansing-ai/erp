@@ -332,7 +332,7 @@ export default function Facturen() {
       )}
 
       {/* Outstanding Summary by Tenant */}
-      {summary.unpaid > 0 && statusFilter !== 'paid' && (
+      {(summary.unpaid > 0 || summary.partial > 0) && statusFilter !== 'paid' && (
         <Card className="border-orange-200 bg-orange-50">
           <CardContent className="p-4">
             <h3 className="font-semibold text-orange-800 flex items-center gap-2 mb-3">
@@ -342,13 +342,22 @@ export default function Facturen() {
             <div className="space-y-2">
               {Object.entries(
                 filteredInvoices
-                  .filter(i => i.status === 'unpaid')
+                  .filter(i => i.status === 'unpaid' || i.status === 'partial')
                   .reduce((acc, inv) => {
                     if (!acc[inv.tenant_name]) {
-                      acc[inv.tenant_name] = { count: 0, amount: 0, apartment: inv.apartment_name };
+                      acc[inv.tenant_name] = { 
+                        count: 0, 
+                        totalRemaining: 0, 
+                        apartment: inv.apartment_name,
+                        latestBalance: 0
+                      };
                     }
                     acc[inv.tenant_name].count++;
-                    acc[inv.tenant_name].amount += inv.amount;
+                    acc[inv.tenant_name].totalRemaining += inv.remaining;
+                    // Keep track of the latest (highest) cumulative balance
+                    if (inv.cumulative_balance > acc[inv.tenant_name].latestBalance) {
+                      acc[inv.tenant_name].latestBalance = inv.cumulative_balance;
+                    }
                     return acc;
                   }, {})
               ).map(([tenant, data]) => (
@@ -358,8 +367,8 @@ export default function Facturen() {
                     <span className="text-orange-600 ml-2">({data.apartment})</span>
                   </div>
                   <div className="text-right">
-                    <span className="font-semibold text-orange-800">{formatCurrency(data.amount)}</span>
-                    <span className="text-orange-600 text-xs ml-2">({data.count} maand{data.count > 1 ? 'en' : ''})</span>
+                    <span className="font-bold text-red-600">{formatCurrency(data.latestBalance)}</span>
+                    <span className="text-orange-600 text-xs ml-2">({data.count} factuur{data.count > 1 ? 'en' : ''})</span>
                   </div>
                 </div>
               ))}
