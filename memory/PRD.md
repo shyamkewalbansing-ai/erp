@@ -125,6 +125,17 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 - [x] PDF terugbetaling bevestiging downloaden
 - [x] Borg zichtbaar in huurder saldo overzicht ("Bekijk Saldo")
 
+### Leningen (Loans) - NIEUW (23 Jan 2026) ✅
+- [x] Leningen aanmaken voor huurders
+- [x] Overzicht van alle leningen met status (Open/Gedeeltelijk/Afbetaald)
+- [x] Samenvatting kaarten (Totaal Uitgeleend, Terugbetaald, Openstaand, Actieve Leningen)
+- [x] Lening bewerken en verwijderen
+- [x] Lening terugbetaling via Betalingen module
+- [x] Lening selectie dropdown in betalingsformulier
+- [x] Automatische status update (open → partial → paid)
+- [x] Leningen zichtbaar in Facturen overzicht (optioneel)
+- [x] GET /api/tenants/{id}/loans endpoint voor dropdown
+
 ### Dashboard
 - [x] Totaal appartementen / bezet / beschikbaar
 - [x] Totaal huurders
