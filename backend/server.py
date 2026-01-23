@@ -386,6 +386,7 @@ class MaintenanceCreate(BaseModel):
     cost: float
     maintenance_date: str
     status: str = "completed"  # 'pending', 'in_progress', 'completed'
+    cost_type: str = "kasgeld"  # 'kasgeld' (verhuurder betaalt) or 'tenant' (huurder betaalt)
 
 class MaintenanceUpdate(BaseModel):
     category: Optional[str] = None
@@ -393,6 +394,7 @@ class MaintenanceUpdate(BaseModel):
     cost: Optional[float] = None
     maintenance_date: Optional[str] = None
     status: Optional[str] = None
+    cost_type: Optional[str] = None
 
 class MaintenanceResponse(BaseModel):
     id: str
@@ -403,6 +405,7 @@ class MaintenanceResponse(BaseModel):
     cost: float
     maintenance_date: str
     status: str
+    cost_type: str = "kasgeld"
     created_at: str
     user_id: str
 
