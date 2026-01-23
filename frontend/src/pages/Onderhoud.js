@@ -283,6 +283,7 @@ export default function Onderhoud() {
                 <TableHead>Categorie</TableHead>
                 <TableHead>Omschrijving</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Kosten voor</TableHead>
                 <TableHead className="text-right">Kosten</TableHead>
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
@@ -322,6 +323,13 @@ export default function Onderhoud() {
                         'bg-gray-100 text-gray-600'
                       }`}>
                         {statusInfo.label}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`status-badge ${
+                        record.cost_type === 'tenant' ? 'bg-yellow-50 text-yellow-600' : 'bg-blue-50 text-blue-600'
+                      }`}>
+                        {record.cost_type === 'tenant' ? 'Huurder' : 'Kasgeld'}
                       </span>
                     </TableCell>
                     <TableCell className="text-right font-semibold text-blue-600">
