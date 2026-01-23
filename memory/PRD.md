@@ -29,6 +29,30 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 
 ## What's Been Implemented (January 2026)
 
+### Dashboard Verbeteringen ✅ (23 Jan 2026)
+- [x] "Openstaand" kaart toont nu gecombineerd bedrag (huur + leningen)
+- [x] "Openstaand" toont ondertitel "incl. leningen SRD X" als er openstaande leningen zijn
+- [x] "Inkomsten deze maand" berekent nu correct op basis van payment_date
+- [x] Sidebar "Uitloggen" knop is nu altijd zichtbaar onderaan (mt-auto, flex-shrink-0)
+
+### Huurinstellingen - Betaaldeadline ✅ (23 Jan 2026)
+- [x] Nieuwe "Betaaldeadline" sectie toegevoegd aan Huurinstellingen
+- [x] "Deadline in volgende maand?" dropdown (Dezelfde maand / Volgende maand)
+- [x] "Deadline dag" dropdown (1e t/m 28e)
+- [x] Live voorbeeld: "Huur van januari moet uiterlijk 6 februari betaald zijn"
+- [x] Backend velden: payment_deadline_day, payment_deadline_month_offset
+- [x] Validatie: deadline dag moet tussen 0 en 28 zijn
+
+### Leningen (Loans) - NIEUW ✅ (23 Jan 2026)
+- [x] Leningen aanmaken voor huurders
+- [x] Overzicht van alle leningen met status (Open/Gedeeltelijk/Afbetaald)
+- [x] Samenvatting kaarten (Totaal Uitgeleend, Terugbetaald, Openstaand, Actieve Leningen)
+- [x] Lening bewerken en verwijderen
+- [x] Lening terugbetaling via Betalingen module
+- [x] Lening selectie dropdown in betalingsformulier
+- [x] Automatische status update (open → partial → paid)
+- [x] GET /api/tenants/{id}/loans endpoint voor dropdown
+
 ### Rebranding ✅ (22 Jan 2026)
 - [x] Applicatie gerebrand van "SuriRentals" naar "Facturatie N.V."
 - [x] Nieuw logo (FACTURATE) geïmplementeerd op alle pagina's
