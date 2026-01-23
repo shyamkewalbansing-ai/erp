@@ -1918,7 +1918,7 @@ async def get_tenant_balance(tenant_id: str, current_user: dict = Depends(get_cu
 
 @api_router.get("/tenants/{tenant_id}/outstanding")
 async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(get_current_active_user)):
-    """Get outstanding (unpaid) months for a tenant - used when registering new payment"""
+    """Get outstanding (unpaid/partially paid) months for a tenant - used when registering new payment"""
     tenant = await db.tenants.find_one(
         {"id": tenant_id, "user_id": current_user["id"]},
         {"_id": 0}
@@ -1939,20 +1939,24 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
             "has_outstanding": False,
             "outstanding_amount": 0,
             "outstanding_months": [],
+            "partial_payments": [],
             "suggestion": None
         }
     
     # Get all rent payments for this tenant-apartment
     payments = await db.payments.find(
         {"tenant_id": tenant_id, "apartment_id": apt["id"], "user_id": current_user["id"], "payment_type": "rent"},
-        {"_id": 0, "period_month": 1, "period_year": 1, "amount": 1}
+        {"_id": 0, "period_month": 1, "period_year": 1, "amount": 1, "payment_date": 1}
     ).to_list(1000)
     
-    # Create set of paid periods
-    paid_periods = set()
+    # Create payment lookup: (year, month) -> total paid for that period
+    payment_totals = {}
     for p in payments:
         if p.get("period_month") and p.get("period_year"):
-            paid_periods.add((p["period_year"], p["period_month"]))
+            key = (p["period_year"], p["period_month"])
+            if key not in payment_totals:
+                payment_totals[key] = 0
+            payment_totals[key] += p["amount"]
     
     # Calculate which months should be paid (from apartment creation or first payment)
     if payments:
@@ -1975,9 +1979,11 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
             start_year = now.year
             start_month = now.month
     
-    # Generate list of all months that should be paid
+    # Generate list of all months with their payment status
     now = datetime.now(timezone.utc)
     outstanding_months = []
+    partial_payments = []
+    total_outstanding = 0.0
     
     year = start_year
     month = start_month
@@ -1985,14 +1991,28 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
                  'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December']
     
     while (year < now.year) or (year == now.year and month <= now.month):
-        if (year, month) not in paid_periods:
-            outstanding_months.append({
+        key = (year, month)
+        amount_due = apt["rent_amount"]
+        amount_paid = payment_totals.get(key, 0)
+        remaining = amount_due - amount_paid
+        
+        if remaining > 0:
+            month_info = {
                 "year": year,
                 "month": month,
                 "month_name": months_nl[month],
                 "label": f"{months_nl[month]} {year}",
-                "amount": apt["rent_amount"]
-            })
+                "amount_due": amount_due,
+                "amount_paid": amount_paid,
+                "remaining": remaining,
+                "status": "partial" if amount_paid > 0 else "unpaid"
+            }
+            
+            if amount_paid > 0:
+                partial_payments.append(month_info)
+            
+            outstanding_months.append(month_info)
+            total_outstanding += remaining
         
         month += 1
         if month > 12:
@@ -2001,16 +2021,31 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
     
     # Sort by date (oldest first)
     outstanding_months.sort(key=lambda x: (x["year"], x["month"]))
+    partial_payments.sort(key=lambda x: (x["year"], x["month"]))
     
-    outstanding_amount = len(outstanding_months) * apt["rent_amount"]
-    
-    # Create suggestion message
+    # Create detailed suggestion message
     suggestion = None
     if outstanding_months:
         oldest = outstanding_months[0]
-        suggestion = f"Let op: Deze huurder heeft {len(outstanding_months)} openstaande maand(en). " \
-                    f"De oudste onbetaalde maand is {oldest['label']} ({format_currency(oldest['amount'])}). " \
-                    f"Totaal openstaand: {format_currency(outstanding_amount)}"
+        
+        # Count unpaid vs partial
+        unpaid_count = len([m for m in outstanding_months if m["status"] == "unpaid"])
+        partial_count = len([m for m in outstanding_months if m["status"] == "partial"])
+        
+        suggestion_parts = [f"Let op: Deze huurder heeft een openstaand saldo van {format_currency(total_outstanding)}."]
+        
+        if unpaid_count > 0:
+            suggestion_parts.append(f"{unpaid_count} maand(en) volledig onbetaald.")
+        
+        if partial_count > 0:
+            partial_details = []
+            for pm in partial_payments:
+                partial_details.append(f"{pm['label']}: {format_currency(pm['amount_paid'])} betaald, {format_currency(pm['remaining'])} nog open")
+            suggestion_parts.append(f"{partial_count} maand(en) gedeeltelijk betaald:")
+            suggestion_parts.extend(partial_details)
+        
+        suggestion_parts.append(f"Oudste openstaande maand: {oldest['label']}")
+        suggestion = " ".join(suggestion_parts[:2]) + (" " + " | ".join(partial_details) if partial_count > 0 else "")
     
     return {
         "tenant_id": tenant_id,
@@ -2018,8 +2053,11 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
         "apartment_name": apt["name"],
         "rent_amount": apt["rent_amount"],
         "has_outstanding": len(outstanding_months) > 0,
-        "outstanding_amount": outstanding_amount,
+        "outstanding_amount": total_outstanding,
         "outstanding_months": outstanding_months,
+        "partial_payments": partial_payments,
+        "unpaid_count": len([m for m in outstanding_months if m["status"] == "unpaid"]),
+        "partial_count": len([m for m in outstanding_months if m["status"] == "partial"]),
         "suggestion": suggestion
     }
 
