@@ -1905,6 +1905,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
         total_tenants=total_tenants,
         total_income_this_month=total_income,
         total_outstanding=total_outstanding,
+        total_outstanding_loans=total_outstanding_loans,
         total_deposits_held=total_deposits,
         total_kasgeld=total_kasgeld,
         total_employees=total_employees,
