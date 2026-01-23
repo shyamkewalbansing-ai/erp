@@ -1,0 +1,118 @@
+{
+  "summary": "Maintenance Tenant Costs Feature testing complete. Backend: 12/12 tests passed (100%). Frontend: Facturen page verified with Huur, Onderhoud, Totaal columns. All features working correctly.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "Backend: Create maintenance with cost_type='tenant' works correctly",
+    "Backend: Create maintenance with cost_type='kasgeld' works correctly",
+    "Backend: GET /api/invoices returns maintenance_cost field",
+    "Backend: GET /api/invoices returns maintenance_items with details (category, description, date, cost)",
+    "Backend: Invoice amount_due = rent_amount + maintenance_cost",
+    "Backend: Maintenance costs only appear on first month's invoice",
+    "Backend: GET /api/tenants/{id}/outstanding includes maintenance_costs",
+    "Backend: outstanding_amount = outstanding_rent + total_maintenance",
+    "Backend: maintenance_costs contains item details (category, description, cost, date)",
+    "Backend: Kasgeld maintenance NOT included in tenant outstanding",
+    "Backend: cumulative_balance includes maintenance costs",
+    "Backend: Multiple maintenance items are summed correctly",
+    "Frontend: Facturen page has 'Huur' column",
+    "Frontend: Facturen page has 'Onderhoud' column",
+    "Frontend: Facturen page has 'Totaal' column",
+    "Frontend: Facturen page has 'Totaal Schuld' column",
+    "Frontend: Invoice row shows maintenance cost with amber/yellow styling",
+    "Frontend: Expandable row button (chevron) visible for rows with maintenance"
+  ],
+  
+  "features_verified": {
+    "feature_1_maintenance_added_to_tenant_balance": {
+      "status": "PASSED",
+      "description": "Maintenance with cost_type='tenant' is correctly added to tenant's rent balance"
+    },
+    "feature_2_facturen_separate_columns": {
+      "status": "PASSED",
+      "description": "Facturen page shows separate columns: Huur, Onderhoud, Totaal"
+    },
+    "feature_3_expandable_maintenance_details": {
+      "status": "PASSED",
+      "description": "Maintenance items can be expanded to show details (category, description, date, cost)"
+    },
+    "feature_4_outstanding_warning_includes_maintenance": {
+      "status": "PASSED",
+      "description": "Outstanding balance warning includes maintenance costs in total"
+    },
+    "feature_5_invoices_api_maintenance_fields": {
+      "status": "PASSED",
+      "description": "Invoices API returns maintenance_cost and maintenance_items fields"
+    },
+    "feature_6_total_outstanding_calculation": {
+      "status": "PASSED",
+      "description": "Total outstanding includes rent + maintenance costs"
+    }
+  },
+  
+  "test_report_links": [
+    "/app/backend/tests/test_maintenance_tenant_costs.py",
+    "/app/test_reports/pytest/pytest_maintenance_tenant_costs.xml"
+  ],
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [],
+  
+  "updated_files": [
+    "/app/backend/tests/test_maintenance_tenant_costs.py"
+  ],
+  
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (all columns and features verified)"
+  },
+  
+  "test_credentials": {
+    "test_customer": {
+      "email": "uitest2@test.com",
+      "password": "test123"
+    }
+  },
+  
+  "seed_data_creation": "Test data created with prefix 'TEST_' during testing, cleaned up after tests",
+  
+  "retest_needed": false,
+  
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "Maintenance Tenant Costs feature has been fully tested. When maintenance is created with cost_type='tenant': 1) The cost is added to the first month's invoice for that apartment, 2) Facturen page shows separate columns: Huur (rent), Onderhoud (maintenance), Totaal (total), 3) Rows with maintenance have amber/yellow background and expandable details, 4) GET /api/invoices returns maintenance_cost and maintenance_items fields, 5) GET /api/tenants/{id}/outstanding includes maintenance_costs and total_maintenance, 6) cumulative_balance includes maintenance costs. The Payments page outstanding warning also includes maintenance costs in the total.",
+  
+  "api_verification": {
+    "invoices_api": {
+      "endpoint": "GET /api/invoices",
+      "verified_fields": ["maintenance_cost", "maintenance_items", "rent_amount", "amount_due", "cumulative_balance"],
+      "sample_response": {
+        "rent_amount": 1500.0,
+        "maintenance_cost": 500.0,
+        "amount_due": 2000.0,
+        "maintenance_items": [{"category": "Kraan", "description": "...", "cost": 500.0, "date": "2026-01-23"}]
+      }
+    },
+    "outstanding_api": {
+      "endpoint": "GET /api/tenants/{id}/outstanding",
+      "verified_fields": ["has_outstanding", "outstanding_amount", "total_maintenance", "maintenance_costs"],
+      "sample_response": {
+        "has_outstanding": true,
+        "outstanding_amount": 2000.0,
+        "total_maintenance": 500.0,
+        "maintenance_costs": [{"category": "Kraan", "description": "...", "cost": 500.0, "date": "2026-01-23"}]
+      }
+    }
+  }
+}
