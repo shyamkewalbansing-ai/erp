@@ -47,6 +47,18 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 - [x] **Status tracking**: Concept → Wacht op handtekening → Ondertekend
 - [x] **Opslag bij huurder**: Contract gekoppeld aan tenant_id
 
+### Notificaties & Reminders ✅ (23 Jan 2026)
+- [x] **Notificatie bel** rechtsboven in header (desktop en mobiel)
+- [x] **Badge** met aantal meldingen (rood bij urgente meldingen)
+- [x] **Popover** met alle notificaties en details
+- [x] **Herinnering huurbetalingen**: Niet betaalde huur deze maand
+- [x] **Herinnering openstaand saldo**: Meer dan 1 maand huur achterstallig
+- [x] **Contract vervaldatum**: Contracten die binnen 30 dagen verlopen
+- [x] **Openstaande leningen**: Leningen die nog niet volledig terugbetaald zijn
+- [x] **Loonbetalingen**: Lonen die nog niet uitbetaald zijn (na 25e van maand)
+- [x] **Prioriteit systeem**: Urgent (rood), Aandacht (geel), Info (groen)
+- [x] **Ververs knop** om notificaties te herladen
+
 ### Dashboard Verbeteringen ✅ (23 Jan 2026)
 - [x] "Openstaand" kaart toont nu gecombineerd bedrag (huur + leningen)
 - [x] "Openstaand" toont ondertitel "incl. leningen SRD X" als er openstaande leningen zijn
