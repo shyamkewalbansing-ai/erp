@@ -186,6 +186,9 @@ function App() {
             <Route path="facturen" element={
               <SubscriptionRoute><Facturen /></SubscriptionRoute>
             } />
+            <Route path="leningen" element={
+              <SubscriptionRoute><Leningen /></SubscriptionRoute>
+            } />
             <Route path="deposits" element={
               <SubscriptionRoute><Deposits /></SubscriptionRoute>
             } />
