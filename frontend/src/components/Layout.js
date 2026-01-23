@@ -16,7 +16,8 @@ import {
   ChevronRight,
   Crown,
   Package,
-  Settings
+  Settings,
+  FileText
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -27,6 +28,7 @@ const customerNavItems = [
   { to: '/tenants', icon: Users, label: 'Huurders' },
   { to: '/apartments', icon: Building2, label: 'Appartementen' },
   { to: '/payments', icon: CreditCard, label: 'Betalingen' },
+  { to: '/facturen', icon: FileText, label: 'Facturen' },
   { to: '/deposits', icon: Wallet, label: 'Borg' },
   { to: '/kasgeld', icon: Banknote, label: 'Kasgeld' },
   { to: '/onderhoud', icon: Wrench, label: 'Onderhoud' },
