@@ -112,10 +112,6 @@ export const deleteSalary = (id) => api.delete(`/salaries/${id}`);
 export const downloadPayslip = (salaryId) => 
   api.get(`/salaries/${salaryId}/pdf`, { responseType: 'blob' });
 
-// Deposit Refund PDF
-export const downloadDepositRefund = (depositId) => 
-  api.get(`/deposits/${depositId}/refund-pdf`, { responseType: 'blob' });
-
 // Wisselkoers (Exchange Rate)
 export const getExchangeRate = () => api.get('/exchange-rate');
 
