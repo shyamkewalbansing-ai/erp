@@ -17,7 +17,8 @@ import {
   Crown,
   Package,
   Settings,
-  FileText
+  FileText,
+  HandCoins
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -29,6 +30,7 @@ const customerNavItems = [
   { to: '/apartments', icon: Building2, label: 'Appartementen' },
   { to: '/payments', icon: CreditCard, label: 'Betalingen' },
   { to: '/facturen', icon: FileText, label: 'Facturen' },
+  { to: '/leningen', icon: HandCoins, label: 'Leningen' },
   { to: '/deposits', icon: Wallet, label: 'Borg' },
   { to: '/kasgeld', icon: Banknote, label: 'Kasgeld' },
   { to: '/onderhoud', icon: Wrench, label: 'Onderhoud' },
