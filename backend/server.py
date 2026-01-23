@@ -2131,7 +2131,7 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
 
 @api_router.get("/invoices")
 async def get_invoices(current_user: dict = Depends(get_current_active_user)):
-    """Get all invoices (rent due) for all tenants with payment status, cumulative balance and maintenance costs"""
+    """Get all invoices (rent due) for all tenants with payment status, cumulative balance, maintenance costs and loans"""
     
     # Get all apartments with tenants
     apartments = await db.apartments.find(
@@ -2155,6 +2155,53 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
         {"user_id": current_user["id"], "payment_type": "rent"},
         {"_id": 0}
     ).to_list(10000)
+    
+    # Get all loan payments
+    loan_payments = await db.payments.find(
+        {"user_id": current_user["id"], "payment_type": "loan"},
+        {"_id": 0, "tenant_id": 1, "loan_id": 1, "amount": 1}
+    ).to_list(10000)
+    
+    # Get all loans
+    loans = await db.loans.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Calculate loan balances per tenant
+    loan_payments_by_loan = {}
+    for lp in loan_payments:
+        loan_id = lp.get("loan_id")
+        if loan_id:
+            if loan_id not in loan_payments_by_loan:
+                loan_payments_by_loan[loan_id] = 0
+            loan_payments_by_loan[loan_id] += lp["amount"]
+    
+    # Group loans by tenant with remaining balance
+    loans_by_tenant = {}
+    for loan in loans:
+        tenant_id = loan["tenant_id"]
+        if tenant_id not in loans_by_tenant:
+            loans_by_tenant[tenant_id] = {
+                "total": 0,
+                "paid": 0,
+                "remaining": 0,
+                "items": []
+            }
+        paid = loan_payments_by_loan.get(loan["id"], 0)
+        remaining = loan["amount"] - paid
+        if remaining > 0:
+            loans_by_tenant[tenant_id]["total"] += loan["amount"]
+            loans_by_tenant[tenant_id]["paid"] += paid
+            loans_by_tenant[tenant_id]["remaining"] += remaining
+            loans_by_tenant[tenant_id]["items"].append({
+                "id": loan["id"],
+                "date": loan["loan_date"],
+                "description": loan.get("description", ""),
+                "amount": loan["amount"],
+                "paid": paid,
+                "remaining": remaining
+            })
     
     # Get all maintenance costs for tenants (cost_type = 'tenant')
     maintenance_records = await db.maintenance.find(
