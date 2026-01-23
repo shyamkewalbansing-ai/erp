@@ -246,10 +246,13 @@ export default function Facturen() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[30px]"></TableHead>
                 <TableHead>Huurder</TableHead>
                 <TableHead>Appartement</TableHead>
                 <TableHead>Periode</TableHead>
                 <TableHead className="text-right">Huur</TableHead>
+                <TableHead className="text-right">Onderhoud</TableHead>
+                <TableHead className="text-right">Totaal</TableHead>
                 <TableHead className="text-right">Betaald</TableHead>
                 <TableHead className="text-right">Openstaand</TableHead>
                 <TableHead className="text-right">Totaal Schuld</TableHead>
@@ -258,7 +261,24 @@ export default function Facturen() {
             </TableHeader>
             <TableBody>
               {filteredInvoices.map((invoice) => (
-                <TableRow key={invoice.id} data-testid={`invoice-row-${invoice.id}`}>
+                <>
+                <TableRow key={invoice.id} data-testid={`invoice-row-${invoice.id}`} className={invoice.maintenance_cost > 0 ? 'bg-amber-50/50' : ''}>
+                  <TableCell className="p-1">
+                    {invoice.maintenance_items?.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => setExpandedInvoice(expandedInvoice === invoice.id ? null : invoice.id)}
+                      >
+                        {expandedInvoice === invoice.id ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </Button>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-muted-foreground" />
@@ -283,6 +303,31 @@ export default function Facturen() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right font-medium">
+                    {formatCurrency(invoice.rent_amount || invoice.amount_due)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {invoice.maintenance_cost > 0 ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="text-amber-600 font-medium cursor-help flex items-center justify-end gap-1">
+                              <Wrench className="w-3 h-3" />
+                              {formatCurrency(invoice.maintenance_cost)}
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="font-medium">Onderhoudskosten huurder</p>
+                            {invoice.maintenance_items?.map((item, i) => (
+                              <p key={i} className="text-xs">{item.category}: {item.description} - {formatCurrency(item.cost)}</p>
+                            ))}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right font-semibold">
                     {formatCurrency(invoice.amount_due)}
                   </TableCell>
                   <TableCell className="text-right">
@@ -323,6 +368,32 @@ export default function Facturen() {
                     )}
                   </TableCell>
                 </TableRow>
+                {/* Expanded maintenance details row */}
+                {expandedInvoice === invoice.id && invoice.maintenance_items?.length > 0 && (
+                  <TableRow className="bg-amber-50">
+                    <TableCell colSpan={11} className="py-2">
+                      <div className="pl-8">
+                        <p className="text-xs font-semibold text-amber-800 mb-1 flex items-center gap-1">
+                          <Wrench className="w-3 h-3" />
+                          Onderhoudskosten voor huurder:
+                        </p>
+                        <div className="space-y-1">
+                          {invoice.maintenance_items.map((item, i) => (
+                            <div key={i} className="flex justify-between text-xs bg-white rounded px-2 py-1 border border-amber-200">
+                              <span>
+                                <span className="font-medium text-amber-700">{item.category}</span>
+                                {item.description && <span className="text-muted-foreground"> - {item.description}</span>}
+                                <span className="text-muted-foreground ml-2">({item.date})</span>
+                              </span>
+                              <span className="font-semibold text-amber-800">{formatCurrency(item.cost)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+                </>
               ))}
             </TableBody>
           </Table>
