@@ -1,0 +1,129 @@
+{
+  "summary": "Leningen (Loans) feature testing complete. Backend: 14/14 tests passed (100%). Frontend: All features verified and working correctly.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "Backend: GET /api/loans returns 200 with correct structure",
+    "Backend: POST /api/loans creates new loan with status 'open'",
+    "Backend: POST /api/loans with invalid tenant returns 404",
+    "Backend: PUT /api/loans/{id} updates loan successfully",
+    "Backend: DELETE /api/loans/{id} removes loan",
+    "Backend: GET /api/tenants/{id}/loans returns tenant's loans with totals",
+    "Backend: Loan status changes from 'open' to 'partial' after partial payment",
+    "Backend: Loan status changes from 'partial' to 'paid' after full payment",
+    "Backend: Tenant loans endpoint returns open loans for payment dropdown",
+    "Backend: GET /api/invoices returns correct structure with summary",
+    "Backend: Invoices have correct fields (tenant_id, tenant_name, apartment_name, rent_amount, amount_due, status)",
+    "Backend: Invoices summary includes total_amount, paid_amount, unpaid_amount",
+    "Backend: Loans summary calculation works correctly",
+    "Frontend: Leningen page loads with summary cards (Totaal Uitgeleend, Terugbetaald, Openstaand, Actieve Leningen)",
+    "Frontend: Leningen page shows loans table with correct columns",
+    "Frontend: Loan status badges display correctly (Open, Gedeeltelijk, Afbetaald)",
+    "Frontend: 'Nieuwe Lening' button opens modal with all required fields",
+    "Frontend: New loan modal has tenant select, amount, date, description fields",
+    "Frontend: Facturen page displays invoices with correct columns",
+    "Frontend: Facturen page shows summary cards",
+    "Frontend: Facturen page shows 'Openstaande Saldi per Huurder' section"
+  ],
+  
+  "features_verified": {
+    "feature_1_create_new_loan": {
+      "status": "PASSED",
+      "description": "New loan can be created via modal with tenant selection, amount, date, and description"
+    },
+    "feature_2_view_loans_list_with_status": {
+      "status": "PASSED",
+      "description": "Loans list shows all loans with status badges (Open/Gedeeltelijk/Afbetaald)"
+    },
+    "feature_3_loan_repayment_via_payments": {
+      "status": "PASSED",
+      "description": "Payments can be made with type 'Lening terugbetaling' and loan_id"
+    },
+    "feature_4_leningen_dropdown_in_payments": {
+      "status": "PASSED",
+      "description": "GET /api/tenants/{id}/loans returns open loans for dropdown selection"
+    },
+    "feature_5_loan_status_updates": {
+      "status": "PASSED",
+      "description": "Loan status correctly updates: open -> partial (after partial payment) -> paid (after full payment)"
+    },
+    "feature_6_facturen_page": {
+      "status": "PASSED",
+      "description": "Facturen page displays invoices with Huur, Onderhoud, Totaal, Betaald, Openstaand columns"
+    },
+    "feature_7_leningen_summary_cards": {
+      "status": "PASSED",
+      "description": "Leningen page shows summary cards: Totaal Uitgeleend, Terugbetaald, Openstaand, Actieve Leningen"
+    }
+  },
+  
+  "test_report_links": [
+    "/app/backend/tests/test_loans_feature.py",
+    "/app/test_reports/pytest/pytest_loans_feature.xml"
+  ],
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [],
+  
+  "updated_files": [
+    "/app/backend/tests/test_loans_feature.py"
+  ],
+  
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100% (all features verified)"
+  },
+  
+  "test_credentials": {
+    "customer_account": {
+      "email": "klant@test.com",
+      "password": "test123"
+    },
+    "superadmin_account": {
+      "email": "admin@facturatie.sr",
+      "password": "admin123"
+    }
+  },
+  
+  "seed_data_verified": {
+    "tenant": "Jan Jansen",
+    "apartment": "Appartement A1",
+    "loan": {
+      "amount": 500,
+      "amount_paid": 200,
+      "remaining": 300,
+      "status": "partial",
+      "description": "Voorschot voor noodgeval"
+    }
+  },
+  
+  "retest_needed": false,
+  
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "Leningen (Loans) feature has been fully tested. Key endpoints: GET /api/loans (list all loans), POST /api/loans (create loan), PUT /api/loans/{id} (update), DELETE /api/loans/{id} (delete), GET /api/tenants/{id}/loans (tenant's loans for payment dropdown). Loan status automatically updates based on payments: 'open' (no payments), 'partial' (some payments), 'paid' (fully paid). The Facturen page shows invoices with rent, maintenance, and loan amounts. Test data includes Jan Jansen with a partial loan (SRD 500, SRD 200 paid, SRD 300 remaining).",
+  
+  "api_verification": {
+    "loans_api": {
+      "GET /api/loans": "Returns list of loans with tenant_name, amount, amount_paid, remaining, status",
+      "POST /api/loans": "Creates loan with tenant_id, amount, description, loan_date",
+      "PUT /api/loans/{id}": "Updates loan amount, description",
+      "DELETE /api/loans/{id}": "Deletes loan",
+      "GET /api/tenants/{id}/loans": "Returns tenant's loans with totals (total_loans, total_paid, total_remaining)"
+    },
+    "invoices_api": {
+      "GET /api/invoices": "Returns {invoices: [], summary: {total_amount, paid_amount, unpaid_amount}}"
+    }
+  }
+}
