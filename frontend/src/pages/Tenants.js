@@ -392,7 +392,7 @@ export default function Tenants() {
                       Huur: {formatCurrency(balanceData.apartment.rent_amount)} / maand
                     </p>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div className="text-center p-4 bg-accent rounded-lg">
                       <p className="text-sm text-muted-foreground">Totaal verschuldigd</p>
                       <p className="text-xl font-bold text-foreground">
@@ -414,6 +414,17 @@ export default function Tenants() {
                       }`}>
                         {formatCurrency(balanceData.balance)}
                       </p>
+                    </div>
+                    <div className="text-center p-4 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-muted-foreground">Borg</p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {balanceData.deposit ? formatCurrency(balanceData.deposit.amount) : formatCurrency(0)}
+                      </p>
+                      {balanceData.deposit && (
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Gestort: {balanceData.deposit.deposit_date}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </>
