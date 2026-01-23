@@ -459,8 +459,26 @@ export default function Onderhoud() {
                 required
                 data-testid="maintenance-cost-input"
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Kosten voor *</Label>
+              <Select 
+                value={formData.cost_type} 
+                onValueChange={(value) => setFormData({ ...formData, cost_type: value })}
+              >
+                <SelectTrigger data-testid="maintenance-cost-type-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kasgeld">Kasgeld (wordt afgetrokken)</SelectItem>
+                  <SelectItem value="tenant">Huurder (niet van kasgeld)</SelectItem>
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
-                Kosten worden automatisch van het kasgeld afgetrokken
+                {formData.cost_type === 'kasgeld' 
+                  ? 'Kosten worden van het kasgeld afgetrokken'
+                  : 'Kosten zijn voor rekening van de huurder'}
               </p>
             </div>
 
