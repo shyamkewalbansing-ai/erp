@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getProfile, updateProfile, changePassword, uploadLogo, deleteLogo } from '../lib/api';
+import { getProfile, updateProfile, changePassword, uploadLogo, deleteLogo, updateRentSettings } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { toast } from 'sonner';
 import { 
   User, 
@@ -18,13 +19,16 @@ import {
   Shield,
   ImageIcon,
   Upload,
-  Trash2
+  Trash2,
+  Calendar,
+  Clock
 } from 'lucide-react';
 
 export default function Instellingen() {
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingRent, setSavingRent] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -36,6 +40,13 @@ export default function Instellingen() {
     email: '',
     company_name: '',
     logo: null
+  });
+  
+  // Rent settings form
+  const [rentSettings, setRentSettings] = useState({
+    rent_due_day: 1,
+    payment_frequency: 'monthly',
+    grace_period_days: 5
   });
   
   // Password form
