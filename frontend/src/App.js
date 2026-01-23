@@ -9,6 +9,8 @@ import Apartments from "./pages/Apartments";
 import Payments from "./pages/Payments";
 import Facturen from "./pages/Facturen";
 import Leningen from "./pages/Leningen";
+import Contracten from "./pages/Contracten";
+import OndertekeningPage from "./pages/OndertekeningPage";
 import Deposits from "./pages/Deposits";
 import Kasgeld from "./pages/Kasgeld";
 import Onderhoud from "./pages/Onderhoud";
