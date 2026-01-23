@@ -1031,6 +1031,325 @@ async def delete_deposit(deposit_id: str, current_user: dict = Depends(get_curre
         raise HTTPException(status_code=404, detail="Borg niet gevonden")
     return {"message": "Borg verwijderd"}
 
+# ==================== DEPOSIT REFUND PDF ====================
+
+def create_deposit_refund_pdf(deposit, tenant, apt, user):
+    """Create a modern styled deposit refund PDF"""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=A4, 
+        rightMargin=1.5*cm, 
+        leftMargin=1.5*cm, 
+        topMargin=1.5*cm, 
+        bottomMargin=1.5*cm
+    )
+    
+    # Colors
+    PRIMARY_GREEN = colors.HexColor('#0caf60')
+    DARK_TEXT = colors.HexColor('#1a1a1a')
+    GRAY_TEXT = colors.HexColor('#666666')
+    LIGHT_GRAY = colors.HexColor('#f5f5f5')
+    WHITE = colors.white
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'RefundTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=DARK_TEXT,
+        fontName='Helvetica-Bold',
+        spaceAfter=0,
+        alignment=TA_RIGHT
+    )
+    
+    company_style = ParagraphStyle(
+        'CompanyName',
+        parent=styles['Normal'],
+        fontSize=18,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        spaceAfter=5
+    )
+    
+    section_header = ParagraphStyle(
+        'SectionHeader',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        spaceAfter=8,
+        spaceBefore=15
+    )
+    
+    normal_text = ParagraphStyle(
+        'NormalText',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=DARK_TEXT,
+        fontName='Helvetica',
+        leading=14
+    )
+    
+    small_text = ParagraphStyle(
+        'SmallText',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=GRAY_TEXT,
+        fontName='Helvetica',
+        leading=12
+    )
+    
+    bold_text = ParagraphStyle(
+        'BoldText',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=DARK_TEXT,
+        fontName='Helvetica-Bold'
+    )
+    
+    elements = []
+    
+    # Company name from user
+    company_name = user.get("company_name") if user and user.get("company_name") else "Facturatie N.V."
+    
+    # === HEADER SECTION ===
+    header_data = []
+    
+    # Left side: Logo or Company name
+    left_content = []
+    if user and user.get("logo"):
+        try:
+            logo_data = user["logo"]
+            if "," in logo_data:
+                logo_data = logo_data.split(",")[1]
+            logo_bytes = base64.b64decode(logo_data)
+            logo_buffer = BytesIO(logo_bytes)
+            logo_img = Image(logo_buffer, width=4*cm, height=2*cm)
+            left_content.append(logo_img)
+        except Exception as e:
+            logger.error(f"Error adding logo: {e}")
+            left_content.append(Paragraph(company_name, company_style))
+    else:
+        left_content.append(Paragraph(company_name, company_style))
+    
+    left_content.append(Paragraph("Verhuurbeheersysteem", small_text))
+    
+    # Right side: Title
+    right_content = [Paragraph("BORG TERUGBETALING", title_style)]
+    
+    header_table = Table(
+        [[left_content, right_content]],
+        colWidths=[10*cm, 7*cm]
+    )
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+    ]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 15))
+    
+    # Green line separator
+    elements.append(HRFlowable(width="100%", thickness=3, color=PRIMARY_GREEN, spaceBefore=5, spaceAfter=15))
+    
+    # === DOCUMENT DETAILS ROW ===
+    doc_num = deposit["id"][:8].upper()
+    return_date = deposit.get("return_date", "-")
+    
+    details_data = [
+        [
+            Paragraph("<b>Document Nr:</b>", normal_text),
+            Paragraph(doc_num, bold_text),
+            Paragraph("<b>Terugbetaaldatum:</b>", normal_text),
+            Paragraph(return_date, bold_text)
+        ]
+    ]
+    details_table = Table(details_data, colWidths=[3*cm, 5*cm, 4*cm, 5*cm])
+    details_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    elements.append(details_table)
+    elements.append(Spacer(1, 20))
+    
+    # === CLIENT AND PROPERTY INFO ===
+    tenant_name = tenant["name"] if tenant else "Onbekend"
+    tenant_phone = tenant.get("phone", "-") if tenant else "-"
+    tenant_email = tenant.get("email", "-") if tenant else "-"
+    tenant_address = tenant.get("address", "-") if tenant else "-"
+    
+    apt_name = apt["name"] if apt else "Onbekend"
+    apt_address = apt.get("address", "-") if apt else "-"
+    
+    info_left = [
+        [Paragraph("TERUGBETAALD AAN", section_header)],
+        [Paragraph(f"<b>{tenant_name}</b>", normal_text)],
+        [Paragraph(f"Tel: {tenant_phone}", small_text)],
+        [Paragraph(f"Email: {tenant_email}", small_text)],
+        [Paragraph(f"Adres: {tenant_address}", small_text)],
+    ]
+    
+    info_right = [
+        [Paragraph("APPARTEMENT", section_header)],
+        [Paragraph(f"<b>{apt_name}</b>", normal_text)],
+        [Paragraph(f"Adres: {apt_address}", small_text)],
+        [Paragraph("", small_text)],
+        [Paragraph("", small_text)],
+    ]
+    
+    info_table = Table(
+        [[Table(info_left), Table(info_right)]],
+        colWidths=[9*cm, 8*cm]
+    )
+    info_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 25))
+    
+    # === DETAILS TABLE ===
+    original_amount = deposit.get("amount", 0)
+    return_amount = deposit.get("return_amount", original_amount)
+    deposit_date = deposit.get("deposit_date", "-")
+    status_labels = {
+        'returned': 'Volledig terugbetaald',
+        'partial_returned': 'Deels terugbetaald',
+        'held': 'In beheer'
+    }
+    status = status_labels.get(deposit.get("status", "returned"), "Terugbetaald")
+    
+    table_header = ['OMSCHRIJVING', 'DATUM', 'BEDRAG']
+    table_data = [
+        table_header,
+        [f'Oorspronkelijke borg gestort', deposit_date, format_currency(original_amount)],
+        [f'Terugbetaald bedrag', return_date, format_currency(return_amount)],
+    ]
+    
+    items_table = Table(table_data, colWidths=[9*cm, 4*cm, 4*cm])
+    items_table.setStyle(TableStyle([
+        # Header style
+        ('BACKGROUND', (0, 0), (-1, 0), DARK_TEXT),
+        ('TEXTCOLOR', (0, 0), (-1, 0), WHITE),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('TOPPADDING', (0, 0), (-1, 0), 12),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        
+        # Data rows
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 10),
+        ('BACKGROUND', (0, 1), (-1, 1), LIGHT_GRAY),
+        ('BACKGROUND', (0, 2), (-1, 2), colors.HexColor('#e8f5e9')),
+        ('ALIGN', (-1, 1), (-1, -1), 'RIGHT'),
+        
+        # Grid
+        ('LINEBELOW', (0, 0), (-1, 0), 1, PRIMARY_GREEN),
+        ('LINEBELOW', (0, -1), (-1, -1), 1, colors.HexColor('#e0e0e0')),
+    ]))
+    elements.append(items_table)
+    elements.append(Spacer(1, 20))
+    
+    # === STATUS SECTION ===
+    totals_data = [
+        ['Status:', status],
+        ['', ''],
+        ['TERUGBETAALD BEDRAG:', format_currency(return_amount)],
+    ]
+    
+    totals_table = Table(totals_data, colWidths=[10*cm, 4*cm, 3*cm])
+    totals_table.setStyle(TableStyle([
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, 1), 10),
+        ('FONTNAME', (0, 2), (-1, 2), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 2), (-1, 2), 14),
+        ('TEXTCOLOR', (0, 2), (-1, 2), PRIMARY_GREEN),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 2), (-1, 2), 10),
+        ('LINEABOVE', (0, 2), (-1, 2), 2, PRIMARY_GREEN),
+    ]))
+    
+    totals_wrapper = Table([[totals_table]], colWidths=[17*cm])
+    totals_wrapper.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, 0), 'RIGHT'),
+    ]))
+    elements.append(totals_wrapper)
+    elements.append(Spacer(1, 20))
+    
+    # === NOTES ===
+    if deposit.get("notes"):
+        elements.append(Paragraph("OPMERKINGEN", section_header))
+        elements.append(Paragraph(deposit["notes"], normal_text))
+        elements.append(Spacer(1, 20))
+    
+    # === FOOTER ===
+    elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#e0e0e0'), spaceBefore=10, spaceAfter=15))
+    
+    thank_you_style = ParagraphStyle(
+        'ThankYou',
+        parent=styles['Normal'],
+        fontSize=14,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        alignment=TA_CENTER,
+        spaceAfter=10
+    )
+    elements.append(Paragraph("Borg succesvol terugbetaald!", thank_you_style))
+    
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=GRAY_TEXT,
+        fontName='Helvetica',
+        alignment=TA_CENTER
+    )
+    elements.append(Paragraph(f"Dit document is gegenereerd door {company_name}", footer_style))
+    elements.append(Paragraph("Bewaar dit document als bewijs van terugbetaling.", footer_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+@api_router.get("/deposits/{deposit_id}/refund-pdf")
+async def generate_deposit_refund_pdf(deposit_id: str, current_user: dict = Depends(get_current_active_user)):
+    """Generate PDF for deposit refund"""
+    # Get deposit data
+    deposit = await db.deposits.find_one(
+        {"id": deposit_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not deposit:
+        raise HTTPException(status_code=404, detail="Borg niet gevonden")
+    
+    # Check if deposit is returned
+    if deposit.get("status") not in ["returned", "partial_returned"]:
+        raise HTTPException(status_code=400, detail="Borg is nog niet terugbetaald")
+    
+    tenant = await db.tenants.find_one({"id": deposit["tenant_id"]}, {"_id": 0})
+    apt = await db.apartments.find_one({"id": deposit["apartment_id"]}, {"_id": 0})
+    
+    # Get user logo and company name
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "logo": 1, "company_name": 1})
+    
+    # Create PDF
+    buffer = create_deposit_refund_pdf(deposit, tenant, apt, user)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=borg_terugbetaling_{deposit_id[:8]}.pdf"
+        }
+    )
+
 # ==================== RECEIPT/PDF ROUTES ====================
 
 def create_modern_receipt_pdf(payment, tenant, apt, user, payment_id):
