@@ -209,29 +209,37 @@ export default function Layout() {
 
       {/* Main content */}
       <main className="main-content">
+        {/* Desktop header with notifications */}
+        <header className="hidden lg:flex sticky top-0 z-20 glass-header px-8 py-3 items-center justify-end border-b border-border/50">
+          {!isSuperAdmin() && <NotificationBell />}
+        </header>
+
         {/* Mobile header */}
-        <header className="lg:hidden sticky top-0 z-20 glass-header px-4 py-3 flex items-center gap-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarOpen(true)}
-            data-testid="mobile-menu-btn"
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
-          {user?.logo && !isSuperAdmin() ? (
-            <img 
-              src={user.logo} 
-              alt="Bedrijfslogo" 
-              className="h-6 w-auto max-w-[100px] object-contain"
-            />
-          ) : (
-            <img 
-              src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-              alt="Facturatie N.V." 
-              className="h-4 w-auto"
-            />
-          )}
+        <header className="lg:hidden sticky top-0 z-20 glass-header px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+              data-testid="mobile-menu-btn"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+            {user?.logo && !isSuperAdmin() ? (
+              <img 
+                src={user.logo} 
+                alt="Bedrijfslogo" 
+                className="h-6 w-auto max-w-[100px] object-contain"
+              />
+            ) : (
+              <img 
+                src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+                alt="Facturatie N.V." 
+                className="h-4 w-auto"
+              />
+            )}
+          </div>
+          {!isSuperAdmin() && <NotificationBell />}
         </header>
 
         {/* Page content */}
