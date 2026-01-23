@@ -389,11 +389,12 @@ export default function Payments() {
 
       {/* Add Payment Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Nieuwe betaling</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+            <div className="space-y-4 overflow-y-auto flex-1 pr-2" style={{maxHeight: 'calc(90vh - 180px)'}}>
             <div className="space-y-2">
               <Label>Huurder *</Label>
               <Select 
