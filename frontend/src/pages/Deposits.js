@@ -342,6 +342,12 @@ export default function Deposits() {
                               Borg terugbetalen
                             </DropdownMenuItem>
                           )}
+                          {(deposit.status === 'returned' || deposit.status === 'partial_returned') && (
+                            <DropdownMenuItem onClick={() => handleDownloadRefundPdf(deposit)}>
+                              <FileText className="w-4 h-4 mr-2" />
+                              Download PDF
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem 
                             className="text-destructive"
                             onClick={() => { setSelectedDeposit(deposit); setShowDeleteDialog(true); }}
