@@ -544,29 +544,6 @@ export default function Payments() {
                 </div>
               </div>
             )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Jaar</Label>
-                  <Select 
-                    value={formData.period_year.toString()} 
-                    onValueChange={(value) => setFormData({ ...formData, period_year: parseInt(value) })}
-                  >
-                    <SelectTrigger data-testid="payment-year-select">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {years.map((year) => (
-                        <SelectItem key={year} value={year.toString()}>
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
 
             <div className="space-y-2">
               <Label htmlFor="amount">Bedrag (SRD) *</Label>
