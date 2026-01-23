@@ -11,7 +11,10 @@ import {
   Building2,
   TrendingUp,
   TrendingDown,
-  Filter
+  Filter,
+  Wrench,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -31,8 +34,15 @@ import {
   TableRow,
 } from '../components/ui/table';
 import { Card, CardContent } from '../components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../components/ui/tooltip';
 
 export default function Facturen() {
+  const [expandedInvoice, setExpandedInvoice] = useState(null);
   const [invoices, setInvoices] = useState([]);
   const [summary, setSummary] = useState({
     total_invoices: 0,
