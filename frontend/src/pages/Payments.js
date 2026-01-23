@@ -196,14 +196,17 @@ export default function Payments() {
       description: '',
       period_month: new Date().getMonth() + 1,
       period_year: new Date().getFullYear(),
+      loan_id: '',
     });
     setOutstandingInfo(null);
+    setTenantLoans([]);
   };
 
-  // Get tenant's apartment and outstanding info
+  // Get tenant's apartment, outstanding info and loans
   const handleTenantChange = async (tenantId) => {
-    setFormData({ ...formData, tenant_id: tenantId, apartment_id: '' });
+    setFormData({ ...formData, tenant_id: tenantId, apartment_id: '', loan_id: '' });
     setOutstandingInfo(null);
+    setTenantLoans([]);
     
     const apt = apartments.find(a => a.tenant_id === tenantId);
     if (apt) {
@@ -214,15 +217,19 @@ export default function Payments() {
         amount: apt.rent_amount.toString()
       }));
       
-      // Fetch outstanding info
+      // Fetch outstanding info and loans
       setLoadingOutstanding(true);
       try {
-        const response = await getTenantOutstanding(tenantId);
-        setOutstandingInfo(response.data);
+        const [outstandingRes, loansRes] = await Promise.all([
+          getTenantOutstanding(tenantId),
+          getTenantLoans(tenantId)
+        ]);
+        setOutstandingInfo(outstandingRes.data);
+        setTenantLoans(loansRes.data.loans?.filter(l => l.status !== 'paid') || []);
         
         // If there are outstanding months, suggest the oldest one
-        if (response.data.outstanding_months?.length > 0) {
-          const oldest = response.data.outstanding_months[0];
+        if (outstandingRes.data.outstanding_months?.length > 0) {
+          const oldest = outstandingRes.data.outstanding_months[0];
           setFormData(prev => ({
             ...prev,
             period_month: oldest.month,
@@ -230,7 +237,7 @@ export default function Payments() {
           }));
         }
       } catch (error) {
-        console.error('Error fetching outstanding info:', error);
+        console.error('Error fetching tenant info:', error);
       } finally {
         setLoadingOutstanding(false);
       }
