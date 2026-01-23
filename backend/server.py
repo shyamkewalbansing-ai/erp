@@ -702,6 +702,132 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         logo=current_user.get("logo")
     )
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    """Send password reset email"""
+    user = await db.users.find_one({"email": request.email}, {"_id": 0})
+    
+    # Always return success to prevent email enumeration
+    if not user:
+        return {"message": "Als dit e-mailadres bestaat, ontvangt u instructies"}
+    
+    # Generate reset token
+    reset_token = str(uuid.uuid4())
+    reset_expiry = datetime.now(timezone.utc) + timedelta(hours=1)
+    
+    # Store reset token
+    await db.users.update_one(
+        {"email": request.email},
+        {"$set": {
+            "reset_token": reset_token,
+            "reset_token_expiry": reset_expiry.isoformat()
+        }}
+    )
+    
+    # Send email with reset link
+    try:
+        smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
+        smtp_port = int(os.environ.get("SMTP_PORT", "465"))
+        smtp_user = os.environ.get("SMTP_USER", "info@facturatie.sr")
+        smtp_password = os.environ.get("SMTP_PASSWORD", "")
+        
+        if smtp_password:
+            # Build reset link - use frontend URL
+            frontend_url = os.environ.get("FRONTEND_URL", "https://vastgoed.facturatie.sr")
+            reset_link = f"{frontend_url}/reset-wachtwoord/{reset_token}"
+            
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = "Wachtwoord Resetten - Facturatie N.V."
+            msg["From"] = smtp_user
+            msg["To"] = request.email
+            
+            html_content = f"""
+            <html>
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #0caf60;">Facturatie N.V.</h1>
+                </div>
+                <h2>Wachtwoord Resetten</h2>
+                <p>Beste {user.get('name', 'Klant')},</p>
+                <p>U heeft een verzoek ingediend om uw wachtwoord te resetten.</p>
+                <p>Klik op de onderstaande knop om een nieuw wachtwoord in te stellen:</p>
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="{reset_link}" 
+                       style="background-color: #0caf60; color: white; padding: 12px 30px; 
+                              text-decoration: none; border-radius: 25px; font-weight: bold;">
+                        Wachtwoord Resetten
+                    </a>
+                </div>
+                <p style="color: #666; font-size: 14px;">
+                    Deze link is 1 uur geldig. Als u geen wachtwoord reset heeft aangevraagd, 
+                    kunt u deze e-mail negeren.
+                </p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                <p style="color: #999; font-size: 12px;">
+                    Facturatie N.V. - Verhuurbeheersysteem
+                </p>
+            </body>
+            </html>
+            """
+            
+            msg.attach(MIMEText(html_content, "html"))
+            
+            with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+                server.login(smtp_user, smtp_password)
+                server.sendmail(smtp_user, request.email, msg.as_string())
+            
+            logger.info(f"Password reset email sent to {request.email}")
+    except Exception as e:
+        logger.error(f"Failed to send password reset email: {e}")
+        # Don't expose email sending errors to user
+    
+    return {"message": "Als dit e-mailadres bestaat, ontvangt u instructies"}
+
+@api_router.post("/auth/reset-password")
+async def reset_password(request: ResetPasswordRequest):
+    """Reset password using token"""
+    # Find user with valid reset token
+    user = await db.users.find_one(
+        {"reset_token": request.token},
+        {"_id": 0}
+    )
+    
+    if not user:
+        raise HTTPException(status_code=400, detail="Ongeldige of verlopen reset link")
+    
+    # Check if token is expired
+    expiry = user.get("reset_token_expiry")
+    if expiry:
+        try:
+            expiry_dt = datetime.fromisoformat(expiry.replace("Z", "+00:00"))
+            if datetime.now(timezone.utc) > expiry_dt:
+                raise HTTPException(status_code=400, detail="Reset link is verlopen")
+        except:
+            raise HTTPException(status_code=400, detail="Ongeldige reset link")
+    
+    # Validate new password
+    if len(request.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Wachtwoord moet minimaal 6 tekens bevatten")
+    
+    # Hash new password
+    hashed_password = hash_password(request.new_password)
+    
+    # Update password and clear reset token
+    await db.users.update_one(
+        {"reset_token": request.token},
+        {"$set": {"password": hashed_password},
+         "$unset": {"reset_token": "", "reset_token_expiry": ""}}
+    )
+    
+    return {"message": "Wachtwoord succesvol gewijzigd"}
+
 # ==================== TENANT ROUTES ====================
 
 @api_router.post("/tenants", response_model=TenantResponse)
