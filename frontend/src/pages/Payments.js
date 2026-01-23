@@ -428,10 +428,10 @@ export default function Payments() {
                   </p>
                   
                   {/* Summary counts */}
-                  <div className="flex gap-4 mb-2 text-sm">
+                  <div className="flex flex-wrap gap-2 mb-2 text-sm">
                     {outstandingInfo.unpaid_count > 0 && (
                       <span className="bg-orange-100 px-2 py-0.5 rounded">
-                        {outstandingInfo.unpaid_count} onbetaald
+                        {outstandingInfo.unpaid_count} maand(en) onbetaald
                       </span>
                     )}
                     {outstandingInfo.partial_count > 0 && (
@@ -439,7 +439,29 @@ export default function Payments() {
                         {outstandingInfo.partial_count} gedeeltelijk
                       </span>
                     )}
+                    {outstandingInfo.total_maintenance > 0 && (
+                      <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
+                        Onderhoud: {formatCurrency(outstandingInfo.total_maintenance)}
+                      </span>
+                    )}
                   </div>
+
+                  {/* Maintenance costs for tenant */}
+                  {outstandingInfo.maintenance_costs?.length > 0 && (
+                    <div className="mb-3 p-2 bg-amber-50 border border-amber-200 rounded">
+                      <p className="text-xs font-bold text-amber-800 mb-1">Onderhoudskosten huurder:</p>
+                      {outstandingInfo.maintenance_costs.map((mc, i) => (
+                        <div key={i} className="text-xs text-amber-700 flex justify-between">
+                          <span>{mc.category}: {mc.description} ({mc.date})</span>
+                          <span className="font-semibold">{formatCurrency(mc.cost)}</span>
+                        </div>
+                      ))}
+                      <div className="text-xs text-amber-800 font-bold mt-1 pt-1 border-t border-amber-200 flex justify-between">
+                        <span>Totaal onderhoud:</span>
+                        <span>{formatCurrency(outstandingInfo.total_maintenance)}</span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Partial payments details */}
                   {outstandingInfo.partial_payments?.length > 0 && (
@@ -459,6 +481,7 @@ export default function Payments() {
                   )}
 
                   {/* Outstanding months list */}
+                  {outstandingInfo.outstanding_months?.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-orange-200">
                     <p className="text-xs font-medium mb-1">Openstaande maanden (oudste eerst):</p>
                     <div className="flex flex-wrap gap-1">
