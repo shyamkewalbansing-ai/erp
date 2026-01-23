@@ -2274,6 +2274,17 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
     if is_free:
         status = "active"
     
+    # Send welcome email with credentials
+    email_sent = send_welcome_email(
+        name=customer_data.name,
+        email=customer_data.email,
+        password=customer_data.password,
+        plan_type=customer_data.plan_type
+    )
+    
+    if not email_sent:
+        logger.warning(f"Welcome email could not be sent to {customer_data.email}")
+    
     return CustomerResponse(
         id=user_id,
         email=customer_data.email,
