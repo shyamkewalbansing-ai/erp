@@ -77,6 +77,14 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 - [x] Betalingsgeschiedenis
 - [x] Betalingen gaan automatisch naar Kasgeld
 
+### Facturen (Invoices) - NIEUW
+- [x] Overzicht van alle huur-facturen per huurder
+- [x] Status per factuur: Betaald / Openstaand
+- [x] Filters: zoeken, status, jaar
+- [x] Samenvatting kaarten (totaal, betaald, openstaand, bedrag)
+- [x] Openstaand saldo per huurder overzicht
+- [x] Automatisch bijgewerkt wanneer betalingen worden gedaan
+
 ### Borg (Deposits) Management
 - [x] Borg registreren
 - [x] Status tracking (in beheer, terugbetaald, deels terugbetaald)
