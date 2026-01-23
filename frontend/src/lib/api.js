@@ -156,6 +156,20 @@ export const uploadLogo = (logoData) => api.post('/profile/logo', { logo_data: l
 export const deleteLogo = () => api.delete('/profile/logo');
 export const updateRentSettings = (settings) => api.put('/profile/rent-settings', settings);
 
+// Contracts (Huurcontracten)
+export const getContracts = () => api.get('/contracts');
+export const getContract = (id) => api.get(`/contracts/${id}`);
+export const createContract = (data) => api.post('/contracts', data);
+export const updateContract = (id, data) => api.put(`/contracts/${id}`, data);
+export const deleteContract = (id) => api.delete(`/contracts/${id}`);
+export const downloadContractPdf = (id) => api.get(`/contracts/${id}/pdf`, { responseType: 'blob' });
+
+// Public contract signing (no auth needed)
+export const getContractForSigning = (token) => 
+  axios.get(`${API_URL}/contracts/sign/${token}`);
+export const signContract = (token, signatureData) => 
+  axios.post(`${API_URL}/contracts/sign/${token}`, { signature_data: signatureData });
+
 // Format currency in EUR
 export const formatCurrencyEUR = (amount) => {
   return `€ ${new Intl.NumberFormat('nl-NL', {
