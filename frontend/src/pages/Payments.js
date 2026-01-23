@@ -99,6 +99,8 @@ export default function Payments() {
   const [showModal, setShowModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [outstandingInfo, setOutstandingInfo] = useState(null);
+  const [loadingOutstanding, setLoadingOutstanding] = useState(false);
   const [formData, setFormData] = useState({
     tenant_id: '',
     apartment_id: '',
