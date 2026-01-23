@@ -1487,8 +1487,9 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     kasgeld_transactions = await db.kasgeld.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
     kasgeld_deposits = sum(t["amount"] for t in kasgeld_transactions if t["transaction_type"] == "deposit")
     kasgeld_withdrawals = sum(t["amount"] for t in kasgeld_transactions if t["transaction_type"] == "withdrawal")
-    maintenance_costs = await db.maintenance.find({"user_id": user_id}, {"_id": 0, "cost": 1}).to_list(1000)
-    total_maintenance = sum(m["cost"] for m in maintenance_costs)
+    maintenance_costs = await db.maintenance.find({"user_id": user_id}, {"_id": 0, "cost": 1, "cost_type": 1}).to_list(1000)
+    # Only count maintenance where cost_type is 'kasgeld' (or not set for legacy data)
+    total_maintenance = sum(m["cost"] for m in maintenance_costs if m.get("cost_type", "kasgeld") == "kasgeld")
     
     # Get all payments (huurbetalingen) for kasgeld calculation
     all_payments = await db.payments.find({"user_id": user_id}, {"_id": 0, "amount": 1}).to_list(1000)
@@ -1498,7 +1499,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     all_salaries = await db.salaries.find({"user_id": user_id}, {"_id": 0, "amount": 1, "period_month": 1, "period_year": 1}).to_list(1000)
     total_all_salaries = sum(s["amount"] for s in all_salaries)
     
-    # Total kasgeld = deposits + all payments - withdrawals - maintenance - salaries
+    # Total kasgeld = deposits + all payments - withdrawals - maintenance (kasgeld only) - salaries
     total_kasgeld = kasgeld_deposits + total_all_payments - kasgeld_withdrawals - total_maintenance - total_all_salaries
     
     # Get employee stats
