@@ -96,6 +96,12 @@ export const deleteEmployee = (id) => api.delete(`/employees/${id}`);
 export const getSalaries = () => api.get('/salaries');
 export const createSalary = (data) => api.post('/salaries', data);
 export const deleteSalary = (id) => api.delete(`/salaries/${id}`);
+export const downloadPayslip = (salaryId) => 
+  api.get(`/salaries/${salaryId}/pdf`, { responseType: 'blob' });
+
+// Deposit Refund PDF
+export const downloadDepositRefund = (depositId) => 
+  api.get(`/deposits/${depositId}/refund-pdf`, { responseType: 'blob' });
 
 // Wisselkoers (Exchange Rate)
 export const getExchangeRate = () => api.get('/exchange-rate');
