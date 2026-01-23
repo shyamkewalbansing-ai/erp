@@ -103,7 +103,7 @@ export default function Dashboard() {
           <img 
             src={user.logo} 
             alt="Bedrijfslogo" 
-            className="h-12 w-auto max-w-[150px] object-contain hidden sm:block"
+            className="h-20 w-auto max-w-[250px] object-contain hidden sm:block"
           />
         )}
       </div>
