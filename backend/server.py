@@ -2991,6 +2991,200 @@ async def generate_payslip_pdf(salary_id: str, current_user: dict = Depends(get_
         }
     )
 
+# ==================== LENINGEN (LOANS) ROUTES ====================
+
+@api_router.get("/loans")
+async def get_loans(current_user: dict = Depends(get_current_active_user)):
+    """Get all loans for the current user"""
+    loans = await db.loans.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Get tenant names and calculate payments
+    tenant_ids = list(set(l["tenant_id"] for l in loans))
+    tenants = await db.tenants.find(
+        {"id": {"$in": tenant_ids}},
+        {"_id": 0, "id": 1, "name": 1}
+    ).to_list(1000) if tenant_ids else []
+    tenant_map = {t["id"]: t["name"] for t in tenants}
+    
+    # Get all loan payments
+    loan_payments = await db.payments.find(
+        {"user_id": current_user["id"], "payment_type": "loan"},
+        {"_id": 0, "loan_id": 1, "amount": 1}
+    ).to_list(10000)
+    
+    # Calculate payments per loan
+    loan_payments_map = {}
+    for p in loan_payments:
+        loan_id = p.get("loan_id")
+        if loan_id:
+            if loan_id not in loan_payments_map:
+                loan_payments_map[loan_id] = 0
+            loan_payments_map[loan_id] += p["amount"]
+    
+    result = []
+    for loan in loans:
+        amount_paid = loan_payments_map.get(loan["id"], 0)
+        remaining = loan["amount"] - amount_paid
+        
+        if remaining <= 0:
+            status = "paid"
+        elif amount_paid > 0:
+            status = "partial"
+        else:
+            status = "open"
+        
+        result.append(LoanResponse(
+            **loan,
+            tenant_name=tenant_map.get(loan["tenant_id"], "Onbekend"),
+            amount_paid=amount_paid,
+            remaining=max(0, remaining),
+            status=status
+        ))
+    
+    return result
+
+@api_router.post("/loans", response_model=LoanResponse)
+async def create_loan(loan_data: LoanCreate, current_user: dict = Depends(get_current_active_user)):
+    """Create a new loan for a tenant"""
+    # Verify tenant exists
+    tenant = await db.tenants.find_one(
+        {"id": loan_data.tenant_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    loan_id = str(uuid.uuid4())
+    loan_doc = {
+        "id": loan_id,
+        "tenant_id": loan_data.tenant_id,
+        "amount": loan_data.amount,
+        "description": loan_data.description,
+        "loan_date": loan_data.loan_date,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "user_id": current_user["id"]
+    }
+    
+    await db.loans.insert_one(loan_doc)
+    
+    return LoanResponse(
+        **loan_doc,
+        tenant_name=tenant["name"],
+        amount_paid=0,
+        remaining=loan_data.amount,
+        status="open"
+    )
+
+@api_router.put("/loans/{loan_id}", response_model=LoanResponse)
+async def update_loan(loan_id: str, loan_data: LoanUpdate, current_user: dict = Depends(get_current_active_user)):
+    """Update an existing loan"""
+    loan = await db.loans.find_one(
+        {"id": loan_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not loan:
+        raise HTTPException(status_code=404, detail="Lening niet gevonden")
+    
+    update_data = {k: v for k, v in loan_data.dict().items() if v is not None}
+    if update_data:
+        await db.loans.update_one(
+            {"id": loan_id},
+            {"$set": update_data}
+        )
+    
+    updated_loan = await db.loans.find_one({"id": loan_id}, {"_id": 0})
+    
+    # Get tenant name
+    tenant = await db.tenants.find_one({"id": updated_loan["tenant_id"]}, {"_id": 0, "name": 1})
+    
+    # Calculate payments
+    loan_payments = await db.payments.find(
+        {"loan_id": loan_id, "payment_type": "loan"},
+        {"_id": 0, "amount": 1}
+    ).to_list(1000)
+    amount_paid = sum(p["amount"] for p in loan_payments)
+    remaining = updated_loan["amount"] - amount_paid
+    
+    if remaining <= 0:
+        status = "paid"
+    elif amount_paid > 0:
+        status = "partial"
+    else:
+        status = "open"
+    
+    return LoanResponse(
+        **updated_loan,
+        tenant_name=tenant["name"] if tenant else "Onbekend",
+        amount_paid=amount_paid,
+        remaining=max(0, remaining),
+        status=status
+    )
+
+@api_router.delete("/loans/{loan_id}")
+async def delete_loan(loan_id: str, current_user: dict = Depends(get_current_active_user)):
+    """Delete a loan"""
+    result = await db.loans.delete_one({"id": loan_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Lening niet gevonden")
+    return {"message": "Lening verwijderd"}
+
+@api_router.get("/tenants/{tenant_id}/loans")
+async def get_tenant_loans(tenant_id: str, current_user: dict = Depends(get_current_active_user)):
+    """Get all loans for a specific tenant"""
+    loans = await db.loans.find(
+        {"tenant_id": tenant_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Get loan payments
+    loan_ids = [l["id"] for l in loans]
+    loan_payments = await db.payments.find(
+        {"loan_id": {"$in": loan_ids}, "payment_type": "loan"},
+        {"_id": 0, "loan_id": 1, "amount": 1}
+    ).to_list(1000) if loan_ids else []
+    
+    loan_payments_map = {}
+    for p in loan_payments:
+        loan_id = p.get("loan_id")
+        if loan_id:
+            if loan_id not in loan_payments_map:
+                loan_payments_map[loan_id] = 0
+            loan_payments_map[loan_id] += p["amount"]
+    
+    total_loans = 0
+    total_paid = 0
+    result = []
+    
+    for loan in loans:
+        amount_paid = loan_payments_map.get(loan["id"], 0)
+        remaining = loan["amount"] - amount_paid
+        total_loans += loan["amount"]
+        total_paid += amount_paid
+        
+        if remaining <= 0:
+            status = "paid"
+        elif amount_paid > 0:
+            status = "partial"
+        else:
+            status = "open"
+        
+        result.append({
+            **loan,
+            "amount_paid": amount_paid,
+            "remaining": max(0, remaining),
+            "status": status
+        })
+    
+    return {
+        "loans": result,
+        "total_loans": total_loans,
+        "total_paid": total_paid,
+        "total_remaining": total_loans - total_paid
+    }
+
 # ==================== WISSELKOERS (EXCHANGE RATE) ROUTES ====================
 
 # Cache for exchange rate (to avoid too many API calls)
