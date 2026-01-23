@@ -200,15 +200,16 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 - kasgeld, maintenance, employees, salaries
 
 ## Next Action Items
-1. Feature 6: Controleer openstaand saldo bij nieuwe betaling (suggestie om oudste schuld eerst af te lossen)
+1. E-mail bezorging naar externe domeinen (DNS SPF/DKIM records nodig)
 2. E-mail herinneringen voor late betalingen (SendGrid/Resend)
 3. Huurcontracten upload functie
 4. Rapporten exporteren naar PDF/Excel
 
 ## Recent Updates (23 Jan 2026)
-### New Features Implemented
+### New Features Implemented - Batch Complete ✅
 1. **Kasgeld Transactiegeschiedenis**: Onderhoud en salarissen nu zichtbaar in Kasgeld transacties
 2. **Onderhoud Kosten Toewijzing**: Dropdown om kosten aan Kasgeld (verhuurder) of Huurder toe te wijzen
 3. **PDF Loonstrook**: Download knop bij salarisbetalingen in Werknemers pagina
 4. **PDF Borg Terugbetaling**: Download knop bij terugbetaalde borgen in Borg pagina
 5. **Borg in Bekijk Saldo**: Borg bedrag en datum zichtbaar in huurder balans modal
+6. **Openstaand Saldo Check bij Betalingen**: Waarschuwing bij nieuwe betaling als huurder openstaande maanden heeft, met automatische selectie van oudste onbetaalde maand
