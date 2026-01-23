@@ -2236,28 +2236,9 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
                 year += 1
         
         all_invoices.extend(tenant_invoices)
-                "apartment_name": apt["name"],
-                "year": year,
-                "month": month,
-                "month_name": months_nl[month],
-                "period_label": f"{months_nl[month]} {year}",
-                "amount_due": amount_due,
-                "amount_paid": amount_paid,
-                "remaining": max(0, remaining),  # This month's remaining
-                "cumulative_balance": max(0, cumulative_balance),  # Running total including previous months
-                "status": status,
-                "payment_count": len(period_payments),
-                "payment_ids": [p["id"] for p in period_payments],
-                "payment_date": latest_payment_date,
-                "due_date": f"{year}-{month:02d}-01"
-            }
-            
-            tenant_invoices.append(invoice)
-            
-            month += 1
-            if month > 12:
-                month = 1
-                year += 1
+    
+    # Sort by date (newest first), then by tenant name
+    all_invoices.sort(key=lambda x: (-x["year"], -x["month"], x["tenant_name"]))
         
         all_invoices.extend(tenant_invoices)
     
