@@ -1734,19 +1734,24 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     # Get tenant count
     total_tenants = await db.tenants.count_documents({"user_id": user_id})
     
-    # Get this month's income
+    # Get this month's income - based on payment_date in current month
     now = datetime.now(timezone.utc)
-    first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%d")
     
-    payments_this_month = await db.payments.find({
-        "user_id": user_id,
-        "payment_type": "rent"
+    # Get all payments and filter by payment_date in current month
+    all_payments_cursor = await db.payments.find({
+        "user_id": user_id
     }, {"_id": 0}).to_list(1000)
     
+    # Calculate income this month based on payment_date
+    current_month_str = now.strftime("%Y-%m")
     total_income = sum(
-        p["amount"] for p in payments_this_month 
-        if p.get("period_month") == now.month and p.get("period_year") == now.year
+        p["amount"] for p in all_payments_cursor 
+        if p.get("payment_date", "").startswith(current_month_str)
     )
+    
+    # Get rent payments only for calculating outstanding
+    rent_payments = [p for p in all_payments_cursor if p.get("payment_type") == "rent"]
     
     # Calculate outstanding (rent due - payments made this month for occupied apartments)
     occupied_apts = await db.apartments.find(
@@ -1754,8 +1759,36 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
         {"_id": 0}
     ).to_list(1000)
     
+    # Calculate total rent due for current month
     total_rent_due = sum(apt["rent_amount"] for apt in occupied_apts)
-    total_outstanding = max(0, total_rent_due - total_income)
+    
+    # Calculate paid rent for this month's period
+    rent_paid_this_month = sum(
+        p["amount"] for p in rent_payments 
+        if p.get("period_month") == now.month and p.get("period_year") == now.year
+    )
+    total_outstanding = max(0, total_rent_due - rent_paid_this_month)
+    
+    # Calculate outstanding loans
+    loans = await db.loans.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
+    loan_ids = [l["id"] for l in loans]
+    
+    # Get loan payments
+    loan_payments = await db.payments.find(
+        {"user_id": user_id, "payment_type": "loan"},
+        {"_id": 0, "loan_id": 1, "amount": 1}
+    ).to_list(1000)
+    
+    loan_payments_by_id = {}
+    for lp in loan_payments:
+        lid = lp.get("loan_id")
+        if lid:
+            loan_payments_by_id[lid] = loan_payments_by_id.get(lid, 0) + lp["amount"]
+    
+    total_outstanding_loans = sum(
+        max(0, l["amount"] - loan_payments_by_id.get(l["id"], 0))
+        for l in loans
+    )
     
     # Batch fetch tenant names for occupied apartments (used in reminders)
     occupied_tenant_ids = [apt["tenant_id"] for apt in occupied_apts if apt.get("tenant_id")]
