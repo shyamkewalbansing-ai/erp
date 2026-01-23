@@ -510,6 +510,7 @@ export default function Payments() {
                     </div>
                     <p className="text-xs text-orange-600 mt-1 italic">⚡ = gedeeltelijk betaald</p>
                   </div>
+                  )}
                 </AlertDescription>
               </Alert>
             )}
