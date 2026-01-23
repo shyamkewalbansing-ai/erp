@@ -2099,7 +2099,7 @@ class AdminCustomerCreate(BaseModel):
     email: EmailStr
     password: str
     company_name: Optional[str] = None
-    activate_subscription: bool = False
+    plan_type: str = "trial"  # 'trial', 'active', 'none'
     subscription_months: int = 1
     payment_method: str = "bank_transfer"
     payment_reference: Optional[str] = None
@@ -2116,16 +2116,21 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
     user_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
     
-    # Calculate subscription end date
+    # Calculate subscription end date based on plan_type
     subscription_end_date = None
     is_trial = False
     
-    if customer_data.activate_subscription:
+    if customer_data.plan_type == "active":
+        # Active subscription with payment
         subscription_end_date = (now + timedelta(days=SUBSCRIPTION_DAYS * customer_data.subscription_months)).isoformat()
-    else:
-        # Give 3-day trial by default
+    elif customer_data.plan_type == "trial":
+        # 3-day trial
         subscription_end_date = (now + timedelta(days=TRIAL_DAYS)).isoformat()
         is_trial = True
+    else:
+        # No plan - expired (blocked until activation)
+        subscription_end_date = (now - timedelta(days=1)).isoformat()
+        is_trial = False
     
     user_doc = {
         "id": user_id,
@@ -2143,7 +2148,7 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
     
     # If subscription is activated, create subscription record
     total_paid = 0.0
-    if customer_data.activate_subscription:
+    if customer_data.plan_type == "active":
         sub_id = str(uuid.uuid4())
         amount = SUBSCRIPTION_PRICE_SRD * customer_data.subscription_months
         sub_doc = {
@@ -2174,7 +2179,7 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
         subscription_end_date=end_date,
         created_at=user_doc["created_at"],
         total_paid=total_paid,
-        last_payment_date=now.isoformat() if customer_data.activate_subscription else None
+        last_payment_date=now.isoformat() if customer_data.plan_type == "active" else None
     )
 
 @api_router.delete("/admin/customers/{user_id}/permanent")
