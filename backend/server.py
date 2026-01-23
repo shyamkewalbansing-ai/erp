@@ -2072,15 +2072,22 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
         suggestion_parts.append(f"Oudste openstaande maand: {oldest['label']}")
         suggestion = " ".join(suggestion_parts[:2]) + (" " + " | ".join(partial_details) if partial_count > 0 else "")
     
+    # Add maintenance costs to total outstanding
+    total_outstanding_with_maintenance = total_outstanding + total_maintenance
+    has_outstanding = len(outstanding_months) > 0 or total_maintenance > 0
+    
     return {
         "tenant_id": tenant_id,
         "tenant_name": tenant["name"],
         "apartment_name": apt["name"],
         "rent_amount": apt["rent_amount"],
-        "has_outstanding": len(outstanding_months) > 0,
-        "outstanding_amount": total_outstanding,
+        "has_outstanding": has_outstanding,
+        "outstanding_amount": total_outstanding_with_maintenance,
+        "outstanding_rent": total_outstanding,
         "outstanding_months": outstanding_months,
         "partial_payments": partial_payments,
+        "maintenance_costs": maintenance_costs,
+        "total_maintenance": total_maintenance,
         "unpaid_count": len([m for m in outstanding_months if m["status"] == "unpaid"]),
         "partial_count": len([m for m in outstanding_months if m["status"] == "partial"]),
         "suggestion": suggestion
