@@ -71,11 +71,13 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 - [x] Huurder toewijzen/verwijderen
 
 ### Betalingen (Payments)
-- [x] Registreer betalingen (huur, borg, overig)
-- [x] Periode tracking (maand/jaar)
-- [x] PDF kwitanties genereren en downloaden
-- [x] Betalingsgeschiedenis
-- [x] Betalingen gaan automatisch naar Kasgeld
+- [x] Registreer huurbetalingen per maand
+- [x] Borg betalingen afzonderlijk
+- [x] PDF kwitanties downloaden
+- [x] Openstaand saldo check bij nieuwe betaling
+- [x] Waarschuwing blijft zichtbaar tot volledig betaald
+- [x] Gedeeltelijke betalingen worden getoond (betaald vs openstaand)
+- [x] Maand selector toont ⚡ symbool bij gedeeltelijk betaalde maanden
 
 ### Facturen (Invoices) - NIEUW
 - [x] Overzicht van alle huur-facturen per huurder
