@@ -1741,6 +1741,7 @@ async def create_maintenance(maintenance_data: MaintenanceCreate, current_user: 
         "cost": maintenance_data.cost,
         "maintenance_date": maintenance_data.maintenance_date,
         "status": maintenance_data.status,
+        "cost_type": maintenance_data.cost_type,  # 'kasgeld' or 'tenant'
         "created_at": datetime.now(timezone.utc).isoformat(),
         "user_id": current_user["id"]
     }
