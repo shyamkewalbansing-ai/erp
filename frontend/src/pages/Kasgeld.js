@@ -353,13 +353,14 @@ export default function Kasgeld() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {kasgeldData.transactions.map((transaction) => {
-                  const isPayment = transaction.transaction_type === 'payment';
+                {kasgeldData.transactions
+                  .filter(t => t.transaction_type !== 'payment') // Filter huurbetalingen uit
+                  .map((transaction) => {
                   const isDeposit = transaction.transaction_type === 'deposit';
                   const isWithdrawal = transaction.transaction_type === 'withdrawal';
                   const isSalary = transaction.transaction_type === 'salary';
                   
-                  const isIncome = isPayment || isDeposit;
+                  const isIncome = isDeposit;
                   
                   return (
                     <TableRow key={transaction.id}>
@@ -371,13 +372,11 @@ export default function Kasgeld() {
                       </TableCell>
                       <TableCell>
                         <span className={`status-badge ${
-                          isPayment ? 'bg-primary/10 text-primary' :
                           isDeposit ? 'bg-green-50 text-green-600' : 
                           isSalary ? 'bg-purple-50 text-purple-600' :
                           'bg-orange-50 text-orange-600'
                         }`}>
-                          {isPayment ? 'Huurbetaling' : 
-                           isDeposit ? 'Storting' : 
+                          {isDeposit ? 'Storting' : 
                            isSalary ? 'Salaris' : 'Opname'}
                         </span>
                       </TableCell>
