@@ -81,11 +81,14 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 
 ### Facturen (Invoices) - NIEUW
 - [x] Overzicht van alle huur-facturen per huurder
-- [x] Status per factuur: Betaald / Openstaand
+- [x] Status per factuur: Betaald / Gedeeltelijk / Openstaand
 - [x] Filters: zoeken, status, jaar
-- [x] Samenvatting kaarten (totaal, betaald, openstaand, bedrag)
+- [x] Samenvatting kaarten (totaal, betaald, gedeeltelijk, openstaand, nog te ontvangen)
 - [x] Openstaand saldo per huurder overzicht
 - [x] Automatisch bijgewerkt wanneer betalingen worden gedaan
+- [x] Cumulatief saldo tracking (openstaand van vorige maanden)
+- [x] **NIEUW**: Aparte kolommen: Huur, Onderhoud, Totaal
+- [x] **NIEUW**: Uitklapbare rijen met onderhoud details
 
 ### Borg (Deposits) Management
 - [x] Borg registreren
