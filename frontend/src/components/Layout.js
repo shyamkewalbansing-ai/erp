@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import NotificationBell from './NotificationBell';
 
 // Navigation items for customers only (not for superadmin)
 const customerNavItems = [
