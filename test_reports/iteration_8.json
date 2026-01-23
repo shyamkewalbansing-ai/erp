@@ -1,0 +1,113 @@
+{
+  "summary": "Feature 8 (Outstanding Balance Warning with Partial Payment Tracking) testing complete. Backend: 15/15 tests passed (100%). Frontend: All 6 features verified and working correctly.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "Backend: GET /api/tenants/{id}/outstanding endpoint returns correct structure",
+    "Backend: has_outstanding=True when tenant has unpaid months",
+    "Backend: has_outstanding=True when tenant has partially paid months (warning stays until FULLY paid)",
+    "Backend: has_outstanding=False when month is fully paid",
+    "Backend: outstanding_amount correctly includes partial payment remainders",
+    "Backend: partial_payments list exists and contains partial payment entries",
+    "Backend: Each partial payment has amount_paid and remaining fields",
+    "Backend: Each partial payment has label (e.g., 'Januari 2026')",
+    "Backend: Outstanding month has status='partial' for partially paid months",
+    "Backend: Outstanding month has status='unpaid' for unpaid months",
+    "Backend: Outstanding month has remaining amount for display",
+    "Backend: unpaid_count field exists in response",
+    "Backend: partial_count field exists in response",
+    "Backend: Counts are calculated separately (unpaid_count + partial_count = total)",
+    "Backend: Scenario test - 1500 rent, 500 partial payment = 1000 outstanding",
+    "Frontend: 'Openstaand saldo' warning title visible",
+    "Frontend: 'Totaal openstaand: SRD 1.000,00' displayed correctly",
+    "Frontend: '1 gedeeltelijk' count badge visible",
+    "Frontend: 'Gedeeltelijk betaald:' section with blue background visible",
+    "Frontend: Partial payment details show 'SRD 500,00 betaald • SRD 1.000,00 nog open'",
+    "Frontend: 'Januari 2026 ⚡' badge with lightning symbol visible",
+    "Frontend: '⚡ = gedeeltelijk betaald' legend visible",
+    "Frontend: Month selector shows 'Januari ⚡ (nog SRD 1.000,00)'"
+  ],
+  
+  "features_verified": {
+    "feature_1_warning_stays_until_fully_paid": {
+      "status": "PASSED",
+      "description": "Warning (has_outstanding=True) stays visible until balance is FULLY paid, not just partially paid"
+    },
+    "feature_2_total_outstanding_includes_partial_remainders": {
+      "status": "PASSED",
+      "description": "Total outstanding amount correctly includes partial payment remainders (1500-500=1000)"
+    },
+    "feature_3_partial_payments_section": {
+      "status": "PASSED",
+      "description": "Partial payments section shows each month with amount_paid and remaining (e.g., 'Januari 2026: 500 betaald, 1000 nog open')"
+    },
+    "feature_4_month_selector_lightning_symbol": {
+      "status": "PASSED",
+      "description": "Month selector shows ⚡ symbol with remaining amount for partially paid months (e.g., 'Januari ⚡ (nog 1000)')"
+    },
+    "feature_5_different_styling_partial_vs_unpaid": {
+      "status": "PASSED",
+      "description": "Outstanding months list shows different styling - blue border for partial, orange for unpaid"
+    },
+    "feature_6_summary_counts_separate": {
+      "status": "PASSED",
+      "description": "Summary counts show unpaid_count and partial_count separately"
+    }
+  },
+  
+  "test_report_links": [
+    "/app/backend/tests/test_outstanding_warning.py",
+    "/app/backend/tests/test_partial_payments.py",
+    "/app/test_reports/pytest/pytest_outstanding_warning.xml"
+  ],
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [],
+  
+  "updated_files": [
+    "/app/backend/tests/test_outstanding_warning.py"
+  ],
+  
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "100% (all 6 features verified)"
+  },
+  
+  "test_credentials": {
+    "test_customer": {
+      "email": "uitest2@test.com",
+      "password": "test123"
+    }
+  },
+  
+  "seed_data_creation": "Test data created with prefix 'TEST_UI_Outstanding_' during UI testing, cleaned up after tests",
+  
+  "retest_needed": false,
+  
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "Feature 8 (Outstanding Balance Warning with Partial Payment Tracking) has been fully tested and verified. The GET /api/tenants/{tenant_id}/outstanding endpoint correctly returns: has_outstanding (true until FULLY paid), outstanding_amount (includes partial remainders), outstanding_months (with status 'unpaid' or 'partial'), partial_payments (list of partially paid months with amount_paid and remaining), unpaid_count, partial_count. The frontend Payments page displays: orange warning box with total outstanding, blue partial payments section with details, month badges with ⚡ for partial, month selector with ⚡ and remaining amount.",
+  
+  "scenario_tested": {
+    "description": "1500 SRD rent, 500 SRD partial payment for January 2026",
+    "expected_results": {
+      "has_outstanding": true,
+      "outstanding_amount": 1000,
+      "partial_count": 1,
+      "unpaid_count": 0,
+      "partial_payment_details": "Januari 2026: 500 betaald, 1000 nog open"
+    },
+    "actual_results": "All expected results matched"
+  }
+}
