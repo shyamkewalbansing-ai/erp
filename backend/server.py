@@ -3284,6 +3284,509 @@ async def get_tenant_loans(tenant_id: str, current_user: dict = Depends(get_curr
         "total_remaining": total_loans - total_paid
     }
 
+# ==================== CONTRACT (HUURCONTRACT) ROUTES ====================
+
+class ContractCreate(BaseModel):
+    tenant_id: str
+    apartment_id: str
+    start_date: str
+    end_date: Optional[str] = None  # None = onbepaalde tijd
+    rent_amount: float
+    deposit_amount: float
+    payment_due_day: int = 1
+    payment_deadline_day: Optional[int] = None
+    payment_deadline_month_offset: int = 0
+    additional_terms: Optional[str] = None
+
+class ContractUpdate(BaseModel):
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    rent_amount: Optional[float] = None
+    deposit_amount: Optional[float] = None
+    payment_due_day: Optional[int] = None
+    payment_deadline_day: Optional[int] = None
+    payment_deadline_month_offset: Optional[int] = None
+    additional_terms: Optional[str] = None
+
+class ContractResponse(BaseModel):
+    id: str
+    tenant_id: str
+    tenant_name: Optional[str] = None
+    apartment_id: str
+    apartment_name: Optional[str] = None
+    start_date: str
+    end_date: Optional[str] = None
+    rent_amount: float
+    deposit_amount: float
+    payment_due_day: int
+    payment_deadline_day: Optional[int] = None
+    payment_deadline_month_offset: int = 0
+    additional_terms: Optional[str] = None
+    status: str  # 'draft', 'pending_signature', 'signed'
+    signing_token: Optional[str] = None
+    signature_data: Optional[str] = None
+    signed_at: Optional[str] = None
+    created_at: str
+    user_id: str
+    # Landlord info
+    landlord_name: Optional[str] = None
+    landlord_company: Optional[str] = None
+
+@api_router.get("/contracts", response_model=List[ContractResponse])
+async def get_contracts(current_user: dict = Depends(get_current_active_user)):
+    """Get all contracts for the current user"""
+    contracts = await db.contracts.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    
+    # Get tenant and apartment info
+    tenant_ids = list(set(c["tenant_id"] for c in contracts))
+    apartment_ids = list(set(c["apartment_id"] for c in contracts))
+    
+    tenants = await db.tenants.find({"id": {"$in": tenant_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    apartments = await db.apartments.find({"id": {"$in": apartment_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000)
+    
+    tenant_map = {t["id"]: t["name"] for t in tenants}
+    apartment_map = {a["id"]: a["name"] for a in apartments}
+    
+    result = []
+    for contract in contracts:
+        contract["tenant_name"] = tenant_map.get(contract["tenant_id"])
+        contract["apartment_name"] = apartment_map.get(contract["apartment_id"])
+        contract["landlord_name"] = current_user.get("name")
+        contract["landlord_company"] = current_user.get("company_name")
+        result.append(ContractResponse(**contract))
+    
+    return result
+
+@api_router.post("/contracts", response_model=ContractResponse)
+async def create_contract(contract: ContractCreate, current_user: dict = Depends(get_current_active_user)):
+    """Create a new contract"""
+    # Verify tenant exists and belongs to user
+    tenant = await db.tenants.find_one(
+        {"id": contract.tenant_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    # Verify apartment exists and belongs to user
+    apartment = await db.apartments.find_one(
+        {"id": contract.apartment_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not apartment:
+        raise HTTPException(status_code=404, detail="Appartement niet gevonden")
+    
+    # Generate unique signing token
+    signing_token = str(uuid.uuid4())
+    
+    contract_doc = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "tenant_id": contract.tenant_id,
+        "apartment_id": contract.apartment_id,
+        "start_date": contract.start_date,
+        "end_date": contract.end_date,
+        "rent_amount": contract.rent_amount,
+        "deposit_amount": contract.deposit_amount,
+        "payment_due_day": contract.payment_due_day,
+        "payment_deadline_day": contract.payment_deadline_day,
+        "payment_deadline_month_offset": contract.payment_deadline_month_offset,
+        "additional_terms": contract.additional_terms,
+        "status": "pending_signature",
+        "signing_token": signing_token,
+        "signature_data": None,
+        "signed_at": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.contracts.insert_one(contract_doc)
+    
+    return ContractResponse(
+        **contract_doc,
+        tenant_name=tenant["name"],
+        apartment_name=apartment["name"],
+        landlord_name=current_user.get("name"),
+        landlord_company=current_user.get("company_name")
+    )
+
+@api_router.get("/contracts/{contract_id}", response_model=ContractResponse)
+async def get_contract(contract_id: str, current_user: dict = Depends(get_current_active_user)):
+    """Get a specific contract"""
+    contract = await db.contracts.find_one(
+        {"id": contract_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract niet gevonden")
+    
+    tenant = await db.tenants.find_one({"id": contract["tenant_id"]}, {"_id": 0, "name": 1})
+    apartment = await db.apartments.find_one({"id": contract["apartment_id"]}, {"_id": 0, "name": 1})
+    
+    return ContractResponse(
+        **contract,
+        tenant_name=tenant["name"] if tenant else None,
+        apartment_name=apartment["name"] if apartment else None,
+        landlord_name=current_user.get("name"),
+        landlord_company=current_user.get("company_name")
+    )
+
+@api_router.put("/contracts/{contract_id}", response_model=ContractResponse)
+async def update_contract(contract_id: str, contract_data: ContractUpdate, current_user: dict = Depends(get_current_active_user)):
+    """Update a contract (only if not yet signed)"""
+    contract = await db.contracts.find_one(
+        {"id": contract_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract niet gevonden")
+    
+    if contract["status"] == "signed":
+        raise HTTPException(status_code=400, detail="Ondertekende contracten kunnen niet worden gewijzigd")
+    
+    update_data = {k: v for k, v in contract_data.dict().items() if v is not None}
+    if update_data:
+        await db.contracts.update_one(
+            {"id": contract_id},
+            {"$set": update_data}
+        )
+    
+    updated = await db.contracts.find_one({"id": contract_id}, {"_id": 0})
+    tenant = await db.tenants.find_one({"id": updated["tenant_id"]}, {"_id": 0, "name": 1})
+    apartment = await db.apartments.find_one({"id": updated["apartment_id"]}, {"_id": 0, "name": 1})
+    
+    return ContractResponse(
+        **updated,
+        tenant_name=tenant["name"] if tenant else None,
+        apartment_name=apartment["name"] if apartment else None,
+        landlord_name=current_user.get("name"),
+        landlord_company=current_user.get("company_name")
+    )
+
+@api_router.delete("/contracts/{contract_id}")
+async def delete_contract(contract_id: str, current_user: dict = Depends(get_current_active_user)):
+    """Delete a contract"""
+    result = await db.contracts.delete_one({"id": contract_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Contract niet gevonden")
+    return {"message": "Contract verwijderd"}
+
+# Public endpoint for signing (no auth required)
+@api_router.get("/contracts/sign/{token}")
+async def get_contract_for_signing(token: str):
+    """Get contract details for signing (public endpoint)"""
+    contract = await db.contracts.find_one(
+        {"signing_token": token},
+        {"_id": 0}
+    )
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract niet gevonden of link is verlopen")
+    
+    if contract["status"] == "signed":
+        raise HTTPException(status_code=400, detail="Dit contract is al ondertekend")
+    
+    # Get related info
+    tenant = await db.tenants.find_one({"id": contract["tenant_id"]}, {"_id": 0})
+    apartment = await db.apartments.find_one({"id": contract["apartment_id"]}, {"_id": 0})
+    user = await db.users.find_one({"id": contract["user_id"]}, {"_id": 0, "name": 1, "company_name": 1, "email": 1})
+    
+    return {
+        "contract": {
+            "id": contract["id"],
+            "start_date": contract["start_date"],
+            "end_date": contract["end_date"],
+            "rent_amount": contract["rent_amount"],
+            "deposit_amount": contract["deposit_amount"],
+            "payment_due_day": contract["payment_due_day"],
+            "payment_deadline_day": contract.get("payment_deadline_day"),
+            "payment_deadline_month_offset": contract.get("payment_deadline_month_offset", 0),
+            "additional_terms": contract.get("additional_terms"),
+            "status": contract["status"]
+        },
+        "tenant": {
+            "name": tenant["name"] if tenant else None,
+            "email": tenant.get("email") if tenant else None,
+            "phone": tenant.get("phone") if tenant else None,
+            "id_number": tenant.get("id_number") if tenant else None
+        },
+        "apartment": {
+            "name": apartment["name"] if apartment else None,
+            "address": apartment.get("address") if apartment else None
+        },
+        "landlord": {
+            "name": user.get("name") if user else None,
+            "company_name": user.get("company_name") if user else None,
+            "email": user.get("email") if user else None
+        }
+    }
+
+class SignatureSubmit(BaseModel):
+    signature_data: str  # Base64 encoded image
+
+@api_router.post("/contracts/sign/{token}")
+async def sign_contract(token: str, signature: SignatureSubmit):
+    """Submit signature for a contract (public endpoint)"""
+    contract = await db.contracts.find_one(
+        {"signing_token": token},
+        {"_id": 0}
+    )
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract niet gevonden of link is verlopen")
+    
+    if contract["status"] == "signed":
+        raise HTTPException(status_code=400, detail="Dit contract is al ondertekend")
+    
+    # Update contract with signature
+    await db.contracts.update_one(
+        {"signing_token": token},
+        {"$set": {
+            "signature_data": signature.signature_data,
+            "signed_at": datetime.now(timezone.utc).isoformat(),
+            "status": "signed"
+        }}
+    )
+    
+    return {"message": "Contract succesvol ondertekend"}
+
+@api_router.get("/contracts/{contract_id}/pdf")
+async def get_contract_pdf(contract_id: str, current_user: dict = Depends(get_current_active_user)):
+    """Generate PDF for a contract"""
+    contract = await db.contracts.find_one(
+        {"id": contract_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract niet gevonden")
+    
+    # Get related data
+    tenant = await db.tenants.find_one({"id": contract["tenant_id"]}, {"_id": 0})
+    apartment = await db.apartments.find_one({"id": contract["apartment_id"]}, {"_id": 0})
+    user = await db.users.find_one({"id": contract["user_id"]}, {"_id": 0})
+    
+    # Generate PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2*cm,
+        bottomMargin=2*cm
+    )
+    
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    # Colors
+    PRIMARY_GREEN = HexColor("#0caf60")
+    DARK_TEXT = HexColor("#1a1a1a")
+    GRAY_TEXT = HexColor("#666666")
+    LIGHT_GRAY = HexColor("#f5f5f5")
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'ContractTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=DARK_TEXT,
+        spaceAfter=20,
+        alignment=1  # Center
+    )
+    
+    section_header = ParagraphStyle(
+        'SectionHeader',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=PRIMARY_GREEN,
+        spaceBefore=20,
+        spaceAfter=10,
+        fontName='Helvetica-Bold'
+    )
+    
+    normal_text = ParagraphStyle(
+        'NormalText',
+        parent=styles['Normal'],
+        fontSize=11,
+        textColor=DARK_TEXT,
+        spaceAfter=8,
+        leading=16
+    )
+    
+    small_text = ParagraphStyle(
+        'SmallText',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=GRAY_TEXT
+    )
+    
+    # Header with logo placeholder
+    company_name = user.get("company_name") or user.get("name") or "Verhuurder"
+    elements.append(Paragraph(company_name, ParagraphStyle(
+        'CompanyName',
+        parent=styles['Normal'],
+        fontSize=18,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        alignment=1
+    )))
+    elements.append(Spacer(1, 10))
+    
+    # Title
+    elements.append(Paragraph("HUUROVEREENKOMST", title_style))
+    elements.append(Spacer(1, 20))
+    
+    # Contract info
+    contract_date = datetime.now(timezone.utc).strftime("%d-%m-%Y")
+    elements.append(Paragraph(f"Datum: {contract_date}", small_text))
+    elements.append(Paragraph(f"Contractnummer: {contract['id'][:8].upper()}", small_text))
+    elements.append(Spacer(1, 20))
+    
+    # PARTIJEN
+    elements.append(Paragraph("PARTIJEN", section_header))
+    
+    # Verhuurder
+    landlord_text = f"""
+    <b>DE VERHUURDER:</b><br/>
+    Naam: {user.get('name', '-')}<br/>
+    Bedrijf: {user.get('company_name', '-')}<br/>
+    E-mail: {user.get('email', '-')}<br/>
+    """
+    elements.append(Paragraph(landlord_text, normal_text))
+    elements.append(Spacer(1, 10))
+    
+    # Huurder
+    tenant_text = f"""
+    <b>DE HUURDER:</b><br/>
+    Naam: {tenant.get('name', '-') if tenant else '-'}<br/>
+    ID/Paspoort: {tenant.get('id_number', '-') if tenant else '-'}<br/>
+    Telefoon: {tenant.get('phone', '-') if tenant else '-'}<br/>
+    E-mail: {tenant.get('email', '-') if tenant else '-'}<br/>
+    """
+    elements.append(Paragraph(tenant_text, normal_text))
+    elements.append(Spacer(1, 20))
+    
+    # HET GEHUURDE
+    elements.append(Paragraph("HET GEHUURDE", section_header))
+    apt_address = apartment.get('address', '-') if apartment else '-'
+    apt_name = apartment.get('name', '-') if apartment else '-'
+    elements.append(Paragraph(f"""
+    Het gehuurde betreft: <b>{apt_name}</b><br/>
+    Adres: {apt_address}<br/>
+    """, normal_text))
+    elements.append(Spacer(1, 20))
+    
+    # HUURPERIODE
+    elements.append(Paragraph("HUURPERIODE", section_header))
+    start_date = contract.get('start_date', '-')
+    end_date = contract.get('end_date')
+    if end_date:
+        period_text = f"De huurovereenkomst gaat in op <b>{start_date}</b> en eindigt op <b>{end_date}</b>."
+    else:
+        period_text = f"De huurovereenkomst gaat in op <b>{start_date}</b> en is voor onbepaalde tijd."
+    elements.append(Paragraph(period_text, normal_text))
+    elements.append(Spacer(1, 20))
+    
+    # HUURPRIJS EN BETALING
+    elements.append(Paragraph("HUURPRIJS EN BETALING", section_header))
+    
+    def format_currency(amount):
+        return f"SRD {amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    
+    rent_amount = format_currency(contract.get('rent_amount', 0))
+    deposit_amount = format_currency(contract.get('deposit_amount', 0))
+    due_day = contract.get('payment_due_day', 1)
+    
+    payment_text = f"""
+    <b>Huurprijs:</b> {rent_amount} per maand<br/>
+    <b>Waarborgsom:</b> {deposit_amount}<br/>
+    <b>Betaaldatum:</b> De {due_day}e van elke maand<br/>
+    """
+    
+    deadline_day = contract.get('payment_deadline_day')
+    deadline_offset = contract.get('payment_deadline_month_offset', 0)
+    if deadline_day and deadline_day > 0:
+        if deadline_offset == 1:
+            payment_text += f"<b>Uiterste betaaldatum:</b> De {deadline_day}e van de volgende maand<br/>"
+        else:
+            payment_text += f"<b>Uiterste betaaldatum:</b> De {deadline_day}e van dezelfde maand<br/>"
+    
+    elements.append(Paragraph(payment_text, normal_text))
+    elements.append(Spacer(1, 20))
+    
+    # BIJZONDERE BEPALINGEN
+    if contract.get('additional_terms'):
+        elements.append(Paragraph("BIJZONDERE BEPALINGEN", section_header))
+        elements.append(Paragraph(contract['additional_terms'], normal_text))
+        elements.append(Spacer(1, 20))
+    
+    # ONDERTEKENING
+    elements.append(Paragraph("ONDERTEKENING", section_header))
+    elements.append(Paragraph(
+        "Aldus overeengekomen en in tweevoud opgemaakt en ondertekend:",
+        normal_text
+    ))
+    elements.append(Spacer(1, 30))
+    
+    # Signature table
+    sig_data = [
+        ["Verhuurder", "Huurder"],
+        ["", ""],
+        ["", ""],
+        [f"Naam: {user.get('name', '-')}", f"Naam: {tenant.get('name', '-') if tenant else '-'}"],
+        [f"Datum: {contract_date}", f"Datum: {contract.get('signed_at', '_______________')[:10] if contract.get('signed_at') else '_______________'}"]
+    ]
+    
+    sig_table = Table(sig_data, colWidths=[8*cm, 8*cm])
+    sig_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(sig_table)
+    
+    # Add signature image if signed
+    if contract.get('signature_data') and contract.get('status') == 'signed':
+        elements.append(Spacer(1, 10))
+        elements.append(Paragraph("<b>Digitale Handtekening Huurder:</b>", small_text))
+        
+        try:
+            # Decode base64 signature
+            sig_b64 = contract['signature_data']
+            if ',' in sig_b64:
+                sig_b64 = sig_b64.split(',')[1]
+            sig_bytes = base64.b64decode(sig_b64)
+            sig_img = PILImage.open(BytesIO(sig_bytes))
+            
+            # Save to buffer
+            img_buffer = BytesIO()
+            sig_img.save(img_buffer, format='PNG')
+            img_buffer.seek(0)
+            
+            # Add to PDF
+            sig_image = Image(img_buffer, width=6*cm, height=2*cm)
+            elements.append(sig_image)
+            elements.append(Paragraph(f"Ondertekend op: {contract['signed_at'][:10]}", small_text))
+        except Exception as e:
+            elements.append(Paragraph(f"[Handtekening beschikbaar]", small_text))
+    
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+    
+    tenant_name = tenant.get('name', 'huurder').replace(' ', '_') if tenant else 'huurder'
+    filename = f"Contract_{tenant_name}_{contract['id'][:8]}.pdf"
+    
+    return Response(
+        content=buffer.getvalue(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 # ==================== WISSELKOERS (EXCHANGE RATE) ROUTES ====================
 
 # Cache for exchange rate (to avoid too many API calls)
