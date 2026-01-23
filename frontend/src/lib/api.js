@@ -38,6 +38,7 @@ export const formatCurrency = (amount) => {
 
 // Dashboard
 export const getDashboard = () => api.get('/dashboard');
+export const getNotifications = () => api.get('/notifications');
 
 // Tenants
 export const getTenants = () => api.get('/tenants');
