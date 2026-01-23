@@ -378,6 +378,31 @@ class KasgeldBalanceResponse(BaseModel):
     total_salary_payments: float  # Salarisbetalingen
     transactions: List[KasgeldResponse]
 
+# Lening (Loan) Models
+class LoanCreate(BaseModel):
+    tenant_id: str
+    amount: float
+    description: Optional[str] = None
+    loan_date: str
+
+class LoanUpdate(BaseModel):
+    amount: Optional[float] = None
+    description: Optional[str] = None
+    loan_date: Optional[str] = None
+
+class LoanResponse(BaseModel):
+    id: str
+    tenant_id: str
+    tenant_name: Optional[str] = None
+    amount: float
+    amount_paid: float = 0
+    remaining: float = 0
+    description: Optional[str] = None
+    loan_date: str
+    status: str = "open"  # 'open', 'partial', 'paid'
+    created_at: str
+    user_id: str
+
 # Onderhoud (Maintenance) Models
 class MaintenanceCreate(BaseModel):
     apartment_id: str
