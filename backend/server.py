@@ -2065,7 +2065,7 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
 
 @api_router.get("/invoices")
 async def get_invoices(current_user: dict = Depends(get_current_active_user)):
-    """Get all invoices (rent due) for all tenants with payment status and cumulative balance"""
+    """Get all invoices (rent due) for all tenants with payment status, cumulative balance and maintenance costs"""
     
     # Get all apartments with tenants
     apartments = await db.apartments.find(
@@ -2090,8 +2090,36 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
         {"_id": 0}
     ).to_list(10000)
     
+    # Get all maintenance costs for tenants (cost_type = 'tenant')
+    maintenance_records = await db.maintenance.find(
+        {"user_id": current_user["id"], "cost_type": "tenant"},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    # Create maintenance lookup by apartment_id
+    # Group by apartment and calculate total + details
+    maintenance_by_apartment = {}
+    for m in maintenance_records:
+        apt_id = m["apartment_id"]
+        if apt_id not in maintenance_by_apartment:
+            maintenance_by_apartment[apt_id] = {
+                "total": 0,
+                "items": []
+            }
+        category_labels = {
+            'wc': 'WC/Toilet', 'kraan': 'Kraan', 'douche': 'Douche',
+            'keuken': 'Keuken', 'kasten': 'Kasten', 'verven': 'Verven', 'overig': 'Overig'
+        }
+        maintenance_by_apartment[apt_id]["total"] += m["cost"]
+        maintenance_by_apartment[apt_id]["items"].append({
+            "id": m["id"],
+            "date": m["maintenance_date"],
+            "category": category_labels.get(m.get("category", "overig"), "Onderhoud"),
+            "description": m.get("description", ""),
+            "cost": m["cost"]
+        })
+    
     # Create payment lookup: (tenant_id, apartment_id, year, month) -> list of payments
-    # Multiple payments can exist for the same period (partial payments)
     payment_lookup = {}
     for p in payments:
         if p.get("period_month") and p.get("period_year"):
@@ -2113,6 +2141,9 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
         if not tenant:
             continue
         
+        # Get maintenance costs for this apartment (tenant pays)
+        apt_maintenance = maintenance_by_apartment.get(apt["id"], {"total": 0, "items": []})
+        
         # Determine start date (from apartment creation or assignment)
         try:
             created = apt.get("created_at", "")
@@ -2127,27 +2158,36 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
         year = start_dt.year
         month = start_dt.month
         
-        # Track cumulative balance for this tenant
+        # Track cumulative balance for this tenant (including maintenance)
         cumulative_balance = 0.0
+        # Add maintenance costs to starting balance
+        cumulative_balance += apt_maintenance["total"]
+        
         tenant_invoices = []
+        is_first_month = True
         
         while (year < now.year) or (year == now.year and month <= now.month):
             key = (apt["tenant_id"], apt["id"], year, month)
             period_payments = payment_lookup.get(key, [])
             
             # Calculate amounts
-            amount_due = apt["rent_amount"]
+            rent_due = apt["rent_amount"]
+            # Only add maintenance to first month's invoice display
+            maintenance_due = apt_maintenance["total"] if is_first_month else 0
+            amount_due = rent_due + maintenance_due
             amount_paid = sum(p["amount"] for p in period_payments)
             remaining = amount_due - amount_paid
             
             # Add previous balance to this month's remaining
-            total_remaining = remaining + cumulative_balance
+            if not is_first_month:
+                total_remaining = remaining + cumulative_balance
+            else:
+                total_remaining = remaining
             
             # Determine status
             if amount_paid >= amount_due:
                 status = "paid"
-                # If overpaid, reduce cumulative balance (credit)
-                cumulative_balance = min(0, remaining)
+                cumulative_balance = min(0, remaining) if not is_first_month else min(0, total_remaining)
             elif amount_paid > 0:
                 status = "partial"
                 cumulative_balance = total_remaining
@@ -2168,6 +2208,34 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
                 "tenant_name": tenant["name"],
                 "tenant_phone": tenant.get("phone", ""),
                 "apartment_id": apt["id"],
+                "apartment_name": apt["name"],
+                "year": year,
+                "month": month,
+                "month_name": months_nl[month],
+                "period_label": f"{months_nl[month]} {year}",
+                "rent_amount": rent_due,
+                "maintenance_cost": maintenance_due,
+                "maintenance_items": apt_maintenance["items"] if is_first_month and maintenance_due > 0 else [],
+                "amount_due": amount_due,
+                "amount_paid": amount_paid,
+                "remaining": max(0, remaining),
+                "cumulative_balance": max(0, cumulative_balance),
+                "status": status,
+                "payment_count": len(period_payments),
+                "payment_ids": [p["id"] for p in period_payments],
+                "payment_date": latest_payment_date,
+                "due_date": f"{year}-{month:02d}-01"
+            }
+            
+            tenant_invoices.append(invoice)
+            is_first_month = False
+            
+            month += 1
+            if month > 12:
+                month = 1
+                year += 1
+        
+        all_invoices.extend(tenant_invoices)
                 "apartment_name": apt["name"],
                 "year": year,
                 "month": month,
