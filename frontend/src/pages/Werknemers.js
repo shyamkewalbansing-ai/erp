@@ -225,6 +225,24 @@ export default function Werknemers() {
     }
   };
 
+  const handleDownloadPayslip = async (salary) => {
+    try {
+      const response = await downloadPayslip(salary.id);
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `loonstrook_${salary.id.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Loonstrook gedownload');
+    } catch (error) {
+      toast.error('Fout bij downloaden loonstrook');
+    }
+  };
+
   const resetEmployeeForm = () => {
     setSelectedEmployee(null);
     setEmployeeForm({
