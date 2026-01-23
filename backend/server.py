@@ -1434,6 +1434,11 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
         payment["apartment_name"] = recent_apt_map.get(payment["apartment_id"])
         recent_payments.append(PaymentResponse(**payment))
     
+    # Get user's rent settings
+    user_settings = await db.users.find_one({"id": user_id}, {"_id": 0, "rent_due_day": 1, "grace_period_days": 1})
+    rent_due_day = user_settings.get("rent_due_day", 1) if user_settings else 1
+    grace_period_days = user_settings.get("grace_period_days", 5) if user_settings else 5
+    
     # Generate reminders for unpaid rent
     reminders = []
     for apt in occupied_apts:
@@ -1449,9 +1454,19 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
         )
         
         if not paid_this_month:
-            # Assume rent is due on the 1st of each month
-            due_date = first_of_month
-            days_overdue = (now - due_date).days
+            # Use user's rent due day setting
+            try:
+                due_date = now.replace(day=rent_due_day)
+            except ValueError:
+                # If day doesn't exist in current month, use last day
+                due_date = now.replace(day=28)
+            
+            # Calculate days overdue considering grace period
+            days_since_due = (now - due_date).days
+            days_overdue = max(0, days_since_due - grace_period_days)
+            
+            # Only show as overdue if past grace period
+            is_overdue = days_since_due > grace_period_days
             
             reminders.append(ReminderResponse(
                 id=str(uuid.uuid4()),
@@ -1462,7 +1477,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
                 amount_due=apt["rent_amount"],
                 due_date=due_date.strftime("%Y-%m-%d"),
                 days_overdue=days_overdue,
-                reminder_type="overdue" if days_overdue > 0 else "upcoming"
+                reminder_type="overdue" if is_overdue else "upcoming"
             ))
     
     # Calculate kasgeld balance
