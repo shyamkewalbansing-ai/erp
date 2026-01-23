@@ -2906,6 +2906,193 @@ async def get_subscription_requests(current_user: dict = Depends(get_superadmin)
     
     return requests
 
+# ==================== CRON JOB ENDPOINTS ====================
+
+CRON_SECRET = os.environ.get('CRON_SECRET', 'facturatie-cron-secret-2026')
+
+@api_router.get("/cron/run")
+async def run_cron_jobs(secret: str = None):
+    """Run all cron jobs - called every minute"""
+    
+    # Simple security check
+    if secret != CRON_SECRET:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    results = {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "jobs": {}
+    }
+    
+    # Job 1: Check and update subscription statuses
+    try:
+        expired_count = await check_expired_subscriptions()
+        results["jobs"]["subscription_check"] = {
+            "status": "success",
+            "expired_count": expired_count
+        }
+    except Exception as e:
+        logger.error(f"Cron job subscription_check failed: {e}")
+        results["jobs"]["subscription_check"] = {"status": "error", "message": str(e)}
+    
+    # Job 2: Send subscription reminders (3 days before expiry)
+    try:
+        reminders_sent = await send_subscription_reminders()
+        results["jobs"]["reminders"] = {
+            "status": "success",
+            "reminders_sent": reminders_sent
+        }
+    except Exception as e:
+        logger.error(f"Cron job reminders failed: {e}")
+        results["jobs"]["reminders"] = {"status": "error", "message": str(e)}
+    
+    # Job 3: Clean old data (runs once per day at midnight)
+    current_hour = datetime.now(timezone.utc).hour
+    current_minute = datetime.now(timezone.utc).minute
+    if current_hour == 0 and current_minute == 0:
+        try:
+            cleaned = await cleanup_old_data()
+            results["jobs"]["cleanup"] = {
+                "status": "success",
+                "cleaned": cleaned
+            }
+        except Exception as e:
+            logger.error(f"Cron job cleanup failed: {e}")
+            results["jobs"]["cleanup"] = {"status": "error", "message": str(e)}
+    
+    return results
+
+async def check_expired_subscriptions():
+    """Check and mark expired subscriptions"""
+    now = datetime.now(timezone.utc)
+    expired_count = 0
+    
+    # Find all customers with expired subscriptions that haven't been marked
+    customers = await db.users.find({
+        "role": "customer",
+        "is_free": {"$ne": True}  # Don't touch free accounts
+    }, {"_id": 0}).to_list(1000)
+    
+    for customer in customers:
+        if customer.get("subscription_end_date"):
+            try:
+                end_date = datetime.fromisoformat(customer["subscription_end_date"].replace('Z', '+00:00'))
+                if end_date < now:
+                    # Mark as expired in notifications collection
+                    existing_notification = await db.notifications.find_one({
+                        "user_id": customer["id"],
+                        "type": "subscription_expired",
+                        "created_at": {"$gte": (now - timedelta(days=1)).isoformat()}
+                    })
+                    
+                    if not existing_notification:
+                        await db.notifications.insert_one({
+                            "id": str(uuid.uuid4()),
+                            "user_id": customer["id"],
+                            "type": "subscription_expired",
+                            "message": f"Abonnement van {customer['name']} is verlopen",
+                            "email": customer["email"],
+                            "read": False,
+                            "created_at": now.isoformat()
+                        })
+                        expired_count += 1
+            except Exception as e:
+                logger.error(f"Error checking subscription for {customer.get('email')}: {e}")
+    
+    return expired_count
+
+async def send_subscription_reminders():
+    """Send reminders for subscriptions expiring in 3 days"""
+    now = datetime.now(timezone.utc)
+    reminder_date = now + timedelta(days=3)
+    reminders_sent = 0
+    
+    customers = await db.users.find({
+        "role": "customer",
+        "is_free": {"$ne": True}
+    }, {"_id": 0}).to_list(1000)
+    
+    for customer in customers:
+        if customer.get("subscription_end_date"):
+            try:
+                end_date = datetime.fromisoformat(customer["subscription_end_date"].replace('Z', '+00:00'))
+                
+                # Check if expiring within 3 days
+                days_until_expiry = (end_date - now).days
+                
+                if 0 < days_until_expiry <= 3:
+                    # Check if reminder already sent today
+                    existing_reminder = await db.notifications.find_one({
+                        "user_id": customer["id"],
+                        "type": "subscription_reminder",
+                        "created_at": {"$gte": (now - timedelta(hours=24)).isoformat()}
+                    })
+                    
+                    if not existing_reminder:
+                        await db.notifications.insert_one({
+                            "id": str(uuid.uuid4()),
+                            "user_id": customer["id"],
+                            "type": "subscription_reminder",
+                            "message": f"Abonnement van {customer['name']} verloopt over {days_until_expiry} dag(en)",
+                            "email": customer["email"],
+                            "days_remaining": days_until_expiry,
+                            "read": False,
+                            "created_at": now.isoformat()
+                        })
+                        reminders_sent += 1
+            except Exception as e:
+                logger.error(f"Error sending reminder for {customer.get('email')}: {e}")
+    
+    return reminders_sent
+
+async def cleanup_old_data():
+    """Clean up old data (notifications older than 30 days, old logs)"""
+    now = datetime.now(timezone.utc)
+    cleanup_date = (now - timedelta(days=30)).isoformat()
+    cleaned = {}
+    
+    # Delete old notifications
+    result = await db.notifications.delete_many({
+        "created_at": {"$lt": cleanup_date}
+    })
+    cleaned["notifications"] = result.deleted_count
+    
+    # Delete old subscription requests that are completed
+    result = await db.subscription_requests.delete_many({
+        "status": {"$in": ["approved", "rejected"]},
+        "created_at": {"$lt": cleanup_date}
+    })
+    cleaned["subscription_requests"] = result.deleted_count
+    
+    return cleaned
+
+# Endpoint to get notifications for superadmin
+@api_router.get("/admin/notifications")
+async def get_admin_notifications(current_user: dict = Depends(get_superadmin)):
+    """Get all notifications for superadmin"""
+    notifications = await db.notifications.find(
+        {},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return notifications
+
+@api_router.put("/admin/notifications/{notification_id}/read")
+async def mark_notification_read(notification_id: str, current_user: dict = Depends(get_superadmin)):
+    """Mark notification as read"""
+    await db.notifications.update_one(
+        {"id": notification_id},
+        {"$set": {"read": True}}
+    )
+    return {"message": "Notificatie gelezen"}
+
+@api_router.delete("/admin/notifications/{notification_id}")
+async def delete_notification(notification_id: str, current_user: dict = Depends(get_superadmin)):
+    """Delete a notification"""
+    await db.notifications.delete_one({"id": notification_id})
+    return {"message": "Notificatie verwijderd"}
+    
+    return requests
+
 # Include the router in the main app
 app.include_router(api_router)
 
