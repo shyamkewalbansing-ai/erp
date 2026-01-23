@@ -193,6 +193,7 @@ export default function Payments() {
       period_month: new Date().getMonth() + 1,
       period_year: new Date().getFullYear(),
     });
+    setOutstandingInfo(null);
   };
 
   // Get tenant's apartment and outstanding info
