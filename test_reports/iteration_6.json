@@ -1,0 +1,76 @@
+{
+  "summary": "Feature 6 testing complete: Outstanding balance check when registering new payment. Backend: 7/7 tests passed (100%). Frontend: All UI elements verified and working correctly.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "Feature 6: GET /api/tenants/{tenant_id}/outstanding endpoint exists and returns proper structure",
+    "Feature 6: Outstanding returns empty when tenant has no apartment assigned",
+    "Feature 6: Outstanding returns unpaid months when tenant has apartment but no payments",
+    "Feature 6: Outstanding excludes months that have been paid",
+    "Feature 6: Outstanding returns 404 for non-existent tenant",
+    "Feature 6: Outstanding returns suggestion message when there are unpaid months",
+    "Feature 6: Outstanding months are sorted with oldest first",
+    "Feature 6: Orange warning box appears in payment modal when tenant has outstanding balance",
+    "Feature 6: Warning shows number of outstanding months",
+    "Feature 6: Warning shows total outstanding amount in SRD",
+    "Feature 6: Warning shows oldest unpaid month",
+    "Feature 6: Period month/year selector auto-selects oldest unpaid month",
+    "Feature 6: Month selector shows ⚠️ emoji next to unpaid months",
+    "Feature 6: Year selector shows ⚠️ emoji next to years with unpaid months",
+    "Feature 6: Label shows '(oudste geselecteerd)' indicating oldest month is selected"
+  ],
+  
+  "test_report_links": [
+    "/app/backend/tests/test_feature6_outstanding.py",
+    "/app/test_reports/pytest/pytest_feature6_results.xml"
+  ],
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [],
+  
+  "updated_files": [
+    "/app/backend/tests/test_feature6_outstanding.py"
+  ],
+  
+  "success_rate": {
+    "backend": "100% (7/7 tests passed)",
+    "frontend": "100% (all Feature 6 UI elements verified)"
+  },
+  
+  "test_credentials": {
+    "test_customer": {
+      "email": "uitest2@test.com",
+      "password": "test123"
+    }
+  },
+  
+  "seed_data_creation": "Test data created with prefix 'TEST_Feature6_' during testing, cleaned up after tests",
+  
+  "retest_needed": false,
+  
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "Feature 6 (Outstanding balance check) has been fully tested and verified. The GET /api/tenants/{tenant_id}/outstanding endpoint correctly returns outstanding months for a tenant. The frontend payment modal shows an orange warning box when a tenant has unpaid months, displays the total outstanding amount, and auto-selects the oldest unpaid month in the period selector. Month/year dropdowns show ⚠️ emoji next to unpaid periods.",
+  
+  "features_verified": {
+    "feature_6_outstanding_balance": {
+      "backend_endpoint": "✓ GET /api/tenants/{tenant_id}/outstanding returns outstanding months, amount, and suggestion message",
+      "frontend_warning": "✓ Orange warning box appears in payment modal with 'Openstaand saldo' title",
+      "outstanding_info": "✓ Shows number of outstanding months, total amount (SRD), and oldest unpaid month",
+      "auto_select": "✓ Period month/year auto-selects oldest unpaid month",
+      "warning_emoji": "✓ Month and year dropdowns show ⚠️ emoji next to unpaid periods",
+      "label_indicator": "✓ Label shows '(oudste geselecteerd)' when outstanding months exist"
+    }
+  }
+}
