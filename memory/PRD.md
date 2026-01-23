@@ -29,6 +29,24 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 
 ## What's Been Implemented (January 2026)
 
+### Contractgeneratie met Digitale Handtekening ✅ (23 Jan 2026)
+- [x] **Contracten pagina** met overzicht, zoeken, filteren op status
+- [x] **Summary cards**: Totaal Contracten, Ondertekend, Wacht op Handtekening
+- [x] **Contract aanmaken** via modal met alle velden:
+  - Verhuurder gegevens (automatisch)
+  - Huurder selectie + gegevens (naam, ID, telefoon, email)
+  - Appartement selectie + adres
+  - Huurperiode (start/einddatum of onbepaalde tijd)
+  - Huurprijs en waarborgsom
+  - Betaalvoorwaarden (betaaldag, deadline)
+  - Bijzondere bepalingen (vrij tekstveld)
+- [x] **Digitale ondertekening** via unieke link (publiek, geen login nodig)
+- [x] **Handtekening canvas**: tekenen met muis of vinger
+- [x] **Ondertekeningspagina** toont alle contractgegevens
+- [x] **PDF download** met handtekening (indien ondertekend)
+- [x] **Status tracking**: Concept → Wacht op handtekening → Ondertekend
+- [x] **Opslag bij huurder**: Contract gekoppeld aan tenant_id
+
 ### Dashboard Verbeteringen ✅ (23 Jan 2026)
 - [x] "Openstaand" kaart toont nu gecombineerd bedrag (huur + leningen)
 - [x] "Openstaand" toont ondertitel "incl. leningen SRD X" als er openstaande leningen zijn
