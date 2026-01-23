@@ -109,7 +109,7 @@ export default function Admin() {
     email: '',
     password: '',
     company_name: '',
-    activate_subscription: false,
+    plan_type: 'trial', // 'trial', 'active', 'none'
     subscription_months: 1,
     payment_method: 'bank_transfer',
     payment_reference: ''
