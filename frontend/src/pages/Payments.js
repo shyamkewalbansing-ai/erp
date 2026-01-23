@@ -103,6 +103,7 @@ export default function Payments() {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [outstandingInfo, setOutstandingInfo] = useState(null);
   const [loadingOutstanding, setLoadingOutstanding] = useState(false);
+  const [tenantLoans, setTenantLoans] = useState([]);
   const [formData, setFormData] = useState({
     tenant_id: '',
     apartment_id: '',
@@ -112,6 +113,7 @@ export default function Payments() {
     description: '',
     period_month: new Date().getMonth() + 1,
     period_year: new Date().getFullYear(),
+    loan_id: '',
   });
 
   useEffect(() => {
