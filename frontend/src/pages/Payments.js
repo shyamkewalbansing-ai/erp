@@ -531,7 +531,7 @@ export default function Payments() {
             {formData.payment_type === 'rent' && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Maand {outstandingInfo?.has_outstanding && <span className="text-orange-600 text-xs">(oudste geselecteerd)</span>}</Label>
+                  <Label>Maand {outstandingInfo?.has_outstanding && <span className="text-orange-600 text-xs">(openstaand)</span>}</Label>
                   <Select 
                     value={formData.period_month.toString()} 
                     onValueChange={(value) => setFormData({ ...formData, period_month: parseInt(value) })}
@@ -540,14 +540,21 @@ export default function Payments() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {MONTHS.map((month) => (
-                        <SelectItem key={month.value} value={month.value.toString()}>
-                          {month.label}
-                          {outstandingInfo?.outstanding_months?.some(
-                            m => m.month === month.value && m.year === formData.period_year
-                          ) && ' ⚠️'}
-                        </SelectItem>
-                      ))}
+                      {MONTHS.map((month) => {
+                        const outstandingMonth = outstandingInfo?.outstanding_months?.find(
+                          m => m.month === month.value && m.year === formData.period_year
+                        );
+                        return (
+                          <SelectItem key={month.value} value={month.value.toString()}>
+                            {month.label}
+                            {outstandingMonth && (
+                              outstandingMonth.status === 'partial' 
+                                ? ` ⚡ (nog ${formatCurrency(outstandingMonth.remaining)})`
+                                : ' ⚠️'
+                            )}
+                          </SelectItem>
+                        );
+                      })}
                     </SelectContent>
                   </Select>
                 </div>
