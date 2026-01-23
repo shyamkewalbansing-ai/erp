@@ -4089,9 +4089,11 @@ async def delete_logo(current_user: dict = Depends(get_current_user)):
     return {"message": "Logo succesvol verwijderd"}
 
 class RentSettings(BaseModel):
-    rent_due_day: int = 1  # Day of month (1-28)
+    rent_due_day: int = 1  # Day of month (1-28) - when rent is DUE
     payment_frequency: str = "monthly"  # monthly, weekly, biweekly, quarterly, yearly
     grace_period_days: int = 5  # Days after due date before considered late
+    payment_deadline_day: int = 0  # Day of NEXT month by which rent must be paid (0 = same month)
+    payment_deadline_month_offset: int = 0  # 0 = same month, 1 = next month
 
 @api_router.put("/profile/rent-settings")
 async def update_rent_settings(settings: RentSettings, current_user: dict = Depends(get_current_user)):
@@ -4099,6 +4101,9 @@ async def update_rent_settings(settings: RentSettings, current_user: dict = Depe
     
     if settings.rent_due_day < 1 or settings.rent_due_day > 28:
         raise HTTPException(status_code=400, detail="Dag moet tussen 1 en 28 zijn")
+    
+    if settings.payment_deadline_day < 0 or settings.payment_deadline_day > 28:
+        raise HTTPException(status_code=400, detail="Deadline dag moet tussen 0 en 28 zijn")
     
     valid_frequencies = ["monthly", "weekly", "biweekly", "quarterly", "yearly"]
     if settings.payment_frequency not in valid_frequencies:
@@ -4109,7 +4114,9 @@ async def update_rent_settings(settings: RentSettings, current_user: dict = Depe
         {"$set": {
             "rent_due_day": settings.rent_due_day,
             "payment_frequency": settings.payment_frequency,
-            "grace_period_days": settings.grace_period_days
+            "grace_period_days": settings.grace_period_days,
+            "payment_deadline_day": settings.payment_deadline_day,
+            "payment_deadline_month_offset": settings.payment_deadline_month_offset
         }}
     )
     
