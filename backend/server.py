@@ -1862,6 +1862,12 @@ async def get_tenant_balance(tenant_id: str, current_user: dict = Depends(get_cu
         {"_id": 0}
     )
     
+    # Get deposit info for this tenant
+    deposit_info = await db.deposits.find_one(
+        {"tenant_id": tenant_id, "user_id": current_user["id"], "status": "held"},
+        {"_id": 0, "amount": 1, "deposit_date": 1, "status": 1}
+    )
+    
     if not apt:
         return {
             "tenant_id": tenant_id,
@@ -1870,7 +1876,8 @@ async def get_tenant_balance(tenant_id: str, current_user: dict = Depends(get_cu
             "total_due": 0,
             "total_paid": 0,
             "balance": 0,
-            "payments": []
+            "payments": [],
+            "deposit": deposit_info
         }
     
     # Get all payments for this tenant-apartment combination
@@ -1905,7 +1912,8 @@ async def get_tenant_balance(tenant_id: str, current_user: dict = Depends(get_cu
         "total_due": total_due,
         "total_paid": total_paid,
         "balance": balance,
-        "payments": payments
+        "payments": payments,
+        "deposit": deposit_info
     }
 
 # ==================== KASGELD (CASH FUND) ROUTES ====================
