@@ -98,6 +98,7 @@ export default function Onderhoud() {
     cost: '',
     maintenance_date: new Date().toISOString().split('T')[0],
     status: 'completed',
+    cost_type: 'kasgeld', // 'kasgeld' or 'tenant'
   });
 
   useEffect(() => {
