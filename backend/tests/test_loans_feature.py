@@ -393,15 +393,19 @@ class TestFacturenPage:
         """Test GET /api/invoices returns 200"""
         response = self.session.get(f"{BASE_URL}/api/invoices")
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-        assert isinstance(response.json(), list), "Response should be a list"
-        print("✓ GET /api/invoices returns 200 with list")
+        data = response.json()
+        # API returns object with 'invoices' key
+        assert "invoices" in data, "Response should have 'invoices' key"
+        assert isinstance(data["invoices"], list), "invoices should be a list"
+        print("✓ GET /api/invoices returns 200 with invoices list")
     
     def test_invoices_structure(self):
         """Test invoices have correct structure"""
         response = self.session.get(f"{BASE_URL}/api/invoices")
         assert response.status_code == 200
         
-        invoices = response.json()
+        data = response.json()
+        invoices = data.get("invoices", [])
         if len(invoices) > 0:
             invoice = invoices[0]
             required_fields = ["tenant_id", "tenant_name", "apartment_name", "rent_amount", "amount_due", "status"]
@@ -409,7 +413,20 @@ class TestFacturenPage:
                 assert field in invoice, f"Missing field: {field}"
             print(f"✓ Invoice structure verified with fields: {list(invoice.keys())}")
         else:
-            print("✓ GET /api/invoices returns empty list (no invoices)")
+            print("✓ GET /api/invoices returns empty invoices list")
+    
+    def test_invoices_summary(self):
+        """Test invoices endpoint returns summary"""
+        response = self.session.get(f"{BASE_URL}/api/invoices")
+        assert response.status_code == 200
+        
+        data = response.json()
+        assert "summary" in data, "Response should have 'summary' key"
+        summary = data["summary"]
+        required_summary_fields = ["total_amount", "paid_amount", "outstanding_amount"]
+        for field in required_summary_fields:
+            assert field in summary, f"Missing summary field: {field}"
+        print(f"✓ Invoices summary verified: {summary}")
 
 
 class TestLeningenSummaryCards:
