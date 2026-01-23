@@ -1840,7 +1840,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
             p["apartment_id"] == apt["id"] and 
             p.get("period_month") == now.month and 
             p.get("period_year") == now.year
-            for p in payments_this_month
+            for p in rent_payments
         )
         
         if not paid_this_month:
