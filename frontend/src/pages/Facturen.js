@@ -232,16 +232,18 @@ export default function Facturen() {
 
       {/* Invoices Table */}
       {filteredInvoices.length > 0 ? (
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <div className="bg-card border border-border rounded-lg overflow-hidden overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Huurder</TableHead>
                 <TableHead>Appartement</TableHead>
                 <TableHead>Periode</TableHead>
-                <TableHead className="text-right">Bedrag</TableHead>
+                <TableHead className="text-right">Huur</TableHead>
+                <TableHead className="text-right">Betaald</TableHead>
+                <TableHead className="text-right">Openstaand</TableHead>
+                <TableHead className="text-right">Totaal Schuld</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Betaaldatum</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -270,8 +272,27 @@ export default function Facturen() {
                       {invoice.period_label}
                     </div>
                   </TableCell>
-                  <TableCell className="text-right font-semibold">
-                    {formatCurrency(invoice.amount)}
+                  <TableCell className="text-right font-medium">
+                    {formatCurrency(invoice.amount_due)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className={invoice.amount_paid > 0 ? "text-green-600 font-medium" : "text-muted-foreground"}>
+                      {formatCurrency(invoice.amount_paid)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className={invoice.remaining > 0 ? "text-orange-600 font-medium" : "text-green-600"}>
+                      {formatCurrency(invoice.remaining)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {invoice.cumulative_balance > 0 ? (
+                      <span className="text-red-600 font-bold">
+                        {formatCurrency(invoice.cumulative_balance)}
+                      </span>
+                    ) : (
+                      <span className="text-green-600">-</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {invoice.status === 'paid' ? (
@@ -279,18 +300,16 @@ export default function Facturen() {
                         <CheckCircle2 className="w-3 h-3" />
                         Betaald
                       </span>
+                    ) : invoice.status === 'partial' ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800" data-testid={`invoice-status-${invoice.id}`}>
+                        <AlertCircle className="w-3 h-3" />
+                        Gedeeltelijk
+                      </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800" data-testid={`invoice-status-${invoice.id}`}>
                         <AlertCircle className="w-3 h-3" />
                         Openstaand
                       </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {invoice.payment_date ? (
-                      <span className="text-green-600">{invoice.payment_date}</span>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
                 </TableRow>
