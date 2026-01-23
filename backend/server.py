@@ -1636,12 +1636,20 @@ async def get_kasgeld(current_user: dict = Depends(get_current_active_user)):
     # Calculate total from payments (all payments go to kasgeld)
     total_payments = sum(p["amount"] for p in payments)
     
-    # Get total maintenance costs
+    # Get maintenance records - only those with cost_type='kasgeld' (or no cost_type for legacy data)
     maintenance_records = await db.maintenance.find(
         {"user_id": current_user["id"]},
-        {"_id": 0, "cost": 1}
+        {"_id": 0}
     ).to_list(1000)
-    total_maintenance_costs = sum(m["cost"] for m in maintenance_records)
+    
+    # Filter: Only count costs where cost_type is 'kasgeld' or not set (legacy)
+    kasgeld_maintenance = [m for m in maintenance_records if m.get("cost_type", "kasgeld") == "kasgeld"]
+    total_maintenance_costs = sum(m["cost"] for m in kasgeld_maintenance)
+    
+    # Batch fetch apartment names for maintenance
+    maint_apt_ids = list(set(m["apartment_id"] for m in maintenance_records))
+    maint_apts = await db.apartments.find({"id": {"$in": maint_apt_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000) if maint_apt_ids else []
+    maint_apt_map = {a["id"]: a["name"] for a in maint_apts}
     
     # Get total salary payments
     salary_payments = await db.salaries.find(
@@ -1655,7 +1663,7 @@ async def get_kasgeld(current_user: dict = Depends(get_current_active_user)):
     employees = await db.employees.find({"id": {"$in": employee_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(1000) if employee_ids else []
     employee_map = {e["id"]: e["name"] for e in employees}
     
-    # Total balance = deposits + payments - withdrawals - maintenance costs - salaries
+    # Total balance = deposits + payments - withdrawals - maintenance costs (kasgeld only) - salaries
     total_balance = total_deposits + total_payments - total_withdrawals - total_maintenance_costs - total_salary_payments
     
     # Combine all transactions for display
@@ -1698,6 +1706,26 @@ async def get_kasgeld(current_user: dict = Depends(get_current_active_user)):
             created_at=s["created_at"],
             user_id=s["user_id"],
             source="salary"
+        ))
+    
+    # Add maintenance records as transactions (only kasgeld type costs)
+    for m in kasgeld_maintenance:
+        apt_name = maint_apt_map.get(m["apartment_id"], "Onbekend")
+        category_labels = {
+            'wc': 'WC/Toilet', 'kraan': 'Kraan', 'douche': 'Douche',
+            'keuken': 'Keuken', 'kasten': 'Kasten', 'verven': 'Verven', 'overig': 'Overig'
+        }
+        cat_label = category_labels.get(m.get("category", "overig"), "Onderhoud")
+        
+        all_transactions.append(KasgeldResponse(
+            id=m["id"],
+            amount=m["cost"],
+            transaction_type="maintenance",
+            description=f"{cat_label} - {apt_name}: {m.get('description', '')}",
+            transaction_date=m["maintenance_date"],
+            created_at=m["created_at"],
+            user_id=m["user_id"],
+            source="maintenance"
         ))
     
     # Sort all transactions by date (newest first)
