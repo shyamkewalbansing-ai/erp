@@ -6,6 +6,7 @@ import {
   deleteDeposit, 
   getTenants,
   getApartments,
+  downloadDepositRefund,
   formatCurrency 
 } from '../lib/api';
 import { toast } from 'sonner';
@@ -19,7 +20,8 @@ import {
   RefreshCcw,
   Calendar,
   CheckCircle2,
-  Clock
+  Clock,
+  FileText
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
