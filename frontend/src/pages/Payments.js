@@ -6,6 +6,7 @@ import {
   getTenants,
   getApartments,
   getTenantOutstanding,
+  getTenantLoans,
   downloadReceipt,
   formatCurrency 
 } from '../lib/api';
