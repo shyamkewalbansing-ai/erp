@@ -2159,20 +2159,22 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
     all_invoices.sort(key=lambda x: (-x["year"], -x["month"], x["tenant_name"]))
     
     # Calculate summary
-    total_invoices = len(invoices)
-    paid_invoices = [i for i in invoices if i["status"] == "paid"]
-    unpaid_invoices = [i for i in invoices if i["status"] == "unpaid"]
+    total_invoices = len(all_invoices)
+    paid_invoices = [i for i in all_invoices if i["status"] == "paid"]
+    partial_invoices = [i for i in all_invoices if i["status"] == "partial"]
+    unpaid_invoices = [i for i in all_invoices if i["status"] == "unpaid"]
     
     summary = {
         "total_invoices": total_invoices,
         "paid": len(paid_invoices),
+        "partial": len(partial_invoices),
         "unpaid": len(unpaid_invoices),
-        "total_amount": sum(i["amount"] for i in invoices),
-        "paid_amount": sum(i["amount"] for i in paid_invoices),
-        "unpaid_amount": sum(i["amount"] for i in unpaid_invoices)
+        "total_amount": sum(i["amount_due"] for i in all_invoices),
+        "paid_amount": sum(i["amount_paid"] for i in all_invoices),
+        "unpaid_amount": sum(i["remaining"] for i in all_invoices)
     }
     
-    return {"invoices": invoices, "summary": summary}
+    return {"invoices": all_invoices, "summary": summary}
 
 # ==================== KASGELD (CASH FUND) ROUTES ====================
 
