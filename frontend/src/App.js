@@ -155,6 +155,9 @@ function App() {
             <PublicRoute><Register /></PublicRoute>
           } />
           
+          {/* Public Contract Signing Page (no auth required) */}
+          <Route path="/onderteken/:token" element={<OndertekeningPage />} />
+          
           {/* Protected Routes */}
           <Route path="/" element={
             <ProtectedRoute><Layout /></ProtectedRoute>
@@ -190,6 +193,9 @@ function App() {
             } />
             <Route path="leningen" element={
               <SubscriptionRoute><Leningen /></SubscriptionRoute>
+            } />
+            <Route path="contracten" element={
+              <SubscriptionRoute><Contracten /></SubscriptionRoute>
             } />
             <Route path="deposits" element={
               <SubscriptionRoute><Deposits /></SubscriptionRoute>
