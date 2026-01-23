@@ -411,6 +411,76 @@ export default function Instellingen() {
               </div>
             </div>
 
+            {/* Payment Deadline Settings */}
+            <div className="pt-4 border-t">
+              <div className="flex items-center gap-2 mb-4">
+                <Clock className="w-4 h-4 text-primary" />
+                <Label className="text-sm font-medium">Betaaldeadline</Label>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Stel in wanneer de huur uiterlijk betaald moet zijn. Bijvoorbeeld: "Januari huur moet voor 6 februari betaald zijn"
+              </p>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Deadline in volgende maand?</Label>
+                  <Select 
+                    value={String(rentSettings.payment_deadline_month_offset)} 
+                    onValueChange={(v) => setRentSettings({...rentSettings, payment_deadline_month_offset: parseInt(v)})}
+                  >
+                    <SelectTrigger data-testid="deadline-month-offset">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Dezelfde maand</SelectItem>
+                      <SelectItem value="1">Volgende maand</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Moet de betaling in dezelfde maand of volgende maand zijn
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Deadline dag</Label>
+                  <Select 
+                    value={String(rentSettings.payment_deadline_day)} 
+                    onValueChange={(v) => setRentSettings({...rentSettings, payment_deadline_day: parseInt(v)})}
+                    disabled={rentSettings.payment_deadline_month_offset === 0 && rentSettings.payment_deadline_day === 0}
+                  >
+                    <SelectTrigger data-testid="deadline-day">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Niet ingesteld</SelectItem>
+                      {[...Array(28)].map((_, i) => (
+                        <SelectItem key={i + 1} value={String(i + 1)}>
+                          {i + 1}e
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Op welke dag moet de huur uiterlijk betaald zijn
+                  </p>
+                </div>
+              </div>
+              
+              {/* Preview */}
+              {(rentSettings.payment_deadline_day > 0 || rentSettings.payment_deadline_month_offset > 0) && (
+                <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                  <p className="text-sm">
+                    <span className="font-medium">Voorbeeld: </span>
+                    Huur van januari moet uiterlijk{' '}
+                    <span className="font-semibold text-primary">
+                      {rentSettings.payment_deadline_day || rentSettings.rent_due_day}{' '}
+                      {rentSettings.payment_deadline_month_offset === 1 ? 'februari' : 'januari'}
+                    </span>
+                    {' '}betaald zijn.
+                  </p>
+                </div>
+              )}
+            </div>
+
             <Button 
               type="button" 
               onClick={handleSaveRentSettings}
