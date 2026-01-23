@@ -1975,6 +1975,296 @@ async def delete_salary_payment(salary_id: str, current_user: dict = Depends(get
         raise HTTPException(status_code=404, detail="Salarisbetaling niet gevonden")
     return {"message": "Salarisbetaling verwijderd"}
 
+# ==================== PDF LOONSTROOK (PAYSLIP) ====================
+
+def create_payslip_pdf(salary, employee, user):
+    """Create a modern styled payslip PDF"""
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer, 
+        pagesize=A4, 
+        rightMargin=1.5*cm, 
+        leftMargin=1.5*cm, 
+        topMargin=1.5*cm, 
+        bottomMargin=1.5*cm
+    )
+    
+    # Colors
+    PRIMARY_GREEN = colors.HexColor('#0caf60')
+    DARK_TEXT = colors.HexColor('#1a1a1a')
+    GRAY_TEXT = colors.HexColor('#666666')
+    LIGHT_GRAY = colors.HexColor('#f5f5f5')
+    WHITE = colors.white
+    
+    # Styles
+    styles = getSampleStyleSheet()
+    
+    title_style = ParagraphStyle(
+        'PayslipTitle',
+        parent=styles['Heading1'],
+        fontSize=28,
+        textColor=DARK_TEXT,
+        fontName='Helvetica-Bold',
+        spaceAfter=0,
+        alignment=TA_RIGHT
+    )
+    
+    company_style = ParagraphStyle(
+        'CompanyName',
+        parent=styles['Normal'],
+        fontSize=18,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        spaceAfter=5
+    )
+    
+    section_header = ParagraphStyle(
+        'SectionHeader',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        spaceAfter=8,
+        spaceBefore=15
+    )
+    
+    normal_text = ParagraphStyle(
+        'NormalText',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=DARK_TEXT,
+        fontName='Helvetica',
+        leading=14
+    )
+    
+    small_text = ParagraphStyle(
+        'SmallText',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=GRAY_TEXT,
+        fontName='Helvetica',
+        leading=12
+    )
+    
+    bold_text = ParagraphStyle(
+        'BoldText',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=DARK_TEXT,
+        fontName='Helvetica-Bold'
+    )
+    
+    elements = []
+    
+    # Company name from user
+    company_name = user.get("company_name") if user and user.get("company_name") else "Facturatie N.V."
+    
+    # === HEADER SECTION ===
+    header_data = []
+    
+    # Left side: Logo or Company name
+    left_content = []
+    if user and user.get("logo"):
+        try:
+            logo_data = user["logo"]
+            if "," in logo_data:
+                logo_data = logo_data.split(",")[1]
+            logo_bytes = base64.b64decode(logo_data)
+            logo_buffer = BytesIO(logo_bytes)
+            logo_img = Image(logo_buffer, width=4*cm, height=2*cm)
+            left_content.append(logo_img)
+        except Exception as e:
+            logger.error(f"Error adding logo: {e}")
+            left_content.append(Paragraph(company_name, company_style))
+    else:
+        left_content.append(Paragraph(company_name, company_style))
+    
+    left_content.append(Paragraph("Verhuurbeheersysteem", small_text))
+    
+    # Right side: LOONSTROOK title
+    right_content = [Paragraph("LOONSTROOK", title_style)]
+    
+    header_table = Table(
+        [[left_content, right_content]],
+        colWidths=[10*cm, 7*cm]
+    )
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+    ]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 15))
+    
+    # Green line separator
+    elements.append(HRFlowable(width="100%", thickness=3, color=PRIMARY_GREEN, spaceBefore=5, spaceAfter=15))
+    
+    # === PAYSLIP DETAILS ROW ===
+    payslip_num = salary["id"][:8].upper()
+    payment_date = salary.get("payment_date", "-")
+    months_nl = ['', 'Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
+                 'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December']
+    period = f"{months_nl[salary.get('period_month', 1)]} {salary.get('period_year', '-')}"
+    
+    details_data = [
+        [
+            Paragraph("<b>Loonstrook Nr:</b>", normal_text),
+            Paragraph(payslip_num, bold_text),
+            Paragraph("<b>Betaaldatum:</b>", normal_text),
+            Paragraph(payment_date, bold_text)
+        ]
+    ]
+    details_table = Table(details_data, colWidths=[3*cm, 5*cm, 3*cm, 6*cm])
+    details_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+    ]))
+    elements.append(details_table)
+    elements.append(Spacer(1, 20))
+    
+    # === EMPLOYEE INFO ===
+    emp_name = employee["name"] if employee else "Onbekend"
+    emp_position = employee.get("position", "-") if employee else "-"
+    emp_phone = employee.get("phone", "-") if employee else "-"
+    emp_email = employee.get("email", "-") if employee else "-"
+    emp_start = employee.get("start_date", "-") if employee else "-"
+    
+    info_left = [
+        [Paragraph("WERKNEMER", section_header)],
+        [Paragraph(f"<b>{emp_name}</b>", normal_text)],
+        [Paragraph(f"Functie: {emp_position}", small_text)],
+        [Paragraph(f"Tel: {emp_phone}", small_text)],
+        [Paragraph(f"Email: {emp_email}", small_text)],
+    ]
+    
+    info_right = [
+        [Paragraph("PERIODE", section_header)],
+        [Paragraph(f"<b>{period}</b>", normal_text)],
+        [Paragraph(f"In dienst sinds: {emp_start}", small_text)],
+        [Paragraph("", small_text)],
+        [Paragraph("", small_text)],
+    ]
+    
+    info_table = Table(
+        [[Table(info_left), Table(info_right)]],
+        colWidths=[9*cm, 8*cm]
+    )
+    info_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 25))
+    
+    # === PAYMENT TABLE ===
+    amount = salary.get("amount", 0)
+    description = salary.get("description") or f"Salaris {period}"
+    
+    table_header = ['OMSCHRIJVING', 'PERIODE', 'BEDRAG']
+    table_data = [
+        table_header,
+        [description, period, format_currency(amount)]
+    ]
+    
+    items_table = Table(table_data, colWidths=[9*cm, 4*cm, 4*cm])
+    items_table.setStyle(TableStyle([
+        # Header style
+        ('BACKGROUND', (0, 0), (-1, 0), DARK_TEXT),
+        ('TEXTCOLOR', (0, 0), (-1, 0), WHITE),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+        ('TOPPADDING', (0, 0), (-1, 0), 12),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        
+        # Data rows
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 1), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 10),
+        ('BACKGROUND', (0, 1), (-1, 1), LIGHT_GRAY),
+        ('ALIGN', (-1, 1), (-1, -1), 'RIGHT'),
+        
+        # Grid
+        ('LINEBELOW', (0, 0), (-1, 0), 1, PRIMARY_GREEN),
+        ('LINEBELOW', (0, -1), (-1, -1), 1, colors.HexColor('#e0e0e0')),
+    ]))
+    elements.append(items_table)
+    elements.append(Spacer(1, 20))
+    
+    # === TOTALS SECTION ===
+    totals_data = [
+        ['Bruto salaris:', format_currency(amount)],
+        ['Inhoudingen:', format_currency(0)],
+        ['', ''],
+        ['NETTO UITBETAALD:', format_currency(amount)],
+    ]
+    
+    totals_table = Table(totals_data, colWidths=[10*cm, 4*cm, 3*cm])
+    totals_table.setStyle(TableStyle([
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('ALIGN', (0, 0), (0, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 2), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, 2), 10),
+        ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 3), (-1, 3), 14),
+        ('TEXTCOLOR', (0, 3), (-1, 3), PRIMARY_GREEN),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 3), (-1, 3), 10),
+        ('LINEABOVE', (0, 3), (-1, 3), 2, PRIMARY_GREEN),
+    ]))
+    
+    totals_wrapper = Table([[totals_table]], colWidths=[17*cm])
+    totals_wrapper.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, 0), 'RIGHT'),
+    ]))
+    elements.append(totals_wrapper)
+    elements.append(Spacer(1, 30))
+    
+    # === FOOTER ===
+    elements.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#e0e0e0'), spaceBefore=10, spaceAfter=15))
+    
+    footer_style = ParagraphStyle(
+        'Footer',
+        parent=styles['Normal'],
+        fontSize=8,
+        textColor=GRAY_TEXT,
+        fontName='Helvetica',
+        alignment=TA_CENTER
+    )
+    elements.append(Paragraph(f"Dit document is gegenereerd door {company_name}", footer_style))
+    elements.append(Paragraph("Bewaar deze loonstrook voor uw administratie.", footer_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    return buffer
+
+@api_router.get("/salaries/{salary_id}/pdf")
+async def generate_payslip_pdf(salary_id: str, current_user: dict = Depends(get_current_active_user)):
+    """Generate PDF payslip for a salary payment"""
+    # Get salary data
+    salary = await db.salaries.find_one(
+        {"id": salary_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not salary:
+        raise HTTPException(status_code=404, detail="Salarisbetaling niet gevonden")
+    
+    employee = await db.employees.find_one({"id": salary["employee_id"]}, {"_id": 0})
+    
+    # Get user logo and company name
+    user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "logo": 1, "company_name": 1})
+    
+    # Create PDF
+    buffer = create_payslip_pdf(salary, employee, user)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=loonstrook_{salary_id[:8]}.pdf"
+        }
+    )
+
 # ==================== WISSELKOERS (EXCHANGE RATE) ROUTES ====================
 
 # Cache for exchange rate (to avoid too many API calls)
