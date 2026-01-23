@@ -46,7 +46,9 @@ export default function Instellingen() {
   const [rentSettings, setRentSettings] = useState({
     rent_due_day: 1,
     payment_frequency: 'monthly',
-    grace_period_days: 5
+    grace_period_days: 5,
+    payment_deadline_day: 0,
+    payment_deadline_month_offset: 0
   });
   
   // Password form
