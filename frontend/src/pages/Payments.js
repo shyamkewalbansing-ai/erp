@@ -549,7 +549,7 @@ export default function Payments() {
               <Label>Type betaling *</Label>
               <Select 
                 value={formData.payment_type} 
-                onValueChange={(value) => setFormData({ ...formData, payment_type: value })}
+                onValueChange={(value) => setFormData({ ...formData, payment_type: value, loan_id: '' })}
               >
                 <SelectTrigger data-testid="payment-type-select">
                   <SelectValue />
@@ -563,6 +563,41 @@ export default function Payments() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Loan selection when payment_type is 'loan' */}
+            {formData.payment_type === 'loan' && (
+              <div className="space-y-2">
+                <Label>Selecteer Lening *</Label>
+                {tenantLoans.length > 0 ? (
+                  <Select 
+                    value={formData.loan_id} 
+                    onValueChange={(value) => {
+                      const loan = tenantLoans.find(l => l.id === value);
+                      setFormData({ 
+                        ...formData, 
+                        loan_id: value,
+                        amount: loan ? loan.remaining.toString() : ''
+                      });
+                    }}
+                  >
+                    <SelectTrigger data-testid="payment-loan-select">
+                      <SelectValue placeholder="Selecteer lening" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tenantLoans.map((loan) => (
+                        <SelectItem key={loan.id} value={loan.id}>
+                          {loan.loan_date} - {loan.description || 'Lening'} - Openstaand: {formatCurrency(loan.remaining)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <p className="text-sm text-muted-foreground p-2 bg-muted rounded">
+                    Deze huurder heeft geen openstaande leningen
+                  </p>
+                )}
+              </div>
+            )}
 
             {formData.payment_type === 'rent' && (
               <div className="grid grid-cols-2 gap-4">
