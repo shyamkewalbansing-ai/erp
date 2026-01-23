@@ -37,6 +37,7 @@ export default function Facturen() {
   const [summary, setSummary] = useState({
     total_invoices: 0,
     paid: 0,
+    partial: 0,
     unpaid: 0,
     total_amount: 0,
     paid_amount: 0,
@@ -83,9 +84,10 @@ export default function Facturen() {
   const filteredSummary = {
     total: filteredInvoices.length,
     paid: filteredInvoices.filter(i => i.status === 'paid').length,
+    partial: filteredInvoices.filter(i => i.status === 'partial').length,
     unpaid: filteredInvoices.filter(i => i.status === 'unpaid').length,
-    paidAmount: filteredInvoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + i.amount, 0),
-    unpaidAmount: filteredInvoices.filter(i => i.status === 'unpaid').reduce((sum, i) => sum + i.amount, 0)
+    paidAmount: filteredInvoices.reduce((sum, i) => sum + i.amount_paid, 0),
+    unpaidAmount: filteredInvoices.reduce((sum, i) => sum + i.remaining, 0)
   };
 
   if (loading) {
