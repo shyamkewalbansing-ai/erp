@@ -324,6 +324,106 @@ export default function Instellingen() {
         </Card>
       )}
 
+      {/* Rent Settings - Only for customers */}
+      {user?.role !== 'superadmin' && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-primary" />
+              <CardTitle>Huurinstellingen</CardTitle>
+            </div>
+            <CardDescription>
+              Configureer wanneer huur verschuldigd is en de betalingsfrequentie
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Huur verschuldigd op dag</Label>
+                <Select 
+                  value={String(rentSettings.rent_due_day)} 
+                  onValueChange={(v) => setRentSettings({...rentSettings, rent_due_day: parseInt(v)})}
+                >
+                  <SelectTrigger data-testid="rent-due-day">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[...Array(28)].map((_, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>
+                        {i + 1}e van de maand
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Op welke dag van de maand is huur verschuldigd
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Betalingsfrequentie</Label>
+                <Select 
+                  value={rentSettings.payment_frequency} 
+                  onValueChange={(v) => setRentSettings({...rentSettings, payment_frequency: v})}
+                >
+                  <SelectTrigger data-testid="payment-frequency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly">Maandelijks</SelectItem>
+                    <SelectItem value="weekly">Wekelijks</SelectItem>
+                    <SelectItem value="biweekly">Tweewekelijks</SelectItem>
+                    <SelectItem value="quarterly">Per kwartaal</SelectItem>
+                    <SelectItem value="yearly">Jaarlijks</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Hoe vaak huurders moeten betalen
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Betalingstermijn (dagen)</Label>
+                <Select 
+                  value={String(rentSettings.grace_period_days)} 
+                  onValueChange={(v) => setRentSettings({...rentSettings, grace_period_days: parseInt(v)})}
+                >
+                  <SelectTrigger data-testid="grace-period">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Geen (direct te laat)</SelectItem>
+                    <SelectItem value="3">3 dagen</SelectItem>
+                    <SelectItem value="5">5 dagen</SelectItem>
+                    <SelectItem value="7">7 dagen</SelectItem>
+                    <SelectItem value="10">10 dagen</SelectItem>
+                    <SelectItem value="14">14 dagen</SelectItem>
+                    <SelectItem value="30">30 dagen</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Aantal dagen na vervaldatum voordat het als "te laat" telt
+                </p>
+              </div>
+            </div>
+
+            <Button 
+              type="button" 
+              onClick={handleSaveRentSettings}
+              disabled={savingRent}
+              data-testid="save-rent-settings"
+            >
+              {savingRent ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Huurinstellingen Opslaan
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Profile Settings */}
       <Card>
         <CardHeader>
