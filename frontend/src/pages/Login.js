@@ -121,7 +121,17 @@ export default function Login() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Wachtwoord</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">Wachtwoord</Label>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-primary hover:underline"
+                  data-testid="forgot-password-link"
+                >
+                  Wachtwoord vergeten?
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
