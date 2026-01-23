@@ -70,6 +70,7 @@ import {
 
 const PAYMENT_TYPES = [
   { value: 'rent', label: 'Huur' },
+  { value: 'loan', label: 'Lening terugbetaling' },
   { value: 'deposit', label: 'Borg' },
   { value: 'other', label: 'Overig' },
 ];
