@@ -1,0 +1,128 @@
+{
+  "summary": "Dashboard and Rent Settings features testing complete. Backend: 10/10 tests passed (100%). Frontend: All features verified and working correctly.",
+  
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  
+  "passed_tests": [
+    "Backend: GET /api/dashboard returns 200 with correct structure",
+    "Backend: Dashboard includes total_outstanding_loans field",
+    "Backend: Dashboard includes total_outstanding field (rent)",
+    "Backend: Dashboard includes total_income_this_month field",
+    "Backend: Combined outstanding = rent + loans calculation works",
+    "Backend: GET /api/profile returns rent settings with payment_deadline fields",
+    "Backend: PUT /api/profile/rent-settings updates deadline settings",
+    "Backend: Rent settings are persisted correctly",
+    "Backend: Rent settings validation rejects invalid deadline day (>28)",
+    "Backend: Dashboard income is based on payment_date (not period)",
+    "Frontend: Dashboard 'Openstaand' card shows combined amount (SRD 300,00)",
+    "Frontend: Dashboard 'Openstaand' shows subtitle 'incl. leningen SRD 300,00'",
+    "Frontend: Dashboard 'Inkomsten deze maand' shows SRD 2.700,00",
+    "Frontend: Sidebar 'Uitloggen' button is visible at bottom (y=1028)",
+    "Frontend: Instellingen has 'Betaaldeadline' section",
+    "Frontend: Betaaldeadline has 'Deadline in volgende maand?' dropdown",
+    "Frontend: Betaaldeadline has 'Deadline dag' dropdown",
+    "Frontend: Betaaldeadline preview shows example text",
+    "Frontend: 'Huurinstellingen Opslaan' button saves settings successfully"
+  ],
+  
+  "features_verified": {
+    "feature_1_dashboard_openstaand_combined": {
+      "status": "PASSED",
+      "description": "Dashboard 'Openstaand' card shows combined rent + loan outstanding amount (SRD 300,00)"
+    },
+    "feature_2_dashboard_openstaand_subtitle": {
+      "status": "PASSED",
+      "description": "Dashboard 'Openstaand' shows subtitle 'incl. leningen SRD 300,00' when loans are outstanding"
+    },
+    "feature_3_dashboard_income_this_month": {
+      "status": "PASSED",
+      "description": "Dashboard 'Inkomsten deze maand' shows correct income (SRD 2.700,00) based on payment_date"
+    },
+    "feature_4_sidebar_logout_visible": {
+      "status": "PASSED",
+      "description": "Sidebar 'Uitloggen' button is always visible at bottom with mt-auto and flex-shrink-0"
+    },
+    "feature_5_betaaldeadline_section": {
+      "status": "PASSED",
+      "description": "Huurinstellingen has 'Betaaldeadline' section with month offset and deadline day options"
+    },
+    "feature_6_betaaldeadline_preview": {
+      "status": "PASSED",
+      "description": "Betaaldeadline preview shows example like 'Huur van januari moet uiterlijk X februari betaald zijn'"
+    },
+    "feature_7_rent_settings_save": {
+      "status": "PASSED",
+      "description": "Rent settings can be saved with new deadline fields (payment_deadline_day, payment_deadline_month_offset)"
+    }
+  },
+  
+  "test_report_links": [
+    "/app/backend/tests/test_iteration11.py",
+    "/app/test_reports/pytest/pytest_iteration11.xml"
+  ],
+  
+  "action_items": [],
+  
+  "critical_code_review_comments": [],
+  
+  "updated_files": [
+    "/app/backend/tests/test_iteration11.py"
+  ],
+  
+  "success_rate": {
+    "backend": "100% (10/10 tests passed)",
+    "frontend": "100% (all 7 features verified)"
+  },
+  
+  "test_credentials": {
+    "customer_account": {
+      "email": "klant@test.com",
+      "password": "test123"
+    },
+    "superadmin_account": {
+      "email": "admin@facturatie.sr",
+      "password": "admin123"
+    }
+  },
+  
+  "seed_data_verified": {
+    "tenant": "Jan Jansen",
+    "apartment": "Appartement A1 (rent: SRD 2500)",
+    "loan": {
+      "amount": 500,
+      "amount_paid": 200,
+      "remaining": 300,
+      "status": "partial"
+    },
+    "payments_jan_2026": [
+      {"type": "rent", "amount": 2500, "date": "2026-01-22"},
+      {"type": "loan", "amount": 200, "date": "2026-01-23"}
+    ],
+    "total_income_jan_2026": 2700
+  },
+  
+  "retest_needed": false,
+  
+  "should_main_agent_self_test": false,
+  
+  "context_for_next_testing_agent": "Dashboard and Rent Settings features have been fully tested. Key findings: 1) Dashboard 'Openstaand' now shows combined rent + loan outstanding with subtitle showing loan portion. 2) Dashboard 'Inkomsten deze maand' is based on payment_date (not period_month/period_year). 3) Sidebar logout button is fixed at bottom with mt-auto and flex-shrink-0. 4) Huurinstellingen has new Betaaldeadline section with payment_deadline_day and payment_deadline_month_offset fields. Test data: Jan Jansen with SRD 2500 rent paid, SRD 300 loan remaining, total income SRD 2700 for Jan 2026.",
+  
+  "api_verification": {
+    "dashboard_api": {
+      "GET /api/dashboard": "Returns total_outstanding (rent), total_outstanding_loans, total_income_this_month (based on payment_date)"
+    },
+    "rent_settings_api": {
+      "GET /api/profile": "Returns rent_due_day, payment_frequency, grace_period_days, payment_deadline_day, payment_deadline_month_offset",
+      "PUT /api/profile/rent-settings": "Updates all rent settings including new deadline fields"
+    }
+  }
+}
