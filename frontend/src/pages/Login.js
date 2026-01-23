@@ -177,6 +177,73 @@ export default function Login() {
           </p>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <Dialog open={showForgotPassword} onOpenChange={closeForgotPassword}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="w-5 h-5 text-primary" />
+              Wachtwoord vergeten
+            </DialogTitle>
+            <DialogDescription>
+              {resetSent 
+                ? 'Controleer uw e-mail voor verdere instructies.'
+                : 'Vul uw e-mailadres in om uw wachtwoord te resetten.'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {!resetSent ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">E-mailadres</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="reset-email"
+                    type="email"
+                    placeholder="naam@voorbeeld.com"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    className="pl-10"
+                    required
+                    data-testid="reset-email-input"
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={closeForgotPassword}
+                >
+                  Annuleren
+                </Button>
+                <Button type="submit" disabled={resetLoading} data-testid="reset-submit-btn">
+                  {resetLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : null}
+                  Verstuur reset link
+                </Button>
+              </DialogFooter>
+            </form>
+          ) : (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Mail className="w-8 h-8 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                Als het e-mailadres <strong>{resetEmail}</strong> in ons systeem voorkomt, 
+                ontvangt u binnen enkele minuten een e-mail met instructies om uw wachtwoord te resetten.
+              </p>
+              <Button onClick={closeForgotPassword} data-testid="close-reset-modal">
+                Terug naar inloggen
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
