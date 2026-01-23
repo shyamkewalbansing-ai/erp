@@ -75,7 +75,9 @@ export default function Instellingen() {
       setRentSettings({
         rent_due_day: response.data.rent_due_day || 1,
         payment_frequency: response.data.payment_frequency || 'monthly',
-        grace_period_days: response.data.grace_period_days || 5
+        grace_period_days: response.data.grace_period_days || 5,
+        payment_deadline_day: response.data.payment_deadline_day || 0,
+        payment_deadline_month_offset: response.data.payment_deadline_month_offset || 0
       });
     } catch (error) {
       toast.error('Fout bij het laden van profiel');
