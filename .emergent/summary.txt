@@ -1,59 +1,101 @@
 <analysis>**original_problem_statement:**
-The user requested a SaaS application for managing apartment rentals in Suriname, using SRD as the currency. The platform should support tenant, apartment, payment, and financial management (Kasgeld). A key requirement is a multi-tenant SaaS model with a Super Admin role to manage customer subscriptions, which cost SRD 3,500 per month. Subsequent requests added features for the superadmin to manage customers (create, edit, delete, reset passwords), and a custom domain mapping feature for customers. The user also requested a rebranding of the application from SuriRentals to Facturatie N.V..
+The user initially requested a SaaS application for managing apartment rentals in Suriname, branded as SuriRentals, with SRD as the currency. This included tenant, apartment, payment, and financial management (Kasgeld). The core was a multi-tenant model with a Super Admin managing customer subscriptions.
 
-**PRODUCT REQUIREMENTS:**
--   **Core Rental Management (For Customers):** Manage tenants, apartments, payments, deposits, maintenance costs, and employee salaries.
--   **Financial Management (For Customers):** A Kasgeld (cash fund) automatically funded by rent and debited for expenses, with SRD-to-EUR conversion.
--   **SaaS Subscription Model:**
-    -   A Super Admin role with a dedicated dashboard to manage customers and subscriptions.
-    -   Customer accounts have a 3-day trial upon registration.
-    -   After the trial, access is blocked until the superadmin manually activates the subscription.
-    -   Superadmin can create, edit, and delete customers and their subscriptions.
-    -   Superadmin can generate PDF receipts for subscription payments.
--   **User & Profile Management:** All users can change their own profile info (name, email) and password.
--   **Custom Domains:** Customers can map their own domain name to the application via an A record. The superadmin manages these domains.
--   **Branding:** The application should be branded as Facturatie N.V..
+Subsequent requests evolved the application significantly:
+-   **Rebranding:** The application was rebranded from SuriRentals to Facturatie N.V..
+-   **Custom Branding for Customers:** Customers can now upload their own logo, which appears on their dashboard, sidebar, and PDF receipts.
+-   **Modern PDF Invoices:** The design for all PDF receipts (rent payments for customers, subscription payments for superadmin) was updated to a modern layout based on a user-provided image.
+-   **Advanced Subscription Management:** The superadmin can now create customers with different plans: a 3-day trial, a pre-activated paid subscription, a fully free plan for permanent access, or a blocked account pending manual activation.
+-   **Automated Email Notifications:** Upon customer creation, an email should be sent with their credentials and the login URL, using the user's Hostinger SMTP server.
+-   **Customizable Rent Cycles:** Customers can configure their own rent payment rules, including the day of the month rent is due and a grace period, which affects when a payment is marked as overdue.
+-   **Automated Maintenance (Cron Job):** A cron job was set up to run every minute to check for expired subscriptions, send reminder notifications, and perform daily database cleanup.
+-   **Deployment Automation:** An extensive, user-specific installation script () was created and debugged to automate deployment on the user's CloudPanel server.
+-   **New Feature Batch:** The user requested a batch of new features, including changes to maintenance cost allocation, PDF payslips, deposit refund PDFs, and more detailed balance views.
 
 **User's preferred language**: Dutch
 
 **what currently exists?**
-A complete full-stack application (FastAPI backend, React frontend) has been built. All core rental management features for customers are implemented. The multi-tenant SaaS model is fully functional, including a 3-day trial for new users and a comprehensive superadmin dashboard to manage customers, subscriptions, and custom domains. A key feature is an automated installation script () created to simplify deployment on the user's CloudPanel server, which was debugged over several interactions. The application is functionally complete based on all requests, except for the final rebranding task.
+A full-stack SaaS application (FastAPI + React) for rental management. The rebranding to Facturatie N.V. is complete. All core features, including tenant/apartment management, a superadmin dashboard, and customer subscription management, are implemented. Customers can upload their own logos, and all PDF receipts have been redesigned. An automated installation script () has been created and debugged for the user's specific CloudPanel environment. An email notification system for new customers is in place, though it has a delivery bug. The agent has just begun implementing a new batch of features requested by the user, starting with updates to the maintenance and kasgeld modules.
 
 **Last working item**:
-    - Last item agent was working: The user requested to rebrand the application from SuriRentals to Facturatie N.V..
-    - Status: NOT STARTED
+    - Last item agent was working: Implementing a batch of new features. The agent had just started the second item: **adding an option in the Maintenance section to specify if the cost should be deducted from the Kasgeld (landlord's cost) or is a cost for the tenant.**
+    - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? frontend testing agent
+    - Which testing method agent to use? both
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- None.
+  - Issue 1:  (P0) External Email Delivery Fails
+  - Issue 2:  (P1) Finish Maintenance Cost Allocation Feature
+  
+  **Issues Detail:**
+  - **Issue 1: External Email Delivery Fails**
+     - **Description:** The email notification system, which uses the user's Hostinger SMTP, successfully sends emails to internal addresses (e.g.,  to itself) but fails to deliver to external domains like Gmail. Logs show the email is sent successfully from the application, but it never arrives.
+     - **Attempted fixes:** The agent confirmed SMTP credentials are correct and the connection is successful via a manual test script. The issue was diagnosed as a probable DNS problem.
+     - **Next debug checklist:**
+       - Instruct the user to add an **SPF record** to their DNS settings for the  domain. The value should be .
+       - Instruct the user to check their Hostinger email settings for a **DKIM record** and add it to their DNS as a TXT record.
+       - After DNS changes, re-run the test script to send an email to an external address ().
+     - **Why fix this issue and what will be achieved with the fix?** This is a critical bug blocking a key feature. New customers are not receiving their login credentials, which breaks the onboarding flow.
+     - **Status:** NOT STARTED
+     - **Is recurring issue?** N
+     - **Should Test frontend/backend/both after fix?** backend
+     - **Blocked on other issue:** None
+
+  - **Issue 2: Finish Maintenance Cost Allocation Feature**
+     - **Description:** The agent was adding a feature to let users specify whether a maintenance cost is for the landlord (paid from Kasgeld) or for the tenant. The frontend changes have been started.
+     - **Attempted fixes:** The agent added state and a dropdown menu for Cost Type to the create/edit maintenance form in . The Kasgeld history was also updated to show maintenance items.
+     - **Next debug checklist:**
+       - **Backend ():**
+         - Modify the  Pydantic model and the database schema to include a  field (e.g., 'kasgeld' or 'tenant').
+         - Update the  and  endpoints to accept and save the .
+         - When a maintenance record with  is created or updated, ensure the amount is deducted from the kasgeld balance.
+       - **Frontend ():**
+         - Ensure the  function correctly sends the selected  to the backend API.
+         - Ensure the maintenance list table displays the cost type.
+     - **Why fix this issue and what will be achieved with the fix?** This will give landlords the flexibility to track all maintenance jobs without every cost automatically being deducted from their operational funds.
+     - **Status:** IN PROGRESS
+     - **Is recurring issue?** N
+     - **Should Test frontend/backend/both after fix?** both
+     - **Blocked on other issue:** None
 
 **In progress Task List**:
-- None.
+The user requested a batch of features. The agent has partially completed the first two. The rest are pending.
+  - **Task 1: (P0) Kasgeld - Show Maintenance & Salary in History**
+    - **Where to resume:** The agent already filtered the  page to show maintenance and salary transactions. This task is nearly complete but needs verification after the Maintenance Cost Allocation feature is finished.
+    - **What will be achieved with this?** The Kasgeld transaction history will provide a complete overview of all expenses (withdrawals, maintenance, and salaries).
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** frontend
+    - **Blocked on something:** Issue 2 (Finish Maintenance Cost Allocation Feature)
 
 **Upcoming and Future Tasks**
-    Upcoming Tasks:
-    - (P0) **Rebrand Application to Facturatie N.V.**: Search and replace all occurrences of SuriRentals across the entire frontend codebase, particularly in layout components, page titles, and static text. Verify the logo and name change in files like , , and .
+    **Upcoming Tasks:**
+    - (P1) **PDF Payslip for Employees:** When a salary is marked as paid in the Werknemers section, a button should be available to generate and download a PDF payslip for that specific payment.
+        - **File/Method:** Create a new PDF generation function in  and a new endpoint. Add a download button in .
+    - (P2) **PDF for Deposit Refund:** When a tenant's security deposit is refunded, a button should be available to generate a PDF confirmation of the refund.
+        - **File/Method:** Create a new PDF generation function in  and a new endpoint. Add a download button in the deposit management section ().
+    - (P3) **Show Deposit in Bekijk Saldo:** When a customer views the balance for a specific tenant (Bekijk Saldo), the security deposit amount for that tenant should also be displayed.
+        - **File/Method:** Update the backend endpoint that provides data for the balance view to include the deposit. Update the corresponding frontend component to display it.
+    - (P4) **Check for Outstanding Balance on Payment:** When a customer records a new rent payment, the system should check if that tenant has any outstanding overdue balance and suggest applying the payment to the oldest debt first.
+        - **File/Method:** Add logic to the payment creation endpoint in . The frontend () may need UI updates to show this.
 
-    Future Tasks:
+    **Future Tasks:**
     - (P1) **Automate Subscription Payments**: Integrate a payment gateway like Stripe to handle the recurring SRD 3,500 monthly subscription fee, removing the need for manual activation by the superadmin.
-    - (P1) **PDF Receipt Generation for Rent Payments**: The original request included generating receipts (kwitantie maken) for tenant rent payments. The current implementation only generates PDF receipts for SaaS subscription payments. This feature for the customer-facing side is still missing.
-    - (P2) **Email Notifications**: Implement automated email reminders for tenants about upcoming rent due dates.
+    - (P2) **Email Notifications for Rent Due Dates**: The cron job sends reminders for SaaS subscriptions, but the original request for tenant rent reminders is still pending.
 
 **Completed work in this session**
-- **SaaS Subscription Model**: Implemented a full multi-tenant system with a superadmin and customer roles.
-- **3-Day Trial Period**: New customers are automatically placed on a 3-day trial.
-- **Superadmin Dashboard**: Built a comprehensive admin page () for the superadmin to manage the entire SaaS platform.
-- **Full Customer Management**: Superadmin can create, view, edit, delete, activate, and deactivate customer accounts.
-- **Subscription & Payment Management**: Superadmin can view subscription payment history, generate PDF receipts for payments, and delete payment records.
-- **User Profile & Security**: Implemented features for all users to change their profile information and password (), and for the superadmin to reset customer passwords.
-- **Custom Domain Feature**: Created a system for customers to use their own domain. The admin dashboard provides DNS instructions (with the user's server IP) and an Nginx configuration generator to simplify setup.
-- **Role-Based Access Control**: Refined the application to strictly separate superadmin and customer views and permissions. Superadmins are automatically redirected to the admin dashboard and cannot access rental management features.
-- **Automated Installation Script**: Created and extensively debugged a shell script () to automate the entire deployment process on the user's CloudPanel server, including dependency installation and service configuration.
+- **Full Rebranding to Facturatie N.V.:** Replaced all instances of SuriRentals and updated the logo across the application, with multiple iterative UI adjustments based on user feedback.
+- **Customer Logo Upload & Display:** Implemented a feature for customers to upload their own logo, which now appears on the dashboard, sidebar, and PDF receipts.
+- **Modern PDF Receipt Redesign:** Replaced the simple PDF receipt with a professionally designed layout for both rent and subscription payments.
+- **Advanced Subscription Options:** Added a Fully Free plan to the customer creation flow for the superadmin.
+- **Automated Installation & Debugging:** Created and heavily debugged an  script for the user's specific CloudPanel server, resolving issues with Node.js versions, Nginx conflicts, and systemd services.
+- **SMTP Email Integration:** Configured the backend to send a welcome email with credentials to new customers.
+- **Custom Rent Cycle Settings:** Added a section in Instellingen for customers to define their rent due day and grace period.
+- **Cron Job for Automated Tasks:** Created backend endpoints and a setup script for cron jobs to manage subscriptions and clean the database.
+- **Removed Emergent Branding:** The Made with Emergent badge was removed from the application's UI.
 
 **Earlier issues found/mentioned but not fixed**
-   - **PDF Receipt for Rent Payments**: The initial requirement to generate PDF receipts for tenants' rent payments was not implemented. The agent built PDF generation for the superadmin's subscription payments instead. This is now listed under Future Tasks.
+   - **Email Delivery to External Domains:** This is a critical bug identified during the session. While the SMTP connection works, emails are not being delivered to external providers like Gmail. This is now listed as the highest priority issue (P0) in the All Pending/In progress Issue list.
 
 **Known issue recurrence from previous fork**
   - None
@@ -62,81 +104,87 @@ A complete full-stack application (FastAPI backend, React frontend) has been bui
 
 
 **Key Technical Concepts**
-- **Backend**: FastAPI, Motor, Pydantic, JWT.  was added for PDF generation.
-- **Frontend**: React, React Router, Axios, Tailwind CSS, Shadcn/UI. Features heavy conditional rendering based on user role ( vs. ).
-- **Database**: MongoDB.
-- **Deployment**: A custom shell script () was created to automate deployment on a CloudPanel server using  and Nginx.
+- **Backend**: FastAPI, Motor, Pydantic, JWT.  was heavily modified for the new PDF design.  was used for sending emails.
+- **Frontend**: React, React Router, Axios, Tailwind CSS. Heavy use of state and context for new settings.
+- **Deployment**: Deep, user-specific work with CloudPanel, Nginx, Systemd, and Certbot. Heavy reliance on custom bash scripts (, ).
 
 **key DB schema**
-  - **users**: 
-  - **domains**: (New Collection) 
-  - **subscriptions**: (New Collection, implicitly managed within ) 
-  - (Other collections like , , , etc. remain unchanged)
+  - **users**: Now includes  and .
+  - **maintenance_records**: The schema is being updated to include  ('kasgeld' or 'tenant').
 
 **changes in tech stack**
-  -  was added to  for PDF generation.
+  - No new package dependencies were added, but the standard Python  library was integrated for email functionality.
 
 **All files of reference**
-- : Heavily modified to add all admin, user management, and custom domain endpoints.
-- : New file. A large, complex component that serves as the superadmin's main interface.
-- : New file for user profile and password settings.
-- : Modified with advanced role-based routing logic.
-- : Modified for role-based navigation.
-- : New file. A critical shell script for deploying the application on the user's server.
+- : Contains all backend logic. Critical for all pending tasks.
+- : For user-specific settings.
+- : Contains the in-progress maintenance feature.
+- : For the transaction history view.
+- : The primary deployment script for the user's server.
+- : Script for configuring background tasks on the server.
+- : Now requires SMTP credentials for email to work.
 
 **Areas that need refactoring**:
-- **Critical:** The frontend component at  is over 1500 lines long. It is extremely fragile and difficult to maintain. It should be broken down into smaller, more manageable components for each piece of functionality (e.g., , , ).
-- **High:** The backend in  remains a large monolith. It should be broken down into separate files for routers, models, and services to improve maintainability, especially with the addition of extensive admin logic.
+- **Critical:**  is now over 3000 lines long and handles everything from API routing and database logic to PDF generation and cron tasks. It urgently needs to be broken down into a modular structure (e.g., routers, services, models).
+- **High:**  remains a very large, monolithic component that is difficult and risky to modify.
 
 **key api endpoints**
-- , , , , , 
-- , 
+-  (POST, DELETE)
+-  (PUT)
+-  (GET)
+-  (POST) - Modified to accept  (, ,                total        used        free      shared  buff/cache   available
+Mem:        32816340    15409956     4077692       47540    13763172    17406384
+Swap:              0           0           0, ).
+-  (POST, PUT) - Being modified to accept .
 
 **Critical Info for New Agent**
-- The user's primary goal is to self-host the application on their CloudPanel server. The  script is the main tool for this. Any changes must be compatible with this script.
-- The user has limited technical expertise, so instructions and interactions must be kept simple and clear.
-- The immediate task is a simple rebranding from SuriRentals to Facturatie N.V.. This is a high-priority cosmetic change for the user.
-- The  frontend file is very brittle. Be extremely careful when making changes to it and strongly consider refactoring it if any significant modifications are requested in that area.
+- The user's top priority is fixing the remaining issues and implementing the new features. The most critical bug is the **failure of email delivery to external domains (Gmail, etc.)**. This should be addressed first by guiding the user to update their DNS records (SPF, DKIM).
+- All deployment and update instructions for the user must be tailored to their specific CloudPanel environment and file paths (). The user relies on  and build commands.
+- The SMTP credentials ( / ) are sensitive and must be configured on the user's server in , not committed to the repository.
+- The  and  files are extremely fragile. Be cautious with edits. When implementing new features, consider opportunities to extract logic into smaller, dedicated functions or components, even if a full refactor isn't possible.
 
 **documents and test reports created in this job**
-  - /app/memory/PRD.md (updated)
-  - /app/test_reports/iteration_4.json
-  - /app/install.sh (new)
-  - /app/INSTALLATIE.md (new)
+  - 
+  - 
+  -  (updated with new paths and commands)
+  -  (updated with completed features)
 
-**Last 10 User Messages and any pending HUMAN messages**
-1.  **Request (Current):** SuriRentals logo veranderen naar Facturatie N.V. (Change SuriRentals logo to Facturatie N.V.). - **Status: Pending**
-2.  **Confirmation:** User confirmed the first registered user becomes superadmin. - **Status: Done**
-3.  **Bug Report:** het werkt alleen ik zie geen superadmin account die de saas beheerd (it works but I don't see a superadmin account that manages the saas). - **Status: Resolved**
-4.  **Error Report:** Unknown command: "error"
-
-To see a list of supported npm commands, run:
-  npm help in the wrong directory. - **Status: Resolved**
-5.  **Error Report:** . - **Status: Resolved**
-6.  **Error Report:**  command failed. - **Status: Resolved**
-7.  **Error Report:** . - **Status: Resolved**
-8.  **Confirmation:** User confirmed they will run the provided  and  commands. - **Status: Done**
-9.  **Bug Report:** . - **Status: Resolved**
-10. **Bug Report:** . - **Status: Resolved**
+**Last 10 User Messages and any pending HUMAN messages** 
+1.  **Request:** Add custom rent settings (due day, grace period) for clients. **Status: Completed**
+2.  **Bug Report:** Customer logos on the dashboard are too small. **Status: Completed**
+3.  **Request (Multi-part):** 1. Show maintenance/salary costs in Kasgeld. 2. Add cost allocation for maintenance. 3. Generate PDF payslips. 4. Generate PDF for deposit refunds. 5. Show deposit in balance view. 6. Check outstanding balance on payment. **Status: In Progress**
+4.  **Request:** Set up a cron job for automated tasks (check subscriptions, send reminders, clean DB). **Status: Completed**
+5.  **Debug Request:** Help fix Nginx vhost for a new custom domain. **Status: Resolved**
+6.  **Debug Request:** Fix  error due to non-existent SSL certificate. **Status: Resolved**
+7.  **Request:** Add email notification on customer creation, providing SMTP details. **Status: Implemented**
+8.  **Bug Report:** klant krijg geen mail (customer receives no email). **Status: Diagnosed, Pending Fix**
+9.  **Confirmation:** Self-test email to  was received. **Status: Done**
+10. **Problem Statement:** User states their SMTP provider (Hostinger) is likely blocking emails and that DNS records (SPF/DKIM) are needed. **Status: Understood**
 
 **Project Health Check:**
-- **Broken:** None. The application is functional.
+- **Broken:** Email delivery to external domains.
 - **Mocked:** None.
-- **Fragile:**  is extremely large and prone to breaking.  is a large monolith.
+- **Fragile:** , .
 
 **3rd Party Integrations**
 - **Exchange Rate API:**  (no key required).
-- **ReportLab:** Python library for PDF generation (installed via pip).
+- **ReportLab:** Python library for PDF generation.
+- **Hostinger SMTP:** For sending emails. Requires user-provided credentials and correct DNS (SPF/DKIM) configuration to function properly.
 
 **Testing status**
-  - Testing agent used after significant changes: YES
+  - Testing agent used after significant changes: NO
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: []
   - Known regressions: None
 
 **Credentials to test flow:**
-- **Superadmin:** The first user to register on a fresh deployment becomes the superadmin. Alternatively, registering with the email  will grant superadmin rights. A common test credential used was  / .
-- **Customer:** Any subsequent user registration will create a customer account with a 3-day trial.
+- **Superadmin:** The first user registered on the server is the superadmin. A test account was created with  / .
+- **SMTP Credentials:**
+    -   **Host:** 
+    -   **Port:** 
+    -   **User:** 
+    -   **Password:** 
 
 **What agent forgot to execute**
-- The agent has not yet started the final user request to rebrand the application to Facturatie N.V..</analysis>
+- The agent correctly diagnosed the email delivery issue (missing DNS records) but did not guide the user on how to implement the fix. This is the most critical pending action.
+- The agent started the user's multi-part feature request but did not complete it. The remaining items are listed in the Upcoming and Future Tasks section.</analysis>
