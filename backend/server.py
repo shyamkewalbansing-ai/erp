@@ -2888,10 +2888,10 @@ async def request_subscription(current_user: dict = Depends(get_current_user)):
         "request_id": request_id,
         "amount": SUBSCRIPTION_PRICE_SRD,
         "bank_info": {
-            "bank": "De Surinaamsche Bank",
-            "rekening": "123456789",
+            "bank": "Hakrinbank",
+            "rekening": "205911044",
             "naam": "Facturatie N.V.",
-            "omschrijving": f"Abonnement {current_user['email']}"
+            "omschrijving": "+5978934982"
         }
     }
 
