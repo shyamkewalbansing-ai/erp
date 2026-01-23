@@ -2099,7 +2099,7 @@ class AdminCustomerCreate(BaseModel):
     email: EmailStr
     password: str
     company_name: Optional[str] = None
-    plan_type: str = "trial"  # 'trial', 'active', 'none'
+    plan_type: str = "trial"  # 'trial', 'active', 'none', 'free'
     subscription_months: int = 1
     payment_method: str = "bank_transfer"
     payment_reference: Optional[str] = None
@@ -2119,6 +2119,7 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
     # Calculate subscription end date based on plan_type
     subscription_end_date = None
     is_trial = False
+    is_free = False
     
     if customer_data.plan_type == "active":
         # Active subscription with payment
@@ -2127,6 +2128,10 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
         # 3-day trial
         subscription_end_date = (now + timedelta(days=TRIAL_DAYS)).isoformat()
         is_trial = True
+    elif customer_data.plan_type == "free":
+        # Free forever - set far future date
+        subscription_end_date = (now + timedelta(days=36500)).isoformat()  # 100 years
+        is_free = True
     else:
         # No plan - expired (blocked until activation)
         subscription_end_date = (now - timedelta(days=1)).isoformat()
@@ -2141,6 +2146,7 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
         "role": "customer",
         "subscription_end_date": subscription_end_date,
         "is_trial": is_trial,
+        "is_free": is_free,
         "created_at": now.isoformat()
     }
     
@@ -2168,6 +2174,10 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
         total_paid = amount
     
     status, end_date, _ = get_subscription_status(user_doc)
+    
+    # Override status for free accounts
+    if is_free:
+        status = "active"
     
     return CustomerResponse(
         id=user_id,
