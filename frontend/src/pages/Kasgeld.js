@@ -359,6 +359,7 @@ export default function Kasgeld() {
                   const isDeposit = transaction.transaction_type === 'deposit';
                   const isWithdrawal = transaction.transaction_type === 'withdrawal';
                   const isSalary = transaction.transaction_type === 'salary';
+                  const isMaintenance = transaction.transaction_type === 'maintenance';
                   
                   const isIncome = isDeposit;
                   
@@ -374,10 +375,12 @@ export default function Kasgeld() {
                         <span className={`status-badge ${
                           isDeposit ? 'bg-green-50 text-green-600' : 
                           isSalary ? 'bg-purple-50 text-purple-600' :
+                          isMaintenance ? 'bg-blue-50 text-blue-600' :
                           'bg-orange-50 text-orange-600'
                         }`}>
                           {isDeposit ? 'Storting' : 
-                           isSalary ? 'Salaris' : 'Opname'}
+                           isSalary ? 'Salaris' : 
+                           isMaintenance ? 'Onderhoud' : 'Opname'}
                         </span>
                       </TableCell>
                       <TableCell>{transaction.description || '-'}</TableCell>
