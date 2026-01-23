@@ -5,6 +5,7 @@ import {
   deletePayment, 
   getTenants,
   getApartments,
+  getTenantOutstanding,
   downloadReceipt,
   formatCurrency 
 } from '../lib/api';
@@ -17,7 +18,8 @@ import {
   Download,
   Trash2,
   Calendar,
-  FileText
+  FileText,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -60,6 +62,11 @@ import {
   TableHeader,
   TableRow,
 } from '../components/ui/table';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '../components/ui/alert';
 
 const PAYMENT_TYPES = [
   { value: 'rent', label: 'Huur' },
