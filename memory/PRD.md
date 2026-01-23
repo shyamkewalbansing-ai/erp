@@ -221,3 +221,4 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 4. **PDF Borg Terugbetaling**: Download knop bij terugbetaalde borgen in Borg pagina
 5. **Borg in Bekijk Saldo**: Borg bedrag en datum zichtbaar in huurder balans modal
 6. **Openstaand Saldo Check bij Betalingen**: Waarschuwing bij nieuwe betaling als huurder openstaande maanden heeft, met automatische selectie van oudste onbetaalde maand
+7. **Facturen Pagina**: Nieuw menu-item met overzicht van alle huur-facturen, status (betaald/openstaand), filters en openstaand saldo per huurder
