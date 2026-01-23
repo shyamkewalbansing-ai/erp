@@ -422,37 +422,70 @@ export default function Payments() {
                 <AlertTriangle className="h-4 w-4 text-orange-600" />
                 <AlertTitle className="text-orange-800">Openstaand saldo</AlertTitle>
                 <AlertDescription className="text-orange-700">
-                  <p className="mb-2">
-                    Deze huurder heeft <strong>{outstandingInfo.outstanding_months.length} openstaande maand(en)</strong>.
+                  <p className="mb-2 text-base font-semibold">
+                    Totaal openstaand: <span className="text-red-600">{formatCurrency(outstandingInfo.outstanding_amount)}</span>
                   </p>
-                  <p className="mb-2">
-                    Totaal openstaand: <strong>{formatCurrency(outstandingInfo.outstanding_amount)}</strong>
-                  </p>
-                  <p className="text-sm">
-                    Oudste onbetaalde maand: <strong>{outstandingInfo.outstanding_months[0]?.label}</strong>
-                  </p>
-                  {outstandingInfo.outstanding_months.length > 1 && (
-                    <div className="mt-2 pt-2 border-t border-orange-200">
-                      <p className="text-xs font-medium mb-1">Openstaande maanden:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {outstandingInfo.outstanding_months.slice(0, 6).map((m, i) => (
-                          <span 
-                            key={i} 
-                            className={`text-xs px-2 py-0.5 rounded ${
-                              m.month === formData.period_month && m.year === formData.period_year
-                                ? 'bg-orange-600 text-white'
-                                : 'bg-orange-100 text-orange-800'
-                            }`}
-                          >
-                            {m.label}
+                  
+                  {/* Summary counts */}
+                  <div className="flex gap-4 mb-2 text-sm">
+                    {outstandingInfo.unpaid_count > 0 && (
+                      <span className="bg-orange-100 px-2 py-0.5 rounded">
+                        {outstandingInfo.unpaid_count} onbetaald
+                      </span>
+                    )}
+                    {outstandingInfo.partial_count > 0 && (
+                      <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded">
+                        {outstandingInfo.partial_count} gedeeltelijk
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Partial payments details */}
+                  {outstandingInfo.partial_payments?.length > 0 && (
+                    <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded">
+                      <p className="text-xs font-bold text-blue-800 mb-1">Gedeeltelijk betaald:</p>
+                      {outstandingInfo.partial_payments.map((pm, i) => (
+                        <div key={i} className="text-xs text-blue-700 flex justify-between">
+                          <span>{pm.label}:</span>
+                          <span>
+                            <span className="text-green-600">{formatCurrency(pm.amount_paid)} betaald</span>
+                            {' • '}
+                            <span className="text-red-600 font-medium">{formatCurrency(pm.remaining)} nog open</span>
                           </span>
-                        ))}
-                        {outstandingInfo.outstanding_months.length > 6 && (
-                          <span className="text-xs text-orange-600">+{outstandingInfo.outstanding_months.length - 6} meer</span>
-                        )}
-                      </div>
+                        </div>
+                      ))}
                     </div>
                   )}
+
+                  {/* Outstanding months list */}
+                  <div className="mt-2 pt-2 border-t border-orange-200">
+                    <p className="text-xs font-medium mb-1">Openstaande maanden (oudste eerst):</p>
+                    <div className="flex flex-wrap gap-1">
+                      {outstandingInfo.outstanding_months.slice(0, 8).map((m, i) => (
+                        <span 
+                          key={i} 
+                          className={`text-xs px-2 py-0.5 rounded ${
+                            m.month === formData.period_month && m.year === formData.period_year
+                              ? 'bg-orange-600 text-white'
+                              : m.status === 'partial'
+                                ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                                : 'bg-orange-100 text-orange-800'
+                          }`}
+                          title={m.status === 'partial' 
+                            ? `${formatCurrency(m.amount_paid)} betaald, ${formatCurrency(m.remaining)} open`
+                            : `${formatCurrency(m.amount_due)} onbetaald`
+                          }
+                        >
+                          {m.label}
+                          {m.status === 'partial' && ' ⚡'}
+                        </span>
+                      ))}
+                      {outstandingInfo.outstanding_months.length > 8 && (
+                        <span className="text-xs text-orange-600">+{outstandingInfo.outstanding_months.length - 8} meer</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-orange-600 mt-1 italic">⚡ = gedeeltelijk betaald</p>
+                  </div>
                 </AlertDescription>
               </Alert>
             )}
