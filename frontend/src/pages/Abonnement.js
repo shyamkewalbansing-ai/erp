@@ -217,18 +217,18 @@ export default function Abonnement() {
             <div className="grid gap-3">
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Bank</span>
-                <span className="font-medium">De Surinaamsche Bank</span>
+                <span className="font-medium">Hakrinbank</span>
               </div>
               
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Rekeningnummer</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono font-medium">123456789</span>
+                  <span className="font-mono font-medium">205911044</span>
                   <Button 
                     variant="ghost" 
                     size="icon"
                     className="h-6 w-6"
-                    onClick={() => copyToClipboard('123456789')}
+                    onClick={() => copyToClipboard('205911044')}
                   >
                     <Copy className="w-3 h-3" />
                   </Button>
@@ -248,12 +248,12 @@ export default function Abonnement() {
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Omschrijving</span>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-sm">Abonnement {user?.email}</span>
+                  <span className="font-mono text-sm">+5978934982</span>
                   <Button 
                     variant="ghost" 
                     size="icon"
                     className="h-6 w-6"
-                    onClick={() => copyToClipboard(`Abonnement ${user?.email}`)}
+                    onClick={() => copyToClipboard('+5978934982')}
                   >
                     <Copy className="w-3 h-3" />
                   </Button>
