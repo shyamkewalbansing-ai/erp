@@ -2027,7 +2027,7 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
 
 @api_router.get("/invoices")
 async def get_invoices(current_user: dict = Depends(get_current_active_user)):
-    """Get all invoices (rent due) for all tenants with payment status"""
+    """Get all invoices (rent due) for all tenants with payment status and cumulative balance"""
     
     # Get all apartments with tenants
     apartments = await db.apartments.find(
@@ -2036,7 +2036,7 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
     ).to_list(1000)
     
     if not apartments:
-        return {"invoices": [], "summary": {"total_invoices": 0, "paid": 0, "unpaid": 0, "total_amount": 0, "paid_amount": 0, "unpaid_amount": 0}}
+        return {"invoices": [], "summary": {"total_invoices": 0, "paid": 0, "partial": 0, "unpaid": 0, "total_amount": 0, "paid_amount": 0, "unpaid_amount": 0}}
     
     # Get all tenants
     tenant_ids = [apt["tenant_id"] for apt in apartments if apt.get("tenant_id")]
@@ -2052,18 +2052,23 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
         {"_id": 0}
     ).to_list(10000)
     
-    # Create payment lookup: (tenant_id, apartment_id, year, month) -> payment
+    # Create payment lookup: (tenant_id, apartment_id, year, month) -> list of payments
+    # Multiple payments can exist for the same period (partial payments)
     payment_lookup = {}
     for p in payments:
         if p.get("period_month") and p.get("period_year"):
             key = (p["tenant_id"], p["apartment_id"], p["period_year"], p["period_month"])
-            payment_lookup[key] = p
+            if key not in payment_lookup:
+                payment_lookup[key] = []
+            payment_lookup[key].append(p)
     
-    invoices = []
     months_nl = ['', 'Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
                  'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December']
     
     now = datetime.now(timezone.utc)
+    
+    # Process each apartment/tenant combination
+    all_invoices = []
     
     for apt in apartments:
         tenant = tenant_map.get(apt.get("tenant_id"))
@@ -2084,11 +2089,40 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
         year = start_dt.year
         month = start_dt.month
         
+        # Track cumulative balance for this tenant
+        cumulative_balance = 0.0
+        tenant_invoices = []
+        
         while (year < now.year) or (year == now.year and month <= now.month):
             key = (apt["tenant_id"], apt["id"], year, month)
-            payment = payment_lookup.get(key)
+            period_payments = payment_lookup.get(key, [])
+            
+            # Calculate amounts
+            amount_due = apt["rent_amount"]
+            amount_paid = sum(p["amount"] for p in period_payments)
+            remaining = amount_due - amount_paid
+            
+            # Add previous balance to this month's remaining
+            total_remaining = remaining + cumulative_balance
+            
+            # Determine status
+            if amount_paid >= amount_due:
+                status = "paid"
+                # If overpaid, reduce cumulative balance (credit)
+                cumulative_balance = min(0, remaining)
+            elif amount_paid > 0:
+                status = "partial"
+                cumulative_balance = total_remaining
+            else:
+                status = "unpaid"
+                cumulative_balance = total_remaining
             
             invoice_id = f"{apt['id']}-{year}-{month:02d}"
+            
+            # Get latest payment date if any
+            latest_payment_date = None
+            if period_payments:
+                latest_payment_date = max(p["payment_date"] for p in period_payments)
             
             invoice = {
                 "id": invoice_id,
@@ -2101,22 +2135,28 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
                 "month": month,
                 "month_name": months_nl[month],
                 "period_label": f"{months_nl[month]} {year}",
-                "amount": apt["rent_amount"],
-                "status": "paid" if payment else "unpaid",
-                "payment_id": payment["id"] if payment else None,
-                "payment_date": payment["payment_date"] if payment else None,
+                "amount_due": amount_due,
+                "amount_paid": amount_paid,
+                "remaining": max(0, remaining),  # This month's remaining
+                "cumulative_balance": max(0, cumulative_balance),  # Running total including previous months
+                "status": status,
+                "payment_count": len(period_payments),
+                "payment_ids": [p["id"] for p in period_payments],
+                "payment_date": latest_payment_date,
                 "due_date": f"{year}-{month:02d}-01"
             }
             
-            invoices.append(invoice)
+            tenant_invoices.append(invoice)
             
             month += 1
             if month > 12:
                 month = 1
                 year += 1
+        
+        all_invoices.extend(tenant_invoices)
     
     # Sort by date (newest first), then by tenant name
-    invoices.sort(key=lambda x: (-x["year"], -x["month"], x["tenant_name"]))
+    all_invoices.sort(key=lambda x: (-x["year"], -x["month"], x["tenant_name"]))
     
     # Calculate summary
     total_invoices = len(invoices)
