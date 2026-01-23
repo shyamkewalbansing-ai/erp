@@ -174,9 +174,12 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 - GET/POST /api/tenants, /api/apartments, /api/payments, /api/deposits
 - GET /api/dashboard
 - GET /api/kasgeld, POST /api/kasgeld
-- GET/POST /api/maintenance
+- GET/POST /api/maintenance (incl. cost_type: 'kasgeld' of 'tenant')
 - GET/POST /api/employees, /api/salaries
-- GET /api/receipts/{payment_id}/pdf
+- GET /api/receipts/{payment_id}/pdf - Huur kwitantie PDF
+- GET /api/salaries/{salary_id}/pdf - Loonstrook PDF
+- GET /api/deposits/{deposit_id}/refund-pdf - Borg terugbetaling PDF
+- GET /api/tenants/{tenant_id}/balance - Huurder saldo incl. borg
 - GET /api/exchange-rate
 
 ## Test Credentials
