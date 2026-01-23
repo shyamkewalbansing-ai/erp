@@ -169,6 +169,24 @@ export default function Deposits() {
     }
   };
 
+  const handleDownloadRefundPdf = async (deposit) => {
+    try {
+      const response = await downloadDepositRefund(deposit.id);
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `borg_terugbetaling_${deposit.id.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('PDF gedownload');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij downloaden PDF');
+    }
+  };
+
   const openReturnModal = (deposit) => {
     setSelectedDeposit(deposit);
     setReturnData({
