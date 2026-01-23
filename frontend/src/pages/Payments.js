@@ -624,8 +624,9 @@ export default function Payments() {
                 data-testid="payment-description-input"
               />
             </div>
+            </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-3 pt-4 border-t mt-4 bg-background sticky bottom-0">
               <Button
                 type="button"
                 variant="outline"
