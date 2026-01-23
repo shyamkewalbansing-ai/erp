@@ -18,7 +18,8 @@ import {
   Package,
   Settings,
   FileText,
-  HandCoins
+  HandCoins,
+  FileSignature
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -28,6 +29,7 @@ const customerNavItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/tenants', icon: Users, label: 'Huurders' },
   { to: '/apartments', icon: Building2, label: 'Appartementen' },
+  { to: '/contracten', icon: FileSignature, label: 'Contracten' },
   { to: '/payments', icon: CreditCard, label: 'Betalingen' },
   { to: '/facturen', icon: FileText, label: 'Facturen' },
   { to: '/leningen', icon: HandCoins, label: 'Leningen' },
