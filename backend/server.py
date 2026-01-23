@@ -2023,6 +2023,117 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
         "suggestion": suggestion
     }
 
+# ==================== FACTUREN (INVOICES) ROUTES ====================
+
+@api_router.get("/invoices")
+async def get_invoices(current_user: dict = Depends(get_current_active_user)):
+    """Get all invoices (rent due) for all tenants with payment status"""
+    
+    # Get all apartments with tenants
+    apartments = await db.apartments.find(
+        {"user_id": current_user["id"], "tenant_id": {"$ne": None}},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    if not apartments:
+        return {"invoices": [], "summary": {"total_invoices": 0, "paid": 0, "unpaid": 0, "total_amount": 0, "paid_amount": 0, "unpaid_amount": 0}}
+    
+    # Get all tenants
+    tenant_ids = [apt["tenant_id"] for apt in apartments if apt.get("tenant_id")]
+    tenants = await db.tenants.find(
+        {"id": {"$in": tenant_ids}, "user_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(1000)
+    tenant_map = {t["id"]: t for t in tenants}
+    
+    # Get all rent payments
+    payments = await db.payments.find(
+        {"user_id": current_user["id"], "payment_type": "rent"},
+        {"_id": 0}
+    ).to_list(10000)
+    
+    # Create payment lookup: (tenant_id, apartment_id, year, month) -> payment
+    payment_lookup = {}
+    for p in payments:
+        if p.get("period_month") and p.get("period_year"):
+            key = (p["tenant_id"], p["apartment_id"], p["period_year"], p["period_month"])
+            payment_lookup[key] = p
+    
+    invoices = []
+    months_nl = ['', 'Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
+                 'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December']
+    
+    now = datetime.now(timezone.utc)
+    
+    for apt in apartments:
+        tenant = tenant_map.get(apt.get("tenant_id"))
+        if not tenant:
+            continue
+        
+        # Determine start date (from apartment creation or assignment)
+        try:
+            created = apt.get("created_at", "")
+            if created:
+                start_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
+            else:
+                start_dt = now
+        except:
+            start_dt = now
+        
+        # Generate invoices from start month to current month
+        year = start_dt.year
+        month = start_dt.month
+        
+        while (year < now.year) or (year == now.year and month <= now.month):
+            key = (apt["tenant_id"], apt["id"], year, month)
+            payment = payment_lookup.get(key)
+            
+            invoice_id = f"{apt['id']}-{year}-{month:02d}"
+            
+            invoice = {
+                "id": invoice_id,
+                "tenant_id": apt["tenant_id"],
+                "tenant_name": tenant["name"],
+                "tenant_phone": tenant.get("phone", ""),
+                "apartment_id": apt["id"],
+                "apartment_name": apt["name"],
+                "year": year,
+                "month": month,
+                "month_name": months_nl[month],
+                "period_label": f"{months_nl[month]} {year}",
+                "amount": apt["rent_amount"],
+                "status": "paid" if payment else "unpaid",
+                "payment_id": payment["id"] if payment else None,
+                "payment_date": payment["payment_date"] if payment else None,
+                "due_date": f"{year}-{month:02d}-01"
+            }
+            
+            invoices.append(invoice)
+            
+            month += 1
+            if month > 12:
+                month = 1
+                year += 1
+    
+    # Sort by date (newest first), then by tenant name
+    invoices.sort(key=lambda x: (-x["year"], -x["month"], x["tenant_name"]))
+    
+    # Calculate summary
+    total_invoices = len(invoices)
+    paid_invoices = [i for i in invoices if i["status"] == "paid"]
+    unpaid_invoices = [i for i in invoices if i["status"] == "unpaid"]
+    
+    summary = {
+        "total_invoices": total_invoices,
+        "paid": len(paid_invoices),
+        "unpaid": len(unpaid_invoices),
+        "total_amount": sum(i["amount"] for i in invoices),
+        "paid_amount": sum(i["amount"] for i in paid_invoices),
+        "unpaid_amount": sum(i["amount"] for i in unpaid_invoices)
+    }
+    
+    return {"invoices": invoices, "summary": summary}
+
 # ==================== KASGELD (CASH FUND) ROUTES ====================
 
 @api_router.post("/kasgeld", response_model=KasgeldResponse)
