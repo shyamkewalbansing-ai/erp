@@ -2731,6 +2731,33 @@ async def delete_logo(current_user: dict = Depends(get_current_user)):
     
     return {"message": "Logo succesvol verwijderd"}
 
+class RentSettings(BaseModel):
+    rent_due_day: int = 1  # Day of month (1-28)
+    payment_frequency: str = "monthly"  # monthly, weekly, biweekly, quarterly, yearly
+    grace_period_days: int = 5  # Days after due date before considered late
+
+@api_router.put("/profile/rent-settings")
+async def update_rent_settings(settings: RentSettings, current_user: dict = Depends(get_current_user)):
+    """Update rent/payment settings for customer"""
+    
+    if settings.rent_due_day < 1 or settings.rent_due_day > 28:
+        raise HTTPException(status_code=400, detail="Dag moet tussen 1 en 28 zijn")
+    
+    valid_frequencies = ["monthly", "weekly", "biweekly", "quarterly", "yearly"]
+    if settings.payment_frequency not in valid_frequencies:
+        raise HTTPException(status_code=400, detail="Ongeldige betalingsfrequentie")
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {
+            "rent_due_day": settings.rent_due_day,
+            "payment_frequency": settings.payment_frequency,
+            "grace_period_days": settings.grace_period_days
+        }}
+    )
+    
+    return {"message": "Huurinstellingen opgeslagen"}
+
 # ==================== ADMIN: CUSTOMER PROFILE MANAGEMENT ====================
 
 class AdminPasswordReset(BaseModel):
