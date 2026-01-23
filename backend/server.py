@@ -2239,11 +2239,6 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
     
     # Sort by date (newest first), then by tenant name
     all_invoices.sort(key=lambda x: (-x["year"], -x["month"], x["tenant_name"]))
-        
-        all_invoices.extend(tenant_invoices)
-    
-    # Sort by date (newest first), then by tenant name
-    all_invoices.sort(key=lambda x: (-x["year"], -x["month"], x["tenant_name"]))
     
     # Calculate summary
     total_invoices = len(all_invoices)
