@@ -75,6 +75,15 @@ export const getDeposits = () => api.get('/deposits');
 export const createDeposit = (data) => api.post('/deposits', data);
 export const updateDeposit = (id, data) => api.put(`/deposits/${id}`, data);
 export const deleteDeposit = (id) => api.delete(`/deposits/${id}`);
+export const downloadDepositRefund = (depositId) => 
+  api.get(`/deposits/${depositId}/refund-pdf`, { responseType: 'blob' });
+
+// Loans (Leningen)
+export const getLoans = () => api.get('/loans');
+export const createLoan = (data) => api.post('/loans', data);
+export const updateLoan = (id, data) => api.put(`/loans/${id}`, data);
+export const deleteLoan = (id) => api.delete(`/loans/${id}`);
+export const getTenantLoans = (tenantId) => api.get(`/tenants/${tenantId}/loans`);
 
 // Kasgeld (Cash Fund)
 export const getKasgeld = () => api.get('/kasgeld');
