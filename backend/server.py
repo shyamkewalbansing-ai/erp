@@ -55,6 +55,98 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Email Configuration
+SMTP_HOST = os.environ.get('SMTP_HOST', 'smtp.hostinger.com')
+SMTP_PORT = int(os.environ.get('SMTP_PORT', 465))
+SMTP_USER = os.environ.get('SMTP_USER', '')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
+SMTP_FROM = os.environ.get('SMTP_FROM', 'info@facturatie.sr')
+APP_URL = os.environ.get('APP_URL', 'https://vastgoed.facturatie.sr')
+
+def send_email(to_email: str, subject: str, html_content: str):
+    """Send email via SMTP"""
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"Facturatie N.V. <{SMTP_FROM}>"
+        msg['To'] = to_email
+        
+        html_part = MIMEText(html_content, 'html')
+        msg.attach(html_part)
+        
+        with smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT) as server:
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SMTP_FROM, to_email, msg.as_string())
+        
+        logger.info(f"Email sent successfully to {to_email}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
+        return False
+
+def send_welcome_email(name: str, email: str, password: str, plan_type: str):
+    """Send welcome email to new customer"""
+    
+    plan_text = {
+        'trial': '3 dagen gratis proefperiode',
+        'active': 'Actief abonnement',
+        'free': 'Gratis account (onbeperkt)',
+        'none': 'Account aangemaakt (wacht op activatie)'
+    }.get(plan_type, 'Account aangemaakt')
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #0caf60 0%, #0a8f4e 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+            .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+            .credentials {{ background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #0caf60; }}
+            .credentials p {{ margin: 8px 0; }}
+            .label {{ color: #666; font-size: 14px; }}
+            .value {{ font-weight: bold; color: #333; font-size: 16px; }}
+            .button {{ display: inline-block; background: #0caf60; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }}
+            .footer {{ text-align: center; color: #888; font-size: 12px; margin-top: 20px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1 style="margin: 0;">Welkom bij Facturatie N.V.!</h1>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">Uw verhuurbeheersysteem</p>
+            </div>
+            <div class="content">
+                <p>Beste {name},</p>
+                <p>Uw account is succesvol aangemaakt. Hieronder vindt u uw inloggegevens:</p>
+                
+                <div class="credentials">
+                    <p><span class="label">E-mailadres:</span><br><span class="value">{email}</span></p>
+                    <p><span class="label">Wachtwoord:</span><br><span class="value">{password}</span></p>
+                    <p><span class="label">Account type:</span><br><span class="value">{plan_text}</span></p>
+                </div>
+                
+                <p style="text-align: center;">
+                    <a href="{APP_URL}/login" class="button">Nu Inloggen</a>
+                </p>
+                
+                <p><strong>Belangrijk:</strong> Wijzig uw wachtwoord na de eerste keer inloggen via Instellingen.</p>
+                
+                <p>Met vriendelijke groet,<br>Het Facturatie N.V. Team</p>
+            </div>
+            <div class="footer">
+                <p>© 2026 Facturatie N.V. - Verhuurbeheersysteem</p>
+                <p>Dit is een automatisch gegenereerd bericht.</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return send_email(email, "Welkom bij Facturatie N.V. - Uw Inloggegevens", html_content)
+
 # Health check endpoint (required for Kubernetes deployment)
 # Define at app level before any other routes
 @app.get("/health")
