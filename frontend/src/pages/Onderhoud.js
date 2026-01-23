@@ -152,6 +152,7 @@ export default function Onderhoud() {
       cost: record.cost.toString(),
       maintenance_date: record.maintenance_date,
       status: record.status,
+      cost_type: record.cost_type || 'kasgeld',
     });
     setShowModal(true);
   };
@@ -177,6 +178,7 @@ export default function Onderhoud() {
       cost: '',
       maintenance_date: new Date().toISOString().split('T')[0],
       status: 'completed',
+      cost_type: 'kasgeld',
     });
   };
 
