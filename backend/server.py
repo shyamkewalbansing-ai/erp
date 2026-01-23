@@ -289,10 +289,11 @@ class PaymentCreate(BaseModel):
     apartment_id: str
     amount: float
     payment_date: str
-    payment_type: str  # 'rent', 'deposit', 'other'
+    payment_type: str  # 'rent', 'deposit', 'loan', 'other'
     description: Optional[str] = None
     period_month: Optional[int] = None
     period_year: Optional[int] = None
+    loan_id: Optional[str] = None  # For loan repayments
 
 class PaymentResponse(BaseModel):
     id: str
@@ -306,6 +307,7 @@ class PaymentResponse(BaseModel):
     description: Optional[str] = None
     period_month: Optional[int] = None
     period_year: Optional[int] = None
+    loan_id: Optional[str] = None
     created_at: str
     user_id: str
 
