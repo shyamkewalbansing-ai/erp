@@ -216,31 +216,31 @@ export default function Payments() {
         apartment_id: apt.id,
         amount: apt.rent_amount.toString()
       }));
+    }
+    
+    // Always fetch outstanding info and loans for the tenant
+    setLoadingOutstanding(true);
+    try {
+      const [outstandingRes, loansRes] = await Promise.all([
+        getTenantOutstanding(tenantId),
+        getTenantLoans(tenantId)
+      ]);
+      setOutstandingInfo(outstandingRes.data);
+      setTenantLoans(loansRes.data.loans?.filter(l => l.status !== 'paid') || []);
       
-      // Fetch outstanding info and loans
-      setLoadingOutstanding(true);
-      try {
-        const [outstandingRes, loansRes] = await Promise.all([
-          getTenantOutstanding(tenantId),
-          getTenantLoans(tenantId)
-        ]);
-        setOutstandingInfo(outstandingRes.data);
-        setTenantLoans(loansRes.data.loans?.filter(l => l.status !== 'paid') || []);
-        
-        // If there are outstanding months, suggest the oldest one
-        if (outstandingRes.data.outstanding_months?.length > 0) {
-          const oldest = outstandingRes.data.outstanding_months[0];
-          setFormData(prev => ({
-            ...prev,
-            period_month: oldest.month,
-            period_year: oldest.year
-          }));
-        }
-      } catch (error) {
-        console.error('Error fetching tenant info:', error);
-      } finally {
-        setLoadingOutstanding(false);
+      // If there are outstanding months, suggest the oldest one
+      if (outstandingRes.data.outstanding_months?.length > 0) {
+        const oldest = outstandingRes.data.outstanding_months[0];
+        setFormData(prev => ({
+          ...prev,
+          period_month: oldest.month,
+          period_year: oldest.year
+        }));
       }
+    } catch (error) {
+      console.error('Error fetching tenant info:', error);
+    } finally {
+      setLoadingOutstanding(false);
     }
   };
 
