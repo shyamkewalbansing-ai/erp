@@ -5,12 +5,18 @@ import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Building2, Mail, Lock, ArrowRight } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../components/ui/dialog';
+import { Building2, Mail, Lock, ArrowRight, Loader2, KeyRound } from 'lucide-react';
+import api from '../lib/api';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -27,6 +33,33 @@ export default function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    if (!resetEmail) {
+      toast.error('Vul uw e-mailadres in');
+      return;
+    }
+
+    setResetLoading(true);
+    try {
+      await api.post('/auth/forgot-password', { email: resetEmail });
+      setResetSent(true);
+      toast.success('Instructies verzonden naar uw e-mail');
+    } catch (error) {
+      // Don't reveal if email exists or not for security
+      setResetSent(true);
+      toast.success('Als dit e-mailadres bestaat, ontvangt u instructies');
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  const closeForgotPassword = () => {
+    setShowForgotPassword(false);
+    setResetEmail('');
+    setResetSent(false);
   };
 
   return (
