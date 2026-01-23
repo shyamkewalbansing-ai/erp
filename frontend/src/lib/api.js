@@ -139,6 +139,7 @@ export const changePassword = (currentPassword, newPassword) =>
   api.put('/profile/password', { current_password: currentPassword, new_password: newPassword });
 export const uploadLogo = (logoData) => api.post('/profile/logo', { logo_data: logoData });
 export const deleteLogo = () => api.delete('/profile/logo');
+export const updateRentSettings = (settings) => api.put('/profile/rent-settings', settings);
 
 // Format currency in EUR
 export const formatCurrencyEUR = (amount) => {
