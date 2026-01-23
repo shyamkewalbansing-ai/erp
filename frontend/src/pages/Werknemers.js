@@ -512,7 +512,7 @@ export default function Werknemers() {
                     <TableHead>Periode</TableHead>
                     <TableHead>Omschrijving</TableHead>
                     <TableHead className="text-right">Bedrag</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
+                    <TableHead className="w-[100px]">Acties</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -533,18 +533,30 @@ export default function Werknemers() {
                         {formatCurrency(salary.amount)}
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-destructive hover:text-destructive"
-                          onClick={() => { 
-                            setSelectedSalary(salary); 
-                            setDeleteType('salary');
-                            setShowDeleteDialog(true); 
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-primary hover:text-primary"
+                            onClick={() => handleDownloadPayslip(salary)}
+                            title="Download loonstrook"
+                            data-testid={`download-payslip-${salary.id}`}
+                          >
+                            <FileText className="w-4 h-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => { 
+                              setSelectedSalary(salary); 
+                              setDeleteType('salary');
+                              setShowDeleteDialog(true); 
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
