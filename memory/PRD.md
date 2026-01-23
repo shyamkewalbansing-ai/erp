@@ -105,6 +105,8 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 - [x] Kosten toewijzing: Kasgeld (verhuurder) of Huurder
 - [x] Alleen 'kasgeld' type kosten afgetrokken van Kasgeld
 - [x] Onderhoud transacties zichtbaar in Kasgeld historie
+- [x] **NIEUW**: Huurder onderhoudskosten toegevoegd aan huur saldo
+- [x] **NIEUW**: Onderhoudskosten zichtbaar in Facturen met details
 
 ### Werknemers (Employees)
 - [x] CRUD voor werknemers
