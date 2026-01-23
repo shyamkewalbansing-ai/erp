@@ -173,8 +173,8 @@ export default function Layout() {
           )}
         </nav>
 
-        {/* User section */}
-        <div className="p-4 border-t border-border">
+        {/* User section - fixed at bottom */}
+        <div className="p-4 border-t border-border mt-auto flex-shrink-0">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
               <span className="text-sm font-semibold text-primary">
