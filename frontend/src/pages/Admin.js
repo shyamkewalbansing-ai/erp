@@ -1049,12 +1049,14 @@ server {
                 <SelectContent>
                   <SelectItem value="trial">3 Dagen Proefperiode (gratis)</SelectItem>
                   <SelectItem value="active">Direct Actief Abonnement (betaald)</SelectItem>
+                  <SelectItem value="free">Volledig Gratis (onbeperkt)</SelectItem>
                   <SelectItem value="none">Geen Abonnement (geblokkeerd tot activatie)</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
                 {newCustomer.plan_type === 'trial' && 'Klant krijgt 3 dagen gratis toegang'}
                 {newCustomer.plan_type === 'active' && 'Klant heeft direct volledige toegang'}
+                {newCustomer.plan_type === 'free' && 'Klant heeft permanent gratis toegang'}
                 {newCustomer.plan_type === 'none' && 'Klant kan niet inloggen tot u activeert'}
               </p>
             </div>
