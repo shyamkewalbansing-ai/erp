@@ -67,6 +67,9 @@ export const deletePayment = (id) => api.delete(`/payments/${id}`);
 export const downloadReceipt = (paymentId) => 
   api.get(`/receipts/${paymentId}/pdf`, { responseType: 'blob' });
 
+// Invoices (Facturen)
+export const getInvoices = () => api.get('/invoices');
+
 // Deposits
 export const getDeposits = () => api.get('/deposits');
 export const createDeposit = (data) => api.post('/deposits', data);
