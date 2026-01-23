@@ -1037,18 +1037,29 @@ server {
               />
             </div>
 
-            <div className="flex items-center space-x-2 pt-2">
-              <Checkbox
-                id="activate"
-                checked={newCustomer.activate_subscription}
-                onCheckedChange={(checked) => setNewCustomer({...newCustomer, activate_subscription: checked})}
-              />
-              <Label htmlFor="activate" className="cursor-pointer">
-                Direct abonnement activeren (anders 3 dagen proef)
-              </Label>
+            <div className="space-y-2">
+              <Label>Abonnement Type *</Label>
+              <Select 
+                value={newCustomer.plan_type} 
+                onValueChange={(v) => setNewCustomer({...newCustomer, plan_type: v})}
+              >
+                <SelectTrigger data-testid="plan-type-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="trial">3 Dagen Proefperiode (gratis)</SelectItem>
+                  <SelectItem value="active">Direct Actief Abonnement (betaald)</SelectItem>
+                  <SelectItem value="none">Geen Abonnement (geblokkeerd tot activatie)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                {newCustomer.plan_type === 'trial' && 'Klant krijgt 3 dagen gratis toegang'}
+                {newCustomer.plan_type === 'active' && 'Klant heeft direct volledige toegang'}
+                {newCustomer.plan_type === 'none' && 'Klant kan niet inloggen tot u activeert'}
+              </p>
             </div>
 
-            {newCustomer.activate_subscription && (
+            {newCustomer.plan_type === 'active' && (
               <>
                 <div className="space-y-2">
                   <Label>Aantal maanden</Label>
