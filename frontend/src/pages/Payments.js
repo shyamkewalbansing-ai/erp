@@ -626,7 +626,7 @@ export default function Payments() {
             </div>
             </div>
 
-            <div className="flex gap-3 pt-4 border-t mt-4 bg-background sticky bottom-0">
+            <div className="flex gap-3 pt-4 border-t flex-shrink-0">
               <Button
                 type="button"
                 variant="outline"
