@@ -114,7 +114,7 @@ export default function Facturen() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <Card className="bg-card border-border">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -131,9 +131,8 @@ export default function Facturen() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Betaald</p>
+                <p className="text-sm text-muted-foreground">Volledig Betaald</p>
                 <p className="text-2xl font-bold text-green-600">{summary.paid}</p>
-                <p className="text-xs text-muted-foreground">{formatCurrency(summary.paid_amount)}</p>
               </div>
               <CheckCircle2 className="w-8 h-8 text-green-500 opacity-80" />
             </div>
@@ -144,9 +143,20 @@ export default function Facturen() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
+                <p className="text-sm text-muted-foreground">Gedeeltelijk</p>
+                <p className="text-2xl font-bold text-blue-600">{summary.partial || 0}</p>
+              </div>
+              <AlertCircle className="w-8 h-8 text-blue-500 opacity-80" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-card border-border">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-sm text-muted-foreground">Openstaand</p>
                 <p className="text-2xl font-bold text-orange-600">{summary.unpaid}</p>
-                <p className="text-xs text-muted-foreground">{formatCurrency(summary.unpaid_amount)}</p>
               </div>
               <AlertCircle className="w-8 h-8 text-orange-500 opacity-80" />
             </div>
@@ -157,10 +167,10 @@ export default function Facturen() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Totaal Bedrag</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(summary.total_amount)}</p>
+                <p className="text-sm text-muted-foreground">Nog te Ontvangen</p>
+                <p className="text-2xl font-bold text-red-600">{formatCurrency(summary.unpaid_amount)}</p>
               </div>
-              <TrendingUp className="w-8 h-8 text-primary opacity-80" />
+              <TrendingDown className="w-8 h-8 text-red-500 opacity-80" />
             </div>
           </CardContent>
         </Card>
