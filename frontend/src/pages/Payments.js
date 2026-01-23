@@ -412,6 +412,50 @@ export default function Payments() {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Outstanding Balance Warning */}
+            {loadingOutstanding && (
+              <div className="text-sm text-muted-foreground">Openstaand saldo controleren...</div>
+            )}
+            {outstandingInfo?.has_outstanding && formData.payment_type === 'rent' && (
+              <Alert variant="destructive" className="bg-orange-50 border-orange-200" data-testid="outstanding-warning">
+                <AlertTriangle className="h-4 w-4 text-orange-600" />
+                <AlertTitle className="text-orange-800">Openstaand saldo</AlertTitle>
+                <AlertDescription className="text-orange-700">
+                  <p className="mb-2">
+                    Deze huurder heeft <strong>{outstandingInfo.outstanding_months.length} openstaande maand(en)</strong>.
+                  </p>
+                  <p className="mb-2">
+                    Totaal openstaand: <strong>{formatCurrency(outstandingInfo.outstanding_amount)}</strong>
+                  </p>
+                  <p className="text-sm">
+                    Oudste onbetaalde maand: <strong>{outstandingInfo.outstanding_months[0]?.label}</strong>
+                  </p>
+                  {outstandingInfo.outstanding_months.length > 1 && (
+                    <div className="mt-2 pt-2 border-t border-orange-200">
+                      <p className="text-xs font-medium mb-1">Openstaande maanden:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {outstandingInfo.outstanding_months.slice(0, 6).map((m, i) => (
+                          <span 
+                            key={i} 
+                            className={`text-xs px-2 py-0.5 rounded ${
+                              m.month === formData.period_month && m.year === formData.period_year
+                                ? 'bg-orange-600 text-white'
+                                : 'bg-orange-100 text-orange-800'
+                            }`}
+                          >
+                            {m.label}
+                          </span>
+                        ))}
+                        {outstandingInfo.outstanding_months.length > 6 && (
+                          <span className="text-xs text-orange-600">+{outstandingInfo.outstanding_months.length - 6} meer</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
             
             <div className="space-y-2">
               <Label>Appartement *</Label>
@@ -454,7 +498,7 @@ export default function Payments() {
             {formData.payment_type === 'rent' && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Maand</Label>
+                  <Label>Maand {outstandingInfo?.has_outstanding && <span className="text-orange-600 text-xs">(oudste geselecteerd)</span>}</Label>
                   <Select 
                     value={formData.period_month.toString()} 
                     onValueChange={(value) => setFormData({ ...formData, period_month: parseInt(value) })}
@@ -466,8 +510,40 @@ export default function Payments() {
                       {MONTHS.map((month) => (
                         <SelectItem key={month.value} value={month.value.toString()}>
                           {month.label}
+                          {outstandingInfo?.outstanding_months?.some(
+                            m => m.month === month.value && m.year === formData.period_year
+                          ) && ' ⚠️'}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Jaar</Label>
+                  <Select 
+                    value={formData.period_year.toString()} 
+                    onValueChange={(value) => setFormData({ ...formData, period_year: parseInt(value) })}
+                  >
+                    <SelectTrigger data-testid="payment-year-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[...Array(5)].map((_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                            {outstandingInfo?.outstanding_months?.some(
+                              m => m.year === year && m.month === formData.period_month
+                            ) && ' ⚠️'}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
                     </SelectContent>
                   </Select>
                 </div>
