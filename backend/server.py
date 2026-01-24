@@ -5938,8 +5938,20 @@ async def ai_get_tenant_balance(user_id: str, tenant_name: str):
     }
 
 async def ai_register_payment(user_id: str, tenant_name: str, amount: float, payment_type: str = "rent", description: str = None):
-    """Register a payment for a tenant"""
-    tenant = await db.tenants.find_one({"user_id": user_id, "name": {"$regex": tenant_name, "$options": "i"}})
+    """Register a payment for a tenant with validation"""
+    # Validate tenant name
+    if not tenant_name or not isinstance(tenant_name, str) or len(tenant_name.strip()) < 2:
+        return {"error": "Huurder naam is verplicht"}
+    
+    # Validate amount
+    try:
+        payment_amount = float(amount) if amount else 0
+        if payment_amount <= 0:
+            return {"error": "Betaling bedrag moet groter zijn dan 0"}
+    except (ValueError, TypeError):
+        return {"error": "Ongeldig betalingsbedrag"}
+    
+    tenant = await db.tenants.find_one({"user_id": user_id, "name": {"$regex": tenant_name.strip(), "$options": "i"}})
     if not tenant:
         return {"error": f"Huurder '{tenant_name}' niet gevonden"}
     
@@ -5951,16 +5963,16 @@ async def ai_register_payment(user_id: str, tenant_name: str, amount: float, pay
         "user_id": user_id,
         "tenant_id": tenant["id"],
         "apartment_id": apartment["id"] if apartment else None,
-        "amount": amount,
-        "payment_type": payment_type,
+        "amount": payment_amount,
+        "payment_type": payment_type or "rent",
         "payment_date": now.strftime("%Y-%m-%d"),
         "period_month": now.month,
         "period_year": now.year,
-        "description": description or f"Betaling van {tenant['name']}",
+        "description": (description or f"Betaling van {tenant['name']}").strip(),
         "created_at": now.isoformat()
     }
     await db.payments.insert_one(payment)
-    return {"success": True, "payment_id": payment["id"], "amount": amount, "tenant": tenant["name"]}
+    return {"success": True, "payment_id": payment["id"], "amount": payment_amount, "tenant": tenant["name"]}
 
 async def ai_list_payments(user_id: str, limit: int = 10):
     """List recent payments"""
@@ -5985,8 +5997,20 @@ async def ai_list_loans(user_id: str):
     return loans
 
 async def ai_create_loan(user_id: str, tenant_name: str, amount: float, description: str = None):
-    """Create a loan for a tenant"""
-    tenant = await db.tenants.find_one({"user_id": user_id, "name": {"$regex": tenant_name, "$options": "i"}})
+    """Create a loan for a tenant with validation"""
+    # Validate tenant name
+    if not tenant_name or not isinstance(tenant_name, str) or len(tenant_name.strip()) < 2:
+        return {"error": "Huurder naam is verplicht"}
+    
+    # Validate amount
+    try:
+        loan_amount = float(amount) if amount else 0
+        if loan_amount <= 0:
+            return {"error": "Lening bedrag moet groter zijn dan 0"}
+    except (ValueError, TypeError):
+        return {"error": "Ongeldig leningsbedrag"}
+    
+    tenant = await db.tenants.find_one({"user_id": user_id, "name": {"$regex": tenant_name.strip(), "$options": "i"}})
     if not tenant:
         return {"error": f"Huurder '{tenant_name}' niet gevonden"}
     
@@ -5994,14 +6018,14 @@ async def ai_create_loan(user_id: str, tenant_name: str, amount: float, descript
         "id": str(uuid.uuid4()),
         "user_id": user_id,
         "tenant_id": tenant["id"],
-        "amount": amount,
-        "remaining_amount": amount,
-        "description": description or f"Lening aan {tenant['name']}",
+        "amount": loan_amount,
+        "remaining_amount": loan_amount,
+        "description": (description or f"Lening aan {tenant['name']}").strip(),
         "status": "open",
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.loans.insert_one(loan)
-    return {"success": True, "loan_id": loan["id"], "amount": amount, "tenant": tenant["name"]}
+    return {"success": True, "loan_id": loan["id"], "amount": loan_amount, "tenant": tenant["name"]}
 
 async def ai_get_kasgeld(user_id: str):
     """Get kasgeld (petty cash) balance"""
