@@ -109,6 +109,36 @@ export default function Abonnement() {
     toast.success('Gekopieerd naar klembord');
   };
 
+  const handleRequestAddon = async () => {
+    if (!selectedAddon) return;
+    
+    setRequestingAddon(true);
+    try {
+      await requestAddonActivation({
+        addon_id: selectedAddon.id,
+        notes: addonNotes || undefined
+      });
+      toast.success('Add-on verzoek verzonden! De beheerder zal uw verzoek beoordelen.');
+      setAddonRequestDialogOpen(false);
+      setSelectedAddon(null);
+      setAddonNotes('');
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij het aanvragen');
+    } finally {
+      setRequestingAddon(false);
+    }
+  };
+
+  const isAddonActive = (addonId) => {
+    return myAddons.some(ma => ma.addon_id === addonId && ma.status === 'active');
+  };
+
+  const getAddonEndDate = (addonId) => {
+    const addon = myAddons.find(ma => ma.addon_id === addonId && ma.status === 'active');
+    return addon?.end_date;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
