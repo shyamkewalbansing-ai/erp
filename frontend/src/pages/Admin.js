@@ -17,7 +17,18 @@ import {
   createCustomDomain,
   verifyCustomDomain,
   deleteCustomDomain,
-  formatCurrency 
+  formatCurrency,
+  // Add-ons imports
+  getAdminAddons,
+  createAddon,
+  updateAddon,
+  deleteAddon,
+  getUserAddons,
+  activateUserAddon,
+  deactivateUserAddon,
+  getAddonRequests,
+  approveAddonRequest,
+  rejectAddonRequest
 } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
