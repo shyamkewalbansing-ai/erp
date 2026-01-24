@@ -67,9 +67,13 @@ export default function AIAssistant() {
         actionExecuted: response.data.action_executed
       }]);
 
-      // If an action was executed, show a toast
+      // If an action was executed, trigger refresh
       if (response.data.action_executed) {
-        toast.success('Actie uitgevoerd! Vernieuw de pagina om wijzigingen te zien.');
+        toast.success('Actie uitgevoerd! Data wordt vernieuwd...');
+        // Trigger refresh of all data
+        setTimeout(() => {
+          triggerRefresh(REFRESH_EVENTS.ALL);
+        }, 500);
       }
     } catch (error) {
       console.error('AI Chat error:', error);
