@@ -6018,6 +6018,7 @@ async def ai_create_loan(user_id: str, tenant_name: str, amount: float, descript
     if not tenant:
         return {"error": f"Huurder '{tenant_name}' niet gevonden"}
     
+    now = datetime.now(timezone.utc)
     loan = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
@@ -6026,7 +6027,8 @@ async def ai_create_loan(user_id: str, tenant_name: str, amount: float, descript
         "remaining_amount": loan_amount,
         "description": (description or f"Lening aan {tenant['name']}").strip(),
         "status": "open",
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "loan_date": now.strftime("%Y-%m-%d"),
+        "created_at": now.isoformat()
     }
     await db.loans.insert_one(loan)
     return {"success": True, "loan_id": loan["id"], "amount": loan_amount, "tenant": tenant["name"]}
