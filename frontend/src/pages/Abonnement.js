@@ -58,17 +58,31 @@ export default function Abonnement() {
   const [requesting, setRequesting] = useState(false);
   const [subscriptionData, setSubscriptionData] = useState(null);
   const [showBankDetails, setShowBankDetails] = useState(false);
+  
+  // Add-ons state
+  const [addons, setAddons] = useState([]);
+  const [myAddons, setMyAddons] = useState([]);
+  const [selectedAddon, setSelectedAddon] = useState(null);
+  const [addonRequestDialogOpen, setAddonRequestDialogOpen] = useState(false);
+  const [addonNotes, setAddonNotes] = useState('');
+  const [requestingAddon, setRequestingAddon] = useState(false);
 
   useEffect(() => {
-    loadSubscriptionStatus();
+    loadData();
   }, []);
 
-  const loadSubscriptionStatus = async () => {
+  const loadData = async () => {
     try {
-      const response = await getSubscriptionStatus();
-      setSubscriptionData(response.data);
+      const [statusRes, addonsRes, myAddonsRes] = await Promise.all([
+        getSubscriptionStatus(),
+        getAddons(),
+        getMyAddons()
+      ]);
+      setSubscriptionData(statusRes.data);
+      setAddons(addonsRes.data);
+      setMyAddons(myAddonsRes.data);
     } catch (error) {
-      toast.error('Fout bij het laden van abonnementsstatus');
+      toast.error('Fout bij het laden van gegevens');
     } finally {
       setLoading(false);
     }
