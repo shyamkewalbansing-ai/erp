@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getDashboard, formatCurrency } from '../lib/api';
+import { REFRESH_EVENTS } from '../lib/refreshEvents';
 import { toast } from 'sonner';
 import { 
   Building2, 
@@ -22,6 +23,17 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchDashboard();
+  }, []);
+
+  // Listen for refresh events
+  useEffect(() => {
+    const handleRefresh = () => fetchDashboard();
+    window.addEventListener(REFRESH_EVENTS.DASHBOARD, handleRefresh);
+    window.addEventListener(REFRESH_EVENTS.ALL, handleRefresh);
+    return () => {
+      window.removeEventListener(REFRESH_EVENTS.DASHBOARD, handleRefresh);
+      window.removeEventListener(REFRESH_EVENTS.ALL, handleRefresh);
+    };
   }, []);
 
   const fetchDashboard = async () => {
