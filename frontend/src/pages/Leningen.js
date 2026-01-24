@@ -132,7 +132,6 @@ export default function Leningen() {
       fetchData();
       // Trigger refresh for other components
       triggerRefresh(REFRESH_EVENTS.LOANS);
-      fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij opslaan');
     }
