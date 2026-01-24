@@ -5857,15 +5857,21 @@ async def ai_list_tenants(user_id: str):
     return tenants
 
 async def ai_create_tenant(user_id: str, name: str, phone: str, email: str = None, address: str = None, id_number: str = None):
-    """Create a new tenant"""
+    """Create a new tenant with validation"""
+    # Validate required fields
+    if not name or not isinstance(name, str) or len(name.strip()) < 2:
+        return {"error": "Naam is verplicht en moet minimaal 2 tekens zijn"}
+    if not phone or not isinstance(phone, str) or len(phone.strip()) < 5:
+        return {"error": "Telefoonnummer is verplicht en moet minimaal 5 tekens zijn"}
+    
     tenant = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
-        "name": name,
-        "phone": phone,
-        "email": email,
-        "address": address,
-        "id_number": id_number,
+        "name": name.strip(),
+        "phone": phone.strip(),
+        "email": email.strip() if email else None,
+        "address": address.strip() if address else None,
+        "id_number": id_number.strip() if id_number else None,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.tenants.insert_one(tenant)
@@ -5877,14 +5883,25 @@ async def ai_list_apartments(user_id: str):
     return apartments
 
 async def ai_create_apartment(user_id: str, name: str, address: str, rent_amount: float, description: str = None):
-    """Create a new apartment"""
+    """Create a new apartment with validation"""
+    # Validate required fields
+    if not name or not isinstance(name, str) or len(name.strip()) < 2:
+        return {"error": "Appartement naam is verplicht en moet minimaal 2 tekens zijn"}
+    
+    try:
+        rent = float(rent_amount) if rent_amount else 0
+        if rent <= 0:
+            return {"error": "Huurbedrag moet groter zijn dan 0"}
+    except (ValueError, TypeError):
+        return {"error": "Ongeldig huurbedrag"}
+    
     apartment = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
-        "name": name,
-        "address": address or "",
-        "rent_amount": rent_amount,
-        "description": description,
+        "name": name.strip(),
+        "address": (address or "").strip(),
+        "rent_amount": rent,
+        "description": (description or "").strip() if description else None,
         "status": "available",
         "tenant_id": None,
         "bedrooms": 1,
