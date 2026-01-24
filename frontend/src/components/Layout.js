@@ -179,33 +179,48 @@ export default function Layout() {
             </NavLink>
           ))}
 
-          {/* Subscription link - for customers only */}
+          {/* Settings dropdown - for customers only */}
           {!isSuperAdmin() && (
-            <NavLink
-              to="/abonnement"
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-              data-testid="nav-abonnement"
-            >
-              <Package className="w-5 h-5" />
-              <span>Abonnement</span>
-              {showExpiredBadge && (
-                <Badge className="ml-auto text-[10px] bg-red-500/10 text-red-500 border-red-500/20">!</Badge>
-              )}
-            </NavLink>
-          )}
-
-          {/* Settings link - for customers only */}
-          {!isSuperAdmin() && (
-            <NavLink
-              to="/instellingen"
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-              data-testid="nav-instellingen-customer"
-            >
-              <Settings className="w-5 h-5" />
-              <span>Instellingen</span>
-            </NavLink>
+            <div className="mt-2">
+              <button
+                onClick={() => setSettingsOpen(!settingsOpen)}
+                className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement') ? 'active' : ''}`}
+                data-testid="nav-instellingen-dropdown"
+              >
+                <div className="flex items-center gap-3">
+                  <Settings className="w-5 h-5" />
+                  <span>Instellingen</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {/* Dropdown items */}
+              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="pl-4 mt-1 space-y-1">
+                  <NavLink
+                    to="/instellingen"
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                    data-testid="nav-instellingen-sub"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Huurinstellingen</span>
+                  </NavLink>
+                  <NavLink
+                    to="/abonnement"
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                    data-testid="nav-abonnement"
+                  >
+                    <Package className="w-4 h-4" />
+                    <span>Abonnement</span>
+                    {showExpiredBadge && (
+                      <Badge className="ml-auto text-[10px] bg-red-500/10 text-red-500 border-red-500/20">!</Badge>
+                    )}
+                  </NavLink>
+                </div>
+              </div>
+            </div>
           )}
         </nav>
 
