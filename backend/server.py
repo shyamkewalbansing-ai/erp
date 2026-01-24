@@ -1010,11 +1010,26 @@ async def get_apartment(apartment_id: str, current_user: dict = Depends(get_curr
     if not apt:
         raise HTTPException(status_code=404, detail="Appartement niet gevonden")
     
+    tenant_name = None
     if apt.get("tenant_id"):
         tenant = await db.tenants.find_one({"id": apt["tenant_id"]}, {"_id": 0, "name": 1})
-        apt["tenant_name"] = tenant["name"] if tenant else None
+        tenant_name = tenant.get("name") if tenant else None
     
-    return ApartmentResponse(**apt)
+    # Safely build response with defaults
+    return ApartmentResponse(
+        id=apt.get("id", apartment_id),
+        name=apt.get("name", "Onbekend"),
+        address=apt.get("address", ""),
+        rent_amount=apt.get("rent_amount", 0) or 0,
+        description=apt.get("description"),
+        bedrooms=apt.get("bedrooms", 1) or 1,
+        bathrooms=apt.get("bathrooms", 1) or 1,
+        status=apt.get("status", "available"),
+        tenant_id=apt.get("tenant_id"),
+        tenant_name=tenant_name,
+        created_at=apt.get("created_at", ""),
+        user_id=apt.get("user_id", current_user["id"])
+    )
 
 @api_router.put("/apartments/{apartment_id}", response_model=ApartmentResponse)
 async def update_apartment(apartment_id: str, apt_data: ApartmentUpdate, current_user: dict = Depends(get_current_active_user)):
@@ -1032,11 +1047,26 @@ async def update_apartment(apartment_id: str, apt_data: ApartmentUpdate, current
     
     apt = await db.apartments.find_one({"id": apartment_id}, {"_id": 0})
     
+    tenant_name = None
     if apt.get("tenant_id"):
         tenant = await db.tenants.find_one({"id": apt["tenant_id"]}, {"_id": 0, "name": 1})
-        apt["tenant_name"] = tenant["name"] if tenant else None
+        tenant_name = tenant.get("name") if tenant else None
     
-    return ApartmentResponse(**apt)
+    # Safely build response with defaults
+    return ApartmentResponse(
+        id=apt.get("id", apartment_id),
+        name=apt.get("name", "Onbekend"),
+        address=apt.get("address", ""),
+        rent_amount=apt.get("rent_amount", 0) or 0,
+        description=apt.get("description"),
+        bedrooms=apt.get("bedrooms", 1) or 1,
+        bathrooms=apt.get("bathrooms", 1) or 1,
+        status=apt.get("status", "available"),
+        tenant_id=apt.get("tenant_id"),
+        tenant_name=tenant_name,
+        created_at=apt.get("created_at", ""),
+        user_id=apt.get("user_id", current_user["id"])
+    )
 
 @api_router.delete("/apartments/{apartment_id}")
 async def delete_apartment(apartment_id: str, current_user: dict = Depends(get_current_active_user)):
