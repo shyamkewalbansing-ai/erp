@@ -111,6 +111,33 @@ export default function Facturen() {
     navigate('/payments');
   };
 
+  // Download invoice PDF
+  const handleDownloadPdf = async () => {
+    if (!selectedTenant || !selectedPeriod) return;
+    
+    setDownloadingPdf(true);
+    try {
+      const response = await api.get(
+        `/invoices/pdf/${selectedTenant.id}/${selectedPeriod.year}/${selectedPeriod.month}`,
+        { responseType: 'blob' }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Factuur_${selectedTenant.name.replace(/\s/g, '_')}_${MONTHS[selectedPeriod.month - 1]}_${selectedPeriod.year}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('PDF gedownload');
+    } catch (error) {
+      toast.error('Fout bij downloaden PDF');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   // Get tenant's apartment and rent
   const getTenantApartment = (tenantId) => {
     return apartments.find(a => a.tenant_id === tenantId);
