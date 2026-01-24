@@ -513,6 +513,66 @@ class ExchangeRateResponse(BaseModel):
     last_updated: str
     source: str
 
+# ==================== ADD-ON MODELS ====================
+
+class AddonCreate(BaseModel):
+    name: str
+    slug: str  # Unique identifier, e.g., 'vastgoed_beheer'
+    description: Optional[str] = None
+    price: float
+    is_active: bool = True
+
+class AddonUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    price: Optional[float] = None
+    is_active: Optional[bool] = None
+
+class AddonResponse(BaseModel):
+    id: str
+    name: str
+    slug: str
+    description: Optional[str] = None
+    price: float
+    is_active: bool
+    created_at: str
+
+class UserAddonCreate(BaseModel):
+    user_id: str
+    addon_id: str
+    months: int = 1
+    payment_method: Optional[str] = None
+    payment_reference: Optional[str] = None
+
+class UserAddonResponse(BaseModel):
+    id: str
+    user_id: str
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    addon_id: str
+    addon_name: Optional[str] = None
+    addon_slug: Optional[str] = None
+    status: str  # 'active', 'expired', 'pending'
+    start_date: str
+    end_date: Optional[str] = None
+    created_at: str
+
+class AddonRequestCreate(BaseModel):
+    addon_id: str
+    notes: Optional[str] = None
+
+class AddonRequestResponse(BaseModel):
+    id: str
+    user_id: str
+    user_name: Optional[str] = None
+    user_email: Optional[str] = None
+    addon_id: str
+    addon_name: Optional[str] = None
+    addon_price: Optional[float] = None
+    status: str  # 'pending', 'approved', 'rejected'
+    notes: Optional[str] = None
+    created_at: str
+
 # Admin Dashboard Models
 class AdminDashboardStats(BaseModel):
     total_customers: int
