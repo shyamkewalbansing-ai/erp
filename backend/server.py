@@ -678,6 +678,71 @@ async def get_current_active_user(credentials: HTTPAuthorizationCredentials = De
 
 async def get_superadmin(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verify current user is superadmin"""
+
+async def get_user_active_addons(user_id: str) -> List[str]:
+    """Get list of active addon slugs for a user"""
+    now = datetime.now(timezone.utc)
+    user_addons = await db.user_addons.find({
+        "user_id": user_id,
+        "status": "active"
+    }).to_list(length=100)
+    
+    active_slugs = []
+    for ua in user_addons:
+        # Check if addon is still valid (not expired)
+        end_date = ua.get("end_date")
+        if end_date:
+            try:
+                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                if end_dt < now:
+                    # Expired, update status
+                    await db.user_addons.update_one(
+                        {"id": ua["id"]},
+                        {"$set": {"status": "expired"}}
+                    )
+                    continue
+            except:
+                pass
+        
+        # Get addon info
+        addon = await db.addons.find_one({"id": ua["addon_id"]}, {"_id": 0})
+        if addon and addon.get("is_active", True):
+            active_slugs.append(addon.get("slug", ""))
+    
+    return active_slugs
+
+async def user_has_addon(user_id: str, addon_slug: str) -> bool:
+    """Check if user has a specific addon active"""
+    active_addons = await get_user_active_addons(user_id)
+    return addon_slug in active_addons
+
+async def get_current_active_user_with_addon(addon_slug: str):
+    """Dependency factory for checking addon access"""
+    async def dependency(credentials: HTTPAuthorizationCredentials = Depends(security)):
+        user = await get_current_user(credentials)
+        
+        # Superadmin always has access
+        if user.get("role") == "superadmin":
+            return user
+        
+        # Check subscription first
+        status = user.get("subscription_status")
+        if status not in ("active", "trial"):
+            raise HTTPException(
+                status_code=403, 
+                detail="Uw abonnement is verlopen. Ga naar Abonnement om uw account te activeren."
+            )
+        
+        # Check addon
+        has_addon = await user_has_addon(user["id"], addon_slug)
+        if not has_addon:
+            raise HTTPException(
+                status_code=403,
+                detail=f"U heeft de add-on '{addon_slug}' niet geactiveerd. Ga naar Abonnement om deze te activeren."
+            )
+        
+        return user
+    return dependency
     user = await get_current_user(credentials)
     if user.get("role") != "superadmin":
         raise HTTPException(status_code=403, detail="Alleen voor beheerders")
