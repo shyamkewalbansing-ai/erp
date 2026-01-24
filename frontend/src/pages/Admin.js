@@ -278,6 +278,144 @@ export default function Admin() {
     }
   };
 
+  // ==================== ADD-ON HANDLERS ====================
+  
+  const handleCreateAddon = async () => {
+    if (!newAddon.name || !newAddon.slug) {
+      toast.error('Naam en slug zijn verplicht');
+      return;
+    }
+    
+    setActivating(true);
+    try {
+      await createAddon({
+        name: newAddon.name,
+        slug: newAddon.slug,
+        description: newAddon.description,
+        price: parseFloat(newAddon.price) || 0,
+        is_active: true
+      });
+      toast.success('Add-on aangemaakt');
+      setCreateAddonDialogOpen(false);
+      setNewAddon({ name: '', slug: '', description: '', price: 3500 });
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleEditAddon = async () => {
+    if (!selectedAddon) return;
+    
+    setActivating(true);
+    try {
+      await updateAddon(selectedAddon.id, {
+        name: editAddonForm.name,
+        description: editAddonForm.description,
+        price: parseFloat(editAddonForm.price) || 0
+      });
+      toast.success('Add-on bijgewerkt');
+      setEditAddonDialogOpen(false);
+      setSelectedAddon(null);
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij bijwerken');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleDeleteAddon = async () => {
+    if (!selectedAddon) return;
+    
+    setActivating(true);
+    try {
+      await deleteAddon(selectedAddon.id);
+      toast.success('Add-on verwijderd');
+      setDeleteAddonDialogOpen(false);
+      setSelectedAddon(null);
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleActivateAddonForCustomer = async () => {
+    if (!selectedCustomer || !selectedAddon) return;
+    
+    setActivating(true);
+    try {
+      await activateUserAddon(selectedCustomer.id, {
+        user_id: selectedCustomer.id,
+        addon_id: selectedAddon.id,
+        months: parseInt(addonMonths) || 1
+      });
+      toast.success('Add-on geactiveerd voor klant');
+      setActivateAddonDialogOpen(false);
+      setSelectedAddon(null);
+      setAddonMonths('1');
+      loadCustomerAddons(selectedCustomer.id);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij activeren');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleDeactivateUserAddon = async (addonId) => {
+    if (!selectedCustomer) return;
+    
+    try {
+      await deactivateUserAddon(selectedCustomer.id, addonId);
+      toast.success('Add-on gedeactiveerd');
+      loadCustomerAddons(selectedCustomer.id);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij deactiveren');
+    }
+  };
+
+  const loadCustomerAddons = async (userId) => {
+    try {
+      const res = await getUserAddons(userId);
+      setCustomerAddons(res.data);
+    } catch (error) {
+      console.error('Fout bij laden add-ons:', error);
+      setCustomerAddons([]);
+    }
+  };
+
+  const handleApproveAddonRequest = async () => {
+    if (!selectedAddonRequest) return;
+    
+    setActivating(true);
+    try {
+      await approveAddonRequest(selectedAddonRequest.id, parseInt(addonMonths) || 1);
+      toast.success('Add-on verzoek goedgekeurd');
+      setApproveAddonRequestDialogOpen(false);
+      setSelectedAddonRequest(null);
+      setAddonMonths('1');
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij goedkeuren');
+    } finally {
+      setActivating(false);
+    }
+  };
+
+  const handleRejectAddonRequest = async (requestId) => {
+    try {
+      await rejectAddonRequest(requestId);
+      toast.success('Add-on verzoek afgewezen');
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij afwijzen');
+    }
+  };
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     toast.success('Gekopieerd naar klembord');
