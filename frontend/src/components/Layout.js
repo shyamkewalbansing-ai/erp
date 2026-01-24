@@ -27,6 +27,7 @@ import {
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import NotificationBell from './NotificationBell';
+import AIAssistant from './AIAssistant';
 
 // Navigation items for customers only (not for superadmin)
 const customerNavItems = [
