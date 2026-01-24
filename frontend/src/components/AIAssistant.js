@@ -61,14 +61,18 @@ export default function AIAssistant() {
         session_id: sessionId
       });
 
+      const isSuccess = response.data.action_executed && 
+                        response.data.action_result && 
+                        !response.data.response.startsWith('❌');
+
       setMessages(prev => [...prev, { 
         role: 'assistant', 
         content: response.data.response,
-        actionExecuted: response.data.action_executed
+        actionExecuted: isSuccess
       }]);
 
-      // If an action was executed, trigger refresh
-      if (response.data.action_executed) {
+      // Only trigger refresh if action was SUCCESSFUL (not on errors)
+      if (isSuccess) {
         toast.success('Actie uitgevoerd! Data wordt vernieuwd...');
         // Trigger refresh of all data
         setTimeout(() => {
