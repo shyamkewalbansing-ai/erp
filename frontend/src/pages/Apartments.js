@@ -84,6 +84,17 @@ export default function Apartments() {
     fetchData();
   }, []);
 
+  // Listen for refresh events
+  useEffect(() => {
+    const handleRefresh = () => fetchData();
+    window.addEventListener(REFRESH_EVENTS.APARTMENTS, handleRefresh);
+    window.addEventListener(REFRESH_EVENTS.ALL, handleRefresh);
+    return () => {
+      window.removeEventListener(REFRESH_EVENTS.APARTMENTS, handleRefresh);
+      window.removeEventListener(REFRESH_EVENTS.ALL, handleRefresh);
+    };
+  }, []);
+
   const fetchData = async () => {
     try {
       const [apartmentsRes, tenantsRes] = await Promise.all([
@@ -119,6 +130,8 @@ export default function Apartments() {
       setShowModal(false);
       resetForm();
       fetchData();
+      // Trigger refresh for other components
+      triggerRefresh(REFRESH_EVENTS.APARTMENTS);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij opslaan');
     }
