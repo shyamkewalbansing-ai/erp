@@ -5882,11 +5882,13 @@ async def ai_create_apartment(user_id: str, name: str, address: str, rent_amount
         "id": str(uuid.uuid4()),
         "user_id": user_id,
         "name": name,
-        "address": address,
+        "address": address or "",
         "rent_amount": rent_amount,
         "description": description,
         "status": "available",
         "tenant_id": None,
+        "bedrooms": 1,
+        "bathrooms": 1,
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     await db.apartments.insert_one(apartment)
