@@ -148,6 +148,30 @@ export const verifyCustomDomain = (domainId) => api.put(`/admin/domains/${domain
 export const deleteCustomDomain = (domainId) => api.delete(`/admin/domains/${domainId}`);
 export const getCustomerDomains = (userId) => api.get(`/admin/domains/customer/${userId}`);
 
+// Add-ons (Public)
+export const getAddons = () => api.get('/addons');
+
+// Add-ons (User)
+export const getMyAddons = () => api.get('/user/addons');
+export const requestAddonActivation = (data) => api.post('/user/addons/request', data);
+
+// Add-ons (Admin)
+export const getAdminAddons = () => api.get('/admin/addons');
+export const createAddon = (data) => api.post('/admin/addons', data);
+export const updateAddon = (id, data) => api.put(`/admin/addons/${id}`, data);
+export const deleteAddon = (id) => api.delete(`/admin/addons/${id}`);
+
+// User Add-ons (Admin)
+export const getAllUserAddons = () => api.get('/admin/user-addons');
+export const getUserAddons = (userId) => api.get(`/admin/users/${userId}/addons`);
+export const activateUserAddon = (userId, data) => api.post(`/admin/users/${userId}/addons`, data);
+export const deactivateUserAddon = (userId, addonId) => api.delete(`/admin/users/${userId}/addons/${addonId}`);
+
+// Add-on Requests (Admin)
+export const getAddonRequests = () => api.get('/admin/addon-requests');
+export const approveAddonRequest = (requestId, months = 1) => api.put(`/admin/addon-requests/${requestId}/approve?months=${months}`);
+export const rejectAddonRequest = (requestId) => api.put(`/admin/addon-requests/${requestId}/reject`);
+
 // Profile/Settings
 export const getProfile = () => api.get('/profile');
 export const updateProfile = (data) => api.put('/profile', data);
