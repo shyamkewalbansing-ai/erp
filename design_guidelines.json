@@ -1,149 +1,144 @@
 {
-  "identity": {
+  "project_name": "Facturatie N.V.",
+  "design_philosophy": {
     "persona": "E1 - The Anti-AI Designer",
-    "philosophy": "Fusion over Imitation. Emotion First. Content is King.",
-    "anti_patterns": [
-      "Purple/Teal generic SaaS gradients",
-      "Inter font everywhere",
-      "Centered layouts without tension",
-      "Gradient overload (>20%)"
+    "core_concept": "Crystal Forest",
+    "vibe": "Professional, Transparent, Organic, Efficient",
+    "principles": [
+      "Fusion: Glassmorphism meets Tropical Business (Suriname context)",
+      "Depth: Layered interfaces using z-index and blur, not just flat cards",
+      "Clarity: Data is dense but breathable",
+      "Tactility: Micro-interactions on every touchpoint"
     ]
   },
-  "theme_strategy": {
-    "default_theme": "light",
-    "rationale": "Property management involves contracts, invoices, and data tables. A 'Paper/Physical' aesthetic (Light Mode) builds trust and readability. Dark mode is available for power users.",
-    "primary_color": "#0caf60",
-    "palette_archetype": "Organic & Earthy (Trust, Growth) + Swiss Utility (Data)",
-    "colors": {
-      "light": {
-        "background": "#fdfcf8",
-        "foreground": "#1a1c1a",
-        "card": "#ffffff",
-        "card_foreground": "#1a1c1a",
-        "primary": "#0caf60",
-        "primary_foreground": "#ffffff",
-        "secondary": "#f2f0e9",
-        "secondary_foreground": "#2c3e2c",
-        "muted": "#f2f0e9",
-        "muted_foreground": "#6b7280",
-        "accent": "#e8f5e9",
-        "accent_foreground": "#0caf60",
-        "border": "#e5e7eb",
-        "input": "#f3f4f6",
-        "ring": "#0caf60"
-      },
-      "dark": {
-        "background": "#0a0a0a",
-        "foreground": "#fdfcf8",
-        "card": "#121212",
-        "card_foreground": "#fdfcf8",
-        "primary": "#0caf60",
-        "primary_foreground": "#ffffff",
-        "secondary": "#1f2937",
-        "secondary_foreground": "#fdfcf8",
-        "muted": "#1f2937",
-        "muted_foreground": "#9ca3af",
-        "accent": "#1f2937",
-        "accent_foreground": "#0caf60",
-        "border": "#27272a",
-        "input": "#27272a",
-        "ring": "#0caf60"
-      }
-    }
-  },
   "typography": {
-    "strategy": "The Soft Utility",
-    "headings": {
-      "family": "Outfit, sans-serif",
-      "weights": ["500", "700"],
-      "usage": "Use for all H1-H4. Tight tracking (-0.02em).",
-      "cdn_import": "@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap');"
+    "font_family": {
+      "headings": "Outfit, sans-serif",
+      "body": "Plus Jakarta Sans, sans-serif",
+      "mono": "JetBrains Mono, monospace"
     },
-    "body": {
-      "family": "Plus Jakarta Sans, sans-serif",
-      "weights": ["400", "500", "600"],
-      "usage": "Use for all body text, tables, and UI elements. Excellent legibility for numbers (SRD currency).",
-      "cdn_import": "@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');"
+    "usage_rules": [
+      "Headings (H1-H3): Outfit. Weight: 600/700. Tracking: -0.02em. Use for page titles and major section headers.",
+      "Subheadings (H4-H6): Plus Jakarta Sans. Weight: 600. Tracking: normal. Use for card titles.",
+      "Body: Plus Jakarta Sans. Weight: 400/500. Leading: relaxed.",
+      "Data/Numbers: Plus Jakarta Sans (tabular-nums) or JetBrains Mono for financial data."
+    ],
+    "scale": {
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight",
+      "h2": "text-3xl font-bold tracking-tight",
+      "h3": "text-2xl font-semibold",
+      "body_lg": "text-lg leading-relaxed",
+      "body_base": "text-base leading-relaxed",
+      "caption": "text-sm text-muted-foreground"
     }
   },
-  "layout_system": {
-    "spacing_scale": "Tailwind Scale (p-1 to p-64)",
-    "container_padding": "p-6 or p-8 for internal containers",
-    "grids": {
-      "dashboard": {
-        "name": "Bento Mode B (High Density)",
-        "columns": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
-        "gap": "gap-4 or gap-6",
-        "rules": "Every pixel utilized. Use h-full on children. No jagged bottoms."
+  "colors": {
+    "primary": {
+      "hex": "#0caf60",
+      "tailwind": "bg-[#0caf60]",
+      "description": "The core brand color. Use for primary actions, active states, and key highlights."
+    },
+    "palettes": {
+      "light_mode": {
+        "background": "#f8faf9",
+        "surface": "#ffffff",
+        "surface_glass": "rgba(255, 255, 255, 0.7)",
+        "text_primary": "#0f172a",
+        "text_secondary": "#64748b",
+        "border": "#e2e8f0"
       },
-      "marketing": {
-        "name": "Tetris Mode A (Asymmetry)",
-        "columns": "grid-cols-1 md:grid-cols-8 lg:grid-cols-12",
-        "gap": "gap-8 to gap-12",
-        "rules": "Never fill 100% perfectly. Leave breathing room."
+      "dark_mode": {
+        "background": "#050a07",
+        "surface": "#0f1c15",
+        "surface_glass": "rgba(15, 28, 21, 0.6)",
+        "text_primary": "#f8fafc",
+        "text_secondary": "#94a3b8",
+        "border": "#1e293b"
       }
+    },
+    "semantic": {
+      "success": "#0caf60",
+      "warning": "#f59e0b",
+      "error": "#ef4444",
+      "info": "#3b82f6"
+    },
+    "gradients": {
+      "primary_glass": "linear-gradient(135deg, rgba(12, 175, 96, 0.1) 0%, rgba(12, 175, 96, 0.05) 100%)",
+      "surface_glass": "linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%)"
+    }
+  },
+  "glassmorphism_rules": {
+    "sidebar": {
+      "style": "Crystal Glass",
+      "classes": "bg-white/80 dark:bg-black/60 backdrop-blur-xl border-r border-white/20 dark:border-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
+    },
+    "header": {
+      "style": "Floating Glass",
+      "classes": "bg-white/70 dark:bg-black/50 backdrop-blur-md border-b border-white/20 dark:border-white/10 sticky top-0 z-50"
+    },
+    "cards": {
+      "style": "Tactile Surface",
+      "classes": "bg-white/60 dark:bg-white/5 backdrop-blur-lg border border-white/40 dark:border-white/10 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+    },
+    "modals": {
+      "style": "Deep Freeze",
+      "classes": "bg-white/90 dark:bg-[#0a120e]/90 backdrop-blur-2xl border border-white/20 shadow-2xl"
+    }
+  },
+  "layout_strategies": {
+    "dashboard_grid": {
+      "type": "Bento Grid",
+      "classes": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6",
+      "rules": "Use col-span-2 for main charts, col-span-1 for summary cards. Maintain strict alignment."
+    },
+    "data_tables": {
+      "style": "Clean Rows",
+      "classes": "w-full border-collapse",
+      "header_classes": "text-xs uppercase tracking-wider text-muted-foreground font-semibold bg-muted/30 p-4 text-left",
+      "row_classes": "border-b border-border/50 hover:bg-primary/5 transition-colors duration-200"
+    },
+    "spacing": {
+      "container_padding": "p-6 md:p-8 lg:p-10",
+      "section_gap": "gap-8",
+      "element_gap": "gap-4"
     }
   },
   "components": {
-    "strategy": "Hybrid",
-    "rules": [
-      "Use Shadcn for interactive logic (Forms, Select, Datepicker, Dialogs).",
-      "Use raw HTML/Tailwind for structural layout (Sections, Grids).",
-      "Customize Shadcn components to remove the 'Vercel default' look.",
-      "Cards: Use 'Tracing Beam' style for active states, 'Glassmorphism' for sticky headers."
-    ],
-    "specific_overrides": {
-      "Button": "Pill-shaped or sharp edges. No default rounded-md.",
-      "Card": "Flat background, 1px subtle border, no shadow by default. Hover: Lift + Shadow.",
-      "Input": "Background #f3f4f6 (Light) / #27272a (Dark). Border-transparent focus:ring-2."
+    "buttons": {
+      "primary": "bg-[#0caf60] hover:bg-[#099954] text-white shadow-lg shadow-[#0caf60]/20 rounded-lg px-6 py-2.5 font-medium transition-all active:scale-95",
+      "secondary": "bg-white dark:bg-white/10 border border-border hover:bg-muted text-foreground rounded-lg px-6 py-2.5 font-medium transition-all",
+      "ghost": "hover:bg-primary/10 text-primary hover:text-primary/80 rounded-lg px-4 py-2 transition-all"
+    },
+    "inputs": {
+      "base": "bg-white/50 dark:bg-black/20 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-2.5 outline-none transition-all backdrop-blur-sm"
+    },
+    "status_badges": {
+      "base": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset",
+      "paid": "bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400",
+      "pending": "bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-500",
+      "overdue": "bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/30 dark:text-red-400"
     }
   },
-  "visual_enhancers": {
-    "textures": "Subtle grain overlay on the main background to kill digital flatness.",
-    "glassmorphism": "Use for sticky headers: bg-white/70 backdrop-blur-xl backdrop-saturate-150 border-b border-white/20.",
-    "gradients": "NO full-screen gradients. Use subtle mesh gradients in specific 'hero' areas only.",
-    "shadows": "Layered shadows (ambient + direct).",
-    "borders": "Crisp edges via semi-transparent borders."
-  },
-  "motion": {
-    "library": "framer-motion",
-    "transitions": "transition: transform 0.2s ease, opacity 0.2s ease (NO transition: all)",
-    "page_load": "Staggered entrance for dashboard widgets.",
-    "micro_interactions": "Buttons scale down slightly (0.98) on click."
-  },
   "assets": {
-    "icons": "lucide-react (Default)",
     "images": {
-      "login_hero": {
-        "url": "https://images.unsplash.com/photo-1758548157747-285c7012db5b?crop=entropy&cs=srgb&fm=jpg&q=85",
-        "alt": "Modern minimalist apartment interior",
-        "usage": "Full height split-screen on Login/Register page."
-      },
-      "dashboard_placeholder_1": {
-        "url": "https://images.unsplash.com/photo-1757439402190-99b73ac8e807?crop=entropy&cs=srgb&fm=jpg&q=85",
-        "alt": "Modern kitchen with island",
-        "usage": "Widget background or property card example."
-      },
-      "handing_keys": {
-        "url": "https://images.pexels.com/photos/8292791/pexels-photo-8292791.jpeg",
-        "alt": "Property manager handing keys",
-        "usage": "Onboarding or 'Add Property' empty state."
-      },
-      "happy_tenants": {
-        "url": "https://images.pexels.com/photos/8962337/pexels-photo-8962337.jpeg",
-        "alt": "Happy diverse tenants",
-        "usage": "Tenant management section empty state or promo."
-      }
+      "login_background": "https://images.unsplash.com/photo-1617341623760-1919df79274c?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "dashboard_hero": "https://images.unsplash.com/photo-1675118546055-32c56579cc58?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "placeholder_avatar": "https://ui.shadcn.com/avatars/01.png"
+    },
+    "icons": {
+      "library": "lucide-react",
+      "style": "Stroke width 1.5px for elegance, 2px for active states"
     }
   },
   "universal_guidelines": [
-    "DO NOT use 'text-align: center' on the main App container.",
-    "DO NOT use generic AI emojis (🤖, 🚀) as icons.",
-    "Ensure all interactive elements have 'data-testid'.",
-    "Use 'sonner' for toasts.",
-    "Use 'recharts' for data visualization (customized to match theme).",
-    "Currency formatting: 'SRD 1.250,00' (Dutch format).",
-    "Language: Interface is English but designed to accommodate Dutch text expansion."
+    "DO NOT use generic gradients. Use the 'Crystal Forest' palette.",
+    "Ensure all interactive elements have `data-testid` attributes.",
+    "Use `sonner` for toasts.",
+    "Use `lucide-react` for icons.",
+    "Files are `.js` (React), not `.tsx`. Adapt code accordingly.",
+    "Dark mode is toggled via class 'dark' on the HTML element.",
+    "Always prioritize mobile responsiveness. Use `hidden md:block` for non-essential desktop elements.",
+    "For charts, use `recharts` with custom tooltips styled like glass cards."
   ],
-  "instructions_to_main_agent": "You are building a Rental Management SaaS. Focus on the 'Dashboard' and 'Tenants' pages first. Use the defined color palette strictly. Implement the 'Bento' grid for the dashboard. Ensure the 'Login' page uses the split-screen layout with the provided image. Use 'Outfit' for all headings and 'Plus Jakarta Sans' for body text."
+  "instructions_to_main_agent": "You are building the frontend for Facturatie N.V. Follow these guidelines strictly. Start by updating the Tailwind config to match the colors and border radius. Then, refactor the App.css to implement the glassmorphism utility classes. Finally, build the components and pages using the specified layout strategies. Remember: The user wants a 'Professional SaaS' look, so keep animations smooth (0.2s - 0.3s) and avoid excessive bouncing."
 }
