@@ -15,6 +15,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
 import api from '../lib/api';
+import { triggerRefresh, REFRESH_EVENTS } from '../lib/refreshEvents';
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
