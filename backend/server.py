@@ -3843,23 +3843,36 @@ async def get_loans(current_user: dict = Depends(get_current_active_user)):
     
     result = []
     for loan in loans:
-        amount_paid = loan_payments_map.get(loan["id"], 0)
-        remaining = loan["amount"] - amount_paid
-        
-        if remaining <= 0:
-            status = "paid"
-        elif amount_paid > 0:
-            status = "partial"
-        else:
-            status = "open"
-        
-        result.append(LoanResponse(
-            **loan,
-            tenant_name=tenant_map.get(loan["tenant_id"], "Onbekend"),
-            amount_paid=amount_paid,
-            remaining=max(0, remaining),
-            status=status
-        ))
+        try:
+            amount_paid = loan_payments_map.get(loan.get("id", ""), 0)
+            loan_amount = loan.get("amount", 0) or 0
+            remaining = loan_amount - amount_paid
+            
+            if remaining <= 0:
+                calc_status = "paid"
+            elif amount_paid > 0:
+                calc_status = "partial"
+            else:
+                calc_status = "open"
+            
+            # Build response manually to avoid duplicate keys
+            result.append(LoanResponse(
+                id=loan.get("id", ""),
+                tenant_id=loan.get("tenant_id", ""),
+                amount=loan_amount,
+                description=loan.get("description", ""),
+                loan_date=loan.get("loan_date") or loan.get("created_at", "")[:10] if loan.get("created_at") else "",
+                created_at=loan.get("created_at", ""),
+                user_id=loan.get("user_id", ""),
+                tenant_name=tenant_map.get(loan.get("tenant_id", ""), "Onbekend"),
+                amount_paid=amount_paid,
+                remaining=max(0, remaining),
+                status=calc_status
+            ))
+        except Exception as e:
+            # Skip invalid loans instead of crashing
+            logger.error(f"Error processing loan {loan.get('id')}: {e}")
+            continue
     
     return result
 
