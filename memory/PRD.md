@@ -310,7 +310,15 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 3. Huurcontracten upload functie
 4. Rapporten exporteren naar PDF/Excel
 
-## Recent Updates (23 Jan 2026)
+## Recent Updates (24 Jan 2026)
+### Factuur PDF Download ✅ (24 Jan 2026)
+- [x] **Download PDF knop** in factuur detail modal op Facturen pagina
+- [x] **Backend endpoint** `/api/invoices/pdf/{tenant_id}/{year}/{month}` genereert PDF
+- [x] **PDF bevat**: Huurder info, appartement, huur, betalingen, cumulatief saldo, leningen
+- [x] **Bestandsnaam**: `Factuur_{HuurderNaam}_{Maand}_{Jaar}.pdf`
+- [x] **Getest**: Backend 100% (8/8), Frontend 100%
+
+### Recent Updates (23 Jan 2026)
 ### New Features Implemented - Batch Complete ✅
 1. **Kasgeld Transactiegeschiedenis**: Onderhoud en salarissen nu zichtbaar in Kasgeld transacties
 2. **Onderhoud Kosten Toewijzing**: Dropdown om kosten aan Kasgeld (verhuurder) of Huurder toe te wijzen
