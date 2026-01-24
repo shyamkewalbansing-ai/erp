@@ -233,12 +233,21 @@ export default function Layout() {
       {/* Main content */}
       <main className="main-content">
         {/* Desktop header with notifications */}
-        <header className="hidden lg:flex sticky top-0 z-20 glass-header px-8 py-3 items-center justify-end border-b border-border/50">
+        <header className="hidden lg:flex sticky top-0 z-20 header-glass px-8 py-3 items-center justify-end gap-3 border-b border-border/50">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleDarkMode}
+            className="theme-toggle"
+            data-testid="theme-toggle-btn"
+          >
+            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </Button>
           {!isSuperAdmin() && <NotificationBell />}
         </header>
 
         {/* Mobile header */}
-        <header className="lg:hidden sticky top-0 z-20 glass-header px-4 py-3 flex items-center justify-between">
+        <header className="lg:hidden sticky top-0 z-20 header-glass px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -262,7 +271,18 @@ export default function Layout() {
               />
             )}
           </div>
-          {!isSuperAdmin() && <NotificationBell />}
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDarkMode}
+              className="theme-toggle w-9 h-9"
+              data-testid="theme-toggle-btn-mobile"
+            >
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </Button>
+            {!isSuperAdmin() && <NotificationBell />}
+          </div>
         </header>
 
         {/* Page content */}
