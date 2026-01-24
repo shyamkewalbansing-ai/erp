@@ -2218,7 +2218,7 @@ async def get_notifications(current_user: dict = Depends(get_current_active_user
     
     # === 4. OUTSTANDING LOAN REMINDERS ===
     loans = await db.loans.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
-    loan_ids = [l["id"] for l in loans]
+    loan_ids = [l.get("id") for l in loans if l.get("id")]
     
     if loan_ids:
         loan_payments = await db.payments.find(
@@ -2230,40 +2230,53 @@ async def get_notifications(current_user: dict = Depends(get_current_active_user
         for lp in loan_payments:
             lid = lp.get("loan_id")
             if lid:
-                loan_payments_map[lid] = loan_payments_map.get(lid, 0) + lp["amount"]
+                loan_payments_map[lid] = loan_payments_map.get(lid, 0) + (lp.get("amount") or 0)
         
         for loan in loans:
-            paid = loan_payments_map.get(loan["id"], 0)
-            remaining = loan["amount"] - paid
-            
-            if remaining > 0:
-                tenant = await db.tenants.find_one({"id": loan["tenant_id"]}, {"_id": 0, "name": 1})
-                tenant_name = tenant["name"] if tenant else "Onbekend"
+            try:
+                loan_id = loan.get("id")
+                if not loan_id:
+                    continue
+                    
+                paid = loan_payments_map.get(loan_id, 0)
+                loan_amount = loan.get("amount") or 0
+                remaining = loan_amount - paid
                 
-                # Calculate days since loan
-                loan_date_str = loan.get("loan_date") or loan.get("created_at")
-                try:
-                    if loan_date_str:
-                        loan_date = datetime.fromisoformat(loan_date_str.replace('Z', '+00:00'))
-                        days_since_loan = (now - loan_date).days
-                    else:
+                if remaining > 0:
+                    tenant_id = loan.get("tenant_id")
+                    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0, "name": 1}) if tenant_id else None
+                    tenant_name = tenant.get("name", "Onbekend") if tenant else "Onbekend"
+                    
+                    # Calculate days since loan
+                    loan_date_str = loan.get("loan_date") or loan.get("created_at") or ""
+                    try:
+                        if loan_date_str:
+                            clean_date = loan_date_str.replace('Z', '+00:00')
+                            if '+' not in clean_date and 'T' in clean_date:
+                                clean_date = clean_date + '+00:00'
+                            loan_date = datetime.fromisoformat(clean_date)
+                            days_since_loan = (now - loan_date).days
+                        else:
+                            days_since_loan = 0
+                    except:
                         days_since_loan = 0
-                except:
-                    days_since_loan = 0
-                
-                priority = "high" if days_since_loan > 60 else ("medium" if days_since_loan > 30 else "low")
-                
-                notifications.append(NotificationItem(
-                    id=str(uuid.uuid4()),
-                    type="loan_outstanding",
-                    title="Openstaande lening",
-                    message=f"{tenant_name} heeft nog SRD {remaining:,.2f} openstaande lening",
-                    priority=priority,
-                    related_id=loan["id"],
-                    related_name=tenant_name,
-                    amount=remaining,
-                    due_date=loan_date_str or ""
-                ))
+                    
+                    priority = "high" if days_since_loan > 60 else ("medium" if days_since_loan > 30 else "low")
+                    
+                    notifications.append(NotificationItem(
+                        id=str(uuid.uuid4()),
+                        type="loan_outstanding",
+                        title="Openstaande lening",
+                        message=f"{tenant_name} heeft nog SRD {remaining:,.2f} openstaande lening",
+                        priority=priority,
+                        related_id=loan_id,
+                        related_name=tenant_name,
+                        amount=remaining,
+                        due_date=loan_date_str[:10] if loan_date_str else ""
+                    ))
+            except Exception as e:
+                logger.error(f"Error processing loan notification: {e}")
+                continue
     
     # === 5. SALARY PAYMENT REMINDERS ===
     employees = await db.employees.find(
