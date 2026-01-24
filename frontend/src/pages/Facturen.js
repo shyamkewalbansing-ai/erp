@@ -850,6 +850,121 @@ export default function Facturen() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Payment Modal */}
+      <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary" />
+              Betaling Registreren
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Tenant Selection */}
+            <div className="space-y-2">
+              <Label>Huurder *</Label>
+              <Select 
+                value={paymentForm.tenant_id} 
+                onValueChange={handlePaymentTenantChange}
+              >
+                <SelectTrigger data-testid="payment-tenant-select">
+                  <SelectValue placeholder="Selecteer huurder" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tenants.filter(t => apartments.some(a => a.tenant_id === t.id)).map(tenant => (
+                    <SelectItem key={tenant.id} value={tenant.id}>
+                      {tenant.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Period */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Maand *</Label>
+                <Select 
+                  value={String(paymentForm.period_month)} 
+                  onValueChange={(v) => setPaymentForm({...paymentForm, period_month: parseInt(v)})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {MONTHS.map((month, idx) => (
+                      <SelectItem key={idx} value={String(idx + 1)}>{month}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Jaar *</Label>
+                <Select 
+                  value={String(paymentForm.period_year)} 
+                  onValueChange={(v) => setPaymentForm({...paymentForm, period_year: parseInt(v)})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[currentDate.getFullYear() - 1, currentDate.getFullYear(), currentDate.getFullYear() + 1].map(year => (
+                      <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Amount */}
+            <div className="space-y-2">
+              <Label>Bedrag (SRD) *</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={paymentForm.amount}
+                onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
+                placeholder="0.00"
+                data-testid="payment-amount"
+              />
+            </div>
+
+            {/* Payment Date */}
+            <div className="space-y-2">
+              <Label>Betaaldatum *</Label>
+              <Input
+                type="date"
+                value={paymentForm.payment_date}
+                onChange={(e) => setPaymentForm({...paymentForm, payment_date: e.target.value})}
+                data-testid="payment-date"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label>Omschrijving</Label>
+              <Textarea
+                value={paymentForm.description}
+                onChange={(e) => setPaymentForm({...paymentForm, description: e.target.value})}
+                placeholder="Optionele omschrijving..."
+                rows={2}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPaymentModal(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleSavePayment} disabled={savingPayment} data-testid="save-payment-btn">
+              {savingPayment ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+              Opslaan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
