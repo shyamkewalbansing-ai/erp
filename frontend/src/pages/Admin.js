@@ -95,6 +95,13 @@ export default function Admin() {
   const [selectedSubscription, setSelectedSubscription] = useState(null);
   const [selectedDomain, setSelectedDomain] = useState(null);
   
+  // Add-ons state
+  const [addons, setAddons] = useState([]);
+  const [addonRequests, setAddonRequests] = useState([]);
+  const [selectedAddon, setSelectedAddon] = useState(null);
+  const [selectedAddonRequest, setSelectedAddonRequest] = useState(null);
+  const [customerAddons, setCustomerAddons] = useState([]);
+  
   // Dialog states
   const [activateDialogOpen, setActivateDialogOpen] = useState(false);
   const [deactivateDialogOpen, setDeactivateDialogOpen] = useState(false);
@@ -107,6 +114,14 @@ export default function Admin() {
   const [deleteDomainDialogOpen, setDeleteDomainDialogOpen] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   
+  // Add-on dialog states
+  const [createAddonDialogOpen, setCreateAddonDialogOpen] = useState(false);
+  const [editAddonDialogOpen, setEditAddonDialogOpen] = useState(false);
+  const [deleteAddonDialogOpen, setDeleteAddonDialogOpen] = useState(false);
+  const [activateAddonDialogOpen, setActivateAddonDialogOpen] = useState(false);
+  const [customerAddonsDialogOpen, setCustomerAddonsDialogOpen] = useState(false);
+  const [approveAddonRequestDialogOpen, setApproveAddonRequestDialogOpen] = useState(false);
+  
   // Form states
   const [activating, setActivating] = useState(false);
   const [months, setMonths] = useState('1');
@@ -115,6 +130,20 @@ export default function Admin() {
   const [newPassword, setNewPassword] = useState('');
   const [editForm, setEditForm] = useState({ name: '', email: '', company_name: '' });
   const [newDomain, setNewDomain] = useState({ domain: '', user_id: '' });
+  
+  // Add-on form states
+  const [newAddon, setNewAddon] = useState({
+    name: '',
+    slug: '',
+    description: '',
+    price: 3500
+  });
+  const [editAddonForm, setEditAddonForm] = useState({
+    name: '',
+    description: '',
+    price: 0
+  });
+  const [addonMonths, setAddonMonths] = useState('1');
   
   // Create customer form
   const [newCustomer, setNewCustomer] = useState({
