@@ -46,7 +46,9 @@ const customerNavItems = [
 export default function Layout() {
   const { user, logout, hasActiveSubscription, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('darkMode');
@@ -55,6 +57,13 @@ export default function Layout() {
     }
     return false;
   });
+
+  // Auto-expand settings menu if on settings or subscription page
+  useEffect(() => {
+    if (location.pathname === '/instellingen' || location.pathname === '/abonnement') {
+      setSettingsOpen(true);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     if (darkMode) {
