@@ -230,13 +230,10 @@ export default function Facturen() {
     let partialCount = 0;
     let unpaidCount = 0;
     
+    const displayMonths = getDisplayMonths();
+    
     activeTenantsData.forEach(tenant => {
-      for (let month = 1; month <= 12; month++) {
-        // Only count months up to current month for current year
-        if (selectedYear === currentDate.getFullYear() && month > currentDate.getMonth() + 1) {
-          continue;
-        }
-        
+      displayMonths.forEach(month => {
         const data = getInvoiceData(tenant.id, selectedYear, month);
         totalDue += data.rentAmount;
         totalPaid += data.totalPaid;
@@ -244,7 +241,7 @@ export default function Facturen() {
         if (data.status === 'paid') paidCount++;
         else if (data.status === 'partial') partialCount++;
         else unpaidCount++;
-      }
+      });
     });
     
     return { totalDue, totalPaid, balance: totalDue - totalPaid, paidCount, partialCount, unpaidCount };
