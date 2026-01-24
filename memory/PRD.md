@@ -59,6 +59,28 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 - [x] **Prioriteit systeem**: Urgent (rood), Aandacht (geel), Info (groen)
 - [x] **Ververs knop** om notificaties te herladen
 
+### Wachtwoord Vergeten ✅ (24 Jan 2026)
+- [x] **"Wachtwoord vergeten?"** link op inlogpagina
+- [x] **Modal** om e-mailadres in te voeren
+- [x] **Reset link** per e-mail (1 uur geldig)
+- [x] **Reset wachtwoord pagina** om nieuw wachtwoord in te stellen
+- [x] **Beveiliging**: E-mail enumeratie voorkomen (altijd success response)
+
+### Verbeterde Facturen Pagina ✅ (24 Jan 2026)
+- [x] **Jaar selector** met navigatie pijlen en dropdown
+- [x] **Maandkaarten** met Betaald/Openstaand aantallen
+- [x] **Bij klik op maand**: Detailtabel met alle huurders
+- [x] **Kolommen**: Huurder, Appartement, Huur, Betaald, Openstaand, Cum. Saldo, Status, Actie
+- [x] **Jaaroverzicht tabel** met alle huurders en maanden
+- [x] **Status indicators**: ✓ (betaald), ½ (gedeeltelijk), ○ (openstaand)
+- [x] **Detail modal** met complete factuurinfo:
+  - Periode en status
+  - Huurder en appartement gegevens
+  - Huur, onderhoudskosten, betalingen
+  - Cumulatief saldo (achterstallig/vooruit betaald)
+  - Openstaande leningen
+  - Betalingsgeschiedenis
+
 ### Dashboard Verbeteringen ✅ (23 Jan 2026)
 - [x] "Openstaand" kaart toont nu gecombineerd bedrag (huur + leningen)
 - [x] "Openstaand" toont ondertitel "incl. leningen SRD X" als er openstaande leningen zijn
