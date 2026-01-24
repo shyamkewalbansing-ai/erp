@@ -1174,6 +1174,266 @@ server {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Add-ons Tab */}
+        <TabsContent value="addons">
+          <div className="space-y-6">
+            {/* Add-on Requests */}
+            {addonRequests.length > 0 && (
+              <Card className="border-orange-500/30 bg-orange-500/5">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-500" />
+                    <CardTitle className="text-lg">Openstaande Add-on Verzoeken</CardTitle>
+                    <Badge className="bg-orange-500 text-white">{addonRequests.length}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {addonRequests.map((request) => (
+                      <div key={request.id} className="flex items-center justify-between p-4 bg-background rounded-lg border">
+                        <div>
+                          <p className="font-medium">{request.user_name}</p>
+                          <p className="text-sm text-muted-foreground">{request.user_email}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline">{request.addon_name}</Badge>
+                            <span className="text-sm text-primary font-medium">
+                              {formatCurrency(request.addon_price || 0)}/maand
+                            </span>
+                          </div>
+                          {request.notes && (
+                            <p className="text-sm text-muted-foreground mt-1">"{request.notes}"</p>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              setSelectedAddonRequest(request);
+                              setAddonMonths('1');
+                              setApproveAddonRequestDialogOpen(true);
+                            }}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Goedkeuren
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => handleRejectAddonRequest(request.id)}
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Afwijzen
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Add-ons Management */}
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <CardTitle>Add-ons Beheer</CardTitle>
+                    <CardDescription>Beheer beschikbare add-ons en prijzen</CardDescription>
+                  </div>
+                  <Button onClick={() => setCreateAddonDialogOpen(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nieuwe Add-on
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b">
+                        <th className="text-left py-3 px-4 font-medium">Naam</th>
+                        <th className="text-left py-3 px-4 font-medium">Slug</th>
+                        <th className="text-left py-3 px-4 font-medium">Prijs/maand</th>
+                        <th className="text-left py-3 px-4 font-medium">Status</th>
+                        <th className="text-right py-3 px-4 font-medium">Acties</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {addons.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="text-center py-8 text-muted-foreground">
+                            Geen add-ons gevonden
+                          </td>
+                        </tr>
+                      ) : (
+                        addons.map((addon) => (
+                          <tr key={addon.id} className="border-b hover:bg-muted/50">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2">
+                                <Package className="w-4 h-4 text-primary" />
+                                <span className="font-medium">{addon.name}</span>
+                              </div>
+                              {addon.description && (
+                                <p className="text-xs text-muted-foreground mt-1 max-w-xs truncate">
+                                  {addon.description}
+                                </p>
+                              )}
+                            </td>
+                            <td className="py-3 px-4">
+                              <code className="text-xs bg-muted px-2 py-1 rounded">{addon.slug}</code>
+                            </td>
+                            <td className="py-3 px-4 font-medium text-primary">
+                              {formatCurrency(addon.price)}
+                            </td>
+                            <td className="py-3 px-4">
+                              <Badge className={addon.is_active ? 'bg-green-500/10 text-green-500' : 'bg-gray-500/10 text-gray-500'}>
+                                {addon.is_active ? 'Actief' : 'Inactief'}
+                              </Badge>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setSelectedAddon(addon);
+                                    setEditAddonForm({
+                                      name: addon.name,
+                                      description: addon.description || '',
+                                      price: addon.price
+                                    });
+                                    setEditAddonDialogOpen(true);
+                                  }}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => {
+                                    setSelectedAddon(addon);
+                                    setDeleteAddonDialogOpen(true);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Activate Add-on for Customer */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Add-on Activeren voor Klant</CardTitle>
+                <CardDescription>Selecteer een klant en activeer een add-on</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Klant selecteren</Label>
+                    <Select 
+                      value={selectedCustomer?.id || ''} 
+                      onValueChange={(value) => {
+                        const customer = customers.find(c => c.id === value);
+                        setSelectedCustomer(customer);
+                        if (customer) {
+                          loadCustomerAddons(customer.id);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecteer een klant" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customers.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.name} ({customer.email})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {selectedCustomer && (
+                    <div className="space-y-2">
+                      <Label>Add-on selecteren</Label>
+                      <div className="flex gap-2">
+                        <Select 
+                          value={selectedAddon?.id || ''} 
+                          onValueChange={(value) => setSelectedAddon(addons.find(a => a.id === value))}
+                        >
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Selecteer een add-on" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {addons.filter(a => a.is_active).map((addon) => (
+                              <SelectItem key={addon.id} value={addon.id}>
+                                {addon.name} - {formatCurrency(addon.price)}/mnd
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Button 
+                          onClick={() => setActivateAddonDialogOpen(true)}
+                          disabled={!selectedAddon}
+                        >
+                          Activeren
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Show customer's current add-ons */}
+                {selectedCustomer && customerAddons.length > 0 && (
+                  <div className="mt-6 pt-4 border-t">
+                    <h4 className="font-medium mb-3">Actieve add-ons voor {selectedCustomer.name}</h4>
+                    <div className="space-y-2">
+                      {customerAddons.map((ua) => (
+                        <div key={ua.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                          <div>
+                            <span className="font-medium">{ua.addon_name}</span>
+                            <div className="flex items-center gap-2 mt-1">
+                              <Badge className={
+                                ua.status === 'active' ? 'bg-green-500/10 text-green-500' : 
+                                ua.status === 'expired' ? 'bg-red-500/10 text-red-500' : 
+                                'bg-gray-500/10 text-gray-500'
+                              }>
+                                {ua.status === 'active' ? 'Actief' : ua.status === 'expired' ? 'Verlopen' : 'Gedeactiveerd'}
+                              </Badge>
+                              {ua.end_date && (
+                                <span className="text-xs text-muted-foreground">
+                                  Tot: {new Date(ua.end_date).toLocaleDateString('nl-NL')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          {ua.status === 'active' && (
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => handleDeactivateUserAddon(ua.addon_id)}
+                            >
+                              Deactiveren
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Create Customer Dialog */}
