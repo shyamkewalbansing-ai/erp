@@ -271,11 +271,27 @@ export default function Facturen() {
     }
   };
 
-  // Get months to display
+  // Get months to display - includes future months if there are payments for them
   const getDisplayMonths = () => {
-    const maxMonth = selectedYear === currentDate.getFullYear() 
+    // Start with current month as minimum
+    let maxMonth = selectedYear === currentDate.getFullYear() 
       ? currentDate.getMonth() + 1 
       : 12;
+    
+    // Check if there are payments for future months (vooruit betaald)
+    if (selectedYear === currentDate.getFullYear()) {
+      payments.forEach(p => {
+        if (p.period_year === selectedYear && p.period_month > maxMonth) {
+          maxMonth = Math.min(12, p.period_month);
+        }
+      });
+    }
+    
+    // For past years, show all 12 months
+    if (selectedYear < currentDate.getFullYear()) {
+      maxMonth = 12;
+    }
+    
     return Array.from({ length: maxMonth }, (_, i) => i + 1);
   };
 
