@@ -49,6 +49,7 @@ const MONTHS = [
 ];
 
 export default function Facturen() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [tenants, setTenants] = useState([]);
   const [apartments, setApartments] = useState([]);
@@ -61,6 +62,20 @@ export default function Facturen() {
   const currentDate = new Date();
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(null); // null = show year overview
+  
+  // Payment modal
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [savingPayment, setSavingPayment] = useState(false);
+  const [paymentForm, setPaymentForm] = useState({
+    tenant_id: '',
+    apartment_id: '',
+    amount: '',
+    payment_date: new Date().toISOString().split('T')[0],
+    payment_type: 'rent',
+    period_month: currentDate.getMonth() + 1,
+    period_year: currentDate.getFullYear(),
+    description: ''
+  });
   
   // Detail modal
   const [showDetail, setShowDetail] = useState(false);
