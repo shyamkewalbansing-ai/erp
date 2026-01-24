@@ -5807,6 +5807,381 @@ async def delete_notification(notification_id: str, current_user: dict = Depends
     
     return requests
 
+# ============================================
+# AI CHAT ASSISTANT
+# ============================================
+
+class AIChatMessage(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+class AIActionResult(BaseModel):
+    success: bool
+    message: str
+    data: Optional[dict] = None
+
+# AI System functions to execute commands
+async def ai_get_dashboard_stats(user_id: str):
+    """Get dashboard statistics"""
+    tenants = await db.tenants.count_documents({"user_id": user_id})
+    apartments = await db.apartments.count_documents({"user_id": user_id})
+    
+    # Get payments this month
+    now = datetime.now(timezone.utc)
+    start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    
+    payments_pipeline = [
+        {"$match": {"user_id": user_id, "created_at": {"$gte": start_of_month.isoformat()}}},
+        {"$group": {"_id": None, "total": {"$sum": "$amount"}}}
+    ]
+    payments_result = await db.payments.aggregate(payments_pipeline).to_list(1)
+    monthly_income = payments_result[0]["total"] if payments_result else 0
+    
+    # Outstanding balance
+    outstanding_pipeline = [
+        {"$match": {"user_id": user_id, "balance": {"$gt": 0}}},
+        {"$group": {"_id": None, "total": {"$sum": "$balance"}}}
+    ]
+    # This is simplified - actual implementation would calculate from payments
+    
+    return {
+        "total_tenants": tenants,
+        "total_apartments": apartments,
+        "monthly_income": monthly_income,
+        "currency": "SRD"
+    }
+
+async def ai_list_tenants(user_id: str):
+    """List all tenants"""
+    tenants = await db.tenants.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    return tenants
+
+async def ai_create_tenant(user_id: str, name: str, phone: str, email: str = None, address: str = None, id_number: str = None):
+    """Create a new tenant"""
+    tenant = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "name": name,
+        "phone": phone,
+        "email": email,
+        "address": address,
+        "id_number": id_number,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.tenants.insert_one(tenant)
+    return {"success": True, "tenant_id": tenant["id"], "name": name}
+
+async def ai_list_apartments(user_id: str):
+    """List all apartments"""
+    apartments = await db.apartments.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    return apartments
+
+async def ai_create_apartment(user_id: str, name: str, address: str, rent_amount: float, description: str = None):
+    """Create a new apartment"""
+    apartment = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "name": name,
+        "address": address,
+        "rent_amount": rent_amount,
+        "description": description,
+        "status": "available",
+        "tenant_id": None,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.apartments.insert_one(apartment)
+    return {"success": True, "apartment_id": apartment["id"], "name": name}
+
+async def ai_get_tenant_balance(user_id: str, tenant_name: str):
+    """Get balance for a specific tenant by name"""
+    tenant = await db.tenants.find_one({"user_id": user_id, "name": {"$regex": tenant_name, "$options": "i"}})
+    if not tenant:
+        return {"error": f"Huurder '{tenant_name}' niet gevonden"}
+    
+    apartment = await db.apartments.find_one({"user_id": user_id, "tenant_id": tenant["id"]})
+    if not apartment:
+        return {"tenant": tenant["name"], "message": "Geen appartement toegewezen"}
+    
+    # Calculate balance
+    payments = await db.payments.find({
+        "user_id": user_id,
+        "tenant_id": tenant["id"],
+        "payment_type": "rent"
+    }).to_list(1000)
+    
+    total_paid = sum(p.get("amount", 0) for p in payments)
+    
+    return {
+        "tenant": tenant["name"],
+        "apartment": apartment["name"],
+        "rent_amount": apartment["rent_amount"],
+        "total_paid": total_paid
+    }
+
+async def ai_register_payment(user_id: str, tenant_name: str, amount: float, payment_type: str = "rent", description: str = None):
+    """Register a payment for a tenant"""
+    tenant = await db.tenants.find_one({"user_id": user_id, "name": {"$regex": tenant_name, "$options": "i"}})
+    if not tenant:
+        return {"error": f"Huurder '{tenant_name}' niet gevonden"}
+    
+    apartment = await db.apartments.find_one({"user_id": user_id, "tenant_id": tenant["id"]})
+    
+    now = datetime.now(timezone.utc)
+    payment = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "tenant_id": tenant["id"],
+        "apartment_id": apartment["id"] if apartment else None,
+        "amount": amount,
+        "payment_type": payment_type,
+        "payment_date": now.strftime("%Y-%m-%d"),
+        "period_month": now.month,
+        "period_year": now.year,
+        "description": description or f"Betaling van {tenant['name']}",
+        "created_at": now.isoformat()
+    }
+    await db.payments.insert_one(payment)
+    return {"success": True, "payment_id": payment["id"], "amount": amount, "tenant": tenant["name"]}
+
+async def ai_list_payments(user_id: str, limit: int = 10):
+    """List recent payments"""
+    payments = await db.payments.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    # Add tenant names
+    for payment in payments:
+        tenant = await db.tenants.find_one({"id": payment.get("tenant_id")})
+        payment["tenant_name"] = tenant["name"] if tenant else "Onbekend"
+    
+    return payments
+
+async def ai_list_loans(user_id: str):
+    """List all loans"""
+    loans = await db.loans.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    for loan in loans:
+        tenant = await db.tenants.find_one({"id": loan.get("tenant_id")})
+        loan["tenant_name"] = tenant["name"] if tenant else "Onbekend"
+    return loans
+
+async def ai_create_loan(user_id: str, tenant_name: str, amount: float, description: str = None):
+    """Create a loan for a tenant"""
+    tenant = await db.tenants.find_one({"user_id": user_id, "name": {"$regex": tenant_name, "$options": "i"}})
+    if not tenant:
+        return {"error": f"Huurder '{tenant_name}' niet gevonden"}
+    
+    loan = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "tenant_id": tenant["id"],
+        "amount": amount,
+        "remaining_amount": amount,
+        "description": description or f"Lening aan {tenant['name']}",
+        "status": "open",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.loans.insert_one(loan)
+    return {"success": True, "loan_id": loan["id"], "amount": amount, "tenant": tenant["name"]}
+
+async def ai_get_kasgeld(user_id: str):
+    """Get kasgeld (petty cash) balance"""
+    kasgeld = await db.kasgeld.find_one({"user_id": user_id})
+    if not kasgeld:
+        return {"balance": 0, "transactions": []}
+    
+    transactions = await db.kasgeld_transactions.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(10).to_list(10)
+    
+    return {"balance": kasgeld.get("balance", 0), "recent_transactions": transactions}
+
+# Main AI processing function
+async def process_ai_command(user_id: str, message: str, session_id: str):
+    """Process user message with AI and execute commands"""
+    
+    # Get current data context
+    stats = await ai_get_dashboard_stats(user_id)
+    tenants = await ai_list_tenants(user_id)
+    apartments = await ai_list_apartments(user_id)
+    
+    tenant_list = ", ".join([t["name"] for t in tenants[:10]]) if tenants else "Geen huurders"
+    apartment_list = ", ".join([f"{a['name']} (SRD {a['rent_amount']})" for a in apartments[:10]]) if apartments else "Geen appartementen"
+    
+    system_prompt = f"""Je bent de AI assistent van Facturatie N.V., een verhuurbeheersysteem in Suriname.
+Je helpt de gebruiker met het beheren van hun verhuuradministratie.
+
+HUIDIGE SYSTEEM DATA:
+- Totaal huurders: {stats['total_tenants']}
+- Totaal appartementen: {stats['total_apartments']}
+- Maandinkomen: SRD {stats['monthly_income']:,.2f}
+- Huurders: {tenant_list}
+- Appartementen: {apartment_list}
+
+JE KUNT DE VOLGENDE ACTIES UITVOEREN:
+1. HUURDER_TOEVOEGEN: Nieuwe huurder aanmaken
+2. APPARTEMENT_TOEVOEGEN: Nieuw appartement aanmaken
+3. BETALING_REGISTREREN: Betaling registreren voor een huurder
+4. SALDO_OPVRAGEN: Saldo van een huurder bekijken
+5. LENING_AANMAKEN: Lening aanmaken voor een huurder
+6. OVERZICHT_GEVEN: Overzicht geven van huurders, appartementen, betalingen, etc.
+
+WANNEER DE GEBRUIKER EEN ACTIE WIL UITVOEREN, GEEF DAN EEN JSON RESPONSE IN DIT FORMAAT:
+{{"action": "ACTIE_NAAM", "params": {{"param1": "waarde1", "param2": "waarde2"}}}}
+
+VOORBEELDEN:
+- "Voeg Jan Pietersen toe met telefoon 8234567" -> {{"action": "HUURDER_TOEVOEGEN", "params": {{"name": "Jan Pietersen", "phone": "8234567"}}}}
+- "Registreer betaling van 5000 voor Jan" -> {{"action": "BETALING_REGISTREREN", "params": {{"tenant_name": "Jan", "amount": 5000}}}}
+- "Wat is het saldo van Maria?" -> {{"action": "SALDO_OPVRAGEN", "params": {{"tenant_name": "Maria"}}}}
+- "Maak een lening van 2000 voor Piet" -> {{"action": "LENING_AANMAKEN", "params": {{"tenant_name": "Piet", "amount": 2000}}}}
+
+Als de gebruiker alleen informatie vraagt of een gesprek voert, antwoord dan normaal in het Nederlands ZONDER JSON.
+Wees vriendelijk, professioneel en behulpzaam. Gebruik de valuta SRD (Surinaamse Dollar).
+Als je een actie uitvoert, bevestig dit duidelijk aan de gebruiker."""
+
+    # Initialize AI chat
+    llm_key = os.environ.get("EMERGENT_LLM_KEY")
+    chat = LlmChat(
+        api_key=llm_key,
+        session_id=session_id,
+        system_message=system_prompt
+    ).with_model("openai", "gpt-4o")
+    
+    # Send message to AI
+    user_msg = UserMessage(text=message)
+    ai_response = await chat.send_message(user_msg)
+    
+    # Check if response contains an action
+    action_result = None
+    final_response = ai_response
+    
+    try:
+        # Try to parse JSON action from response
+        if "{" in ai_response and "}" in ai_response:
+            # Find JSON in response
+            start = ai_response.find("{")
+            end = ai_response.rfind("}") + 1
+            json_str = ai_response[start:end]
+            action_data = json.loads(json_str)
+            
+            if "action" in action_data:
+                action = action_data["action"]
+                params = action_data.get("params", {})
+                
+                # Execute action
+                if action == "HUURDER_TOEVOEGEN":
+                    result = await ai_create_tenant(
+                        user_id, 
+                        params.get("name"), 
+                        params.get("phone"),
+                        params.get("email"),
+                        params.get("address"),
+                        params.get("id_number")
+                    )
+                    action_result = result
+                    final_response = f"✅ Huurder '{params.get('name')}' is succesvol toegevoegd!"
+                    
+                elif action == "APPARTEMENT_TOEVOEGEN":
+                    result = await ai_create_apartment(
+                        user_id,
+                        params.get("name"),
+                        params.get("address", ""),
+                        float(params.get("rent_amount", 0)),
+                        params.get("description")
+                    )
+                    action_result = result
+                    final_response = f"✅ Appartement '{params.get('name')}' is succesvol toegevoegd!"
+                    
+                elif action == "BETALING_REGISTREREN":
+                    result = await ai_register_payment(
+                        user_id,
+                        params.get("tenant_name"),
+                        float(params.get("amount", 0)),
+                        params.get("payment_type", "rent"),
+                        params.get("description")
+                    )
+                    if "error" in result:
+                        final_response = f"❌ {result['error']}"
+                    else:
+                        action_result = result
+                        final_response = f"✅ Betaling van SRD {params.get('amount'):,.2f} voor {params.get('tenant_name')} is geregistreerd!"
+                    
+                elif action == "SALDO_OPVRAGEN":
+                    result = await ai_get_tenant_balance(user_id, params.get("tenant_name"))
+                    if "error" in result:
+                        final_response = f"❌ {result['error']}"
+                    else:
+                        action_result = result
+                        if "message" in result:
+                            final_response = f"📊 **{result['tenant']}**: {result['message']}"
+                        else:
+                            final_response = f"📊 **Saldo {result['tenant']}**\n- Appartement: {result['apartment']}\n- Huur: SRD {result['rent_amount']:,.2f}\n- Totaal betaald: SRD {result['total_paid']:,.2f}"
+                    
+                elif action == "LENING_AANMAKEN":
+                    result = await ai_create_loan(
+                        user_id,
+                        params.get("tenant_name"),
+                        float(params.get("amount", 0)),
+                        params.get("description")
+                    )
+                    if "error" in result:
+                        final_response = f"❌ {result['error']}"
+                    else:
+                        action_result = result
+                        final_response = f"✅ Lening van SRD {params.get('amount'):,.2f} voor {params.get('tenant_name')} is aangemaakt!"
+                    
+                elif action == "OVERZICHT_GEVEN":
+                    # Already have stats, just format nicely
+                    final_response = f"""📊 **Overzicht Facturatie N.V.**
+
+👥 **Huurders:** {stats['total_tenants']}
+🏠 **Appartementen:** {stats['total_apartments']}
+💰 **Maandinkomen:** SRD {stats['monthly_income']:,.2f}
+
+**Huurders:** {tenant_list}
+**Appartementen:** {apartment_list}"""
+                    
+    except json.JSONDecodeError:
+        # Not a JSON response, just return the AI's natural response
+        pass
+    except Exception as e:
+        logger.error(f"AI action error: {e}")
+    
+    return {
+        "response": final_response,
+        "action_executed": action_result is not None,
+        "action_result": action_result
+    }
+
+@api_router.post("/ai/chat")
+async def ai_chat(message_data: AIChatMessage, current_user: dict = Depends(get_current_user)):
+    """AI Chat endpoint - processes user messages and executes commands"""
+    try:
+        session_id = message_data.session_id or f"chat_{current_user['id']}_{datetime.now().strftime('%Y%m%d')}"
+        
+        result = await process_ai_command(
+            current_user["id"],
+            message_data.message,
+            session_id
+        )
+        
+        # Store chat message in database
+        await db.ai_chat_history.insert_one({
+            "id": str(uuid.uuid4()),
+            "user_id": current_user["id"],
+            "session_id": session_id,
+            "user_message": message_data.message,
+            "ai_response": result["response"],
+            "action_executed": result["action_executed"],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return result
+    except Exception as e:
+        logger.error(f"AI Chat error: {e}")
+        raise HTTPException(status_code=500, detail=f"AI fout: {str(e)}")
+
 # Include the router in the main app
 app.include_router(api_router)
 
