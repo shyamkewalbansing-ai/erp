@@ -316,6 +316,9 @@ export default function Layout() {
           <Outlet />
         </div>
       </main>
+
+      {/* AI Assistant - only for customers */}
+      {!isSuperAdmin() && <AIAssistant />}
     </div>
   );
 }
