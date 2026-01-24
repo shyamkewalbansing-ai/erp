@@ -307,11 +307,23 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 
 ## Next Action Items
 1. E-mail bezorging naar externe domeinen (DNS SPF/DKIM records nodig)
-2. E-mail herinneringen voor late betalingen (SendGrid/Resend)
-3. Huurcontracten upload functie
-4. Rapporten exporteren naar PDF/Excel
+2. UI Redesign voltooien voor resterende pagina's
+3. E-mail herinneringen voor late betalingen (SendGrid/Resend)
+4. Huurcontracten upload functie
+5. Rapporten exporteren naar PDF/Excel
 
 ## Recent Updates (24 Jan 2026)
+
+### Backend Hardening & Crash Prevention ✅ (24 Jan 2026)
+- [x] **Global Exception Handler** toegevoegd om crashes te voorkomen
+- [x] **Robuuste data-ophaling** voor alle endpoints met `.get()` en defaults
+- [x] **Loans endpoint** veilig gemaakt met try/except en data validation
+- [x] **Tenants endpoint** veilig gemaakt met defaults voor ontbrekende velden
+- [x] **Apartments endpoint** veilig gemaakt met defaults voor ontbrekende velden
+- [x] **Dashboard endpoint** veilig gemaakt met error handling
+- [x] **Notifications endpoint** veilig gemaakt met error handling
+- [x] **Data repair script** (`fix_corrupt_data.py`) voor productieserver
+- [x] **Getest**: Alle kritieke endpoints werken zonder crashes
 ### Factuur PDF Download ✅ (24 Jan 2026)
 - [x] **Download PDF knop** in factuur detail modal op Facturen pagina
 - [x] **Backend endpoint** `/api/invoices/pdf/{tenant_id}/{year}/{month}` genereert PDF
