@@ -4835,6 +4835,429 @@ async def get_exchange_rate():
 
 # ==================== ADMIN/SUPERADMIN ROUTES ====================
 
+# ==================== ADD-ONS MANAGEMENT ROUTES ====================
+
+@api_router.get("/addons", response_model=List[AddonResponse])
+async def get_all_addons():
+    """Get all available add-ons (public endpoint)"""
+    addons = await db.addons.find(
+        {"is_active": True},
+        {"_id": 0}
+    ).to_list(100)
+    return [AddonResponse(**addon) for addon in addons]
+
+@api_router.post("/admin/addons", response_model=AddonResponse)
+async def create_addon(addon_data: AddonCreate, current_user: dict = Depends(get_superadmin)):
+    """Create a new add-on - superadmin only"""
+    # Check if slug already exists
+    existing = await db.addons.find_one({"slug": addon_data.slug}, {"_id": 0})
+    if existing:
+        raise HTTPException(status_code=400, detail="Add-on met deze slug bestaat al")
+    
+    addon_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    addon_doc = {
+        "id": addon_id,
+        "name": addon_data.name,
+        "slug": addon_data.slug,
+        "description": addon_data.description,
+        "price": addon_data.price,
+        "is_active": addon_data.is_active,
+        "created_at": now
+    }
+    
+    await db.addons.insert_one(addon_doc)
+    return AddonResponse(**addon_doc)
+
+@api_router.get("/admin/addons", response_model=List[AddonResponse])
+async def get_admin_addons(current_user: dict = Depends(get_superadmin)):
+    """Get all add-ons including inactive - superadmin only"""
+    addons = await db.addons.find({}, {"_id": 0}).to_list(100)
+    return [AddonResponse(**addon) for addon in addons]
+
+@api_router.put("/admin/addons/{addon_id}", response_model=AddonResponse)
+async def update_addon(addon_id: str, addon_data: AddonUpdate, current_user: dict = Depends(get_superadmin)):
+    """Update an add-on - superadmin only"""
+    addon = await db.addons.find_one({"id": addon_id}, {"_id": 0})
+    if not addon:
+        raise HTTPException(status_code=404, detail="Add-on niet gevonden")
+    
+    update_data = {k: v for k, v in addon_data.model_dump().items() if v is not None}
+    if update_data:
+        await db.addons.update_one({"id": addon_id}, {"$set": update_data})
+    
+    updated = await db.addons.find_one({"id": addon_id}, {"_id": 0})
+    return AddonResponse(**updated)
+
+@api_router.delete("/admin/addons/{addon_id}")
+async def delete_addon(addon_id: str, current_user: dict = Depends(get_superadmin)):
+    """Delete an add-on - superadmin only"""
+    result = await db.addons.delete_one({"id": addon_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Add-on niet gevonden")
+    
+    # Also remove all user addons for this addon
+    await db.user_addons.delete_many({"addon_id": addon_id})
+    await db.addon_requests.delete_many({"addon_id": addon_id})
+    
+    return {"message": "Add-on verwijderd"}
+
+# ==================== USER ADD-ONS MANAGEMENT ====================
+
+@api_router.get("/user/addons", response_model=List[UserAddonResponse])
+async def get_my_addons(current_user: dict = Depends(get_current_user)):
+    """Get current user's active add-ons"""
+    user_addons = await db.user_addons.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(100)
+    
+    result = []
+    now = datetime.now(timezone.utc)
+    
+    for ua in user_addons:
+        # Check if expired
+        end_date = ua.get("end_date")
+        if end_date:
+            try:
+                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                if end_dt < now and ua.get("status") == "active":
+                    await db.user_addons.update_one(
+                        {"id": ua["id"]},
+                        {"$set": {"status": "expired"}}
+                    )
+                    ua["status"] = "expired"
+            except:
+                pass
+        
+        addon = await db.addons.find_one({"id": ua["addon_id"]}, {"_id": 0})
+        result.append(UserAddonResponse(
+            id=ua["id"],
+            user_id=ua["user_id"],
+            addon_id=ua["addon_id"],
+            addon_name=addon.get("name") if addon else None,
+            addon_slug=addon.get("slug") if addon else None,
+            status=ua.get("status", "active"),
+            start_date=ua.get("start_date", ua.get("created_at")),
+            end_date=ua.get("end_date"),
+            created_at=ua.get("created_at")
+        ))
+    
+    return result
+
+@api_router.post("/user/addons/request", response_model=AddonRequestResponse)
+async def request_addon_activation(request_data: AddonRequestCreate, current_user: dict = Depends(get_current_user)):
+    """Request activation of an add-on (for customers)"""
+    # Check if addon exists
+    addon = await db.addons.find_one({"id": request_data.addon_id, "is_active": True}, {"_id": 0})
+    if not addon:
+        raise HTTPException(status_code=404, detail="Add-on niet gevonden of niet beschikbaar")
+    
+    # Check if already has active addon
+    existing_active = await db.user_addons.find_one({
+        "user_id": current_user["id"],
+        "addon_id": request_data.addon_id,
+        "status": "active"
+    }, {"_id": 0})
+    if existing_active:
+        raise HTTPException(status_code=400, detail="U heeft deze add-on al actief")
+    
+    # Check if pending request exists
+    existing_request = await db.addon_requests.find_one({
+        "user_id": current_user["id"],
+        "addon_id": request_data.addon_id,
+        "status": "pending"
+    }, {"_id": 0})
+    if existing_request:
+        raise HTTPException(status_code=400, detail="U heeft al een verzoek ingediend voor deze add-on")
+    
+    request_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    request_doc = {
+        "id": request_id,
+        "user_id": current_user["id"],
+        "addon_id": request_data.addon_id,
+        "status": "pending",
+        "notes": request_data.notes,
+        "created_at": now
+    }
+    
+    await db.addon_requests.insert_one(request_doc)
+    
+    return AddonRequestResponse(
+        id=request_id,
+        user_id=current_user["id"],
+        user_name=current_user.get("name"),
+        user_email=current_user.get("email"),
+        addon_id=request_data.addon_id,
+        addon_name=addon.get("name"),
+        addon_price=addon.get("price"),
+        status="pending",
+        notes=request_data.notes,
+        created_at=now
+    )
+
+# ==================== ADMIN USER ADD-ONS MANAGEMENT ====================
+
+@api_router.get("/admin/user-addons", response_model=List[UserAddonResponse])
+async def get_all_user_addons(current_user: dict = Depends(get_superadmin)):
+    """Get all user add-ons - superadmin only"""
+    user_addons = await db.user_addons.find({}, {"_id": 0}).to_list(1000)
+    
+    result = []
+    for ua in user_addons:
+        user = await db.users.find_one({"id": ua["user_id"]}, {"_id": 0, "name": 1, "email": 1})
+        addon = await db.addons.find_one({"id": ua["addon_id"]}, {"_id": 0})
+        
+        result.append(UserAddonResponse(
+            id=ua["id"],
+            user_id=ua["user_id"],
+            user_name=user.get("name") if user else None,
+            user_email=user.get("email") if user else None,
+            addon_id=ua["addon_id"],
+            addon_name=addon.get("name") if addon else None,
+            addon_slug=addon.get("slug") if addon else None,
+            status=ua.get("status", "active"),
+            start_date=ua.get("start_date", ua.get("created_at")),
+            end_date=ua.get("end_date"),
+            created_at=ua.get("created_at")
+        ))
+    
+    return result
+
+@api_router.get("/admin/users/{user_id}/addons", response_model=List[UserAddonResponse])
+async def get_user_addons_admin(user_id: str, current_user: dict = Depends(get_superadmin)):
+    """Get add-ons for a specific user - superadmin only"""
+    user_addons = await db.user_addons.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+    
+    result = []
+    for ua in user_addons:
+        addon = await db.addons.find_one({"id": ua["addon_id"]}, {"_id": 0})
+        
+        result.append(UserAddonResponse(
+            id=ua["id"],
+            user_id=ua["user_id"],
+            addon_id=ua["addon_id"],
+            addon_name=addon.get("name") if addon else None,
+            addon_slug=addon.get("slug") if addon else None,
+            status=ua.get("status", "active"),
+            start_date=ua.get("start_date", ua.get("created_at")),
+            end_date=ua.get("end_date"),
+            created_at=ua.get("created_at")
+        ))
+    
+    return result
+
+@api_router.post("/admin/users/{user_id}/addons", response_model=UserAddonResponse)
+async def activate_user_addon(user_id: str, addon_data: UserAddonCreate, current_user: dict = Depends(get_superadmin)):
+    """Activate an add-on for a user - superadmin only"""
+    # Check if user exists
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Gebruiker niet gevonden")
+    
+    # Check if addon exists
+    addon = await db.addons.find_one({"id": addon_data.addon_id}, {"_id": 0})
+    if not addon:
+        raise HTTPException(status_code=404, detail="Add-on niet gevonden")
+    
+    # Check if already has active addon of same type
+    existing = await db.user_addons.find_one({
+        "user_id": user_id,
+        "addon_id": addon_data.addon_id,
+        "status": "active"
+    }, {"_id": 0})
+    
+    now = datetime.now(timezone.utc)
+    end_date = (now + timedelta(days=30 * addon_data.months)).isoformat()
+    
+    if existing:
+        # Extend existing addon
+        current_end = existing.get("end_date")
+        if current_end:
+            try:
+                current_end_dt = datetime.fromisoformat(current_end.replace("Z", "+00:00"))
+                if current_end_dt > now:
+                    # Extend from current end date
+                    end_date = (current_end_dt + timedelta(days=30 * addon_data.months)).isoformat()
+            except:
+                pass
+        
+        await db.user_addons.update_one(
+            {"id": existing["id"]},
+            {"$set": {"end_date": end_date}}
+        )
+        
+        updated = await db.user_addons.find_one({"id": existing["id"]}, {"_id": 0})
+        return UserAddonResponse(
+            id=updated["id"],
+            user_id=updated["user_id"],
+            user_name=user.get("name"),
+            user_email=user.get("email"),
+            addon_id=updated["addon_id"],
+            addon_name=addon.get("name"),
+            addon_slug=addon.get("slug"),
+            status=updated.get("status", "active"),
+            start_date=updated.get("start_date", updated.get("created_at")),
+            end_date=updated.get("end_date"),
+            created_at=updated.get("created_at")
+        )
+    
+    # Create new user addon
+    user_addon_id = str(uuid.uuid4())
+    
+    user_addon_doc = {
+        "id": user_addon_id,
+        "user_id": user_id,
+        "addon_id": addon_data.addon_id,
+        "status": "active",
+        "start_date": now.isoformat(),
+        "end_date": end_date,
+        "payment_method": addon_data.payment_method,
+        "payment_reference": addon_data.payment_reference,
+        "created_at": now.isoformat()
+    }
+    
+    await db.user_addons.insert_one(user_addon_doc)
+    
+    # Remove any pending requests for this addon
+    await db.addon_requests.delete_many({
+        "user_id": user_id,
+        "addon_id": addon_data.addon_id,
+        "status": "pending"
+    })
+    
+    return UserAddonResponse(
+        id=user_addon_id,
+        user_id=user_id,
+        user_name=user.get("name"),
+        user_email=user.get("email"),
+        addon_id=addon_data.addon_id,
+        addon_name=addon.get("name"),
+        addon_slug=addon.get("slug"),
+        status="active",
+        start_date=now.isoformat(),
+        end_date=end_date,
+        created_at=now.isoformat()
+    )
+
+@api_router.delete("/admin/users/{user_id}/addons/{addon_id}")
+async def deactivate_user_addon(user_id: str, addon_id: str, current_user: dict = Depends(get_superadmin)):
+    """Deactivate an add-on for a user - superadmin only"""
+    result = await db.user_addons.update_one(
+        {"user_id": user_id, "addon_id": addon_id, "status": "active"},
+        {"$set": {"status": "deactivated"}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Actieve add-on niet gevonden voor deze gebruiker")
+    
+    return {"message": "Add-on gedeactiveerd"}
+
+# ==================== ADD-ON REQUESTS MANAGEMENT ====================
+
+@api_router.get("/admin/addon-requests", response_model=List[AddonRequestResponse])
+async def get_addon_requests(current_user: dict = Depends(get_superadmin)):
+    """Get all pending add-on requests - superadmin only"""
+    requests = await db.addon_requests.find(
+        {"status": "pending"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    result = []
+    for req in requests:
+        user = await db.users.find_one({"id": req["user_id"]}, {"_id": 0, "name": 1, "email": 1})
+        addon = await db.addons.find_one({"id": req["addon_id"]}, {"_id": 0})
+        
+        result.append(AddonRequestResponse(
+            id=req["id"],
+            user_id=req["user_id"],
+            user_name=user.get("name") if user else None,
+            user_email=user.get("email") if user else None,
+            addon_id=req["addon_id"],
+            addon_name=addon.get("name") if addon else None,
+            addon_price=addon.get("price") if addon else None,
+            status=req.get("status", "pending"),
+            notes=req.get("notes"),
+            created_at=req.get("created_at")
+        ))
+    
+    return result
+
+@api_router.put("/admin/addon-requests/{request_id}/approve")
+async def approve_addon_request(request_id: str, months: int = 1, current_user: dict = Depends(get_superadmin)):
+    """Approve an add-on request - superadmin only"""
+    request = await db.addon_requests.find_one({"id": request_id, "status": "pending"}, {"_id": 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Verzoek niet gevonden of al verwerkt")
+    
+    # Activate the addon for the user
+    addon_data = UserAddonCreate(
+        user_id=request["user_id"],
+        addon_id=request["addon_id"],
+        months=months
+    )
+    
+    # Use the existing activation function
+    result = await activate_user_addon(request["user_id"], addon_data, current_user)
+    
+    # Mark request as approved
+    await db.addon_requests.update_one(
+        {"id": request_id},
+        {"$set": {"status": "approved"}}
+    )
+    
+    return {"message": "Add-on verzoek goedgekeurd en geactiveerd", "user_addon": result}
+
+@api_router.put("/admin/addon-requests/{request_id}/reject")
+async def reject_addon_request(request_id: str, current_user: dict = Depends(get_superadmin)):
+    """Reject an add-on request - superadmin only"""
+    result = await db.addon_requests.update_one(
+        {"id": request_id, "status": "pending"},
+        {"$set": {"status": "rejected"}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Verzoek niet gevonden of al verwerkt")
+    
+    return {"message": "Add-on verzoek afgewezen"}
+
+# ==================== SEED DEFAULT ADD-ONS ====================
+
+async def seed_default_addons():
+    """Seed the default Vastgoed Beheer add-on if it doesn't exist"""
+    existing = await db.addons.find_one({"slug": "vastgoed_beheer"}, {"_id": 0})
+    if not existing:
+        addon_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc).isoformat()
+        
+        addon_doc = {
+            "id": addon_id,
+            "name": "Vastgoed Beheer",
+            "slug": "vastgoed_beheer",
+            "description": "Complete vastgoedbeheer module met huurders, appartementen, contracten, betalingen, facturen, leningen, borg, kasgeld, onderhoud en werknemers.",
+            "price": 3500.0,
+            "is_active": True,
+            "created_at": now
+        }
+        
+        await db.addons.insert_one(addon_doc)
+        logger.info("Default 'Vastgoed Beheer' add-on created")
+    
+    return existing or await db.addons.find_one({"slug": "vastgoed_beheer"}, {"_id": 0})
+
+# Call seed on startup
+@app.on_event("startup")
+async def startup_event():
+    """Run startup tasks"""
+    try:
+        await seed_default_addons()
+        logger.info("Startup tasks completed")
+    except Exception as e:
+        logger.error(f"Startup error: {e}")
+
 @api_router.get("/admin/dashboard", response_model=AdminDashboardStats)
 async def get_admin_dashboard(current_user: dict = Depends(get_superadmin)):
     """Get admin dashboard statistics - superadmin only"""
