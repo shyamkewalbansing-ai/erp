@@ -106,9 +106,9 @@ export default function Facturen() {
     return Array.from(years).sort((a, b) => b - a);
   };
 
-  // Navigate to payments page
+  // Navigate to payments page and open modal
   const goToPayments = () => {
-    navigate('/payments');
+    navigate('/payments', { state: { openModal: true } });
   };
 
   // Download invoice PDF
