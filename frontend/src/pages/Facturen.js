@@ -93,57 +93,6 @@ export default function Facturen() {
     }
   };
 
-  // Handle tenant selection in payment form
-  const handlePaymentTenantChange = (tenantId) => {
-    const apt = apartments.find(a => a.tenant_id === tenantId);
-    setPaymentForm(prev => ({
-      ...prev,
-      tenant_id: tenantId,
-      apartment_id: apt?.id || '',
-      amount: apt?.rent_amount?.toString() || ''
-    }));
-  };
-
-  // Open payment modal with selected month
-  const openPaymentModal = (month = null, year = null) => {
-    const m = month || selectedMonth || currentDate.getMonth() + 1;
-    const y = year || selectedYear;
-    setPaymentForm({
-      tenant_id: '',
-      apartment_id: '',
-      amount: '',
-      payment_date: new Date().toISOString().split('T')[0],
-      payment_type: 'rent',
-      period_month: m,
-      period_year: y,
-      description: ''
-    });
-    setShowPaymentModal(true);
-  };
-
-  // Save payment
-  const handleSavePayment = async () => {
-    if (!paymentForm.tenant_id || !paymentForm.amount) {
-      toast.error('Vul alle verplichte velden in');
-      return;
-    }
-
-    setSavingPayment(true);
-    try {
-      await api.post('/payments', {
-        ...paymentForm,
-        amount: parseFloat(paymentForm.amount)
-      });
-      toast.success('Betaling geregistreerd');
-      setShowPaymentModal(false);
-      fetchData(); // Refresh data
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij opslaan');
-    } finally {
-      setSavingPayment(false);
-    }
-  };
-
   // Get available years (from first payment to current year + 1)
   const getAvailableYears = () => {
     const years = new Set([currentDate.getFullYear()]);
@@ -155,6 +104,11 @@ export default function Facturen() {
       } catch {}
     });
     return Array.from(years).sort((a, b) => b - a);
+  };
+
+  // Navigate to payments page
+  const goToPayments = () => {
+    navigate('/payments');
   };
 
   // Get tenant's apartment and rent
