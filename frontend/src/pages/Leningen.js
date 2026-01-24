@@ -85,6 +85,17 @@ export default function Leningen() {
     fetchData();
   }, []);
 
+  // Listen for refresh events
+  useEffect(() => {
+    const handleRefresh = () => fetchData();
+    window.addEventListener(REFRESH_EVENTS.LOANS, handleRefresh);
+    window.addEventListener(REFRESH_EVENTS.ALL, handleRefresh);
+    return () => {
+      window.removeEventListener(REFRESH_EVENTS.LOANS, handleRefresh);
+      window.removeEventListener(REFRESH_EVENTS.ALL, handleRefresh);
+    };
+  }, []);
+
   const fetchData = async () => {
     try {
       const [loansRes, tenantsRes] = await Promise.all([
@@ -118,6 +129,9 @@ export default function Leningen() {
       
       setShowModal(false);
       resetForm();
+      fetchData();
+      // Trigger refresh for other components
+      triggerRefresh(REFRESH_EVENTS.LOANS);
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij opslaan');
