@@ -222,6 +222,30 @@ export default function Facturen() {
       };
     });
 
+  // Get months to display - includes future months if there are payments for them
+  const getDisplayMonths = () => {
+    // Start with current month as minimum
+    let maxMonth = selectedYear === currentDate.getFullYear() 
+      ? currentDate.getMonth() + 1 
+      : 12;
+    
+    // Check if there are payments for future months (vooruit betaald)
+    if (selectedYear === currentDate.getFullYear()) {
+      payments.forEach(p => {
+        if (p.period_year === selectedYear && p.period_month > maxMonth) {
+          maxMonth = Math.min(12, p.period_month);
+        }
+      });
+    }
+    
+    // For past years, show all 12 months
+    if (selectedYear < currentDate.getFullYear()) {
+      maxMonth = 12;
+    }
+    
+    return Array.from({ length: maxMonth }, (_, i) => i + 1);
+  };
+
   // Calculate year summary
   const yearSummary = () => {
     let totalDue = 0;
@@ -266,30 +290,6 @@ export default function Facturen() {
       default:
         return <Badge className="bg-orange-100 text-orange-700 border-orange-200"><AlertCircle className="w-3 h-3 mr-1" />Openstaand</Badge>;
     }
-  };
-
-  // Get months to display - includes future months if there are payments for them
-  const getDisplayMonths = () => {
-    // Start with current month as minimum
-    let maxMonth = selectedYear === currentDate.getFullYear() 
-      ? currentDate.getMonth() + 1 
-      : 12;
-    
-    // Check if there are payments for future months (vooruit betaald)
-    if (selectedYear === currentDate.getFullYear()) {
-      payments.forEach(p => {
-        if (p.period_year === selectedYear && p.period_month > maxMonth) {
-          maxMonth = Math.min(12, p.period_month);
-        }
-      });
-    }
-    
-    // For past years, show all 12 months
-    if (selectedYear < currentDate.getFullYear()) {
-      maxMonth = 12;
-    }
-    
-    return Array.from({ length: maxMonth }, (_, i) => i + 1);
   };
 
   if (loading) {
