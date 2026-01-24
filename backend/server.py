@@ -2241,9 +2241,13 @@ async def get_notifications(current_user: dict = Depends(get_current_active_user
                 tenant_name = tenant["name"] if tenant else "Onbekend"
                 
                 # Calculate days since loan
+                loan_date_str = loan.get("loan_date") or loan.get("created_at")
                 try:
-                    loan_date = datetime.fromisoformat(loan["loan_date"])
-                    days_since_loan = (now - loan_date).days
+                    if loan_date_str:
+                        loan_date = datetime.fromisoformat(loan_date_str.replace('Z', '+00:00'))
+                        days_since_loan = (now - loan_date).days
+                    else:
+                        days_since_loan = 0
                 except:
                     days_since_loan = 0
                 
@@ -2258,7 +2262,7 @@ async def get_notifications(current_user: dict = Depends(get_current_active_user
                     related_id=loan["id"],
                     related_name=tenant_name,
                     amount=remaining,
-                    due_date=loan["loan_date"]
+                    due_date=loan_date_str or ""
                 ))
     
     # === 5. SALARY PAYMENT REMINDERS ===
