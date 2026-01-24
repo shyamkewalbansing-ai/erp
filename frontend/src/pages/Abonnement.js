@@ -485,6 +485,215 @@ export default function Abonnement() {
           </CardContent>
         </Card>
       )}
+
+      {/* Add-ons Section */}
+      {addons.length > 0 && (
+        <Card className="border-border/50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Puzzle className="w-5 h-5 text-primary" />
+              <CardTitle>Beschikbare Add-ons</CardTitle>
+            </div>
+            <CardDescription>
+              Breid uw account uit met extra modules en functionaliteiten
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {addons.map((addon) => {
+                const isActive = isAddonActive(addon.id);
+                const endDate = getAddonEndDate(addon.id);
+                
+                return (
+                  <div 
+                    key={addon.id} 
+                    className={`relative p-6 rounded-xl border-2 transition-all ${
+                      isActive 
+                        ? 'border-green-500/30 bg-green-500/5' 
+                        : 'border-border hover:border-primary/30 hover:bg-primary/5'
+                    }`}
+                  >
+                    {isActive && (
+                      <div className="absolute top-3 right-3">
+                        <Badge className="bg-green-500 text-white">
+                          <Check className="w-3 h-3 mr-1" />
+                          Actief
+                        </Badge>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        isActive ? 'bg-green-500/20' : 'bg-primary/10'
+                      }`}>
+                        <Package className={`w-6 h-6 ${isActive ? 'text-green-500' : 'text-primary'}`} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-foreground">{addon.name}</h3>
+                        <p className="text-2xl font-bold text-primary">
+                          {formatCurrency(addon.price)}
+                          <span className="text-sm text-muted-foreground font-normal">/maand</span>
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {addon.description && (
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {addon.description}
+                      </p>
+                    )}
+                    
+                    {isActive ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2 text-sm text-green-600">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Add-on is geactiveerd</span>
+                        </div>
+                        {endDate && (
+                          <p className="text-xs text-muted-foreground">
+                            Geldig tot: {new Date(endDate).toLocaleDateString('nl-NL', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric'
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <Button 
+                        className="w-full"
+                        onClick={() => {
+                          setSelectedAddon(addon);
+                          setAddonRequestDialogOpen(true);
+                        }}
+                      >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        Activeren Aanvragen
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* My Active Add-ons */}
+      {myAddons.filter(a => a.status === 'active').length > 0 && (
+        <Card className="border-border/50">
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Package className="w-5 h-5 text-primary" />
+              <CardTitle>Mijn Actieve Add-ons</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {myAddons.filter(a => a.status === 'active').map((addon) => (
+                <div 
+                  key={addon.id}
+                  className="flex items-center justify-between p-4 rounded-xl bg-green-500/5 border border-green-500/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
+                      <Package className="w-5 h-5 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-foreground">{addon.addon_name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Geactiveerd op: {new Date(addon.start_date).toLocaleDateString('nl-NL')}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge className="bg-green-500 text-white">Actief</Badge>
+                    {addon.end_date && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Tot: {new Date(addon.end_date).toLocaleDateString('nl-NL')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Add-on Request Dialog */}
+      <Dialog open={addonRequestDialogOpen} onOpenChange={setAddonRequestDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add-on Activeren Aanvragen</DialogTitle>
+            <DialogDescription>
+              Vraag activatie aan voor "{selectedAddon?.name}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-primary/5 rounded-xl border border-primary/20">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Package className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-bold">{selectedAddon?.name}</h3>
+                  <p className="text-2xl font-bold text-primary">
+                    {formatCurrency(selectedAddon?.price || 0)}
+                    <span className="text-sm text-muted-foreground font-normal">/maand</span>
+                  </p>
+                </div>
+              </div>
+              {selectedAddon?.description && (
+                <p className="text-sm text-muted-foreground mt-3">
+                  {selectedAddon.description}
+                </p>
+              )}
+            </div>
+
+            <div className="p-4 bg-muted rounded-xl">
+              <h4 className="font-medium text-sm mb-2">Betaalinstructies</h4>
+              <p className="text-sm text-muted-foreground">
+                Maak het bedrag over naar ons rekeningnummer en dien daarna uw verzoek in. 
+                De beheerder zal uw add-on activeren zodra de betaling is ontvangen.
+              </p>
+              <div className="mt-3 p-3 bg-background rounded-lg border">
+                <p className="text-xs text-muted-foreground">Rekeningnummer</p>
+                <p className="font-mono font-medium">001.907.657</p>
+                <p className="text-xs text-muted-foreground mt-1">De Surinaamsche Bank N.V.</p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Opmerking (optioneel)</Label>
+              <Textarea
+                placeholder="Eventuele opmerkingen bij uw verzoek..."
+                value={addonNotes}
+                onChange={(e) => setAddonNotes(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddonRequestDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleRequestAddon} disabled={requestingAddon}>
+              {requestingAddon ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Bezig...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Verzoek Indienen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
