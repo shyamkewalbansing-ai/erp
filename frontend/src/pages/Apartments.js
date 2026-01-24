@@ -9,6 +9,7 @@ import {
   removeTenant,
   formatCurrency 
 } from '../lib/api';
+import { triggerRefresh, REFRESH_EVENTS } from '../lib/refreshEvents';
 import { toast } from 'sonner';
 import { 
   Building2, 
