@@ -66,6 +66,7 @@ export default function Facturen() {
   const [showDetail, setShowDetail] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [selectedPeriod, setSelectedPeriod] = useState(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     fetchData();
