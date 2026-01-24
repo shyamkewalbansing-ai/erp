@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getTenants, getApartments, formatCurrency } from '../lib/api';
+import { formatCurrency } from '../lib/api';
 import api from '../lib/api';
 import { toast } from 'sonner';
 import { 
@@ -24,8 +24,6 @@ import {
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -40,7 +38,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
 } from '../components/ui/dialog';
 
 const MONTHS = [
