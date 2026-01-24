@@ -2014,6 +2014,231 @@ server {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Create Add-on Dialog */}
+      <Dialog open={createAddonDialogOpen} onOpenChange={setCreateAddonDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nieuwe Add-on Aanmaken</DialogTitle>
+            <DialogDescription>
+              Maak een nieuwe add-on aan die klanten kunnen activeren
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Naam *</Label>
+              <Input
+                placeholder="bijv. Vastgoed Beheer"
+                value={newAddon.name}
+                onChange={(e) => setNewAddon({...newAddon, name: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Slug (unieke identificatie) *</Label>
+              <Input
+                placeholder="bijv. vastgoed_beheer"
+                value={newAddon.slug}
+                onChange={(e) => setNewAddon({...newAddon, slug: e.target.value.toLowerCase().replace(/\s+/g, '_')})}
+              />
+              <p className="text-xs text-muted-foreground">Gebruik alleen kleine letters, cijfers en underscores</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Beschrijving</Label>
+              <Input
+                placeholder="Korte beschrijving van de add-on"
+                value={newAddon.description}
+                onChange={(e) => setNewAddon({...newAddon, description: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Prijs per maand (SRD)</Label>
+              <Input
+                type="number"
+                placeholder="3500"
+                value={newAddon.price}
+                onChange={(e) => setNewAddon({...newAddon, price: e.target.value})}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateAddonDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleCreateAddon} disabled={activating}>
+              {activating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Aanmaken
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Add-on Dialog */}
+      <Dialog open={editAddonDialogOpen} onOpenChange={setEditAddonDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add-on Bewerken</DialogTitle>
+            <DialogDescription>
+              Pas de add-on gegevens aan
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Naam</Label>
+              <Input
+                value={editAddonForm.name}
+                onChange={(e) => setEditAddonForm({...editAddonForm, name: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Beschrijving</Label>
+              <Input
+                value={editAddonForm.description}
+                onChange={(e) => setEditAddonForm({...editAddonForm, description: e.target.value})}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Prijs per maand (SRD)</Label>
+              <Input
+                type="number"
+                value={editAddonForm.price}
+                onChange={(e) => setEditAddonForm({...editAddonForm, price: e.target.value})}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditAddonDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleEditAddon} disabled={activating}>
+              {activating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Opslaan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Add-on Dialog */}
+      <Dialog open={deleteAddonDialogOpen} onOpenChange={setDeleteAddonDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add-on Verwijderen</DialogTitle>
+            <DialogDescription>
+              Weet u zeker dat u de add-on "{selectedAddon?.name}" wilt verwijderen? 
+              Dit zal ook alle klant-koppelingen verwijderen.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteAddonDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteAddon} disabled={activating}>
+              {activating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Verwijderen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Activate Add-on for Customer Dialog */}
+      <Dialog open={activateAddonDialogOpen} onOpenChange={setActivateAddonDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add-on Activeren</DialogTitle>
+            <DialogDescription>
+              Activeer "{selectedAddon?.name}" voor {selectedCustomer?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground">Prijs per maand</p>
+              <p className="text-2xl font-bold text-primary">{formatCurrency(selectedAddon?.price || 0)}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Aantal maanden</Label>
+              <Select value={addonMonths} onValueChange={setAddonMonths}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 maand</SelectItem>
+                  <SelectItem value="3">3 maanden</SelectItem>
+                  <SelectItem value="6">6 maanden</SelectItem>
+                  <SelectItem value="12">12 maanden</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="p-3 bg-green-500/10 rounded-lg">
+              <p className="text-sm font-medium text-green-600">
+                Totaal: {formatCurrency((selectedAddon?.price || 0) * parseInt(addonMonths || 1))}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setActivateAddonDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleActivateAddonForCustomer} disabled={activating}>
+              {activating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Activeren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Approve Add-on Request Dialog */}
+      <Dialog open={approveAddonRequestDialogOpen} onOpenChange={setApproveAddonRequestDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add-on Verzoek Goedkeuren</DialogTitle>
+            <DialogDescription>
+              Keur het verzoek van {selectedAddonRequest?.user_name} goed voor "{selectedAddonRequest?.addon_name}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-muted rounded-lg space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Klant:</span>
+                <span className="font-medium">{selectedAddonRequest?.user_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Email:</span>
+                <span>{selectedAddonRequest?.user_email}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Add-on:</span>
+                <span className="font-medium">{selectedAddonRequest?.addon_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Prijs:</span>
+                <span className="text-primary font-medium">{formatCurrency(selectedAddonRequest?.addon_price || 0)}/maand</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Aantal maanden activeren</Label>
+              <Select value={addonMonths} onValueChange={setAddonMonths}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 maand</SelectItem>
+                  <SelectItem value="3">3 maanden</SelectItem>
+                  <SelectItem value="6">6 maanden</SelectItem>
+                  <SelectItem value="12">12 maanden</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApproveAddonRequestDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleApproveAddonRequest} disabled={activating}>
+              {activating && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Goedkeuren & Activeren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
