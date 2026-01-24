@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://facturafix.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://rental-admin-12.preview.emergentagent.com')
 
 class TestInvoicePdfDownload:
     """Tests for Invoice PDF Download feature"""
