@@ -155,6 +155,7 @@ function App() {
           <Route path="/register" element={
             <PublicRoute><Register /></PublicRoute>
           } />
+          <Route path="/reset-wachtwoord/:token" element={<ResetPassword />} />
           
           {/* Public Contract Signing Page (no auth required) */}
           <Route path="/onderteken/:token" element={<OndertekeningPage />} />
