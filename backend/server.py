@@ -6171,6 +6171,7 @@ Als je een actie uitvoert, bevestig dit duidelijk aan de gebruiker."""
                     result = await ai_get_tenant_balance(user_id, params.get("tenant_name"))
                     if "error" in result:
                         final_response = f"❌ {result['error']}"
+                        action_result = None
                     else:
                         action_result = result
                         if "message" in result:
@@ -6179,17 +6180,22 @@ Als je een actie uitvoert, bevestig dit duidelijk aan de gebruiker."""
                             final_response = f"📊 **Saldo {result['tenant']}**\n- Appartement: {result['apartment']}\n- Huur: SRD {result['rent_amount']:,.2f}\n- Totaal betaald: SRD {result['total_paid']:,.2f}"
                     
                 elif action == "LENING_AANMAKEN":
+                    try:
+                        amount = float(params.get("amount", 0)) if params.get("amount") else 0
+                    except:
+                        amount = 0
                     result = await ai_create_loan(
                         user_id,
                         params.get("tenant_name"),
-                        float(params.get("amount", 0)),
+                        amount,
                         params.get("description")
                     )
                     if "error" in result:
                         final_response = f"❌ {result['error']}"
+                        action_result = None
                     else:
                         action_result = result
-                        final_response = f"✅ Lening van SRD {params.get('amount'):,.2f} voor {params.get('tenant_name')} is aangemaakt!"
+                        final_response = f"✅ Lening van SRD {amount:,.2f} voor {params.get('tenant_name')} is aangemaakt!"
                     
                 elif action == "OVERZICHT_GEVEN":
                     # Already have stats, just format nicely
