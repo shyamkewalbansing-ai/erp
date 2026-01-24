@@ -970,17 +970,36 @@ async def get_apartments(current_user: dict = Depends(get_current_active_user)):
     
     # Batch fetch tenant names to avoid N+1 queries
     tenant_ids = [apt["tenant_id"] for apt in apartments if apt.get("tenant_id")]
+    tenant_map = {}
     if tenant_ids:
         tenants = await db.tenants.find(
             {"id": {"$in": tenant_ids}},
             {"_id": 0, "id": 1, "name": 1}
         ).to_list(1000)
         tenant_map = {t["id"]: t["name"] for t in tenants}
-        for apt in apartments:
-            if apt.get("tenant_id"):
-                apt["tenant_name"] = tenant_map.get(apt["tenant_id"])
     
-    return [ApartmentResponse(**apt) for apt in apartments]
+    result = []
+    for apt in apartments:
+        try:
+            # Safely build apartment response with defaults for missing fields
+            result.append(ApartmentResponse(
+                id=apt.get("id", ""),
+                name=apt.get("name", "Onbekend"),
+                address=apt.get("address", ""),
+                rent_amount=apt.get("rent_amount", 0) or 0,
+                description=apt.get("description"),
+                bedrooms=apt.get("bedrooms", 1) or 1,
+                bathrooms=apt.get("bathrooms", 1) or 1,
+                status=apt.get("status", "available"),
+                tenant_id=apt.get("tenant_id"),
+                tenant_name=tenant_map.get(apt.get("tenant_id")) if apt.get("tenant_id") else None,
+                created_at=apt.get("created_at", ""),
+                user_id=apt.get("user_id", "")
+            ))
+        except Exception as e:
+            logger.error(f"Error processing apartment {apt.get('id')}: {e}")
+            continue
+    return result
 
 @api_router.get("/apartments/{apartment_id}", response_model=ApartmentResponse)
 async def get_apartment(apartment_id: str, current_user: dict = Depends(get_current_active_user)):
