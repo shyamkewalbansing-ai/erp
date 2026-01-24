@@ -93,6 +93,7 @@ const MONTHS = [
 ];
 
 export default function Payments() {
+  const location = useLocation();
   const [payments, setPayments] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [apartments, setApartments] = useState([]);
@@ -116,6 +117,15 @@ export default function Payments() {
     period_year: new Date().getFullYear(),
     loan_id: '',
   });
+
+  // Auto-open modal when navigating from Facturen page
+  useEffect(() => {
+    if (location.state?.openModal) {
+      setShowModal(true);
+      // Clear the state to prevent re-opening on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     fetchData();
