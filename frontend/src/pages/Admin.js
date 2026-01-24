@@ -77,7 +77,9 @@ import {
   Edit,
   Globe,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Package,
+  Puzzle
 } from 'lucide-react';
 
 export default function Admin() {
