@@ -737,6 +737,13 @@ server {
         <TabsList>
           <TabsTrigger value="customers">Klanten</TabsTrigger>
           <TabsTrigger value="payments">Betalingen</TabsTrigger>
+          <TabsTrigger value="addons">
+            <Puzzle className="w-4 h-4 mr-1" />
+            Add-ons
+            {addonRequests.length > 0 && (
+              <Badge className="ml-2 bg-orange-500 text-white text-xs">{addonRequests.length}</Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="domains">Domeinen</TabsTrigger>
         </TabsList>
 
