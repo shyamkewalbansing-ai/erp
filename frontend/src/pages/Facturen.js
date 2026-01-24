@@ -328,7 +328,7 @@ export default function Facturen() {
         {/* Year Selector & Payment Button */}
         <div className="flex items-center gap-4">
           <Button 
-            onClick={() => openPaymentModal()}
+            onClick={goToPayments}
             data-testid="add-payment-btn-facturen"
           >
             <Plus className="w-4 h-4 mr-2" />
