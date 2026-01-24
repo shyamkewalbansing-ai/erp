@@ -6122,33 +6122,50 @@ Als je een actie uitvoert, bevestig dit duidelijk aan de gebruiker."""
                         params.get("address"),
                         params.get("id_number")
                     )
-                    action_result = result
-                    final_response = f"✅ Huurder '{params.get('name')}' is succesvol toegevoegd!"
+                    if "error" in result:
+                        final_response = f"❌ {result['error']}"
+                        action_result = None
+                    else:
+                        action_result = result
+                        final_response = f"✅ Huurder '{params.get('name')}' is succesvol toegevoegd!"
                     
                 elif action == "APPARTEMENT_TOEVOEGEN":
+                    try:
+                        rent = float(params.get("rent_amount", 0)) if params.get("rent_amount") else 0
+                    except:
+                        rent = 0
                     result = await ai_create_apartment(
                         user_id,
                         params.get("name"),
                         params.get("address", ""),
-                        float(params.get("rent_amount", 0)),
+                        rent,
                         params.get("description")
                     )
-                    action_result = result
-                    final_response = f"✅ Appartement '{params.get('name')}' is succesvol toegevoegd!"
+                    if "error" in result:
+                        final_response = f"❌ {result['error']}"
+                        action_result = None
+                    else:
+                        action_result = result
+                        final_response = f"✅ Appartement '{params.get('name')}' is succesvol toegevoegd!"
                     
                 elif action == "BETALING_REGISTREREN":
+                    try:
+                        amount = float(params.get("amount", 0)) if params.get("amount") else 0
+                    except:
+                        amount = 0
                     result = await ai_register_payment(
                         user_id,
                         params.get("tenant_name"),
-                        float(params.get("amount", 0)),
+                        amount,
                         params.get("payment_type", "rent"),
                         params.get("description")
                     )
                     if "error" in result:
                         final_response = f"❌ {result['error']}"
+                        action_result = None
                     else:
                         action_result = result
-                        final_response = f"✅ Betaling van SRD {params.get('amount'):,.2f} voor {params.get('tenant_name')} is geregistreerd!"
+                        final_response = f"✅ Betaling van SRD {amount:,.2f} voor {params.get('tenant_name')} is geregistreerd!"
                     
                 elif action == "SALDO_OPVRAGEN":
                     result = await ai_get_tenant_balance(user_id, params.get("tenant_name"))
