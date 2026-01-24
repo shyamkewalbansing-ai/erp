@@ -385,35 +385,45 @@ export default function Facturen() {
           </p>
         </div>
         
-        {/* Year Selector */}
-        <div className="flex items-center gap-2">
+        {/* Year Selector & Payment Button */}
+        <div className="flex items-center gap-4">
           <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => setSelectedYear(y => y - 1)}
-            disabled={selectedYear <= 2020}
+            onClick={() => openPaymentModal()}
+            data-testid="add-payment-btn-facturen"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <Plus className="w-4 h-4 mr-2" />
+            Betaling Registreren
           </Button>
-          <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(parseInt(v))}>
-            <SelectTrigger className="w-[120px]" data-testid="year-selector">
-              <Calendar className="w-4 h-4 mr-2" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {getAvailableYears().map(year => (
-                <SelectItem key={year} value={String(year)}>{year}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button 
-            variant="outline" 
-            size="icon"
-            onClick={() => setSelectedYear(y => y + 1)}
-            disabled={selectedYear >= currentDate.getFullYear() + 1}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
+          
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => setSelectedYear(y => y - 1)}
+              disabled={selectedYear <= 2020}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(parseInt(v))}>
+              <SelectTrigger className="w-[120px]" data-testid="year-selector">
+                <Calendar className="w-4 h-4 mr-2" />
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {getAvailableYears().map(year => (
+                  <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button 
+              variant="outline" 
+              size="icon"
+              onClick={() => setSelectedYear(y => y + 1)}
+              disabled={selectedYear >= currentDate.getFullYear() + 1}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
