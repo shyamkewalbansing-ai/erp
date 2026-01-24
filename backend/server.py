@@ -2799,6 +2799,330 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
     
     return {"invoices": all_invoices, "summary": summary}
 
+@api_router.get("/invoices/pdf/{tenant_id}/{year}/{month}")
+async def get_invoice_pdf(tenant_id: str, year: int, month: int, current_user: dict = Depends(get_current_active_user)):
+    """Generate PDF for a specific invoice/factuur"""
+    user_id = current_user["id"]
+    
+    # Get tenant
+    tenant = await db.tenants.find_one({"id": tenant_id, "user_id": user_id}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    # Get apartment
+    apartment = await db.apartments.find_one({"tenant_id": tenant_id, "user_id": user_id}, {"_id": 0})
+    if not apartment:
+        raise HTTPException(status_code=404, detail="Appartement niet gevonden")
+    
+    rent_amount = apartment.get("rent_amount", 0)
+    
+    # Get rent payments for this period
+    all_payments = await db.payments.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
+    rent_payments = [p for p in all_payments if 
+                    p["tenant_id"] == tenant_id and 
+                    p.get("payment_type") == "rent" and
+                    p.get("period_month") == month and 
+                    p.get("period_year") == year]
+    
+    total_paid = sum(p["amount"] for p in rent_payments)
+    remaining = max(0, rent_amount - total_paid)
+    
+    # Get maintenance costs for tenant this month
+    maintenance_records = await db.maintenance.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
+    tenant_maintenance = [m for m in maintenance_records if 
+                         m.get("tenant_id") == tenant_id and
+                         m.get("cost_type") == "tenant"]
+    
+    month_maintenance = []
+    maintenance_cost = 0
+    for m in tenant_maintenance:
+        try:
+            m_date = datetime.fromisoformat(m["date"].replace("Z", "+00:00"))
+            if m_date.month == month and m_date.year == year:
+                month_maintenance.append(m)
+                maintenance_cost += m.get("cost", 0)
+        except:
+            pass
+    
+    # Get loans info
+    loans = await db.loans.find({"user_id": user_id, "tenant_id": tenant_id}, {"_id": 0}).to_list(100)
+    loan_payments = [p for p in all_payments if p.get("payment_type") == "loan" and p.get("tenant_id") == tenant_id]
+    
+    total_loan_amount = sum(l["amount"] for l in loans)
+    total_loan_paid = sum(p["amount"] for p in loan_payments)
+    loan_balance = max(0, total_loan_amount - total_loan_paid)
+    
+    # Calculate cumulative balance
+    cumulative_due = 0
+    cumulative_paid = 0
+    for m in range(1, month + 1):
+        cumulative_due += rent_amount
+        month_payments = [p for p in all_payments if 
+                        p["tenant_id"] == tenant_id and 
+                        p.get("payment_type") == "rent" and
+                        p.get("period_month") == m and 
+                        p.get("period_year") == year]
+        cumulative_paid += sum(p["amount"] for p in month_payments)
+    
+    cumulative_balance = cumulative_due - cumulative_paid
+    
+    # Status
+    status = "Openstaand"
+    if total_paid >= rent_amount:
+        status = "Betaald"
+    elif total_paid > 0:
+        status = "Gedeeltelijk"
+    
+    # Month names in Dutch
+    month_names = ['', 'Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
+                   'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December']
+    
+    # Generate PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=2*cm,
+        leftMargin=2*cm,
+        topMargin=2*cm,
+        bottomMargin=2*cm
+    )
+    
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    # Colors
+    PRIMARY_GREEN = HexColor("#0caf60")
+    DARK_TEXT = HexColor("#1a1a1a")
+    GRAY_TEXT = HexColor("#666666")
+    LIGHT_GRAY = HexColor("#f5f5f5")
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'InvoiceTitle',
+        parent=styles['Heading1'],
+        fontSize=24,
+        textColor=DARK_TEXT,
+        spaceAfter=10,
+        alignment=1
+    )
+    
+    section_header = ParagraphStyle(
+        'SectionHeader',
+        parent=styles['Heading2'],
+        fontSize=12,
+        textColor=PRIMARY_GREEN,
+        spaceBefore=15,
+        spaceAfter=8,
+        fontName='Helvetica-Bold'
+    )
+    
+    normal_text = ParagraphStyle(
+        'NormalText',
+        parent=styles['Normal'],
+        fontSize=10,
+        textColor=DARK_TEXT,
+        spaceAfter=4
+    )
+    
+    # Company header
+    company_name = current_user.get("company_name") or current_user.get("name") or "Verhuurder"
+    elements.append(Paragraph(company_name, ParagraphStyle(
+        'CompanyName',
+        parent=styles['Normal'],
+        fontSize=16,
+        textColor=PRIMARY_GREEN,
+        fontName='Helvetica-Bold',
+        alignment=1
+    )))
+    elements.append(Spacer(1, 5))
+    elements.append(Paragraph(current_user.get("email", ""), ParagraphStyle(
+        'CompanyEmail',
+        parent=styles['Normal'],
+        fontSize=9,
+        textColor=GRAY_TEXT,
+        alignment=1
+    )))
+    elements.append(Spacer(1, 20))
+    
+    # Title
+    elements.append(Paragraph("FACTUUR", title_style))
+    elements.append(Spacer(1, 5))
+    
+    # Period
+    elements.append(Paragraph(f"{month_names[month]} {year}", ParagraphStyle(
+        'Period',
+        parent=styles['Normal'],
+        fontSize=14,
+        textColor=DARK_TEXT,
+        fontName='Helvetica-Bold',
+        alignment=1
+    )))
+    elements.append(Spacer(1, 5))
+    
+    # Status badge
+    status_color = PRIMARY_GREEN if status == "Betaald" else HexColor("#f59e0b") if status == "Gedeeltelijk" else HexColor("#ef4444")
+    elements.append(Paragraph(f"Status: {status}", ParagraphStyle(
+        'Status',
+        parent=styles['Normal'],
+        fontSize=11,
+        textColor=status_color,
+        fontName='Helvetica-Bold',
+        alignment=1
+    )))
+    elements.append(Spacer(1, 20))
+    
+    # Tenant & Apartment info in table
+    elements.append(Paragraph("GEGEVENS", section_header))
+    
+    info_data = [
+        ["Huurder:", tenant.get("name", "-")],
+        ["E-mail:", tenant.get("email", "-")],
+        ["Telefoon:", tenant.get("phone", "-")],
+        ["ID/Paspoort:", tenant.get("id_number", "-")],
+        ["", ""],
+        ["Appartement:", apartment.get("name", "-")],
+        ["Adres:", apartment.get("address", "-")]
+    ]
+    
+    info_table = Table(info_data, colWidths=[4*cm, 12*cm])
+    info_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (0, -1), GRAY_TEXT),
+        ('TEXTCOLOR', (1, 0), (1, -1), DARK_TEXT),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    elements.append(info_table)
+    elements.append(Spacer(1, 20))
+    
+    # Financial details
+    elements.append(Paragraph("FINANCIEEL OVERZICHT", section_header))
+    
+    def format_currency(amount):
+        return f"SRD {amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    
+    fin_data = [
+        ["Omschrijving", "Bedrag"],
+        ["Maandelijkse huur", format_currency(rent_amount)],
+    ]
+    
+    if maintenance_cost > 0:
+        fin_data.append(["Onderhoudskosten (huurder)", format_currency(maintenance_cost)])
+    
+    fin_data.append(["Totaal verschuldigd", format_currency(rent_amount + maintenance_cost)])
+    fin_data.append(["Betaald", f"- {format_currency(total_paid)}"])
+    fin_data.append(["Openstaand deze maand", format_currency(remaining + maintenance_cost)])
+    
+    fin_table = Table(fin_data, colWidths=[10*cm, 6*cm])
+    fin_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BACKGROUND', (0, 0), (-1, 0), LIGHT_GRAY),
+        ('BACKGROUND', (0, -1), (-1, -1), HexColor("#e8f5e9") if remaining == 0 else HexColor("#fff3e0")),
+        ('TEXTCOLOR', (0, 0), (-1, -1), DARK_TEXT),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('GRID', (0, 0), (-1, -1), 0.5, GRAY_TEXT),
+    ]))
+    elements.append(fin_table)
+    elements.append(Spacer(1, 20))
+    
+    # Cumulative balance
+    elements.append(Paragraph("CUMULATIEF SALDO", section_header))
+    cum_data = [
+        ["Totaal verschuldigd t/m deze maand:", format_currency(cumulative_due)],
+        ["Totaal betaald t/m deze maand:", format_currency(cumulative_paid)],
+        ["Saldo:", format_currency(abs(cumulative_balance)) + (" (achterstallig)" if cumulative_balance > 0 else " (vooruit)")],
+    ]
+    
+    cum_table = Table(cum_data, colWidths=[10*cm, 6*cm])
+    cum_table.setStyle(TableStyle([
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TEXTCOLOR', (0, 0), (-1, -2), DARK_TEXT),
+        ('TEXTCOLOR', (0, -1), (-1, -1), HexColor("#ef4444") if cumulative_balance > 0 else PRIMARY_GREEN),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    elements.append(cum_table)
+    elements.append(Spacer(1, 20))
+    
+    # Loan info if any
+    if loan_balance > 0:
+        elements.append(Paragraph("OPENSTAANDE LENING", section_header))
+        elements.append(Paragraph(f"Totaal uitgeleend: {format_currency(total_loan_amount)}", normal_text))
+        elements.append(Paragraph(f"Totaal terugbetaald: {format_currency(total_loan_paid)}", normal_text))
+        elements.append(Paragraph(f"<b>Openstaand: {format_currency(loan_balance)}</b>", normal_text))
+        elements.append(Spacer(1, 20))
+    
+    # Payment history
+    if rent_payments:
+        elements.append(Paragraph("BETALINGEN DEZE MAAND", section_header))
+        pay_data = [["Datum", "Bedrag"]]
+        for p in rent_payments:
+            pay_data.append([p.get("payment_date", "-"), format_currency(p.get("amount", 0))])
+        
+        pay_table = Table(pay_data, colWidths=[8*cm, 8*cm])
+        pay_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BACKGROUND', (0, 0), (-1, 0), LIGHT_GRAY),
+            ('TEXTCOLOR', (1, 1), (1, -1), PRIMARY_GREEN),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 0.5, GRAY_TEXT),
+        ]))
+        elements.append(pay_table)
+        elements.append(Spacer(1, 20))
+    
+    # Maintenance records
+    if month_maintenance:
+        elements.append(Paragraph("ONDERHOUDSKOSTEN DEZE MAAND", section_header))
+        maint_data = [["Datum", "Omschrijving", "Bedrag"]]
+        for m in month_maintenance:
+            maint_data.append([
+                m.get("date", "-")[:10], 
+                m.get("description", "-")[:30],
+                format_currency(m.get("cost", 0))
+            ])
+        
+        maint_table = Table(maint_data, colWidths=[4*cm, 8*cm, 4*cm])
+        maint_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BACKGROUND', (0, 0), (-1, 0), LIGHT_GRAY),
+            ('TEXTCOLOR', (2, 1), (2, -1), HexColor("#f59e0b")),
+            ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 0.5, GRAY_TEXT),
+        ]))
+        elements.append(maint_table)
+    
+    # Footer
+    elements.append(Spacer(1, 30))
+    elements.append(Paragraph(
+        f"Gegenereerd op: {datetime.now(timezone.utc).strftime('%d-%m-%Y %H:%M')}",
+        ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, textColor=GRAY_TEXT, alignment=1)
+    ))
+    
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+    
+    filename = f"Factuur_{tenant.get('name', 'huurder').replace(' ', '_')}_{month_names[month]}_{year}.pdf"
+    
+    return Response(
+        content=buffer.getvalue(),
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
 # ==================== KASGELD (CASH FUND) ROUTES ====================
 
 @api_router.post("/kasgeld", response_model=KasgeldResponse)
