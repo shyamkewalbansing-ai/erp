@@ -2051,9 +2051,27 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     
     recent_payments = []
     for payment in recent_payments_cursor:
-        payment["tenant_name"] = recent_tenant_map.get(payment["tenant_id"])
-        payment["apartment_name"] = recent_apt_map.get(payment["apartment_id"])
-        recent_payments.append(PaymentResponse(**payment))
+        try:
+            # Safely build payment response with defaults
+            recent_payments.append(PaymentResponse(
+                id=payment.get("id", ""),
+                tenant_id=payment.get("tenant_id", ""),
+                tenant_name=recent_tenant_map.get(payment.get("tenant_id")),
+                apartment_id=payment.get("apartment_id", ""),
+                apartment_name=recent_apt_map.get(payment.get("apartment_id")),
+                amount=payment.get("amount", 0) or 0,
+                payment_date=payment.get("payment_date", ""),
+                payment_type=payment.get("payment_type", "rent"),
+                description=payment.get("description"),
+                period_month=payment.get("period_month"),
+                period_year=payment.get("period_year"),
+                loan_id=payment.get("loan_id"),
+                created_at=payment.get("created_at", ""),
+                user_id=payment.get("user_id", "")
+            ))
+        except Exception as e:
+            logger.error(f"Error processing payment for dashboard: {e}")
+            continue
     
     # Get user's rent settings
     user_settings = await db.users.find_one({"id": user_id}, {"_id": 0, "rent_due_day": 1, "grace_period_days": 1})
