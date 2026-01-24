@@ -1,22 +1,105 @@
-/* SuriRentals - Main App Styles */
+/* Facturatie N.V. - Crystal Forest Design System */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+/* Root Variables - Light Mode */
+:root {
+    --background: 0 0% 98%;
+    --background-rgb: 248, 250, 249;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 152 85% 37%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 152 85% 95%;
+    --accent-foreground: 152 85% 25%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 152 85% 37%;
+    --radius: 0.75rem;
+    
+    /* Glass effects */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* Dark Mode Variables */
+.dark {
+    --background: 150 25% 3%;
+    --background-rgb: 5, 10, 7;
+    --foreground: 210 40% 98%;
+    --card: 150 25% 7%;
+    --card-foreground: 210 40% 98%;
+    --popover: 150 25% 7%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 152 85% 37%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 150 20% 15%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 150 20% 15%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 150 30% 12%;
+    --accent-foreground: 152 85% 60%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 150 20% 18%;
+    --input: 150 20% 18%;
+    --ring: 152 85% 45%;
+    
+    /* Glass effects - Dark */
+    --glass-bg: rgba(15, 28, 21, 0.6);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Base styles */
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: hsl(var(--background));
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+}
 
 /* Layout */
 .app-container {
     min-height: 100vh;
     display: flex;
+    background: hsl(var(--background));
 }
 
-/* Sidebar */
+/* Sidebar - Glassmorphism */
 .sidebar {
-    width: 260px;
-    background: hsl(var(--card));
-    border-right: 1px solid hsl(var(--border));
+    width: 280px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid var(--glass-border);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.02);
     display: flex;
     flex-direction: column;
     position: fixed;
     height: 100vh;
     z-index: 40;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .sidebar {
+    background: rgba(5, 15, 10, 0.85);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.2);
 }
 
 /* Sidebar navigation should scroll, user section stays fixed at bottom */
