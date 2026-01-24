@@ -1995,7 +1995,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     
     # Calculate outstanding loans
     loans = await db.loans.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
-    loan_ids = [l["id"] for l in loans]
+    loan_ids = [l.get("id") for l in loans if l.get("id")]
     
     # Get loan payments
     loan_payments = await db.payments.find(
@@ -2007,12 +2007,19 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     for lp in loan_payments:
         lid = lp.get("loan_id")
         if lid:
-            loan_payments_by_id[lid] = loan_payments_by_id.get(lid, 0) + lp["amount"]
+            loan_payments_by_id[lid] = loan_payments_by_id.get(lid, 0) + (lp.get("amount") or 0)
     
-    total_outstanding_loans = sum(
-        max(0, l["amount"] - loan_payments_by_id.get(l["id"], 0))
-        for l in loans
-    )
+    total_outstanding_loans = 0
+    for l in loans:
+        try:
+            loan_id = l.get("id")
+            loan_amount = l.get("amount") or 0
+            if loan_id:
+                paid = loan_payments_by_id.get(loan_id, 0)
+                total_outstanding_loans += max(0, loan_amount - paid)
+        except Exception as e:
+            logger.error(f"Error calculating loan outstanding: {e}")
+            continue
     
     # Batch fetch tenant names for occupied apartments (used in reminders)
     occupied_tenant_ids = [apt["tenant_id"] for apt in occupied_apts if apt.get("tenant_id")]
