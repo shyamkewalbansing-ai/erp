@@ -79,6 +79,17 @@ export default function Tenants() {
     fetchTenants();
   }, []);
 
+  // Listen for refresh events
+  useEffect(() => {
+    const handleRefresh = () => fetchTenants();
+    window.addEventListener(REFRESH_EVENTS.TENANTS, handleRefresh);
+    window.addEventListener(REFRESH_EVENTS.ALL, handleRefresh);
+    return () => {
+      window.removeEventListener(REFRESH_EVENTS.TENANTS, handleRefresh);
+      window.removeEventListener(REFRESH_EVENTS.ALL, handleRefresh);
+    };
+  }, []);
+
   const fetchTenants = async () => {
     try {
       const response = await getTenants();
@@ -103,6 +114,8 @@ export default function Tenants() {
       setShowModal(false);
       resetForm();
       fetchTenants();
+      // Trigger refresh for other components
+      triggerRefresh(REFRESH_EVENTS.TENANTS);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij opslaan');
     }
