@@ -873,7 +873,25 @@ async def get_tenants(current_user: dict = Depends(get_current_active_user)):
         {"user_id": current_user["id"]}, 
         {"_id": 0}
     ).to_list(1000)
-    return [TenantResponse(**t) for t in tenants]
+    
+    result = []
+    for t in tenants:
+        try:
+            # Safely build tenant response with defaults for missing fields
+            result.append(TenantResponse(
+                id=t.get("id", ""),
+                name=t.get("name", "Onbekend"),
+                email=t.get("email"),
+                phone=t.get("phone", ""),
+                address=t.get("address"),
+                id_number=t.get("id_number"),
+                created_at=t.get("created_at", ""),
+                user_id=t.get("user_id", "")
+            ))
+        except Exception as e:
+            logger.error(f"Error processing tenant {t.get('id')}: {e}")
+            continue
+    return result
 
 @api_router.get("/tenants/{tenant_id}", response_model=TenantResponse)
 async def get_tenant(tenant_id: str, current_user: dict = Depends(get_current_active_user)):
@@ -883,7 +901,18 @@ async def get_tenant(tenant_id: str, current_user: dict = Depends(get_current_ac
     )
     if not tenant:
         raise HTTPException(status_code=404, detail="Huurder niet gevonden")
-    return TenantResponse(**tenant)
+    
+    # Safely build response with defaults
+    return TenantResponse(
+        id=tenant.get("id", tenant_id),
+        name=tenant.get("name", "Onbekend"),
+        email=tenant.get("email"),
+        phone=tenant.get("phone", ""),
+        address=tenant.get("address"),
+        id_number=tenant.get("id_number"),
+        created_at=tenant.get("created_at", ""),
+        user_id=tenant.get("user_id", current_user["id"])
+    )
 
 @api_router.put("/tenants/{tenant_id}", response_model=TenantResponse)
 async def update_tenant(tenant_id: str, tenant_data: TenantUpdate, current_user: dict = Depends(get_current_active_user)):
