@@ -815,6 +815,27 @@ export default function Facturen() {
               })()}
             </div>
           )}
+          
+          <DialogFooter className="mt-4">
+            <Button
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className="w-full sm:w-auto"
+              data-testid="download-invoice-pdf-btn"
+            >
+              {downloadingPdf ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Downloaden...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
