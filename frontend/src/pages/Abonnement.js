@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getSubscriptionStatus, requestSubscription, formatCurrency } from '../lib/api';
-import { Card, CardContent } from '../components/ui/card';
+import { getSubscriptionStatus, requestSubscription, formatCurrency, getAddons, getMyAddons, requestAddonActivation } from '../lib/api';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
@@ -25,8 +25,21 @@ import {
   ArrowRight,
   Phone,
   Mail,
-  ExternalLink
+  ExternalLink,
+  Package,
+  Puzzle,
+  Check
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+import { Textarea } from '../components/ui/textarea';
+import { Label } from '../components/ui/label';
 
 const features = [
   { icon: Users, text: 'Onbeperkt huurders beheren' },
