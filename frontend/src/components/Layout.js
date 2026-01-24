@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, NavLink, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   LayoutDashboard, 
@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  ChevronDown,
   Crown,
   Package,
   Settings,
