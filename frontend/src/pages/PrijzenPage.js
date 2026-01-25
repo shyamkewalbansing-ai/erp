@@ -74,17 +74,45 @@ export default function PrijzenPage() {
       return;
     }
     
+    if (orderForm.password.length < 6) {
+      toast.error('Wachtwoord moet minimaal 6 tekens zijn');
+      return;
+    }
+    
     setSubmitting(true);
     try {
-      await createPublicOrder({
+      const response = await createPublicOrder({
         ...orderForm,
         addon_ids: selectedAddons
       });
-      toast.success('Uw bestelling is ontvangen! Wij nemen zo snel mogelijk contact met u op.');
-      setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '' });
+      
+      const orderData = response.data;
+      setOrderSuccess(orderData);
+      
+      toast.success('Uw account is aangemaakt! U kunt nu betalen of later inloggen.');
+      setOrderForm({ name: '', email: '', phone: '', password: '', company_name: '', message: '' });
       setSelectedAddons([]);
+      
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Er is een fout opgetreden');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePayNow = async () => {
+    if (!orderSuccess) return;
+    
+    setSubmitting(true);
+    try {
+      const response = await createPaymentForOrder(orderSuccess.id, window.location.origin);
+      if (response.data.payment_url) {
+        window.location.href = response.data.payment_url;
+      } else {
+        toast.error('Kon geen betaallink aanmaken. Neem contact op met de beheerder.');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Betaling kon niet worden gestart. Probeer later opnieuw of neem contact op.');
     } finally {
       setSubmitting(false);
     }
