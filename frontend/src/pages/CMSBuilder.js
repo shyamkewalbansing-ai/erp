@@ -62,10 +62,10 @@ export default function CMSBuilder() {
   const loadData = async () => {
     try {
       const [pagesRes, templatesRes, menuRes, footerRes] = await Promise.all([
-        api.get('/api/cms/pages'),
-        api.get('/api/cms/templates'),
-        api.get('/api/cms/menu'),
-        api.get('/api/cms/footer')
+        api.get('/cms/pages'),
+        api.get('/cms/templates'),
+        api.get('/cms/menu'),
+        api.get('/cms/footer')
       ]);
       setPages(pagesRes.data);
       setTemplates(templatesRes.data);
