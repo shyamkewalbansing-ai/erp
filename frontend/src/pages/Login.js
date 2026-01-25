@@ -73,10 +73,11 @@ export default function Login() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
-          <h2 className="text-4xl font-bold mb-4">Beheer uw vastgoed met gemak</h2>
+          <h2 className="text-4xl font-bold mb-4">Uw Complete ERP Oplossing</h2>
           <p className="text-lg text-white/80">
-            De complete oplossing voor verhuurbeheer in Suriname. 
-            Beheer huurders, appartementen en betalingen op één plek.
+            Modulaire bedrijfssoftware voor ondernemers in Suriname. 
+            Kies de modules die passen bij uw bedrijfsvoering.
+          </p>
           </p>
         </div>
       </div>
