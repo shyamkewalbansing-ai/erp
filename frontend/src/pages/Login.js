@@ -67,18 +67,10 @@ export default function Login() {
       {/* Left side - Image */}
       <div className="hidden lg:flex lg:w-1/2 relative">
         <img
-          src="https://images.unsplash.com/photo-1758548157747-285c7012db5b?crop=entropy&cs=srgb&fm=jpg&q=85"
-          alt="Modern apartment"
+          src="https://customer-assets.emergentagent.com/job_07e3c66b-0794-491d-bbf3-342aff3c1100/artifacts/vill14ys_261F389D-0F54-4D61-963C-4B58A923ED3D.png"
+          alt="Facturatie ERP"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        <div className="relative z-10 flex flex-col justify-end p-12 text-white">
-          <h2 className="text-4xl font-bold mb-4">Uw Complete ERP Oplossing</h2>
-          <p className="text-lg text-white/80">
-            Modulaire bedrijfssoftware voor ondernemers in Suriname. 
-            Kies de modules die passen bij uw bedrijfsvoering.
-          </p>
-        </div>
       </div>
 
       {/* Right side - Form */}
