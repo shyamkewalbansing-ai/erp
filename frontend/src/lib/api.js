@@ -172,6 +172,26 @@ export const getAddonRequests = () => api.get('/admin/addon-requests');
 export const approveAddonRequest = (requestId, months = 1) => api.put(`/admin/addon-requests/${requestId}/approve?months=${months}`);
 export const rejectAddonRequest = (requestId) => api.put(`/admin/addon-requests/${requestId}/reject`);
 
+// Landing Page (Public)
+export const getLandingSections = () => axios.get(`${API_URL}/public/landing/sections`);
+export const getLandingSettings = () => axios.get(`${API_URL}/public/landing/settings`);
+export const getPublicAddons = () => axios.get(`${API_URL}/public/addons`);
+export const createPublicOrder = (data) => axios.post(`${API_URL}/public/orders`, data);
+
+// Landing Page (Admin)
+export const getAdminLandingSections = () => api.get('/admin/landing/sections');
+export const createLandingSection = (data) => api.post('/admin/landing/sections', data);
+export const updateLandingSection = (id, data) => api.put(`/admin/landing/sections/${id}`, data);
+export const deleteLandingSection = (id) => api.delete(`/admin/landing/sections/${id}`);
+export const reorderLandingSections = (orders) => api.put('/admin/landing/sections/reorder', orders);
+export const getAdminLandingSettings = () => api.get('/admin/landing/settings');
+export const updateLandingSettings = (data) => api.put('/admin/landing/settings', data);
+
+// Public Orders (Admin)
+export const getAdminOrders = () => api.get('/admin/orders');
+export const updateOrderStatus = (id, status) => api.put(`/admin/orders/${id}/status?status=${status}`);
+export const deleteOrder = (id) => api.delete(`/admin/orders/${id}`);
+
 // Profile/Settings
 export const getProfile = () => api.get('/profile');
 export const updateProfile = (data) => api.put('/profile', data);
