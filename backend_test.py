@@ -10,6 +10,9 @@ class SuriRentalsAPITester:
         self.base_url = base_url
         self.token = None
         self.user_id = None
+        self.superadmin_token = None
+        self.customer_token = None
+        self.customer_user_id = None
         self.tests_run = 0
         self.tests_passed = 0
         self.created_resources = {
@@ -20,7 +23,10 @@ class SuriRentalsAPITester:
             'kasgeld': [],
             'maintenance': [],
             'employees': [],
-            'salaries': []
+            'salaries': [],
+            'addons': [],
+            'addon_requests': [],
+            'user_addons': []
         }
 
     def run_test(self, name, method, endpoint, expected_status, data=None, headers=None):
