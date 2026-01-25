@@ -19,6 +19,8 @@ import Werknemers from "./pages/Werknemers";
 import Abonnement from "./pages/Abonnement";
 import Admin from "./pages/Admin";
 import Instellingen from "./pages/Instellingen";
+import LandingPage from "./pages/LandingPage";
+import LandingEditor from "./pages/LandingEditor";
 import Layout from "./components/Layout";
 import "@/App.css";
 
