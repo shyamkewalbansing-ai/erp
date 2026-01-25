@@ -1228,6 +1228,28 @@ def main():
         ("Dashboard Stats", tester.test_get_dashboard),
         ("Download Receipt", tester.test_download_receipt),
         ("Tenant Balance", tester.test_tenant_balance),
+        
+        # ADD-ONS TESTING SEQUENCE
+        ("=== ADD-ONS SYSTEM TESTING ===", lambda: True),
+        ("Superadmin Login", tester.test_superadmin_login),
+        ("Create Customer User", tester.test_create_customer_user),
+        ("Get Public Add-ons", tester.test_get_public_addons),
+        ("Create Add-on (Superadmin)", tester.test_create_addon_as_superadmin),
+        ("Get Admin Add-ons", tester.test_get_admin_addons),
+        ("Update Add-on Price", tester.test_update_addon_price),
+        ("Customer Request Add-on", tester.test_customer_request_addon),
+        ("Get Customer Add-ons (Before)", tester.test_get_customer_addons),
+        ("Get Add-on Requests (Admin)", tester.test_get_addon_requests_as_admin),
+        ("Approve Add-on Request", tester.test_approve_addon_request),
+        ("Activate Add-on for Customer", tester.test_activate_addon_for_customer),
+        ("Get User Add-ons (Admin)", tester.test_get_user_addons_as_admin),
+        ("Customer Add-ons After Activation", tester.test_customer_addons_after_activation),
+        ("Deactivate User Add-on", tester.test_deactivate_user_addon),
+        ("Reject Add-on Request", tester.test_reject_addon_request),
+        ("Unauthorized Add-on Access", tester.test_unauthorized_addon_access),
+        ("Delete Add-on (Superadmin)", tester.test_delete_addon_as_superadmin),
+        
+        # CLEANUP TESTS
         ("Delete Salary Payment", tester.test_delete_salary_payment),
         ("Delete Employee", tester.test_delete_employee),
         ("Delete Kasgeld Transaction", tester.test_delete_kasgeld_transaction),
@@ -1238,6 +1260,9 @@ def main():
     
     for test_name, test_func in tests:
         try:
+            if test_name.startswith("==="):
+                print(f"\n{test_name}")
+                continue
             if not test_func():
                 failed_tests.append(test_name)
         except Exception as e:
