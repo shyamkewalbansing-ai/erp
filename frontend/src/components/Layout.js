@@ -196,6 +196,16 @@ export default function Layout() {
                 <LayoutDashboard className="w-5 h-5" />
                 <span>Website Beheer</span>
               </NavLink>
+              <NavLink
+                to="/app/cms-builder"
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                data-testid="nav-cms-builder"
+              >
+                <Layers className="w-5 h-5" />
+                <span>CMS Builder</span>
+                <Badge className="ml-auto text-[10px] bg-green-500/10 text-green-600 border-green-500/20">Nieuw</Badge>
+              </NavLink>
             </>
           )}
 
