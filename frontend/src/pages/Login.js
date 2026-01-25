@@ -65,11 +65,11 @@ export default function Login() {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Image */}
-      <div className="hidden lg:flex lg:w-1/2 relative">
+      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-primary/10 via-primary/5 to-background items-center justify-center">
         <img
           src="https://customer-assets.emergentagent.com/job_07e3c66b-0794-491d-bbf3-342aff3c1100/artifacts/vill14ys_261F389D-0F54-4D61-963C-4B58A923ED3D.png"
           alt="Facturatie ERP"
-          className="absolute inset-0 w-full h-full object-cover"
+          className="w-full h-full object-contain p-8"
         />
       </div>
 
