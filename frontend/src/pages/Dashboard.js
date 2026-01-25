@@ -89,7 +89,7 @@ export default function Dashboard() {
           <Button 
             size="lg" 
             className="h-14 px-8 text-lg rounded-xl shadow-lg shadow-primary/20"
-            onClick={() => navigate('/abonnement')}
+            onClick={() => navigate('/app/abonnement')}
           >
             <Sparkles className="w-5 h-5 mr-2" />
             Bekijk Beschikbare Modules
