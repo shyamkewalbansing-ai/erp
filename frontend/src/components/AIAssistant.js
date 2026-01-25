@@ -193,15 +193,11 @@ export default function AIAssistant() {
   const handleClearChat = () => {
     setMessages([{
       role: 'assistant',
-      content: 'Chat gewist. Hoe kan ik u helpen?'
+      content: getWelcomeMessage(activeModules)
     }]);
   };
 
-  const quickActions = [
-    { label: 'Overzicht', message: 'Geef me een overzicht van mijn verhuur' },
-    { label: 'Huurders', message: 'Toon alle huurders' },
-    { label: 'Betalingen', message: 'Wat zijn de recente betalingen?' },
-  ];
+  const quickActions = getQuickActions();
 
   if (!isOpen) {
     return (
