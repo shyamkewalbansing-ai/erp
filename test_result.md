@@ -182,10 +182,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Add-ons CRUD endpoints"
-    - "User add-ons management endpoints"
-    - "Add-on requests management"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -193,3 +190,5 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: "Add-ons systeem geïmplementeerd. Backend endpoints en frontend UI zijn klaar. Test de add-on CRUD operations, user add-on management, en request flow."
+  - agent: "testing"
+    message: "✅ ADD-ONS SYSTEM FULLY TESTED AND WORKING! Fixed critical bug in get_superadmin function (was incomplete). All 3 main add-on tasks are now working correctly: 1) Add-on CRUD (create/read/update/delete), 2) User add-on management (activation/deactivation), 3) Request management (approve/reject). Tested complete flow: superadmin login → create add-on → customer request → admin approval → activation → deactivation. Security properly implemented - customers cannot access admin endpoints. Default 'Vastgoed Beheer' add-on exists and working. Ready for production use."
