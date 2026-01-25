@@ -103,7 +103,9 @@ export default function LandingEditor() {
     company_address: '',
     logo_url: '',
     footer_text: '',
-    social_links: {}
+    social_links: {},
+    login_image_url: '',
+    register_image_url: ''
   });
   const [orders, setOrders] = useState([]);
   
