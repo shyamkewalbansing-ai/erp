@@ -32,17 +32,17 @@ import AIAssistant from './AIAssistant';
 
 // Navigation items for Vastgoed Beheer add-on
 const vastgoedNavItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', addon: 'vastgoed_beheer' },
-  { to: '/tenants', icon: Users, label: 'Huurders', addon: 'vastgoed_beheer' },
-  { to: '/apartments', icon: Building2, label: 'Appartementen', addon: 'vastgoed_beheer' },
-  { to: '/contracten', icon: FileSignature, label: 'Contracten', addon: 'vastgoed_beheer' },
-  { to: '/payments', icon: CreditCard, label: 'Betalingen', addon: 'vastgoed_beheer' },
-  { to: '/facturen', icon: FileText, label: 'Facturen', addon: 'vastgoed_beheer' },
-  { to: '/leningen', icon: HandCoins, label: 'Leningen', addon: 'vastgoed_beheer' },
-  { to: '/deposits', icon: Wallet, label: 'Borg', addon: 'vastgoed_beheer' },
-  { to: '/kasgeld', icon: Banknote, label: 'Kasgeld', addon: 'vastgoed_beheer' },
-  { to: '/onderhoud', icon: Wrench, label: 'Onderhoud', addon: 'vastgoed_beheer' },
-  { to: '/werknemers', icon: Users2, label: 'Werknemers', addon: 'vastgoed_beheer' },
+  { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', addon: 'vastgoed_beheer' },
+  { to: '/app/tenants', icon: Users, label: 'Huurders', addon: 'vastgoed_beheer' },
+  { to: '/app/apartments', icon: Building2, label: 'Appartementen', addon: 'vastgoed_beheer' },
+  { to: '/app/contracten', icon: FileSignature, label: 'Contracten', addon: 'vastgoed_beheer' },
+  { to: '/app/payments', icon: CreditCard, label: 'Betalingen', addon: 'vastgoed_beheer' },
+  { to: '/app/facturen', icon: FileText, label: 'Facturen', addon: 'vastgoed_beheer' },
+  { to: '/app/leningen', icon: HandCoins, label: 'Leningen', addon: 'vastgoed_beheer' },
+  { to: '/app/deposits', icon: Wallet, label: 'Borg', addon: 'vastgoed_beheer' },
+  { to: '/app/kasgeld', icon: Banknote, label: 'Kasgeld', addon: 'vastgoed_beheer' },
+  { to: '/app/onderhoud', icon: Wrench, label: 'Onderhoud', addon: 'vastgoed_beheer' },
+  { to: '/app/werknemers', icon: Users2, label: 'Werknemers', addon: 'vastgoed_beheer' },
 ];
 
 export default function Layout() {
