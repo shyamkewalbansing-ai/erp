@@ -64,7 +64,8 @@ import {
   Clock,
   MessageSquare,
   CreditCard,
-  Shield
+  Shield,
+  Upload
 } from 'lucide-react';
 
 const sectionTypes = [
