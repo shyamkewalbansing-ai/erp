@@ -336,6 +336,10 @@ export default function LandingEditor() {
               <Badge className="ml-2 bg-orange-500 text-white">{pendingOrders}</Badge>
             )}
           </TabsTrigger>
+          <TabsTrigger value="payments">
+            <CreditCard className="w-4 h-4 mr-2" />
+            Betalingen
+          </TabsTrigger>
         </TabsList>
 
         {/* Sections Tab */}
