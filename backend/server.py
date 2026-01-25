@@ -5618,6 +5618,7 @@ async def startup_event():
     """Run startup tasks"""
     try:
         await seed_default_addons()
+        await seed_default_landing_page()
         logger.info("Startup tasks completed")
     except Exception as e:
         logger.error(f"Startup error: {e}")
