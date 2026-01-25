@@ -192,6 +192,15 @@ export const getAdminOrders = () => api.get('/admin/orders');
 export const updateOrderStatus = (id, status) => api.put(`/admin/orders/${id}/status?status=${status}`);
 export const deleteOrder = (id) => api.delete(`/admin/orders/${id}`);
 
+// Mope Payment Settings (Admin)
+export const getMopeSettings = () => api.get('/admin/mope/settings');
+export const updateMopeSettings = (data) => api.put('/admin/mope/settings', data);
+
+// Public Payment
+export const createPaymentForOrder = (orderId, redirectUrl = '') => 
+  axios.post(`${API_URL}/public/orders/${orderId}/pay?redirect_url=${encodeURIComponent(redirectUrl)}`);
+export const checkPaymentStatus = (orderId) => axios.get(`${API_URL}/public/orders/${orderId}/payment-status`);
+
 // Profile/Settings
 export const getProfile = () => api.get('/profile');
 export const updateProfile = (data) => api.put('/profile', data);
