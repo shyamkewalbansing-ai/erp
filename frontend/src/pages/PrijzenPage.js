@@ -213,11 +213,71 @@ export default function PrijzenPage() {
           </div>
 
           {/* Order Form */}
+          {orderSuccess ? (
+            <Card className="max-w-2xl mx-auto border-2 border-green-500/30 bg-green-500/5">
+              <CardHeader className="text-center">
+                <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-8 h-8 text-green-500" />
+                </div>
+                <CardTitle className="text-2xl text-green-600">Account Aangemaakt!</CardTitle>
+                <CardDescription>
+                  Uw account is aangemaakt. U kunt nu direct betalen of later inloggen.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-4 rounded-lg bg-background border">
+                  <div className="grid gap-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">E-mail:</span>
+                      <span className="font-medium">{orderSuccess.email}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Modules:</span>
+                      <span className="font-medium">{orderSuccess.addon_names?.join(', ')}</span>
+                    </div>
+                    <div className="flex justify-between pt-2 border-t">
+                      <span className="text-muted-foreground">Totaal:</span>
+                      <span className="font-bold text-primary">{formatCurrency(orderSuccess.total_price)}/maand</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid gap-3">
+                  <Button 
+                    size="lg" 
+                    className="w-full h-14"
+                    onClick={handlePayNow}
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    ) : (
+                      <CreditCard className="w-5 h-5 mr-2" />
+                    )}
+                    Nu Betalen met Mope
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="lg"
+                    className="w-full"
+                    onClick={() => navigate('/login')}
+                  >
+                    <User className="w-5 h-5 mr-2" />
+                    Later Inloggen
+                  </Button>
+                </div>
+                
+                <p className="text-center text-sm text-muted-foreground">
+                  Na betaling worden uw modules automatisch geactiveerd.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
           <Card className="max-w-2xl mx-auto border-2 border-primary/20">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl">Bestelling Plaatsen</CardTitle>
+              <CardTitle className="text-2xl">Bestelling & Account Aanmaken</CardTitle>
               <CardDescription>
-                Selecteer de modules hierboven en vul uw gegevens in
+                Selecteer de modules hierboven en maak direct uw account aan
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -261,6 +321,31 @@ export default function PrijzenPage() {
                       placeholder="+597 ..."
                     />
                   </div>
+                </div>
+                
+                {/* Password field for account creation */}
+                <div className="space-y-2">
+                  <Label>Wachtwoord * (voor uw account)</Label>
+                  <div className="relative">
+                    <Input 
+                      type={showPassword ? "text" : "password"}
+                      required
+                      value={orderForm.password}
+                      onChange={(e) => setOrderForm({...orderForm, password: e.target.value})}
+                      placeholder="Minimaal 6 tekens"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Met dit wachtwoord kunt u later inloggen op uw account
+                  </p>
                 </div>
 
                 {/* Selected modules summary */}
