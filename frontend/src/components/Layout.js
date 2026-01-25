@@ -196,14 +196,6 @@ export default function Layout() {
                 <LayoutDashboard className="w-5 h-5" />
                 <span>Website Beheer</span>
               </NavLink>
-                to="/instellingen"
-                onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                data-testid="nav-instellingen"
-              >
-                <Settings className="w-5 h-5" />
-                <span>Instellingen</span>
-              </NavLink>
             </>
           )}
 
