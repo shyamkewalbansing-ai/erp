@@ -306,11 +306,42 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 - kasgeld, maintenance, employees, salaries
 
 ## Next Action Items
-1. E-mail bezorging naar externe domeinen (DNS SPF/DKIM records nodig)
-2. UI Redesign voltooien voor resterende pagina's
-3. E-mail herinneringen voor late betalingen (SendGrid/Resend)
-4. Huurcontracten upload functie
-5. Rapporten exporteren naar PDF/Excel
+1. **HRM Module functionaliteit bouwen** - De add-on bestaat maar heeft nog geen echte features
+2. E-mail bezorging naar externe domeinen (DNS SPF/DKIM records nodig)
+3. UI Redesign voltooien voor resterende pagina's
+4. E-mail herinneringen voor late betalingen (SendGrid/Resend)
+5. Andere ERP modules bouwen naar wens (Inventory, CRM, Accounting)
+
+## Recent Updates (25 Jan 2026)
+
+### ERP SaaS Transformatie & Mope Betaalintegratie ✅ (25 Jan 2026)
+- [x] **Modulair Add-on Systeem**: Applicatie getransformeerd naar generieke ERP SaaS
+- [x] **Dynamische UI**: Sidebar, Dashboard en AI Assistant tonen features op basis van actieve add-ons
+- [x] **Lege staat voor nieuwe klanten**: Dashboard toont "geen modules geactiveerd" zonder actieve add-ons
+- [x] **Add-on Management (Superadmin)**: CRUD voor add-ons met prijzen
+- [x] **Customer Add-on Beheer**: Superadmin kan add-ons activeren/deactiveren per klant
+- [x] **Multi-pagina Publieke Website**: Home, Prijzen, Over Ons, Contact, Voorwaarden, Privacy
+- [x] **Website CMS (Superadmin)**: "Website Beheer" pagina om landingspagina content te beheren
+- [x] **Bestelformulier met Accountregistratie**: Bezoekers kunnen modules bestellen en direct een account aanmaken
+- [x] **Wachtwoord bij registratie**: Order formulier bevat wachtwoord veld (min 6 tekens)
+- [x] **Mope Betaalintegratie**: Backend endpoints voor betalingsinitiatie en status check
+- [x] **Mope Settings UI**: Superadmin kan Test/Live API tokens configureren via Website Beheer → Betalingen
+- [x] **Backend validatie**: Orders vereisen minimaal één module en geldig wachtwoord
+
+### API Endpoints Toegevoegd (25 Jan 2026)
+- POST /api/public/orders - Maakt order én gebruikersaccount aan met wachtwoord
+- POST /api/public/orders/{id}/pay - Initieert Mope betaling en retourneert payment_url
+- GET /api/public/orders/{id}/payment-status - Controleert betaalstatus bij Mope
+- GET /api/admin/mope/settings - Haalt Mope instellingen op (superadmin only)
+- PUT /api/admin/mope/settings - Update Mope tokens (superadmin only)
+- POST /api/webhooks/mope - Webhook endpoint voor Mope callbacks
+
+### Mope Integratie Documentatie
+- **API URL**: https://api.mope.sr/api
+- **Documentatie**: https://api.mope.sr/integration/doc
+- **Test Tokens**: Configureerbaar via Website Beheer → Betalingen
+- **Live Tokens**: Configureerbaar via Website Beheer → Betalingen
+- **Flow**: Bestelling → Account aanmaken → Betalen via Mope → Modules worden geactiveerd
 
 ## Recent Updates (24 Jan 2026)
 
