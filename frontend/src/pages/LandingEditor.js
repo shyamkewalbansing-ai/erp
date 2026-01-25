@@ -107,6 +107,18 @@ export default function LandingEditor() {
   });
   const [orders, setOrders] = useState([]);
   
+  // Mope payment settings
+  const [mopeSettings, setMopeSettings] = useState({
+    is_enabled: false,
+    use_live_mode: false,
+    test_token: '',
+    live_token: '',
+    webhook_secret: ''
+  });
+  const [savingMope, setSavingMope] = useState(false);
+  const [showTestToken, setShowTestToken] = useState(false);
+  const [showLiveToken, setShowLiveToken] = useState(false);
+  
   // Dialog states
   const [sectionDialogOpen, setSectionDialogOpen] = useState(false);
   const [editingSection, setEditingSection] = useState(null);
@@ -132,16 +144,26 @@ export default function LandingEditor() {
 
   const loadData = async () => {
     try {
-      const [sectionsRes, settingsRes, ordersRes] = await Promise.all([
+      const [sectionsRes, settingsRes, ordersRes, mopeRes] = await Promise.all([
         getAdminLandingSections(),
         getAdminLandingSettings(),
-        getAdminOrders()
+        getAdminOrders(),
+        getMopeSettings()
       ]);
       setSections(sectionsRes.data);
       if (settingsRes.data) {
         setSettings(settingsRes.data);
       }
       setOrders(ordersRes.data);
+      if (mopeRes.data) {
+        setMopeSettings({
+          is_enabled: mopeRes.data.is_enabled || false,
+          use_live_mode: mopeRes.data.use_live_mode || false,
+          test_token: mopeRes.data.test_token || '',
+          live_token: mopeRes.data.live_token || '',
+          webhook_secret: mopeRes.data.webhook_secret || ''
+        });
+      }
     } catch (error) {
       toast.error('Fout bij het laden van gegevens');
     } finally {
