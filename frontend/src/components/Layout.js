@@ -199,8 +199,8 @@ export default function Layout() {
             </>
           )}
 
-          {/* Customer navigation - only for non-superadmin users */}
-          {!isSuperAdmin() && customerNavItems.map((item) => (
+          {/* Customer navigation - only for non-superadmin users with active add-ons */}
+          {!isSuperAdmin() && addonsLoaded && getVisibleNavItems().map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -213,6 +213,21 @@ export default function Layout() {
               <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />
             </NavLink>
           ))}
+
+          {/* No add-ons message for customers */}
+          {!isSuperAdmin() && addonsLoaded && getVisibleNavItems().length === 0 && (
+            <div className="px-3 py-4 text-center">
+              <Package className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
+              <p className="text-sm text-muted-foreground">Geen actieve modules</p>
+              <NavLink 
+                to="/abonnement" 
+                className="text-xs text-primary hover:underline mt-1 block"
+                onClick={() => setSidebarOpen(false)}
+              >
+                Bekijk beschikbare add-ons →
+              </NavLink>
+            </div>
+          )}
 
           {/* Settings dropdown - for customers only */}
           {!isSuperAdmin() && (
