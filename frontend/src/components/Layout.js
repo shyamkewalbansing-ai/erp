@@ -258,7 +258,7 @@ export default function Layout() {
                   {/* Huurinstellingen - only visible with Vastgoed Beheer add-on */}
                   {hasAddon('vastgoed_beheer') && (
                     <NavLink
-                      to="/instellingen"
+                      to="/app/instellingen"
                       onClick={() => setSidebarOpen(false)}
                       className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
                       data-testid="nav-instellingen-sub"
@@ -268,7 +268,7 @@ export default function Layout() {
                     </NavLink>
                   )}
                   <NavLink
-                    to="/abonnement"
+                    to="/app/abonnement"
                     onClick={() => setSidebarOpen(false)}
                     className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
                     data-testid="nav-abonnement"
