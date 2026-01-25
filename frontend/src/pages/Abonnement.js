@@ -41,15 +41,12 @@ import {
 import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 
+// Platform features (basis account)
 const features = [
-  { icon: Users, text: 'Onbeperkt huurders beheren' },
-  { icon: Building2, text: 'Onbeperkt appartementen' },
-  { icon: Banknote, text: 'Kasgeld & financieel beheer' },
-  { icon: FileText, text: 'PDF facturen & kwitanties' },
-  { icon: Wrench, text: 'Onderhoudsbeheer' },
-  { icon: BarChart3, text: 'Dashboard & rapportages' },
   { icon: Shield, text: 'Veilige data opslag' },
   { icon: Zap, text: 'Snelle updates & support' },
+  { icon: BarChart3, text: 'Modulair systeem' },
+  { icon: Package, text: 'Kies uw eigen modules' },
 ];
 
 export default function Abonnement() {
