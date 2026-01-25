@@ -7481,7 +7481,7 @@ async def get_cms_footer(current_user: dict = Depends(get_superadmin)):
             "background_color": "#1f2937",
             "text_color": "#ffffff"
         }
-        await db.cms_footer.insert_one(footer)
+        await db.cms_footer.insert_one({**footer})
     return footer
 
 @api_router.put("/cms/footer")
