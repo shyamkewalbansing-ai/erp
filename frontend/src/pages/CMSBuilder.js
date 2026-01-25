@@ -87,7 +87,7 @@ export default function CMSBuilder() {
     setSaving(true);
     try {
       if (newPageForm.template && newPageForm.template !== 'blank') {
-        await api.post(`/api/cms/pages/from-template/${newPageForm.template}`, {
+        await api.post(`/cms/pages/from-template/${newPageForm.template}`, {
           title: newPageForm.title,
           slug: newPageForm.slug,
           show_in_menu: true
@@ -118,7 +118,7 @@ export default function CMSBuilder() {
     
     setSaving(true);
     try {
-      await api.put(`/api/cms/pages/${selectedPage.id}`, selectedPage);
+      await api.put(`/cms/pages/${selectedPage.id}`, selectedPage);
       toast.success('Pagina opgeslagen');
       loadData();
     } catch (error) {
@@ -132,7 +132,7 @@ export default function CMSBuilder() {
     if (!confirm('Weet u zeker dat u deze pagina wilt verwijderen?')) return;
     
     try {
-      await api.delete(`/api/cms/pages/${pageId}`);
+      await api.delete(`/cms/pages/${pageId}`);
       toast.success('Pagina verwijderd');
       setSelectedPage(null);
       loadData();
