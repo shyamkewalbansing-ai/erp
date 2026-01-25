@@ -446,9 +446,9 @@ export default function CMSPage() {
       
       const [pageRes, settingsRes, footerRes, menuRes] = await Promise.all([
         api.get(`/api/public/cms/page/${pageSlug}`).catch(() => null),
-        api.get('/api/public/landing/settings').catch(() => ({ data: {} })),
-        api.get('/api/public/cms/footer').catch(() => ({ data: {} })),
-        api.get('/api/public/cms/menu').catch(() => ({ data: { items: [] } }))
+        api.get('/public/landing/settings').catch(() => ({ data: {} })),
+        api.get('/public/cms/footer').catch(() => ({ data: {} })),
+        api.get('/public/cms/menu').catch(() => ({ data: { items: [] } }))
       ]);
       
       if (pageRes?.data) {
