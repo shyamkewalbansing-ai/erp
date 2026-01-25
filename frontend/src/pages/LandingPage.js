@@ -173,6 +173,16 @@ export default function LandingPage() {
               <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Prijzen</a>
               <a href="#about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Over Ons</a>
               <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
+              {/* Dynamic menu items from CMS */}
+              {menuItems.map((item, index) => (
+                <Link 
+                  key={index}
+                  to={`/pagina/${item.link.replace('/', '')}`}
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
             </div>
 
             {/* CTA Buttons */}
@@ -203,6 +213,17 @@ export default function LandingPage() {
               <a href="#pricing" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</a>
               <a href="#about" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</a>
               <a href="#contact" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+              {/* Dynamic menu items from CMS */}
+              {menuItems.map((item, index) => (
+                <Link 
+                  key={index}
+                  to={`/pagina/${item.link.replace('/', '')}`}
+                  className="block text-foreground py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
               <div className="pt-3 space-y-2">
                 <Button variant="outline" className="w-full" onClick={() => navigate('/login')}>Inloggen</Button>
                 <Button className="w-full" onClick={() => navigate('/register')}>Gratis Starten</Button>
