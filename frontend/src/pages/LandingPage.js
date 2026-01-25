@@ -1,39 +1,25 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getLandingSections, getLandingSettings, getPublicAddons, createPublicOrder, formatCurrency } from '../lib/api';
-import { toast } from 'sonner';
+import { getLandingSections, getLandingSettings, getPublicAddons, formatCurrency } from '../lib/api';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
-import { Badge } from '../components/ui/badge';
-import { Checkbox } from '../components/ui/checkbox';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '../components/ui/dialog';
 import { 
   ArrowRight, 
-  Check, 
   Shield, 
   Zap, 
   Package, 
   Headphones,
-  Mail,
-  Phone,
-  MapPin,
   Loader2,
   Sparkles,
   ChevronRight,
   Menu,
   X,
   FileText,
-  Lock
+  Lock,
+  Users,
+  Building2,
+  Mail,
+  Phone
 } from 'lucide-react';
 
 // Icon mapping for features
@@ -51,23 +37,6 @@ export default function LandingPage() {
   const [addons, setAddons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
-  // Order dialog state
-  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
-  const [selectedAddons, setSelectedAddons] = useState([]);
-  const [orderForm, setOrderForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    company_name: '',
-    message: ''
-  });
-  const [submitting, setSubmitting] = useState(false);
-
-  // Modal states for terms/privacy
-  const [termsModalOpen, setTermsModalOpen] = useState(false);
-  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
-  const [activeModalContent, setActiveModalContent] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -92,44 +61,6 @@ export default function LandingPage() {
 
   const getSection = (type) => sections.find(s => s.section_type === type);
 
-  const handleOrderSubmit = async (e) => {
-    e.preventDefault();
-    if (selectedAddons.length === 0) {
-      toast.error('Selecteer minimaal één module');
-      return;
-    }
-    
-    setSubmitting(true);
-    try {
-      await createPublicOrder({
-        ...orderForm,
-        addon_ids: selectedAddons
-      });
-      toast.success('Uw bestelling is ontvangen! Wij nemen zo snel mogelijk contact met u op.');
-      setOrderDialogOpen(false);
-      setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '' });
-      setSelectedAddons([]);
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Er is een fout opgetreden');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const toggleAddonSelection = (addonId) => {
-    setSelectedAddons(prev => 
-      prev.includes(addonId) 
-        ? prev.filter(id => id !== addonId)
-        : [...prev, addonId]
-    );
-  };
-
-  const getTotalPrice = () => {
-    return addons
-      .filter(a => selectedAddons.includes(a.id))
-      .reduce((sum, a) => sum + (a.price || 0), 0);
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -140,11 +71,6 @@ export default function LandingPage() {
 
   const heroSection = getSection('hero');
   const featuresSection = getSection('features');
-  const pricingSection = getSection('pricing');
-  const aboutSection = getSection('about');
-  const termsSection = getSection('terms');
-  const privacySection = getSection('privacy');
-  const contactSection = getSection('contact');
 
   return (
     <div className="min-h-screen bg-background">
@@ -163,10 +89,9 @@ export default function LandingPage() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Prijzen</a>
-              <a href="#about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Over Ons</a>
-              <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
+              <Link to="/prijzen" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Prijzen</Link>
+              <Link to="/over-ons" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Over Ons</Link>
+              <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</Link>
             </div>
 
             {/* CTA Buttons */}
@@ -193,10 +118,9 @@ export default function LandingPage() {
         {mobileMenuOpen && (
           <div className="md:hidden bg-background border-b border-border">
             <div className="px-4 py-4 space-y-3">
-              <a href="#features" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Features</a>
-              <a href="#pricing" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</a>
-              <a href="#about" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</a>
-              <a href="#contact" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+              <Link to="/prijzen" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</Link>
+              <Link to="/over-ons" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</Link>
+              <Link to="/contact" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
               <div className="pt-3 space-y-2">
                 <Button variant="outline" className="w-full" onClick={() => navigate('/login')}>Inloggen</Button>
                 <Button className="w-full" onClick={() => navigate('/register')}>Gratis Starten</Button>
@@ -233,8 +157,8 @@ export default function LandingPage() {
                     {heroSection.button_text || 'Start Nu'}
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </Button>
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg" onClick={() => setOrderDialogOpen(true)}>
-                    Direct Bestellen
+                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg" onClick={() => navigate('/prijzen')}>
+                    Bekijk Prijzen
                   </Button>
                 </div>
               </div>
@@ -255,7 +179,7 @@ export default function LandingPage() {
 
       {/* Features Section */}
       {featuresSection && (
-        <section id="features" className="py-16 md:py-24 bg-muted/30">
+        <section className="py-16 md:py-24 bg-muted/30">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -287,263 +211,67 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* Pricing Section - Add-ons */}
-      {pricingSection && (
-        <section id="pricing" className="py-16 md:py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                {pricingSection.title}
-              </h2>
-              {pricingSection.subtitle && (
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  {pricingSection.subtitle}
-                </p>
-              )}
-              {pricingSection.content && (
-                <p className="text-muted-foreground mt-2">{pricingSection.content}</p>
-              )}
-            </div>
-            
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {addons.map((addon) => (
-                <Card key={addon.id} className="relative overflow-hidden border-2 hover:border-primary/50 transition-colors">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full" />
-                  <CardHeader>
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                      <Package className="w-7 h-7 text-primary" />
-                    </div>
-                    <CardTitle className="text-2xl">{addon.name}</CardTitle>
-                    <CardDescription>{addon.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="mb-6">
-                      <span className="text-4xl font-bold text-foreground">{formatCurrency(addon.price)}</span>
-                      <span className="text-muted-foreground">/maand</span>
-                    </div>
-                    <Button 
-                      className="w-full" 
-                      onClick={() => {
-                        setSelectedAddons([addon.id]);
-                        setOrderDialogOpen(true);
-                      }}
-                    >
-                      Nu Bestellen
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <div className="text-center">
-              <Button size="lg" variant="outline" onClick={() => setOrderDialogOpen(true)}>
-                <Package className="w-5 h-5 mr-2" />
-                Meerdere Modules Bestellen
-              </Button>
-            </div>
+      {/* Modules Preview Section */}
+      <section className="py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              Onze Modules
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Kies de modules die passen bij uw bedrijf
+            </p>
           </div>
-        </section>
-      )}
-
-      {/* About Section */}
-      {aboutSection && (
-        <section id="about" className="py-16 md:py-24 bg-muted/30">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                {aboutSection.title}
-              </h2>
-              {aboutSection.subtitle && (
-                <p className="text-xl text-muted-foreground">
-                  {aboutSection.subtitle}
-                </p>
-              )}
-            </div>
-            {aboutSection.content && (
-              <div className="prose prose-lg max-w-none text-muted-foreground">
-                {aboutSection.content.split('\n\n').map((paragraph, index) => (
-                  <p key={index} className="mb-4">{paragraph}</p>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Contact Section */}
-      {contactSection && (
-        <section id="contact" className="py-16 md:py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-12">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                  {contactSection.title}
-                </h2>
-                {contactSection.subtitle && (
-                  <p className="text-xl text-muted-foreground mb-8">
-                    {contactSection.subtitle}
-                  </p>
-                )}
-                {contactSection.content && (
-                  <p className="text-muted-foreground mb-8">{contactSection.content}</p>
-                )}
-                
-                <div className="space-y-4">
-                  {settings?.company_email && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">E-mail</p>
-                        <a href={`mailto:${settings.company_email}`} className="text-foreground font-medium hover:text-primary">
-                          {settings.company_email}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  {settings?.company_phone && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Phone className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Telefoon</p>
-                        <a href={`tel:${settings.company_phone}`} className="text-foreground font-medium hover:text-primary">
-                          {settings.company_phone}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  {settings?.company_address && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <MapPin className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Adres</p>
-                        <p className="text-foreground font-medium">{settings.company_address}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Quick Order Form */}
-              <Card className="border-2">
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {addons.slice(0, 3).map((addon) => (
+              <Card key={addon.id} className="border-2 hover:border-primary/50 transition-colors">
                 <CardHeader>
-                  <CardTitle>Direct Bestellen</CardTitle>
-                  <CardDescription>Vul het formulier in en wij nemen contact met u op</CardDescription>
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3">
+                    <Package className="w-6 h-6 text-primary" />
+                  </div>
+                  <CardTitle>{addon.name}</CardTitle>
+                  <CardDescription className="line-clamp-2">{addon.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleOrderSubmit} className="space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Naam *</Label>
-                        <Input 
-                          required
-                          value={orderForm.name}
-                          onChange={(e) => setOrderForm({...orderForm, name: e.target.value})}
-                          placeholder="Uw volledige naam"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Bedrijfsnaam</Label>
-                        <Input 
-                          value={orderForm.company_name}
-                          onChange={(e) => setOrderForm({...orderForm, company_name: e.target.value})}
-                          placeholder="Uw bedrijfsnaam"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>E-mail *</Label>
-                        <Input 
-                          type="email"
-                          required
-                          value={orderForm.email}
-                          onChange={(e) => setOrderForm({...orderForm, email: e.target.value})}
-                          placeholder="uw@email.com"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Telefoon *</Label>
-                        <Input 
-                          required
-                          value={orderForm.phone}
-                          onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})}
-                          placeholder="+597 ..."
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Selecteer Module(s) *</Label>
-                      <div className="grid gap-2">
-                        {addons.map((addon) => (
-                          <div 
-                            key={addon.id}
-                            className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${
-                              selectedAddons.includes(addon.id) 
-                                ? 'border-primary bg-primary/5' 
-                                : 'border-border hover:border-primary/50'
-                            }`}
-                            onClick={() => toggleAddonSelection(addon.id)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Checkbox 
-                                checked={selectedAddons.includes(addon.id)}
-                                onCheckedChange={() => toggleAddonSelection(addon.id)}
-                              />
-                              <span className="font-medium">{addon.name}</span>
-                            </div>
-                            <span className="text-primary font-semibold">{formatCurrency(addon.price)}/mnd</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Bericht (optioneel)</Label>
-                      <Textarea 
-                        value={orderForm.message}
-                        onChange={(e) => setOrderForm({...orderForm, message: e.target.value})}
-                        placeholder="Heeft u nog vragen of opmerkingen?"
-                        rows={3}
-                      />
-                    </div>
-
-                    {selectedAddons.length > 0 && (
-                      <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium">Totaal per maand:</span>
-                          <span className="text-2xl font-bold text-primary">{formatCurrency(getTotalPrice())}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <Button type="submit" className="w-full h-12" disabled={submitting || selectedAddons.length === 0}>
-                      {submitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Verzenden...
-                        </>
-                      ) : (
-                        <>
-                          <Check className="w-4 h-4 mr-2" />
-                          Bestelling Versturen
-                        </>
-                      )}
-                    </Button>
-                  </form>
+                  <div className="flex items-baseline gap-1 mb-4">
+                    <span className="text-3xl font-bold text-foreground">{formatCurrency(addon.price)}</span>
+                    <span className="text-muted-foreground">/maand</span>
+                  </div>
                 </CardContent>
               </Card>
-            </div>
+            ))}
           </div>
-        </section>
-      )}
+
+          <div className="text-center">
+            <Button size="lg" onClick={() => navigate('/prijzen')}>
+              Bekijk Alle Modules & Prijzen
+              <ChevronRight className="w-5 h-5 ml-2" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 md:py-24 bg-primary/5">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Klaar om te beginnen?
+          </h2>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Start vandaag nog met het stroomlijnen van uw bedrijfsprocessen. Geen verplichtingen, geen verborgen kosten.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" className="h-14 px-8 text-lg" onClick={() => navigate('/register')}>
+              Gratis Account Aanmaken
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+            <Button size="lg" variant="outline" className="h-14 px-8 text-lg" onClick={() => navigate('/contact')}>
+              Neem Contact Op
+            </Button>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
       <footer className="bg-muted/50 border-t border-border py-12">
@@ -558,42 +286,41 @@ export default function LandingPage() {
               <p className="text-muted-foreground max-w-md">
                 {settings?.footer_text || "Modulaire bedrijfssoftware voor ondernemers in Suriname. Kies de modules die passen bij uw bedrijfsvoering."}
               </p>
+              {settings?.company_phone && (
+                <div className="flex items-center gap-2 mt-4 text-muted-foreground">
+                  <Phone className="w-4 h-4" />
+                  <a href={`tel:${settings.company_phone}`} className="hover:text-foreground">{settings.company_phone}</a>
+                </div>
+              )}
+              {settings?.company_email && (
+                <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+                  <Mail className="w-4 h-4" />
+                  <a href={`mailto:${settings.company_email}`} className="hover:text-foreground">{settings.company_email}</a>
+                </div>
+              )}
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-4">Links</h4>
+              <h4 className="font-semibold text-foreground mb-4">Pagina's</h4>
               <ul className="space-y-2">
-                <li><a href="#features" className="text-muted-foreground hover:text-foreground">Features</a></li>
-                <li><a href="#pricing" className="text-muted-foreground hover:text-foreground">Prijzen</a></li>
-                <li><a href="#about" className="text-muted-foreground hover:text-foreground">Over Ons</a></li>
-                <li><a href="#contact" className="text-muted-foreground hover:text-foreground">Contact</a></li>
+                <li><Link to="/prijzen" className="text-muted-foreground hover:text-foreground">Prijzen</Link></li>
+                <li><Link to="/over-ons" className="text-muted-foreground hover:text-foreground">Over Ons</Link></li>
+                <li><Link to="/contact" className="text-muted-foreground hover:text-foreground">Contact</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold text-foreground mb-4">Juridisch</h4>
               <ul className="space-y-2">
                 <li>
-                  <button 
-                    onClick={() => {
-                      setActiveModalContent(termsSection);
-                      setTermsModalOpen(true);
-                    }}
-                    className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-                  >
+                  <Link to="/voorwaarden" className="text-muted-foreground hover:text-foreground flex items-center gap-1">
                     <FileText className="w-4 h-4" />
                     Algemene Voorwaarden
-                  </button>
+                  </Link>
                 </li>
                 <li>
-                  <button 
-                    onClick={() => {
-                      setActiveModalContent(privacySection);
-                      setPrivacyModalOpen(true);
-                    }}
-                    className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-                  >
+                  <Link to="/privacy" className="text-muted-foreground hover:text-foreground flex items-center gap-1">
                     <Lock className="w-4 h-4" />
                     Privacybeleid
-                  </button>
+                  </Link>
                 </li>
               </ul>
             </div>
@@ -603,191 +330,6 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
-
-      {/* Order Dialog */}
-      <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Bestelling Plaatsen</DialogTitle>
-            <DialogDescription>
-              Selecteer de modules die u wilt bestellen en vul uw gegevens in
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleOrderSubmit} className="space-y-4">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Naam *</Label>
-                <Input 
-                  required
-                  value={orderForm.name}
-                  onChange={(e) => setOrderForm({...orderForm, name: e.target.value})}
-                  placeholder="Uw volledige naam"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Bedrijfsnaam</Label>
-                <Input 
-                  value={orderForm.company_name}
-                  onChange={(e) => setOrderForm({...orderForm, company_name: e.target.value})}
-                  placeholder="Uw bedrijfsnaam"
-                />
-              </div>
-            </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>E-mail *</Label>
-                <Input 
-                  type="email"
-                  required
-                  value={orderForm.email}
-                  onChange={(e) => setOrderForm({...orderForm, email: e.target.value})}
-                  placeholder="uw@email.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Telefoon *</Label>
-                <Input 
-                  required
-                  value={orderForm.phone}
-                  onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})}
-                  placeholder="+597 ..."
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Selecteer Module(s) *</Label>
-              <div className="grid gap-2 max-h-48 overflow-y-auto">
-                {addons.map((addon) => (
-                  <div 
-                    key={addon.id}
-                    className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${
-                      selectedAddons.includes(addon.id) 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                    onClick={() => toggleAddonSelection(addon.id)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Checkbox 
-                        checked={selectedAddons.includes(addon.id)}
-                        onCheckedChange={() => toggleAddonSelection(addon.id)}
-                      />
-                      <div>
-                        <span className="font-medium">{addon.name}</span>
-                        {addon.description && (
-                          <p className="text-xs text-muted-foreground">{addon.description}</p>
-                        )}
-                      </div>
-                    </div>
-                    <span className="text-primary font-semibold whitespace-nowrap">{formatCurrency(addon.price)}/mnd</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Bericht (optioneel)</Label>
-              <Textarea 
-                value={orderForm.message}
-                onChange={(e) => setOrderForm({...orderForm, message: e.target.value})}
-                placeholder="Heeft u nog vragen of opmerkingen?"
-                rows={3}
-              />
-            </div>
-
-            {selectedAddons.length > 0 && (
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">Totaal per maand:</span>
-                  <span className="text-2xl font-bold text-primary">{formatCurrency(getTotalPrice())}</span>
-                </div>
-              </div>
-            )}
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setOrderDialogOpen(false)}>
-                Annuleren
-              </Button>
-              <Button type="submit" disabled={submitting || selectedAddons.length === 0}>
-                {submitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Verzenden...
-                  </>
-                ) : (
-                  <>
-                    <Check className="w-4 h-4 mr-2" />
-                    Bestelling Versturen
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Terms Modal */}
-      <Dialog open={termsModalOpen} onOpenChange={setTermsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{activeModalContent?.title || "Algemene Voorwaarden"}</DialogTitle>
-            {activeModalContent?.subtitle && (
-              <DialogDescription>{activeModalContent.subtitle}</DialogDescription>
-            )}
-          </DialogHeader>
-          <div className="prose prose-sm max-w-none">
-            {activeModalContent?.content?.split('\n\n').map((paragraph, index) => {
-              if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-                return <h3 key={index} className="font-semibold mt-4">{paragraph.replace(/\*\*/g, '')}</h3>;
-              }
-              if (paragraph.includes('**')) {
-                const parts = paragraph.split('**');
-                return (
-                  <p key={index}>
-                    {parts.map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part)}
-                  </p>
-                );
-              }
-              return <p key={index}>{paragraph}</p>;
-            })}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setTermsModalOpen(false)}>Sluiten</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Privacy Modal */}
-      <Dialog open={privacyModalOpen} onOpenChange={setPrivacyModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{activeModalContent?.title || "Privacybeleid"}</DialogTitle>
-            {activeModalContent?.subtitle && (
-              <DialogDescription>{activeModalContent.subtitle}</DialogDescription>
-            )}
-          </DialogHeader>
-          <div className="prose prose-sm max-w-none">
-            {activeModalContent?.content?.split('\n\n').map((paragraph, index) => {
-              if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-                return <h3 key={index} className="font-semibold mt-4">{paragraph.replace(/\*\*/g, '')}</h3>;
-              }
-              if (paragraph.includes('**')) {
-                const parts = paragraph.split('**');
-                return (
-                  <p key={index}>
-                    {parts.map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part)}
-                  </p>
-                );
-              }
-              return <p key={index}>{paragraph}</p>;
-            })}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setPrivacyModalOpen(false)}>Sluiten</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
