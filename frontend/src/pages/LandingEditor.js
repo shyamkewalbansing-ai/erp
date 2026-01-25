@@ -487,6 +487,36 @@ export default function LandingEditor() {
                   />
                 </div>
               </div>
+              
+              {/* Login & Register Afbeeldingen */}
+              <div className="border-t pt-6 mt-6">
+                <h3 className="font-medium mb-4">Login & Registratie Afbeeldingen</h3>
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label>Login Pagina Afbeelding URL</Label>
+                    <Input 
+                      value={settings.login_image_url || ''}
+                      onChange={(e) => setSettings({...settings, login_image_url: e.target.value})}
+                      placeholder="https://... (laat leeg voor standaard)"
+                    />
+                    {settings.login_image_url && (
+                      <img src={settings.login_image_url} alt="Login preview" className="h-32 object-cover rounded-lg mt-2" />
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Registratie Pagina Afbeelding URL</Label>
+                    <Input 
+                      value={settings.register_image_url || ''}
+                      onChange={(e) => setSettings({...settings, register_image_url: e.target.value})}
+                      placeholder="https://... (laat leeg voor standaard)"
+                    />
+                    {settings.register_image_url && (
+                      <img src={settings.register_image_url} alt="Register preview" className="h-32 object-cover rounded-lg mt-2" />
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="flex justify-end">
                 <Button onClick={handleSaveSettings} disabled={savingSettings}>
                   {savingSettings ? (
