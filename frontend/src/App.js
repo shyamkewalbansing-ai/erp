@@ -198,6 +198,11 @@ function App() {
               <AdminRoute><LandingEditor /></AdminRoute>
             } />
             
+            {/* CMS Builder only for superadmin */}
+            <Route path="cms-builder" element={
+              <AdminRoute><CMSBuilder /></AdminRoute>
+            } />
+            
             {/* These routes require active subscription (customers only) */}
             <Route path="dashboard" element={
               <SubscriptionRoute><Dashboard /></SubscriptionRoute>
