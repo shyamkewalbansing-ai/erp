@@ -155,10 +155,15 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public Landing Page - Homepage */}
+          {/* Public Landing Pages */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/prijzen" element={<PrijzenPage />} />
+          <Route path="/over-ons" element={<OverOnsPage />} />
+          <Route path="/voorwaarden" element={<VoorwaardenPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/contact" element={<ContactPage />} />
           
-          {/* Public Routes */}
+          {/* Public Auth Routes */}
           <Route path="/login" element={
             <PublicRoute><Login /></PublicRoute>
           } />
