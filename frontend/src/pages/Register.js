@@ -72,7 +72,7 @@ export default function Register() {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-foreground mb-2">Account aanmaken</h2>
             <p className="text-muted-foreground">
-              Vul uw gegevens in om te beginnen. 3 dagen gratis proefperiode!
+              Vul uw gegevens in om te beginnen. Kies daarna de modules die u nodig heeft.
             </p>
           </div>
 
