@@ -311,6 +311,34 @@ De applicatie is gerebrand van "SuriRentals" naar "Facturatie N.V."
 3. UI Redesign voltooien voor resterende pagina's
 4. E-mail herinneringen voor late betalingen (SendGrid/Resend)
 5. Andere ERP modules bouwen naar wens (Inventory, CRM, Accounting)
+6. **server.py Refactoring** - Backend bestand is >7600 regels en moet worden opgesplitst in modulaire APIRouters
+
+## Recent Updates (26 Jan 2026)
+
+### CMS Consolidatie & Publieke Website ✅ (26 Jan 2026)
+- [x] **Unified Website Beheer**: `LandingEditor.js` en `CMSBuilder.js` samengevoegd in één `WebsiteBeheer.js`
+- [x] **Enkele navigatie link**: Admin sidebar toont nu één "Website Beheer" link in plaats van twee
+- [x] **Route update**: `/app/website-beheer` vervangt `/app/landing-editor` en `/app/cms-builder`
+- [x] **Dynamische publieke website**: Nieuwe `PublicPage.js` component die CMS content rendert
+- [x] **CMS-gestuurde navigatie**: Menu wordt dynamisch geladen uit `/api/public/cms/menu`
+- [x] **CMS-gestuurde pagina's**: Homepage, Over Ons, Contact worden uit de database geladen
+- [x] **Footer uit CMS**: Footer configuratie wordt dynamisch geladen
+- [x] **Oude bestanden verwijderd**: `LandingPage.js`, `CMSBuilder.js`, `LandingEditor.js`, `OverOnsPage.js`, `ContactPage.js`, `CMSPage.js`
+- [x] **emergentintegrations** toegevoegd aan `requirements.txt`
+- [x] **Getest**: Backend 100% (17/17), Frontend 100% (alle features geverifieerd)
+
+### CMS Admin Interface (WebsiteBeheer.js)
+- **Pagina's tab**: Beheer alle website pagina's, secties, publicatie status, menu zichtbaarheid
+- **Footer tab**: Footer kolommen, links, copyright tekst, kleuren
+- **Instellingen tab**: Bedrijfsgegevens, logo, sociale media, login/register afbeeldingen
+- **Design tab**: Primaire en secundaire kleuren
+
+### CMS API Endpoints
+- GET /api/public/cms/menu - Haalt navigatiemenu op
+- GET /api/public/cms/page/:slug - Haalt pagina content op
+- GET /api/public/cms/footer - Haalt footer configuratie op
+- GET/PUT /api/cms/pages - CRUD voor pagina's (admin only)
+- GET/PUT /api/cms/footer - Footer beheer (admin only)
 
 ## Recent Updates (25 Jan 2026)
 
