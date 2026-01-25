@@ -183,6 +183,18 @@ export default function LandingEditor() {
     }
   };
 
+  const handleSaveMopeSettings = async () => {
+    setSavingMope(true);
+    try {
+      await updateMopeSettings(mopeSettings);
+      toast.success('Betaalinstellingen opgeslagen');
+    } catch (error) {
+      toast.error('Fout bij opslaan van betaalinstellingen');
+    } finally {
+      setSavingMope(false);
+    }
+  };
+
   const handleCreateSection = () => {
     setEditingSection(null);
     setSectionForm({
