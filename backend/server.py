@@ -630,6 +630,93 @@ class LandingPageSettings(BaseModel):
     social_links: Optional[dict] = None  # {"facebook": "url", "instagram": "url", etc}
     login_image_url: Optional[str] = None  # Afbeelding voor login pagina
     register_image_url: Optional[str] = None  # Afbeelding voor registratie pagina
+    # Global site settings
+    site_title: Optional[str] = "Facturatie N.V."
+    site_description: Optional[str] = None
+    primary_color: Optional[str] = "#3b82f6"
+    secondary_color: Optional[str] = "#1e40af"
+    font_family: Optional[str] = "Inter"
+
+# ==================== CMS MODELS ====================
+
+class CMSPageSection(BaseModel):
+    """A section/block within a CMS page"""
+    id: Optional[str] = None
+    type: str  # 'hero', 'text', 'image_text', 'features', 'cta', 'gallery', 'pricing', 'contact', 'testimonials', 'faq', 'custom_html'
+    title: Optional[str] = None
+    subtitle: Optional[str] = None
+    content: Optional[str] = None  # Rich text / HTML content
+    image_url: Optional[str] = None
+    background_image_url: Optional[str] = None
+    background_color: Optional[str] = None
+    text_color: Optional[str] = None
+    button_text: Optional[str] = None
+    button_link: Optional[str] = None
+    button_style: Optional[str] = "primary"  # 'primary', 'secondary', 'outline'
+    layout: Optional[str] = "center"  # 'left', 'center', 'right', 'image-left', 'image-right'
+    items: Optional[List[dict]] = None  # For features, gallery, testimonials, faq, etc.
+    settings: Optional[dict] = None  # Extra settings per section type
+    order: int = 0
+    is_visible: bool = True
+
+class CMSPage(BaseModel):
+    """A CMS managed page"""
+    id: Optional[str] = None
+    title: str
+    slug: str  # URL path e.g. 'about-us', 'contact'
+    description: Optional[str] = None  # SEO description
+    template: str = "default"  # 'default', 'landing', 'sidebar', 'full-width', 'blank'
+    sections: List[CMSPageSection] = []
+    is_published: bool = True
+    show_in_menu: bool = True
+    menu_order: int = 0
+    menu_label: Optional[str] = None  # Override title in menu
+    parent_page_id: Optional[str] = None  # For submenu
+    show_header: bool = True
+    show_footer: bool = True
+    custom_css: Optional[str] = None
+    seo_title: Optional[str] = None
+    seo_keywords: Optional[str] = None
+    created_at: Optional[str] = None
+    updated_at: Optional[str] = None
+
+class CMSMenuItem(BaseModel):
+    """Menu item for navigation"""
+    id: Optional[str] = None
+    label: str
+    link: str  # URL or page slug
+    page_id: Optional[str] = None  # Link to CMS page
+    is_external: bool = False
+    open_in_new_tab: bool = False
+    parent_id: Optional[str] = None  # For submenu
+    order: int = 0
+    is_visible: bool = True
+
+class CMSMenu(BaseModel):
+    """Navigation menu"""
+    id: Optional[str] = None
+    name: str  # 'main', 'footer', etc.
+    items: List[CMSMenuItem] = []
+
+class CMSFooter(BaseModel):
+    """Footer configuration"""
+    columns: List[dict] = []  # Each column has title and links
+    copyright_text: Optional[str] = None
+    show_social_links: bool = True
+    show_newsletter: bool = False
+    newsletter_title: Optional[str] = "Schrijf u in voor onze nieuwsbrief"
+    background_color: Optional[str] = "#1f2937"
+    text_color: Optional[str] = "#ffffff"
+    custom_html: Optional[str] = None
+
+class CMSTemplate(BaseModel):
+    """Pre-made page templates"""
+    id: str
+    name: str
+    description: str
+    preview_image: Optional[str] = None
+    category: str  # 'landing', 'business', 'portfolio', 'ecommerce'
+    sections: List[dict] = []  # Pre-configured sections
 
 class PublicOrderCreate(BaseModel):
     """Order from landing page with account creation"""
