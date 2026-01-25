@@ -228,7 +228,7 @@ export default function Layout() {
               <Package className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">Geen actieve modules</p>
               <NavLink 
-                to="/abonnement" 
+                to="/app/abonnement" 
                 className="text-xs text-primary hover:underline mt-1 block"
                 onClick={() => setSidebarOpen(false)}
               >
