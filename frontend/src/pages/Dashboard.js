@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getDashboard, formatCurrency } from '../lib/api';
+import { useNavigate } from 'react-router-dom';
+import { getDashboard, formatCurrency, getMyAddons } from '../lib/api';
 import { REFRESH_EVENTS } from '../lib/refreshEvents';
 import { toast } from 'sonner';
 import { 
@@ -12,22 +13,28 @@ import {
   AlertTriangle,
   ArrowUpRight,
   Clock,
-  Banknote
+  Banknote,
+  Package,
+  Sparkles
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [hasVastgoedAddon, setHasVastgoedAddon] = useState(false);
+  const [addonsChecked, setAddonsChecked] = useState(false);
 
   useEffect(() => {
-    fetchDashboard();
+    checkAddonsAndFetch();
   }, []);
 
   // Listen for refresh events
   useEffect(() => {
-    const handleRefresh = () => fetchDashboard();
+    const handleRefresh = () => checkAddonsAndFetch();
     window.addEventListener(REFRESH_EVENTS.DASHBOARD, handleRefresh);
     window.addEventListener(REFRESH_EVENTS.ALL, handleRefresh);
     return () => {
@@ -36,12 +43,23 @@ export default function Dashboard() {
     };
   }, []);
 
-  const fetchDashboard = async () => {
+  const checkAddonsAndFetch = async () => {
     try {
-      const response = await getDashboard();
-      setStats(response.data);
+      // Check if user has vastgoed_beheer add-on
+      const addonsRes = await getMyAddons();
+      const hasAddon = addonsRes.data.some(
+        a => a.addon_slug === 'vastgoed_beheer' && a.status === 'active'
+      );
+      setHasVastgoedAddon(hasAddon);
+      setAddonsChecked(true);
+
+      // Only fetch dashboard data if user has the add-on
+      if (hasAddon) {
+        const response = await getDashboard();
+        setStats(response.data);
+      }
     } catch (error) {
-      toast.error('Fout bij laden dashboard');
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
@@ -51,6 +69,35 @@ export default function Dashboard() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    );
+  }
+
+  // Show empty state if no add-on
+  if (addonsChecked && !hasVastgoedAddon) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center px-4">
+        <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+          <Package className="w-10 h-10 text-primary" />
+        </div>
+        <h1 className="text-3xl font-bold text-foreground mb-3">Welkom bij Facturatie N.V.</h1>
+        <p className="text-muted-foreground max-w-md mb-8">
+          Uw account is actief! Om te beginnen met het beheren van uw bedrijf, 
+          activeer een module die past bij uw behoeften.
+        </p>
+        <div className="space-y-4">
+          <Button 
+            size="lg" 
+            className="h-14 px-8 text-lg rounded-xl shadow-lg shadow-primary/20"
+            onClick={() => navigate('/abonnement')}
+          >
+            <Sparkles className="w-5 h-5 mr-2" />
+            Bekijk Beschikbare Modules
+          </Button>
+          <p className="text-sm text-muted-foreground">
+            Start met de <strong>Vastgoed Beheer</strong> module voor verhuuradministratie
+          </p>
+        </div>
       </div>
     );
   }
