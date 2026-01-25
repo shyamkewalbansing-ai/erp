@@ -7273,6 +7273,433 @@ async def delete_notification(notification_id: str, current_user: dict = Depends
     return requests
 
 # ============================================
+# CMS - COMPLETE WEBSITE BUILDER
+# ============================================
+
+# --- CMS PAGES ---
+
+@api_router.get("/cms/pages")
+async def get_cms_pages(current_user: dict = Depends(get_superadmin)):
+    """Get all CMS pages (admin)"""
+    pages = await db.cms_pages.find({}, {"_id": 0}).sort("menu_order", 1).to_list(100)
+    return pages
+
+@api_router.get("/cms/pages/{page_id}")
+async def get_cms_page(page_id: str, current_user: dict = Depends(get_superadmin)):
+    """Get a specific CMS page (admin)"""
+    page = await db.cms_pages.find_one({"id": page_id}, {"_id": 0})
+    if not page:
+        raise HTTPException(status_code=404, detail="Pagina niet gevonden")
+    return page
+
+@api_router.post("/cms/pages")
+async def create_cms_page(page: CMSPage, current_user: dict = Depends(get_superadmin)):
+    """Create a new CMS page"""
+    # Check slug uniqueness
+    existing = await db.cms_pages.find_one({"slug": page.slug})
+    if existing:
+        raise HTTPException(status_code=400, detail="Deze URL slug bestaat al")
+    
+    page_dict = page.dict()
+    page_dict["id"] = str(uuid.uuid4())
+    page_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    page_dict["updated_at"] = page_dict["created_at"]
+    
+    # Add IDs to sections
+    for section in page_dict.get("sections", []):
+        if not section.get("id"):
+            section["id"] = str(uuid.uuid4())
+    
+    await db.cms_pages.insert_one(page_dict)
+    
+    # Update menu if show_in_menu
+    if page.show_in_menu:
+        await update_main_menu()
+    
+    return {**page_dict, "_id": None}
+
+@api_router.put("/cms/pages/{page_id}")
+async def update_cms_page(page_id: str, page: CMSPage, current_user: dict = Depends(get_superadmin)):
+    """Update a CMS page"""
+    existing = await db.cms_pages.find_one({"id": page_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Pagina niet gevonden")
+    
+    # Check slug uniqueness if changed
+    if page.slug != existing.get("slug"):
+        slug_exists = await db.cms_pages.find_one({"slug": page.slug, "id": {"$ne": page_id}})
+        if slug_exists:
+            raise HTTPException(status_code=400, detail="Deze URL slug bestaat al")
+    
+    page_dict = page.dict()
+    page_dict["id"] = page_id
+    page_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    page_dict["created_at"] = existing.get("created_at")
+    
+    # Add IDs to new sections
+    for section in page_dict.get("sections", []):
+        if not section.get("id"):
+            section["id"] = str(uuid.uuid4())
+    
+    await db.cms_pages.update_one({"id": page_id}, {"$set": page_dict})
+    
+    # Update menu
+    await update_main_menu()
+    
+    return {**page_dict, "_id": None}
+
+@api_router.delete("/cms/pages/{page_id}")
+async def delete_cms_page(page_id: str, current_user: dict = Depends(get_superadmin)):
+    """Delete a CMS page"""
+    page = await db.cms_pages.find_one({"id": page_id})
+    if not page:
+        raise HTTPException(status_code=404, detail="Pagina niet gevonden")
+    
+    # Don't allow deleting home page
+    if page.get("slug") == "home":
+        raise HTTPException(status_code=400, detail="De homepage kan niet worden verwijderd")
+    
+    await db.cms_pages.delete_one({"id": page_id})
+    
+    # Update menu
+    await update_main_menu()
+    
+    return {"message": "Pagina verwijderd"}
+
+@api_router.put("/cms/pages/{page_id}/sections/reorder")
+async def reorder_page_sections(page_id: str, section_ids: List[str], current_user: dict = Depends(get_superadmin)):
+    """Reorder sections within a page"""
+    page = await db.cms_pages.find_one({"id": page_id})
+    if not page:
+        raise HTTPException(status_code=404, detail="Pagina niet gevonden")
+    
+    sections = page.get("sections", [])
+    section_map = {s["id"]: s for s in sections}
+    
+    reordered = []
+    for i, sid in enumerate(section_ids):
+        if sid in section_map:
+            section_map[sid]["order"] = i
+            reordered.append(section_map[sid])
+    
+    await db.cms_pages.update_one({"id": page_id}, {"$set": {"sections": reordered}})
+    return {"message": "Secties herschikt"}
+
+# --- CMS MENU ---
+
+@api_router.get("/cms/menu")
+async def get_cms_menu(current_user: dict = Depends(get_superadmin)):
+    """Get main menu (admin)"""
+    menu = await db.cms_menus.find_one({"name": "main"}, {"_id": 0})
+    if not menu:
+        # Create default menu
+        menu = {"id": str(uuid.uuid4()), "name": "main", "items": []}
+        await db.cms_menus.insert_one(menu)
+    return menu
+
+@api_router.put("/cms/menu")
+async def update_cms_menu(menu: CMSMenu, current_user: dict = Depends(get_superadmin)):
+    """Update main menu"""
+    menu_dict = menu.dict()
+    menu_dict["name"] = "main"
+    
+    # Add IDs to items
+    for item in menu_dict.get("items", []):
+        if not item.get("id"):
+            item["id"] = str(uuid.uuid4())
+    
+    await db.cms_menus.update_one(
+        {"name": "main"},
+        {"$set": menu_dict},
+        upsert=True
+    )
+    return menu_dict
+
+async def update_main_menu():
+    """Auto-update main menu based on published pages"""
+    pages = await db.cms_pages.find(
+        {"is_published": True, "show_in_menu": True},
+        {"_id": 0}
+    ).sort("menu_order", 1).to_list(100)
+    
+    items = []
+    for page in pages:
+        items.append({
+            "id": str(uuid.uuid4()),
+            "label": page.get("menu_label") or page.get("title"),
+            "link": f"/{page.get('slug')}" if page.get("slug") != "home" else "/",
+            "page_id": page.get("id"),
+            "is_external": False,
+            "open_in_new_tab": False,
+            "parent_id": page.get("parent_page_id"),
+            "order": page.get("menu_order", 0),
+            "is_visible": True
+        })
+    
+    await db.cms_menus.update_one(
+        {"name": "main"},
+        {"$set": {"items": items}},
+        upsert=True
+    )
+
+# --- CMS FOOTER ---
+
+@api_router.get("/cms/footer")
+async def get_cms_footer(current_user: dict = Depends(get_superadmin)):
+    """Get footer configuration (admin)"""
+    footer = await db.cms_footer.find_one({}, {"_id": 0})
+    if not footer:
+        # Create default footer
+        footer = {
+            "id": str(uuid.uuid4()),
+            "columns": [
+                {
+                    "title": "Over Ons",
+                    "links": [
+                        {"label": "Over Facturatie", "url": "/over-ons"},
+                        {"label": "Contact", "url": "/contact"}
+                    ]
+                },
+                {
+                    "title": "Diensten",
+                    "links": [
+                        {"label": "Prijzen", "url": "/prijzen"},
+                        {"label": "Modules", "url": "/prijzen"}
+                    ]
+                },
+                {
+                    "title": "Legal",
+                    "links": [
+                        {"label": "Privacy Policy", "url": "/privacy"},
+                        {"label": "Algemene Voorwaarden", "url": "/voorwaarden"}
+                    ]
+                }
+            ],
+            "copyright_text": f"© {datetime.now().year} Facturatie N.V. Alle rechten voorbehouden.",
+            "show_social_links": True,
+            "show_newsletter": False,
+            "background_color": "#1f2937",
+            "text_color": "#ffffff"
+        }
+        await db.cms_footer.insert_one(footer)
+    return footer
+
+@api_router.put("/cms/footer")
+async def update_cms_footer(footer: CMSFooter, current_user: dict = Depends(get_superadmin)):
+    """Update footer configuration"""
+    footer_dict = footer.dict()
+    footer_dict["id"] = str(uuid.uuid4())
+    
+    await db.cms_footer.update_one(
+        {},
+        {"$set": footer_dict},
+        upsert=True
+    )
+    return footer_dict
+
+# --- CMS TEMPLATES ---
+
+@api_router.get("/cms/templates")
+async def get_cms_templates(current_user: dict = Depends(get_superadmin)):
+    """Get available page templates"""
+    templates = [
+        {
+            "id": "blank",
+            "name": "Lege Pagina",
+            "description": "Start met een lege pagina",
+            "preview_image": None,
+            "category": "basic",
+            "sections": []
+        },
+        {
+            "id": "landing",
+            "name": "Landing Page",
+            "description": "Perfect voor een homepage met hero, features en CTA",
+            "preview_image": None,
+            "category": "landing",
+            "sections": [
+                {"type": "hero", "title": "Welkom", "subtitle": "Uw ondertitel hier", "layout": "center"},
+                {"type": "features", "title": "Onze Features", "items": []},
+                {"type": "cta", "title": "Klaar om te beginnen?", "button_text": "Contact"}
+            ]
+        },
+        {
+            "id": "about",
+            "name": "Over Ons",
+            "description": "Vertel uw verhaal met tekst en afbeeldingen",
+            "preview_image": None,
+            "category": "business",
+            "sections": [
+                {"type": "hero", "title": "Over Ons", "layout": "center"},
+                {"type": "image_text", "title": "Ons Verhaal", "layout": "image-left"},
+                {"type": "text", "title": "Onze Missie", "layout": "center"}
+            ]
+        },
+        {
+            "id": "services",
+            "name": "Diensten",
+            "description": "Toon uw diensten met kaarten",
+            "preview_image": None,
+            "category": "business",
+            "sections": [
+                {"type": "hero", "title": "Onze Diensten", "layout": "center"},
+                {"type": "features", "title": "", "items": [], "layout": "grid-3"}
+            ]
+        },
+        {
+            "id": "pricing",
+            "name": "Prijzen",
+            "description": "Prijstabellen en vergelijkingen",
+            "preview_image": None,
+            "category": "business",
+            "sections": [
+                {"type": "hero", "title": "Prijzen", "subtitle": "Kies het plan dat bij u past"},
+                {"type": "pricing", "title": "", "items": []}
+            ]
+        },
+        {
+            "id": "contact",
+            "name": "Contact",
+            "description": "Contactformulier en bedrijfsinfo",
+            "preview_image": None,
+            "category": "business",
+            "sections": [
+                {"type": "hero", "title": "Contact", "layout": "center"},
+                {"type": "contact", "title": "Neem contact op"}
+            ]
+        },
+        {
+            "id": "gallery",
+            "name": "Galerij",
+            "description": "Afbeeldingen galerij met lightbox",
+            "preview_image": None,
+            "category": "portfolio",
+            "sections": [
+                {"type": "hero", "title": "Galerij", "layout": "center"},
+                {"type": "gallery", "title": "", "items": []}
+            ]
+        },
+        {
+            "id": "faq",
+            "name": "FAQ",
+            "description": "Veelgestelde vragen met accordion",
+            "preview_image": None,
+            "category": "support",
+            "sections": [
+                {"type": "hero", "title": "Veelgestelde Vragen", "layout": "center"},
+                {"type": "faq", "title": "", "items": []}
+            ]
+        }
+    ]
+    return templates
+
+@api_router.post("/cms/pages/from-template/{template_id}")
+async def create_page_from_template(template_id: str, page_data: dict, current_user: dict = Depends(get_superadmin)):
+    """Create a new page from a template"""
+    templates = await get_cms_templates(current_user)
+    template = next((t for t in templates if t["id"] == template_id), None)
+    
+    if not template:
+        raise HTTPException(status_code=404, detail="Template niet gevonden")
+    
+    # Create page with template sections
+    page = CMSPage(
+        title=page_data.get("title", template["name"]),
+        slug=page_data.get("slug", template_id + "-" + str(uuid.uuid4())[:8]),
+        template=template_id,
+        sections=[CMSPageSection(**s) for s in template["sections"]],
+        is_published=page_data.get("is_published", False),
+        show_in_menu=page_data.get("show_in_menu", True),
+        menu_order=page_data.get("menu_order", 99)
+    )
+    
+    return await create_cms_page(page, current_user)
+
+# --- PUBLIC CMS ROUTES ---
+
+@api_router.get("/public/cms/page/{slug}")
+async def get_public_cms_page(slug: str):
+    """Get a published CMS page by slug (public)"""
+    page = await db.cms_pages.find_one(
+        {"slug": slug, "is_published": True},
+        {"_id": 0}
+    )
+    if not page:
+        raise HTTPException(status_code=404, detail="Pagina niet gevonden")
+    return page
+
+@api_router.get("/public/cms/menu")
+async def get_public_menu():
+    """Get public navigation menu"""
+    menu = await db.cms_menus.find_one({"name": "main"}, {"_id": 0})
+    if not menu:
+        # Build from pages
+        pages = await db.cms_pages.find(
+            {"is_published": True, "show_in_menu": True},
+            {"_id": 0, "id": 1, "title": 1, "slug": 1, "menu_label": 1, "menu_order": 1, "parent_page_id": 1}
+        ).sort("menu_order", 1).to_list(100)
+        
+        items = []
+        for page in pages:
+            items.append({
+                "id": page.get("id"),
+                "label": page.get("menu_label") or page.get("title"),
+                "link": f"/{page.get('slug')}" if page.get("slug") != "home" else "/",
+                "page_id": page.get("id"),
+                "parent_id": page.get("parent_page_id"),
+                "order": page.get("menu_order", 0)
+            })
+        
+        return {"name": "main", "items": items}
+    
+    # Filter only visible items
+    menu["items"] = [i for i in menu.get("items", []) if i.get("is_visible", True)]
+    return menu
+
+@api_router.get("/public/cms/footer")
+async def get_public_footer():
+    """Get public footer configuration"""
+    footer = await db.cms_footer.find_one({}, {"_id": 0})
+    if not footer:
+        return {
+            "columns": [],
+            "copyright_text": f"© {datetime.now().year} Facturatie N.V.",
+            "show_social_links": True,
+            "background_color": "#1f2937",
+            "text_color": "#ffffff"
+        }
+    return footer
+
+@api_router.get("/public/cms/pages")
+async def get_public_pages():
+    """Get all published pages (for sitemap, etc.)"""
+    pages = await db.cms_pages.find(
+        {"is_published": True},
+        {"_id": 0, "id": 1, "title": 1, "slug": 1, "description": 1, "template": 1}
+    ).sort("menu_order", 1).to_list(100)
+    return pages
+
+# --- CMS IMAGE UPLOAD ---
+
+@api_router.post("/cms/upload-image")
+async def upload_cms_image(file: UploadFile = File(...), current_user: dict = Depends(get_superadmin)):
+    """Upload an image for CMS"""
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="Alleen afbeeldingen zijn toegestaan")
+    
+    # Read and convert to base64
+    contents = await file.read()
+    
+    # Check file size (max 5MB)
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Afbeelding mag maximaal 5MB zijn")
+    
+    base64_image = base64.b64encode(contents).decode("utf-8")
+    data_url = f"data:{file.content_type};base64,{base64_image}"
+    
+    return {"url": data_url, "filename": file.filename}
+
+# ============================================
 # AI CHAT ASSISTANT
 # ============================================
 
