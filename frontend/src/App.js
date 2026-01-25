@@ -21,7 +21,7 @@ import Admin from "./pages/Admin";
 import Instellingen from "./pages/Instellingen";
 import LandingPage from "./pages/LandingPage";
 import WebsiteBeheer from "./pages/WebsiteBeheer";
-import CMSPage from "./pages/CMSPage";
+import PublicPage from "./pages/PublicPage";
 import OverOnsPage from "./pages/OverOnsPage";
 import VoorwaardenPage from "./pages/VoorwaardenPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -156,16 +156,14 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public Landing Pages */}
-          <Route path="/" element={<LandingPage />} />
+          {/* Public CMS-driven Pages */}
+          <Route path="/" element={<PublicPage />} />
           <Route path="/prijzen" element={<PrijzenPage />} />
-          <Route path="/over-ons" element={<OverOnsPage />} />
           <Route path="/voorwaarden" element={<VoorwaardenPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/contact" element={<ContactPage />} />
           
-          {/* Dynamic CMS Pages - catch-all for custom pages */}
-          <Route path="/page/:slug" element={<CMSPage />} />
+          {/* Dynamic CMS Pages - for any slug managed in CMS */}
+          <Route path="/:slug" element={<PublicPage />} />
           
           {/* Public Auth Routes */}
           <Route path="/login" element={
