@@ -178,7 +178,7 @@ export default function Layout() {
           {isSuperAdmin() && (
             <>
               <NavLink
-                to="/admin"
+                to="/app/admin"
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
                 data-testid="nav-admin"
@@ -188,6 +188,14 @@ export default function Layout() {
                 <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>
               </NavLink>
               <NavLink
+                to="/app/landing-editor"
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                data-testid="nav-landing-editor"
+              >
+                <LayoutDashboard className="w-5 h-5" />
+                <span>Website Beheer</span>
+              </NavLink>
                 to="/instellingen"
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
