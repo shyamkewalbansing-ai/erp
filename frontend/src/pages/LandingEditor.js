@@ -10,7 +10,9 @@ import {
   getAdminOrders,
   updateOrderStatus,
   deleteOrder,
-  formatCurrency
+  formatCurrency,
+  getMopeSettings,
+  updateMopeSettings
 } from '../lib/api';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
