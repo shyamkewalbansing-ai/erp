@@ -6,7 +6,7 @@
 
 set -e
 
-DOMAIN="vastgoed.facturatie.sr"
+DOMAIN="facturatie.sr"
 APP_USER="facturatie-vastgoed"
 APP_DIR="/home/$APP_USER/htdocs/$DOMAIN"
 GITHUB_URL="https://github.com/shyamkewalbansing-ai/rent.git"

@@ -4,7 +4,7 @@ Data Repair Script for Facturatie N.V.
 This script fixes corrupt data in the MongoDB database that may cause server crashes.
 
 Run this on the production server:
-    cd /home/facturatie-vastgoed/htdocs/vastgoed.facturatie.sr/backend
+    cd /home/facturatie/htdocs/vastgoed.facturatie.sr/backend
     python3 fix_corrupt_data.py
 """
 
