@@ -78,7 +78,6 @@ export default function Login() {
             Modulaire bedrijfssoftware voor ondernemers in Suriname. 
             Kies de modules die passen bij uw bedrijfsvoering.
           </p>
-          </p>
         </div>
       </div>
 
