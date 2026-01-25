@@ -158,13 +158,13 @@ export default function Abonnement() {
       <div className="text-center space-y-4">
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
           <Sparkles className="w-4 h-4" />
-          {isActive ? 'Uw abonnement is actief' : isTrial ? 'Proefperiode' : 'Kies uw plan'}
+          {isActive ? 'Uw account is actief' : isTrial ? 'Proefperiode' : 'Activeer uw account'}
         </div>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-          {isActive ? 'Abonnementsbeheer' : 'Activeer Facturatie N.V.'}
+          {isActive ? 'Account & Modules' : 'Facturatie N.V. Platform'}
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          De complete oplossing voor verhuurbeheer in Suriname. Beheer al uw huurders, appartementen en betalingen op één plek.
+          Modulaire bedrijfssoftware voor ondernemers. Activeer de modules die u nodig heeft en betaal alleen voor wat u gebruikt.
         </p>
       </div>
 
