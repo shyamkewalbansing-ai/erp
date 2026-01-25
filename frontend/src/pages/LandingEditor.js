@@ -491,27 +491,92 @@ export default function LandingEditor() {
               {/* Login & Register Afbeeldingen */}
               <div className="border-t pt-6 mt-6">
                 <h3 className="font-medium mb-4">Login & Registratie Afbeeldingen</h3>
-                <div className="grid gap-4">
-                  <div className="space-y-2">
-                    <Label>Login Pagina Afbeelding URL</Label>
-                    <Input 
-                      value={settings.login_image_url || ''}
-                      onChange={(e) => setSettings({...settings, login_image_url: e.target.value})}
-                      placeholder="https://... (laat leeg voor standaard)"
-                    />
+                <div className="grid gap-6">
+                  {/* Login Afbeelding */}
+                  <div className="space-y-3">
+                    <Label>Login Pagina Afbeelding</Label>
+                    <div className="flex gap-3 items-start">
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id="login-image-upload"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setSettings({...settings, login_image_url: reader.result});
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="login-image-upload"
+                          className="flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary transition-colors"
+                        >
+                          <Upload className="w-5 h-5 mr-2 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Kies afbeelding</span>
+                        </label>
+                      </div>
+                      {settings.login_image_url && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => setSettings({...settings, login_image_url: ''})}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                     {settings.login_image_url && (
-                      <img src={settings.login_image_url} alt="Login preview" className="h-32 object-cover rounded-lg mt-2" />
+                      <img src={settings.login_image_url} alt="Login preview" className="h-40 w-full object-cover rounded-lg" />
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <Label>Registratie Pagina Afbeelding URL</Label>
-                    <Input 
-                      value={settings.register_image_url || ''}
-                      onChange={(e) => setSettings({...settings, register_image_url: e.target.value})}
-                      placeholder="https://... (laat leeg voor standaard)"
-                    />
+
+                  {/* Register Afbeelding */}
+                  <div className="space-y-3">
+                    <Label>Registratie Pagina Afbeelding</Label>
+                    <div className="flex gap-3 items-start">
+                      <div className="flex-1">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id="register-image-upload"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                setSettings({...settings, register_image_url: reader.result});
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="register-image-upload"
+                          className="flex items-center justify-center px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary transition-colors"
+                        >
+                          <Upload className="w-5 h-5 mr-2 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Kies afbeelding</span>
+                        </label>
+                      </div>
+                      {settings.register_image_url && (
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => setSettings({...settings, register_image_url: ''})}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      )}
+                    </div>
                     {settings.register_image_url && (
-                      <img src={settings.register_image_url} alt="Register preview" className="h-32 object-cover rounded-lg mt-2" />
+                      <img src={settings.register_image_url} alt="Register preview" className="h-40 w-full object-cover rounded-lg" />
                     )}
                   </div>
                 </div>
