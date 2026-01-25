@@ -40,15 +40,16 @@ export default function Register() {
   return (
     <div className="min-h-screen flex">
       {/* Left side - Image */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-primary/10 via-primary/5 to-background flex-col items-center justify-center">
+      <div className="hidden lg:flex lg:w-1/2 relative">
         <img
           src="https://customer-assets.emergentagent.com/job_07e3c66b-0794-491d-bbf3-342aff3c1100/artifacts/vill14ys_261F389D-0F54-4D61-963C-4B58A923ED3D.png"
           alt="Facturatie ERP"
-          className="w-full h-auto max-h-[70vh] object-contain p-8"
+          className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute bottom-0 left-0 right-0 p-12 bg-gradient-to-t from-black/70 to-transparent text-white">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 p-12 text-white">
           <h2 className="text-3xl font-bold mb-3">Start vandaag met Facturatie N.V.</h2>
-          <p className="text-base text-white/80">
+          <p className="text-base text-white/90">
             Maak een gratis account aan en ontdek onze bedrijfsmodules. 
             U krijgt 3 dagen gratis proefperiode om het platform te verkennen!
           </p>
