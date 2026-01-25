@@ -6018,6 +6018,151 @@ async def seed_default_addons():
     
     return existing or await db.addons.find_one({"slug": "vastgoed_beheer"}, {"_id": 0})
 
+async def seed_default_cms_pages():
+    """Seed default CMS pages if they don't exist"""
+    existing = await db.cms_pages.find_one({}, {"_id": 0})
+    if existing:
+        return  # Already seeded
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Create default Home page
+    home_page = {
+        "id": str(uuid.uuid4()),
+        "title": "Home",
+        "slug": "home",
+        "description": "Welkom bij Facturatie N.V.",
+        "template": "landing",
+        "sections": [
+            {
+                "id": str(uuid.uuid4()),
+                "type": "hero",
+                "title": "Uw Complete ERP Oplossing",
+                "subtitle": "Modulaire bedrijfssoftware voor ondernemers in Suriname",
+                "content": "Kies de modules die passen bij uw bedrijfsvoering. Betaal alleen voor wat u gebruikt.",
+                "image_url": None,
+                "background_color": "#3b82f6",
+                "text_color": "#ffffff",
+                "button_text": "Start Nu",
+                "button_link": "/register",
+                "layout": "center",
+                "order": 0,
+                "is_visible": True
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "type": "features",
+                "title": "Waarom Facturatie N.V.?",
+                "subtitle": "Alles wat u nodig heeft voor uw bedrijf",
+                "items": [
+                    {"title": "Veilig & Betrouwbaar", "description": "Uw data is veilig opgeslagen in de cloud"},
+                    {"title": "Snel & Efficiënt", "description": "Bespaar tijd met onze geoptimaliseerde workflows"},
+                    {"title": "Modulair Systeem", "description": "Betaal alleen voor de modules die u nodig heeft"},
+                    {"title": "24/7 Support", "description": "Altijd bereikbaar voor ondersteuning"}
+                ],
+                "layout": "center",
+                "order": 1,
+                "is_visible": True
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "type": "cta",
+                "title": "Klaar om te beginnen?",
+                "subtitle": "Start vandaag nog met uw gratis proefperiode",
+                "button_text": "Registreer Nu",
+                "button_link": "/register",
+                "background_color": "#1e40af",
+                "text_color": "#ffffff",
+                "layout": "center",
+                "order": 2,
+                "is_visible": True
+            }
+        ],
+        "is_published": True,
+        "show_in_menu": True,
+        "menu_order": 0,
+        "menu_label": "Home",
+        "show_header": True,
+        "show_footer": True,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    # Create Over Ons page
+    about_page = {
+        "id": str(uuid.uuid4()),
+        "title": "Over Ons",
+        "slug": "over-ons",
+        "description": "Leer meer over Facturatie N.V.",
+        "template": "about",
+        "sections": [
+            {
+                "id": str(uuid.uuid4()),
+                "type": "hero",
+                "title": "Over Ons",
+                "subtitle": "Uw partner in bedrijfsautomatisering",
+                "layout": "center",
+                "order": 0,
+                "is_visible": True
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "type": "text",
+                "title": "Ons Verhaal",
+                "content": "Facturatie N.V. is opgericht met één doel: het leven van ondernemers in Suriname makkelijker maken. Wij bieden moderne, betaalbare software oplossingen die speciaal zijn ontworpen voor de lokale markt.",
+                "layout": "center",
+                "order": 1,
+                "is_visible": True
+            }
+        ],
+        "is_published": True,
+        "show_in_menu": True,
+        "menu_order": 1,
+        "show_header": True,
+        "show_footer": True,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    # Create Contact page
+    contact_page = {
+        "id": str(uuid.uuid4()),
+        "title": "Contact",
+        "slug": "contact",
+        "description": "Neem contact met ons op",
+        "template": "contact",
+        "sections": [
+            {
+                "id": str(uuid.uuid4()),
+                "type": "hero",
+                "title": "Contact",
+                "subtitle": "Wij horen graag van u",
+                "layout": "center",
+                "order": 0,
+                "is_visible": True
+            },
+            {
+                "id": str(uuid.uuid4()),
+                "type": "contact",
+                "title": "Neem contact op",
+                "subtitle": "Vul het formulier in of neem direct contact met ons op",
+                "layout": "center",
+                "order": 1,
+                "is_visible": True
+            }
+        ],
+        "is_published": True,
+        "show_in_menu": True,
+        "menu_order": 2,
+        "show_header": True,
+        "show_footer": True,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.cms_pages.insert_many([home_page, about_page, contact_page])
+    logger.info("Default CMS pages created")
+
 # Call seed on startup
 @app.on_event("startup")
 async def startup_event():
