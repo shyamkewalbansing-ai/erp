@@ -9,28 +9,113 @@ import {
   Loader2,
   Minimize2,
   Maximize2,
-  RefreshCw
+  RefreshCw,
+  Package
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
-import api from '../lib/api';
+import api, { getMyAddons } from '../lib/api';
 import { triggerRefresh, REFRESH_EVENTS } from '../lib/refreshEvents';
+
+// Module-specific capabilities
+const moduleCapabilities = {
+  vastgoed_beheer: {
+    name: 'Vastgoed Beheer',
+    capabilities: [
+      '• Huurders toevoegen of opzoeken',
+      '• Appartementen beheren',
+      '• Betalingen registreren',
+      '• Saldo\'s bekijken',
+      '• Leningen aanmaken',
+      '• Contracten beheren',
+      '• Onderhoud registreren'
+    ],
+    quickActions: [
+      { label: 'Overzicht', message: 'Geef me een overzicht van mijn verhuur' },
+      { label: 'Huurders', message: 'Toon alle huurders' },
+      { label: 'Betalingen', message: 'Wat zijn de recente betalingen?' },
+    ]
+  }
+  // Future modules can be added here
+};
+
+const getWelcomeMessage = (activeModules) => {
+  if (activeModules.length === 0) {
+    return 'Hallo! 👋 Ik ben uw AI assistent voor Facturatie N.V.\n\n⚠️ U heeft nog geen modules geactiveerd. Ga naar **Instellingen > Abonnement** om modules te activeren.\n\nZodra u een module activeert, kan ik u helpen met het beheren van uw bedrijf!';
+  }
+  
+  let message = 'Hallo! 👋 Ik ben uw AI assistent voor Facturatie N.V.\n\n';
+  message += '**Actieve modules:**\n';
+  
+  activeModules.forEach(slug => {
+    const module = moduleCapabilities[slug];
+    if (module) {
+      message += `\n📦 **${module.name}**\n`;
+      message += module.capabilities.join('\n');
+      message += '\n';
+    }
+  });
+  
+  message += '\nWat kan ik voor u doen?';
+  return message;
+};
 
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      role: 'assistant',
-      content: 'Hallo! 👋 Ik ben uw AI assistent voor Facturatie N.V. Ik kan u helpen met:\n\n• Huurders toevoegen of opzoeken\n• Appartementen beheren\n• Betalingen registreren\n• Saldo\'s bekijken\n• Leningen aanmaken\n\nWat kan ik voor u doen?'
-    }
-  ]);
+  const [activeModules, setActiveModules] = useState([]);
+  const [modulesLoaded, setModulesLoaded] = useState(false);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(() => `chat_${Date.now()}`);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Load active modules
+  useEffect(() => {
+    const loadModules = async () => {
+      try {
+        const res = await getMyAddons();
+        const activeSlugs = res.data
+          .filter(a => a.status === 'active')
+          .map(a => a.addon_slug);
+        setActiveModules(activeSlugs);
+        
+        // Set initial welcome message based on active modules
+        setMessages([{
+          role: 'assistant',
+          content: getWelcomeMessage(activeSlugs)
+        }]);
+      } catch (error) {
+        console.error('Error loading modules:', error);
+        setMessages([{
+          role: 'assistant',
+          content: 'Hallo! 👋 Ik ben uw AI assistent voor Facturatie N.V. Hoe kan ik u helpen?'
+        }]);
+      } finally {
+        setModulesLoaded(true);
+      }
+    };
+    loadModules();
+  }, []);
+
+  // Get quick actions based on active modules
+  const getQuickActions = () => {
+    if (activeModules.length === 0) {
+      return [{ label: 'Modules bekijken', message: 'Welke modules zijn beschikbaar?' }];
+    }
+    
+    let actions = [];
+    activeModules.forEach(slug => {
+      const module = moduleCapabilities[slug];
+      if (module && module.quickActions) {
+        actions = [...actions, ...module.quickActions];
+      }
+    });
+    return actions.slice(0, 3); // Max 3 quick actions
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -50,6 +135,19 @@ export default function AIAssistant() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
+    // Check if user has any active modules
+    if (activeModules.length === 0) {
+      setMessages(prev => [...prev, 
+        { role: 'user', content: input.trim() },
+        { 
+          role: 'assistant', 
+          content: '⚠️ U heeft nog geen modules geactiveerd. Ik kan pas opdrachten uitvoeren als u een module heeft geactiveerd.\n\nGa naar **Instellingen > Abonnement** om de Vastgoed Beheer module of andere modules te activeren.'
+        }
+      ]);
+      setInput('');
+      return;
+    }
+
     const userMessage = input.trim();
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
@@ -58,7 +156,8 @@ export default function AIAssistant() {
     try {
       const response = await api.post('/ai/chat', {
         message: userMessage,
-        session_id: sessionId
+        session_id: sessionId,
+        active_modules: activeModules // Send active modules to backend
       });
 
       const isSuccess = response.data.action_executed && 
