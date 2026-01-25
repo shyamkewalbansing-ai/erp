@@ -207,7 +207,9 @@ export default function AIAssistant() {
         data-testid="ai-chat-button"
       >
         <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
-        <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse" />
+        <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-background animate-pulse ${
+          activeModules.length > 0 ? 'bg-green-500' : 'bg-orange-500'
+        }`} />
       </button>
     );
   }
