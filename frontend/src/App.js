@@ -21,6 +21,7 @@ import Admin from "./pages/Admin";
 import Instellingen from "./pages/Instellingen";
 import LandingPage from "./pages/LandingPage";
 import LandingEditor from "./pages/LandingEditor";
+import CMSBuilder from "./pages/CMSBuilder";
 import OverOnsPage from "./pages/OverOnsPage";
 import VoorwaardenPage from "./pages/VoorwaardenPage";
 import PrivacyPage from "./pages/PrivacyPage";
