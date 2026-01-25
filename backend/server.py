@@ -5365,7 +5365,16 @@ async def get_public_addons():
 
 @api_router.post("/public/orders")
 async def create_public_order(order_data: PublicOrderCreate):
-    """Create a new order from landing page (public - no auth required)"""
+    """Create a new order from landing page with account creation"""
+    # Check if email already exists
+    existing_user = await db.users.find_one({"email": order_data.email.lower()}, {"_id": 0})
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Dit e-mailadres is al geregistreerd. Log in of gebruik een ander e-mailadres.")
+    
+    # Validate password
+    if len(order_data.password) < 6:
+        raise HTTPException(status_code=400, detail="Wachtwoord moet minimaal 6 tekens zijn")
+    
     # Validate addons exist
     addon_names = []
     total_price = 0
@@ -5377,12 +5386,32 @@ async def create_public_order(order_data: PublicOrderCreate):
         total_price += addon.get("price", 0)
     
     order_id = str(uuid.uuid4())
+    user_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     
+    # Create user account (inactive - pending payment/activation)
+    user_doc = {
+        "id": user_id,
+        "email": order_data.email.lower(),
+        "password": hash_password(order_data.password),
+        "name": order_data.name,
+        "company_name": order_data.company_name,
+        "phone": order_data.phone,
+        "role": "customer",
+        "subscription_status": "pending",  # Will be activated after payment
+        "subscription_end": None,
+        "created_at": now,
+        "order_id": order_id  # Link to the order
+    }
+    
+    await db.users.insert_one(user_doc)
+    
+    # Create order
     order_doc = {
         "id": order_id,
+        "user_id": user_id,
         "name": order_data.name,
-        "email": order_data.email,
+        "email": order_data.email.lower(),
         "phone": order_data.phone,
         "company_name": order_data.company_name,
         "addon_ids": order_data.addon_ids,
@@ -5390,12 +5419,263 @@ async def create_public_order(order_data: PublicOrderCreate):
         "total_price": total_price,
         "message": order_data.message,
         "status": "pending",
+        "payment_id": None,
+        "payment_url": None,
         "created_at": now
     }
     
     await db.public_orders.insert_one(order_doc)
     
     return PublicOrderResponse(**order_doc)
+
+# ==================== MOPE PAYMENT ROUTES ====================
+
+MOPE_API_URL = "https://api.mope.sr/api"
+
+async def get_mope_settings():
+    """Get Mope payment settings"""
+    settings = await db.mope_settings.find_one({}, {"_id": 0})
+    if not settings:
+        return MopeSettings()
+    return MopeSettings(**settings)
+
+async def get_mope_token():
+    """Get the active Mope API token"""
+    settings = await get_mope_settings()
+    if not settings.is_enabled:
+        return None
+    if settings.use_live_mode:
+        return settings.live_token
+    return settings.test_token
+
+@api_router.get("/admin/mope/settings")
+async def get_admin_mope_settings(current_user: dict = Depends(get_superadmin)):
+    """Get Mope payment settings (admin)"""
+    settings = await db.mope_settings.find_one({}, {"_id": 0})
+    if not settings:
+        return MopeSettings()
+    return settings
+
+@api_router.put("/admin/mope/settings")
+async def update_mope_settings(settings_data: MopeSettings, current_user: dict = Depends(get_superadmin)):
+    """Update Mope payment settings (admin)"""
+    settings_dict = settings_data.model_dump()
+    settings_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.mope_settings.update_one(
+        {},
+        {"$set": settings_dict},
+        upsert=True
+    )
+    return settings_data
+
+@api_router.post("/public/orders/{order_id}/pay")
+async def create_payment_for_order(order_id: str, redirect_url: str = ""):
+    """Create a Mope payment for an order"""
+    import httpx
+    
+    # Get order
+    order = await db.public_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Bestelling niet gevonden")
+    
+    if order.get("status") == "paid":
+        raise HTTPException(status_code=400, detail="Deze bestelling is al betaald")
+    
+    # Get Mope settings
+    token = await get_mope_token()
+    if not token:
+        raise HTTPException(status_code=400, detail="Mope betalingen zijn niet geconfigureerd. Neem contact op met de beheerder.")
+    
+    # Get landing settings for redirect URL
+    landing_settings = await db.landing_settings.find_one({}, {"_id": 0})
+    base_url = redirect_url or "/"
+    
+    # Create payment request to Mope
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{MOPE_API_URL}/shop/payment_request",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "amount": order["total_price"],
+                    "description": f"Bestelling {order_id[:8]} - {', '.join(order.get('addon_names', []))}",
+                    "redirect_url": f"{base_url}/betaling-voltooid?order_id={order_id}"
+                },
+                timeout=30.0
+            )
+            
+            if response.status_code != 200 and response.status_code != 201:
+                logger.error(f"Mope API error: {response.status_code} - {response.text}")
+                raise HTTPException(status_code=500, detail="Fout bij het aanmaken van de betaling")
+            
+            mope_response = response.json()
+            payment_id = mope_response.get("id")
+            payment_url = mope_response.get("payment_url") or mope_response.get("url")
+            
+            # Update order with payment info
+            await db.public_orders.update_one(
+                {"id": order_id},
+                {"$set": {
+                    "payment_id": payment_id,
+                    "payment_url": payment_url,
+                    "status": "pending_payment"
+                }}
+            )
+            
+            return {
+                "payment_id": payment_id,
+                "payment_url": payment_url,
+                "order_id": order_id
+            }
+            
+    except httpx.RequestError as e:
+        logger.error(f"Mope request error: {e}")
+        raise HTTPException(status_code=500, detail="Kon geen verbinding maken met Mope")
+
+@api_router.get("/public/orders/{order_id}/payment-status")
+async def check_payment_status(order_id: str):
+    """Check payment status for an order"""
+    import httpx
+    
+    order = await db.public_orders.find_one({"id": order_id}, {"_id": 0})
+    if not order:
+        raise HTTPException(status_code=404, detail="Bestelling niet gevonden")
+    
+    payment_id = order.get("payment_id")
+    if not payment_id:
+        return {"status": order.get("status", "pending"), "paid": False}
+    
+    # Get Mope token
+    token = await get_mope_token()
+    if not token:
+        return {"status": order.get("status", "pending"), "paid": False}
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{MOPE_API_URL}/shop/payment_request/{payment_id}",
+                headers={
+                    "Authorization": f"Bearer {token}"
+                },
+                timeout=30.0
+            )
+            
+            if response.status_code == 200:
+                mope_data = response.json()
+                mope_status = mope_data.get("status", "").lower()
+                
+                if mope_status in ["paid", "completed", "success"]:
+                    # Update order and activate user
+                    await db.public_orders.update_one(
+                        {"id": order_id},
+                        {"$set": {"status": "paid"}}
+                    )
+                    
+                    # Activate user account if exists
+                    if order.get("user_id"):
+                        trial_end = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+                        await db.users.update_one(
+                            {"id": order["user_id"]},
+                            {"$set": {
+                                "subscription_status": "active",
+                                "subscription_end": trial_end
+                            }}
+                        )
+                        
+                        # Activate the add-ons for the user
+                        for addon_id in order.get("addon_ids", []):
+                            user_addon_id = str(uuid.uuid4())
+                            now = datetime.now(timezone.utc)
+                            await db.user_addons.insert_one({
+                                "id": user_addon_id,
+                                "user_id": order["user_id"],
+                                "addon_id": addon_id,
+                                "status": "active",
+                                "start_date": now.isoformat(),
+                                "end_date": (now + timedelta(days=30)).isoformat(),
+                                "created_at": now.isoformat()
+                            })
+                    
+                    return {"status": "paid", "paid": True}
+                
+                return {"status": mope_status, "paid": False}
+            
+            return {"status": order.get("status", "pending"), "paid": False}
+            
+    except Exception as e:
+        logger.error(f"Error checking payment status: {e}")
+        return {"status": order.get("status", "pending"), "paid": False}
+
+@api_router.post("/webhooks/mope")
+async def mope_webhook(request: Request):
+    """Handle Mope payment webhooks"""
+    try:
+        body = await request.json()
+        payment_id = body.get("payment_request_id") or body.get("id")
+        status = body.get("status", "").lower()
+        
+        logger.info(f"Mope webhook received: payment_id={payment_id}, status={status}")
+        
+        if not payment_id:
+            return {"status": "error", "message": "Missing payment_request_id"}
+        
+        # Find order by payment_id
+        order = await db.public_orders.find_one({"payment_id": payment_id}, {"_id": 0})
+        if not order:
+            logger.warning(f"Order not found for payment_id: {payment_id}")
+            return {"status": "ok", "message": "Order not found"}
+        
+        if status in ["paid", "completed", "success"]:
+            # Update order status
+            await db.public_orders.update_one(
+                {"payment_id": payment_id},
+                {"$set": {"status": "paid"}}
+            )
+            
+            # Activate user account if exists
+            if order.get("user_id"):
+                trial_end = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+                await db.users.update_one(
+                    {"id": order["user_id"]},
+                    {"$set": {
+                        "subscription_status": "active",
+                        "subscription_end": trial_end
+                    }}
+                )
+                
+                # Activate the add-ons for the user
+                for addon_id in order.get("addon_ids", []):
+                    # Check if addon already exists
+                    existing = await db.user_addons.find_one({
+                        "user_id": order["user_id"],
+                        "addon_id": addon_id,
+                        "status": "active"
+                    }, {"_id": 0})
+                    
+                    if not existing:
+                        user_addon_id = str(uuid.uuid4())
+                        now = datetime.now(timezone.utc)
+                        await db.user_addons.insert_one({
+                            "id": user_addon_id,
+                            "user_id": order["user_id"],
+                            "addon_id": addon_id,
+                            "status": "active",
+                            "start_date": now.isoformat(),
+                            "end_date": (now + timedelta(days=30)).isoformat(),
+                            "created_at": now.isoformat()
+                        })
+                
+                logger.info(f"User {order['user_id']} activated via Mope payment")
+        
+        return {"status": "ok"}
+        
+    except Exception as e:
+        logger.error(f"Mope webhook error: {e}")
+        return {"status": "error", "message": str(e)}
 
 # ==================== ADMIN LANDING PAGE MANAGEMENT ====================
 
