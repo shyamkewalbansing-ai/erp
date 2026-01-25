@@ -396,6 +396,7 @@ export default function PrijzenPage() {
               </form>
             </CardContent>
           </Card>
+          )}
         </div>
       </section>
 
