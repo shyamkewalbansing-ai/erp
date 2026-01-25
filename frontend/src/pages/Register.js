@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Building2, Mail, Lock, User, ArrowRight, Briefcase } from 'lucide-react';
+import { getLandingSettings } from '../lib/api';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -13,8 +14,13 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [settings, setSettings] = useState(null);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    getLandingSettings().then(res => setSettings(res.data)).catch(() => {});
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
