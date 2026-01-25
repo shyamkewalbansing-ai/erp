@@ -765,6 +765,433 @@ class SuriRentalsAPITester:
             return True
         return False
 
+    # ==================== ADD-ONS TESTING ====================
+    
+    def test_superadmin_login(self):
+        """Test superadmin login"""
+        login_data = {
+            "email": "admin@facturatie.sr",
+            "password": "admin123"
+        }
+        
+        success, response = self.run_test(
+            "Superadmin Login",
+            "POST", 
+            "auth/login",
+            200,
+            data=login_data
+        )
+        
+        if success and 'access_token' in response:
+            self.superadmin_token = response['access_token']
+            # Store current token as superadmin token
+            self.token = self.superadmin_token
+            print(f"   Superadmin token obtained: {self.superadmin_token[:20]}...")
+            return True
+        return False
+
+    def test_create_customer_user(self):
+        """Test creating a customer user for add-on testing"""
+        timestamp = datetime.now().strftime('%H%M%S')
+        customer_data = {
+            "name": f"Test Klant {timestamp}",
+            "email": f"klant{timestamp}@example.com",
+            "password": "klant123",
+            "company_name": f"Test Bedrijf {timestamp}"
+        }
+        
+        success, response = self.run_test(
+            "Create Customer User",
+            "POST",
+            "auth/register",
+            200,
+            data=customer_data
+        )
+        
+        if success and 'access_token' in response:
+            self.customer_token = response['access_token']
+            self.customer_user_id = response['user']['id']
+            print(f"   Customer created: {customer_data['email']}")
+            print(f"   Customer token: {self.customer_token[:20]}...")
+            return True
+        return False
+
+    def test_get_public_addons(self):
+        """Test getting public add-ons (no auth required)"""
+        # Temporarily remove token for public endpoint
+        temp_token = self.token
+        self.token = None
+        
+        success, response = self.run_test(
+            "Get Public Add-ons",
+            "GET",
+            "addons",
+            200
+        )
+        
+        # Restore token
+        self.token = temp_token
+        
+        if success:
+            print(f"   Found {len(response)} public add-ons")
+            for addon in response:
+                print(f"   - {addon.get('name')} ({addon.get('slug')}) - SRD {addon.get('price')}")
+            return True
+        return False
+
+    def test_create_addon_as_superadmin(self):
+        """Test creating a new add-on as superadmin"""
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        timestamp = datetime.now().strftime('%H%M%S')
+        addon_data = {
+            "name": f"Test Add-on {timestamp}",
+            "slug": f"test_addon_{timestamp}",
+            "description": "Test add-on voor testing doeleinden",
+            "price": 2500.0,
+            "is_active": True
+        }
+        
+        success, response = self.run_test(
+            "Create Add-on (Superadmin)",
+            "POST",
+            "admin/addons",
+            200,
+            data=addon_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources['addons'].append(response['id'])
+            print(f"   Created add-on ID: {response['id']}")
+            print(f"   Name: {response.get('name')}, Price: SRD {response.get('price')}")
+            return True
+        return False
+
+    def test_get_admin_addons(self):
+        """Test getting all add-ons as superadmin"""
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        success, response = self.run_test(
+            "Get Admin Add-ons",
+            "GET",
+            "admin/addons",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} add-ons (including inactive)")
+            for addon in response:
+                status = "Active" if addon.get('is_active') else "Inactive"
+                print(f"   - {addon.get('name')} ({addon.get('slug')}) - {status}")
+            return True
+        return False
+
+    def test_update_addon_price(self):
+        """Test updating add-on price as superadmin"""
+        if not self.created_resources['addons']:
+            print("⚠️  Skipping add-on update - no add-on created")
+            return True
+            
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        addon_id = self.created_resources['addons'][0]
+        update_data = {
+            "price": 3000.0,
+            "description": "Updated test add-on met nieuwe prijs"
+        }
+        
+        success, response = self.run_test(
+            "Update Add-on Price",
+            "PUT",
+            f"admin/addons/{addon_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            print(f"   Updated add-on price to: SRD {response.get('price')}")
+            return True
+        return False
+
+    def test_customer_request_addon(self):
+        """Test customer requesting add-on activation"""
+        if not self.created_resources['addons']:
+            print("⚠️  Skipping add-on request - no add-on created")
+            return True
+            
+        # Switch to customer token
+        self.token = self.customer_token
+        
+        addon_id = self.created_resources['addons'][0]
+        request_data = {
+            "addon_id": addon_id,
+            "notes": "Graag deze add-on activeren voor mijn bedrijf"
+        }
+        
+        success, response = self.run_test(
+            "Customer Request Add-on",
+            "POST",
+            "user/addons/request",
+            200,
+            data=request_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources['addon_requests'].append(response['id'])
+            print(f"   Created add-on request ID: {response['id']}")
+            print(f"   Status: {response.get('status')}")
+            return True
+        return False
+
+    def test_get_customer_addons(self):
+        """Test getting customer's active add-ons"""
+        # Switch to customer token
+        self.token = self.customer_token
+        
+        success, response = self.run_test(
+            "Get Customer Add-ons",
+            "GET",
+            "user/addons",
+            200
+        )
+        
+        if success:
+            print(f"   Customer has {len(response)} add-ons")
+            for addon in response:
+                print(f"   - {addon.get('addon_name')} - Status: {addon.get('status')}")
+            return True
+        return False
+
+    def test_get_addon_requests_as_admin(self):
+        """Test getting add-on requests as superadmin"""
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        success, response = self.run_test(
+            "Get Add-on Requests (Admin)",
+            "GET",
+            "admin/addon-requests",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} add-on requests")
+            for req in response:
+                print(f"   - {req.get('user_name')} requested {req.get('addon_name')} - Status: {req.get('status')}")
+            return True
+        return False
+
+    def test_approve_addon_request(self):
+        """Test approving add-on request as superadmin"""
+        if not self.created_resources['addon_requests']:
+            print("⚠️  Skipping request approval - no request created")
+            return True
+            
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        request_id = self.created_resources['addon_requests'][0]
+        
+        success, response = self.run_test(
+            "Approve Add-on Request",
+            "PUT",
+            f"admin/addon-requests/{request_id}/approve",
+            200
+        )
+        
+        if success:
+            print(f"   Approved add-on request: {request_id}")
+            return True
+        return False
+
+    def test_activate_addon_for_customer(self):
+        """Test directly activating add-on for customer as superadmin"""
+        if not self.created_resources['addons'] or not self.customer_user_id:
+            print("⚠️  Skipping add-on activation - no add-on or customer")
+            return True
+            
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        addon_id = self.created_resources['addons'][0]
+        activation_data = {
+            "user_id": self.customer_user_id,
+            "addon_id": addon_id,
+            "months": 1,
+            "payment_method": "cash",
+            "payment_reference": "TEST-001"
+        }
+        
+        success, response = self.run_test(
+            "Activate Add-on for Customer",
+            "POST",
+            f"admin/users/{self.customer_user_id}/addons",
+            200,
+            data=activation_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources['user_addons'].append(response['id'])
+            print(f"   Activated add-on for customer: {response.get('addon_name')}")
+            print(f"   End date: {response.get('end_date')}")
+            return True
+        return False
+
+    def test_get_user_addons_as_admin(self):
+        """Test getting user's add-ons as superadmin"""
+        if not self.customer_user_id:
+            print("⚠️  Skipping user add-ons check - no customer")
+            return True
+            
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        success, response = self.run_test(
+            "Get User Add-ons (Admin)",
+            "GET",
+            f"admin/users/{self.customer_user_id}/addons",
+            200
+        )
+        
+        if success:
+            print(f"   Customer has {len(response)} add-ons")
+            for addon in response:
+                print(f"   - {addon.get('addon_name')} - Status: {addon.get('status')}")
+            return True
+        return False
+
+    def test_customer_addons_after_activation(self):
+        """Test that customer can see activated add-ons"""
+        # Switch to customer token
+        self.token = self.customer_token
+        
+        success, response = self.run_test(
+            "Customer Add-ons After Activation",
+            "GET",
+            "user/addons",
+            200
+        )
+        
+        if success:
+            active_addons = [a for a in response if a.get('status') == 'active']
+            print(f"   Customer has {len(active_addons)} active add-ons")
+            for addon in active_addons:
+                print(f"   - {addon.get('addon_name')} - Expires: {addon.get('end_date')}")
+            return len(active_addons) > 0
+        return False
+
+    def test_deactivate_user_addon(self):
+        """Test deactivating user add-on as superadmin"""
+        if not self.customer_user_id or not self.created_resources['addons']:
+            print("⚠️  Skipping add-on deactivation - no customer or add-on")
+            return True
+            
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        addon_id = self.created_resources['addons'][0]
+        
+        success, response = self.run_test(
+            "Deactivate User Add-on",
+            "DELETE",
+            f"admin/users/{self.customer_user_id}/addons/{addon_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Deactivated add-on for customer")
+            return True
+        return False
+
+    def test_reject_addon_request(self):
+        """Test rejecting an add-on request"""
+        # First create another request to reject
+        if not self.created_resources['addons']:
+            print("⚠️  Skipping request rejection - no add-on created")
+            return True
+            
+        # Switch to customer token to create request
+        self.token = self.customer_token
+        
+        addon_id = self.created_resources['addons'][0]
+        request_data = {
+            "addon_id": addon_id,
+            "notes": "Tweede verzoek om te testen rejection"
+        }
+        
+        success, response = self.run_test(
+            "Create Second Add-on Request",
+            "POST",
+            "user/addons/request",
+            200,
+            data=request_data
+        )
+        
+        if not success or 'id' not in response:
+            print("⚠️  Could not create second request for rejection test")
+            return True
+            
+        request_id = response['id']
+        
+        # Switch to superadmin token to reject
+        self.token = self.superadmin_token
+        
+        success, response = self.run_test(
+            "Reject Add-on Request",
+            "PUT",
+            f"admin/addon-requests/{request_id}/reject",
+            200
+        )
+        
+        if success:
+            print(f"   Rejected add-on request: {request_id}")
+            return True
+        return False
+
+    def test_delete_addon_as_superadmin(self):
+        """Test deleting add-on as superadmin"""
+        if not self.created_resources['addons']:
+            print("⚠️  Skipping add-on deletion - no add-on created")
+            return True
+            
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        addon_id = self.created_resources['addons'][0]
+        
+        success, response = self.run_test(
+            "Delete Add-on (Superadmin)",
+            "DELETE",
+            f"admin/addons/{addon_id}",
+            200
+        )
+        
+        if success:
+            print(f"   Deleted add-on: {addon_id}")
+            return True
+        return False
+
+    def test_unauthorized_addon_access(self):
+        """Test that customers cannot access admin add-on endpoints"""
+        # Switch to customer token
+        self.token = self.customer_token
+        
+        # Try to access admin add-ons endpoint
+        success, response = self.run_test(
+            "Unauthorized Admin Add-ons Access",
+            "GET",
+            "admin/addons",
+            403  # Expect forbidden
+        )
+        
+        if success:
+            print("   ✅ Customer correctly denied access to admin endpoints")
+            return True
+        return False
+
 def main():
     print("🏠 SuriRentals API Testing Suite")
     print("=" * 50)
