@@ -5293,6 +5293,301 @@ async def reject_addon_request(request_id: str, current_user: dict = Depends(get
     
     return {"message": "Add-on verzoek afgewezen"}
 
+# ==================== LANDING PAGE CMS ROUTES ====================
+
+@api_router.get("/public/landing/sections")
+async def get_landing_sections():
+    """Get all active landing page sections (public)"""
+    sections = await db.landing_sections.find(
+        {"is_active": True},
+        {"_id": 0}
+    ).sort("order", 1).to_list(100)
+    return sections
+
+@api_router.get("/public/landing/settings")
+async def get_landing_settings():
+    """Get landing page settings (public)"""
+    settings = await db.landing_settings.find_one({}, {"_id": 0})
+    if not settings:
+        # Return default settings
+        return {
+            "company_name": "Facturatie N.V.",
+            "company_email": "info@facturatie.sr",
+            "company_phone": "+597 8934982",
+            "company_address": "Paramaribo, Suriname",
+            "logo_url": "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp",
+            "footer_text": "© 2025 Facturatie N.V. Alle rechten voorbehouden.",
+            "social_links": {}
+        }
+    return settings
+
+@api_router.get("/public/addons")
+async def get_public_addons():
+    """Get all active add-ons for landing page (public)"""
+    addons = await db.addons.find(
+        {"is_active": True},
+        {"_id": 0}
+    ).to_list(100)
+    return addons
+
+@api_router.post("/public/orders")
+async def create_public_order(order_data: PublicOrderCreate):
+    """Create a new order from landing page (public - no auth required)"""
+    # Validate addons exist
+    addon_names = []
+    total_price = 0
+    for addon_id in order_data.addon_ids:
+        addon = await db.addons.find_one({"id": addon_id, "is_active": True}, {"_id": 0})
+        if not addon:
+            raise HTTPException(status_code=400, detail=f"Add-on niet gevonden: {addon_id}")
+        addon_names.append(addon["name"])
+        total_price += addon.get("price", 0)
+    
+    order_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    order_doc = {
+        "id": order_id,
+        "name": order_data.name,
+        "email": order_data.email,
+        "phone": order_data.phone,
+        "company_name": order_data.company_name,
+        "addon_ids": order_data.addon_ids,
+        "addon_names": addon_names,
+        "total_price": total_price,
+        "message": order_data.message,
+        "status": "pending",
+        "created_at": now
+    }
+    
+    await db.public_orders.insert_one(order_doc)
+    
+    return PublicOrderResponse(**order_doc)
+
+# ==================== ADMIN LANDING PAGE MANAGEMENT ====================
+
+@api_router.get("/admin/landing/sections")
+async def get_admin_landing_sections(current_user: dict = Depends(get_superadmin)):
+    """Get all landing page sections (admin)"""
+    sections = await db.landing_sections.find({}, {"_id": 0}).sort("order", 1).to_list(100)
+    return sections
+
+@api_router.post("/admin/landing/sections")
+async def create_landing_section(section_data: LandingPageSectionCreate, current_user: dict = Depends(get_superadmin)):
+    """Create a new landing page section"""
+    section_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    section_doc = {
+        "id": section_id,
+        "section_type": section_data.section_type,
+        "title": section_data.title,
+        "content": section_data.content,
+        "subtitle": section_data.subtitle,
+        "image_url": section_data.image_url,
+        "button_text": section_data.button_text,
+        "button_link": section_data.button_link,
+        "is_active": section_data.is_active,
+        "order": section_data.order,
+        "metadata": section_data.metadata,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.landing_sections.insert_one(section_doc)
+    return LandingPageSection(**section_doc)
+
+@api_router.put("/admin/landing/sections/{section_id}")
+async def update_landing_section(section_id: str, section_data: LandingPageSectionUpdate, current_user: dict = Depends(get_superadmin)):
+    """Update a landing page section"""
+    section = await db.landing_sections.find_one({"id": section_id}, {"_id": 0})
+    if not section:
+        raise HTTPException(status_code=404, detail="Sectie niet gevonden")
+    
+    update_data = {k: v for k, v in section_data.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    if update_data:
+        await db.landing_sections.update_one({"id": section_id}, {"$set": update_data})
+    
+    updated = await db.landing_sections.find_one({"id": section_id}, {"_id": 0})
+    return LandingPageSection(**updated)
+
+@api_router.delete("/admin/landing/sections/{section_id}")
+async def delete_landing_section(section_id: str, current_user: dict = Depends(get_superadmin)):
+    """Delete a landing page section"""
+    result = await db.landing_sections.delete_one({"id": section_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Sectie niet gevonden")
+    return {"message": "Sectie verwijderd"}
+
+@api_router.put("/admin/landing/sections/reorder")
+async def reorder_landing_sections(section_orders: List[dict], current_user: dict = Depends(get_superadmin)):
+    """Reorder landing page sections"""
+    for item in section_orders:
+        await db.landing_sections.update_one(
+            {"id": item["id"]},
+            {"$set": {"order": item["order"]}}
+        )
+    return {"message": "Volgorde bijgewerkt"}
+
+@api_router.get("/admin/landing/settings")
+async def get_admin_landing_settings(current_user: dict = Depends(get_superadmin)):
+    """Get landing page settings (admin)"""
+    settings = await db.landing_settings.find_one({}, {"_id": 0})
+    if not settings:
+        return LandingPageSettings()
+    return settings
+
+@api_router.put("/admin/landing/settings")
+async def update_landing_settings(settings_data: LandingPageSettings, current_user: dict = Depends(get_superadmin)):
+    """Update landing page settings"""
+    settings_dict = settings_data.model_dump()
+    settings_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.landing_settings.update_one(
+        {},
+        {"$set": settings_dict},
+        upsert=True
+    )
+    return settings_data
+
+# ==================== ADMIN PUBLIC ORDERS MANAGEMENT ====================
+
+@api_router.get("/admin/orders")
+async def get_admin_orders(current_user: dict = Depends(get_superadmin)):
+    """Get all public orders (admin)"""
+    orders = await db.public_orders.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return [PublicOrderResponse(**order) for order in orders]
+
+@api_router.put("/admin/orders/{order_id}/status")
+async def update_order_status(order_id: str, status: str, current_user: dict = Depends(get_superadmin)):
+    """Update order status"""
+    if status not in ["pending", "contacted", "converted", "rejected"]:
+        raise HTTPException(status_code=400, detail="Ongeldige status")
+    
+    result = await db.public_orders.update_one(
+        {"id": order_id},
+        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Bestelling niet gevonden")
+    
+    return {"message": "Status bijgewerkt"}
+
+@api_router.delete("/admin/orders/{order_id}")
+async def delete_order(order_id: str, current_user: dict = Depends(get_superadmin)):
+    """Delete an order"""
+    result = await db.public_orders.delete_one({"id": order_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Bestelling niet gevonden")
+    return {"message": "Bestelling verwijderd"}
+
+# ==================== SEED DEFAULT LANDING PAGE ====================
+
+async def seed_default_landing_page():
+    """Seed the default landing page sections if they don't exist"""
+    existing = await db.landing_sections.find_one({}, {"_id": 0})
+    if existing:
+        return  # Already seeded
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    default_sections = [
+        {
+            "id": str(uuid.uuid4()),
+            "section_type": "hero",
+            "title": "Uw Complete ERP Oplossing",
+            "subtitle": "Modulaire bedrijfssoftware voor ondernemers in Suriname",
+            "content": "Kies de modules die passen bij uw bedrijfsvoering. Betaal alleen voor wat u gebruikt.",
+            "image_url": "https://customer-assets.emergentagent.com/job_07e3c66b-0794-491d-bbf3-342aff3c1100/artifacts/vill14ys_261F389D-0F54-4D61-963C-4B58A923ED3D.png",
+            "button_text": "Start Nu",
+            "button_link": "/register",
+            "is_active": True,
+            "order": 0,
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "section_type": "features",
+            "title": "Waarom Facturatie N.V.?",
+            "subtitle": "Alles wat u nodig heeft voor uw bedrijf",
+            "content": None,
+            "is_active": True,
+            "order": 1,
+            "metadata": {
+                "features": [
+                    {"icon": "Shield", "title": "Veilig & Betrouwbaar", "description": "Uw data is veilig opgeslagen in de cloud"},
+                    {"icon": "Zap", "title": "Snel & Efficiënt", "description": "Bespaar tijd met onze geoptimaliseerde workflows"},
+                    {"icon": "Package", "title": "Modulair Systeem", "description": "Betaal alleen voor de modules die u nodig heeft"},
+                    {"icon": "HeadphonesIcon", "title": "24/7 Support", "description": "Altijd bereikbaar voor ondersteuning"}
+                ]
+            },
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "section_type": "pricing",
+            "title": "Onze Modules",
+            "subtitle": "Kies de modules die passen bij uw bedrijf",
+            "content": "Alle prijzen zijn per maand. Geen verborgen kosten.",
+            "is_active": True,
+            "order": 2,
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "section_type": "about",
+            "title": "Over Ons",
+            "subtitle": "Facturatie N.V. - Uw Partner in Bedrijfssoftware",
+            "content": "Facturatie N.V. is een Surinaams softwarebedrijf dat zich richt op het ontwikkelen van moderne, gebruiksvriendelijke bedrijfssoftware. Onze missie is om ondernemers in Suriname te helpen hun bedrijf efficiënter te beheren met betaalbare, modulaire oplossingen.\n\nOnze software is speciaal ontworpen voor de Surinaamse markt, met ondersteuning voor lokale valuta en belastingregels.",
+            "is_active": True,
+            "order": 3,
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "section_type": "terms",
+            "title": "Algemene Voorwaarden",
+            "subtitle": "Gebruiksvoorwaarden Facturatie N.V.",
+            "content": "**1. Algemeen**\nDeze algemene voorwaarden zijn van toepassing op alle diensten van Facturatie N.V.\n\n**2. Diensten**\nFacturatie N.V. biedt cloud-gebaseerde bedrijfssoftware aan op basis van maandelijkse abonnementen.\n\n**3. Betalingen**\nBetalingen geschieden vooraf per maand. Bij niet-betaling wordt de toegang tot de dienst opgeschort.\n\n**4. Privacy**\nWij gaan zorgvuldig om met uw gegevens. Zie ons privacybeleid voor meer informatie.\n\n**5. Aansprakelijkheid**\nFacturatie N.V. is niet aansprakelijk voor indirecte schade of gevolgschade.\n\n**6. Wijzigingen**\nWij behouden het recht om deze voorwaarden te wijzigen. Wijzigingen worden via e-mail gecommuniceerd.",
+            "is_active": True,
+            "order": 4,
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "section_type": "privacy",
+            "title": "Privacybeleid",
+            "subtitle": "Hoe wij omgaan met uw gegevens",
+            "content": "**1. Verzamelde Gegevens**\nWij verzamelen alleen gegevens die nodig zijn voor het leveren van onze diensten: naam, e-mailadres, bedrijfsgegevens en gebruiksdata.\n\n**2. Gebruik van Gegevens**\nUw gegevens worden uitsluitend gebruikt voor het leveren en verbeteren van onze diensten.\n\n**3. Delen van Gegevens**\nWij delen uw gegevens niet met derden, tenzij wettelijk verplicht.\n\n**4. Beveiliging**\nWij nemen passende technische en organisatorische maatregelen om uw gegevens te beschermen.\n\n**5. Uw Rechten**\nU heeft recht op inzage, correctie en verwijdering van uw gegevens. Neem contact met ons op voor meer informatie.\n\n**6. Contact**\nVoor vragen over privacy kunt u contact opnemen via info@facturatie.sr",
+            "is_active": True,
+            "order": 5,
+            "created_at": now,
+            "updated_at": now
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "section_type": "contact",
+            "title": "Contact",
+            "subtitle": "Neem contact met ons op",
+            "content": "Heeft u vragen of wilt u meer informatie? Neem gerust contact met ons op!",
+            "is_active": True,
+            "order": 6,
+            "created_at": now,
+            "updated_at": now
+        }
+    ]
+    
+    await db.landing_sections.insert_many(default_sections)
+    logger.info("Default landing page sections created")
+
 # ==================== SEED DEFAULT ADD-ONS ====================
 
 async def seed_default_addons():
