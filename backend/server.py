@@ -678,6 +678,10 @@ async def get_current_active_user(credentials: HTTPAuthorizationCredentials = De
 
 async def get_superadmin(credentials: HTTPAuthorizationCredentials = Depends(security)):
     """Verify current user is superadmin"""
+    user = await get_current_user(credentials)
+    if user.get("role") != "superadmin":
+        raise HTTPException(status_code=403, detail="Alleen voor beheerders")
+    return user
 
 async def get_user_active_addons(user_id: str) -> List[str]:
     """Get list of active addon slugs for a user"""
