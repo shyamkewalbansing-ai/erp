@@ -747,10 +747,6 @@ async def get_current_active_user_with_addon(addon_slug: str):
         
         return user
     return dependency
-    user = await get_current_user(credentials)
-    if user.get("role") != "superadmin":
-        raise HTTPException(status_code=403, detail="Alleen voor beheerders")
-    return user
 
 def format_currency(amount: float) -> str:
     """Format amount as SRD currency"""
