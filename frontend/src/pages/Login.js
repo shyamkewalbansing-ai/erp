@@ -98,7 +98,7 @@ export default function Login() {
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-foreground mb-2">Welkom terug</h2>
             <p className="text-muted-foreground">
-              Log in om uw verhuurportfolio te beheren
+              Log in om uw bedrijf te beheren
             </p>
           </div>
 
