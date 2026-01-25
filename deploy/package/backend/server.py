@@ -81,7 +81,7 @@ SMTP_PORT = int(os.environ.get('SMTP_PORT', 465))
 SMTP_USER = os.environ.get('SMTP_USER', '')
 SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 SMTP_FROM = os.environ.get('SMTP_FROM', 'info@facturatie.sr')
-APP_URL = os.environ.get('APP_URL', 'https://vastgoed.facturatie.sr')
+APP_URL = os.environ.get('APP_URL', 'https://facturatie.sr')
 
 def send_email(to_email: str, subject: str, html_content: str):
     """Send email via SMTP"""
@@ -985,7 +985,7 @@ async def forgot_password(request: ForgotPasswordRequest):
         
         if smtp_password:
             # Build reset link - use frontend URL
-            frontend_url = os.environ.get("FRONTEND_URL", "https://vastgoed.facturatie.sr")
+            frontend_url = os.environ.get("FRONTEND_URL", "https://facturatie.sr")
             reset_link = f"{frontend_url}/reset-wachtwoord/{reset_token}"
             
             msg = MIMEMultipart("alternative")
