@@ -235,18 +235,21 @@ export default function Abonnement() {
         <Card className="lg:col-span-3 relative overflow-hidden border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
           <div className="absolute top-4 right-4">
             <Badge className="bg-primary text-white px-3 py-1">
-              Populair
+              Basis Account
             </Badge>
           </div>
           <CardContent className="p-8">
             <div className="space-y-6">
               {/* Price */}
               <div>
-                <p className="text-muted-foreground text-sm uppercase tracking-wider font-medium">Maandelijks</p>
+                <p className="text-muted-foreground text-sm uppercase tracking-wider font-medium">Platform Toegang</p>
                 <div className="flex items-baseline gap-2 mt-2">
-                  <span className="text-5xl font-bold text-foreground">SRD 3.500</span>
-                  <span className="text-muted-foreground">/maand</span>
+                  <span className="text-5xl font-bold text-foreground">Gratis</span>
+                  <span className="text-muted-foreground">+ modules</span>
                 </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Betaal alleen voor de modules die u gebruikt
+                </p>
               </div>
 
               {/* Features */}
@@ -261,26 +264,12 @@ export default function Abonnement() {
                 ))}
               </div>
 
-              {/* CTA Button */}
-              {!isActive && (
-                <Button 
-                  size="lg"
-                  className="w-full h-14 text-lg rounded-xl shadow-lg shadow-primary/20 mt-4"
-                  onClick={() => setShowBankDetails(true)}
-                  data-testid="show-payment-btn"
-                >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Nu Activeren
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </Button>
-              )}
-
               {isActive && (
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-green-500/10 border border-green-500/20">
                   <CheckCircle2 className="w-6 h-6 text-green-500" />
                   <div>
-                    <p className="font-semibold text-green-600 dark:text-green-400">Uw abonnement is actief</p>
-                    <p className="text-sm text-muted-foreground">Geniet van alle functies van Facturatie N.V.</p>
+                    <p className="font-semibold text-green-600 dark:text-green-400">Uw account is actief</p>
+                    <p className="text-sm text-muted-foreground">Activeer modules hieronder om te beginnen</p>
                   </div>
                 </div>
               )}
