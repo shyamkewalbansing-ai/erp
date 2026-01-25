@@ -107,39 +107,48 @@ user_problem_statement: "ERP SaaS Add-ons systeem bouwen - Superadmin kan add-on
 backend:
   - task: "Add-ons CRUD endpoints"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Add-on endpoints toegevoegd: GET /addons, POST/PUT/DELETE /admin/addons"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - All add-on CRUD endpoints working correctly. Fixed critical bug in get_superadmin function. Tested: GET /api/addons (public), POST/PUT/DELETE /api/admin/addons (superadmin only). Created test add-on, updated price from SRD 2500 to SRD 3000, deleted successfully."
 
   - task: "User add-ons management endpoints"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "User add-ons endpoints: GET /user/addons, POST /user/addons/request, admin activatie endpoints"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - All user add-on management working. Tested: GET /api/user/addons (customer's active add-ons), POST /api/user/addons/request (request activation), POST /api/admin/users/{user_id}/addons (admin activation), DELETE /api/admin/users/{user_id}/addons/{addon_id} (deactivation). Full flow tested successfully."
 
   - task: "Add-on requests management"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Request endpoints: GET /admin/addon-requests, approve/reject endpoints"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Add-on request management fully functional. Tested: GET /api/admin/addon-requests (pending requests), PUT /api/admin/addon-requests/{id}/approve (approval), PUT /api/admin/addon-requests/{id}/reject (rejection). Both approval and rejection workflows tested successfully."
 
 frontend:
   - task: "Admin Add-ons tab"
