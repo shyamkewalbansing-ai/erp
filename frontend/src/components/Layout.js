@@ -51,6 +51,8 @@ export default function Layout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [activeAddons, setActiveAddons] = useState([]);
+  const [addonsLoaded, setAddonsLoaded] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('darkMode');
@@ -59,6 +61,37 @@ export default function Layout() {
     }
     return false;
   });
+
+  // Load user's active add-ons
+  useEffect(() => {
+    const loadAddons = async () => {
+      if (!isSuperAdmin() && user) {
+        try {
+          const res = await getMyAddons();
+          const activeSlugs = res.data
+            .filter(a => a.status === 'active')
+            .map(a => a.addon_slug);
+          setActiveAddons(activeSlugs);
+        } catch (error) {
+          console.error('Error loading addons:', error);
+          setActiveAddons([]);
+        }
+      }
+      setAddonsLoaded(true);
+    };
+    loadAddons();
+  }, [user]);
+
+  // Check if user has a specific add-on
+  const hasAddon = (addonSlug) => {
+    if (isSuperAdmin()) return true;
+    return activeAddons.includes(addonSlug);
+  };
+
+  // Get visible nav items based on active add-ons
+  const getVisibleNavItems = () => {
+    return vastgoedNavItems.filter(item => hasAddon(item.addon));
+  };
 
   // Auto-expand settings menu if on settings or subscription page
   useEffect(() => {
