@@ -50,8 +50,8 @@ export default function Register() {
         <div className="relative z-10 flex flex-col justify-end p-12 text-white">
           <h2 className="text-4xl font-bold mb-4">Start vandaag met Facturatie N.V.</h2>
           <p className="text-lg text-white/80">
-            Maak een gratis account aan en begin direct met het beheren 
-            van uw vastgoedportfolio. U krijgt 3 dagen gratis proefperiode!
+            Maak een gratis account aan en ontdek onze bedrijfsmodules. 
+            U krijgt 3 dagen gratis proefperiode om het platform te verkennen!
           </p>
         </div>
       </div>
