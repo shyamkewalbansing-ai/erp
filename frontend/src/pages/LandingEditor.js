@@ -619,6 +619,165 @@ export default function LandingEditor() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Payments (Mope) Tab */}
+        <TabsContent value="payments" className="mt-6">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <CreditCard className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Mope Betaalinstellingen</CardTitle>
+                  <CardDescription>Configureer uw Mope betaalgateway integratie</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Enable Toggle */}
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-medium">Betalingen Inschakelen</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Schakel online betalingen via Mope in voor bestellingen
+                  </p>
+                </div>
+                <Switch 
+                  checked={mopeSettings.is_enabled}
+                  onCheckedChange={(checked) => setMopeSettings({...mopeSettings, is_enabled: checked})}
+                />
+              </div>
+
+              {/* Live Mode Toggle */}
+              <div className="flex items-center justify-between p-4 border rounded-lg">
+                <div className="space-y-0.5">
+                  <Label className="text-base font-medium">Live Modus</Label>
+                  <p className="text-sm text-muted-foreground">
+                    {mopeSettings.use_live_mode 
+                      ? 'Live betalingen zijn actief - echte transacties!' 
+                      : 'Test modus actief - geen echte transacties'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {mopeSettings.use_live_mode ? (
+                    <Badge className="bg-green-500/10 text-green-600 border-green-500/20">
+                      <Shield className="w-3 h-3 mr-1" />
+                      Live
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-yellow-600 border-yellow-500/30">
+                      Test
+                    </Badge>
+                  )}
+                  <Switch 
+                    checked={mopeSettings.use_live_mode}
+                    onCheckedChange={(checked) => setMopeSettings({...mopeSettings, use_live_mode: checked})}
+                  />
+                </div>
+              </div>
+
+              {/* API Tokens */}
+              <div className="space-y-4">
+                <h3 className="font-medium flex items-center gap-2">
+                  <Shield className="w-4 h-4 text-muted-foreground" />
+                  API Tokens
+                </h3>
+                
+                {/* Test Token */}
+                <div className="space-y-2">
+                  <Label>Test API Token</Label>
+                  <div className="relative">
+                    <Input 
+                      type={showTestToken ? "text" : "password"}
+                      value={mopeSettings.test_token}
+                      onChange={(e) => setMopeSettings({...mopeSettings, test_token: e.target.value})}
+                      placeholder="Voer uw Mope test token in"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowTestToken(!showTestToken)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showTestToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Gebruik dit token voor test transacties (geen echt geld)
+                  </p>
+                </div>
+
+                {/* Live Token */}
+                <div className="space-y-2">
+                  <Label>Live API Token</Label>
+                  <div className="relative">
+                    <Input 
+                      type={showLiveToken ? "text" : "password"}
+                      value={mopeSettings.live_token}
+                      onChange={(e) => setMopeSettings({...mopeSettings, live_token: e.target.value})}
+                      placeholder="Voer uw Mope live token in"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLiveToken(!showLiveToken)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showLiveToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Gebruik dit token voor echte transacties (live modus)
+                  </p>
+                </div>
+
+                {/* Webhook Secret (optional) */}
+                <div className="space-y-2">
+                  <Label>Webhook Secret (optioneel)</Label>
+                  <Input 
+                    type="password"
+                    value={mopeSettings.webhook_secret}
+                    onChange={(e) => setMopeSettings({...mopeSettings, webhook_secret: e.target.value})}
+                    placeholder="Voer uw webhook secret in"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Voor het verifiëren van webhook callbacks van Mope
+                  </p>
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                <h4 className="font-medium text-blue-600 mb-2">Hoe werkt het?</h4>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  <li>• Registreer bij <a href="https://mope.sr" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">mope.sr</a> voor uw API tokens</li>
+                  <li>• Gebruik de test token voor het testen van de integratie</li>
+                  <li>• Schakel over naar live modus wanneer u klaar bent voor echte betalingen</li>
+                </ul>
+              </div>
+
+              {/* Save Button */}
+              <Button 
+                onClick={handleSaveMopeSettings} 
+                disabled={savingMope}
+                className="w-full"
+              >
+                {savingMope ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Opslaan...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Betaalinstellingen Opslaan
+                  </>
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Section Edit Dialog */}
