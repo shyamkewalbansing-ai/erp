@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getMyAddons } from '../lib/api';
 import { 
   LayoutDashboard, 
   Users, 
@@ -29,19 +30,19 @@ import { Badge } from './ui/badge';
 import NotificationBell from './NotificationBell';
 import AIAssistant from './AIAssistant';
 
-// Navigation items for customers only (not for superadmin)
-const customerNavItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/tenants', icon: Users, label: 'Huurders' },
-  { to: '/apartments', icon: Building2, label: 'Appartementen' },
-  { to: '/contracten', icon: FileSignature, label: 'Contracten' },
-  { to: '/payments', icon: CreditCard, label: 'Betalingen' },
-  { to: '/facturen', icon: FileText, label: 'Facturen' },
-  { to: '/leningen', icon: HandCoins, label: 'Leningen' },
-  { to: '/deposits', icon: Wallet, label: 'Borg' },
-  { to: '/kasgeld', icon: Banknote, label: 'Kasgeld' },
-  { to: '/onderhoud', icon: Wrench, label: 'Onderhoud' },
-  { to: '/werknemers', icon: Users2, label: 'Werknemers' },
+// Navigation items for Vastgoed Beheer add-on
+const vastgoedNavItems = [
+  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', addon: 'vastgoed_beheer' },
+  { to: '/tenants', icon: Users, label: 'Huurders', addon: 'vastgoed_beheer' },
+  { to: '/apartments', icon: Building2, label: 'Appartementen', addon: 'vastgoed_beheer' },
+  { to: '/contracten', icon: FileSignature, label: 'Contracten', addon: 'vastgoed_beheer' },
+  { to: '/payments', icon: CreditCard, label: 'Betalingen', addon: 'vastgoed_beheer' },
+  { to: '/facturen', icon: FileText, label: 'Facturen', addon: 'vastgoed_beheer' },
+  { to: '/leningen', icon: HandCoins, label: 'Leningen', addon: 'vastgoed_beheer' },
+  { to: '/deposits', icon: Wallet, label: 'Borg', addon: 'vastgoed_beheer' },
+  { to: '/kasgeld', icon: Banknote, label: 'Kasgeld', addon: 'vastgoed_beheer' },
+  { to: '/onderhoud', icon: Wrench, label: 'Onderhoud', addon: 'vastgoed_beheer' },
+  { to: '/werknemers', icon: Users2, label: 'Werknemers', addon: 'vastgoed_beheer' },
 ];
 
 export default function Layout() {
