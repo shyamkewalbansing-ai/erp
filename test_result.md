@@ -101,3 +101,86 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: "ERP SaaS Add-ons systeem bouwen - Superadmin kan add-ons beheren en activeren voor klanten, klanten kunnen add-on activering aanvragen"
+
+backend:
+  - task: "Add-ons CRUD endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Add-on endpoints toegevoegd: GET /addons, POST/PUT/DELETE /admin/addons"
+
+  - task: "User add-ons management endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "User add-ons endpoints: GET /user/addons, POST /user/addons/request, admin activatie endpoints"
+
+  - task: "Add-on requests management"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Request endpoints: GET /admin/addon-requests, approve/reject endpoints"
+
+frontend:
+  - task: "Admin Add-ons tab"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Admin.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Add-ons tab toegevoegd aan admin pagina met CRUD, klant add-on activatie, en verzoeken beheer"
+
+  - task: "Abonnement pagina add-ons sectie"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Abonnement.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Add-ons sectie toegevoegd waar klanten add-ons kunnen zien en activering aanvragen"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Add-ons CRUD endpoints"
+    - "User add-ons management endpoints"
+    - "Add-on requests management"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: "Add-ons systeem geïmplementeerd. Backend endpoints en frontend UI zijn klaar. Test de add-on CRUD operations, user add-on management, en request flow."
