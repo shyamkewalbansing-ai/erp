@@ -247,15 +247,18 @@ export default function Layout() {
               {/* Dropdown items */}
               <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="pl-4 mt-1 space-y-1">
-                  <NavLink
-                    to="/instellingen"
-                    onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
-                    data-testid="nav-instellingen-sub"
-                  >
-                    <Settings className="w-4 h-4" />
-                    <span>Huurinstellingen</span>
-                  </NavLink>
+                  {/* Huurinstellingen - only visible with Vastgoed Beheer add-on */}
+                  {hasAddon('vastgoed_beheer') && (
+                    <NavLink
+                      to="/instellingen"
+                      onClick={() => setSidebarOpen(false)}
+                      className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                      data-testid="nav-instellingen-sub"
+                    >
+                      <Settings className="w-4 h-4" />
+                      <span>Huurinstellingen</span>
+                    </NavLink>
+                  )}
                   <NavLink
                     to="/abonnement"
                     onClick={() => setSidebarOpen(false)}
