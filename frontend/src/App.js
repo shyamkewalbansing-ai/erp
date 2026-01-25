@@ -165,6 +165,9 @@ function App() {
           <Route path="/privacy" element={<PrivacyPage />} />
           <Route path="/contact" element={<ContactPage />} />
           
+          {/* Dynamic CMS Pages - catch-all for custom pages */}
+          <Route path="/page/:slug" element={<CMSPage />} />
+          
           {/* Public Auth Routes */}
           <Route path="/login" element={
             <PublicRoute><Login /></PublicRoute>
