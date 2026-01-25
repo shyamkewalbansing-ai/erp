@@ -150,6 +150,9 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
+          {/* Public Landing Page - Homepage */}
+          <Route path="/" element={<LandingPage />} />
+          
           {/* Public Routes */}
           <Route path="/login" element={
             <PublicRoute><Login /></PublicRoute>
@@ -162,8 +165,8 @@ function App() {
           {/* Public Contract Signing Page (no auth required) */}
           <Route path="/onderteken/:token" element={<OndertekeningPage />} />
           
-          {/* Protected Routes */}
-          <Route path="/" element={
+          {/* Protected Routes - with Layout */}
+          <Route path="/app" element={
             <ProtectedRoute><Layout /></ProtectedRoute>
           }>
             <Route index element={<SmartRedirect />} />
@@ -177,6 +180,11 @@ function App() {
             {/* Admin pages only for superadmin */}
             <Route path="admin" element={
               <AdminRoute><Admin /></AdminRoute>
+            } />
+            
+            {/* Landing Editor only for superadmin */}
+            <Route path="landing-editor" element={
+              <AdminRoute><LandingEditor /></AdminRoute>
             } />
             
             {/* These routes require active subscription (customers only) */}
@@ -201,6 +209,44 @@ function App() {
             <Route path="contracten" element={
               <SubscriptionRoute><Contracten /></SubscriptionRoute>
             } />
+            <Route path="deposits" element={
+              <SubscriptionRoute><Deposits /></SubscriptionRoute>
+            } />
+            <Route path="kasgeld" element={
+              <SubscriptionRoute><Kasgeld /></SubscriptionRoute>
+            } />
+            <Route path="onderhoud" element={
+              <SubscriptionRoute><Onderhoud /></SubscriptionRoute>
+            } />
+            <Route path="werknemers" element={
+              <SubscriptionRoute><Werknemers /></SubscriptionRoute>
+            } />
+          </Route>
+          
+          {/* Legacy routes - redirect to /app prefix */}
+          <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+          <Route path="/admin" element={<Navigate to="/app/admin" replace />} />
+          <Route path="/abonnement" element={<Navigate to="/app/abonnement" replace />} />
+          <Route path="/instellingen" element={<Navigate to="/app/instellingen" replace />} />
+          <Route path="/tenants" element={<Navigate to="/app/tenants" replace />} />
+          <Route path="/apartments" element={<Navigate to="/app/apartments" replace />} />
+          <Route path="/payments" element={<Navigate to="/app/payments" replace />} />
+          <Route path="/facturen" element={<Navigate to="/app/facturen" replace />} />
+          <Route path="/leningen" element={<Navigate to="/app/leningen" replace />} />
+          <Route path="/contracten" element={<Navigate to="/app/contracten" replace />} />
+          <Route path="/deposits" element={<Navigate to="/app/deposits" replace />} />
+          <Route path="/kasgeld" element={<Navigate to="/app/kasgeld" replace />} />
+          <Route path="/onderhoud" element={<Navigate to="/app/onderhoud" replace />} />
+          <Route path="/werknemers" element={<Navigate to="/app/werknemers" replace />} />
+          
+          {/* 404 - redirect to landing */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <Toaster richColors position="top-right" />
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
             <Route path="deposits" element={
               <SubscriptionRoute><Deposits /></SubscriptionRoute>
             } />
