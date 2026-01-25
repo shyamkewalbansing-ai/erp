@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getLandingSections, getLandingSettings, getPublicAddons, createPublicOrder, formatCurrency } from '../lib/api';
+import api from '../lib/api';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
@@ -49,6 +50,7 @@ export default function LandingPage() {
   const [sections, setSections] = useState([]);
   const [settings, setSettings] = useState(null);
   const [addons, setAddons] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -75,14 +77,18 @@ export default function LandingPage() {
 
   const loadData = async () => {
     try {
-      const [sectionsRes, settingsRes, addonsRes] = await Promise.all([
+      const [sectionsRes, settingsRes, addonsRes, menuRes] = await Promise.all([
         getLandingSections(),
         getLandingSettings(),
-        getPublicAddons()
+        getPublicAddons(),
+        api.get('/public/cms/menu').catch(() => ({ data: { items: [] } }))
       ]);
       setSections(sectionsRes.data);
       setSettings(settingsRes.data);
       setAddons(addonsRes.data);
+      // Filter menu items - only show visible ones, exclude 'home'
+      const items = menuRes.data?.items?.filter(item => item.is_visible && item.link !== '/') || [];
+      setMenuItems(items);
     } catch (error) {
       console.error('Error loading landing page:', error);
     } finally {
