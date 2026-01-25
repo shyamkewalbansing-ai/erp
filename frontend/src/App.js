@@ -247,27 +247,5 @@ function App() {
     </AuthProvider>
   );
 }
-            <Route path="deposits" element={
-              <SubscriptionRoute><Deposits /></SubscriptionRoute>
-            } />
-            <Route path="kasgeld" element={
-              <SubscriptionRoute><Kasgeld /></SubscriptionRoute>
-            } />
-            <Route path="onderhoud" element={
-              <SubscriptionRoute><Onderhoud /></SubscriptionRoute>
-            } />
-            <Route path="werknemers" element={
-              <SubscriptionRoute><Werknemers /></SubscriptionRoute>
-            } />
-          </Route>
-          
-          {/* Catch all */}
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </BrowserRouter>
-      <Toaster position="top-right" richColors />
-    </AuthProvider>
-  );
-}
 
 export default App;
