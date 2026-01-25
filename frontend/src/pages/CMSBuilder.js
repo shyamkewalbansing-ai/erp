@@ -93,7 +93,7 @@ export default function CMSBuilder() {
           show_in_menu: true
         });
       } else {
-        await api.post('/api/cms/pages', {
+        await api.post('/cms/pages', {
           title: newPageForm.title,
           slug: newPageForm.slug,
           template: 'default',
@@ -216,7 +216,7 @@ export default function CMSBuilder() {
     formData.append('file', file);
     
     try {
-      const res = await api.post('/api/cms/upload-image', formData, {
+      const res = await api.post('/cms/upload-image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setSectionForm({ ...sectionForm, [field]: res.data.url });
@@ -229,7 +229,7 @@ export default function CMSBuilder() {
   const handleSaveFooter = async () => {
     setSaving(true);
     try {
-      await api.put('/api/cms/footer', footer);
+      await api.put('/cms/footer', footer);
       toast.success('Footer opgeslagen');
     } catch (error) {
       toast.error('Fout bij opslaan footer');
@@ -241,7 +241,7 @@ export default function CMSBuilder() {
   const handleSaveMenu = async () => {
     setSaving(true);
     try {
-      await api.put('/api/cms/menu', menu);
+      await api.put('/cms/menu', menu);
       toast.success('Menu opgeslagen');
     } catch (error) {
       toast.error('Fout bij opslaan menu');
