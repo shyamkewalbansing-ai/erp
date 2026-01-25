@@ -628,6 +628,8 @@ class LandingPageSettings(BaseModel):
     logo_url: Optional[str] = None
     footer_text: Optional[str] = None
     social_links: Optional[dict] = None  # {"facebook": "url", "instagram": "url", etc}
+    login_image_url: Optional[str] = None  # Afbeelding voor login pagina
+    register_image_url: Optional[str] = None  # Afbeelding voor registratie pagina
 
 class PublicOrderCreate(BaseModel):
     """Order from landing page with account creation"""
