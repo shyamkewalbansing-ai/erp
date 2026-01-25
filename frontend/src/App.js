@@ -20,8 +20,7 @@ import Abonnement from "./pages/Abonnement";
 import Admin from "./pages/Admin";
 import Instellingen from "./pages/Instellingen";
 import LandingPage from "./pages/LandingPage";
-import LandingEditor from "./pages/LandingEditor";
-import CMSBuilder from "./pages/CMSBuilder";
+import WebsiteBeheer from "./pages/WebsiteBeheer";
 import CMSPage from "./pages/CMSPage";
 import OverOnsPage from "./pages/OverOnsPage";
 import VoorwaardenPage from "./pages/VoorwaardenPage";
@@ -197,14 +196,9 @@ function App() {
               <AdminRoute><Admin /></AdminRoute>
             } />
             
-            {/* Landing Editor only for superadmin */}
-            <Route path="landing-editor" element={
-              <AdminRoute><LandingEditor /></AdminRoute>
-            } />
-            
-            {/* CMS Builder only for superadmin */}
-            <Route path="cms-builder" element={
-              <AdminRoute><CMSBuilder /></AdminRoute>
+            {/* Website Beheer - unified CMS for superadmin */}
+            <Route path="website-beheer" element={
+              <AdminRoute><WebsiteBeheer /></AdminRoute>
             } />
             
             {/* These routes require active subscription (customers only) */}
