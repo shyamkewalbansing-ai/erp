@@ -5366,6 +5366,10 @@ async def get_public_addons():
 @api_router.post("/public/orders")
 async def create_public_order(order_data: PublicOrderCreate):
     """Create a new order from landing page with account creation"""
+    # Validate at least one addon selected
+    if not order_data.addon_ids or len(order_data.addon_ids) == 0:
+        raise HTTPException(status_code=400, detail="Selecteer minimaal één module")
+    
     # Check if email already exists
     existing_user = await db.users.find_one({"email": order_data.email.lower()}, {"_id": 0})
     if existing_user:
