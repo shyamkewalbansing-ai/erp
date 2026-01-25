@@ -630,10 +630,11 @@ class LandingPageSettings(BaseModel):
     social_links: Optional[dict] = None  # {"facebook": "url", "instagram": "url", etc}
 
 class PublicOrderCreate(BaseModel):
-    """Order from landing page - no account required"""
+    """Order from landing page with account creation"""
     name: str
     email: EmailStr
     phone: str
+    password: str  # For account creation
     company_name: Optional[str] = None
     addon_ids: List[str]  # Which add-ons they want
     message: Optional[str] = None
@@ -648,8 +649,40 @@ class PublicOrderResponse(BaseModel):
     addon_names: Optional[List[str]] = None
     total_price: Optional[float] = None
     message: Optional[str] = None
-    status: str  # 'pending', 'contacted', 'converted', 'rejected'
+    status: str  # 'pending', 'pending_payment', 'paid', 'contacted', 'converted', 'rejected'
+    payment_url: Optional[str] = None
+    payment_id: Optional[str] = None
+    user_id: Optional[str] = None
     created_at: str
+
+# ==================== MOPE PAYMENT MODELS ====================
+
+class MopeSettings(BaseModel):
+    """Mope Payment Gateway Settings"""
+    is_enabled: bool = False
+    use_live_mode: bool = False  # False = test, True = live
+    test_token: Optional[str] = None
+    live_token: Optional[str] = None
+    webhook_secret: Optional[str] = None
+
+class MopePaymentRequest(BaseModel):
+    """Create a Mope payment request"""
+    amount: float
+    description: str
+    order_id: str
+    redirect_url: str
+
+class MopePaymentResponse(BaseModel):
+    """Response from Mope payment creation"""
+    id: str
+    payment_url: str
+    status: str
+
+class MopeWebhook(BaseModel):
+    """Webhook from Mope"""
+    payment_request_id: str
+    status: str
+    amount: Optional[float] = None
 
 # Dashboard Models
 class DashboardStats(BaseModel):
