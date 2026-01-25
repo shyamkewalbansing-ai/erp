@@ -62,7 +62,9 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  MessageSquare
+  MessageSquare,
+  CreditCard,
+  Shield
 } from 'lucide-react';
 
 const sectionTypes = [
