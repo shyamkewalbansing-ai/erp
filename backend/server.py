@@ -582,6 +582,75 @@ class AdminDashboardStats(BaseModel):
     revenue_this_month: float
     recent_subscriptions: List[SubscriptionResponse]
 
+# ==================== LANDING PAGE CMS MODELS ====================
+
+class LandingPageSection(BaseModel):
+    id: str
+    section_type: str  # 'hero', 'features', 'pricing', 'about', 'terms', 'privacy', 'hrm', 'custom'
+    title: str
+    content: Optional[str] = None
+    subtitle: Optional[str] = None
+    image_url: Optional[str] = None
+    button_text: Optional[str] = None
+    button_link: Optional[str] = None
+    is_active: bool = True
+    order: int = 0
+    metadata: Optional[dict] = None  # For additional custom data
+
+class LandingPageSectionCreate(BaseModel):
+    section_type: str
+    title: str
+    content: Optional[str] = None
+    subtitle: Optional[str] = None
+    image_url: Optional[str] = None
+    button_text: Optional[str] = None
+    button_link: Optional[str] = None
+    is_active: bool = True
+    order: int = 0
+    metadata: Optional[dict] = None
+
+class LandingPageSectionUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None
+    subtitle: Optional[str] = None
+    image_url: Optional[str] = None
+    button_text: Optional[str] = None
+    button_link: Optional[str] = None
+    is_active: Optional[bool] = None
+    order: Optional[int] = None
+    metadata: Optional[dict] = None
+
+class LandingPageSettings(BaseModel):
+    company_name: str = "Facturatie N.V."
+    company_email: str = "info@facturatie.sr"
+    company_phone: str = "+597 8934982"
+    company_address: str = "Paramaribo, Suriname"
+    logo_url: Optional[str] = None
+    footer_text: Optional[str] = None
+    social_links: Optional[dict] = None  # {"facebook": "url", "instagram": "url", etc}
+
+class PublicOrderCreate(BaseModel):
+    """Order from landing page - no account required"""
+    name: str
+    email: EmailStr
+    phone: str
+    company_name: Optional[str] = None
+    addon_ids: List[str]  # Which add-ons they want
+    message: Optional[str] = None
+
+class PublicOrderResponse(BaseModel):
+    id: str
+    name: str
+    email: str
+    phone: str
+    company_name: Optional[str] = None
+    addon_ids: List[str]
+    addon_names: Optional[List[str]] = None
+    total_price: Optional[float] = None
+    message: Optional[str] = None
+    status: str  # 'pending', 'contacted', 'converted', 'rejected'
+    created_at: str
+
 # Dashboard Models
 class DashboardStats(BaseModel):
     total_apartments: int
