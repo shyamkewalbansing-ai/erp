@@ -7394,7 +7394,7 @@ async def get_cms_menu(current_user: dict = Depends(get_superadmin)):
     if not menu:
         # Create default menu
         menu = {"id": str(uuid.uuid4()), "name": "main", "items": []}
-        await db.cms_menus.insert_one(menu)
+        await db.cms_menus.insert_one({**menu})
     return menu
 
 @api_router.put("/cms/menu")
