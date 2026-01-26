@@ -1,36 +1,48 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { lazy, Suspense, memo } from "react";
+
+// Critical pages - load immediately
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import ResetPassword from "./pages/ResetPassword";
-import Dashboard from "./pages/Dashboard";
-import Tenants from "./pages/Tenants";
-import Apartments from "./pages/Apartments";
-import Payments from "./pages/Payments";
-import Facturen from "./pages/Facturen";
-import Leningen from "./pages/Leningen";
-import Contracten from "./pages/Contracten";
-import OndertekeningPage from "./pages/OndertekeningPage";
-import Deposits from "./pages/Deposits";
-import Kasgeld from "./pages/Kasgeld";
-import Onderhoud from "./pages/Onderhoud";
-import Werknemers from "./pages/Werknemers";
-import Abonnement from "./pages/Abonnement";
-import Admin from "./pages/Admin";
-import Instellingen from "./pages/Instellingen";
-import HRM from "./pages/HRM";
-import MijnModules from "./pages/MijnModules";
 import LandingPage from "./pages/LandingPage";
-import WebsiteBeheer from "./pages/WebsiteBeheer";
-import CMSPage from "./pages/CMSPage";
-import ModulesPage from "./pages/ModulesPage";
-import VoorwaardenPage from "./pages/VoorwaardenPage";
-import PrivacyPage from "./pages/PrivacyPage";
-import PrijzenPage from "./pages/PrijzenPage";
-import OverOnsPage from "./pages/OverOnsPage";
 import Layout from "./components/Layout";
 import "@/App.css";
+
+// Lazy load non-critical pages for faster initial load
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Tenants = lazy(() => import("./pages/Tenants"));
+const Apartments = lazy(() => import("./pages/Apartments"));
+const Payments = lazy(() => import("./pages/Payments"));
+const Facturen = lazy(() => import("./pages/Facturen"));
+const Leningen = lazy(() => import("./pages/Leningen"));
+const Contracten = lazy(() => import("./pages/Contracten"));
+const OndertekeningPage = lazy(() => import("./pages/OndertekeningPage"));
+const Deposits = lazy(() => import("./pages/Deposits"));
+const Kasgeld = lazy(() => import("./pages/Kasgeld"));
+const Onderhoud = lazy(() => import("./pages/Onderhoud"));
+const Werknemers = lazy(() => import("./pages/Werknemers"));
+const Abonnement = lazy(() => import("./pages/Abonnement"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Instellingen = lazy(() => import("./pages/Instellingen"));
+const HRM = lazy(() => import("./pages/HRM"));
+const MijnModules = lazy(() => import("./pages/MijnModules"));
+const WebsiteBeheer = lazy(() => import("./pages/WebsiteBeheer"));
+const CMSPage = lazy(() => import("./pages/CMSPage"));
+const ModulesPage = lazy(() => import("./pages/ModulesPage"));
+const VoorwaardenPage = lazy(() => import("./pages/VoorwaardenPage"));
+const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
+const PrijzenPage = lazy(() => import("./pages/PrijzenPage"));
+const OverOnsPage = lazy(() => import("./pages/OverOnsPage"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+
+// Loading component for lazy loaded pages
+const PageLoader = memo(() => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+  </div>
+));
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
