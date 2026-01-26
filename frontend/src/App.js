@@ -21,12 +21,8 @@ import Admin from "./pages/Admin";
 import Instellingen from "./pages/Instellingen";
 import LandingPage from "./pages/LandingPage";
 import WebsiteBeheer from "./pages/WebsiteBeheer";
-import DynamicPage from "./pages/DynamicPage";
-import OverOnsPage from "./pages/OverOnsPage";
 import VoorwaardenPage from "./pages/VoorwaardenPage";
 import PrivacyPage from "./pages/PrivacyPage";
-import PrijzenPage from "./pages/PrijzenPage";
-import ContactPage from "./pages/ContactPage";
 import Layout from "./components/Layout";
 import "@/App.css";
 
