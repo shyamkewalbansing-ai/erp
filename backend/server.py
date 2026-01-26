@@ -7846,6 +7846,265 @@ async def upload_cms_image(file: UploadFile = File(...), current_user: dict = De
     return {"url": data_url, "filename": file.filename}
 
 # ============================================
+# HRM MODULE - Human Resource Management
+# ============================================
+
+class HRMEmployee(BaseModel):
+    name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    position: Optional[str] = None
+    department: Optional[str] = None
+    salary: Optional[float] = None
+    hire_date: Optional[str] = None
+    birth_date: Optional[str] = None
+    address: Optional[str] = None
+    id_number: Optional[str] = None
+    emergency_contact: Optional[str] = None
+    emergency_phone: Optional[str] = None
+    status: Optional[str] = "active"  # active, inactive, on_leave
+    notes: Optional[str] = None
+
+class HRMLeaveRequest(BaseModel):
+    employee_id: str
+    leave_type: str  # vacation, sick, personal, maternity, paternity, unpaid
+    start_date: str
+    end_date: str
+    reason: Optional[str] = None
+    status: Optional[str] = "pending"  # pending, approved, rejected
+
+class HRMDepartment(BaseModel):
+    name: str
+    description: Optional[str] = None
+    manager_id: Optional[str] = None
+
+# --- HRM EMPLOYEES ---
+
+@api_router.get("/hrm/employees")
+async def get_hrm_employees(current_user: dict = Depends(get_current_user)):
+    """Get all employees for the user's company"""
+    employees = await db.hrm_employees.find(
+        {"user_id": current_user["id"]}, 
+        {"_id": 0}
+    ).sort("name", 1).to_list(500)
+    return employees
+
+@api_router.get("/hrm/employees/{employee_id}")
+async def get_hrm_employee(employee_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a specific employee"""
+    employee = await db.hrm_employees.find_one(
+        {"id": employee_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not employee:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    return employee
+
+@api_router.post("/hrm/employees")
+async def create_hrm_employee(employee: HRMEmployee, current_user: dict = Depends(get_current_user)):
+    """Create a new employee"""
+    # Check addon access
+    has_hrm = await db.customer_addons.find_one({
+        "user_id": current_user["id"],
+        "addon_id": {"$in": ["hrm", "HRM"]}
+    })
+    if not has_hrm and current_user.get("role") != "superadmin":
+        raise HTTPException(status_code=403, detail="HRM module niet geactiveerd")
+    
+    employee_dict = employee.dict()
+    employee_dict["id"] = str(uuid.uuid4())
+    employee_dict["user_id"] = current_user["id"]
+    employee_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    employee_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    employee_dict["leave_balance"] = {
+        "vacation": 20,  # Standard Suriname vacation days
+        "sick": 10,
+        "personal": 3
+    }
+    
+    await db.hrm_employees.insert_one(employee_dict)
+    del employee_dict["_id"] if "_id" in employee_dict else None
+    return employee_dict
+
+@api_router.put("/hrm/employees/{employee_id}")
+async def update_hrm_employee(employee_id: str, employee: HRMEmployee, current_user: dict = Depends(get_current_user)):
+    """Update an employee"""
+    existing = await db.hrm_employees.find_one({"id": employee_id, "user_id": current_user["id"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    
+    employee_dict = employee.dict()
+    employee_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.hrm_employees.update_one(
+        {"id": employee_id},
+        {"$set": employee_dict}
+    )
+    
+    updated = await db.hrm_employees.find_one({"id": employee_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/hrm/employees/{employee_id}")
+async def delete_hrm_employee(employee_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete an employee"""
+    result = await db.hrm_employees.delete_one({"id": employee_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    return {"message": "Werknemer verwijderd"}
+
+# --- HRM DEPARTMENTS ---
+
+@api_router.get("/hrm/departments")
+async def get_hrm_departments(current_user: dict = Depends(get_current_user)):
+    """Get all departments"""
+    departments = await db.hrm_departments.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("name", 1).to_list(100)
+    return departments
+
+@api_router.post("/hrm/departments")
+async def create_hrm_department(department: HRMDepartment, current_user: dict = Depends(get_current_user)):
+    """Create a new department"""
+    dept_dict = department.dict()
+    dept_dict["id"] = str(uuid.uuid4())
+    dept_dict["user_id"] = current_user["id"]
+    dept_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.hrm_departments.insert_one(dept_dict)
+    return {k: v for k, v in dept_dict.items() if k != "_id"}
+
+@api_router.delete("/hrm/departments/{dept_id}")
+async def delete_hrm_department(dept_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a department"""
+    result = await db.hrm_departments.delete_one({"id": dept_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Afdeling niet gevonden")
+    return {"message": "Afdeling verwijderd"}
+
+# --- HRM LEAVE REQUESTS ---
+
+@api_router.get("/hrm/leave-requests")
+async def get_hrm_leave_requests(current_user: dict = Depends(get_current_user)):
+    """Get all leave requests"""
+    requests = await db.hrm_leave_requests.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(500)
+    
+    # Enrich with employee names
+    for req in requests:
+        employee = await db.hrm_employees.find_one({"id": req.get("employee_id")}, {"name": 1})
+        req["employee_name"] = employee.get("name") if employee else "Onbekend"
+    
+    return requests
+
+@api_router.post("/hrm/leave-requests")
+async def create_hrm_leave_request(request: HRMLeaveRequest, current_user: dict = Depends(get_current_user)):
+    """Create a new leave request"""
+    # Validate employee exists
+    employee = await db.hrm_employees.find_one({
+        "id": request.employee_id, 
+        "user_id": current_user["id"]
+    })
+    if not employee:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    
+    req_dict = request.dict()
+    req_dict["id"] = str(uuid.uuid4())
+    req_dict["user_id"] = current_user["id"]
+    req_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    req_dict["employee_name"] = employee.get("name")
+    
+    # Calculate days
+    try:
+        start = datetime.fromisoformat(request.start_date.replace('Z', '+00:00'))
+        end = datetime.fromisoformat(request.end_date.replace('Z', '+00:00'))
+        req_dict["days"] = (end - start).days + 1
+    except:
+        req_dict["days"] = 1
+    
+    await db.hrm_leave_requests.insert_one(req_dict)
+    return {k: v for k, v in req_dict.items() if k != "_id"}
+
+@api_router.put("/hrm/leave-requests/{request_id}")
+async def update_hrm_leave_request(request_id: str, status: str, current_user: dict = Depends(get_current_user)):
+    """Approve or reject a leave request"""
+    if status not in ["approved", "rejected", "pending"]:
+        raise HTTPException(status_code=400, detail="Ongeldige status")
+    
+    request = await db.hrm_leave_requests.find_one({
+        "id": request_id,
+        "user_id": current_user["id"]
+    })
+    if not request:
+        raise HTTPException(status_code=404, detail="Verlofaanvraag niet gevonden")
+    
+    # Update leave balance if approved
+    if status == "approved" and request.get("status") != "approved":
+        leave_type = request.get("leave_type", "vacation")
+        days = request.get("days", 1)
+        
+        await db.hrm_employees.update_one(
+            {"id": request.get("employee_id")},
+            {"$inc": {f"leave_balance.{leave_type}": -days}}
+        )
+    
+    await db.hrm_leave_requests.update_one(
+        {"id": request_id},
+        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    updated = await db.hrm_leave_requests.find_one({"id": request_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/hrm/leave-requests/{request_id}")
+async def delete_hrm_leave_request(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a leave request"""
+    result = await db.hrm_leave_requests.delete_one({
+        "id": request_id,
+        "user_id": current_user["id"]
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Verlofaanvraag niet gevonden")
+    return {"message": "Verlofaanvraag verwijderd"}
+
+# --- HRM DASHBOARD STATS ---
+
+@api_router.get("/hrm/stats")
+async def get_hrm_stats(current_user: dict = Depends(get_current_user)):
+    """Get HRM dashboard statistics"""
+    user_id = current_user["id"]
+    
+    total_employees = await db.hrm_employees.count_documents({"user_id": user_id})
+    active_employees = await db.hrm_employees.count_documents({"user_id": user_id, "status": "active"})
+    on_leave = await db.hrm_employees.count_documents({"user_id": user_id, "status": "on_leave"})
+    
+    pending_requests = await db.hrm_leave_requests.count_documents({
+        "user_id": user_id,
+        "status": "pending"
+    })
+    
+    departments = await db.hrm_departments.count_documents({"user_id": user_id})
+    
+    # Calculate total salary
+    salary_pipeline = [
+        {"$match": {"user_id": user_id, "status": "active"}},
+        {"$group": {"_id": None, "total": {"$sum": "$salary"}}}
+    ]
+    salary_result = await db.hrm_employees.aggregate(salary_pipeline).to_list(1)
+    total_salary = salary_result[0]["total"] if salary_result else 0
+    
+    return {
+        "total_employees": total_employees,
+        "active_employees": active_employees,
+        "on_leave": on_leave,
+        "pending_leave_requests": pending_requests,
+        "departments": departments,
+        "total_monthly_salary": total_salary
+    }
+
+# ============================================
 # AI CHAT ASSISTANT
 # ============================================
 
