@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { getLandingSections, getLandingSettings, getPublicAddons, createPublicOrder, formatCurrency } from '../lib/api';
 import api from '../lib/api';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -34,24 +33,30 @@ import {
   ChevronRight,
   Menu,
   X,
+  Building2,
+  Users,
   FileText,
-  Lock
+  BarChart3,
+  Clock,
+  Globe,
+  Lock,
+  Star,
+  CheckCircle,
+  Briefcase,
+  Target,
+  TrendingUp,
+  Calendar,
+  DollarSign,
+  Settings,
+  Layers
 } from 'lucide-react';
 
-// Icon mapping for features
-const iconMap = {
-  Shield: Shield,
-  Zap: Zap,
-  Package: Package,
-  HeadphonesIcon: Headphones,
-};
+const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [sections, setSections] = useState([]);
   const [settings, setSettings] = useState(null);
   const [addons, setAddons] = useState([]);
-  const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -68,31 +73,19 @@ export default function LandingPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  // Modal states for terms/privacy
-  const [termsModalOpen, setTermsModalOpen] = useState(false);
-  const [privacyModalOpen, setPrivacyModalOpen] = useState(false);
-  const [activeModalContent, setActiveModalContent] = useState(null);
-
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
     try {
-      const [sectionsRes, settingsRes, addonsRes, menuRes] = await Promise.all([
-        getLandingSections(),
-        getLandingSettings(),
-        getPublicAddons(),
-        api.get('/public/cms/menu').catch(() => ({ data: { items: [] } }))
+      const [settingsRes, addonsRes] = await Promise.all([
+        axios.get(`${API_URL}/public/landing/settings`).catch(() => ({ data: null })),
+        axios.get(`${API_URL}/public/addons`).catch(() => ({ data: [] }))
       ]);
       
-      setSections(sectionsRes.data || []);
       setSettings(settingsRes.data);
       setAddons(addonsRes.data || []);
-      
-      // Load menu items from CMS
-      const items = menuRes.data?.items?.filter(item => item.is_visible) || [];
-      setMenuItems(items);
     } catch (error) {
       console.error('Error loading landing page:', error);
     } finally {
@@ -100,7 +93,12 @@ export default function LandingPage() {
     }
   };
 
-  const getSection = (type) => sections.find(s => s.section_type === type);
+  const formatCurrency = (amount) => {
+    return `SRD ${new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount)}`;
+  };
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
@@ -115,31 +113,26 @@ export default function LandingPage() {
     
     setSubmitting(true);
     try {
-      const response = await createPublicOrder({
+      const response = await axios.post(`${API_URL}/public/orders`, {
         ...orderForm,
         addon_ids: selectedAddons
       });
       
-      // Auto-login: Store token and setup axios headers
       if (response.data?.token) {
         localStorage.setItem('token', response.data.token);
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         toast.success('Uw account is aangemaakt! U wordt nu ingelogd...');
         
-        // Reset form
         setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '', password: '' });
         setSelectedAddons([]);
         setOrderDialogOpen(false);
         
-        // Navigate to Mijn Modules page
         setTimeout(() => {
           window.location.href = '/app/mijn-modules';
         }, 1000);
       } else {
         toast.success('Uw bestelling is ontvangen!');
         setOrderDialogOpen(false);
-        setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '', password: '' });
-        setSelectedAddons([]);
       }
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Er is een fout opgetreden');
@@ -164,63 +157,125 @@ export default function LandingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
       </div>
     );
   }
 
-  const heroSection = getSection('hero');
-  const featuresSection = getSection('features');
-  const pricingSection = getSection('pricing');
-  const aboutSection = getSection('about');
-  const termsSection = getSection('terms');
-  const privacySection = getSection('privacy');
-  const contactSection = getSection('contact');
+  // Features data
+  const features = [
+    {
+      icon: Shield,
+      title: 'SSL-encryptie',
+      description: 'Alle gegevens worden veilig opgeslagen met SSL-encryptie en voldoen aan de geldende lokale privacyregels.'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Gegarandeerde groei',
+      description: 'Ons platform helpt u tijd te besparen, fouten te voorkomen en sneller betaald te krijgen.'
+    },
+    {
+      icon: Headphones,
+      title: '24/7 Ondersteuning',
+      description: 'Ons team helpt je persoonlijk en vriendelijk. Gewoon duidelijke uitleg wanneer jij die nodig hebt.'
+    }
+  ];
+
+  // Module features
+  const moduleFeatures = [
+    {
+      id: 'boekhouding',
+      title: 'Boekhouding',
+      subtitle: 'Vereenvoudig uw boekhouding en facturering',
+      description: 'Beheer moeiteloos uw administratie: stel financiële doelen in, volg ze automatisch, automatiseer uw belastingaangifte en houd grip op uw voorraad.',
+      icon: BarChart3,
+      color: 'emerald',
+      features: [
+        'Vereenvoudig uw boekhouding en facturering',
+        'Neem de controle over uw voorraad',
+        'Breng uw project van voorstel tot betaling'
+      ]
+    },
+    {
+      id: 'hrm',
+      title: 'HRM',
+      subtitle: 'Alles wat je nodig hebt voor succesvol HRM',
+      description: 'Deze functie maakt het voor een bedrijf eenvoudiger om de persoonlijke, bedrijfs- en bankgegevens van werknemers bij te houden.',
+      icon: Users,
+      color: 'blue',
+      features: [
+        'Belangrijke zaken van werknemers beheren',
+        'Help uw medewerkers productiever te worden',
+        'Beheer salarissen in slechts een paar klikken'
+      ]
+    },
+    {
+      id: 'projecten',
+      title: 'Projecten',
+      subtitle: 'Beheer al je projecten eenvoudig',
+      description: 'Heb je een groot team of werk je aan meerdere projecten tegelijk? Beheer taakprioriteiten en creëer extra werkruimtes.',
+      icon: Briefcase,
+      color: 'purple',
+      features: [
+        'Kanban Taakbeheer',
+        'Mijlpalen creëren en subtaken toewijzen',
+        'Oplossen van bugs'
+      ]
+    },
+    {
+      id: 'leads',
+      title: 'Leads & CRM',
+      subtitle: 'Beheer uw leads beter. Converteer sneller',
+      description: 'Verhoog uw omzet met een effectieve tool voor leadmanagement. Bepaal de waarde van leads en ontwikkel veelbelovende leads met gemak.',
+      icon: Target,
+      color: 'orange',
+      features: [
+        'Beheer al je leads onder één dak',
+        'Kostenbesheerste Leadaanpak',
+        'Ontvang Maatwerkrapporten'
+      ]
+    }
+  ];
+
+  // Industry solutions
+  const industries = [
+    { icon: Building2, title: 'Verhuur Beheer', description: 'Intuïtieve oplossing om al uw verhuuractiviteiten te stroomlijnen.' },
+    { icon: Sparkles, title: 'Beauty & Spa', description: 'Stroomlijnt de spa-operaties met online boekingen en veilige betalingen.' },
+    { icon: Settings, title: 'AutoDealer', description: 'Alles-in-één oplossing voor het beheren van auto\'s, voorraad en verkoop.' },
+    { icon: Calendar, title: 'Hotel & Kamers', description: 'Complete oplossing die hoteloperaties vereenvoudigt.' }
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
               <img 
                 src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
-                alt={settings?.company_name || "Facturatie N.V."}
+                alt="Facturatie N.V."
                 className="h-8 w-auto"
               />
             </Link>
 
-            {/* Desktop Navigation - from CMS */}
+            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              {menuItems.length > 0 ? (
-                menuItems.filter(item => item.link !== '/').map((item, index) => (
-                  <Link 
-                    key={index}
-                    to={item.link}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {item.label}
-                  </Link>
-                ))
-              ) : (
-                <>
-                  <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-                  <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Prijzen</a>
-                  <a href="#about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Over Ons</a>
-                  <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
-                </>
-              )}
+              <Link to="/" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Home</Link>
+              <Link to="/prijzen" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Prijzen</Link>
+              <Link to="/over-ons" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Over Ons</Link>
+              <Link to="/voorwaarden" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Voorwaarden</Link>
+              <Link to="/privacy" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Privacy</Link>
             </div>
 
             {/* CTA Buttons */}
             <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" onClick={() => navigate('/login')}>
+              <Button variant="ghost" onClick={() => navigate('/login')} className="text-gray-700">
                 Inloggen
               </Button>
-              <Button onClick={() => navigate('/register')}>
+              <Button onClick={() => navigate('/prijzen')} className="bg-emerald-500 hover:bg-emerald-600 text-white">
                 Gratis Starten
               </Button>
             </div>
@@ -235,32 +290,18 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Mobile Navigation - from CMS */}
+        {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden bg-background border-b border-border">
+          <div className="md:hidden bg-white border-b border-gray-100">
             <div className="px-4 py-4 space-y-3">
-              {menuItems.length > 0 ? (
-                menuItems.filter(item => item.link !== '/').map((item, index) => (
-                  <Link 
-                    key={index}
-                    to={item.link}
-                    className="block text-foreground py-2"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                ))
-              ) : (
-                <>
-                  <a href="#features" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Features</a>
-                  <a href="#pricing" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</a>
-                  <a href="#about" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</a>
-                  <a href="#contact" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Contact</a>
-                </>
-              )}
+              <Link to="/" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+              <Link to="/prijzen" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</Link>
+              <Link to="/over-ons" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</Link>
+              <Link to="/voorwaarden" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Voorwaarden</Link>
+              <Link to="/privacy" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Privacy</Link>
               <div className="pt-3 space-y-2">
                 <Button variant="outline" className="w-full" onClick={() => navigate('/login')}>Inloggen</Button>
-                <Button className="w-full" onClick={() => navigate('/register')}>Gratis Starten</Button>
+                <Button className="w-full bg-emerald-500 hover:bg-emerald-600" onClick={() => navigate('/prijzen')}>Gratis Starten</Button>
               </div>
             </div>
           </div>
@@ -268,427 +309,255 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      {heroSection && (
-        <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10" />
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div className="space-y-8">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                  <Sparkles className="w-4 h-4" />
-                  Nu beschikbaar in Suriname
-                </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-foreground leading-tight">
-                  {heroSection.title}
-                </h1>
-                <p className="text-xl text-muted-foreground max-w-lg">
-                  {heroSection.subtitle}
-                </p>
-                {heroSection.content && (
-                  <p className="text-muted-foreground">
-                    {heroSection.content}
-                  </p>
-                )}
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button size="lg" className="h-14 px-8 text-lg" onClick={() => navigate('/register')}>
-                    {heroSection.button_text || 'Start Nu'}
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
-                  <Button size="lg" variant="outline" className="h-14 px-8 text-lg" onClick={() => setOrderDialogOpen(true)}>
-                    Direct Bestellen
-                  </Button>
-                </div>
+      <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-100 rounded-full opacity-50 blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-100 rounded-full opacity-50 blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="space-y-8">
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                Het Surinaamse SaaS‑platform met een volledig geïntegreerd{' '}
+                <span className="text-emerald-500">ERP‑ en HRM‑systeem</span>
+              </h1>
+              <p className="text-xl text-gray-600 max-w-lg">
+                Boekhouding, HRM, leads, projecten, sales & post-sale, verhuur en reserveringen – efficiënt, overzichtelijk en volledig geïntegreerd.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button size="lg" className="h-14 px-8 text-lg bg-emerald-500 hover:bg-emerald-600" onClick={() => navigate('/prijzen')}>
+                  Ontvang het pakket
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+                <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-emerald-500 text-emerald-600 hover:bg-emerald-50" onClick={() => setOrderDialogOpen(true)}>
+                  Direct Bestellen
+                </Button>
               </div>
-              {heroSection.image_url && (
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-transparent rounded-3xl blur-3xl" />
-                  <img 
-                    src={heroSection.image_url}
-                    alt="Hero"
-                    className="relative rounded-3xl shadow-2xl w-full max-w-lg mx-auto"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Features Section */}
-      {featuresSection && (
-        <section id="features" className="py-16 md:py-24 bg-muted/30">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                {featuresSection.title}
-              </h2>
-              {featuresSection.subtitle && (
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  {featuresSection.subtitle}
-                </p>
-              )}
-            </div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {featuresSection.metadata?.features?.map((feature, index) => {
-                const IconComponent = iconMap[feature.icon] || Package;
-                return (
-                  <Card key={index} className="bg-background border-border/50 hover:shadow-lg transition-shadow">
-                    <CardContent className="pt-6">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4">
-                        <IconComponent className="w-6 h-6 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground mb-2">{feature.title}</h3>
-                      <p className="text-muted-foreground">{feature.description}</p>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Pricing Section - Add-ons */}
-      {pricingSection && (
-        <section id="pricing" className="py-16 md:py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                {pricingSection.title}
-              </h2>
-              {pricingSection.subtitle && (
-                <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                  {pricingSection.subtitle}
-                </p>
-              )}
-              {pricingSection.content && (
-                <p className="text-muted-foreground mt-2">{pricingSection.content}</p>
-              )}
             </div>
             
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {addons.map((addon) => (
-                <Card key={addon.id} className="relative overflow-hidden border-2 hover:border-primary/50 transition-colors">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full" />
-                  <CardHeader>
-                    <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                      <Package className="w-7 h-7 text-primary" />
-                    </div>
-                    <CardTitle className="text-2xl">{addon.name}</CardTitle>
-                    <CardDescription>{addon.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="mb-6">
-                      <span className="text-4xl font-bold text-foreground">{formatCurrency(addon.price)}</span>
-                      <span className="text-muted-foreground">/maand</span>
-                    </div>
-                    <Button 
-                      className="w-full" 
-                      onClick={() => {
-                        setSelectedAddons([addon.id]);
-                        setOrderDialogOpen(true);
-                      }}
-                    >
-                      Nu Bestellen
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <div className="text-center">
-              <Button size="lg" variant="outline" onClick={() => setOrderDialogOpen(true)}>
-                <Package className="w-5 h-5 mr-2" />
-                Meerdere Modules Bestellen
-              </Button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* About Section */}
-      {aboutSection && (
-        <section id="about" className="py-16 md:py-24 bg-muted/30">
-          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                {aboutSection.title}
-              </h2>
-              {aboutSection.subtitle && (
-                <p className="text-xl text-muted-foreground">
-                  {aboutSection.subtitle}
-                </p>
-              )}
-            </div>
-            {aboutSection.content && (
-              <div className="prose prose-lg max-w-none text-muted-foreground">
-                {aboutSection.content.split('\n\n').map((paragraph, index) => (
-                  <p key={index} className="mb-4">{paragraph}</p>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* Contact Section */}
-      {contactSection && (
-        <section id="contact" className="py-16 md:py-24">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-12">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                  {contactSection.title}
-                </h2>
-                {contactSection.subtitle && (
-                  <p className="text-xl text-muted-foreground mb-8">
-                    {contactSection.subtitle}
-                  </p>
-                )}
-                {contactSection.content && (
-                  <p className="text-muted-foreground mb-8">{contactSection.content}</p>
-                )}
-                
-                <div className="space-y-4">
-                  {settings?.company_email && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Mail className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">E-mail</p>
-                        <a href={`mailto:${settings.company_email}`} className="text-foreground font-medium hover:text-primary">
-                          {settings.company_email}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  {settings?.company_phone && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Phone className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Telefoon</p>
-                        <a href={`tel:${settings.company_phone}`} className="text-foreground font-medium hover:text-primary">
-                          {settings.company_phone}
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                  {settings?.company_address && (
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <MapPin className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Adres</p>
-                        <p className="text-foreground font-medium">{settings.company_address}</p>
-                      </div>
-                    </div>
-                  )}
+            <div className="relative hidden lg:block">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-blue-400/20 rounded-3xl blur-2xl"></div>
+              <div className="relative bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
+                <div className="flex items-center gap-3 mb-4 pb-4 border-b">
+                  <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                    <BarChart3 className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">Facturatie ERP</h3>
+                    <p className="text-sm text-gray-500">Dashboard Overview</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-emerald-50 rounded-xl p-4">
+                    <p className="text-sm text-gray-600">Omzet</p>
+                    <p className="text-2xl font-bold text-emerald-600">SRD 125K</p>
+                    <p className="text-xs text-emerald-500 mt-1">+12% deze maand</p>
+                  </div>
+                  <div className="bg-blue-50 rounded-xl p-4">
+                    <p className="text-sm text-gray-600">Klanten</p>
+                    <p className="text-2xl font-bold text-blue-600">248</p>
+                    <p className="text-xs text-blue-500 mt-1">+8 deze week</p>
+                  </div>
+                  <div className="bg-purple-50 rounded-xl p-4">
+                    <p className="text-sm text-gray-600">Projecten</p>
+                    <p className="text-2xl font-bold text-purple-600">32</p>
+                    <p className="text-xs text-purple-500 mt-1">4 actief</p>
+                  </div>
+                  <div className="bg-orange-50 rounded-xl p-4">
+                    <p className="text-sm text-gray-600">Facturen</p>
+                    <p className="text-2xl font-bold text-orange-600">156</p>
+                    <p className="text-xs text-orange-500 mt-1">98% betaald</p>
+                  </div>
                 </div>
               </div>
-
-              {/* Quick Order Form */}
-              <Card className="border-2">
-                <CardHeader>
-                  <CardTitle>Direct Bestellen</CardTitle>
-                  <CardDescription>Vul het formulier in en wij nemen contact met u op</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleOrderSubmit} className="space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Naam *</Label>
-                        <Input 
-                          required
-                          value={orderForm.name}
-                          onChange={(e) => setOrderForm({...orderForm, name: e.target.value})}
-                          placeholder="Uw volledige naam"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Bedrijfsnaam</Label>
-                        <Input 
-                          value={orderForm.company_name}
-                          onChange={(e) => setOrderForm({...orderForm, company_name: e.target.value})}
-                          placeholder="Uw bedrijfsnaam"
-                        />
-                      </div>
-                    </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>E-mail *</Label>
-                        <Input 
-                          type="email"
-                          required
-                          value={orderForm.email}
-                          onChange={(e) => setOrderForm({...orderForm, email: e.target.value})}
-                          placeholder="uw@email.com"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Telefoon *</Label>
-                        <Input 
-                          required
-                          value={orderForm.phone}
-                          onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})}
-                          placeholder="+597 ..."
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Wachtwoord * (voor uw account)</Label>
-                      <Input 
-                        type="password"
-                        required
-                        minLength={6}
-                        value={orderForm.password}
-                        onChange={(e) => setOrderForm({...orderForm, password: e.target.value})}
-                        placeholder="Minimaal 6 tekens"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label>Selecteer Module(s) *</Label>
-                      <div className="grid gap-2">
-                        {addons.map((addon) => (
-                          <div 
-                            key={addon.id}
-                            className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${
-                              selectedAddons.includes(addon.id) 
-                                ? 'border-primary bg-primary/5' 
-                                : 'border-border hover:border-primary/50'
-                            }`}
-                            onClick={() => toggleAddonSelection(addon.id)}
-                          >
-                            <div className="flex items-center gap-3">
-                              <Checkbox 
-                                checked={selectedAddons.includes(addon.id)}
-                                onCheckedChange={() => {}}
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                              <span className="font-medium">{addon.name}</span>
-                            </div>
-                            <span className="text-primary font-semibold">{formatCurrency(addon.price)}/mnd</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Bericht (optioneel)</Label>
-                      <Textarea 
-                        value={orderForm.message}
-                        onChange={(e) => setOrderForm({...orderForm, message: e.target.value})}
-                        placeholder="Heeft u nog vragen of opmerkingen?"
-                        rows={3}
-                      />
-                    </div>
-
-                    {selectedAddons.length > 0 && (
-                      <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                        <div className="flex justify-between items-center">
-                          <span className="font-medium">Totaal per maand:</span>
-                          <span className="text-2xl font-bold text-primary">{formatCurrency(getTotalPrice())}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <Button type="submit" className="w-full h-12" disabled={submitting || selectedAddons.length === 0}>
-                      {submitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Verzenden...
-                        </>
-                      ) : (
-                        <>
-                          <Check className="w-4 h-4 mr-2" />
-                          Bestelling Versturen
-                        </>
-                      )}
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
+
+      {/* Partners Section */}
+      <section className="py-12 bg-gray-50 border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-gray-500 mb-8">
+            Onze beste partners en meer dan <strong className="text-gray-700">500+ klanten</strong> in Suriname zijn tevreden over onze diensten
+          </p>
+          <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="w-24 h-12 bg-gray-300 rounded flex items-center justify-center">
+                <span className="text-gray-500 text-xs">Partner {i}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-gray-50">
+                <CardContent className="p-8">
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center mb-6">
+                    <feature.icon className="w-7 h-7 text-emerald-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                  <Button variant="link" className="mt-4 p-0 text-emerald-600 hover:text-emerald-700">
+                    Meer info <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Module Features Section */}
+      <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Vereenvoudig uw boekhouding en facturering
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Beheer moeiteloos uw administratie: stel financiële doelen in, volg ze automatisch, automatiseer uw belastingaangifte en houd grip op uw voorraad.
+            </p>
+          </div>
+
+          <div className="space-y-24">
+            {moduleFeatures.map((module, index) => (
+              <div key={module.id} className={`grid lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:grid-flow-dense' : ''}`}>
+                <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
+                  <Badge className={`mb-4 bg-${module.color}-100 text-${module.color}-700 hover:bg-${module.color}-100`}>
+                    {module.title}
+                  </Badge>
+                  <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                    {module.subtitle}
+                  </h3>
+                  <p className="text-gray-600 mb-6 text-lg">
+                    {module.description}
+                  </p>
+                  <ul className="space-y-3">
+                    {module.features.map((feature, i) => (
+                      <li key={i} className="flex items-start gap-3">
+                        <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className={`bg-gradient-to-br from-${module.color}-50 to-${module.color}-100/50 rounded-2xl p-8 ${index % 2 === 1 ? 'lg:col-start-1' : ''}`}>
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`w-10 h-10 bg-${module.color}-500 rounded-lg flex items-center justify-center`}>
+                        <module.icon className="w-5 h-5 text-white" />
+                      </div>
+                      <h4 className="font-semibold text-gray-900">{module.title} Module</h4>
+                    </div>
+                    <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <p className="text-gray-400">Module Preview</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Industry Solutions */}
+      <section className="py-20 bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Verhuur, Beauty, Auto & Hotel – compleet beheer in één platform
+            </h2>
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+              Beheer moeiteloos jouw verhuuractiviteiten, beauty spa afspraken, autodealer processen en hotel- en kamerreserveringen.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {industries.map((industry, index) => (
+              <Card key={index} className="bg-slate-800 border-slate-700 hover:bg-slate-700 transition-colors">
+                <CardContent className="p-6">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4">
+                    <industry.icon className="w-6 h-6 text-emerald-400" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-white mb-2">{industry.title}</h3>
+                  <p className="text-gray-400 text-sm">{industry.description}</p>
+                  <Button variant="link" className="mt-4 p-0 text-emerald-400 hover:text-emerald-300">
+                    Meer info <ArrowRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-r from-emerald-500 to-emerald-600">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+            Facturatie.sr – uw administratie eenvoudig geregeld
+          </h2>
+          <p className="text-xl text-emerald-100 mb-8">
+            Beheer facturering, boekhouding en voorraad in één systeem. Bespaar tijd, verhoog efficiëntie en voldoe moeiteloos aan fiscale verplichtingen.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" variant="secondary" className="h-14 px-8 text-lg" onClick={() => navigate('/prijzen')}>
+              Bekijk Prijzen
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
+            <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-white text-white hover:bg-white/10" onClick={() => setOrderDialogOpen(true)}>
+              Direct Bestellen
+            </Button>
+          </div>
+        </div>
+      </section>
 
       {/* Footer */}
-      <footer className="bg-muted/50 border-t border-border py-12">
+      <footer className="bg-slate-900 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
               <img 
                 src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
-                alt={settings?.company_name || "Facturatie N.V."}
-                className="h-8 w-auto mb-4"
+                alt="Facturatie N.V."
+                className="h-8 w-auto mb-4 brightness-0 invert"
               />
-              <p className="text-muted-foreground max-w-md">
-                {settings?.footer_text || "Modulaire bedrijfssoftware voor ondernemers in Suriname. Kies de modules die passen bij uw bedrijfsvoering."}
+              <p className="text-gray-400 max-w-md">
+                Facturatie.sr is hét Surinaamse platform voor digitale facturatie en bedrijfsadministratie. Speciaal ontwikkeld voor Surinaamse bedrijven.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-4">Links</h4>
+              <h4 className="font-semibold text-white mb-4">Links</h4>
               <ul className="space-y-2">
-                {menuItems.length > 0 ? (
-                  menuItems.filter(item => item.link !== '/').slice(0, 4).map((item, index) => (
-                    <li key={index}>
-                      <Link 
-                        to={item.link}
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        {item.label}
-                      </Link>
-                    </li>
-                  ))
-                ) : (
-                  <>
-                    <li><a href="#features" className="text-muted-foreground hover:text-foreground">Features</a></li>
-                    <li><a href="#pricing" className="text-muted-foreground hover:text-foreground">Prijzen</a></li>
-                    <li><a href="#about" className="text-muted-foreground hover:text-foreground">Over Ons</a></li>
-                    <li><a href="#contact" className="text-muted-foreground hover:text-foreground">Contact</a></li>
-                  </>
-                )}
+                <li><Link to="/" className="text-gray-400 hover:text-white transition-colors">Home</Link></li>
+                <li><Link to="/prijzen" className="text-gray-400 hover:text-white transition-colors">Prijzen</Link></li>
+                <li><Link to="/over-ons" className="text-gray-400 hover:text-white transition-colors">Over Ons</Link></li>
+                <li><Link to="/login" className="text-gray-400 hover:text-white transition-colors">Aanmelden</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-foreground mb-4">Juridisch</h4>
+              <h4 className="font-semibold text-white mb-4">Juridisch</h4>
               <ul className="space-y-2">
-                <li>
-                  <button 
-                    onClick={() => {
-                      setActiveModalContent(termsSection);
-                      setTermsModalOpen(true);
-                    }}
-                    className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-                  >
-                    <FileText className="w-4 h-4" />
-                    Algemene Voorwaarden
-                  </button>
-                </li>
-                <li>
-                  <button 
-                    onClick={() => {
-                      setActiveModalContent(privacySection);
-                      setPrivacyModalOpen(true);
-                    }}
-                    className="text-muted-foreground hover:text-foreground flex items-center gap-1"
-                  >
-                    <Lock className="w-4 h-4" />
-                    Privacybeleid
-                  </button>
-                </li>
+                <li><Link to="/voorwaarden" className="text-gray-400 hover:text-white transition-colors">Algemene Voorwaarden</Link></li>
+                <li><Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacybeleid</Link></li>
               </ul>
+              <div className="mt-6">
+                <h4 className="font-semibold text-white mb-2">Contact</h4>
+                <p className="text-gray-400 flex items-center gap-2">
+                  <Phone className="w-4 h-4" /> +597 893-4982
+                </p>
+              </div>
             </div>
           </div>
-          <div className="border-t border-border mt-8 pt-8 text-center text-muted-foreground">
-            <p>© {new Date().getFullYear()} {settings?.company_name || "Facturatie N.V."}. Alle rechten voorbehouden.</p>
+          <div className="border-t border-slate-800 mt-12 pt-8 text-center text-gray-500">
+            <p>© {new Date().getFullYear()} Facturatie N.V. Alle rechten voorbehouden.</p>
           </div>
         </div>
       </footer>
@@ -764,8 +633,8 @@ export default function LandingPage() {
                     key={addon.id}
                     className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-colors ${
                       selectedAddons.includes(addon.id) 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:border-primary/50'
+                        ? 'border-emerald-500 bg-emerald-50' 
+                        : 'border-gray-200 hover:border-emerald-300'
                     }`}
                     onClick={() => toggleAddonSelection(addon.id)}
                   >
@@ -777,31 +646,21 @@ export default function LandingPage() {
                       <div>
                         <span className="font-medium">{addon.name}</span>
                         {addon.description && (
-                          <p className="text-xs text-muted-foreground">{addon.description}</p>
+                          <p className="text-xs text-gray-500">{addon.description}</p>
                         )}
                       </div>
                     </div>
-                    <span className="text-primary font-semibold whitespace-nowrap">{formatCurrency(addon.price)}/mnd</span>
+                    <span className="text-emerald-600 font-semibold whitespace-nowrap">{formatCurrency(addon.price)}/mnd</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Bericht (optioneel)</Label>
-              <Textarea 
-                value={orderForm.message}
-                onChange={(e) => setOrderForm({...orderForm, message: e.target.value})}
-                placeholder="Heeft u nog vragen of opmerkingen?"
-                rows={3}
-              />
-            </div>
-
             {selectedAddons.length > 0 && (
-              <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
+              <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-200">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">Totaal per maand:</span>
-                  <span className="text-2xl font-bold text-primary">{formatCurrency(getTotalPrice())}</span>
+                  <span className="text-2xl font-bold text-emerald-600">{formatCurrency(getTotalPrice())}</span>
                 </div>
               </div>
             )}
@@ -810,7 +669,7 @@ export default function LandingPage() {
               <Button type="button" variant="outline" onClick={() => setOrderDialogOpen(false)}>
                 Annuleren
               </Button>
-              <Button type="submit" disabled={submitting || selectedAddons.length === 0}>
+              <Button type="submit" disabled={submitting || selectedAddons.length === 0} className="bg-emerald-500 hover:bg-emerald-600">
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -825,68 +684,6 @@ export default function LandingPage() {
               </Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Terms Modal */}
-      <Dialog open={termsModalOpen} onOpenChange={setTermsModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{activeModalContent?.title || "Algemene Voorwaarden"}</DialogTitle>
-            {activeModalContent?.subtitle && (
-              <DialogDescription>{activeModalContent.subtitle}</DialogDescription>
-            )}
-          </DialogHeader>
-          <div className="prose prose-sm max-w-none">
-            {activeModalContent?.content?.split('\n\n').map((paragraph, index) => {
-              if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-                return <h3 key={index} className="font-semibold mt-4">{paragraph.replace(/\*\*/g, '')}</h3>;
-              }
-              if (paragraph.includes('**')) {
-                const parts = paragraph.split('**');
-                return (
-                  <p key={index}>
-                    {parts.map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part)}
-                  </p>
-                );
-              }
-              return <p key={index}>{paragraph}</p>;
-            })}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setTermsModalOpen(false)}>Sluiten</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Privacy Modal */}
-      <Dialog open={privacyModalOpen} onOpenChange={setPrivacyModalOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{activeModalContent?.title || "Privacybeleid"}</DialogTitle>
-            {activeModalContent?.subtitle && (
-              <DialogDescription>{activeModalContent.subtitle}</DialogDescription>
-            )}
-          </DialogHeader>
-          <div className="prose prose-sm max-w-none">
-            {activeModalContent?.content?.split('\n\n').map((paragraph, index) => {
-              if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-                return <h3 key={index} className="font-semibold mt-4">{paragraph.replace(/\*\*/g, '')}</h3>;
-              }
-              if (paragraph.includes('**')) {
-                const parts = paragraph.split('**');
-                return (
-                  <p key={index}>
-                    {parts.map((part, i) => i % 2 === 1 ? <strong key={i}>{part}</strong> : part)}
-                  </p>
-                );
-              }
-              return <p key={index}>{paragraph}</p>;
-            })}
-          </div>
-          <DialogFooter>
-            <Button onClick={() => setPrivacyModalOpen(false)}>Sluiten</Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
