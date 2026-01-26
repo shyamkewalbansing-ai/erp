@@ -76,24 +76,13 @@ export default function LandingPage() {
 
   const loadData = async () => {
     try {
-      const [sectionsRes, settingsRes, addonsRes, homePageRes] = await Promise.all([
+      const [sectionsRes, settingsRes, addonsRes] = await Promise.all([
         getLandingSections(),
         getLandingSettings(),
-        getPublicAddons(),
-        api.get('/public/cms/page/home').catch(() => ({ data: null }))
+        getPublicAddons()
       ]);
       
-      // Use CMS home page sections if available, otherwise fall back to landing sections
-      if (homePageRes.data?.sections?.length > 0) {
-        const cmsSections = homePageRes.data.sections.map(s => ({
-          ...s,
-          section_type: s.type
-        }));
-        setSections(cmsSections);
-      } else {
-        setSections(sectionsRes.data || []);
-      }
-      
+      setSections(sectionsRes.data || []);
       setSettings(settingsRes.data);
       setAddons(addonsRes.data || []);
     } catch (error) {
