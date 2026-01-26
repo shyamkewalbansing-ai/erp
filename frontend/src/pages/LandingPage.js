@@ -120,22 +120,27 @@ export default function LandingPage() {
         addon_ids: selectedAddons
       });
       
-      // Auto-login: Store token and redirect to dashboard
+      // Auto-login: Store token and setup axios headers
       if (response.data?.token) {
         localStorage.setItem('token', response.data.token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         toast.success('Uw account is aangemaakt! U wordt nu ingelogd...');
         
-        // Small delay to show success message
+        // Reset form
+        setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '', password: '' });
+        setSelectedAddons([]);
+        setOrderDialogOpen(false);
+        
+        // Navigate to Mijn Modules page
         setTimeout(() => {
           window.location.href = '/app/mijn-modules';
-        }, 1500);
+        }, 1000);
       } else {
         toast.success('Uw bestelling is ontvangen!');
         setOrderDialogOpen(false);
+        setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '', password: '' });
+        setSelectedAddons([]);
       }
-      
-      setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '', password: '' });
-      setSelectedAddons([]);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Er is een fout opgetreden');
     } finally {
