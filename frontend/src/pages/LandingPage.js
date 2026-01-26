@@ -381,8 +381,190 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Modules Section - From Database */}
+      {/* Module Features Section - Detailed */}
       <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+              Vereenvoudig uw boekhouding en facturering
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Beheer moeiteloos uw administratie: stel financiële doelen in, volg ze automatisch, automatiseer uw belastingaangifte en houd grip op uw voorraad.
+            </p>
+          </div>
+
+          {/* Boekhouding */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
+            <div>
+              <Badge className="mb-4 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Boekhouding</Badge>
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                Vereenvoudig uw boekhouding en facturering
+              </h3>
+              <p className="text-gray-600 mb-6 text-lg">
+                Beheer moeiteloos uw administratie: stel financiële doelen in, volg ze automatisch, automatiseer uw belastingaangifte en houd grip op uw voorraad.
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Vereenvoudig uw boekhouding en facturering</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Neem de controle over uw voorraad</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Breng uw project van voorstel tot betaling</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-2xl p-8">
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+                    <BarChart3 className="w-5 h-5 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Boekhouding Module</h4>
+                </div>
+                <img 
+                  src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=600&h=300&fit=crop" 
+                  alt="Boekhouding Dashboard" 
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* HRM */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center mb-24 lg:grid-flow-dense">
+            <div className="lg:col-start-2">
+              <Badge className="mb-4 bg-blue-100 text-blue-700 hover:bg-blue-100">HRM</Badge>
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                Alles wat je nodig hebt voor succesvol HRM
+              </h3>
+              <p className="text-gray-600 mb-6 text-lg">
+                Deze functie maakt het voor een bedrijf eenvoudiger om de persoonlijke, bedrijfs- en bankgegevens van werknemers bij te houden.
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Belangrijke zaken van werknemers beheren</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Help uw medewerkers productiever te worden</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Beheer salarissen in slechts een paar klikken</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-8 lg:col-start-1">
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900">HRM Module</h4>
+                </div>
+                <img 
+                  src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=600&h=300&fit=crop" 
+                  alt="HRM Dashboard" 
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Projecten */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
+            <div>
+              <Badge className="mb-4 bg-purple-100 text-purple-700 hover:bg-purple-100">Projecten</Badge>
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                Beheer al je projecten eenvoudig
+              </h3>
+              <p className="text-gray-600 mb-6 text-lg">
+                Heb je een groot team of werk je aan meerdere projecten tegelijk? Beheer taakprioriteiten en creëer extra werkruimtes.
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Kanban Taakbeheer</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Mijlpalen creëren en subtaken toewijzen</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-purple-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Oplossen van bugs</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-2xl p-8">
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+                    <Briefcase className="w-5 h-5 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Projecten Module</h4>
+                </div>
+                <img 
+                  src="https://images.unsplash.com/photo-1507925921958-8a62f3d1a50d?w=600&h=300&fit=crop" 
+                  alt="Projecten Dashboard" 
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Leads & CRM */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center lg:grid-flow-dense">
+            <div className="lg:col-start-2">
+              <Badge className="mb-4 bg-orange-100 text-orange-700 hover:bg-orange-100">Leads & CRM</Badge>
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                Beheer uw leads beter. Converteer sneller
+              </h3>
+              <p className="text-gray-600 mb-6 text-lg">
+                Verhoog uw omzet met een effectieve tool voor leadmanagement. Bepaal de waarde van leads en ontwikkel veelbelovende leads met gemak.
+              </p>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Beheer al je leads onder één dak</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Kostenbesheerste Leadaanpak</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                  <span className="text-gray-700">Ontvang Maatwerkrapporten</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-2xl p-8 lg:col-start-1">
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-orange-500 rounded-lg flex items-center justify-center">
+                    <Target className="w-5 h-5 text-white" />
+                  </div>
+                  <h4 className="font-semibold text-gray-900">Leads & CRM Module</h4>
+                </div>
+                <img 
+                  src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=300&fit=crop" 
+                  alt="CRM Dashboard" 
+                  className="w-full h-48 object-cover rounded-lg"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Modules Section - From Database */}
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
