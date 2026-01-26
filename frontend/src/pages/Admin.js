@@ -745,6 +745,10 @@ server {
             )}
           </TabsTrigger>
           <TabsTrigger value="domains">Domeinen</TabsTrigger>
+          <TabsTrigger value="website">
+            <Globe className="w-4 h-4 mr-1" />
+            Website
+          </TabsTrigger>
         </TabsList>
 
         {/* Customers Tab */}
