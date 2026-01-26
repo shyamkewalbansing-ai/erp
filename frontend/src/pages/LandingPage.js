@@ -62,7 +62,8 @@ export default function LandingPage() {
     email: '',
     phone: '',
     company_name: '',
-    message: ''
+    message: '',
+    password: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
