@@ -50,6 +50,7 @@ export default function LandingPage() {
   const [sections, setSections] = useState([]);
   const [settings, setSettings] = useState(null);
   const [addons, setAddons] = useState([]);
+  const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
