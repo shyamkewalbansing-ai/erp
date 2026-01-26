@@ -97,7 +97,9 @@ export default function Layout() {
 
   // Get visible nav items based on active add-ons
   const getVisibleNavItems = () => {
-    return vastgoedNavItems.filter(item => hasAddon(item.addon));
+    const vastgoedItems = vastgoedNavItems.filter(item => hasAddon(item.addon));
+    const hrmItems = hrmNavItems.filter(item => hasAddon(item.addon));
+    return [...vastgoedItems, ...hrmItems];
   };
 
   // Auto-expand settings menu if on settings or subscription page
