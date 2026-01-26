@@ -232,6 +232,9 @@ function App() {
             <Route path="werknemers" element={
               <SubscriptionRoute><Werknemers /></SubscriptionRoute>
             } />
+            <Route path="hrm" element={
+              <SubscriptionRoute><HRM /></SubscriptionRoute>
+            } />
           </Route>
           
           {/* Legacy routes - redirect to /app prefix */}
