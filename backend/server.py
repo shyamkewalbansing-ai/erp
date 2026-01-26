@@ -5997,26 +5997,40 @@ async def seed_default_landing_page():
 # ==================== SEED DEFAULT ADD-ONS ====================
 
 async def seed_default_addons():
-    """Seed the default Vastgoed Beheer add-on if it doesn't exist"""
-    existing = await db.addons.find_one({"slug": "vastgoed_beheer"}, {"_id": 0})
-    if not existing:
-        addon_id = str(uuid.uuid4())
-        now = datetime.now(timezone.utc).isoformat()
-        
+    """Seed the default add-ons if they don't exist"""
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Vastgoed Beheer
+    existing_vastgoed = await db.addons.find_one({"slug": "vastgoed_beheer"}, {"_id": 0})
+    if not existing_vastgoed:
         addon_doc = {
-            "id": addon_id,
+            "id": str(uuid.uuid4()),
             "name": "Vastgoed Beheer",
             "slug": "vastgoed_beheer",
             "description": "Complete vastgoedbeheer module met huurders, appartementen, contracten, betalingen, facturen, leningen, borg, kasgeld, onderhoud en werknemers.",
             "price": 3500.0,
             "is_active": True,
+            "category": "vastgoed",
             "created_at": now
         }
-        
         await db.addons.insert_one(addon_doc)
         logger.info("Default 'Vastgoed Beheer' add-on created")
     
-    return existing or await db.addons.find_one({"slug": "vastgoed_beheer"}, {"_id": 0})
+    # HRM Module
+    existing_hrm = await db.addons.find_one({"slug": "hrm"}, {"_id": 0})
+    if not existing_hrm:
+        hrm_doc = {
+            "id": str(uuid.uuid4()),
+            "name": "HRM",
+            "slug": "hrm",
+            "description": "Complete HRM module voor personeelsbeheer. Werknemers registratie, verlofaanvragen, afdelingen, salarisoverzicht en meer.",
+            "price": 1500.0,
+            "is_active": True,
+            "category": "hr",
+            "created_at": now
+        }
+        await db.addons.insert_one(hrm_doc)
+        logger.info("Default 'HRM' add-on created")
 
 async def seed_default_cms_pages():
     """Seed default CMS pages if they don't exist"""
