@@ -107,6 +107,10 @@ export default function LandingPage() {
       toast.error('Selecteer minimaal één module');
       return;
     }
+    if (!orderForm.password || orderForm.password.length < 6) {
+      toast.error('Wachtwoord moet minimaal 6 tekens zijn');
+      return;
+    }
     
     setSubmitting(true);
     try {
@@ -116,7 +120,7 @@ export default function LandingPage() {
       });
       toast.success('Uw bestelling is ontvangen! Wij nemen zo snel mogelijk contact met u op.');
       setOrderDialogOpen(false);
-      setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '' });
+      setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '', password: '' });
       setSelectedAddons([]);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Er is een fout opgetreden');
