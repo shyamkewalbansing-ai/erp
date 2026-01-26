@@ -401,11 +401,11 @@ export default function LandingPage() {
       <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Vereenvoudig uw boekhouding en facturering
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4" data-testid="boekhouding-section-title">
+              {getCmsSectionContent('boekhouding', 'title', 'Boekhouding')}
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Beheer moeiteloos uw administratie: stel financiële doelen in, volg ze automatisch, automatiseer uw belastingaangifte en houd grip op uw voorraad.
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto" data-testid="boekhouding-section-content">
+              {getCmsSectionContent('boekhouding', 'content', 'Vereenvoudig uw boekhouding en facturering. Beheer moeiteloos uw administratie.').split('.')[0]}.
             </p>
           </div>
 
@@ -414,10 +414,10 @@ export default function LandingPage() {
             <div>
               <Badge className="mb-4 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">Boekhouding</Badge>
               <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                Vereenvoudig uw boekhouding en facturering
+                {getCmsSectionContent('boekhouding', 'title', 'Boekhouding')}
               </h3>
               <p className="text-gray-600 mb-6 text-lg">
-                Beheer moeiteloos uw administratie: stel financiële doelen in, volg ze automatisch, automatiseer uw belastingaangifte en houd grip op uw voorraad.
+                {getCmsSectionContent('boekhouding', 'content', 'Vereenvoudig uw boekhouding en facturering. Beheer moeiteloos uw administratie.')}
               </p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
