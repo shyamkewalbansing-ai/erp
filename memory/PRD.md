@@ -1,85 +1,79 @@
 # Facturatie N.V. - Product Requirements Document
 
 ## Original Problem Statement
-ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons en CMS beheer.
+ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en AI chatbot.
 
 ## Architecture & Tech Stack
 - **Backend**: FastAPI (Python) met JWT authenticatie
-- **Frontend**: React met Shadcn UI, lazy loading, code splitting
+- **Frontend**: React met Shadcn UI, lazy loading
 - **Database**: MongoDB
+- **AI**: OpenAI GPT-4o via Emergent LLM Key
 - **Styling**: Tailwind CSS
 - **Primary Color**: #0caf60 (groen)
 
 ## What's Been Implemented (26 Jan 2026)
 
-### Nieuwe Publieke Website ✅
-- **Landing Page** - Moderne hero met ERP dashboard preview
-- **Prijzen Page** (/prijzen) - Module selectie met maandelijks/jaarlijks toggle
-- **Over Ons Page** (/over-ons) - Missie, waarden, team, statistieken
-- **Algemene Voorwaarden** (/voorwaarden) - Volledige juridische tekst
-- **Privacybeleid** (/privacy) - Compleet privacybeleid
+### AI Chatbot Assistent ✅ NEW
+- [x] OpenAI GPT-4o integratie via Emergent LLM Key
+- [x] Publieke chatbot endpoint: POST /api/public/chat
+- [x] ChatWidget component op alle publieke pagina's
+- [x] Kennis over alle modules, prijzen en diensten
+- [x] Quick questions voor snelle hulp
+- [x] Chat sessie opslag voor analytics
 
-### CMS Beheer via Admin Dashboard ✅
-- **Website tab** in Admin met alle pagina's
-- **Bewerken knop** voor elke pagina
-- **Preview knop** om pagina's te bekijken
-- **Extra Pagina's** sectie voor custom pages
-- **Sectie editor** met drag & drop
+### Verbeterde Publieke Pagina's ✅ NEW
+- [x] **Landing Page** - Module kaarten met iconen, partner logos
+- [x] **Voorwaarden** - Mooi design met genummerde artikelen en highlights
+- [x] **Privacy** - Blauw kleurschema, SSL/GDPR highlights
+
+### Website Beheer in Admin ✅
+- [x] Website tab in Admin dashboard
+- [x] Pagina overzicht met bewerken/preview knoppen
+- [x] Sectie editor met drag & drop
 
 ### Snelheidsoptimalisaties ✅
-- **Lazy loading** - Alle niet-kritieke pagina's lazy loaded
-- **Code splitting** - App splitst in kleinere chunks
-- **API caching** - 30 seconden cache voor publieke endpoints
-- **Preconnect/Prefetch** - Fonts en externe resources
-- **Critical CSS** - Inline voor snelle eerste render
-- **Optimized index.html** - Preload, DNS prefetch
-
-### Post-Order Auto-Login Flow ✅
-- Klant bestelt → automatisch account
-- JWT token voor auto-login
-- Redirect naar "Mijn Modules"
-- Superadmin goedkeuring
+- [x] Lazy loading voor alle niet-kritieke pagina's
+- [x] Code splitting
+- [x] API caching (30 sec)
+- [x] Preconnect/Prefetch
 
 ## Publieke Routes
 | Route | Pagina |
 |-------|--------|
-| / | Home |
-| /prijzen | Prijzen |
-| /over-ons | Over Ons |
-| /voorwaarden | Voorwaarden |
-| /privacy | Privacy |
-| /login | Login |
+| / | Home + Chat |
+| /prijzen | Prijzen + Chat |
+| /over-ons | Over Ons + Chat |
+| /voorwaarden | Voorwaarden + Chat |
+| /privacy | Privacy + Chat |
 
-## Admin Routes
-| Tab | Functie |
-|-----|---------|
-| Klanten | Klantenbeheer |
-| Betalingen | Overzicht |
-| Add-ons | Module beheer |
-| Domeinen | DNS management |
-| Website | **CMS Editor** |
+## API Endpoints
+| Endpoint | Functie |
+|----------|---------|
+| POST /api/public/chat | AI Chatbot |
+| GET /api/public/addons | Module lijst |
+| POST /api/public/orders | Bestelling + account |
 
 ## Test Credentials
 - **Superadmin**: admin@facturatie.sr / admin123
 
+## AI Chatbot Features
+- Beantwoordt vragen over alle modules
+- Geeft prijsinformatie (SRD)
+- Verwijst naar prijzenpagina
+- Moedigt registratie aan
+- 24/7 beschikbaar
+
 ## Prioritized Backlog
 
 ### P1 (High Priority)
-- [ ] CMS content direct vanuit database laden in pagina's
+- [ ] CMS content direct bewerkbaar via admin
+- [ ] Partner logos uploaden/beheren
+- [ ] Module afbeeldingen uploaden
+
+### P2 (Medium Priority)
 - [ ] HRM Module frontend uitbouwen
 - [ ] server.py refactoring
 
-### P2 (Medium Priority)
-- [ ] E-mail herinneringen
-- [ ] Export naar Excel/CSV
-- [ ] update.sh script
-
-## Performance Optimizations Done
-1. React.lazy() voor alle secundaire pagina's
-2. Suspense met PageLoader component
-3. API response caching (30 sec TTL)
-4. Preconnect naar fonts.googleapis.com
-5. DNS prefetch naar customer-assets
-6. Critical CSS inline in HTML
-7. Async script loading
-8. memo() voor component caching
+### P3 (Nice to Have)
+- [ ] Chat geschiedenis per sessie
+- [ ] Analytics dashboard voor chats
