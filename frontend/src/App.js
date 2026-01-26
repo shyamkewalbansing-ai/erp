@@ -236,6 +236,11 @@ function App() {
             <Route path="hrm" element={
               <SubscriptionRoute><HRM /></SubscriptionRoute>
             } />
+            
+            {/* Mijn Modules - customer can see their pending and active modules */}
+            <Route path="mijn-modules" element={
+              <CustomerOnlyRoute><MijnModules /></CustomerOnlyRoute>
+            } />
           </Route>
           
           {/* Legacy routes - redirect to /app prefix */}

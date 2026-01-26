@@ -25,7 +25,8 @@ import {
   Moon,
   Sun,
   Layers,
-  UserCog
+  UserCog,
+  Boxes
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
