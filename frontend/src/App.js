@@ -279,6 +279,7 @@ function App() {
           {/* 404 - redirect to landing */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        </Suspense>
         <Toaster richColors position="top-right" />
       </BrowserRouter>
     </AuthProvider>
