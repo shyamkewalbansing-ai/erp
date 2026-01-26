@@ -1,13 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import api from '../lib/api';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Textarea } from '../components/ui/textarea';
 import { Badge } from '../components/ui/badge';
 import { Checkbox } from '../components/ui/checkbox';
 import {
@@ -22,36 +20,56 @@ import {
   ArrowRight, 
   Check, 
   Shield, 
-  Zap, 
-  Package, 
   Headphones,
-  Mail,
   Phone,
-  MapPin,
   Loader2,
-  Sparkles,
-  ChevronRight,
   Menu,
   X,
   Building2,
   Users,
-  FileText,
   BarChart3,
-  Clock,
-  Globe,
-  Lock,
-  Star,
   CheckCircle,
   Briefcase,
   Target,
   TrendingUp,
   Calendar,
-  DollarSign,
   Settings,
-  Layers
+  Sparkles
 } from 'lucide-react';
 
+// Lazy load ChatWidget
+const ChatWidget = lazy(() => import('../components/ChatWidget'));
+
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+
+// Memoized components for performance
+const FeatureCard = memo(({ icon: Icon, title, description }) => (
+  <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-gray-50">
+    <CardContent className="p-8">
+      <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center mb-6">
+        <Icon className="w-7 h-7 text-emerald-600" />
+      </div>
+      <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
+      <p className="text-gray-600 leading-relaxed">{description}</p>
+    </CardContent>
+  </Card>
+));
+
+FeatureCard.displayName = 'FeatureCard';
+
+const IndustryCard = memo(({ icon: Icon, title, description }) => (
+  <Card className="bg-slate-800 border-slate-700 hover:bg-slate-700 transition-colors">
+    <CardContent className="p-6">
+      <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4">
+        <Icon className="w-6 h-6 text-emerald-400" />
+      </div>
+      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+      <p className="text-gray-400 text-sm">{description}</p>
+    </CardContent>
+  </Card>
+));
+
+IndustryCard.displayName = 'IndustryCard';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -68,7 +86,6 @@ export default function LandingPage() {
     email: '',
     phone: '',
     company_name: '',
-    message: '',
     password: ''
   });
   const [submitting, setSubmitting] = useState(false);
@@ -123,16 +140,13 @@ export default function LandingPage() {
         axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         toast.success('Uw account is aangemaakt! U wordt nu ingelogd...');
         
-        setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '', password: '' });
+        setOrderForm({ name: '', email: '', phone: '', company_name: '', password: '' });
         setSelectedAddons([]);
         setOrderDialogOpen(false);
         
         setTimeout(() => {
           window.location.href = '/app/mijn-modules';
         }, 1000);
-      } else {
-        toast.success('Uw bestelling is ontvangen!');
-        setOrderDialogOpen(false);
       }
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Er is een fout opgetreden');
@@ -182,61 +196,19 @@ export default function LandingPage() {
     }
   ];
 
-  // Module features
-  const moduleFeatures = [
-    {
-      id: 'boekhouding',
-      title: 'Boekhouding',
-      subtitle: 'Vereenvoudig uw boekhouding en facturering',
-      description: 'Beheer moeiteloos uw administratie: stel financiële doelen in, volg ze automatisch, automatiseer uw belastingaangifte en houd grip op uw voorraad.',
-      icon: BarChart3,
-      color: 'emerald',
-      features: [
-        'Vereenvoudig uw boekhouding en facturering',
-        'Neem de controle over uw voorraad',
-        'Breng uw project van voorstel tot betaling'
-      ]
-    },
-    {
-      id: 'hrm',
-      title: 'HRM',
-      subtitle: 'Alles wat je nodig hebt voor succesvol HRM',
-      description: 'Deze functie maakt het voor een bedrijf eenvoudiger om de persoonlijke, bedrijfs- en bankgegevens van werknemers bij te houden.',
-      icon: Users,
-      color: 'blue',
-      features: [
-        'Belangrijke zaken van werknemers beheren',
-        'Help uw medewerkers productiever te worden',
-        'Beheer salarissen in slechts een paar klikken'
-      ]
-    },
-    {
-      id: 'projecten',
-      title: 'Projecten',
-      subtitle: 'Beheer al je projecten eenvoudig',
-      description: 'Heb je een groot team of werk je aan meerdere projecten tegelijk? Beheer taakprioriteiten en creëer extra werkruimtes.',
-      icon: Briefcase,
-      color: 'purple',
-      features: [
-        'Kanban Taakbeheer',
-        'Mijlpalen creëren en subtaken toewijzen',
-        'Oplossen van bugs'
-      ]
-    },
-    {
-      id: 'leads',
-      title: 'Leads & CRM',
-      subtitle: 'Beheer uw leads beter. Converteer sneller',
-      description: 'Verhoog uw omzet met een effectieve tool voor leadmanagement. Bepaal de waarde van leads en ontwikkel veelbelovende leads met gemak.',
-      icon: Target,
-      color: 'orange',
-      features: [
-        'Beheer al je leads onder één dak',
-        'Kostenbesheerste Leadaanpak',
-        'Ontvang Maatwerkrapporten'
-      ]
-    }
-  ];
+  // Module features with images from addons
+  const getModuleIcon = (slug) => {
+    const icons = {
+      'boekhouding': BarChart3,
+      'hrm': Users,
+      'projecten': Briefcase,
+      'leads': Target,
+      'crm': Target,
+      'vastgoed_beheer': Building2,
+      'verhuur': Building2
+    };
+    return icons[slug] || BarChart3;
+  };
 
   // Industry solutions
   const industries = [
@@ -246,13 +218,22 @@ export default function LandingPage() {
     { icon: Calendar, title: 'Hotel & Kamers', description: 'Complete oplossing die hoteloperaties vereenvoudigt.' }
   ];
 
+  // Partner logos (using placeholder images)
+  const partners = [
+    { name: 'Bedrijf A', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+A' },
+    { name: 'Bedrijf B', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+B' },
+    { name: 'Bedrijf C', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+C' },
+    { name: 'Bedrijf D', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+D' },
+    { name: 'Bedrijf E', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+E' },
+    { name: 'Bedrijf F', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+F' }
+  ];
+
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
               <img 
                 src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
@@ -261,16 +242,14 @@ export default function LandingPage() {
               />
             </Link>
 
-            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              <Link to="/" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Home</Link>
+              <Link to="/" className="text-sm font-medium text-emerald-600">Home</Link>
               <Link to="/prijzen" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Prijzen</Link>
               <Link to="/over-ons" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Over Ons</Link>
               <Link to="/voorwaarden" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Voorwaarden</Link>
               <Link to="/privacy" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Privacy</Link>
             </div>
 
-            {/* CTA Buttons */}
             <div className="hidden md:flex items-center gap-3">
               <Button variant="ghost" onClick={() => navigate('/login')} className="text-gray-700">
                 Inloggen
@@ -280,21 +259,16 @@ export default function LandingPage() {
               </Button>
             </div>
 
-            {/* Mobile menu button */}
-            <button
-              className="md:hidden p-2"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
+            <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-b border-gray-100">
             <div className="px-4 py-4 space-y-3">
-              <Link to="/" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+              <Link to="/" className="block text-emerald-600 py-2 font-medium" onClick={() => setMobileMenuOpen(false)}>Home</Link>
               <Link to="/prijzen" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</Link>
               <Link to="/over-ons" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</Link>
               <Link to="/voorwaarden" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Voorwaarden</Link>
@@ -382,10 +356,14 @@ export default function LandingPage() {
           <p className="text-center text-gray-500 mb-8">
             Onze beste partners en meer dan <strong className="text-gray-700">500+ klanten</strong> in Suriname zijn tevreden over onze diensten
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 opacity-60">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="w-24 h-12 bg-gray-300 rounded flex items-center justify-center">
-                <span className="text-gray-500 text-xs">Partner {i}</span>
+          <div className="flex flex-wrap justify-center items-center gap-8">
+            {partners.map((partner, i) => (
+              <div key={i} className="grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                <img 
+                  src={partner.logo} 
+                  alt={partner.name}
+                  className="h-10 w-auto"
+                />
               </div>
             ))}
           </div>
@@ -397,72 +375,55 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-gray-50">
-                <CardContent className="p-8">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center mb-6">
-                    <feature.icon className="w-7 h-7 text-emerald-600" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-                  <Button variant="link" className="mt-4 p-0 text-emerald-600 hover:text-emerald-700">
-                    Meer info <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </CardContent>
-              </Card>
+              <FeatureCard key={index} {...feature} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Module Features Section */}
+      {/* Modules Section - From Database */}
       <section className="py-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Vereenvoudig uw boekhouding en facturering
+              Onze Modules
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Beheer moeiteloos uw administratie: stel financiële doelen in, volg ze automatisch, automatiseer uw belastingaangifte en houd grip op uw voorraad.
+              Kies de modules die het beste bij uw bedrijf passen
             </p>
           </div>
 
-          <div className="space-y-24">
-            {moduleFeatures.map((module, index) => (
-              <div key={module.id} className={`grid lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:grid-flow-dense' : ''}`}>
-                <div className={index % 2 === 1 ? 'lg:col-start-2' : ''}>
-                  <Badge className={`mb-4 bg-${module.color}-100 text-${module.color}-700 hover:bg-${module.color}-100`}>
-                    {module.title}
-                  </Badge>
-                  <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                    {module.subtitle}
-                  </h3>
-                  <p className="text-gray-600 mb-6 text-lg">
-                    {module.description}
-                  </p>
-                  <ul className="space-y-3">
-                    {module.features.map((feature, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-gray-700">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className={`bg-gradient-to-br from-${module.color}-50 to-${module.color}-100/50 rounded-2xl p-8 ${index % 2 === 1 ? 'lg:col-start-1' : ''}`}>
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className={`w-10 h-10 bg-${module.color}-500 rounded-lg flex items-center justify-center`}>
-                        <module.icon className="w-5 h-5 text-white" />
-                      </div>
-                      <h4 className="font-semibold text-gray-900">{module.title} Module</h4>
-                    </div>
-                    <div className="h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-                      <p className="text-gray-400">Module Preview</p>
-                    </div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {addons.map((addon) => {
+              const Icon = getModuleIcon(addon.slug);
+              return (
+                <Card key={addon.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <div className="h-40 bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
+                    <Icon className="w-16 h-16 text-white/80" />
                   </div>
-                </div>
-              </div>
-            ))}
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{addon.name}</h3>
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{addon.description || 'Beheer module voor uw bedrijf'}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl font-bold text-emerald-600">{formatCurrency(addon.price)}<span className="text-sm text-gray-500 font-normal">/mnd</span></span>
+                      <Button size="sm" variant="outline" onClick={() => {
+                        setSelectedAddons([addon.id]);
+                        setOrderDialogOpen(true);
+                      }}>
+                        Bestellen
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          <div className="text-center mt-12">
+            <Button size="lg" onClick={() => navigate('/prijzen')} className="bg-emerald-500 hover:bg-emerald-600">
+              Bekijk alle prijzen
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </Button>
           </div>
         </div>
       </section>
@@ -481,18 +442,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {industries.map((industry, index) => (
-              <Card key={index} className="bg-slate-800 border-slate-700 hover:bg-slate-700 transition-colors">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4">
-                    <industry.icon className="w-6 h-6 text-emerald-400" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{industry.title}</h3>
-                  <p className="text-gray-400 text-sm">{industry.description}</p>
-                  <Button variant="link" className="mt-4 p-0 text-emerald-400 hover:text-emerald-300">
-                    Meer info <ArrowRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </CardContent>
-              </Card>
+              <IndustryCard key={index} {...industry} />
             ))}
           </div>
         </div>
@@ -561,6 +511,11 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Chat Widget */}
+      <Suspense fallback={null}>
+        <ChatWidget />
+      </Suspense>
 
       {/* Order Dialog */}
       <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
