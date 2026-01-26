@@ -17,9 +17,6 @@ export default function ModulesPage() {
   
   // Selection state
   const [selectedAddons, setSelectedAddons] = useState([]);
-  const [workspaces, setWorkspaces] = useState(0);
-  const [users, setUsers] = useState(0);
-  const [showExtensions, setShowExtensions] = useState(false);
 
   useEffect(() => {
     loadData();
