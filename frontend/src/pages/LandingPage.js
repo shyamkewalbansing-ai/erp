@@ -180,17 +180,12 @@ export default function LandingPage() {
               />
             </Link>
 
-            {/* Desktop Navigation - All from CMS */}
+            {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
-              {menuItems.map((item, index) => (
-                <Link 
-                  key={index}
-                  to={item.link === '/' ? '/' : `/pagina${item.link}`}
-                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ))}
+              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
+              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Prijzen</a>
+              <a href="#about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Over Ons</a>
+              <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
             </div>
 
             {/* CTA Buttons */}
@@ -213,20 +208,14 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Mobile Navigation - All from CMS */}
+        {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-background border-b border-border">
             <div className="px-4 py-4 space-y-3">
-              {menuItems.map((item, index) => (
-                <Link 
-                  key={index}
-                  to={item.link === '/' ? '/' : `/pagina${item.link}`}
-                  className="block text-foreground py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              <a href="#features" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Features</a>
+              <a href="#pricing" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</a>
+              <a href="#about" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</a>
+              <a href="#contact" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Contact</a>
               <div className="pt-3 space-y-2">
                 <Button variant="outline" className="w-full" onClick={() => navigate('/login')}>Inloggen</Button>
                 <Button className="w-full" onClick={() => navigate('/register')}>Gratis Starten</Button>
@@ -592,16 +581,10 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold text-foreground mb-4">Links</h4>
               <ul className="space-y-2">
-                {menuItems.slice(0, 4).map((item, index) => (
-                  <li key={index}>
-                    <Link 
-                      to={item.link === '/' ? '/' : `/pagina${item.link}`}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
+                <li><a href="#features" className="text-muted-foreground hover:text-foreground">Features</a></li>
+                <li><a href="#pricing" className="text-muted-foreground hover:text-foreground">Prijzen</a></li>
+                <li><a href="#about" className="text-muted-foreground hover:text-foreground">Over Ons</a></li>
+                <li><a href="#contact" className="text-muted-foreground hover:text-foreground">Contact</a></li>
               </ul>
             </div>
             <div>
