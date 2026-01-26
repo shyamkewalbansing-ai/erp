@@ -2,9 +2,14 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
-// Create axios instance
+// Simple in-memory cache for GET requests
+const cache = new Map();
+const CACHE_TTL = 30000; // 30 seconds
+
+// Create axios instance with optimized config
 const api = axios.create({
   baseURL: API_URL,
+  timeout: 15000, // 15 second timeout
 });
 
 // Add auth token to requests
@@ -16,9 +21,19 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Handle auth errors
+// Handle auth errors and cache responses
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Cache GET responses for public endpoints
+    if (response.config.method === 'get' && response.config.url?.includes('/public/')) {
+      const cacheKey = response.config.url;
+      cache.set(cacheKey, {
+        data: response,
+        timestamp: Date.now()
+      });
+    }
+    return response;
+  },
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
@@ -27,6 +42,21 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+// Cached GET for public endpoints
+export const cachedGet = async (url) => {
+  const cacheKey = url;
+  const cached = cache.get(cacheKey);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.data;
+  }
+  
+  return api.get(url);
+};
+
+// Clear cache (useful after mutations)
+export const clearCache = () => cache.clear();
 
 // Format currency
 export const formatCurrency = (amount) => {
