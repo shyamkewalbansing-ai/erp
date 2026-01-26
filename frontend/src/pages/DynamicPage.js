@@ -511,10 +511,16 @@ export default function DynamicPage() {
             <div>
               <h4 className="font-semibold text-foreground mb-4">Links</h4>
               <ul className="space-y-2">
-                <li><a href="/#features" className="text-muted-foreground hover:text-foreground">Features</a></li>
-                <li><a href="/#pricing" className="text-muted-foreground hover:text-foreground">Prijzen</a></li>
-                <li><a href="/#about" className="text-muted-foreground hover:text-foreground">Over Ons</a></li>
-                <li><a href="/#contact" className="text-muted-foreground hover:text-foreground">Contact</a></li>
+                {menuItems.slice(0, 4).map((item, index) => (
+                  <li key={index}>
+                    <Link 
+                      to={item.link === '/' ? '/' : `/pagina${item.link}`}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      {item.label}
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
             <div>
