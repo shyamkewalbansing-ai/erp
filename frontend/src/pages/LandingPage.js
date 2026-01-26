@@ -307,12 +307,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
-                Het Surinaamse SaaS‑platform met een volledig geïntegreerd{' '}
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight" data-testid="hero-title">
+                {getCmsSectionContent('hero', 'title', 'Het Surinaamse SaaS‑platform met een volledig geïntegreerd ERP‑ en HRM‑systeem').split('ERP')[0]}
                 <span className="text-emerald-500">ERP‑ en HRM‑systeem</span>
               </h1>
-              <p className="text-xl text-gray-600 max-w-lg">
-                Boekhouding, HRM, leads, projecten, sales & post-sale, verhuur en reserveringen – efficiënt, overzichtelijk en volledig geïntegreerd.
+              <p className="text-xl text-gray-600 max-w-lg" data-testid="hero-subtitle">
+                {getCmsSectionContent('hero', 'content', 'Boekhouding, HRM, leads, projecten, sales & post-sale, verhuur en reserveringen – efficiënt, overzichtelijk en volledig geïntegreerd.')}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button size="lg" className="h-14 px-8 text-lg bg-emerald-500 hover:bg-emerald-600" onClick={() => navigate('/prijzen')}>
