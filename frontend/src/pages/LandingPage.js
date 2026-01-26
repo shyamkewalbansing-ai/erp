@@ -368,8 +368,9 @@ export default function LandingPage() {
       {/* Partners Section */}
       <section className="py-12 bg-gray-50 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-gray-500 mb-8">
-            Onze beste partners en meer dan <strong className="text-gray-700">500+ klanten</strong> in Suriname zijn tevreden over onze diensten
+          <p className="text-center text-gray-500 mb-8" data-testid="partners-content">
+            {getCmsSectionContent('partners', 'content', 'Onze beste partners en meer dan 500+ klanten in Suriname zijn tevreden over onze diensten').split('500+')[0]}
+            <strong className="text-gray-700">500+ klanten</strong> in Suriname zijn tevreden over onze diensten
           </p>
           <div className="flex flex-wrap justify-center items-center gap-8">
             {partners.map((partner, i) => (
