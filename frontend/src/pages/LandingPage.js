@@ -75,6 +75,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
   const [addons, setAddons] = useState([]);
+  const [cmsContent, setCmsContent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -96,18 +97,32 @@ export default function LandingPage() {
 
   const loadData = async () => {
     try {
-      const [settingsRes, addonsRes] = await Promise.all([
+      const [settingsRes, addonsRes, cmsRes] = await Promise.all([
         axios.get(`${API_URL}/public/landing/settings`).catch(() => ({ data: null })),
-        axios.get(`${API_URL}/public/addons`).catch(() => ({ data: [] }))
+        axios.get(`${API_URL}/public/addons`).catch(() => ({ data: [] })),
+        axios.get(`${API_URL}/public/cms/page/home`).catch(() => ({ data: null }))
       ]);
       
       setSettings(settingsRes.data);
       setAddons(addonsRes.data || []);
+      setCmsContent(cmsRes.data);
     } catch (error) {
       console.error('Error loading landing page:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper to get CMS section by id
+  const getCmsSection = (sectionId) => {
+    if (!cmsContent?.sections) return null;
+    return cmsContent.sections.find(s => s.id === sectionId);
+  };
+
+  // Helper to get CMS section content with fallback
+  const getCmsSectionContent = (sectionId, field, fallback) => {
+    const section = getCmsSection(sectionId);
+    return section?.[field] || fallback;
   };
 
   const formatCurrency = (amount) => {
