@@ -497,11 +497,11 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center mb-24">
             <div>
               <Badge className="mb-4 bg-purple-100 text-purple-700 hover:bg-purple-100">Projecten</Badge>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                Beheer al je projecten eenvoudig
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4" data-testid="projecten-title">
+                {getCmsSectionContent('projecten', 'title', 'Beheer al je projecten eenvoudig')}
               </h3>
-              <p className="text-gray-600 mb-6 text-lg">
-                Heb je een groot team of werk je aan meerdere projecten tegelijk? Beheer taakprioriteiten en creëer extra werkruimtes.
+              <p className="text-gray-600 mb-6 text-lg" data-testid="projecten-content">
+                {getCmsSectionContent('projecten', 'content', 'Heb je een groot team of werk je aan meerdere projecten tegelijk? Beheer taakprioriteiten en creëer extra werkruimtes.')}
               </p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
