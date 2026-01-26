@@ -217,14 +217,14 @@ export default function LandingPage() {
             <div className="px-4 py-4 space-y-3">
               {menuItems.length > 0 ? (
                 menuItems.filter(item => item.link !== '/').map((item, index) => (
-                  <a 
+                  <Link 
                     key={index}
-                    href={item.link.startsWith('#') ? item.link : `#${item.link.replace('/', '')}`}
+                    to={item.link}
                     className="block text-foreground py-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 ))
               ) : (
                 <>
