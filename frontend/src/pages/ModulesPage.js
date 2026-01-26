@@ -49,28 +49,20 @@ export default function ModulesPage() {
   };
 
   const calculateTotal = () => {
-    const addonTotal = selectedAddons.reduce((sum, id) => {
+    return selectedAddons.reduce((sum, id) => {
       const addon = addons.find(a => a.id === id);
       return sum + (addon?.price || 0);
     }, 0);
-    const workspaceTotal = workspaces * 0; // Free workspaces for now
-    const userTotal = users * 0; // Free users for now
-    return addonTotal + workspaceTotal + userTotal;
   };
 
   const handleOrder = () => {
-    // Navigate to register with selected addons
     const params = new URLSearchParams();
     params.set('addons', selectedAddons.join(','));
-    params.set('workspaces', workspaces.toString());
-    params.set('users', users.toString());
     navigate(`/register?${params.toString()}`);
   };
 
   const resetSelection = () => {
     setSelectedAddons([]);
-    setWorkspaces(0);
-    setUsers(0);
   };
 
   if (loading) {
