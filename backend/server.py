@@ -5572,7 +5572,7 @@ async def create_public_order(order_data: PublicOrderCreate):
     await db.public_orders.insert_one(order_doc)
     
     # Generate JWT token for auto-login
-    token = create_access_token(data={"sub": user_id})
+    token = create_token(user_id, order_data.email.lower())
     
     # Return order with token for auto-login
     return {
