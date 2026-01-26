@@ -497,7 +497,8 @@ export default function LandingPage() {
                             <div className="flex items-center gap-3">
                               <Checkbox 
                                 checked={selectedAddons.includes(addon.id)}
-                                onCheckedChange={() => toggleAddonSelection(addon.id)}
+                                onCheckedChange={() => {}}
+                                onClick={(e) => e.stopPropagation()}
                               />
                               <span className="font-medium">{addon.name}</span>
                             </div>
