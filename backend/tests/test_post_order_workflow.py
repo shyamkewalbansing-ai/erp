@@ -358,6 +358,7 @@ class TestApproveRejectAddonRequests:
         assert len(pending_requests) > 0, "Should have pending requests"
         
         request_id = pending_requests[0]["id"]
+        addon_id = pending_requests[0]["addon_id"]
         
         # Approve the request
         approve_res = requests.put(
@@ -366,18 +367,24 @@ class TestApproveRejectAddonRequests:
         )
         assert approve_res.status_code == 200, f"Approve failed: {approve_res.text}"
         
-        # Verify the request is now approved
-        requests_res = requests.get(f"{BASE_URL}/api/my-addon-requests", headers=user_headers)
-        updated_requests = requests_res.json()
-        approved_request = next((r for r in updated_requests if r["id"] == request_id), None)
-        assert approved_request is not None
-        assert approved_request["status"] == "approved"
+        # Verify approve response contains user_addon
+        approve_data = approve_res.json()
+        assert "user_addon" in approve_data
+        assert approve_data["user_addon"]["status"] == "active"
+        
+        # Note: The pending request is deleted after activation (current behavior)
+        # The request is removed from addon_requests collection when addon is activated
         
         # Verify user now has active addon
         active_res = requests.get(f"{BASE_URL}/api/my-active-addons", headers=user_headers)
         assert active_res.status_code == 200
         active_addons = active_res.json()
         assert len(active_addons) >= 1, "User should have at least one active addon after approval"
+        
+        # Verify the correct addon is active
+        active_addon = next((a for a in active_addons if a["addon_id"] == addon_id), None)
+        assert active_addon is not None, "The approved addon should be in active addons"
+        assert active_addon["status"] == "active"
         
         print(f"✓ Addon request approved successfully")
     
