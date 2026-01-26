@@ -161,11 +161,13 @@ function App() {
           {/* Landing Page */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/modules" element={<ModulesPage />} />
+          <Route path="/prijzen" element={<PrijzenPage />} />
+          <Route path="/over-ons" element={<OverOnsPage />} />
           <Route path="/voorwaarden" element={<VoorwaardenPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           
           {/* Dynamic CMS Pages */}
-          <Route path="/:slug" element={<CMSPage />} />
+          <Route path="/pagina/:slug" element={<CMSPage />} />
           
           {/* Public Auth Routes */}
           <Route path="/login" element={
