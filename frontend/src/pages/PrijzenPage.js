@@ -30,6 +30,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 
+const ChatWidget = lazy(() => import('../components/ChatWidget'));
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 export default function PrijzenPage() {
