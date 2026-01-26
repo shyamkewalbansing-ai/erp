@@ -5427,7 +5427,7 @@ async def get_my_addon_requests(current_user: dict = Depends(get_current_user)):
 @api_router.get("/my-active-addons")
 async def get_my_active_addons(current_user: dict = Depends(get_current_user)):
     """Get active addons for the current user"""
-    user_addons = await db.customer_addons.find(
+    user_addons = await db.user_addons.find(
         {"user_id": current_user["id"], "status": "active"},
         {"_id": 0}
     ).to_list(100)
