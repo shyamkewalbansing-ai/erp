@@ -45,9 +45,26 @@ export default function CMSPage() {
 
     switch (section.type) {
       case 'hero':
+        const hasImage = section.image_url || section.background_image_url;
+        const imageUrl = section.image_url || section.background_image_url;
         return (
-          <section key={index} className="py-16 md:py-24" style={{ backgroundColor: section.background_color || '#0caf60', color: section.text_color || '#ffffff' }}>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <section 
+            key={index} 
+            className="py-16 md:py-24 relative overflow-hidden" 
+            style={{ 
+              backgroundColor: section.background_color || '#0caf60', 
+              color: section.text_color || '#ffffff' 
+            }}
+          >
+            {hasImage && (
+              <div 
+                className="absolute inset-0 bg-cover bg-center"
+                style={{ backgroundImage: `url(${imageUrl})` }}
+              >
+                <div className="absolute inset-0 bg-black/50" />
+              </div>
+            )}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">{section.title}</h1>
               {section.subtitle && <p className="text-xl md:text-2xl opacity-90 mb-8 max-w-3xl mx-auto">{section.subtitle}</p>}
               {section.content && <p className="text-lg opacity-80 mb-8">{section.content}</p>}
