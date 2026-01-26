@@ -77,15 +77,20 @@ export default function LandingPage() {
 
   const loadData = async () => {
     try {
-      const [sectionsRes, settingsRes, addonsRes] = await Promise.all([
+      const [sectionsRes, settingsRes, addonsRes, menuRes] = await Promise.all([
         getLandingSections(),
         getLandingSettings(),
-        getPublicAddons()
+        getPublicAddons(),
+        api.get('/public/cms/menu').catch(() => ({ data: { items: [] } }))
       ]);
       
       setSections(sectionsRes.data || []);
       setSettings(settingsRes.data);
       setAddons(addonsRes.data || []);
+      
+      // Load menu items from CMS
+      const items = menuRes.data?.items?.filter(item => item.is_visible) || [];
+      setMenuItems(items);
     } catch (error) {
       console.error('Error loading landing page:', error);
     } finally {
