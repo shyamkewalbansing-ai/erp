@@ -169,35 +169,36 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          {/* Landing Page */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/modules" element={<ModulesPage />} />
-          <Route path="/prijzen" element={<PrijzenPage />} />
-          <Route path="/over-ons" element={<OverOnsPage />} />
-          <Route path="/voorwaarden" element={<VoorwaardenPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
-          
-          {/* Dynamic CMS Pages */}
-          <Route path="/pagina/:slug" element={<CMSPage />} />
-          
-          {/* Public Auth Routes */}
-          <Route path="/login" element={
-            <PublicRoute><Login /></PublicRoute>
-          } />
-          <Route path="/register" element={
-            <PublicRoute><Register /></PublicRoute>
-          } />
-          <Route path="/reset-wachtwoord/:token" element={<ResetPassword />} />
-          
-          {/* Public Contract Signing Page (no auth required) */}
-          <Route path="/onderteken/:token" element={<OndertekeningPage />} />
-          
-          {/* Protected Routes - with Layout */}
-          <Route path="/app" element={
-            <ProtectedRoute><Layout /></ProtectedRoute>
-          }>
-            <Route index element={<SmartRedirect />} />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Landing Page - Critical, loaded immediately */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/modules" element={<ModulesPage />} />
+            <Route path="/prijzen" element={<PrijzenPage />} />
+            <Route path="/over-ons" element={<OverOnsPage />} />
+            <Route path="/voorwaarden" element={<VoorwaardenPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            
+            {/* Dynamic CMS Pages */}
+            <Route path="/pagina/:slug" element={<CMSPage />} />
+            
+            {/* Public Auth Routes */}
+            <Route path="/login" element={
+              <PublicRoute><Login /></PublicRoute>
+            } />
+            <Route path="/register" element={
+              <PublicRoute><Register /></PublicRoute>
+            } />
+            <Route path="/reset-wachtwoord/:token" element={<ResetPassword />} />
+            
+            {/* Public Contract Signing Page (no auth required) */}
+            <Route path="/onderteken/:token" element={<OndertekeningPage />} />
+            
+            {/* Protected Routes - with Layout */}
+            <Route path="/app" element={
+              <ProtectedRoute><Layout /></ProtectedRoute>
+            }>
+              <Route index element={<SmartRedirect />} />
             
             {/* Subscription page is always accessible for logged-in customers */}
             <Route path="abonnement" element={<CustomerOnlyRoute><Abonnement /></CustomerOnlyRoute>} />
