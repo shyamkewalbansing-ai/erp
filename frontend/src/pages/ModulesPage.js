@@ -235,141 +235,56 @@ export default function ModulesPage() {
               <div className="sticky top-24">
                 <Card className="border-2">
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-bold mb-6">Basispakket</h3>
+                    <h3 className="text-xl font-bold mb-6">Uw Selectie</h3>
                     
-                    {/* Summary Items */}
-                    <div className="space-y-4 mb-6">
-                      <div className="flex items-center justify-between text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Building className="w-4 h-4" />
-                          <span>werkruimte :</span>
-                        </div>
-                        <span>{workspaces}</span>
-                      </div>
-                      
-                      <div className="flex items-center justify-between text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4" />
-                          <span>Gebruikers :</span>
-                        </div>
-                        <span>{users}</span>
-                      </div>
-                      
-                      <div 
-                        className="flex items-center justify-between text-gray-600 cursor-pointer"
-                        onClick={() => setShowExtensions(!showExtensions)}
-                      >
-                        <div className="flex items-center gap-2">
-                          <Puzzle className="w-4 h-4" />
-                          <span>Uitbreiding: {selectedAddons.length}</span>
-                        </div>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${showExtensions ? 'rotate-180' : ''}`} />
-                      </div>
-                      
-                      {showExtensions && selectedAddons.length > 0 && (
-                        <div className="pl-6 space-y-2">
-                          {selectedAddons.map(id => {
-                            const addon = addons.find(a => a.id === id);
-                            return addon ? (
-                              <div key={id} className="flex justify-between text-sm">
-                                <span>{addon.name}</span>
-                                <span>{formatCurrency(addon.price)}</span>
+                    {/* Selected Modules */}
+                    <div className="space-y-3 mb-6">
+                      {selectedAddons.length === 0 ? (
+                        <p className="text-gray-500 text-center py-4">Geen modules geselecteerd</p>
+                      ) : (
+                        selectedAddons.map(id => {
+                          const addon = addons.find(a => a.id === id);
+                          return addon ? (
+                            <div key={id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded bg-primary/10 flex items-center justify-center">
+                                  <Puzzle className="w-4 h-4 text-primary" />
+                                </div>
+                                <span className="font-medium">{addon.name}</span>
                               </div>
-                            ) : null;
-                          })}
-                        </div>
+                              <span className="text-primary font-semibold">{formatCurrency(addon.price)}</span>
+                            </div>
+                          ) : null;
+                        })
                       )}
                     </div>
 
-                    {/* Workspace Selector */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Kies werkruimte:
-                      </label>
-                      <div className="flex items-center justify-between border rounded-lg p-2">
-                        <button 
-                          className="p-2 hover:bg-gray-100 rounded"
-                          onClick={() => setWorkspaces(Math.max(0, workspaces - 1))}
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="font-semibold">{workspaces}</span>
-                        <button 
-                          className="p-2 hover:bg-gray-100 rounded"
-                          onClick={() => setWorkspaces(workspaces + 1)}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Users Selector */}
-                    <div className="mb-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Gebruikers kiezen:
-                      </label>
-                      <div className="flex items-center justify-between border rounded-lg p-2">
-                        <button 
-                          className="p-2 hover:bg-gray-100 rounded"
-                          onClick={() => setUsers(Math.max(0, users - 1))}
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <span className="font-semibold">{users}</span>
-                        <button 
-                          className="p-2 hover:bg-gray-100 rounded"
-                          onClick={() => setUsers(users + 1)}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Price Breakdown */}
-                    <div className="space-y-2 mb-6 text-sm">
-                      <div className="flex justify-between">
-                        <span>Basispakket</span>
-                        <span>Free</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Werkruimte <span className="text-gray-400">( Per werkruimteSRD 0 )</span></span>
-                        <span>SRD 0</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Gebruikers <span className="text-gray-400">( Per gebruikerSRD 0 )</span></span>
-                        <span>SRD 0</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Uitbreiding:</span>
-                        <span>{formatCurrency(calculateTotal())}</span>
-                      </div>
-                    </div>
-
                     {/* Total */}
-                    <div className="bg-primary/10 rounded-xl p-4 mb-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-3xl font-bold text-primary">{formatCurrency(calculateTotal())}</p>
-                          <p className="text-gray-500">/Maand</p>
-                        </div>
-                        <Button 
-                          className="bg-primary hover:bg-primary/90"
-                          onClick={handleOrder}
-                          disabled={selectedAddons.length === 0}
-                        >
-                          Koop nu
-                        </Button>
+                    <div className="border-t pt-4 mb-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-lg font-semibold">Totaal per maand:</span>
+                        <span className="text-2xl font-bold text-primary">{formatCurrency(calculateTotal())}</span>
                       </div>
+                      
+                      <Button 
+                        className="w-full bg-primary hover:bg-primary/90 h-12 text-lg"
+                        onClick={handleOrder}
+                        disabled={selectedAddons.length === 0}
+                      >
+                        Koop nu
+                      </Button>
                     </div>
 
                     {/* Reset Button */}
-                    <button 
-                      className="flex items-center justify-center gap-2 w-full text-gray-500 hover:text-gray-700"
-                      onClick={resetSelection}
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                      Herstellen
-                    </button>
+                    {selectedAddons.length > 0 && (
+                      <button 
+                        className="flex items-center justify-center gap-2 w-full text-gray-500 hover:text-gray-700 mt-4"
+                        onClick={resetSelection}
+                      >
+                        <RefreshCw className="w-4 h-4" />
+                        Selectie wissen
+                      </button>
+                    )}
                   </CardContent>
                 </Card>
               </div>
