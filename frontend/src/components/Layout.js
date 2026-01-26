@@ -205,15 +205,6 @@ export default function Layout() {
                 <Layers className="w-5 h-5" />
                 <span>Website Beheer</span>
               </NavLink>
-              <NavLink
-                to="/app/hrm"
-                onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
-                data-testid="nav-hrm"
-              >
-                <UserCog className="w-5 h-5" />
-                <span>HRM</span>
-              </NavLink>
             </>
           )}
 
