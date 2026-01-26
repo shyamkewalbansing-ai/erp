@@ -27,6 +27,8 @@ import CMSPage from "./pages/CMSPage";
 import ModulesPage from "./pages/ModulesPage";
 import VoorwaardenPage from "./pages/VoorwaardenPage";
 import PrivacyPage from "./pages/PrivacyPage";
+import PrijzenPage from "./pages/PrijzenPage";
+import OverOnsPage from "./pages/OverOnsPage";
 import Layout from "./components/Layout";
 import "@/App.css";
 
