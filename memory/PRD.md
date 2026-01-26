@@ -13,7 +13,16 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (26 Jan 2026)
 
-### AI Chatbot Assistent ✅ NEW
+### CMS End-to-End Functionaliteit ✅ VERIFIED
+- [x] CMS editor in admin panel met sectie bewerken
+- [x] Backend API's voor CMS pagina CRUD
+- [x] LandingPage haalt CMS content dynamisch op
+- [x] Secties tab met alle 9 secties (hero, partners, features, modules, industries, cta)
+- [x] Wijzigingen in CMS editor zijn direct zichtbaar op publieke pagina's
+- [x] Drag & drop voor sectie herordening
+- [x] Sectie types: hero, partners, features, module, industries, cta
+
+### AI Chatbot Assistent ✅
 - [x] OpenAI GPT-4o integratie via Emergent LLM Key
 - [x] Publieke chatbot endpoint: POST /api/public/chat
 - [x] ChatWidget component op alle publieke pagina's
@@ -21,30 +30,30 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - [x] Quick questions voor snelle hulp
 - [x] Chat sessie opslag voor analytics
 
-### Verbeterde Publieke Pagina's ✅ NEW
-- [x] **Landing Page** - Module kaarten met iconen, partner logos
-- [x] **Voorwaarden** - Mooi design met genummerde artikelen en highlights
-- [x] **Privacy** - Blauw kleurschema, SSL/GDPR highlights
-
-### Website Beheer in Admin ✅
-- [x] Website tab in Admin dashboard
-- [x] Pagina overzicht met bewerken/preview knoppen
-- [x] Sectie editor met drag & drop
+### Website Redesign ✅
+- [x] **LandingPage** - Volledig nieuw design met CMS integratie
+- [x] **PrijzenPage** - Module prijzen en bestellen
+- [x] **OverOnsPage** - Bedrijfsinformatie
+- [x] **VoorwaardenPage** - Juridische voorwaarden
+- [x] **PrivacyPage** - Privacy informatie
 
 ### Snelheidsoptimalisaties ✅
-- [x] Lazy loading voor alle niet-kritieke pagina's
+- [x] React.lazy loading voor alle pagina's
 - [x] Code splitting
-- [x] API caching (30 sec)
 - [x] Preconnect/Prefetch
 
-## Publieke Routes
-| Route | Pagina |
-|-------|--------|
-| / | Home + Chat |
-| /prijzen | Prijzen + Chat |
-| /over-ons | Over Ons + Chat |
-| /voorwaarden | Voorwaarden + Chat |
-| /privacy | Privacy + Chat |
+## CMS Structuur
+| Sectie ID | Type | Bewerkbaar |
+|-----------|------|------------|
+| hero | hero | ✅ Titel, Content |
+| partners | partners | ✅ Titel, Content |
+| features | features | ✅ Titel, Content |
+| boekhouding | module | ✅ Titel, Content |
+| hrm | module | ✅ Titel, Content |
+| projecten | module | ✅ Titel, Content |
+| leads | module | ✅ Titel, Content |
+| industries | industries | ✅ Titel, Content |
+| cta | cta | ✅ Titel, Content |
 
 ## API Endpoints
 | Endpoint | Functie |
@@ -52,28 +61,26 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 | POST /api/public/chat | AI Chatbot |
 | GET /api/public/addons | Module lijst |
 | POST /api/public/orders | Bestelling + account |
+| GET /api/public/cms/page/{slug} | CMS pagina content |
+| GET /api/cms/pages | CMS pagina's (admin) |
+| PUT /api/cms/pages/{id} | CMS pagina update (admin) |
 
 ## Test Credentials
 - **Superadmin**: admin@facturatie.sr / admin123
 
-## AI Chatbot Features
-- Beantwoordt vragen over alle modules
-- Geeft prijsinformatie (SRD)
-- Verwijst naar prijzenpagina
-- Moedigt registratie aan
-- 24/7 beschikbaar
-
 ## Prioritized Backlog
 
+### P0 (Critical) - DONE ✅
+- [x] CMS end-to-end verificatie
+
 ### P1 (High Priority)
-- [ ] CMS content direct bewerkbaar via admin
-- [ ] Partner logos uploaden/beheren
-- [ ] Module afbeeldingen uploaden
+- [ ] Image uploads voor CMS (partner logos, module afbeeldingen)
+- [ ] HRM Module frontend uitbouwen
 
 ### P2 (Medium Priority)
-- [ ] HRM Module frontend uitbouwen
-- [ ] server.py refactoring
+- [ ] server.py refactoring (>8700 lines)
+- [ ] update.sh deployment script
 
 ### P3 (Nice to Have)
 - [ ] Chat geschiedenis per sessie
-- [ ] Analytics dashboard voor chats
+- [ ] Overige ERP modules (Inventory, CRM, Accounting)
