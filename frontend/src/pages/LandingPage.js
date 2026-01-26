@@ -539,11 +539,11 @@ export default function LandingPage() {
           <div className="grid lg:grid-cols-2 gap-12 items-center lg:grid-flow-dense">
             <div className="lg:col-start-2">
               <Badge className="mb-4 bg-orange-100 text-orange-700 hover:bg-orange-100">Leads & CRM</Badge>
-              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                Beheer uw leads beter. Converteer sneller
+              <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4" data-testid="leads-title">
+                {getCmsSectionContent('leads', 'title', 'Beheer uw leads beter. Converteer sneller')}
               </h3>
-              <p className="text-gray-600 mb-6 text-lg">
-                Verhoog uw omzet met een effectieve tool voor leadmanagement. Bepaal de waarde van leads en ontwikkel veelbelovende leads met gemak.
+              <p className="text-gray-600 mb-6 text-lg" data-testid="leads-content">
+                {getCmsSectionContent('leads', 'content', 'Verhoog uw omzet met een effectieve tool voor leadmanagement. Bepaal de waarde van leads en ontwikkel veelbelovende leads met gemak.')}
               </p>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
