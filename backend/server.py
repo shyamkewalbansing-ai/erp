@@ -7923,7 +7923,8 @@ async def create_hrm_employee(employee: HRMEmployee, current_user: dict = Depend
     }
     
     await db.hrm_employees.insert_one(employee_dict)
-    del employee_dict["_id"] if "_id" in employee_dict else None
+    if "_id" in employee_dict:
+        del employee_dict["_id"]
     return employee_dict
 
 @api_router.put("/hrm/employees/{employee_id}")
