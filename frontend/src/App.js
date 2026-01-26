@@ -152,16 +152,10 @@ function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          {/* Public Landing Pages */}
+          {/* Landing Page - content from CMS "home" page */}
           <Route path="/" element={<LandingPage />} />
-          <Route path="/prijzen" element={<PrijzenPage />} />
-          <Route path="/over-ons" element={<OverOnsPage />} />
           <Route path="/voorwaarden" element={<VoorwaardenPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          
-          {/* Dynamic CMS Pages - for custom pages created in Website Beheer */}
-          <Route path="/pagina/:slug" element={<DynamicPage />} />
           
           {/* Public Auth Routes */}
           <Route path="/login" element={
