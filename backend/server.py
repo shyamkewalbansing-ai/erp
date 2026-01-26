@@ -8634,6 +8634,94 @@ async def ai_chat(message_data: AIChatMessage, current_user: dict = Depends(get_
         logger.error(f"AI Chat error: {e}")
         raise HTTPException(status_code=500, detail=f"AI fout: {str(e)}")
 
+# ==================== PUBLIC CHATBOT FOR WEBSITE ====================
+
+class PublicChatMessage(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+@api_router.post("/public/chat")
+async def public_chat(chat_data: PublicChatMessage):
+    """Public chatbot for website visitors - answers questions about services"""
+    
+    session_id = chat_data.session_id or str(uuid.uuid4())
+    message = chat_data.message
+    
+    # Get all available addons for context
+    addons = await db.addons.find({}, {"_id": 0}).to_list(50)
+    addon_info = "\n".join([f"- {a.get('name')}: SRD {a.get('price', 0):,.0f}/maand - {a.get('description', '')}" for a in addons])
+    
+    system_prompt = f"""Je bent de virtuele assistent van Facturatie.sr, het toonaangevende Surinaamse platform voor digitale facturatie en bedrijfsadministratie.
+
+OVER FACTURATIE.SR:
+- Wij bieden een volledig geïntegreerd ERP- en HRM-systeem
+- Speciaal ontwikkeld voor Surinaamse bedrijven
+- Alle prijzen zijn in SRD (Surinaamse Dollar)
+- SSL-encryptie voor veilige gegevensopslag
+- 24/7 ondersteuning beschikbaar
+- Meer dan 500 tevreden klanten
+
+BESCHIKBARE MODULES EN PRIJZEN:
+{addon_info}
+
+KERNFUNCTIES:
+- Boekhouding: Facturatie, inkomsten/uitgaven, belastingaangifte
+- HRM: Personeelsbeheer, salarissen, verlof, contracten
+- CRM/Leads: Klantbeheer, sales pipeline, leadopvolging
+- Projecten: Taakbeheer, mijlpalen, tijdregistratie
+- POS: Point of Sale, voorraad, kassasysteem
+- Verhuur Beheer: Huurders, appartementen, betalingen
+- Beauty & Spa: Afspraken, behandelingen, klantgegevens
+- AutoDealer: Voorraadbeheer, verkoop, aftersales
+- Hotel Management: Kamers, boekingen, check-in/out
+
+CONTACT:
+- Telefoon: +597 893-4982
+- Website: facturatie.sr
+
+INSTRUCTIES:
+1. Beantwoord vragen vriendelijk en professioneel in het Nederlands
+2. Geef concrete prijsinformatie wanneer gevraagd
+3. Leg uit welke modules het beste passen bij de vraag van de klant
+4. Moedig bezoekers aan om een gratis account aan te maken
+5. Verwijs naar de prijzenpagina (/prijzen) voor details
+6. Wees behulpzaam en probeer de klant te helpen met hun specifieke situatie"""
+
+    try:
+        llm_key = os.environ.get("EMERGENT_LLM_KEY")
+        if not llm_key:
+            raise HTTPException(status_code=500, detail="Chat service niet beschikbaar")
+        
+        chat = LlmChat(
+            api_key=llm_key,
+            session_id=f"public_{session_id}",
+            system_message=system_prompt
+        ).with_model("openai", "gpt-4o")
+        
+        user_msg = UserMessage(text=message)
+        ai_response = await chat.send_message(user_msg)
+        
+        # Store chat in database for analytics
+        await db.public_chats.insert_one({
+            "id": str(uuid.uuid4()),
+            "session_id": session_id,
+            "user_message": message,
+            "ai_response": ai_response,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "response": ai_response,
+            "session_id": session_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Public chat error: {e}")
+        return {
+            "response": "Sorry, er is een fout opgetreden. Neem contact op via +597 893-4982 of probeer het later opnieuw.",
+            "session_id": session_id
+        }
+
 # Include the router in the main app
 app.include_router(api_router)
 
