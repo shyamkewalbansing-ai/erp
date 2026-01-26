@@ -114,12 +114,25 @@ export default function LandingPage() {
     
     setSubmitting(true);
     try {
-      await createPublicOrder({
+      const response = await createPublicOrder({
         ...orderForm,
         addon_ids: selectedAddons
       });
-      toast.success('Uw bestelling is ontvangen! Wij nemen zo snel mogelijk contact met u op.');
-      setOrderDialogOpen(false);
+      
+      // Auto-login: Store token and redirect to dashboard
+      if (response.data?.token) {
+        localStorage.setItem('token', response.data.token);
+        toast.success('Uw account is aangemaakt! U wordt nu ingelogd...');
+        
+        // Small delay to show success message
+        setTimeout(() => {
+          window.location.href = '/app/mijn-modules';
+        }, 1500);
+      } else {
+        toast.success('Uw bestelling is ontvangen!');
+        setOrderDialogOpen(false);
+      }
+      
       setOrderForm({ name: '', email: '', phone: '', company_name: '', message: '', password: '' });
       setSelectedAddons([]);
     } catch (error) {
