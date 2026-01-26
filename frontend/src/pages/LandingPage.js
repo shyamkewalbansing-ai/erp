@@ -211,14 +211,29 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Navigation - from CMS */}
         {mobileMenuOpen && (
           <div className="md:hidden bg-background border-b border-border">
             <div className="px-4 py-4 space-y-3">
-              <a href="#features" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Features</a>
-              <a href="#pricing" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</a>
-              <a href="#about" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</a>
-              <a href="#contact" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+              {menuItems.length > 0 ? (
+                menuItems.filter(item => item.link !== '/').map((item, index) => (
+                  <a 
+                    key={index}
+                    href={item.link.startsWith('#') ? item.link : `#${item.link.replace('/', '')}`}
+                    className="block text-foreground py-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {item.label}
+                  </a>
+                ))
+              ) : (
+                <>
+                  <a href="#features" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Features</a>
+                  <a href="#pricing" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</a>
+                  <a href="#about" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</a>
+                  <a href="#contact" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Contact</a>
+                </>
+              )}
               <div className="pt-3 space-y-2">
                 <Button variant="outline" className="w-full" onClick={() => navigate('/login')}>Inloggen</Button>
                 <Button className="w-full" onClick={() => navigate('/register')}>Gratis Starten</Button>
