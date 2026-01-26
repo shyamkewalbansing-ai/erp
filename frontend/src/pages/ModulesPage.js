@@ -1,0 +1,395 @@
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Button } from '../components/ui/button';
+import { Card, CardContent } from '../components/ui/card';
+import { Checkbox } from '../components/ui/checkbox';
+import { Badge } from '../components/ui/badge';
+import { Loader2, Menu, X, Plus, Minus, Users, Building, Puzzle, ChevronDown, RefreshCw } from 'lucide-react';
+import api, { getPublicAddons, formatCurrency } from '../lib/api';
+
+export default function ModulesPage() {
+  const navigate = useNavigate();
+  const [addons, setAddons] = useState([]);
+  const [settings, setSettings] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  
+  // Selection state
+  const [selectedAddons, setSelectedAddons] = useState([]);
+  const [workspaces, setWorkspaces] = useState(0);
+  const [users, setUsers] = useState(0);
+  const [showExtensions, setShowExtensions] = useState(false);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [addonsRes, settingsRes, menuRes] = await Promise.all([
+        getPublicAddons(),
+        api.get('/public/landing/settings').catch(() => ({ data: {} })),
+        api.get('/public/cms/menu').catch(() => ({ data: { items: [] } }))
+      ]);
+      
+      setAddons(addonsRes.data || []);
+      setSettings(settingsRes.data || {});
+      setMenuItems(menuRes.data?.items?.filter(item => item.is_visible) || []);
+    } catch (error) {
+      console.error('Error loading modules:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const toggleAddon = (addonId) => {
+    setSelectedAddons(prev => 
+      prev.includes(addonId) 
+        ? prev.filter(id => id !== addonId)
+        : [...prev, addonId]
+    );
+  };
+
+  const calculateTotal = () => {
+    const addonTotal = selectedAddons.reduce((sum, id) => {
+      const addon = addons.find(a => a.id === id);
+      return sum + (addon?.price || 0);
+    }, 0);
+    const workspaceTotal = workspaces * 0; // Free workspaces for now
+    const userTotal = users * 0; // Free users for now
+    return addonTotal + workspaceTotal + userTotal;
+  };
+
+  const handleOrder = () => {
+    // Navigate to register with selected addons
+    const params = new URLSearchParams();
+    params.set('addons', selectedAddons.join(','));
+    params.set('workspaces', workspaces.toString());
+    params.set('users', users.toString());
+    navigate(`/register?${params.toString()}`);
+  };
+
+  const resetSelection = () => {
+    setSelectedAddons([]);
+    setWorkspaces(0);
+    setUsers(0);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link to="/" className="flex items-center gap-2">
+              <img 
+                src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
+                alt={settings?.company_name || "Facturatie N.V."}
+                className="h-8 w-auto"
+              />
+            </Link>
+
+            <div className="hidden md:flex items-center gap-8">
+              <Link to="/" className="text-sm text-gray-600 hover:text-gray-900">Home</Link>
+              {menuItems.filter(item => item.link !== '/').map((item, index) => (
+                <Link 
+                  key={index}
+                  to={item.link}
+                  className="text-sm text-gray-600 hover:text-gray-900"
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <Link to="/modules" className="text-sm text-primary font-semibold">Modules</Link>
+            </div>
+
+            <div className="hidden md:flex items-center gap-3">
+              <Button variant="ghost" onClick={() => navigate('/login')}>Inloggen</Button>
+              <Button onClick={() => navigate('/register')}>Gratis Starten</Button>
+            </div>
+
+            <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-white border-b">
+            <div className="px-4 py-4 space-y-3">
+              <Link to="/" className="block py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+              {menuItems.filter(item => item.link !== '/').map((item, index) => (
+                <Link key={index} to={item.link} className="block py-2" onClick={() => setMobileMenuOpen(false)}>
+                  {item.label}
+                </Link>
+              ))}
+              <Link to="/modules" className="block py-2 text-primary font-semibold" onClick={() => setMobileMenuOpen(false)}>Modules</Link>
+              <div className="pt-3 space-y-2">
+                <Button variant="outline" className="w-full" onClick={() => navigate('/login')}>Inloggen</Button>
+                <Button className="w-full" onClick={() => navigate('/register')}>Gratis Starten</Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Main Content */}
+      <main className="pt-24 pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Header */}
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Onze Modules</h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Kies de modules die passen bij uw bedrijfsvoering. Betaal alleen voor wat u nodig heeft.
+            </p>
+          </div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Modules Grid */}
+            <div className="lg:col-span-2">
+              {/* Base Package Card */}
+              <Card className="mb-6 border-2 border-primary">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
+                          <span className="text-white font-bold text-xl">→</span>
+                        </div>
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-bold">Basispakket</h2>
+                        <p className="text-gray-500">+{addons.length} Premium Add-on</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-primary">SRD 0</p>
+                      <p className="text-gray-500">/Maand</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Addon Cards Grid */}
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {addons.map((addon) => (
+                  <Card 
+                    key={addon.id}
+                    className={`cursor-pointer transition-all hover:shadow-lg ${
+                      selectedAddons.includes(addon.id) ? 'ring-2 ring-primary' : ''
+                    }`}
+                    onClick={() => toggleAddon(addon.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          {addon.icon_url ? (
+                            <img src={addon.icon_url} alt={addon.name} className="w-8 h-8" />
+                          ) : (
+                            <Puzzle className="w-6 h-6 text-primary" />
+                          )}
+                        </div>
+                        <Checkbox 
+                          checked={selectedAddons.includes(addon.id)}
+                          onCheckedChange={() => {}}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </div>
+                      
+                      <Badge variant="secondary" className="mb-2 text-xs">
+                        {addon.category || 'STATISTIEKEN'}
+                      </Badge>
+                      
+                      <h3 className="font-bold text-lg mb-2">{addon.name}</h3>
+                      
+                      {addon.description && (
+                        <p className="text-sm text-gray-500 mb-3 line-clamp-2">{addon.description}</p>
+                      )}
+                      
+                      <p className="text-xl font-bold text-primary">
+                        {formatCurrency(addon.price)}
+                        <span className="text-sm font-normal text-gray-500">/Maand</span>
+                      </p>
+                      
+                      <Button 
+                        variant="default" 
+                        className="w-full mt-4 bg-gray-900 hover:bg-gray-800"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleAddon(addon.id);
+                        }}
+                      >
+                        {selectedAddons.includes(addon.id) ? 'Geselecteerd' : 'Details weergeven'}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* Order Summary Panel */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24">
+                <Card className="border-2">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-bold mb-6">Basispakket</h3>
+                    
+                    {/* Summary Items */}
+                    <div className="space-y-4 mb-6">
+                      <div className="flex items-center justify-between text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <Building className="w-4 h-4" />
+                          <span>werkruimte :</span>
+                        </div>
+                        <span>{workspaces}</span>
+                      </div>
+                      
+                      <div className="flex items-center justify-between text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4" />
+                          <span>Gebruikers :</span>
+                        </div>
+                        <span>{users}</span>
+                      </div>
+                      
+                      <div 
+                        className="flex items-center justify-between text-gray-600 cursor-pointer"
+                        onClick={() => setShowExtensions(!showExtensions)}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Puzzle className="w-4 h-4" />
+                          <span>Uitbreiding: {selectedAddons.length}</span>
+                        </div>
+                        <ChevronDown className={`w-4 h-4 transition-transform ${showExtensions ? 'rotate-180' : ''}`} />
+                      </div>
+                      
+                      {showExtensions && selectedAddons.length > 0 && (
+                        <div className="pl-6 space-y-2">
+                          {selectedAddons.map(id => {
+                            const addon = addons.find(a => a.id === id);
+                            return addon ? (
+                              <div key={id} className="flex justify-between text-sm">
+                                <span>{addon.name}</span>
+                                <span>{formatCurrency(addon.price)}</span>
+                              </div>
+                            ) : null;
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Workspace Selector */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Kies werkruimte:
+                      </label>
+                      <div className="flex items-center justify-between border rounded-lg p-2">
+                        <button 
+                          className="p-2 hover:bg-gray-100 rounded"
+                          onClick={() => setWorkspaces(Math.max(0, workspaces - 1))}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="font-semibold">{workspaces}</span>
+                        <button 
+                          className="p-2 hover:bg-gray-100 rounded"
+                          onClick={() => setWorkspaces(workspaces + 1)}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Users Selector */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Gebruikers kiezen:
+                      </label>
+                      <div className="flex items-center justify-between border rounded-lg p-2">
+                        <button 
+                          className="p-2 hover:bg-gray-100 rounded"
+                          onClick={() => setUsers(Math.max(0, users - 1))}
+                        >
+                          <Minus className="w-4 h-4" />
+                        </button>
+                        <span className="font-semibold">{users}</span>
+                        <button 
+                          className="p-2 hover:bg-gray-100 rounded"
+                          onClick={() => setUsers(users + 1)}
+                        >
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Price Breakdown */}
+                    <div className="space-y-2 mb-6 text-sm">
+                      <div className="flex justify-between">
+                        <span>Basispakket</span>
+                        <span>Free</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Werkruimte <span className="text-gray-400">( Per werkruimteSRD 0 )</span></span>
+                        <span>SRD 0</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Gebruikers <span className="text-gray-400">( Per gebruikerSRD 0 )</span></span>
+                        <span>SRD 0</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Uitbreiding:</span>
+                        <span>{formatCurrency(calculateTotal())}</span>
+                      </div>
+                    </div>
+
+                    {/* Total */}
+                    <div className="bg-primary/10 rounded-xl p-4 mb-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-3xl font-bold text-primary">{formatCurrency(calculateTotal())}</p>
+                          <p className="text-gray-500">/Maand</p>
+                        </div>
+                        <Button 
+                          className="bg-primary hover:bg-primary/90"
+                          onClick={handleOrder}
+                          disabled={selectedAddons.length === 0}
+                        >
+                          Koop nu
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Reset Button */}
+                    <button 
+                      className="flex items-center justify-center gap-2 w-full text-gray-500 hover:text-gray-700"
+                      onClick={resetSelection}
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      Herstellen
+                    </button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="bg-primary text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <p>© {new Date().getFullYear()} {settings?.company_name || "Facturatie N.V."}. Alle rechten voorbehouden.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
