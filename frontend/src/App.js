@@ -19,6 +19,7 @@ import Werknemers from "./pages/Werknemers";
 import Abonnement from "./pages/Abonnement";
 import Admin from "./pages/Admin";
 import Instellingen from "./pages/Instellingen";
+import HRM from "./pages/HRM";
 import LandingPage from "./pages/LandingPage";
 import WebsiteBeheer from "./pages/WebsiteBeheer";
 import CMSPage from "./pages/CMSPage";
