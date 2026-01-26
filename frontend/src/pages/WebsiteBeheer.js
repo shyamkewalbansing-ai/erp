@@ -59,6 +59,13 @@ export default function WebsiteBeheer() {
     loadAllData();
   }, []);
 
+  useEffect(() => {
+    // Select first page when pages are loaded and no page is selected
+    if (pages.length > 0 && !selectedPage) {
+      setSelectedPage(pages[0]);
+    }
+  }, [pages]);
+
   const loadAllData = async () => {
     try {
       const [pagesRes, settingsRes, footerRes] = await Promise.all([
@@ -70,11 +77,6 @@ export default function WebsiteBeheer() {
       setPages(pagesRes.data || []);
       setSettings(settingsRes.data || {});
       setFooter(footerRes.data || { columns: [], copyright_text: '', background_color: '#1f2937', text_color: '#ffffff' });
-      
-      // Select first page if available
-      if (pagesRes.data?.length > 0 && !selectedPage) {
-        setSelectedPage(pagesRes.data[0]);
-      }
     } catch (error) {
       console.error('Load error:', error);
       toast.error('Fout bij laden');
