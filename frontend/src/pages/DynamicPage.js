@@ -373,7 +373,7 @@ export default function DynamicPage() {
       
       setPage(pageRes.data);
       setSettings(settingsRes.data);
-      const items = menuRes.data?.items?.filter(item => item.is_visible && item.link !== '/') || [];
+      const items = menuRes.data?.items?.filter(item => item.is_visible) || [];
       setMenuItems(items);
     } catch (err) {
       setError('Pagina niet gevonden');
@@ -433,17 +433,12 @@ export default function DynamicPage() {
               />
             </Link>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - All from CMS */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="/#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Prijzen</a>
-              <a href="/#about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Over Ons</a>
-              <a href="/#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
-              {/* Dynamic menu items from CMS */}
               {menuItems.map((item, index) => (
                 <Link 
                   key={index}
-                  to={`/pagina/${item.link.replace('/', '')}`}
+                  to={item.link === '/' ? '/' : `/pagina${item.link}`}
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {item.label}
@@ -475,14 +470,10 @@ export default function DynamicPage() {
         {mobileMenuOpen && (
           <div className="md:hidden bg-background border-b border-border">
             <div className="px-4 py-4 space-y-3">
-              <a href="/#features" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Features</a>
-              <a href="/#pricing" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</a>
-              <a href="/#about" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</a>
-              <a href="/#contact" className="block text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>Contact</a>
               {menuItems.map((item, index) => (
                 <Link 
                   key={index}
-                  to={`/pagina/${item.link.replace('/', '')}`}
+                  to={item.link === '/' ? '/' : `/pagina${item.link}`}
                   className="block text-foreground py-2"
                   onClick={() => setMobileMenuOpen(false)}
                 >
