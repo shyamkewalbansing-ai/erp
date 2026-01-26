@@ -5415,6 +5415,32 @@ async def reject_addon_request(request_id: str, current_user: dict = Depends(get
     
     return {"message": "Add-on verzoek afgewezen"}
 
+@api_router.get("/my-addon-requests")
+async def get_my_addon_requests(current_user: dict = Depends(get_current_user)):
+    """Get addon requests for the current user"""
+    requests = await db.addon_requests.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return requests
+
+@api_router.get("/my-active-addons")
+async def get_my_active_addons(current_user: dict = Depends(get_current_user)):
+    """Get active addons for the current user"""
+    user_addons = await db.customer_addons.find(
+        {"user_id": current_user["id"], "status": "active"},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Enrich with addon details
+    for ua in user_addons:
+        addon = await db.addons.find_one({"id": ua.get("addon_id")}, {"_id": 0})
+        if addon:
+            ua["addon_name"] = addon.get("name")
+            ua["addon_slug"] = addon.get("slug")
+    
+    return user_addons
+
 # ==================== LANDING PAGE CMS ROUTES ====================
 
 @api_router.get("/public/landing/sections")
