@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Checkbox } from '../components/ui/checkbox';
 import { Badge } from '../components/ui/badge';
-import { Loader2, Menu, X, Plus, Minus, Users, Building, Puzzle, ChevronDown, RefreshCw } from 'lucide-react';
+import { Loader2, Menu, X, Puzzle, RefreshCw } from 'lucide-react';
 import api, { getPublicAddons, formatCurrency } from '../lib/api';
 
 export default function ModulesPage() {
