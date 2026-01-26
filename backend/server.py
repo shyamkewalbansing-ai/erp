@@ -5454,7 +5454,7 @@ async def get_public_addons():
 
 @api_router.post("/public/orders")
 async def create_public_order(order_data: PublicOrderCreate):
-    """Create a new order from landing page with account creation"""
+    """Create a new order from landing page with account creation and auto-login"""
     # Validate at least one addon selected
     if not order_data.addon_ids or len(order_data.addon_ids) == 0:
         raise HTTPException(status_code=400, detail="Selecteer minimaal één module")
@@ -5471,18 +5471,20 @@ async def create_public_order(order_data: PublicOrderCreate):
     # Validate addons exist
     addon_names = []
     total_price = 0
+    addon_details = []
     for addon_id in order_data.addon_ids:
         addon = await db.addons.find_one({"id": addon_id, "is_active": True}, {"_id": 0})
         if not addon:
             raise HTTPException(status_code=400, detail=f"Add-on niet gevonden: {addon_id}")
         addon_names.append(addon["name"])
         total_price += addon.get("price", 0)
+        addon_details.append(addon)
     
     order_id = str(uuid.uuid4())
     user_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     
-    # Create user account (inactive - pending payment/activation)
+    # Create user account (active - can login immediately)
     user_doc = {
         "id": user_id,
         "email": order_data.email.lower(),
@@ -5491,15 +5493,33 @@ async def create_public_order(order_data: PublicOrderCreate):
         "company_name": order_data.company_name,
         "phone": order_data.phone,
         "role": "customer",
-        "subscription_status": "pending",  # Will be activated after payment
+        "subscription_status": "pending",  # Modules pending approval
         "subscription_end": None,
         "created_at": now,
-        "order_id": order_id  # Link to the order
+        "order_id": order_id
     }
     
     await db.users.insert_one(user_doc)
     
-    # Create order
+    # Create addon requests for each module (pending approval by superadmin)
+    for addon in addon_details:
+        addon_request = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "user_name": order_data.name,
+            "user_email": order_data.email.lower(),
+            "company_name": order_data.company_name,
+            "addon_id": addon["id"],
+            "addon_name": addon["name"],
+            "addon_slug": addon.get("slug"),
+            "addon_price": addon.get("price", 0),
+            "status": "pending",
+            "order_id": order_id,
+            "created_at": now
+        }
+        await db.addon_requests.insert_one(addon_request)
+    
+    # Create order record
     order_doc = {
         "id": order_id,
         "user_id": user_id,
@@ -5519,7 +5539,20 @@ async def create_public_order(order_data: PublicOrderCreate):
     
     await db.public_orders.insert_one(order_doc)
     
-    return PublicOrderResponse(**order_doc)
+    # Generate JWT token for auto-login
+    token = create_access_token(data={"sub": user_id})
+    
+    # Return order with token for auto-login
+    return {
+        "order": PublicOrderResponse(**order_doc),
+        "token": token,
+        "user": {
+            "id": user_id,
+            "email": order_data.email.lower(),
+            "name": order_data.name,
+            "role": "customer"
+        }
+    }
 
 # ==================== MOPE PAYMENT ROUTES ====================
 
