@@ -5400,10 +5400,17 @@ async def approve_addon_request(request_id: str, months: int = 1, current_user: 
         {"$set": {"status": "approved"}}
     )
     
-    # Update user's subscription status to active (they now have at least one active addon)
+    # Calculate subscription end date based on months
+    now = datetime.now(timezone.utc)
+    end_date = (now + timedelta(days=30 * months)).isoformat()
+    
+    # Update user's subscription status and end date (they now have at least one active addon)
     await db.users.update_one(
         {"id": request["user_id"]},
-        {"$set": {"subscription_status": "active"}}
+        {"$set": {
+            "subscription_status": "active",
+            "subscription_end_date": end_date
+        }}
     )
     
     return {"message": "Add-on verzoek goedgekeurd en geactiveerd", "user_addon": result}
