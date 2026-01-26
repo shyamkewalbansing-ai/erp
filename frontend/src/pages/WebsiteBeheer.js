@@ -61,10 +61,11 @@ export default function WebsiteBeheer() {
 
   useEffect(() => {
     // Select first page when pages are loaded and no page is selected
-    if (pages.length > 0 && !selectedPage) {
+    if (pages.length > 0 && selectedPage === null) {
       setSelectedPage(pages[0]);
     }
-  }, [pages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages.length]);
 
   const loadAllData = async () => {
     try {
