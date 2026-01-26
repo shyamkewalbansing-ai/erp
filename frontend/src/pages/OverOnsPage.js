@@ -291,6 +291,11 @@ export default function OverOnsPage() {
           </div>
         </div>
       </footer>
+
+      {/* Chat Widget */}
+      <Suspense fallback={null}>
+        <ChatWidget />
+      </Suspense>
     </div>
   );
 }
