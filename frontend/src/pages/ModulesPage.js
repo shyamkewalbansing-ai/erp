@@ -157,11 +157,16 @@ export default function ModulesPage() {
                       </div>
                       <div>
                         <h2 className="text-xl font-bold">Basispakket</h2>
-                        <p className="text-gray-500">+{addons.length} Premium Add-on</p>
+                        <p className="text-gray-500">
+                          {selectedAddons.length > 0 
+                            ? `${selectedAddons.length} module${selectedAddons.length > 1 ? 's' : ''} geselecteerd`
+                            : `+${addons.length} Premium Add-on`
+                          }
+                        </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-primary">SRD 0</p>
+                      <p className="text-2xl font-bold text-primary">{formatCurrency(calculateTotal())}</p>
                       <p className="text-gray-500">/Maand</p>
                     </div>
                   </div>
