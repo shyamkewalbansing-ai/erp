@@ -86,8 +86,8 @@ export default function LandingPage() {
       setSections(sectionsRes.data);
       setSettings(settingsRes.data);
       setAddons(addonsRes.data);
-      // Filter menu items - only show visible ones, exclude 'home'
-      const items = menuRes.data?.items?.filter(item => item.is_visible && item.link !== '/') || [];
+      // Load ALL visible menu items from CMS
+      const items = menuRes.data?.items?.filter(item => item.is_visible) || [];
       setMenuItems(items);
     } catch (error) {
       console.error('Error loading landing page:', error);
