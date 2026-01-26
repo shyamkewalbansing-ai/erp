@@ -47,6 +47,11 @@ const vastgoedNavItems = [
   { to: '/app/werknemers', icon: Users2, label: 'Werknemers', addon: 'vastgoed_beheer' },
 ];
 
+// Navigation items for HRM add-on
+const hrmNavItems = [
+  { to: '/app/hrm', icon: UserCog, label: 'HRM', addon: 'hrm' },
+];
+
 export default function Layout() {
   const { user, logout, hasActiveSubscription, isSuperAdmin } = useAuth();
   const navigate = useNavigate();
