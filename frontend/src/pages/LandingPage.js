@@ -522,6 +522,18 @@ export default function LandingPage() {
                     </div>
                     
                     <div className="space-y-2">
+                      <Label>Wachtwoord * (voor uw account)</Label>
+                      <Input 
+                        type="password"
+                        required
+                        minLength={6}
+                        value={orderForm.password}
+                        onChange={(e) => setOrderForm({...orderForm, password: e.target.value})}
+                        placeholder="Minimaal 6 tekens"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
                       <Label>Selecteer Module(s) *</Label>
                       <div className="grid gap-2">
                         {addons.map((addon) => (
