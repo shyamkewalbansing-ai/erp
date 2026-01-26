@@ -1438,6 +1438,78 @@ server {
             </Card>
           </div>
         </TabsContent>
+
+        {/* Website Tab - CMS Beheer */}
+        <TabsContent value="website">
+          <Card>
+            <CardHeader>
+              <CardTitle>Website Beheer</CardTitle>
+              <CardDescription>
+                Beheer de inhoud van uw publieke website pagina's
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-6">
+                <div className="p-6 bg-gradient-to-r from-emerald-50 to-emerald-100/50 rounded-lg border border-emerald-200">
+                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-emerald-600" />
+                    Vaste Pagina's
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Deze pagina's zijn direct bewerkbaar via de database. Neem contact op met support voor aanpassingen.
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-4">
+                    <div className="p-4 bg-white rounded-lg border">
+                      <div className="font-medium">Home</div>
+                      <div className="text-sm text-gray-500">Landing page met hero, features, modules</div>
+                      <a href="/" target="_blank" rel="noreferrer" className="text-emerald-600 text-sm hover:underline mt-2 inline-flex items-center gap-1">
+                        Bekijken <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                    <div className="p-4 bg-white rounded-lg border">
+                      <div className="font-medium">Prijzen</div>
+                      <div className="text-sm text-gray-500">Prijzen en add-on overzicht</div>
+                      <a href="/prijzen" target="_blank" rel="noreferrer" className="text-emerald-600 text-sm hover:underline mt-2 inline-flex items-center gap-1">
+                        Bekijken <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                    <div className="p-4 bg-white rounded-lg border">
+                      <div className="font-medium">Over Ons</div>
+                      <div className="text-sm text-gray-500">Informatie over het bedrijf</div>
+                      <a href="/over-ons" target="_blank" rel="noreferrer" className="text-emerald-600 text-sm hover:underline mt-2 inline-flex items-center gap-1">
+                        Bekijken <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                    <div className="p-4 bg-white rounded-lg border">
+                      <div className="font-medium">Algemene Voorwaarden</div>
+                      <div className="text-sm text-gray-500">Juridische voorwaarden</div>
+                      <a href="/voorwaarden" target="_blank" rel="noreferrer" className="text-emerald-600 text-sm hover:underline mt-2 inline-flex items-center gap-1">
+                        Bekijken <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                    <div className="p-4 bg-white rounded-lg border">
+                      <div className="font-medium">Privacybeleid</div>
+                      <div className="text-sm text-gray-500">Privacy informatie</div>
+                      <a href="/privacy" target="_blank" rel="noreferrer" className="text-emerald-600 text-sm hover:underline mt-2 inline-flex items-center gap-1">
+                        Bekijken <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-blue-50 rounded-lg border border-blue-200">
+                  <h3 className="font-semibold text-lg mb-2 flex items-center gap-2">
+                    <Package className="w-5 h-5 text-blue-600" />
+                    Modules/Add-ons Beheren
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Beheer de modules die klanten kunnen bestellen via de "Add-ons" tab hierboven.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Create Customer Dialog */}
