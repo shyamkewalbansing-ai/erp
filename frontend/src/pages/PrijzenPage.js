@@ -480,6 +480,11 @@ export default function PrijzenPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Chat Widget */}
+      <Suspense fallback={null}>
+        <ChatWidget />
+      </Suspense>
     </div>
   );
 }
