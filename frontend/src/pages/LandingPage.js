@@ -169,12 +169,26 @@ export default function LandingPage() {
               />
             </Link>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - from CMS */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Prijzen</a>
-              <a href="#about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Over Ons</a>
-              <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
+              {menuItems.length > 0 ? (
+                menuItems.filter(item => item.link !== '/').map((item, index) => (
+                  <a 
+                    key={index}
+                    href={item.link.startsWith('#') ? item.link : `#${item.link.replace('/', '')}`}
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {item.label}
+                  </a>
+                ))
+              ) : (
+                <>
+                  <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
+                  <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Prijzen</a>
+                  <a href="#about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Over Ons</a>
+                  <a href="#contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Contact</a>
+                </>
+              )}
             </div>
 
             {/* CTA Buttons */}
