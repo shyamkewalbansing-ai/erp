@@ -5400,6 +5400,12 @@ async def approve_addon_request(request_id: str, months: int = 1, current_user: 
         {"$set": {"status": "approved"}}
     )
     
+    # Update user's subscription status to active (they now have at least one active addon)
+    await db.users.update_one(
+        {"id": request["user_id"]},
+        {"$set": {"subscription_status": "active"}}
+    )
+    
     return {"message": "Add-on verzoek goedgekeurd en geactiveerd", "user_addon": result}
 
 @api_router.put("/admin/addon-requests/{request_id}/reject")
