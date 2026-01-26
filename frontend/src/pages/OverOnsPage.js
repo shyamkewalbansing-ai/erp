@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
@@ -17,6 +17,8 @@ import {
   ArrowRight,
   CheckCircle
 } from 'lucide-react';
+
+const ChatWidget = lazy(() => import('../components/ChatWidget'));
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
