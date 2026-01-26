@@ -173,13 +173,13 @@ export default function LandingPage() {
             <div className="hidden md:flex items-center gap-8">
               {menuItems.length > 0 ? (
                 menuItems.filter(item => item.link !== '/').map((item, index) => (
-                  <a 
+                  <Link 
                     key={index}
-                    href={item.link.startsWith('#') ? item.link : `#${item.link.replace('/', '')}`}
+                    to={item.link}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 ))
               ) : (
                 <>
