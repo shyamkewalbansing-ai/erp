@@ -109,8 +109,12 @@ const SectionEditor = memo(({ section, index, onUpdate, onDelete, onMoveUp, onMo
                 <option value="text">Tekst</option>
                 <option value="hero">Hero Banner</option>
                 <option value="features">Features Grid</option>
+                <option value="module">Module Showcase</option>
+                <option value="partners">Partners</option>
+                <option value="industries">Industries</option>
+                <option value="stats">Statistieken</option>
+                <option value="pricing">Prijzen</option>
                 <option value="cta">Call to Action</option>
-                <option value="cards">Kaarten</option>
               </select>
             </div>
           </div>
