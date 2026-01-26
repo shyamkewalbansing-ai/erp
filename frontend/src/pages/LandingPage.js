@@ -630,11 +630,11 @@ export default function LandingPage() {
       <section className="py-20 bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Verhuur, Beauty, Auto & Hotel – compleet beheer in één platform
+            <h2 className="text-3xl md:text-4xl font-bold mb-4" data-testid="industries-title">
+              {getCmsSectionContent('industries', 'title', 'Verhuur, Beauty, Auto & Hotel – compleet beheer in één platform')}
             </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto">
-              Beheer moeiteloos jouw verhuuractiviteiten, beauty spa afspraken, autodealer processen en hotel- en kamerreserveringen.
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto" data-testid="industries-content">
+              {getCmsSectionContent('industries', 'content', 'Beheer moeiteloos jouw verhuuractiviteiten, beauty spa afspraken, autodealer processen en hotel- en kamerreserveringen.')}
             </p>
           </div>
 
@@ -649,11 +649,11 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-r from-emerald-500 to-emerald-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-            Facturatie.sr – uw administratie eenvoudig geregeld
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6" data-testid="cta-title">
+            {getCmsSectionContent('cta', 'title', 'Facturatie.sr – uw administratie eenvoudig geregeld')}
           </h2>
-          <p className="text-xl text-emerald-100 mb-8">
-            Beheer facturering, boekhouding en voorraad in één systeem. Bespaar tijd, verhoog efficiëntie en voldoe moeiteloos aan fiscale verplichtingen.
+          <p className="text-xl text-emerald-100 mb-8" data-testid="cta-content">
+            {getCmsSectionContent('cta', 'content', 'Beheer facturering, boekhouding en voorraad in één systeem. Bespaar tijd, verhoog efficiëntie en voldoe moeiteloos aan fiscale verplichtingen.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" variant="secondary" className="h-14 px-8 text-lg" onClick={() => navigate('/prijzen')}>
