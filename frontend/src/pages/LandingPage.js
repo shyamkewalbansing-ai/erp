@@ -603,12 +603,12 @@ export default function LandingPage() {
                 {menuItems.length > 0 ? (
                   menuItems.filter(item => item.link !== '/').slice(0, 4).map((item, index) => (
                     <li key={index}>
-                      <a 
-                        href={item.link.startsWith('#') ? item.link : `#${item.link.replace('/', '')}`}
+                      <Link 
+                        to={item.link}
                         className="text-muted-foreground hover:text-foreground"
                       >
                         {item.label}
-                      </a>
+                      </Link>
                     </li>
                   ))
                 ) : (
