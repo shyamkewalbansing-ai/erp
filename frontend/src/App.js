@@ -156,6 +156,7 @@ function App() {
         <Routes>
           {/* Landing Page */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/modules" element={<ModulesPage />} />
           <Route path="/voorwaarden" element={<VoorwaardenPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
           
