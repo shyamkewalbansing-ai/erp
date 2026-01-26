@@ -50,7 +50,6 @@ export default function LandingPage() {
   const [sections, setSections] = useState([]);
   const [settings, setSettings] = useState(null);
   const [addons, setAddons] = useState([]);
-  const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
@@ -77,31 +76,26 @@ export default function LandingPage() {
 
   const loadData = async () => {
     try {
-      const [sectionsRes, settingsRes, addonsRes, menuRes, homePageRes] = await Promise.all([
+      const [sectionsRes, settingsRes, addonsRes, homePageRes] = await Promise.all([
         getLandingSections(),
         getLandingSettings(),
         getPublicAddons(),
-        api.get('/public/cms/menu').catch(() => ({ data: { items: [] } })),
         api.get('/public/cms/page/home').catch(() => ({ data: null }))
       ]);
       
       // Use CMS home page sections if available, otherwise fall back to landing sections
       if (homePageRes.data?.sections?.length > 0) {
-        // Convert CMS sections to landing section format
         const cmsSections = homePageRes.data.sections.map(s => ({
           ...s,
-          section_type: s.type // Map 'type' to 'section_type' for compatibility
+          section_type: s.type
         }));
         setSections(cmsSections);
       } else {
-        setSections(sectionsRes.data);
+        setSections(sectionsRes.data || []);
       }
       
       setSettings(settingsRes.data);
-      setAddons(addonsRes.data);
-      // Load ALL visible menu items from CMS
-      const items = menuRes.data?.items?.filter(item => item.is_visible) || [];
-      setMenuItems(items);
+      setAddons(addonsRes.data || []);
     } catch (error) {
       console.error('Error loading landing page:', error);
     } finally {
