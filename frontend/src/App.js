@@ -259,8 +259,34 @@ function App() {
             <Route path="werknemers" element={
               <SubscriptionRoute><Werknemers /></SubscriptionRoute>
             } />
+            
+            {/* HRM Module Routes */}
             <Route path="hrm" element={
-              <SubscriptionRoute><HRM /></SubscriptionRoute>
+              <SubscriptionRoute><HRMDashboard /></SubscriptionRoute>
+            } />
+            <Route path="hrm/personeel" element={
+              <SubscriptionRoute><HRMPersoneel /></SubscriptionRoute>
+            } />
+            <Route path="hrm/werving" element={
+              <SubscriptionRoute><HRMWerving /></SubscriptionRoute>
+            } />
+            <Route path="hrm/contracten" element={
+              <SubscriptionRoute><HRMContracten /></SubscriptionRoute>
+            } />
+            <Route path="hrm/documenten" element={
+              <SubscriptionRoute><HRMDocumenten /></SubscriptionRoute>
+            } />
+            <Route path="hrm/verlof" element={
+              <SubscriptionRoute><HRMVerlof /></SubscriptionRoute>
+            } />
+            <Route path="hrm/aanwezigheid" element={
+              <SubscriptionRoute><HRMAanwezigheid /></SubscriptionRoute>
+            } />
+            <Route path="hrm/loonlijst" element={
+              <SubscriptionRoute><HRMLoonlijst /></SubscriptionRoute>
+            } />
+            <Route path="hrm/instellingen" element={
+              <SubscriptionRoute><HRMInstellingen /></SubscriptionRoute>
             } />
             
             {/* Mijn Modules - customer can see their pending and active modules */}
