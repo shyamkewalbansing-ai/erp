@@ -8189,6 +8189,647 @@ async def get_hrm_stats(current_user: dict = Depends(get_current_user)):
         "total_monthly_salary": total_salary
     }
 
+# --- HRM CONTRACTS ---
+
+class HRMContract(BaseModel):
+    employee_id: str
+    contract_type: str  # permanent, temporary, freelance, internship
+    start_date: str
+    end_date: Optional[str] = None
+    salary: float
+    currency: str = "SRD"  # SRD, EUR, USD
+    working_hours: int = 40
+    position: Optional[str] = None
+    notes: Optional[str] = None
+
+@api_router.get("/hrm/contracts")
+async def get_hrm_contracts(current_user: dict = Depends(get_current_user)):
+    """Get all contracts"""
+    contracts = await db.hrm_contracts.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(500)
+    
+    # Add employee names
+    for contract in contracts:
+        employee = await db.hrm_employees.find_one({"id": contract.get("employee_id")}, {"name": 1})
+        contract["employee_name"] = employee.get("name") if employee else "Onbekend"
+    
+    return contracts
+
+@api_router.post("/hrm/contracts")
+async def create_hrm_contract(contract: HRMContract, current_user: dict = Depends(get_current_user)):
+    """Create a new contract"""
+    contract_dict = contract.dict()
+    contract_dict["id"] = str(uuid.uuid4())
+    contract_dict["user_id"] = current_user["id"]
+    contract_dict["status"] = "active"
+    contract_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.hrm_contracts.insert_one(contract_dict)
+    
+    # Update employee salary if needed
+    await db.hrm_employees.update_one(
+        {"id": contract.employee_id},
+        {"$set": {"salary": contract.salary, "position": contract.position}}
+    )
+    
+    return {k: v for k, v in contract_dict.items() if k != "_id"}
+
+@api_router.put("/hrm/contracts/{contract_id}")
+async def update_hrm_contract(contract_id: str, contract: HRMContract, current_user: dict = Depends(get_current_user)):
+    """Update a contract"""
+    existing = await db.hrm_contracts.find_one({"id": contract_id, "user_id": current_user["id"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Contract niet gevonden")
+    
+    update_data = contract.dict()
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.hrm_contracts.update_one({"id": contract_id}, {"$set": update_data})
+    return await db.hrm_contracts.find_one({"id": contract_id}, {"_id": 0})
+
+@api_router.delete("/hrm/contracts/{contract_id}")
+async def delete_hrm_contract(contract_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a contract"""
+    result = await db.hrm_contracts.delete_one({"id": contract_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Contract niet gevonden")
+    return {"message": "Contract verwijderd"}
+
+# --- HRM VACANCIES (WERVING) ---
+
+class HRMVacancy(BaseModel):
+    title: str
+    department: Optional[str] = None
+    description: Optional[str] = None
+    requirements: Optional[str] = None
+    salary_min: Optional[float] = None
+    salary_max: Optional[float] = None
+    currency: str = "SRD"
+    employment_type: str = "fulltime"  # fulltime, parttime, freelance, internship
+    location: Optional[str] = None
+    deadline: Optional[str] = None
+    status: str = "open"  # open, closed, on_hold
+
+@api_router.get("/hrm/vacancies")
+async def get_hrm_vacancies(current_user: dict = Depends(get_current_user)):
+    """Get all vacancies"""
+    vacancies = await db.hrm_vacancies.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return vacancies
+
+@api_router.post("/hrm/vacancies")
+async def create_hrm_vacancy(vacancy: HRMVacancy, current_user: dict = Depends(get_current_user)):
+    """Create a new vacancy"""
+    vacancy_dict = vacancy.dict()
+    vacancy_dict["id"] = str(uuid.uuid4())
+    vacancy_dict["user_id"] = current_user["id"]
+    vacancy_dict["applications_count"] = 0
+    vacancy_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.hrm_vacancies.insert_one(vacancy_dict)
+    return {k: v for k, v in vacancy_dict.items() if k != "_id"}
+
+@api_router.put("/hrm/vacancies/{vacancy_id}")
+async def update_hrm_vacancy(vacancy_id: str, vacancy: HRMVacancy, current_user: dict = Depends(get_current_user)):
+    """Update a vacancy"""
+    existing = await db.hrm_vacancies.find_one({"id": vacancy_id, "user_id": current_user["id"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Vacature niet gevonden")
+    
+    update_data = vacancy.dict()
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.hrm_vacancies.update_one({"id": vacancy_id}, {"$set": update_data})
+    return await db.hrm_vacancies.find_one({"id": vacancy_id}, {"_id": 0})
+
+@api_router.delete("/hrm/vacancies/{vacancy_id}")
+async def delete_hrm_vacancy(vacancy_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a vacancy"""
+    result = await db.hrm_vacancies.delete_one({"id": vacancy_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Vacature niet gevonden")
+    return {"message": "Vacature verwijderd"}
+
+# --- HRM APPLICATIONS (SOLLICITATIES) ---
+
+class HRMApplication(BaseModel):
+    vacancy_id: str
+    applicant_name: str
+    applicant_email: str
+    applicant_phone: Optional[str] = None
+    resume_url: Optional[str] = None
+    cover_letter: Optional[str] = None
+    status: str = "new"  # new, reviewing, interview, offered, hired, rejected
+
+@api_router.get("/hrm/applications")
+async def get_hrm_applications(current_user: dict = Depends(get_current_user)):
+    """Get all applications"""
+    applications = await db.hrm_applications.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(500)
+    
+    # Add vacancy titles
+    for app in applications:
+        vacancy = await db.hrm_vacancies.find_one({"id": app.get("vacancy_id")}, {"title": 1})
+        app["vacancy_title"] = vacancy.get("title") if vacancy else "Onbekend"
+    
+    return applications
+
+@api_router.post("/hrm/applications")
+async def create_hrm_application(application: HRMApplication, current_user: dict = Depends(get_current_user)):
+    """Create a new application"""
+    app_dict = application.dict()
+    app_dict["id"] = str(uuid.uuid4())
+    app_dict["user_id"] = current_user["id"]
+    app_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.hrm_applications.insert_one(app_dict)
+    
+    # Update applications count on vacancy
+    await db.hrm_vacancies.update_one(
+        {"id": application.vacancy_id},
+        {"$inc": {"applications_count": 1}}
+    )
+    
+    return {k: v for k, v in app_dict.items() if k != "_id"}
+
+@api_router.put("/hrm/applications/{application_id}/status")
+async def update_hrm_application_status(application_id: str, status: str, current_user: dict = Depends(get_current_user)):
+    """Update application status"""
+    valid_statuses = ["new", "reviewing", "interview", "offered", "hired", "rejected"]
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Ongeldige status")
+    
+    result = await db.hrm_applications.update_one(
+        {"id": application_id, "user_id": current_user["id"]},
+        {"$set": {"status": status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Sollicitatie niet gevonden")
+    
+    return await db.hrm_applications.find_one({"id": application_id}, {"_id": 0})
+
+@api_router.delete("/hrm/applications/{application_id}")
+async def delete_hrm_application(application_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete an application"""
+    result = await db.hrm_applications.delete_one({"id": application_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Sollicitatie niet gevonden")
+    return {"message": "Sollicitatie verwijderd"}
+
+# --- HRM DOCUMENTS ---
+
+class HRMDocument(BaseModel):
+    employee_id: Optional[str] = None
+    name: str
+    document_type: str  # contract, id, certificate, other
+    file_url: Optional[str] = None
+    notes: Optional[str] = None
+    expiry_date: Optional[str] = None
+
+@api_router.get("/hrm/documents")
+async def get_hrm_documents(employee_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get all documents, optionally filtered by employee"""
+    query = {"user_id": current_user["id"]}
+    if employee_id:
+        query["employee_id"] = employee_id
+    
+    documents = await db.hrm_documents.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    
+    # Add employee names
+    for doc in documents:
+        if doc.get("employee_id"):
+            employee = await db.hrm_employees.find_one({"id": doc.get("employee_id")}, {"name": 1})
+            doc["employee_name"] = employee.get("name") if employee else "Onbekend"
+    
+    return documents
+
+@api_router.post("/hrm/documents")
+async def create_hrm_document(document: HRMDocument, current_user: dict = Depends(get_current_user)):
+    """Create a new document"""
+    doc_dict = document.dict()
+    doc_dict["id"] = str(uuid.uuid4())
+    doc_dict["user_id"] = current_user["id"]
+    doc_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.hrm_documents.insert_one(doc_dict)
+    return {k: v for k, v in doc_dict.items() if k != "_id"}
+
+@api_router.delete("/hrm/documents/{document_id}")
+async def delete_hrm_document(document_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a document"""
+    result = await db.hrm_documents.delete_one({"id": document_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Document niet gevonden")
+    return {"message": "Document verwijderd"}
+
+# --- HRM ATTENDANCE (AANWEZIGHEID) ---
+
+class HRMAttendance(BaseModel):
+    employee_id: str
+    date: str
+    clock_in: Optional[str] = None
+    clock_out: Optional[str] = None
+    break_minutes: int = 0
+    status: str = "present"  # present, absent, late, half_day, remote
+    notes: Optional[str] = None
+
+@api_router.get("/hrm/attendance")
+async def get_hrm_attendance(date: Optional[str] = None, employee_id: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get attendance records"""
+    query = {"user_id": current_user["id"]}
+    if date:
+        query["date"] = date
+    if employee_id:
+        query["employee_id"] = employee_id
+    
+    records = await db.hrm_attendance.find(query, {"_id": 0}).sort("date", -1).to_list(1000)
+    
+    # Add employee names
+    for record in records:
+        employee = await db.hrm_employees.find_one({"id": record.get("employee_id")}, {"name": 1})
+        record["employee_name"] = employee.get("name") if employee else "Onbekend"
+    
+    return records
+
+@api_router.post("/hrm/attendance")
+async def create_hrm_attendance(attendance: HRMAttendance, current_user: dict = Depends(get_current_user)):
+    """Create or update attendance record"""
+    # Check if record exists for this employee and date
+    existing = await db.hrm_attendance.find_one({
+        "user_id": current_user["id"],
+        "employee_id": attendance.employee_id,
+        "date": attendance.date
+    })
+    
+    att_dict = attendance.dict()
+    att_dict["user_id"] = current_user["id"]
+    att_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Calculate worked hours
+    if attendance.clock_in and attendance.clock_out:
+        try:
+            clock_in = datetime.strptime(attendance.clock_in, "%H:%M")
+            clock_out = datetime.strptime(attendance.clock_out, "%H:%M")
+            worked_minutes = (clock_out - clock_in).seconds // 60 - attendance.break_minutes
+            att_dict["worked_hours"] = round(worked_minutes / 60, 2)
+        except:
+            att_dict["worked_hours"] = 0
+    
+    if existing:
+        await db.hrm_attendance.update_one({"id": existing["id"]}, {"$set": att_dict})
+        return await db.hrm_attendance.find_one({"id": existing["id"]}, {"_id": 0})
+    else:
+        att_dict["id"] = str(uuid.uuid4())
+        att_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+        await db.hrm_attendance.insert_one(att_dict)
+        return {k: v for k, v in att_dict.items() if k != "_id"}
+
+@api_router.post("/hrm/attendance/clock-in")
+async def clock_in(employee_id: str, current_user: dict = Depends(get_current_user)):
+    """Clock in an employee"""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    now_time = datetime.now(timezone.utc).strftime("%H:%M")
+    
+    existing = await db.hrm_attendance.find_one({
+        "user_id": current_user["id"],
+        "employee_id": employee_id,
+        "date": today
+    })
+    
+    if existing:
+        await db.hrm_attendance.update_one(
+            {"id": existing["id"]},
+            {"$set": {"clock_in": now_time, "status": "present"}}
+        )
+    else:
+        att_dict = {
+            "id": str(uuid.uuid4()),
+            "user_id": current_user["id"],
+            "employee_id": employee_id,
+            "date": today,
+            "clock_in": now_time,
+            "status": "present",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.hrm_attendance.insert_one(att_dict)
+    
+    return {"message": f"Ingeklokt om {now_time}", "time": now_time}
+
+@api_router.post("/hrm/attendance/clock-out")
+async def clock_out(employee_id: str, current_user: dict = Depends(get_current_user)):
+    """Clock out an employee"""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    now_time = datetime.now(timezone.utc).strftime("%H:%M")
+    
+    existing = await db.hrm_attendance.find_one({
+        "user_id": current_user["id"],
+        "employee_id": employee_id,
+        "date": today
+    })
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Geen inklok record gevonden voor vandaag")
+    
+    # Calculate worked hours
+    worked_hours = 0
+    if existing.get("clock_in"):
+        try:
+            clock_in = datetime.strptime(existing["clock_in"], "%H:%M")
+            clock_out = datetime.strptime(now_time, "%H:%M")
+            worked_minutes = (clock_out - clock_in).seconds // 60 - existing.get("break_minutes", 0)
+            worked_hours = round(worked_minutes / 60, 2)
+        except:
+            pass
+    
+    await db.hrm_attendance.update_one(
+        {"id": existing["id"]},
+        {"$set": {"clock_out": now_time, "worked_hours": worked_hours}}
+    )
+    
+    return {"message": f"Uitgeklokt om {now_time}", "time": now_time, "worked_hours": worked_hours}
+
+# --- HRM PAYROLL (LOONLIJST) ---
+
+class HRMPayroll(BaseModel):
+    employee_id: str
+    period: str  # e.g., "2024-01"
+    basic_salary: float
+    currency: str = "SRD"
+    overtime_hours: float = 0
+    overtime_rate: float = 1.5
+    bonuses: float = 0
+    deductions: float = 0
+    tax_amount: float = 0
+    net_salary: Optional[float] = None
+    status: str = "draft"  # draft, approved, paid
+    payment_date: Optional[str] = None
+    notes: Optional[str] = None
+
+@api_router.get("/hrm/payroll")
+async def get_hrm_payroll(period: Optional[str] = None, current_user: dict = Depends(get_current_user)):
+    """Get payroll records"""
+    query = {"user_id": current_user["id"]}
+    if period:
+        query["period"] = period
+    
+    records = await db.hrm_payroll.find(query, {"_id": 0}).sort("created_at", -1).to_list(500)
+    
+    # Add employee names
+    for record in records:
+        employee = await db.hrm_employees.find_one({"id": record.get("employee_id")}, {"name": 1})
+        record["employee_name"] = employee.get("name") if employee else "Onbekend"
+    
+    return records
+
+@api_router.post("/hrm/payroll")
+async def create_hrm_payroll(payroll: HRMPayroll, current_user: dict = Depends(get_current_user)):
+    """Create a payroll record"""
+    payroll_dict = payroll.dict()
+    payroll_dict["id"] = str(uuid.uuid4())
+    payroll_dict["user_id"] = current_user["id"]
+    payroll_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Calculate net salary
+    overtime_pay = payroll.overtime_hours * (payroll.basic_salary / 160) * payroll.overtime_rate
+    gross_salary = payroll.basic_salary + overtime_pay + payroll.bonuses
+    payroll_dict["gross_salary"] = gross_salary
+    payroll_dict["net_salary"] = gross_salary - payroll.deductions - payroll.tax_amount
+    
+    await db.hrm_payroll.insert_one(payroll_dict)
+    return {k: v for k, v in payroll_dict.items() if k != "_id"}
+
+@api_router.put("/hrm/payroll/{payroll_id}")
+async def update_hrm_payroll(payroll_id: str, payroll: HRMPayroll, current_user: dict = Depends(get_current_user)):
+    """Update a payroll record"""
+    existing = await db.hrm_payroll.find_one({"id": payroll_id, "user_id": current_user["id"]})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Loonlijst niet gevonden")
+    
+    payroll_dict = payroll.dict()
+    payroll_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Recalculate
+    overtime_pay = payroll.overtime_hours * (payroll.basic_salary / 160) * payroll.overtime_rate
+    gross_salary = payroll.basic_salary + overtime_pay + payroll.bonuses
+    payroll_dict["gross_salary"] = gross_salary
+    payroll_dict["net_salary"] = gross_salary - payroll.deductions - payroll.tax_amount
+    
+    await db.hrm_payroll.update_one({"id": payroll_id}, {"$set": payroll_dict})
+    return await db.hrm_payroll.find_one({"id": payroll_id}, {"_id": 0})
+
+@api_router.put("/hrm/payroll/{payroll_id}/approve")
+async def approve_hrm_payroll(payroll_id: str, current_user: dict = Depends(get_current_user)):
+    """Approve a payroll record"""
+    result = await db.hrm_payroll.update_one(
+        {"id": payroll_id, "user_id": current_user["id"]},
+        {"$set": {"status": "approved", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Loonlijst niet gevonden")
+    return await db.hrm_payroll.find_one({"id": payroll_id}, {"_id": 0})
+
+@api_router.put("/hrm/payroll/{payroll_id}/pay")
+async def pay_hrm_payroll(payroll_id: str, current_user: dict = Depends(get_current_user)):
+    """Mark payroll as paid"""
+    result = await db.hrm_payroll.update_one(
+        {"id": payroll_id, "user_id": current_user["id"]},
+        {"$set": {
+            "status": "paid",
+            "payment_date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Loonlijst niet gevonden")
+    return await db.hrm_payroll.find_one({"id": payroll_id}, {"_id": 0})
+
+@api_router.delete("/hrm/payroll/{payroll_id}")
+async def delete_hrm_payroll(payroll_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a payroll record"""
+    result = await db.hrm_payroll.delete_one({"id": payroll_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Loonlijst niet gevonden")
+    return {"message": "Loonlijst verwijderd"}
+
+@api_router.post("/hrm/payroll/generate")
+async def generate_payroll(period: str, current_user: dict = Depends(get_current_user)):
+    """Generate payroll for all active employees for a period"""
+    employees = await db.hrm_employees.find(
+        {"user_id": current_user["id"], "status": "active"},
+        {"_id": 0}
+    ).to_list(500)
+    
+    created = []
+    for emp in employees:
+        # Check if payroll already exists
+        existing = await db.hrm_payroll.find_one({
+            "user_id": current_user["id"],
+            "employee_id": emp["id"],
+            "period": period
+        })
+        if existing:
+            continue
+        
+        payroll_dict = {
+            "id": str(uuid.uuid4()),
+            "user_id": current_user["id"],
+            "employee_id": emp["id"],
+            "period": period,
+            "basic_salary": emp.get("salary", 0),
+            "currency": "SRD",
+            "overtime_hours": 0,
+            "overtime_rate": 1.5,
+            "bonuses": 0,
+            "deductions": 0,
+            "tax_amount": 0,
+            "gross_salary": emp.get("salary", 0),
+            "net_salary": emp.get("salary", 0),
+            "status": "draft",
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.hrm_payroll.insert_one(payroll_dict)
+        created.append({k: v for k, v in payroll_dict.items() if k != "_id"})
+    
+    return {"message": f"{len(created)} loonstroken aangemaakt", "payrolls": created}
+
+# --- HRM SETTINGS ---
+
+class HRMSettings(BaseModel):
+    company_name: Optional[str] = None
+    default_currency: str = "SRD"
+    work_hours_per_day: int = 8
+    work_days_per_week: int = 5
+    overtime_rate: float = 1.5
+    vacation_days_per_year: int = 20
+    sick_days_per_year: int = 10
+    tax_rate: float = 0.0
+    allow_remote_work: bool = True
+    require_clock_in: bool = False
+
+@api_router.get("/hrm/settings")
+async def get_hrm_settings(current_user: dict = Depends(get_current_user)):
+    """Get HRM settings"""
+    settings = await db.hrm_settings.find_one({"user_id": current_user["id"]}, {"_id": 0})
+    if not settings:
+        # Return defaults
+        settings = {
+            "user_id": current_user["id"],
+            "default_currency": "SRD",
+            "work_hours_per_day": 8,
+            "work_days_per_week": 5,
+            "overtime_rate": 1.5,
+            "vacation_days_per_year": 20,
+            "sick_days_per_year": 10,
+            "tax_rate": 0.0,
+            "allow_remote_work": True,
+            "require_clock_in": False
+        }
+    return settings
+
+@api_router.put("/hrm/settings")
+async def update_hrm_settings(settings: HRMSettings, current_user: dict = Depends(get_current_user)):
+    """Update HRM settings"""
+    settings_dict = settings.dict()
+    settings_dict["user_id"] = current_user["id"]
+    settings_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.hrm_settings.update_one(
+        {"user_id": current_user["id"]},
+        {"$set": settings_dict},
+        upsert=True
+    )
+    
+    return await db.hrm_settings.find_one({"user_id": current_user["id"]}, {"_id": 0})
+
+# --- HRM EXTENDED STATS ---
+
+@api_router.get("/hrm/dashboard")
+async def get_hrm_dashboard(current_user: dict = Depends(get_current_user)):
+    """Get comprehensive HRM dashboard data"""
+    user_id = current_user["id"]
+    
+    # Basic stats
+    total_employees = await db.hrm_employees.count_documents({"user_id": user_id})
+    active_employees = await db.hrm_employees.count_documents({"user_id": user_id, "status": "active"})
+    on_leave = await db.hrm_employees.count_documents({"user_id": user_id, "status": "on_leave"})
+    departments = await db.hrm_departments.count_documents({"user_id": user_id})
+    
+    # Leave requests
+    pending_leave = await db.hrm_leave_requests.count_documents({"user_id": user_id, "status": "pending"})
+    
+    # Vacancies
+    open_vacancies = await db.hrm_vacancies.count_documents({"user_id": user_id, "status": "open"})
+    total_applications = await db.hrm_applications.count_documents({"user_id": user_id})
+    new_applications = await db.hrm_applications.count_documents({"user_id": user_id, "status": "new"})
+    
+    # Contracts expiring soon (within 30 days)
+    thirty_days_later = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+    expiring_contracts = await db.hrm_contracts.count_documents({
+        "user_id": user_id,
+        "end_date": {"$lte": thirty_days_later, "$gte": datetime.now(timezone.utc).isoformat()}
+    })
+    
+    # Salary statistics
+    salary_pipeline = [
+        {"$match": {"user_id": user_id, "status": "active"}},
+        {"$group": {"_id": None, "total": {"$sum": "$salary"}, "avg": {"$avg": "$salary"}}}
+    ]
+    salary_result = await db.hrm_employees.aggregate(salary_pipeline).to_list(1)
+    total_salary = salary_result[0]["total"] if salary_result else 0
+    avg_salary = salary_result[0]["avg"] if salary_result else 0
+    
+    # Today's attendance
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    present_today = await db.hrm_attendance.count_documents({"user_id": user_id, "date": today, "status": "present"})
+    
+    # Department breakdown
+    dept_pipeline = [
+        {"$match": {"user_id": user_id}},
+        {"$group": {"_id": "$department", "count": {"$sum": 1}}}
+    ]
+    dept_breakdown = await db.hrm_employees.aggregate(dept_pipeline).to_list(50)
+    
+    # Recent payroll
+    current_period = datetime.now(timezone.utc).strftime("%Y-%m")
+    payroll_this_month = await db.hrm_payroll.count_documents({"user_id": user_id, "period": current_period})
+    paid_this_month = await db.hrm_payroll.count_documents({"user_id": user_id, "period": current_period, "status": "paid"})
+    
+    return {
+        "employees": {
+            "total": total_employees,
+            "active": active_employees,
+            "on_leave": on_leave,
+            "present_today": present_today
+        },
+        "departments": departments,
+        "leave": {
+            "pending_requests": pending_leave
+        },
+        "recruitment": {
+            "open_vacancies": open_vacancies,
+            "total_applications": total_applications,
+            "new_applications": new_applications
+        },
+        "contracts": {
+            "expiring_soon": expiring_contracts
+        },
+        "salary": {
+            "total_monthly": total_salary,
+            "average": round(avg_salary, 2)
+        },
+        "payroll": {
+            "this_month": payroll_this_month,
+            "paid": paid_this_month
+        },
+        "department_breakdown": [{"name": d["_id"] or "Geen", "count": d["count"]} for d in dept_breakdown]
+    }
+
 # ============================================
 # AI CHAT ASSISTANT
 # ============================================
