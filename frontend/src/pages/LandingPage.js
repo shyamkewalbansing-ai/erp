@@ -661,7 +661,7 @@ export default function LandingPage() {
               return (
                 <Card key={addon.id} className="group relative overflow-hidden border border-gray-100 bg-white hover:shadow-[0_12px_40px_-12px_rgba(12,175,96,0.15)] transition-all duration-300 hover:-translate-y-1">
                   <div className="h-36 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 flex items-center justify-center relative overflow-hidden">
-                    <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"30\" height=\"30\" viewBox=\"0 0 30 30\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z\" fill=\"rgba(255,255,255,0.07)\"%2F%3E%3C/svg%3E')] opacity-50"></div>
+                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.3) 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
                     <Icon className="w-14 h-14 text-white/90 group-hover:scale-110 transition-transform duration-300" />
                   </div>
                   <CardContent className="p-6">
