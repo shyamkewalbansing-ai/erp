@@ -189,7 +189,7 @@ const CustomerOnlyRoute = ({ children }) => {
   
   // Superadmin should not access customer pages
   if (isSuperAdmin()) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/app/admin" replace />;
   }
   
   return children;
