@@ -49,6 +49,7 @@ const vastgoedNavItems = [
   { to: '/app/deposits', icon: Wallet, label: 'Borg', addon: 'vastgoed_beheer' },
   { to: '/app/kasgeld', icon: Banknote, label: 'Kasgeld', addon: 'vastgoed_beheer' },
   { to: '/app/onderhoud', icon: Wrench, label: 'Onderhoud', addon: 'vastgoed_beheer' },
+  { to: '/app/meterstanden', icon: Zap, label: 'Meterstanden', addon: 'vastgoed_beheer' },
   { to: '/app/werknemers', icon: Users2, label: 'Werknemers', addon: 'vastgoed_beheer' },
 ];
 
