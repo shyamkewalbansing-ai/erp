@@ -257,6 +257,9 @@ function App() {
             <Route path="onderhoud" element={
               <SubscriptionRoute><Onderhoud /></SubscriptionRoute>
             } />
+            <Route path="meterstanden" element={
+              <SubscriptionRoute><Meterstanden /></SubscriptionRoute>
+            } />
             <Route path="werknemers" element={
               <SubscriptionRoute><Werknemers /></SubscriptionRoute>
             } />
