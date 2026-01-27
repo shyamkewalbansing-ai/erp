@@ -69,38 +69,48 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex">
-      {/* Left side - Image */}
-      <div className="hidden lg:flex lg:w-1/2 relative">
+      {/* Left side - Image with overlay */}
+      <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden">
         <img
           src={settings?.login_image_url || "https://customer-assets.emergentagent.com/job_modular-erp-19/artifacts/kribqmjl_261F389D-0F54-4D61-963C-4B58A923ED3D.png"}
           alt="Facturatie ERP"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-12 text-white">
-          <h2 className="text-3xl font-bold mb-3">Welkom bij Facturatie N.V.</h2>
-          <p className="text-base text-white/90">
-            Beheer uw bedrijf eenvoudig met onze complete ERP-oplossing.
+        <div className="absolute inset-0 bg-gradient-to-t from-emerald-900/90 via-emerald-900/50 to-emerald-900/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/60 to-transparent" />
+        
+        {/* Decorative elements */}
+        <div className="absolute top-10 right-10 w-64 h-64 bg-emerald-400/20 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-10 w-48 h-48 bg-teal-400/20 rounded-full blur-3xl"></div>
+        
+        <div className="absolute bottom-0 left-0 right-0 p-12 text-white z-10">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-6">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="text-sm font-medium font-body">500+ actieve gebruikers</span>
+          </div>
+          <h2 className="font-heading text-3xl font-bold mb-3 tracking-tight">Welkom bij Facturatie N.V.</h2>
+          <p className="text-base text-white/90 font-body leading-relaxed max-w-md">
+            Beheer uw bedrijf eenvoudig met onze complete ERP-oplossing. Boekhouding, HRM en meer op één plek.
           </p>
         </div>
       </div>
 
       {/* Right side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
+      <div className="flex-1 flex items-center justify-center p-6 md:p-8 bg-gradient-to-br from-gray-50 to-emerald-50/30">
         <div className="w-full max-w-md animate-fade-in">
           {/* Logo */}
-          <div className="mb-8">
+          <div className="mb-10">
             <img 
               src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
               alt="Facturatie N.V." 
-              className="h-12 w-auto"
+              className="h-10 md:h-12 w-auto"
             />
           </div>
 
           {/* Header */}
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Welkom terug</h2>
-            <p className="text-muted-foreground">
+            <h2 className="font-heading text-2xl md:text-3xl font-bold text-gray-900 mb-2 tracking-tight">Welkom terug</h2>
+            <p className="text-gray-600 font-body">
               Log in om uw bedrijf te beheren
             </p>
           </div>
@@ -108,16 +118,16 @@ export default function Login() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mailadres</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Label htmlFor="email" className="font-body font-medium">E-mailadres</Label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="naam@voorbeeld.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-12 bg-input border-transparent focus:border-primary"
+                  className="pl-12 h-12 bg-white border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl transition-all font-body"
                   required
                   data-testid="login-email"
                 />
@@ -126,25 +136,25 @@ export default function Login() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Wachtwoord</Label>
+                <Label htmlFor="password" className="font-body font-medium">Wachtwoord</Label>
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-emerald-600 hover:text-emerald-700 font-medium font-body transition-colors"
                   data-testid="forgot-password-link"
                 >
                   Wachtwoord vergeten?
                 </button>
               </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-emerald-500 transition-colors" />
                 <Input
                   id="password"
                   type="password"
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 h-12 bg-input border-transparent focus:border-primary"
+                  className="pl-12 h-12 bg-white border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl transition-all font-body"
                   required
                   data-testid="login-password"
                 />
@@ -153,7 +163,7 @@ export default function Login() {
 
             <Button
               type="submit"
-              className="w-full h-12 rounded-full bg-primary hover:bg-primary/90 btn-scale"
+              className="w-full h-12 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all font-body font-semibold text-base"
               disabled={loading}
               data-testid="login-submit"
             >
@@ -169,14 +179,25 @@ export default function Login() {
           </form>
 
           {/* Register link */}
-          <p className="mt-8 text-center text-muted-foreground">
+          <p className="mt-8 text-center text-gray-600 font-body">
             Nog geen account?{' '}
             <Link 
               to="/register" 
-              className="text-primary font-medium hover:underline"
+              className="text-emerald-600 font-semibold hover:text-emerald-700 transition-colors"
               data-testid="register-link"
             >
               Registreer hier
+            </Link>
+          </p>
+          
+          {/* Tenant portal link */}
+          <p className="mt-4 text-center">
+            <Link 
+              to="/huurder/login" 
+              className="text-sm text-gray-500 hover:text-emerald-600 transition-colors font-body"
+              data-testid="tenant-login-link"
+            >
+              Bent u een huurder? Klik hier
             </Link>
           </p>
         </div>
