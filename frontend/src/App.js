@@ -345,4 +345,168 @@ function App() {
   );
 }
 
-export default App;
+// Tenant Portal App - separate from main app
+function TenantPortalRoutes() {
+  return (
+    <TenantAuthProvider>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/login" element={<TenantLogin />} />
+          <Route path="/" element={
+            <TenantProtectedRoute><TenantDashboard /></TenantProtectedRoute>
+          } />
+          <Route path="*" element={<Navigate to="/huurder" replace />} />
+        </Routes>
+      </Suspense>
+    </TenantAuthProvider>
+  );
+}
+
+// Main App with both portals
+function AppWithRoutes() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* Tenant Portal Routes */}
+          <Route path="/huurder/*" element={<TenantPortalRoutes />} />
+          
+          {/* Main App Routes */}
+          <Route path="/*" element={<MainAppRoutes />} />
+        </Routes>
+        <Toaster richColors position="top-right" />
+      </AuthProvider>
+    </BrowserRouter>
+  );
+}
+
+// Main App Routes (existing)
+function MainAppRoutes() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        {/* Landing Page - Critical, loaded immediately */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/modules" element={<ModulesPage />} />
+        <Route path="/prijzen" element={<PrijzenPage />} />
+        <Route path="/over-ons" element={<OverOnsPage />} />
+        <Route path="/voorwaarden" element={<VoorwaardenPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        
+        {/* Dynamic CMS Pages */}
+        <Route path="/pagina/:slug" element={<CMSPage />} />
+        
+        {/* Public Auth Routes */}
+        <Route path="/login" element={
+          <PublicRoute><Login /></PublicRoute>
+        } />
+        <Route path="/register" element={
+          <PublicRoute><Register /></PublicRoute>
+        } />
+        <Route path="/reset-wachtwoord/:token" element={<ResetPassword />} />
+        
+        {/* Public Contract Signing Page (no auth required) */}
+        <Route path="/onderteken/:token" element={<OndertekeningPage />} />
+        
+        {/* Protected Routes - with Layout */}
+        <Route path="/app" element={
+          <ProtectedRoute><Layout /></ProtectedRoute>
+        }>
+          <Route index element={<SmartRedirect />} />
+          <Route path="dashboard" element={
+            <SubscriptionRoute><Dashboard /></SubscriptionRoute>
+          } />
+          <Route path="tenants" element={
+            <SubscriptionRoute><Tenants /></SubscriptionRoute>
+          } />
+          <Route path="apartments" element={
+            <SubscriptionRoute><Apartments /></SubscriptionRoute>
+          } />
+          <Route path="payments" element={
+            <SubscriptionRoute><Payments /></SubscriptionRoute>
+          } />
+          <Route path="facturen" element={
+            <SubscriptionRoute><Facturen /></SubscriptionRoute>
+          } />
+          <Route path="leningen" element={
+            <SubscriptionRoute><Leningen /></SubscriptionRoute>
+          } />
+          <Route path="contracten" element={
+            <SubscriptionRoute><Contracten /></SubscriptionRoute>
+          } />
+          <Route path="deposits" element={
+            <SubscriptionRoute><Deposits /></SubscriptionRoute>
+          } />
+          <Route path="kasgeld" element={
+            <SubscriptionRoute><Kasgeld /></SubscriptionRoute>
+          } />
+          <Route path="onderhoud" element={
+            <SubscriptionRoute><Onderhoud /></SubscriptionRoute>
+          } />
+          <Route path="meterstanden" element={
+            <SubscriptionRoute><Meterstanden /></SubscriptionRoute>
+          } />
+          <Route path="werknemers" element={
+            <SubscriptionRoute><Werknemers /></SubscriptionRoute>
+          } />
+          <Route path="abonnement" element={<Abonnement />} />
+          <Route path="instellingen" element={<Instellingen />} />
+          <Route path="admin" element={
+            <AdminRoute><Admin /></AdminRoute>
+          } />
+          <Route path="mijn-modules" element={<MijnModules />} />
+          <Route path="website-beheer" element={
+            <AdminRoute><WebsiteBeheer /></AdminRoute>
+          } />
+          
+          {/* HRM Module Routes */}
+          <Route path="hrm" element={
+            <SubscriptionRoute requiredAddon="hrm"><HRMDashboard /></SubscriptionRoute>
+          } />
+          <Route path="hrm/personeel" element={
+            <SubscriptionRoute requiredAddon="hrm"><HRMPersoneel /></SubscriptionRoute>
+          } />
+          <Route path="hrm/werving" element={
+            <SubscriptionRoute requiredAddon="hrm"><HRMWerving /></SubscriptionRoute>
+          } />
+          <Route path="hrm/contracten" element={
+            <SubscriptionRoute requiredAddon="hrm"><HRMContracten /></SubscriptionRoute>
+          } />
+          <Route path="hrm/documenten" element={
+            <SubscriptionRoute requiredAddon="hrm"><HRMDocumenten /></SubscriptionRoute>
+          } />
+          <Route path="hrm/verlof" element={
+            <SubscriptionRoute requiredAddon="hrm"><HRMVerlof /></SubscriptionRoute>
+          } />
+          <Route path="hrm/aanwezigheid" element={
+            <SubscriptionRoute requiredAddon="hrm"><HRMAanwezigheid /></SubscriptionRoute>
+          } />
+          <Route path="hrm/loonlijst" element={
+            <SubscriptionRoute requiredAddon="hrm"><HRMLoonlijst /></SubscriptionRoute>
+          } />
+          <Route path="hrm/instellingen" element={
+            <SubscriptionRoute requiredAddon="hrm"><HRMInstellingen /></SubscriptionRoute>
+          } />
+        </Route>
+        
+        {/* Redirect old routes to new app routes */}
+        <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
+        <Route path="/tenants" element={<Navigate to="/app/tenants" replace />} />
+        <Route path="/apartments" element={<Navigate to="/app/apartments" replace />} />
+        <Route path="/payments" element={<Navigate to="/app/payments" replace />} />
+        <Route path="/facturen" element={<Navigate to="/app/facturen" replace />} />
+        <Route path="/leningen" element={<Navigate to="/app/leningen" replace />} />
+        <Route path="/contracten" element={<Navigate to="/app/contracten" replace />} />
+        <Route path="/deposits" element={<Navigate to="/app/deposits" replace />} />
+        <Route path="/kasgeld" element={<Navigate to="/app/kasgeld" replace />} />
+        <Route path="/onderhoud" element={<Navigate to="/app/onderhoud" replace />} />
+        <Route path="/werknemers" element={<Navigate to="/app/werknemers" replace />} />
+        
+        {/* 404 - redirect to landing */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Suspense>
+  );
+}
+
+export default AppWithRoutes;
