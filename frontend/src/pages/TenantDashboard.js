@@ -137,19 +137,21 @@ export default function TenantDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-emerald-50/30">
+      {/* Header - Glass effect */}
+      <header className="glass-header sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <Home className="w-6 h-6 text-emerald-500" />
+          <div className="flex justify-between items-center h-16 md:h-18">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <Home className="w-5 h-5 text-white" />
+              </div>
               <div>
-                <h1 className="font-semibold text-gray-900">Huurders Portaal</h1>
-                <p className="text-xs text-gray-500">{tenant?.name}</p>
+                <h1 className="font-heading font-semibold text-gray-900">Huurders Portaal</h1>
+                <p className="text-xs text-gray-500 font-body">{tenant?.name}</p>
               </div>
             </div>
-            <Button variant="ghost" onClick={handleLogout} className="text-gray-500">
+            <Button variant="ghost" onClick={handleLogout} className="text-gray-500 hover:text-red-500 transition-colors font-body" data-testid="tenant-logout-btn">
               <LogOut className="w-4 h-4 mr-2" />
               Uitloggen
             </Button>
@@ -161,29 +163,30 @@ export default function TenantDashboard() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome & Quick Actions */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900">Welkom, {tenant?.name}!</h2>
-          <p className="text-gray-500">Beheer uw huur, betalingen en meterstanden</p>
+          <h2 className="font-heading text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">Welkom, {tenant?.name}!</h2>
+          <p className="text-gray-500 font-body mt-1">Beheer uw huur, betalingen en meterstanden</p>
         </div>
 
-        {/* Apartment Info Card */}
+        {/* Apartment Info Card - Glass effect */}
         {dashboard?.apartment_name && (
-          <Card className="mb-6 border-emerald-200 bg-gradient-to-r from-emerald-50 to-cyan-50">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between">
+          <Card className="mb-6 border-emerald-200/50 bg-gradient-to-r from-emerald-50/80 to-teal-50/80 backdrop-blur-sm overflow-hidden" data-testid="apartment-info-card">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-teal-500/5"></div>
+            <CardContent className="p-6 relative">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-emerald-100 rounded-xl">
-                    <Building2 className="w-8 h-8 text-emerald-600" />
+                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg shadow-emerald-500/20">
+                    <Building2 className="w-7 h-7 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900">{dashboard.apartment_name}</h3>
-                    <p className="text-gray-500">{dashboard.apartment_address}</p>
-                    <p className="text-emerald-600 font-medium mt-1">
+                    <h3 className="font-heading text-xl font-semibold text-gray-900">{dashboard.apartment_name}</h3>
+                    <p className="text-gray-500 font-body">{dashboard.apartment_address}</p>
+                    <p className="text-emerald-600 font-semibold mt-1 font-body">
                       Huur: {formatCurrency(dashboard.rent_amount)} / maand
                     </p>
                   </div>
                 </div>
                 {dashboard.pending_meter_reading && (
-                  <Button onClick={() => setMeterDialogOpen(true)} className="bg-emerald-500 hover:bg-emerald-600">
+                  <Button onClick={() => setMeterDialogOpen(true)} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-full shadow-lg shadow-emerald-500/25 font-body font-semibold" data-testid="submit-meter-btn">
                     <Zap className="w-4 h-4 mr-2" />
                     Meterstand Doorgeven
                   </Button>
@@ -193,48 +196,48 @@ export default function TenantDashboard() {
           </Card>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card>
+        {/* Stats Cards - Modern glass design */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
+          <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_-12px_rgba(12,175,96,0.15)] transition-all duration-300" data-testid="stat-total-paid">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-xl">
+                <div className="p-3 bg-gradient-to-br from-green-100 to-green-50 rounded-xl">
                   <CheckCircle className="w-6 h-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Totaal Betaald</p>
-                  <p className="text-2xl font-bold text-green-600">{formatCurrency(dashboard?.total_paid)}</p>
+                  <p className="text-sm text-gray-500 font-body">Totaal Betaald</p>
+                  <p className="text-2xl font-bold text-green-600 font-heading">{formatCurrency(dashboard?.total_paid)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card>
+          <Card className="border-0 bg-white/70 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_-12px_rgba(59,130,246,0.15)] transition-all duration-300" data-testid="stat-monthly-rent">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-blue-100 rounded-xl">
+                <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-50 rounded-xl">
                   <CreditCard className="w-6 h-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Maandelijkse Huur</p>
-                  <p className="text-2xl font-bold text-blue-600">{formatCurrency(dashboard?.rent_amount)}</p>
+                  <p className="text-sm text-gray-500 font-body">Maandelijkse Huur</p>
+                  <p className="text-2xl font-bold text-blue-600 font-heading">{formatCurrency(dashboard?.rent_amount)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
           
-          <Card className={dashboard?.outstanding_balance > 0 ? 'border-orange-300 bg-orange-50' : ''}>
+          <Card className={`border-0 backdrop-blur-sm shadow-[0_8px_32px_rgba(0,0,0,0.06)] transition-all duration-300 ${dashboard?.outstanding_balance > 0 ? 'bg-orange-50/80 hover:shadow-[0_12px_40px_-12px_rgba(249,115,22,0.2)]' : 'bg-white/70'}`} data-testid="stat-outstanding">
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-xl ${dashboard?.outstanding_balance > 0 ? 'bg-orange-200' : 'bg-gray-100'}`}>
+                <div className={`p-3 rounded-xl ${dashboard?.outstanding_balance > 0 ? 'bg-gradient-to-br from-orange-200 to-orange-100' : 'bg-gray-100'}`}>
                   {dashboard?.outstanding_balance > 0 
                     ? <AlertCircle className="w-6 h-6 text-orange-600" />
                     : <CheckCircle className="w-6 h-6 text-gray-400" />
                   }
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Openstaand Saldo</p>
-                  <p className={`text-2xl font-bold ${dashboard?.outstanding_balance > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
+                  <p className="text-sm text-gray-500 font-body">Openstaand Saldo</p>
+                  <p className={`text-2xl font-bold font-heading ${dashboard?.outstanding_balance > 0 ? 'text-orange-600' : 'text-gray-400'}`}>
                     {formatCurrency(dashboard?.outstanding_balance)}
                   </p>
                 </div>
@@ -243,19 +246,21 @@ export default function TenantDashboard() {
           </Card>
         </div>
 
-        {/* Meter Reading Alert */}
+        {/* Meter Reading Alert - Modern notification */}
         {dashboard?.pending_meter_reading && (
-          <Card className="mb-6 border-yellow-300 bg-yellow-50">
+          <Card className="mb-6 border-yellow-200/50 bg-gradient-to-r from-yellow-50/80 to-amber-50/80 backdrop-blur-sm overflow-hidden" data-testid="meter-alert">
             <CardContent className="p-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <Zap className="w-5 h-5 text-yellow-600" />
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <Zap className="w-5 h-5 text-yellow-600" />
+                  </div>
                   <div>
-                    <p className="font-medium text-yellow-800">Meterstand nog niet ingediend</p>
-                    <p className="text-sm text-yellow-600">Geef uw EBS en SWM meterstanden door voor deze maand</p>
+                    <p className="font-medium text-yellow-800 font-body">Meterstand nog niet ingediend</p>
+                    <p className="text-sm text-yellow-600 font-body">Geef uw EBS en SWM meterstanden door voor deze maand</p>
                   </div>
                 </div>
-                <Button onClick={() => setMeterDialogOpen(true)} variant="outline" className="border-yellow-400 text-yellow-700 hover:bg-yellow-100">
+                <Button onClick={() => setMeterDialogOpen(true)} variant="outline" className="border-yellow-300 text-yellow-700 hover:bg-yellow-100 rounded-full font-body whitespace-nowrap" data-testid="meter-alert-btn">
                   Nu Doorgeven
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
