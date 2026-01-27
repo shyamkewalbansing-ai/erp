@@ -159,7 +159,7 @@ const PublicRoute = ({ children }) => {
   
   if (user) {
     // Superadmin goes to admin page, customers go to dashboard
-    return <Navigate to={isSuperAdmin() ? "/admin" : "/dashboard"} replace />;
+    return <Navigate to={isSuperAdmin() ? "/app/admin" : "/app/dashboard"} replace />;
   }
   
   return children;
