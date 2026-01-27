@@ -825,6 +825,63 @@ export default function Tenants() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Portal Account Dialog */}
+      <Dialog open={showPortalDialog} onOpenChange={setShowPortalDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Key className="w-5 h-5 text-emerald-500" />
+              Portaal Account Aanmaken
+            </DialogTitle>
+            <DialogDescription>
+              Maak een account aan zodat {selectedTenant?.name} kan inloggen op het huurders portaal
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-emerald-50 rounded-lg">
+              <div className="flex items-center gap-3 mb-2">
+                <User className="w-5 h-5 text-emerald-600" />
+                <span className="font-medium">{selectedTenant?.name}</span>
+              </div>
+              <div className="flex items-center gap-3 text-sm text-gray-600">
+                <Mail className="w-4 h-4" />
+                <span>{selectedTenant?.email}</span>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="portal-password">Wachtwoord voor huurder *</Label>
+              <Input
+                id="portal-password"
+                type="password"
+                placeholder="Minimaal 6 tekens"
+                value={portalPassword}
+                onChange={(e) => setPortalPassword(e.target.value)}
+                minLength={6}
+              />
+              <p className="text-xs text-muted-foreground">
+                De huurder kan inloggen op <strong>/huurder</strong> met dit wachtwoord
+              </p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPortalDialog(false)}>
+              Annuleren
+            </Button>
+            <Button 
+              onClick={handleCreatePortalAccount}
+              disabled={creatingPortal || !portalPassword || portalPassword.length < 6}
+              className="bg-emerald-500 hover:bg-emerald-600"
+            >
+              {creatingPortal ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Key className="w-4 h-4 mr-2" />}
+              Account Aanmaken
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
