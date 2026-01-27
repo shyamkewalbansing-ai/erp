@@ -419,8 +419,8 @@ class TestAIChatbot:
             print(f"✓ AI Chatbot endpoint exists (AI service may be unavailable)")
     
     def test_authenticated_chat_endpoint(self, auth_headers):
-        """Test POST /api/chat (authenticated)"""
-        response = requests.post(f"{BASE_URL}/api/chat", headers=auth_headers, json={
+        """Test POST /api/ai/chat (authenticated)"""
+        response = requests.post(f"{BASE_URL}/api/ai/chat", headers=auth_headers, json={
             "message": "Hoeveel huurders heb ik?"
         })
         # Should return 200 or 500 if AI service is unavailable
