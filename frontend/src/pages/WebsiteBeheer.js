@@ -221,16 +221,48 @@ export default function WebsiteBeheer() {
     setSelectedPage({ ...selectedPage, sections });
   };
 
-  const handleImageUpload = async (e, field) => {
+  const [uploading, setUploading] = useState(false);
+
+  const handleImageUpload = async (e, field, targetSetter = null) => {
     const file = e.target.files[0];
     if (!file) return;
     
-    // Convert to base64
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setSectionForm({ ...sectionForm, [field]: reader.result });
-    };
-    reader.readAsDataURL(file);
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Alleen afbeeldingen zijn toegestaan');
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Afbeelding mag maximaal 5MB zijn');
+      return;
+    }
+    
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await api.post('/cms/upload-image', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      const imageUrl = response.data.url;
+      
+      if (targetSetter) {
+        targetSetter(imageUrl);
+      } else {
+        setSectionForm({ ...sectionForm, [field]: imageUrl });
+      }
+      
+      toast.success('Afbeelding geüpload!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error.response?.data?.detail || 'Fout bij uploaden');
+    } finally {
+      setUploading(false);
+    }
   };
 
   // ============ SETTINGS FUNCTIONS ============
