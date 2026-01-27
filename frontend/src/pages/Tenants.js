@@ -407,6 +407,18 @@ export default function Tenants() {
                             Bewerken
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
+                          {tenantAccounts[tenant.id] ? (
+                            <DropdownMenuItem disabled className="text-emerald-600">
+                              <CheckCircle2 className="w-4 h-4 mr-2" />
+                              Heeft Portaal Account
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem onClick={() => handleOpenPortalDialog(tenant)}>
+                              <Key className="w-4 h-4 mr-2" />
+                              Portaal Account Aanmaken
+                            </DropdownMenuItem>
+                          )}
+                          <DropdownMenuSeparator />
                           <DropdownMenuItem 
                             className="text-destructive focus:text-destructive"
                             onClick={() => { setSelectedTenant(tenant); setShowDeleteDialog(true); }}
