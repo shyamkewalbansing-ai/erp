@@ -22,6 +22,7 @@ const OndertekeningPage = lazy(() => import("./pages/OndertekeningPage"));
 const Deposits = lazy(() => import("./pages/Deposits"));
 const Kasgeld = lazy(() => import("./pages/Kasgeld"));
 const Onderhoud = lazy(() => import("./pages/Onderhoud"));
+const Meterstanden = lazy(() => import("./pages/Meterstanden"));
 const Werknemers = lazy(() => import("./pages/Werknemers"));
 const Abonnement = lazy(() => import("./pages/Abonnement"));
 const Admin = lazy(() => import("./pages/Admin"));
