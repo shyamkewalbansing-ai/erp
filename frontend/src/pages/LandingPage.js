@@ -41,15 +41,16 @@ const ChatWidget = lazy(() => import('../components/ChatWidget'));
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
-// Memoized components for performance
-const FeatureCard = memo(({ icon: Icon, title, description }) => (
-  <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-white to-gray-50">
-    <CardContent className="p-8">
-      <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center mb-6">
-        <Icon className="w-7 h-7 text-emerald-600" />
+// Memoized components for performance - Glass morphism design
+const FeatureCard = memo(({ icon: Icon, title, description, delay = 0 }) => (
+  <Card className="group relative overflow-hidden border border-emerald-100/50 bg-white/70 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_40px_-12px_rgba(12,175,96,0.2)] transition-all duration-300 hover:-translate-y-1" style={{ animationDelay: `${delay}ms` }}>
+    <div className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <CardContent className="relative p-8">
+      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center mb-6 shadow-lg shadow-emerald-500/20 group-hover:scale-105 transition-transform duration-300">
+        <Icon className="w-7 h-7 text-white" />
       </div>
-      <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
-      <p className="text-gray-600 leading-relaxed">{description}</p>
+      <h3 className="font-heading text-xl font-bold text-gray-900 mb-3 tracking-tight">{title}</h3>
+      <p className="font-body text-gray-600 leading-relaxed">{description}</p>
     </CardContent>
   </Card>
 ));
@@ -57,13 +58,14 @@ const FeatureCard = memo(({ icon: Icon, title, description }) => (
 FeatureCard.displayName = 'FeatureCard';
 
 const IndustryCard = memo(({ icon: Icon, title, description }) => (
-  <Card className="bg-slate-800 border-slate-700 hover:bg-slate-700 transition-colors">
-    <CardContent className="p-6">
-      <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center mb-4">
+  <Card className="group relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700/50 hover:border-emerald-500/30 transition-all duration-300 hover:-translate-y-1">
+    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <CardContent className="relative p-6">
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-300">
         <Icon className="w-6 h-6 text-emerald-400" />
       </div>
-      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
-      <p className="text-gray-400 text-sm">{description}</p>
+      <h3 className="font-heading text-lg font-semibold text-white mb-2">{title}</h3>
+      <p className="font-body text-gray-400 text-sm leading-relaxed">{description}</p>
     </CardContent>
   </Card>
 ));
