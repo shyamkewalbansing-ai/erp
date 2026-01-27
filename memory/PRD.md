@@ -13,53 +13,51 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (27 Jan 2026)
 
-### HRM Module - Volledig Uitgebreid ✅ (NIEUW)
+### CMS Image Upload ✅ (NIEUW - 27 Jan 2026)
+- [x] Server-side image upload via `/api/cms/upload-image`
+- [x] Logo upload met preview in CMS Instellingen
+- [x] Login/Registratie afbeelding upload
+- [x] Sectie afbeelding upload in page editor
+- [x] Max 5MB bestandslimiet
+- [x] Loading state tijdens upload
+
+### HRM Module - Volledig Uitgebreid ✅
 - [x] **Aparte pagina's in sidebar** - Net als Vastgoed Beheer module
-- [x] **HRM Dashboard** - Overzicht statistieken, snelle acties, wachtende verlofaanvragen
+- [x] **HRM Dashboard** - Overzicht statistieken, snelle acties
 - [x] **Personeel** - Werknemers CRUD met zoeken, filteren, status badges
-- [x] **Werving** - Vacatures en sollicitaties beheren met status tracking
-- [x] **Contracten** - Arbeidscontracten met type, salaris, valuta, looptijd
-- [x] **Documenten** - Document beheer per werknemer met vervaldatum waarschuwingen
+- [x] **Werving** - Vacatures en sollicitaties beheren
+- [x] **Contracten** - Arbeidscontracten met type, salaris, valuta
+- [x] **Documenten** - Document beheer per werknemer
 - [x] **Verlof** - Verlofaanvragen indienen, goedkeuren, afwijzen
 - [x] **Aanwezigheid** - Tijdregistratie met in-/uitklokken
 - [x] **Loonlijst** - Loonstroken genereren, goedkeuren, uitbetalen
-- [x] **HRM Instellingen** - Valuta's (SRD/EUR/USD), werkuren, verlof config, afdelingen
+- [x] **HRM Instellingen** - Valuta's, werkuren, verlof config, afdelingen
 
-### Sidebar Structuur ✅ (NIEUW)
+### Sidebar Structuur ✅
 - [x] Aparte secties voor "VASTGOED BEHEER" en "HRM MODULE"
 - [x] Visuele scheiding met labels en borders
 - [x] Alle module-specifieke items onder juiste sectie
 
 ### CMS End-to-End Functionaliteit ✅ VERIFIED
-- [x] CMS editor in admin panel met sectie bewerken
+- [x] CMS editor met 4 tabs: Pagina's, Footer, Instellingen, Design
 - [x] Backend API's voor CMS pagina CRUD
 - [x] LandingPage haalt CMS content dynamisch op
-- [x] Secties tab met alle 9 secties (hero, partners, features, modules, industries, cta)
-- [x] Wijzigingen in CMS editor zijn direct zichtbaar op publieke pagina's
+- [x] Wijzigingen in CMS editor zijn direct zichtbaar
 - [x] Drag & drop voor sectie herordening
-- [x] Sectie types: hero, partners, features, module, industries, cta
 
 ### AI Chatbot Assistent ✅
 - [x] OpenAI GPT-4o integratie via Emergent LLM Key
-- [x] Publieke chatbot endpoint: POST /api/public/chat
 - [x] ChatWidget component op alle publieke pagina's
-- [x] Kennis over alle modules, prijzen en diensten
 - [x] Quick questions voor snelle hulp
-- [x] Chat sessie opslag voor analytics
 
 ### Website Redesign ✅
-- [x] **LandingPage** - Volledig nieuw design met CMS integratie
+- [x] **LandingPage** - Nieuw design met CMS integratie
 - [x] **PrijzenPage** - Module prijzen en bestellen
 - [x] **OverOnsPage** - Bedrijfsinformatie
 - [x] **VoorwaardenPage** - Juridische voorwaarden
 - [x] **PrivacyPage** - Privacy informatie
 
-### Snelheidsoptimalisaties ✅
-- [x] React.lazy loading voor alle pagina's
-- [x] Code splitting
-- [x] Preconnect/Prefetch
-
-## HRM Module API Endpoints (NIEUW)
+## HRM Module API Endpoints
 | Endpoint | Methode | Beschrijving |
 |----------|---------|--------------|
 | /api/hrm/dashboard | GET | Dashboard statistieken |
@@ -78,45 +76,43 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 | /api/hrm/documents | GET/POST | Documenten |
 | /api/hrm/settings | GET/PUT | HRM Instellingen |
 
-## CMS Structuur
-| Sectie ID | Type | Bewerkbaar |
-|-----------|------|------------|
-| hero | hero | ✅ Titel, Content |
-| partners | partners | ✅ Titel, Content |
-| features | features | ✅ Titel, Content |
-| boekhouding | module | ✅ Titel, Content |
-| hrm | module | ✅ Titel, Content |
-| projecten | module | ✅ Titel, Content |
-| leads | module | ✅ Titel, Content |
-| industries | industries | ✅ Titel, Content |
-| cta | cta | ✅ Titel, Content |
-
-## API Endpoints
-| Endpoint | Functie |
-|----------|---------|
-| POST /api/public/chat | AI Chatbot |
-| GET /api/public/addons | Module lijst |
-| POST /api/public/orders | Bestelling + account |
-| GET /api/public/cms/page/{slug} | CMS pagina content |
-| GET /api/cms/pages | CMS pagina's (admin) |
-| PUT /api/cms/pages/{id} | CMS pagina update (admin) |
+## CMS API Endpoints
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/cms/pages | GET | Alle CMS pagina's |
+| /api/cms/pages/{id} | PUT/DELETE | Pagina bewerken/verwijderen |
+| /api/cms/upload-image | POST | Afbeelding uploaden |
+| /api/cms/footer | GET/PUT | Footer instellingen |
+| /api/public/cms/page/{slug} | GET | Publieke CMS pagina |
 
 ## Test Credentials
 - **Superadmin**: admin@facturatie.sr / admin123
+
+## Testing Status (27 Jan 2026)
+- Backend: 100% (25/25 tests passed)
+- Frontend: 100% (all UI tests passed)
+- Test report: /app/test_reports/iteration_20.json
 
 ## Prioritized Backlog
 
 ### P0 (Critical) - DONE ✅
 - [x] CMS end-to-end verificatie
+- [x] HRM Module uitbreiding
+- [x] CMS Image Upload
 
 ### P1 (High Priority)
-- [ ] Image uploads voor CMS (partner logos, module afbeeldingen)
-- [ ] HRM Module frontend uitbouwen
+- [ ] **server.py refactoring** (>9000 lines) - Split into routers
+- [ ] Partner logo's uploaden via CMS
 
 ### P2 (Medium Priority)
-- [ ] server.py refactoring (>8700 lines)
-- [ ] update.sh deployment script
+- [ ] Update.sh deployment script verbeteren
+- [ ] Email notificaties voor HRM
 
 ### P3 (Nice to Have)
 - [ ] Chat geschiedenis per sessie
 - [ ] Overige ERP modules (Inventory, CRM, Accounting)
+
+## Architecture Notes
+- `server.py` is >9000 regels - KRITIEK om te refactoren naar modulaire routers
+- HRM frontend pages beschermd door SubscriptionRoute (alleen voor klanten met HRM add-on)
+- CMS Editor: /app/website-beheer
