@@ -7989,17 +7989,11 @@ async def get_hrm_employee(employee_id: str, current_user: dict = Depends(get_cu
 @api_router.post("/hrm/employees")
 async def create_hrm_employee(employee: HRMEmployee, current_user: dict = Depends(get_current_user)):
     """Create a new employee"""
-    # Check addon access - first get HRM addon ID, then check user_addons
-    hrm_addon = await db.addons.find_one({"slug": "hrm"})
-    has_hrm = False
-    if hrm_addon:
-        has_hrm = await db.user_addons.find_one({
-            "user_id": current_user["id"],
-            "addon_id": hrm_addon["id"],
-            "status": "active"
-        })
-    if not has_hrm and current_user.get("role") != "superadmin":
-        raise HTTPException(status_code=403, detail="HRM module niet geactiveerd")
+    # Check addon access using helper function
+    if current_user.get("role") != "superadmin":
+        has_hrm = await user_has_addon(current_user["id"], "hrm")
+        if not has_hrm:
+            raise HTTPException(status_code=403, detail="HRM module niet geactiveerd")
     
     employee_dict = employee.dict()
     employee_dict["id"] = str(uuid.uuid4())
