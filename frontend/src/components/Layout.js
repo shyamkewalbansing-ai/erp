@@ -29,7 +29,8 @@ import {
   Boxes,
   Target,
   Clock,
-  Calendar
+  Calendar,
+  Zap
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
