@@ -70,9 +70,13 @@ export default function Tenants() {
   const [showModal, setShowModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
+  const [showPortalDialog, setShowPortalDialog] = useState(false);
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [balanceData, setBalanceData] = useState(null);
   const [loadingBalance, setLoadingBalance] = useState(false);
+  const [portalPassword, setPortalPassword] = useState('');
+  const [creatingPortal, setCreatingPortal] = useState(false);
+  const [tenantAccounts, setTenantAccounts] = useState({});
   const [formData, setFormData] = useState({
     name: '',
     email: '',
