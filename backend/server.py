@@ -456,6 +456,120 @@ class MaintenanceResponse(BaseModel):
     created_at: str
     user_id: str
 
+# ==================== METER READING MODELS ====================
+
+# EBS Tarieven Suriname (2024)
+EBS_TARIFFS = [
+    {"min": 0, "max": 150, "rate": 0.35},      # 0-150 kWh: SRD 0.35/kWh
+    {"min": 150, "max": 500, "rate": 0.55},    # 150-500 kWh: SRD 0.55/kWh
+    {"min": 500, "max": float('inf'), "rate": 0.85}  # 500+ kWh: SRD 0.85/kWh
+]
+
+# SWM Tarieven Suriname (2024)
+SWM_TARIFFS = [
+    {"min": 0, "max": 10, "rate": 2.50},       # 0-10 m³: SRD 2.50/m³
+    {"min": 10, "max": 30, "rate": 4.50},      # 10-30 m³: SRD 4.50/m³
+    {"min": 30, "max": float('inf'), "rate": 7.50}  # 30+ m³: SRD 7.50/m³
+]
+
+def calculate_ebs_cost(usage_kwh: float) -> float:
+    """Calculate EBS cost based on tiered tariffs"""
+    total_cost = 0.0
+    remaining = usage_kwh
+    
+    for tier in EBS_TARIFFS:
+        tier_usage = min(remaining, tier["max"] - tier["min"])
+        if tier_usage > 0:
+            total_cost += tier_usage * tier["rate"]
+            remaining -= tier_usage
+        if remaining <= 0:
+            break
+    
+    return round(total_cost, 2)
+
+def calculate_swm_cost(usage_m3: float) -> float:
+    """Calculate SWM cost based on tiered tariffs"""
+    total_cost = 0.0
+    remaining = usage_m3
+    
+    for tier in SWM_TARIFFS:
+        tier_usage = min(remaining, tier["max"] - tier["min"])
+        if tier_usage > 0:
+            total_cost += tier_usage * tier["rate"]
+            remaining -= tier_usage
+        if remaining <= 0:
+            break
+    
+    return round(total_cost, 2)
+
+class MeterReadingCreate(BaseModel):
+    apartment_id: str
+    tenant_id: Optional[str] = None
+    reading_date: str
+    ebs_reading: Optional[float] = None  # kWh
+    swm_reading: Optional[float] = None  # m³
+    notes: Optional[str] = None
+
+class MeterReadingUpdate(BaseModel):
+    ebs_reading: Optional[float] = None
+    swm_reading: Optional[float] = None
+    notes: Optional[str] = None
+    payment_status: Optional[str] = None  # 'pending', 'paid'
+
+class MeterReadingResponse(BaseModel):
+    id: str
+    apartment_id: str
+    apartment_name: Optional[str] = None
+    tenant_id: Optional[str] = None
+    tenant_name: Optional[str] = None
+    reading_date: str
+    period_month: int
+    period_year: int
+    ebs_reading: Optional[float] = None
+    ebs_previous: Optional[float] = None
+    ebs_usage: Optional[float] = None
+    ebs_cost: Optional[float] = None
+    swm_reading: Optional[float] = None
+    swm_previous: Optional[float] = None
+    swm_usage: Optional[float] = None
+    swm_cost: Optional[float] = None
+    total_cost: Optional[float] = None
+    payment_status: str = "pending"  # 'pending', 'paid'
+    paid_at: Optional[str] = None
+    notes: Optional[str] = None
+    created_at: str
+    submitted_by: str  # 'tenant' or 'admin'
+    user_id: str
+
+class MeterSettingsCreate(BaseModel):
+    ebs_tariffs: Optional[List[dict]] = None
+    swm_tariffs: Optional[List[dict]] = None
+    reminder_day: int = 25  # Day of month for reminder
+    reminder_enabled: bool = True
+
+class MeterSettingsResponse(BaseModel):
+    id: str
+    ebs_tariffs: List[dict]
+    swm_tariffs: List[dict]
+    reminder_day: int
+    reminder_enabled: bool
+    user_id: str
+
+class MeterSummaryResponse(BaseModel):
+    period_month: int
+    period_year: int
+    total_apartments: int
+    submitted_count: int
+    pending_count: int
+    total_ebs_usage: float
+    total_ebs_cost: float
+    total_swm_usage: float
+    total_swm_cost: float
+    total_cost: float
+    paid_count: int
+    unpaid_count: int
+    unpaid_total: float
+
 # Werknemer (Employee) Models
 class EmployeeCreate(BaseModel):
     name: str
