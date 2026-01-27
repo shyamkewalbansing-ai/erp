@@ -572,6 +572,42 @@ class MeterSummaryResponse(BaseModel):
     unpaid_count: int
     unpaid_total: float
 
+# ==================== TENANT PORTAL MODELS ====================
+
+class TenantRegister(BaseModel):
+    email: EmailStr
+    password: str
+    invite_code: Optional[str] = None
+
+class TenantLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class TenantPortalDashboard(BaseModel):
+    tenant_id: str
+    tenant_name: str
+    apartment_id: Optional[str] = None
+    apartment_name: Optional[str] = None
+    apartment_address: Optional[str] = None
+    rent_amount: Optional[float] = None
+    # Financials
+    total_paid: float = 0
+    total_due: float = 0
+    outstanding_balance: float = 0
+    # Recent payments
+    recent_payments: List[dict] = []
+    # Meter readings
+    pending_meter_reading: bool = False
+    last_meter_reading: Optional[dict] = None
+    # Invoices
+    open_invoices: List[dict] = []
+
+class TenantMeterReadingCreate(BaseModel):
+    ebs_reading: Optional[float] = None
+    swm_reading: Optional[float] = None
+    reading_date: Optional[str] = None
+    notes: Optional[str] = None
+
 # Werknemer (Employee) Models
 class EmployeeCreate(BaseModel):
     name: str
