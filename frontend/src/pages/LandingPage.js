@@ -243,119 +243,152 @@ export default function LandingPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
+    <div className="min-h-screen bg-gradient-to-b from-white via-emerald-50/30 to-white grain-overlay">
+      {/* Navigation - Glass morphism */}
+      <nav className="fixed top-0 left-0 right-0 z-50 glass-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-16 md:h-20">
             <Link to="/" className="flex items-center gap-2">
               <img 
                 src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
                 alt="Facturatie N.V."
-                className="h-8 w-auto"
+                className="h-8 md:h-9 w-auto"
+                data-testid="nav-logo"
               />
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
-              <Link to="/" className="text-sm font-medium text-emerald-600">Home</Link>
-              <Link to="/prijzen" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Prijzen</Link>
-              <Link to="/over-ons" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Over Ons</Link>
-              <Link to="/voorwaarden" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Voorwaarden</Link>
-              <Link to="/privacy" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors">Privacy</Link>
+              <Link to="/" className="text-sm font-medium text-emerald-600 font-body" data-testid="nav-home">Home</Link>
+              <Link to="/prijzen" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-prijzen">Prijzen</Link>
+              <Link to="/over-ons" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-over-ons">Over Ons</Link>
+              <Link to="/voorwaarden" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-voorwaarden">Voorwaarden</Link>
+              <Link to="/privacy" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-privacy">Privacy</Link>
             </div>
 
             <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" onClick={() => navigate('/login')} className="text-gray-700">
+              <Button variant="ghost" onClick={() => navigate('/login')} className="text-gray-700 font-body font-medium" data-testid="nav-login-btn">
                 Inloggen
               </Button>
-              <Button onClick={() => navigate('/prijzen')} className="bg-emerald-500 hover:bg-emerald-600 text-white">
+              <Button onClick={() => navigate('/prijzen')} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all font-body font-semibold" data-testid="nav-cta-btn">
                 Gratis Starten
               </Button>
             </div>
 
-            <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} data-testid="mobile-menu-toggle">
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-b border-gray-100">
+          <div className="md:hidden bg-white/95 backdrop-blur-xl border-b border-gray-100 animate-fade-in">
             <div className="px-4 py-4 space-y-3">
-              <Link to="/" className="block text-emerald-600 py-2 font-medium" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-              <Link to="/prijzen" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</Link>
-              <Link to="/over-ons" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Over Ons</Link>
-              <Link to="/voorwaarden" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Voorwaarden</Link>
-              <Link to="/privacy" className="block text-gray-700 py-2" onClick={() => setMobileMenuOpen(false)}>Privacy</Link>
+              <Link to="/" className="block text-emerald-600 py-2 font-medium font-body" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+              <Link to="/prijzen" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Prijzen</Link>
+              <Link to="/over-ons" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Over Ons</Link>
+              <Link to="/voorwaarden" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Voorwaarden</Link>
+              <Link to="/privacy" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Privacy</Link>
               <div className="pt-3 space-y-2">
-                <Button variant="outline" className="w-full" onClick={() => navigate('/login')}>Inloggen</Button>
-                <Button className="w-full bg-emerald-500 hover:bg-emerald-600" onClick={() => navigate('/prijzen')}>Gratis Starten</Button>
+                <Button variant="outline" className="w-full font-body" onClick={() => navigate('/login')}>Inloggen</Button>
+                <Button className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 font-body font-semibold" onClick={() => navigate('/prijzen')}>Gratis Starten</Button>
               </div>
             </div>
           </div>
         )}
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-24 pb-16 md:pt-32 md:pb-24 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald-100 rounded-full opacity-50 blur-3xl"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-100 rounded-full opacity-50 blur-3xl"></div>
+      {/* Hero Section - Modern asymmetrical layout */}
+      <section className="relative pt-28 pb-20 md:pt-40 md:pb-32 overflow-hidden">
+        {/* Background decorations */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-[500px] h-[500px] bg-gradient-to-br from-emerald-200/40 to-cyan-200/30 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 -left-40 w-[400px] h-[400px] bg-gradient-to-tr from-emerald-100/50 to-teal-100/30 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-20 right-1/4 w-[300px] h-[300px] bg-gradient-to-t from-emerald-50/80 to-transparent rounded-full blur-2xl"></div>
         </div>
         
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight" data-testid="hero-title">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div className="space-y-8 lg:pr-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-sm font-medium text-emerald-700 font-body">#1 ERP Platform in Suriname</span>
+              </div>
+              
+              <h1 className="font-heading text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-[1.1] tracking-tight" data-testid="hero-title">
                 {getCmsSectionContent('hero', 'title', 'Het Surinaamse SaaS‑platform met een volledig geïntegreerd ERP‑ en HRM‑systeem').split('ERP')[0]}
-                <span className="text-emerald-500">ERP‑ en HRM‑systeem</span>
+                <span className="bg-gradient-to-r from-emerald-500 to-teal-500 bg-clip-text text-transparent">ERP‑ en HRM‑systeem</span>
               </h1>
-              <p className="text-xl text-gray-600 max-w-lg" data-testid="hero-subtitle">
+              
+              <p className="text-lg md:text-xl text-gray-600 max-w-xl leading-relaxed font-body" data-testid="hero-subtitle">
                 {getCmsSectionContent('hero', 'content', 'Boekhouding, HRM, leads, projecten, sales & post-sale, verhuur en reserveringen – efficiënt, overzichtelijk en volledig geïntegreerd.')}
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg" className="h-14 px-8 text-lg bg-emerald-500 hover:bg-emerald-600" onClick={() => navigate('/prijzen')}>
+              
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <Button size="lg" className="h-14 px-8 text-base bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-full shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all font-body font-semibold" onClick={() => navigate('/prijzen')} data-testid="hero-cta-primary">
                   Ontvang het pakket
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
-                <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-emerald-500 text-emerald-600 hover:bg-emerald-50" onClick={() => setOrderDialogOpen(true)}>
+                <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-full transition-all font-body font-medium" onClick={() => setOrderDialogOpen(true)} data-testid="hero-cta-secondary">
                   Direct Bestellen
                 </Button>
               </div>
+              
+              {/* Trust indicators */}
+              <div className="flex items-center gap-6 pt-4">
+                <div className="flex -space-x-3">
+                  {[1,2,3,4].map(i => (
+                    <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
+                      {['JK', 'SM', 'RB', 'AV'][i-1]}
+                    </div>
+                  ))}
+                </div>
+                <div>
+                  <div className="flex items-center gap-1">
+                    {[1,2,3,4,5].map(i => (
+                      <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                      </svg>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-500 font-body">500+ tevreden klanten</p>
+                </div>
+              </div>
             </div>
             
+            {/* Dashboard Preview Card */}
             <div className="relative hidden lg:block">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-blue-400/20 rounded-3xl blur-2xl"></div>
-              <div className="relative bg-white rounded-2xl shadow-2xl p-6 border border-gray-100">
-                <div className="flex items-center gap-3 mb-4 pb-4 border-b">
-                  <div className="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-3xl blur-2xl scale-95"></div>
+              <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl shadow-emerald-900/10 p-6 border border-white/50">
+                <div className="flex items-center gap-3 mb-5 pb-4 border-b border-gray-100">
+                  <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
                     <BarChart3 className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Facturatie ERP</h3>
-                    <p className="text-sm text-gray-500">Dashboard Overview</p>
+                    <h3 className="font-heading font-semibold text-gray-900">Facturatie ERP</h3>
+                    <p className="text-sm text-gray-500 font-body">Dashboard Overview</p>
                   </div>
+                  <Badge className="ml-auto bg-emerald-50 text-emerald-600 border-emerald-200">Live</Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-emerald-50 rounded-xl p-4">
-                    <p className="text-sm text-gray-600">Omzet</p>
-                    <p className="text-2xl font-bold text-emerald-600">SRD 125K</p>
-                    <p className="text-xs text-emerald-500 mt-1">+12% deze maand</p>
+                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl p-4 border border-emerald-100">
+                    <p className="text-sm text-gray-600 font-body">Omzet</p>
+                    <p className="text-2xl font-bold text-emerald-600 font-heading">SRD 125K</p>
+                    <p className="text-xs text-emerald-500 mt-1 font-body">+12% deze maand</p>
                   </div>
-                  <div className="bg-blue-50 rounded-xl p-4">
-                    <p className="text-sm text-gray-600">Klanten</p>
-                    <p className="text-2xl font-bold text-blue-600">248</p>
-                    <p className="text-xs text-blue-500 mt-1">+8 deze week</p>
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl p-4 border border-blue-100">
+                    <p className="text-sm text-gray-600 font-body">Klanten</p>
+                    <p className="text-2xl font-bold text-blue-600 font-heading">248</p>
+                    <p className="text-xs text-blue-500 mt-1 font-body">+8 deze week</p>
                   </div>
-                  <div className="bg-purple-50 rounded-xl p-4">
-                    <p className="text-sm text-gray-600">Projecten</p>
-                    <p className="text-2xl font-bold text-purple-600">32</p>
-                    <p className="text-xs text-purple-500 mt-1">4 actief</p>
+                  <div className="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-4 border border-purple-100">
+                    <p className="text-sm text-gray-600 font-body">Projecten</p>
+                    <p className="text-2xl font-bold text-purple-600 font-heading">32</p>
+                    <p className="text-xs text-purple-500 mt-1 font-body">4 actief</p>
                   </div>
-                  <div className="bg-orange-50 rounded-xl p-4">
-                    <p className="text-sm text-gray-600">Facturen</p>
-                    <p className="text-2xl font-bold text-orange-600">156</p>
-                    <p className="text-xs text-orange-500 mt-1">98% betaald</p>
+                  <div className="bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-xl p-4 border border-orange-100">
+                    <p className="text-sm text-gray-600 font-body">Facturen</p>
+                    <p className="text-2xl font-bold text-orange-600 font-heading">156</p>
+                    <p className="text-xs text-orange-500 mt-1 font-body">98% betaald</p>
                   </div>
                 </div>
               </div>
