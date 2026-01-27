@@ -55,11 +55,11 @@ const vastgoedNavItems = [
 const hrmNavItems = [
   { to: '/app/hrm', icon: LayoutDashboard, label: 'HRM Dashboard', addon: 'hrm' },
   { to: '/app/hrm/personeel', icon: Users, label: 'Personeel', addon: 'hrm' },
-  { to: '/app/hrm/werving', icon: UserCog, label: 'Werving', addon: 'hrm' },
+  { to: '/app/hrm/werving', icon: Target, label: 'Werving', addon: 'hrm' },
   { to: '/app/hrm/contracten', icon: FileSignature, label: 'Contracten', addon: 'hrm' },
   { to: '/app/hrm/documenten', icon: FileText, label: 'Documenten', addon: 'hrm' },
-  { to: '/app/hrm/verlof', icon: Layers, label: 'Verlof', addon: 'hrm' },
-  { to: '/app/hrm/aanwezigheid', icon: Boxes, label: 'Aanwezigheid', addon: 'hrm' },
+  { to: '/app/hrm/verlof', icon: Calendar, label: 'Verlof', addon: 'hrm' },
+  { to: '/app/hrm/aanwezigheid', icon: Clock, label: 'Aanwezigheid', addon: 'hrm' },
   { to: '/app/hrm/loonlijst', icon: Banknote, label: 'Loonlijst', addon: 'hrm' },
   { to: '/app/hrm/instellingen', icon: Settings, label: 'HRM Instellingen', addon: 'hrm' },
 ];
