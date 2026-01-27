@@ -233,20 +233,13 @@ export default function LandingPage() {
     { icon: Calendar, title: 'Hotel & Kamers', description: 'Complete oplossing die hoteloperaties vereenvoudigt.' }
   ];
 
-  // Partner logos - from CMS settings or defaults
-  const defaultPartners = [
-    { name: 'Partner 1', logo: '' },
-    { name: 'Partner 2', logo: '' },
-    { name: 'Partner 3', logo: '' },
-    { name: 'Partner 4', logo: '' },
-    { name: 'Partner 5', logo: '' },
-    { name: 'Partner 6', logo: '' }
-  ];
-  
-  // Use partners from settings if available
-  const partners = settings?.partners?.length > 0 
-    ? settings.partners.filter(p => p.logo) 
-    : defaultPartners.filter(p => p.logo);
+  // Partner logos - from CMS settings (memoized to prevent infinite loops)
+  const partners = useMemo(() => {
+    if (settings?.partners?.length > 0) {
+      return settings.partners.filter(p => p && p.logo);
+    }
+    return [];
+  }, [settings?.partners]);
 
   return (
     <div className="min-h-screen bg-white">
