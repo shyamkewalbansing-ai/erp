@@ -9938,6 +9938,383 @@ INSTRUCTIES:
             "session_id": session_id
         }
 
+# ==================== TENANT PORTAL ROUTES ====================
+
+@api_router.post("/tenant-portal/register")
+async def tenant_portal_register(data: TenantRegister):
+    """Register a tenant account linked to their tenant record"""
+    # Check if tenant exists with this email
+    tenant = await db.tenants.find_one({"email": data.email}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Geen huurder gevonden met dit e-mailadres. Neem contact op met uw verhuurder.")
+    
+    # Check if already has a portal account
+    existing_account = await db.tenant_accounts.find_one({"email": data.email}, {"_id": 0})
+    if existing_account:
+        raise HTTPException(status_code=400, detail="Er bestaat al een account met dit e-mailadres")
+    
+    # Create tenant portal account
+    account_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    account_doc = {
+        "id": account_id,
+        "tenant_id": tenant["id"],
+        "email": data.email,
+        "password": hash_password(data.password),
+        "name": tenant["name"],
+        "landlord_user_id": tenant["user_id"],  # Link to landlord
+        "created_at": now.isoformat(),
+        "last_login": None,
+        "is_active": True
+    }
+    
+    await db.tenant_accounts.insert_one(account_doc)
+    
+    # Generate token
+    token = create_token(account_id, data.email)
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "tenant": {
+            "id": account_id,
+            "tenant_id": tenant["id"],
+            "email": data.email,
+            "name": tenant["name"]
+        }
+    }
+
+
+@api_router.post("/tenant-portal/login")
+async def tenant_portal_login(data: TenantLogin):
+    """Login for tenant portal"""
+    account = await db.tenant_accounts.find_one({"email": data.email}, {"_id": 0})
+    if not account:
+        raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
+    
+    if not verify_password(data.password, account["password"]):
+        raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
+    
+    if not account.get("is_active", True):
+        raise HTTPException(status_code=403, detail="Uw account is gedeactiveerd")
+    
+    # Update last login
+    await db.tenant_accounts.update_one(
+        {"id": account["id"]},
+        {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    token = create_token(account["id"], data.email)
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "tenant": {
+            "id": account["id"],
+            "tenant_id": account["tenant_id"],
+            "email": account["email"],
+            "name": account["name"]
+        }
+    }
+
+
+async def get_tenant_account(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Get current tenant account from JWT token"""
+    payload = decode_token(credentials.credentials)
+    account = await db.tenant_accounts.find_one({"id": payload["user_id"]}, {"_id": 0})
+    if not account:
+        raise HTTPException(status_code=401, detail="Huurder account niet gevonden")
+    if not account.get("is_active", True):
+        raise HTTPException(status_code=403, detail="Uw account is gedeactiveerd")
+    return account
+
+
+@api_router.get("/tenant-portal/me")
+async def tenant_portal_me(account: dict = Depends(get_tenant_account)):
+    """Get current tenant account info"""
+    return {
+        "id": account["id"],
+        "tenant_id": account["tenant_id"],
+        "email": account["email"],
+        "name": account["name"],
+        "created_at": account["created_at"]
+    }
+
+
+@api_router.get("/tenant-portal/dashboard")
+async def tenant_portal_dashboard(account: dict = Depends(get_tenant_account)):
+    """Get tenant dashboard with all relevant information"""
+    tenant_id = account["tenant_id"]
+    landlord_id = account["landlord_user_id"]
+    
+    # Get tenant info
+    tenant = await db.tenants.find_one(
+        {"id": tenant_id},
+        {"_id": 0}
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    # Get apartment info
+    apartment = await db.apartments.find_one(
+        {"tenant_id": tenant_id, "user_id": landlord_id},
+        {"_id": 0}
+    )
+    
+    # Get payments for this tenant
+    payments = await db.payments.find(
+        {"tenant_id": tenant_id, "user_id": landlord_id},
+        {"_id": 0}
+    ).sort("payment_date", -1).to_list(100)
+    
+    total_paid = sum(p.get("amount", 0) for p in payments)
+    
+    # Calculate outstanding balance
+    outstanding_balance = 0
+    if apartment:
+        # Get all months since tenant moved in
+        # For now, simple calculation based on rent - payments
+        rent = apartment.get("rent_amount", 0)
+        # Count months tenant has been renting (simplified)
+        outstanding_balance = max(0, rent - total_paid % rent) if rent > 0 else 0
+    
+    # Get open invoices
+    invoices = await db.invoices.find(
+        {"tenant_id": tenant_id, "user_id": landlord_id, "status": {"$ne": "paid"}},
+        {"_id": 0}
+    ).to_list(50)
+    
+    # Get meter readings for this apartment
+    last_meter_reading = None
+    pending_meter_reading = True
+    
+    if apartment:
+        now = datetime.now(timezone.utc)
+        current_month = now.month
+        current_year = now.year
+        
+        # Check if reading exists for current month
+        current_reading = await db.meter_readings.find_one(
+            {
+                "apartment_id": apartment["id"],
+                "user_id": landlord_id,
+                "period_month": current_month,
+                "period_year": current_year
+            },
+            {"_id": 0}
+        )
+        pending_meter_reading = current_reading is None
+        
+        # Get last meter reading
+        last_reading = await db.meter_readings.find_one(
+            {"apartment_id": apartment["id"], "user_id": landlord_id},
+            {"_id": 0},
+            sort=[("period_year", -1), ("period_month", -1)]
+        )
+        if last_reading:
+            last_meter_reading = {
+                "id": last_reading.get("id"),
+                "period": f"{last_reading.get('period_month')}/{last_reading.get('period_year')}",
+                "ebs_reading": last_reading.get("ebs_reading"),
+                "swm_reading": last_reading.get("swm_reading"),
+                "total_cost": last_reading.get("total_cost"),
+                "payment_status": last_reading.get("payment_status")
+            }
+    
+    return TenantPortalDashboard(
+        tenant_id=tenant_id,
+        tenant_name=tenant.get("name", ""),
+        apartment_id=apartment.get("id") if apartment else None,
+        apartment_name=apartment.get("name") if apartment else None,
+        apartment_address=apartment.get("address") if apartment else None,
+        rent_amount=apartment.get("rent_amount") if apartment else None,
+        total_paid=total_paid,
+        total_due=apartment.get("rent_amount", 0) if apartment else 0,
+        outstanding_balance=outstanding_balance,
+        recent_payments=[{
+            "id": p.get("id"),
+            "amount": p.get("amount"),
+            "date": p.get("payment_date"),
+            "description": p.get("description", "Huurbetaling")
+        } for p in payments[:5]],
+        pending_meter_reading=pending_meter_reading,
+        last_meter_reading=last_meter_reading,
+        open_invoices=[{
+            "id": inv.get("id"),
+            "invoice_number": inv.get("invoice_number"),
+            "amount": inv.get("total_amount"),
+            "due_date": inv.get("due_date"),
+            "status": inv.get("status")
+        } for inv in invoices[:5]]
+    )
+
+
+@api_router.get("/tenant-portal/payments")
+async def tenant_portal_payments(account: dict = Depends(get_tenant_account)):
+    """Get all payments for the tenant"""
+    tenant_id = account["tenant_id"]
+    landlord_id = account["landlord_user_id"]
+    
+    payments = await db.payments.find(
+        {"tenant_id": tenant_id, "user_id": landlord_id},
+        {"_id": 0}
+    ).sort("payment_date", -1).to_list(200)
+    
+    return payments
+
+
+@api_router.get("/tenant-portal/invoices")
+async def tenant_portal_invoices(account: dict = Depends(get_tenant_account)):
+    """Get all invoices for the tenant"""
+    tenant_id = account["tenant_id"]
+    landlord_id = account["landlord_user_id"]
+    
+    invoices = await db.invoices.find(
+        {"tenant_id": tenant_id, "user_id": landlord_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return invoices
+
+
+@api_router.get("/tenant-portal/meter-readings")
+async def tenant_portal_meter_readings(account: dict = Depends(get_tenant_account)):
+    """Get meter readings for tenant's apartment"""
+    tenant_id = account["tenant_id"]
+    landlord_id = account["landlord_user_id"]
+    
+    # Get apartment
+    apartment = await db.apartments.find_one(
+        {"tenant_id": tenant_id, "user_id": landlord_id},
+        {"_id": 0}
+    )
+    
+    if not apartment:
+        return []
+    
+    readings = await db.meter_readings.find(
+        {"apartment_id": apartment["id"], "user_id": landlord_id},
+        {"_id": 0}
+    ).sort([("period_year", -1), ("period_month", -1)]).to_list(50)
+    
+    return readings
+
+
+@api_router.post("/tenant-portal/meter-readings")
+async def tenant_portal_submit_meter_reading(
+    reading_data: TenantMeterReadingCreate,
+    account: dict = Depends(get_tenant_account)
+):
+    """Submit a meter reading as a tenant"""
+    tenant_id = account["tenant_id"]
+    landlord_id = account["landlord_user_id"]
+    
+    # Get apartment
+    apartment = await db.apartments.find_one(
+        {"tenant_id": tenant_id, "user_id": landlord_id},
+        {"_id": 0}
+    )
+    
+    if not apartment:
+        raise HTTPException(status_code=404, detail="Geen appartement gevonden")
+    
+    # Determine reading date and period
+    if reading_data.reading_date:
+        try:
+            reading_dt = datetime.fromisoformat(reading_data.reading_date.replace('Z', '+00:00'))
+        except:
+            reading_dt = datetime.now(timezone.utc)
+    else:
+        reading_dt = datetime.now(timezone.utc)
+    
+    period_month = reading_dt.month
+    period_year = reading_dt.year
+    
+    # Check if reading already exists for this period
+    existing = await db.meter_readings.find_one({
+        "apartment_id": apartment["id"],
+        "user_id": landlord_id,
+        "period_month": period_month,
+        "period_year": period_year
+    })
+    
+    if existing:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Er is al een meterstand ingediend voor {period_month}/{period_year}"
+        )
+    
+    # Get previous reading
+    prev_reading = await db.meter_readings.find_one(
+        {
+            "apartment_id": apartment["id"],
+            "user_id": landlord_id,
+            "$or": [
+                {"period_year": {"$lt": period_year}},
+                {"$and": [{"period_year": period_year}, {"period_month": {"$lt": period_month}}]}
+            ]
+        },
+        {"_id": 0},
+        sort=[("period_year", -1), ("period_month", -1)]
+    )
+    
+    # Calculate usage and costs
+    ebs_previous = prev_reading.get("ebs_reading") if prev_reading else None
+    swm_previous = prev_reading.get("swm_reading") if prev_reading else None
+    
+    ebs_usage = None
+    ebs_cost = None
+    if reading_data.ebs_reading is not None and ebs_previous is not None:
+        ebs_usage = max(0, reading_data.ebs_reading - ebs_previous)
+        ebs_cost = calculate_ebs_cost(ebs_usage)
+    
+    swm_usage = None
+    swm_cost = None
+    if reading_data.swm_reading is not None and swm_previous is not None:
+        swm_usage = max(0, reading_data.swm_reading - swm_previous)
+        swm_cost = calculate_swm_cost(swm_usage)
+    
+    total_cost = (ebs_cost or 0) + (swm_cost or 0)
+    
+    reading_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    reading_doc = {
+        "id": reading_id,
+        "apartment_id": apartment["id"],
+        "apartment_name": apartment.get("name"),
+        "tenant_id": tenant_id,
+        "tenant_name": account.get("name"),
+        "reading_date": reading_dt.strftime("%Y-%m-%d"),
+        "period_month": period_month,
+        "period_year": period_year,
+        "ebs_reading": reading_data.ebs_reading,
+        "ebs_previous": ebs_previous,
+        "ebs_usage": ebs_usage,
+        "ebs_cost": ebs_cost,
+        "swm_reading": reading_data.swm_reading,
+        "swm_previous": swm_previous,
+        "swm_usage": swm_usage,
+        "swm_cost": swm_cost,
+        "total_cost": total_cost if total_cost > 0 else None,
+        "payment_status": "pending",
+        "paid_at": None,
+        "notes": reading_data.notes,
+        "created_at": now.isoformat(),
+        "submitted_by": "tenant",
+        "user_id": landlord_id  # Important: belongs to landlord
+    }
+    
+    await db.meter_readings.insert_one(reading_doc)
+    reading_doc.pop("_id", None)
+    
+    return {
+        "message": "Meterstand succesvol ingediend!",
+        "reading": reading_doc
+    }
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
