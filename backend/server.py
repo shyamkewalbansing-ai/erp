@@ -630,6 +630,7 @@ class LandingPageSettings(BaseModel):
     social_links: Optional[dict] = None  # {"facebook": "url", "instagram": "url", etc}
     login_image_url: Optional[str] = None  # Afbeelding voor login pagina
     register_image_url: Optional[str] = None  # Afbeelding voor registratie pagina
+    partners: Optional[List[dict]] = None  # [{"name": "Partner A", "logo": "url"}, ...]
     # Global site settings
     site_title: Optional[str] = "Facturatie N.V."
     site_description: Optional[str] = None
