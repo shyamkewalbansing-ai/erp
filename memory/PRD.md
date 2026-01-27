@@ -11,7 +11,24 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - **Styling**: Tailwind CSS
 - **Primary Color**: #0caf60 (groen)
 
-## What's Been Implemented (26 Jan 2026)
+## What's Been Implemented (27 Jan 2026)
+
+### HRM Module - Volledig Uitgebreid ✅ (NIEUW)
+- [x] **Aparte pagina's in sidebar** - Net als Vastgoed Beheer module
+- [x] **HRM Dashboard** - Overzicht statistieken, snelle acties, wachtende verlofaanvragen
+- [x] **Personeel** - Werknemers CRUD met zoeken, filteren, status badges
+- [x] **Werving** - Vacatures en sollicitaties beheren met status tracking
+- [x] **Contracten** - Arbeidscontracten met type, salaris, valuta, looptijd
+- [x] **Documenten** - Document beheer per werknemer met vervaldatum waarschuwingen
+- [x] **Verlof** - Verlofaanvragen indienen, goedkeuren, afwijzen
+- [x] **Aanwezigheid** - Tijdregistratie met in-/uitklokken
+- [x] **Loonlijst** - Loonstroken genereren, goedkeuren, uitbetalen
+- [x] **HRM Instellingen** - Valuta's (SRD/EUR/USD), werkuren, verlof config, afdelingen
+
+### Sidebar Structuur ✅ (NIEUW)
+- [x] Aparte secties voor "VASTGOED BEHEER" en "HRM MODULE"
+- [x] Visuele scheiding met labels en borders
+- [x] Alle module-specifieke items onder juiste sectie
 
 ### CMS End-to-End Functionaliteit ✅ VERIFIED
 - [x] CMS editor in admin panel met sectie bewerken
@@ -41,6 +58,25 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - [x] React.lazy loading voor alle pagina's
 - [x] Code splitting
 - [x] Preconnect/Prefetch
+
+## HRM Module API Endpoints (NIEUW)
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/hrm/dashboard | GET | Dashboard statistieken |
+| /api/hrm/employees | GET/POST | Werknemers CRUD |
+| /api/hrm/employees/{id} | PUT/DELETE | Werknemer bewerken/verwijderen |
+| /api/hrm/departments | GET/POST | Afdelingen beheren |
+| /api/hrm/contracts | GET/POST | Arbeidscontracten |
+| /api/hrm/vacancies | GET/POST | Vacatures |
+| /api/hrm/applications | GET/POST | Sollicitaties |
+| /api/hrm/leave-requests | GET/POST | Verlofaanvragen |
+| /api/hrm/attendance | GET/POST | Aanwezigheid |
+| /api/hrm/attendance/clock-in | POST | Inklokken |
+| /api/hrm/attendance/clock-out | POST | Uitklokken |
+| /api/hrm/payroll | GET/POST | Loonstroken |
+| /api/hrm/payroll/generate | POST | Automatisch genereren |
+| /api/hrm/documents | GET/POST | Documenten |
+| /api/hrm/settings | GET/PUT | HRM Instellingen |
 
 ## CMS Structuur
 | Sectie ID | Type | Bewerkbaar |
