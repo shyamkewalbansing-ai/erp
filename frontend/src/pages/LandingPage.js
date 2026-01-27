@@ -642,35 +642,40 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Modules Section - From Database */}
-      <section className="py-20 bg-white">
+      {/* Modules Section - From Database - Bento Grid */}
+      <section className="py-24 bg-gradient-to-b from-emerald-50/50 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <Badge className="mb-4 bg-emerald-50 text-emerald-600 border-emerald-200 font-body">Prijzen</Badge>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
               Onze Modules
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto font-body">
               Kies de modules die het beste bij uw bedrijf passen
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {addons.map((addon) => {
               const Icon = getModuleIcon(addon.slug);
               return (
-                <Card key={addon.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                  <div className="h-40 bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center">
-                    <Icon className="w-16 h-16 text-white/80" />
+                <Card key={addon.id} className="group relative overflow-hidden border border-gray-100 bg-white hover:shadow-[0_12px_40px_-12px_rgba(12,175,96,0.15)] transition-all duration-300 hover:-translate-y-1">
+                  <div className="h-36 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"30\" height=\"30\" viewBox=\"0 0 30 30\" fill=\"none\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M1.22676 0C1.91374 0 2.45351 0.539773 2.45351 1.22676C2.45351 1.91374 1.91374 2.45351 1.22676 2.45351C0.539773 2.45351 0 1.91374 0 1.22676C0 0.539773 0.539773 0 1.22676 0Z\" fill=\"rgba(255,255,255,0.07)\"%2F%3E%3C/svg%3E')] opacity-50"></div>
+                    <Icon className="w-14 h-14 text-white/90 group-hover:scale-110 transition-transform duration-300" />
                   </div>
                   <CardContent className="p-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{addon.name}</h3>
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">{addon.description || 'Beheer module voor uw bedrijf'}</p>
+                    <h3 className="font-heading text-xl font-bold text-gray-900 mb-2">{addon.name}</h3>
+                    <p className="text-gray-600 text-sm mb-5 line-clamp-2 font-body">{addon.description || 'Beheer module voor uw bedrijf'}</p>
                     <div className="flex items-center justify-between">
-                      <span className="text-2xl font-bold text-emerald-600">{formatCurrency(addon.price)}<span className="text-sm text-gray-500 font-normal">/mnd</span></span>
-                      <Button size="sm" variant="outline" onClick={() => {
+                      <div>
+                        <span className="text-2xl font-bold text-emerald-600 font-heading">{formatCurrency(addon.price)}</span>
+                        <span className="text-sm text-gray-500 font-body">/mnd</span>
+                      </div>
+                      <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 font-body" onClick={() => {
                         setSelectedAddons([addon.id]);
                         setOrderDialogOpen(true);
-                      }}>
+                      }} data-testid={`order-addon-${addon.id}`}>
                         Bestellen
                       </Button>
                     </div>
@@ -680,8 +685,8 @@ export default function LandingPage() {
             })}
           </div>
 
-          <div className="text-center mt-12">
-            <Button size="lg" onClick={() => navigate('/prijzen')} className="bg-emerald-500 hover:bg-emerald-600">
+          <div className="text-center mt-14">
+            <Button size="lg" onClick={() => navigate('/prijzen')} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-full px-8 shadow-lg shadow-emerald-500/25 font-body font-semibold" data-testid="view-all-prices-btn">
               Bekijk alle prijzen
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
@@ -689,14 +694,21 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Industry Solutions */}
-      <section className="py-20 bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Industry Solutions - Dark Section */}
+      <section className="py-24 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 text-white relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4" data-testid="industries-title">
+            <Badge className="mb-4 bg-emerald-500/10 text-emerald-400 border-emerald-500/30 font-body">Sectoren</Badge>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold mb-4 tracking-tight" data-testid="industries-title">
               {getCmsSectionContent('industries', 'title', 'Verhuur, Beauty, Auto & Hotel – compleet beheer in één platform')}
             </h2>
-            <p className="text-xl text-gray-400 max-w-3xl mx-auto" data-testid="industries-content">
+            <p className="text-lg text-gray-400 max-w-3xl mx-auto font-body" data-testid="industries-content">
               {getCmsSectionContent('industries', 'content', 'Beheer moeiteloos jouw verhuuractiviteiten, beauty spa afspraken, autodealer processen en hotel- en kamerreserveringen.')}
             </p>
           </div>
@@ -709,66 +721,86 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-emerald-500 to-emerald-600">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6" data-testid="cta-title">
+      {/* CTA Section - Modern Gradient */}
+      <section className="py-24 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-10 left-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 right-10 w-80 h-80 bg-teal-400/20 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+          <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6 tracking-tight" data-testid="cta-title">
             {getCmsSectionContent('cta', 'title', 'Facturatie.sr – uw administratie eenvoudig geregeld')}
           </h2>
-          <p className="text-xl text-emerald-100 mb-8" data-testid="cta-content">
+          <p className="text-lg md:text-xl text-emerald-100 mb-10 max-w-2xl mx-auto font-body" data-testid="cta-content">
             {getCmsSectionContent('cta', 'content', 'Beheer facturering, boekhouding en voorraad in één systeem. Bespaar tijd, verhoog efficiëntie en voldoe moeiteloos aan fiscale verplichtingen.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="secondary" className="h-14 px-8 text-lg" onClick={() => navigate('/prijzen')}>
+            <Button size="lg" className="h-14 px-8 text-base bg-white text-emerald-700 hover:bg-emerald-50 rounded-full shadow-lg font-body font-semibold" onClick={() => navigate('/prijzen')} data-testid="cta-pricing-btn">
               Bekijk Prijzen
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
-            <Button size="lg" variant="outline" className="h-14 px-8 text-lg border-white text-white hover:bg-white/10" onClick={() => setOrderDialogOpen(true)}>
+            <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-white/30 text-white hover:bg-white/10 rounded-full font-body font-medium" onClick={() => setOrderDialogOpen(true)} data-testid="cta-order-btn">
               Direct Bestellen
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 text-white py-16">
+      {/* Footer - Modern Multi-column */}
+      <footer className="bg-slate-950 text-white pt-20 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="md:col-span-2">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-16">
+            {/* Brand column */}
+            <div className="lg:col-span-2">
               <img 
                 src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
                 alt="Facturatie N.V."
-                className="h-8 w-auto mb-4 brightness-0 invert"
+                className="h-9 w-auto mb-5 brightness-0 invert"
               />
-              <p className="text-gray-400 max-w-md">
+              <p className="text-gray-400 max-w-md leading-relaxed font-body mb-6">
                 Facturatie.sr is hét Surinaamse platform voor digitale facturatie en bedrijfsadministratie. Speciaal ontwikkeld voor Surinaamse bedrijven.
               </p>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white mb-4">Links</h4>
-              <ul className="space-y-2">
-                <li><Link to="/" className="text-gray-400 hover:text-white transition-colors">Home</Link></li>
-                <li><Link to="/prijzen" className="text-gray-400 hover:text-white transition-colors">Prijzen</Link></li>
-                <li><Link to="/over-ons" className="text-gray-400 hover:text-white transition-colors">Over Ons</Link></li>
-                <li><Link to="/login" className="text-gray-400 hover:text-white transition-colors">Aanmelden</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-white mb-4">Juridisch</h4>
-              <ul className="space-y-2">
-                <li><Link to="/voorwaarden" className="text-gray-400 hover:text-white transition-colors">Algemene Voorwaarden</Link></li>
-                <li><Link to="/privacy" className="text-gray-400 hover:text-white transition-colors">Privacybeleid</Link></li>
-              </ul>
-              <div className="mt-6">
-                <h4 className="font-semibold text-white mb-2">Contact</h4>
-                <p className="text-gray-400 flex items-center gap-2">
-                  <Phone className="w-4 h-4" /> +597 893-4982
-                </p>
+              <div className="flex items-center gap-4">
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/30 flex items-center justify-center transition-all">
+                  <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/30 flex items-center justify-center transition-all">
+                  <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                </a>
               </div>
             </div>
+            
+            {/* Links column */}
+            <div>
+              <h4 className="font-heading font-semibold text-white mb-5">Links</h4>
+              <ul className="space-y-3">
+                <li><Link to="/" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Home</Link></li>
+                <li><Link to="/prijzen" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Prijzen</Link></li>
+                <li><Link to="/over-ons" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Over Ons</Link></li>
+                <li><Link to="/login" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Aanmelden</Link></li>
+              </ul>
+            </div>
+            
+            {/* Legal + Contact column */}
+            <div>
+              <h4 className="font-heading font-semibold text-white mb-5">Juridisch</h4>
+              <ul className="space-y-3 mb-8">
+                <li><Link to="/voorwaarden" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Algemene Voorwaarden</Link></li>
+                <li><Link to="/privacy" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Privacybeleid</Link></li>
+              </ul>
+              <h4 className="font-heading font-semibold text-white mb-3">Contact</h4>
+              <a href="tel:+5978934982" className="text-gray-400 hover:text-emerald-400 transition-colors flex items-center gap-2 font-body">
+                <Phone className="w-4 h-4" /> +597 893-4982
+              </a>
+            </div>
           </div>
-          <div className="border-t border-slate-800 mt-12 pt-8 text-center text-gray-500">
-            <p>© {new Date().getFullYear()} Facturatie N.V. Alle rechten voorbehouden.</p>
+          
+          {/* Bottom bar */}
+          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-gray-500 text-sm font-body">© {new Date().getFullYear()} Facturatie N.V. Alle rechten voorbehouden.</p>
+            <p className="text-gray-600 text-sm font-body">Ontwikkeld met ❤️ in Suriname</p>
           </div>
         </div>
       </footer>
