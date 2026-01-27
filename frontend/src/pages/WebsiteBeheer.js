@@ -772,17 +772,10 @@ export default function WebsiteBeheer() {
                           type="file" 
                           accept="image/*" 
                           className="hidden" 
-                          onChange={e => {
-                            const file = e.target.files[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => setSettings({...settings, login_image_url: reader.result});
-                              reader.readAsDataURL(file);
-                            }
-                          }}
+                          onChange={e => handleImageUpload(e, 'login_image_url', (url) => setSettings({...settings, login_image_url: url}))}
                         />
-                        <Button variant="outline" type="button" asChild>
-                          <span><Upload className="w-4 h-4" /></span>
+                        <Button variant="outline" type="button" asChild disabled={uploading}>
+                          <span>{uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}</span>
                         </Button>
                       </label>
                     </div>
@@ -804,17 +797,10 @@ export default function WebsiteBeheer() {
                           type="file" 
                           accept="image/*" 
                           className="hidden" 
-                          onChange={e => {
-                            const file = e.target.files[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => setSettings({...settings, register_image_url: reader.result});
-                              reader.readAsDataURL(file);
-                            }
-                          }}
+                          onChange={e => handleImageUpload(e, 'register_image_url', (url) => setSettings({...settings, register_image_url: url}))}
                         />
-                        <Button variant="outline" type="button" asChild>
-                          <span><Upload className="w-4 h-4" /></span>
+                        <Button variant="outline" type="button" asChild disabled={uploading}>
+                          <span>{uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}</span>
                         </Button>
                       </label>
                     </div>
