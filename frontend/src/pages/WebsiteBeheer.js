@@ -1006,8 +1006,8 @@ export default function WebsiteBeheer() {
                     className="hidden" 
                     onChange={e => handleImageUpload(e, 'image_url')} 
                   />
-                  <Button variant="outline" type="button" asChild>
-                    <span><Upload className="w-4 h-4" /></span>
+                  <Button variant="outline" type="button" asChild disabled={uploading}>
+                    <span>{uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}</span>
                   </Button>
                 </label>
               </div>
