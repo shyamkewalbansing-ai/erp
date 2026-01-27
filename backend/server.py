@@ -1407,6 +1407,111 @@ async def delete_tenant(tenant_id: str, current_user: dict = Depends(get_current
         raise HTTPException(status_code=404, detail="Huurder niet gevonden")
     return {"message": "Huurder verwijderd"}
 
+
+# ==================== TENANT PORTAL ACCOUNT MANAGEMENT (by landlord) ====================
+
+class CreatePortalAccountRequest(BaseModel):
+    tenant_id: str
+    password: str
+
+@api_router.get("/tenants/portal-accounts")
+async def get_tenant_portal_accounts(current_user: dict = Depends(get_current_active_user)):
+    """Get all tenant portal accounts for this landlord"""
+    accounts = await db.tenant_accounts.find(
+        {"landlord_user_id": current_user["id"]},
+        {"_id": 0, "id": 1, "tenant_id": 1, "email": 1, "name": 1, "created_at": 1, "last_login": 1, "is_active": 1}
+    ).to_list(1000)
+    return accounts
+
+
+@api_router.post("/tenants/create-portal-account")
+async def create_tenant_portal_account(
+    data: CreatePortalAccountRequest,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Create a portal account for a tenant (by landlord)"""
+    # Verify tenant belongs to this landlord
+    tenant = await db.tenants.find_one(
+        {"id": data.tenant_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    if not tenant.get("email"):
+        raise HTTPException(status_code=400, detail="Huurder heeft geen e-mailadres")
+    
+    # Check if account already exists
+    existing = await db.tenant_accounts.find_one(
+        {"tenant_id": data.tenant_id},
+        {"_id": 0}
+    )
+    if existing:
+        raise HTTPException(status_code=400, detail="Deze huurder heeft al een portaal account")
+    
+    # Validate password
+    if len(data.password) < 6:
+        raise HTTPException(status_code=400, detail="Wachtwoord moet minimaal 6 tekens bevatten")
+    
+    # Create account
+    account_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    account_doc = {
+        "id": account_id,
+        "tenant_id": data.tenant_id,
+        "email": tenant["email"],
+        "password": hash_password(data.password),
+        "name": tenant["name"],
+        "landlord_user_id": current_user["id"],
+        "created_at": now.isoformat(),
+        "last_login": None,
+        "is_active": True
+    }
+    
+    await db.tenant_accounts.insert_one(account_doc)
+    
+    return {
+        "message": f"Portaal account aangemaakt voor {tenant['name']}",
+        "account_id": account_id,
+        "email": tenant["email"]
+    }
+
+
+@api_router.delete("/tenants/portal-accounts/{tenant_id}")
+async def delete_tenant_portal_account(
+    tenant_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Delete a tenant's portal account"""
+    result = await db.tenant_accounts.delete_one({
+        "tenant_id": tenant_id,
+        "landlord_user_id": current_user["id"]
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Portaal account niet gevonden")
+    return {"message": "Portaal account verwijderd"}
+
+
+@api_router.put("/tenants/portal-accounts/{tenant_id}/reset-password")
+async def reset_tenant_portal_password(
+    tenant_id: str,
+    data: CreatePortalAccountRequest,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Reset a tenant's portal password"""
+    if len(data.password) < 6:
+        raise HTTPException(status_code=400, detail="Wachtwoord moet minimaal 6 tekens bevatten")
+    
+    result = await db.tenant_accounts.update_one(
+        {"tenant_id": tenant_id, "landlord_user_id": current_user["id"]},
+        {"$set": {"password": hash_password(data.password)}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Portaal account niet gevonden")
+    return {"message": "Wachtwoord gereset"}
+
+
 # ==================== APARTMENT ROUTES ====================
 
 @api_router.post("/apartments", response_model=ApartmentResponse)
