@@ -168,7 +168,7 @@ const PublicRoute = ({ children }) => {
 // Smart redirect based on user role
 const SmartRedirect = () => {
   const { isSuperAdmin } = useAuth();
-  return <Navigate to={isSuperAdmin() ? "/admin" : "/dashboard"} replace />;
+  return <Navigate to={isSuperAdmin() ? "/app/admin" : "/app/dashboard"} replace />;
 };
 
 // Customer only route - superadmin cannot access
