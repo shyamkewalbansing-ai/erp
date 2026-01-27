@@ -10021,13 +10021,22 @@ async def tenant_portal_login(data: TenantLogin):
 
 async def get_tenant_account(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
     """Get current tenant account from JWT token"""
-    payload = decode_token(credentials.credentials)
-    account = await db.tenant_accounts.find_one({"id": payload["user_id"]}, {"_id": 0})
-    if not account:
-        raise HTTPException(status_code=401, detail="Huurder account niet gevonden")
-    if not account.get("is_active", True):
-        raise HTTPException(status_code=403, detail="Uw account is gedeactiveerd")
-    return account
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Ongeldige token")
+        
+        account = await db.tenant_accounts.find_one({"id": user_id}, {"_id": 0})
+        if not account:
+            raise HTTPException(status_code=401, detail="Huurder account niet gevonden")
+        if not account.get("is_active", True):
+            raise HTTPException(status_code=403, detail="Uw account is gedeactiveerd")
+        return account
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token is verlopen")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Ongeldige token")
 
 
 @api_router.get("/tenant-portal/me")
