@@ -184,6 +184,14 @@ export default function LandingPage() {
       .reduce((sum, a) => sum + (a.price || 0), 0);
   };
 
+  // Partner logos - from CMS settings (memoized - must be before early return)
+  const partners = useMemo(() => {
+    if (settings?.partners?.length > 0) {
+      return settings.partners.filter(p => p && p.logo);
+    }
+    return [];
+  }, [settings?.partners]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -232,14 +240,6 @@ export default function LandingPage() {
     { icon: Settings, title: 'AutoDealer', description: 'Alles-in-één oplossing voor het beheren van auto\'s, voorraad en verkoop.' },
     { icon: Calendar, title: 'Hotel & Kamers', description: 'Complete oplossing die hoteloperaties vereenvoudigt.' }
   ];
-
-  // Partner logos - from CMS settings (memoized to prevent infinite loops)
-  const partners = useMemo(() => {
-    if (settings?.partners?.length > 0) {
-      return settings.partners.filter(p => p && p.logo);
-    }
-    return [];
-  }, [settings?.partners]);
 
   return (
     <div className="min-h-screen bg-white">
