@@ -13,52 +13,57 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (27 Jan 2026)
 
-### Meterstanden Module ✅ (NIEUW - 27 Jan 2026)
-Complete EBS en SWM meterstanden beheer voor Vastgoed Beheer module:
+### Huurders Portaal ✅ (NIEUW - 27 Jan 2026)
+Complete self-service portaal voor huurders:
 
-**Backend Features:**
-- [x] Officiële Suriname EBS tarieven (staffels: 0-150, 150-500, 500+ kWh)
-- [x] Officiële Suriname SWM tarieven (staffels: 0-10, 10-30, 30+ m³)
-- [x] Automatische verbruiksberekening (nieuwe stand - vorige stand)
-- [x] Automatische kostenberekening op basis van tariefstaffels
-- [x] Betaling markeren met automatische kasgeld aftrek
-- [x] Betaling ongedaan maken
-- [x] Periode samenvatting (totaal verbruik, kosten, betaald/openstaand)
-- [x] Meterstand historie per appartement
+**Features:**
+- [x] Eigen login/registratie systeem voor huurders
+- [x] Dashboard met appartement info, huur, saldo
+- [x] Betalingsoverzicht en -geschiedenis
+- [x] Zelf meterstanden (EBS/SWM) indienen
+- [x] Automatische kostenberekening met Suriname tarieven
+- [x] Openstaande facturen bekijken
+- [x] Melding wanneer meterstand nog niet ingediend
 
-**Frontend Features:**
-- [x] Meterstanden pagina met overzichtelijke UI
-- [x] Periode selector (maand navigatie)
-- [x] Summary cards: Ingediend, EBS Totaal, SWM Totaal, Totaal Kosten
-- [x] Tabel met alle meterstanden en status badges
-- [x] Meterstand toevoegen dialog
-- [x] Tarieven instellingen dialog (EBS & SWM tabs)
-- [x] Betaal knop met bevestigingsdialog
-- [x] Filter op appartement, betalingsstatus, zoeken
+**URL:** `/huurder` (aparte portaal van verhuurder)
 
 **API Endpoints:**
 | Endpoint | Methode | Beschrijving |
 |----------|---------|--------------|
-| /api/meter-readings | GET/POST | Meterstanden CRUD |
-| /api/meter-readings/{id} | PUT/DELETE | Meterstand bewerken/verwijderen |
-| /api/meter-readings/{id}/pay | POST | Markeer als betaald (kasgeld aftrek) |
-| /api/meter-readings/{id}/unpay | POST | Markeer als onbetaald |
-| /api/meter-readings/summary | GET | Periode samenvatting |
-| /api/meter-settings | GET/PUT | Tarieven instellingen |
-| /api/apartments/{id}/meter-history | GET | Meterstand historie |
+| /api/tenant-portal/register | POST | Huurder registratie |
+| /api/tenant-portal/login | POST | Huurder login |
+| /api/tenant-portal/me | GET | Account info |
+| /api/tenant-portal/dashboard | GET | Dashboard data |
+| /api/tenant-portal/payments | GET | Betalingsgeschiedenis |
+| /api/tenant-portal/invoices | GET | Facturen |
+| /api/tenant-portal/meter-readings | GET/POST | Meterstanden |
 
-### Partner Logo's via CMS ✅ (27 Jan 2026)
-- [x] Partner logo's beheerbaar via CMS Instellingen tab
-- [x] Upload functionaliteit met preview
-- [x] Placeholder logo's verwijderd
+### Meterstanden Module ✅ (27 Jan 2026)
+- [x] Officiële Suriname EBS tarieven (0-150, 150-500, 500+ kWh)
+- [x] Officiële Suriname SWM tarieven (0-10, 10-30, 30+ m³)
+- [x] Automatische verbruiks- en kostenberekening
+- [x] Betaling markeren met kasgeld aftrek
+- [x] Periode navigatie en samenvatting
 
-### CMS Image Upload ✅ (27 Jan 2026)
-- [x] Server-side image upload via `/api/cms/upload-image`
-- [x] Logo, Login/Registratie afbeeldingen upload
+### Partner Logo's via CMS ✅
+- [x] Partner logo's beheerbaar via CMS Instellingen
 
-### HRM Module - Volledig Uitgebreid ✅
+### CMS Image Upload ✅
+- [x] Server-side image upload
+- [x] Logo, Login/Registratie afbeeldingen
+
+### HRM Module ✅
 - [x] 9 aparte pagina's in sidebar
-- [x] Dashboard, Personeel, Werving, Contracten, Documenten, Verlof, Aanwezigheid, Loonlijst, Instellingen
+- [x] Dashboard, Personeel, Werving, Contracten, etc.
+
+## Test Credentials
+
+### Verhuurder
+- **Superadmin**: admin@facturatie.sr / admin123
+- **Klant met modules**: shyam@kewalbansing.net / test1234
+
+### Huurder
+- **Huurder portaal**: jan@example.com / huurder123
 
 ## EBS & SWM Tarieven Suriname 2024
 
@@ -76,39 +81,43 @@ Complete EBS en SWM meterstanden beheer voor Vastgoed Beheer module:
 | 10 - 30 m³ | SRD 4.50 / m³ |
 | 30+ m³ | SRD 7.50 / m³ |
 
-## Test Credentials
-- **Superadmin**: admin@facturatie.sr / admin123
-- **Klant met Vastgoed+HRM**: shyam@kewalbansing.net / test1234
-
 ## File Structure
 ```
-/app/backend/
-├── server.py          # Main backend (~9500 lines)
-└── routers/           # Prepared for modular refactoring
-    └── auth.py
+/app/frontend/src/
+├── context/
+│   └── TenantAuthContext.js    # NEW: Huurder auth context
+├── pages/
+│   ├── TenantLogin.js          # NEW: Huurder login/register
+│   ├── TenantDashboard.js      # NEW: Huurder dashboard
+│   ├── Meterstanden.js         # Verhuurder meterstanden
+│   └── ...
 
-/app/frontend/src/pages/
-├── Meterstanden.js    # NEW: Meterstanden beheer pagina
-├── HRM*.js            # HRM module pagina's
-└── ...
+/app/backend/
+├── server.py                   # +tenant portal endpoints (~10000 lines)
+└── routers/                    # Prepared for modular refactoring
 ```
 
 ## Prioritized Backlog
 
 ### P0 (Critical) - DONE ✅
-- [x] Meterstanden module met EBS/SWM tarieven
-- [x] CMS image upload
-- [x] Partner logo's via CMS
+- [x] Huurders portaal met eigen login
+- [x] Huurders kunnen zelf meterstanden invoeren
+- [x] Dashboard met appartement, betalingen, saldo
 
 ### P1 (High Priority)
-- [ ] **server.py refactoring** (>9500 lines) - Split into routers
-- [ ] Huurders kunnen zelf meterstanden invoeren via portaal
-- [ ] Herinneringen voor maandelijkse meteropname
+- [ ] **Herinneringen voor maandelijkse meteropname** (email notificaties)
+- [ ] **server.py refactoring** (>10000 lines) - Split into routers
 
 ### P2 (Medium Priority)
+- [ ] Huurder kan betalingen doen via portaal
 - [ ] Email notificaties voor HRM
-- [ ] Meterstanden exporteren naar PDF/Excel
 
 ### P3 (Nice to Have)
-- [ ] Overige ERP modules (Inventory, CRM, Accounting)
+- [ ] Meterstanden exporteren naar PDF
 - [ ] Grafiek met verbruikshistorie
+- [ ] Overige ERP modules (Inventory, CRM, Accounting)
+
+## Architecture Notes
+- Huurders hebben aparte `tenant_accounts` collectie (losgekoppeld van `users`)
+- Tenant portaal routes starten met `/huurder`
+- Verhuurder (landlord) ID wordt opgeslagen in tenant account voor data isolatie
