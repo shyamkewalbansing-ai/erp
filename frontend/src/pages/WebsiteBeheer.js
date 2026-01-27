@@ -826,6 +826,90 @@ export default function WebsiteBeheer() {
               </div>
 
               <div className="border-t pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="font-semibold">Partner Logo's</h3>
+                    <p className="text-sm text-muted-foreground">Logo's van partners die op de homepage worden getoond</p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      const partners = settings.partners || [];
+                      setSettings({...settings, partners: [...partners, { name: '', logo: '' }]});
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Partner Toevoegen
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {(settings.partners || []).map((partner, index) => (
+                    <div key={index} className="p-4 border rounded-lg space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label>Partner {index + 1}</Label>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => {
+                            const partners = [...(settings.partners || [])];
+                            partners.splice(index, 1);
+                            setSettings({...settings, partners});
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 text-destructive" />
+                        </Button>
+                      </div>
+                      <Input 
+                        value={partner.name}
+                        onChange={e => {
+                          const partners = [...(settings.partners || [])];
+                          partners[index].name = e.target.value;
+                          setSettings({...settings, partners});
+                        }}
+                        placeholder="Partner naam"
+                      />
+                      <div className="flex gap-2">
+                        <Input 
+                          value={partner.logo}
+                          onChange={e => {
+                            const partners = [...(settings.partners || [])];
+                            partners[index].logo = e.target.value;
+                            setSettings({...settings, partners});
+                          }}
+                          placeholder="Logo URL of upload"
+                          className="flex-1"
+                        />
+                        <label className="cursor-pointer">
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={e => handleImageUpload(e, 'logo', (url) => {
+                              const partners = [...(settings.partners || [])];
+                              partners[index].logo = url;
+                              setSettings({...settings, partners});
+                            })}
+                          />
+                          <Button variant="outline" type="button" asChild disabled={uploading}>
+                            <span>{uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}</span>
+                          </Button>
+                        </label>
+                      </div>
+                      {partner.logo && (
+                        <img src={partner.logo} alt={partner.name} className="h-12 w-auto object-contain" />
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {(!settings.partners || settings.partners.length === 0) && (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Nog geen partners toegevoegd. Klik op "Partner Toevoegen" om te beginnen.
+                  </p>
+                )}
+              </div>
+
+              <div className="border-t pt-6">
                 <h3 className="font-semibold mb-4">Sociale Media</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
