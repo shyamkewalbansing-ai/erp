@@ -111,12 +111,12 @@ const SubscriptionRoute = ({ children }) => {
   
   // Superadmin should not access customer pages - redirect to admin
   if (isSuperAdmin()) {
-    return <Navigate to="/admin" replace />;
+    return <Navigate to="/app/admin" replace />;
   }
   
   // If subscription is not active, redirect to subscription page
   if (!hasActiveSubscription()) {
-    return <Navigate to="/abonnement" replace />;
+    return <Navigate to="/app/abonnement" replace />;
   }
   
   return children;
