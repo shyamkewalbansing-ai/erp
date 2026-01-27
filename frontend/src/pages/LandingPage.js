@@ -397,21 +397,21 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Partners Section - Only show if there are partners with logos */}
+      {/* Partners Section - Minimal elegant design */}
       {partners.length > 0 && (
-        <section className="py-12 bg-gray-50 border-y border-gray-100">
+        <section className="py-16 bg-white/50 backdrop-blur-sm border-y border-emerald-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p className="text-center text-gray-500 mb-8" data-testid="partners-content">
+            <p className="text-center text-gray-500 mb-10 font-body" data-testid="partners-content">
               {getCmsSectionContent('partners', 'content', 'Onze beste partners en meer dan 500+ klanten in Suriname zijn tevreden over onze diensten').split('500+')[0]}
-              <strong className="text-gray-700">500+ klanten</strong> in Suriname zijn tevreden over onze diensten
+              <strong className="text-gray-700 font-semibold">500+ klanten</strong> in Suriname zijn tevreden over onze diensten
             </p>
-            <div className="flex flex-wrap justify-center items-center gap-8">
+            <div className="flex flex-wrap justify-center items-center gap-10 md:gap-16">
               {partners.map((partner, i) => (
-                <div key={i} className="grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                <div key={i} className="grayscale hover:grayscale-0 transition-all duration-300 opacity-50 hover:opacity-100 transform hover:scale-105">
                   <img 
                     src={partner.logo} 
                     alt={partner.name}
-                    className="h-10 w-auto"
+                    className="h-10 md:h-12 w-auto"
                   />
                 </div>
               ))}
@@ -420,12 +420,21 @@ export default function LandingPage() {
         </section>
       )}
 
-      {/* Features Section */}
-      <section className="py-20 bg-white">
+      {/* Features Section - Bento Grid Style */}
+      <section className="py-24 bg-gradient-to-b from-white to-emerald-50/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-emerald-50 text-emerald-600 border-emerald-200 font-body">Waarom Facturatie.sr</Badge>
+            <h2 className="font-heading text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
+              Veilig, snel en betrouwbaar
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto font-body">
+              Ontworpen voor Surinaamse ondernemers die hun administratie willen stroomlijnen
+            </p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
             {features.map((feature, index) => (
-              <FeatureCard key={index} {...feature} />
+              <FeatureCard key={index} {...feature} delay={index * 100} />
             ))}
           </div>
         </div>
