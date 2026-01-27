@@ -233,15 +233,20 @@ export default function LandingPage() {
     { icon: Calendar, title: 'Hotel & Kamers', description: 'Complete oplossing die hoteloperaties vereenvoudigt.' }
   ];
 
-  // Partner logos (using placeholder images)
-  const partners = [
-    { name: 'Bedrijf A', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+A' },
-    { name: 'Bedrijf B', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+B' },
-    { name: 'Bedrijf C', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+C' },
-    { name: 'Bedrijf D', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+D' },
-    { name: 'Bedrijf E', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+E' },
-    { name: 'Bedrijf F', logo: 'https://via.placeholder.com/120x40/f3f4f6/9ca3af?text=Partner+F' }
+  // Partner logos - from CMS settings or defaults
+  const defaultPartners = [
+    { name: 'Partner 1', logo: '' },
+    { name: 'Partner 2', logo: '' },
+    { name: 'Partner 3', logo: '' },
+    { name: 'Partner 4', logo: '' },
+    { name: 'Partner 5', logo: '' },
+    { name: 'Partner 6', logo: '' }
   ];
+  
+  // Use partners from settings if available
+  const partners = settings?.partners?.length > 0 
+    ? settings.partners.filter(p => p.logo) 
+    : defaultPartners.filter(p => p.logo);
 
   return (
     <div className="min-h-screen bg-white">
