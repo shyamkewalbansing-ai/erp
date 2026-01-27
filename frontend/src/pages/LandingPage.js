@@ -792,11 +792,15 @@ export default function LandingPage() {
                     onClick={() => toggleAddonSelection(addon.id)}
                   >
                     <div className="flex items-center gap-3">
-                      <Checkbox 
-                        checked={selectedAddons.includes(addon.id)}
-                        onClick={(e) => e.stopPropagation()}
-                        onCheckedChange={() => toggleAddonSelection(addon.id)}
-                      />
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                        selectedAddons.includes(addon.id) 
+                          ? 'border-emerald-500 bg-emerald-500' 
+                          : 'border-gray-300'
+                      }`}>
+                        {selectedAddons.includes(addon.id) && (
+                          <Check className="w-3 h-3 text-white" />
+                        )}
+                      </div>
                       <div>
                         <span className="font-medium">{addon.name}</span>
                         {addon.description && (
