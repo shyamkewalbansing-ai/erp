@@ -1,161 +1,165 @@
 <analysis>**original_problem_statement:**
 The user wants to build a generic, modular ERP SaaS system. The core requirements have evolved to include:
-1.  A powerful CMS for the superadmin to control the public-facing website's content, layout, and pages, completely redesigning it to mirror a provided example ().
-2.  A seamless ordering process where customers can select modules, create an account, and get automatically logged in to see their pending module requests.
-3.  A superadmin interface to approve these customer module requests.
-4.  Implementation of specific modules, with the current focus on a comprehensive HRM module.
-5.  An AI-powered chatbot on the public website to assist visitors.
-6.  The ability for the superadmin to edit all content (text and images) on all public pages directly from the admin dashboard.
-7.  Performance optimizations for a faster website experience.
+1.  A powerful CMS for the superadmin to control the public-facing website's content, layout, and pages, including managing all text and images (like partner logos).
+2.  A seamless ordering process for customers to select modules and create an account.
+3.  A superadmin interface to approve customer module requests.
+4.  Implementation of specific modules, with a detailed HRM module and a Vastgoed Beheer (Real Estate Management) module.
+5.  An AI-powered chatbot on the public website.
+6.  A complete Vastgoed Beheer module with features for managing apartments, tenants, and finances. This has now been expanded to include a comprehensive utility meter reading system (EBS & SWM) with automatic tariff calculations for Suriname.
+7.  A self-service portal for tenants to view their details, outstanding balances, and submit their own monthly meter readings.
+8.  A modern, professional UI/UX design for the entire application.
 
 **PRODUCT REQUIREMENTS:**
-*   **Complete Website Redesign:** Rebuild the public-facing site (, , , , ) to match the style and layout of .
-*   **Integrated CMS Editor:** A Website tab within the superadmin dashboard to manage the content of all public pages.
-*   **Editable Content:** All text and images on the public pages must be editable through the new CMS editor.
-*   **AI Assistant:** An OpenAI GPT-4o powered chatbot widget available on all public pages to answer visitor questions.
-*   **Module E-commerce Flow:** Customers can view all available modules, order them, and get an account automatically with a pending status.
-*   **Request Approval System:** Superadmins must be able to see and approve/reject new customer module requests from their dashboard.
-*   **HRM Module (Expanded):** A functional and modern Human Resource Management module, split into separate pages in the sidebar, with features for: Dashboard, Personnel, Recruitment, Contracts, Documents, Leave, Attendance, Payroll, and Settings.
-*   **Deployment Script:** An  script to simplify server updates.
+*   **Complete Website Redesign:** Modernize the public-facing site and the application's internal pages based on professional design guidelines.
+*   **Integrated CMS Editor:** A Website tab in the superadmin dashboard to manage all public page content, including image uploads for logos and other media.
+*   **AI Assistant:** An OpenAI GPT-4o powered chatbot widget on public pages.
+*   **Module E-commerce Flow:** A working order form for customers to subscribe to modules.
+*   **HRM Module (Expanded):** A functional Human Resource Management module with a dedicated sidebar section.
+*   **Vastgoed Beheer Module (Expanded):**
+    *   Full management of apartments, tenants, and finances ().
+    *   **Meter Reading System:** Ability for the manager to add/view/manage EBS (electricity) and SWM (water) meter readings for each apartment. The system must automatically calculate consumption and costs based on official Surinamese tariff structures.
+    *   **Tenant Portal:** A separate login () for tenants. Tenants can view their apartment details, payment history, outstanding balance, and submit their monthly meter readings.
+    *   **Tenant Account Management:** The landlord/manager can create and manage portal accounts for tenants directly from the main application's Huurders page.
+*   **Critical Backend Refactor:** Break down the monolithic  into modular, domain-specific routers.
 
 **User's preferred language**: The user communicates in **Dutch**. The next agent MUST respond in Dutch.
 
 **what currently exists?**
-The application is a full-featured, modular ERP system. The previous agent completed several major tasks:
-1.  **CMS Fix & Verification:** Fixed the CMS by connecting the  to the backend, enabling dynamic content. A full-system test was conducted via the , confirming all major functionalities (Login, Admin, CMS, Public Pages, Order Flow, AI Chat) are working.
-2.  **HRM Bug Fix:** Resolved a critical bug that prevented adding new employees due to an incorrect database query (HRM module niet geactiveerd).
-3.  **Massive HRM Module Overhaul:** Based on user request, the HRM module was completely rebuilt and expanded. It now includes backend endpoints and frontend UI for a Dashboard, Personnel, Recruitment, Contracts, Documents, Leave Management, Attendance, Payroll, and Settings.
-4.  **UI/UX Refactor:** The monolithic  page was split into nine separate page components. The main  was refactored to include a collapsible HRM MODULE section in the sidebar, mirroring the existing VASTGOED BEHEER module for a consistent and professional user experience. The UI for these pages was also updated to a more modern design.
-5.  ** Script:** An  script was created to simplify the user's server update process.
+The application is a complex, multi-tenant ERP system with three distinct roles: Superadmin, Client/Landlord, and Tenant. The agent has just completed a significant feature expansion by building a comprehensive utility meter reading system and a full-featured tenant portal. This portal allows tenants to log in, view their financial status, and submit their meter readings, which the landlord can then see in the main application. A recurring Maximum update depth exceeded bug on the public order form was also fixed by replacing a problematic UI component. The CMS was enhanced to allow image uploads and dynamic management of partner logos. The agent was just beginning a full UI modernization when the session ended.
 
 **Last working item**:
-*   **Last item agent was working**: Refactoring the HRM module. The agent split the monolithic  page into nine separate, feature-specific pages (, , etc.) and updated the main application layout () to display these new pages in a dedicated, collapsible sidebar section, matching the UI/UX of the Vastgoed Beheer module.
-*   **Status**: USER VERIFICATION PENDING
-*   **Agent Testing Done**: Y (Agent performed visual verification via multiple screenshots, confirming the new sidebar structure and that the new HRM pages load correctly.)
-*   **Which testing method agent to use?**: both. The agent should first run the  to perform a comprehensive regression test and specifically check all the new HRM routes and pages for functionality. Afterwards, the user should be prompted to verify the new structure and UI meet their expectations.
+*   **Last item agent was working**: Implementing a modern UI/UX redesign across the application. The agent had just received design guidelines from the  and started by adding the specified custom fonts (, ) to .
+*   **Status**: IN PROGRESS
+*   **Agent Testing Done**: N (Not applicable, just started).
+*   **Which testing method agent to use?**: both. After implementing the design changes, the agent should call  with a focus on frontend regression to ensure no functionality was broken by the UI overhaul.
 *   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-*   **Issue 1: Minor cosmetic issue with partner logos (P2)**
-    *   **Description**: The partner logos on the public landing page are  URLs, which result in 404 errors in the console and display Partner A, Partner B, etc.
-    *   **Next debug checklist**: This is not a bug to fix but a feature to implement. This is covered by the upcoming task Implement Image Uploads for CMS. The solution will be to allow the admin to upload real logos via the CMS.
-    *   **Why fix this issue and what will be achieved with the fix?**: It will remove console errors and give the public landing page a more professional look.
-    *   **Status**: NOT STARTED
-    *   **Is recurring issue?**: N
-    *   **Should Test frontend/backend/both after fix?**: frontend
-    *   **Blocked on other issue**: Blocked on Implement Image Uploads for CMS.
+*   **Issue 1: React infinite loop on Order Form (P1)**
+    *   **Description**: The order form on the  was causing a Maximum update depth exceeded error. The agent fixed it by replacing the Shadcn  component with a custom . The user confirmed the fix. However, this component has been fragile and the issue has recurred before.
+    *   **Status**: RESOLVED (but high risk of recurrence).
+    *   **Is recurring issue?**: Y
+    *   **Should Test frontend/backend/both after fix?**: frontend. Any changes to  should trigger a specific test of the order dialog.
 
 **In progress Task List**:
-*   None.
+*   **Task 1: Modern UI/UX Redesign (P0)**
+    *   **Where to resume**: The agent just added the fonts to . The next step is to update the  and  files to apply the new color palette, fonts, and spacing defined in . Then, refactor key components (, , , etc.) to align with the new design.
+    *   **What will be achieved with this?**: A more professional, modern, and visually appealing application, as requested by the user.
+    *   **Status**: IN PROGRESS
+    *   **Should Test frontend/backend/both after fix?**: frontend
+*   **Task 2: Critical  Refactoring (P1)**
+    *   **Where to resume**: The agent previously paused this task. The plan is to create a  directory and incrementally move endpoint groups (e.g., , , , , , ) from the monolithic  into their own  files.
+    *   **What will be achieved with this?**: Drastically improve the maintainability, readability, and scalability of the backend codebase, which is currently a single file of over 9,900 lines. This is a critical technical debt.
+    *   **Status**: IN PROGRESS (Paused)
+    *   **Should Test frontend/backend/both after fix?**: backend
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks**:
-    *   **(P0) Implement Image Uploads for CMS**: The user wants to manage all content, including images (like partner logos and module pictures) via the CMS. This requires adding file upload inputs to  and creating backend endpoints to handle file storage and return URLs to be saved in the  collection. This will also resolve the placeholder logo issue.
+    *   **(P1) Email notifications for HRM**: The user previously requested this. It would involve setting up an email service and triggering emails for various HRM events (e.g., leave requests, new contracts).
+    *   **(P1) Herinneringen voor maandelijkse meteropname**: Implement reminders (likely email or in-app notifications) for both tenants and landlords regarding the monthly submission of meter readings.
+    *   **(P2) Finalize Meter Reading Financials**: When a landlord marks utility bills as paid, the total amount should be automatically deducted from the  (cash box) balance.
 *   **Future Tasks**:
-    *   **(P1) Refactor **: This is **CRITICAL**. The monolithic backend file is now well over 8700 lines after adding numerous endpoints for the expanded HRM module. It is difficult to maintain and must be broken into modular  files (e.g., , , , ).
     *   **(P2)** Build out other requested ERP modules (Inventory, CRM, Accounting).
 
 **Completed work in this session**
-- **CMS End-to-End Functionality**: Fixed and verified the CMS editor, allowing changes in the admin panel to reflect on the live public website. (DONE)
-- **Comprehensive System Test**: Performed a full-system test, confirming all core features are operational. (DONE)
-- ** Deployment Script**: Created a script to simplify server updates for the user. (DONE)
-- **HRM Module Bug Fix**: Resolved the HRM module niet geactiveerd error. (DONE)
-- **HRM Module Expansion**: Implemented a massive expansion of the HRM module with a new dashboard and features for personnel, recruitment, contracts, documents, leave, attendance, payroll, and settings. (DONE, pending verification)
-- **HRM UI/UX Refactor**: Split the monolithic HRM module into separate pages and integrated them into a professional, collapsible sidebar menu. (DONE, pending verification)
+- **Meter Reading Module (Vastgoed)**: A complete system for landlords to manage and calculate tenant utility costs (EBS/SWM) based on official Surinamese tariffs. (DONE)
+- **Tenant Portal**: A secure, separate portal for tenants () to log in, view their apartment/financial data, and submit their monthly meter readings. (DONE)
+- **Tenant Account Management**: Functionality for landlords to create/manage portal accounts for their tenants directly from the admin UI. (DONE)
+- **Order Form Bug Fix**: Resolved a recurring Maximum update depth exceeded React infinite loop error. (DONE)
+- **CMS Image & Partner Logo Management**: Implemented server-side image uploads for the CMS and made the partner logos on the landing page fully manageable by the admin. (DONE)
+- **HRM Module Verification**: Confirmed via API tests and a  run that the previously built HRM module is fully functional. (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-*   The placeholder partner logos on the landing page are still present, causing 404 errors. This is now part of the Implement Image Uploads for CMS task.
+*   None. All raised issues in this session were addressed.
 
 **Known issue recurrence from previous fork**
-*   **User Struggles with Server Updates**: This was addressed in the session by creating the  script. The issue is considered resolved, pending user adoption of the script.
+*   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-*   **Backend**: Monolithic FastAPI, MongoDB (), Pydantic models.
-*   **Frontend**: React, Tailwind CSS, Shadcn UI,  for icons.
-*   **State Management**: React Context () for user session.
-*   **Routing**:  with dynamic, role-based sidebar navigation in .
-*   **Performance**:  and  for code-splitting.
-*   **Integrations**: OpenAI GPT-4o, Mope Payments.
+*   **Backend**: Monolithic FastAPI, MongoDB (), Pydantic models. JWT for auth.
+*   **Frontend**: React, Tailwind CSS, Shadcn UI, .
+*   **State Management**: React Context ( for main app,  for tenant portal).
+*   **Routing**: , including protected routes and separate routing structures for the main app and tenant portal.
+*   **Multi-tenancy**: The architecture now clearly separates Superadmin, Client/Landlord, and Tenant roles and data access.
 
 **key DB schema**
-*   **cms_pages**: Core for the public site content.
-*   **users, addons, user_addons**: Manage customer accounts and module subscriptions.
-*   **hrm_employees, hrm_departments, hrm_leave_requests**: Original HRM collections.
-*   **hrm_candidates, hrm_contracts, hrm_documents, hrm_attendance, hrm_payroll, hrm_settings**: **New** collections to support the expanded HRM module.
+*   **meter_readings**: { apartment_id, tenant_id, ebs_reading, swm_reading, month, year, cost, status }
+*   **meter_settings**: Stores EBS and SWM tariff tiers.
+*   **tenant_accounts**: { tenant_id, email, hashed_password } - Manages login for the tenant portal.
+*   **users, tenants, apartments**: Existing collections were heavily used for the new features.
 
 **changes in tech stack**
 *   None.
 
 **All files of reference**
-*   **/app/backend/server.py**: Significantly extended with numerous new endpoints for the expanded HRM module.
-*   **/app/frontend/src/components/Layout.js**: Heavily modified to implement dynamic, collapsible sidebar navigation for different modules.
-*   **/app/frontend/src/App.js**: Updated with many new routes for the individual HRM pages.
-*   **/app/frontend/src/pages/HRM*.js**: All the newly created pages for the HRM module (HRMDashboard, HRMPersoneel, etc.).
-*   **/app/update.sh**: The new server update script.
+*   **/app/backend/server.py**: Grew from ~9300 to over 9900 lines. Contains all new endpoints for meter readings and the tenant portal. Urgently needs refactoring.
+*   **/app/frontend/src/App.js**: Heavily refactored to support two separate authentication contexts and routing systems (main app vs. tenant portal).
+*   **/app/frontend/src/pages/LandingPage.js**: Fixed a critical bug and updated for dynamic partner logos.
+*   **/app/frontend/src/pages/Meterstanden.js**: New page for landlords to manage utility readings.
+*   **/app/frontend/src/pages/TenantLogin.js**: New login page for tenants.
+*   **/app/frontend/src/pages/TenantDashboard.js**: New dashboard for tenants.
+*   **/app/frontend/src/pages/Tenants.js**: Modified to allow landlords to manage tenant portal access.
+*   **/app/design_guidelines.json**: New file containing UI/UX rules for the modernization task.
 
 **Areas that need refactoring**:
-*   **CRITICAL**:  has grown excessively and is now a major liability. It urgently needs to be broken down into domain-specific  files (e.g., , ).
-*   **/app/frontend/src/components/Layout.js**: The logic for rendering the dynamic sidebar is complex and could be simplified or broken into smaller components.
+*   **CRITICAL**:  is the single biggest risk to the project's stability and future development. The refactoring task that was started but paused is the highest technical priority.
+*   **/app/frontend/src/App.js**: The routing and provider logic has become very complex. It could potentially be simplified.
 
 **key api endpoints**
-*   **POST **: Fixed to correctly check for active user subscriptions.
-*   **GET **: **New**.
-*   **GET, POST **: **New**.
-*   **GET, POST **: **New**.
-*   **GET, POST, DELETE **: **New**.
-*   **GET, POST **: **New**.
-*   **GET, POST **: **New**.
-*   **GET, PUT **: **New**.
+*   **POST **, **POST **: New authentication endpoints for the tenant portal.
+*   **GET **: New endpoint to fetch all data for the logged-in tenant.
+*   **POST **: New endpoint for tenants to submit their readings.
+*   **POST **: New endpoint for landlords to create accounts for tenants.
+*   **GET, POST **: New endpoints for landlords to manage all meter readings.
+*   **GET, PUT **: New endpoints to manage utility tariffs.
 
 **Critical Info for New Agent**
-*   The highest priority is to get user feedback on the massive HRM module overhaul. Do not proceed with new features until the user has verified the current work.
-*   The user's request progression shows a pattern: report bug -> request major feature expansion -> request UI/UX improvement. Be prepared for large-scale requests.
-*   The refactoring of  is no longer just a good practice but a critical task to ensure the project's maintainability. It should be proposed to the user as the next major technical task after the current work is approved.
-*   A test customer ( / ) with active HRM and Vastgoed modules exists. Use this user to test all customer-facing module functionality, as the superadmin is correctly redirected away from these pages.
+*   The immediate task is the UI/UX redesign. The user is expecting a visual upgrade. Follow the  file.
+*   After the UI redesign, the  refactoring is the most important task to ensure the project doesn't become unmanageable. Propose this to the user as the next logical step.
+*   The application now has three distinct user journeys. Testing must cover all three:
+    1.  **Superadmin ()**: Manages the CMS and system-wide settings.
+    2.  **Client/Landlord ()**: Manages their modules (Vastgoed, HRM), including tenants and meter readings.
+    3.  **Tenant ()**: Logs into a separate portal () to see their own data and submit readings.
+*   The bug on the  order form was tricky. Be cautious when editing this file.
 
 **documents and test reports created in this job**
 *   
-*   [0;34m=============================================[0m
-[0;34m   Facturatie.sr - Server Update Script     [0m
-[0;34m=============================================[0m
-
-[1;33m[1/6] Git ownership fixen...[0m
-[0;32m✓ Git ownership opgelost[0m
-[1;33m[2/6] Controleren op lokale wijzigingen...[0m
-[1;33m  Lokale wijzigingen gevonden, worden verwijderd...[0m
-Removing frontend/yarn.lock
-[0;32m✓ Werkdirectory schoon[0m
-[1;33m[3/6] Nieuwste code ophalen van GitHub...[0m
+*   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: Asks for a thorough check of the entire application to find and fix all errors. (Done, agent ran comprehensive tests).
-2.  **User**: Asks to specifically check if the Vastgoed and HRM modules are working without errors. (Done, led to finding the HRM bug).
-3.  **User**: Reports a specific bug: When I create an employee, it gives an error HRM module not activated even though it is. (Fixed).
-4.  **User**: Requests a massive expansion of the HRM module with a modern look, dashboard, and numerous new features (Personnel, Recruitment, Contracts, Documents, Calendar, Leave, Attendance, Currency support, Settings). (Implemented).
-5.  **User**: Adds Payroll management to the HRM expansion request. (Implemented).
-6.  **User**: Provides feedback that the new HRM module is good but should not be on a single page. Wants it split into separate items in the sidebar menu, with a more beautiful look, just like the Vastgoed Beheer module. (This was the last major task completed).
+10. **User**: Requests a fix for the Uncaught runtime errors on the order form.
+9.  **User**: Confirms the order form bug is fixed (Ja het werkt).
+8.  **User**: Requests a major new feature: a utility meter reading system (EBS/SWM) for the Vastgoed module.
+7.  **User**: Provides detailed requirements for the meter reading system, including automatic tariff calculation, tenant self-service, payment tracking, and reminders.
+6.  **User**: Requests the next step: building the tenant portal for self-service.
+5.  **User**: Provides detailed requirements for the tenant portal dashboard.
+4.  **User**: Points out that landlords cannot create portal accounts for tenants and requests this feature.
+3.  **User**: Requests a modern look and feel for the entire website.
+2.  **Agent**: Calls the  to get design guidelines.
+1.  **Agent**: Begins implementing the redesign by adding new fonts.
 
 **Project Health Check:**
-*   **Broken**: None.
-*   **Mocked**: The UI for the new HRM sub-pages (Recruitment, Contracts, Documents, etc.) exists, but the full CRUD functionality through the UI has not been end-to-end tested. The backend APIs exist and were tested via .
-*   **Unverified**: The entire new HRM module structure, its split into separate pages, and the new UI/sidebar navigation are pending user review.
+*   **Broken**: None. The application is functional.
+*   **Mocked**: None.
+*   **Unverified**: The newly implemented Meter Reading and Tenant Portal features have only been tested via API calls and screenshots. They have not undergone a full regression test by the .
 
 **3rd Party Integrations**
 *   **OpenAI GPT-4o**: Used for the public AI chatbot, via  and the Emergent LLM Key.
 *   **Mope Payment Gateway**: () - Requires a User API Key.
 
 **Testing status**
-*   **Testing agent used after significant changes**: YES, a comprehensive system test was run after the CMS fix.
+*   **Testing agent used after significant changes**: YES,  was generated to verify the CMS image upload feature.
 *   **Troubleshoot agent used after agent stuck in loop**: NO
 *   **Test files created**: []
 *   **Known regressions**: None.
 
 **Credentials to test flow:**
 *   **Superadmin**:  / 
-*   **Test Customer**:  /  (has active HRM and Vastgoed modules)
+*   **Test Customer/Landlord**:  /  (password was reset to this). Has active HRM and Vastgoed modules.
+*   **Test Tenant**:  / . Belongs to an apartment managed by the superadmin, not the test customer.
 
 **What agent forgot to execute**
-*   The agent correctly prioritized user requests. The tasks for CMS Image Uploads and server.py refactoring were not forgotten but were postponed to address the user's immediate, large-scale request to completely overhaul the HRM module.</analysis>
+*   The agent correctly prioritized user-facing features and bug fixes over the internal  refactoring. This task was not forgotten but strategically postponed.</analysis>
