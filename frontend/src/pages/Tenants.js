@@ -87,11 +87,15 @@ export default function Tenants() {
 
   useEffect(() => {
     fetchTenants();
+    fetchTenantAccounts();
   }, []);
 
   // Listen for refresh events
   useEffect(() => {
-    const handleRefresh = () => fetchTenants();
+    const handleRefresh = () => {
+      fetchTenants();
+      fetchTenantAccounts();
+    };
     window.addEventListener(REFRESH_EVENTS.TENANTS, handleRefresh);
     window.addEventListener(REFRESH_EVENTS.ALL, handleRefresh);
     return () => {
@@ -109,6 +113,55 @@ export default function Tenants() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchTenantAccounts = async () => {
+    try {
+      const response = await api.get('/tenants/portal-accounts');
+      // Create a map of tenant_id -> account status
+      const accountMap = {};
+      response.data.forEach(acc => {
+        accountMap[acc.tenant_id] = acc;
+      });
+      setTenantAccounts(accountMap);
+    } catch (error) {
+      // Ignore error - endpoint might not exist yet
+      console.log('Could not fetch tenant accounts');
+    }
+  };
+
+  const handleCreatePortalAccount = async () => {
+    if (!portalPassword || portalPassword.length < 6) {
+      toast.error('Wachtwoord moet minimaal 6 tekens bevatten');
+      return;
+    }
+    
+    setCreatingPortal(true);
+    try {
+      await api.post('/tenants/create-portal-account', {
+        tenant_id: selectedTenant.id,
+        password: portalPassword
+      });
+      toast.success(`Portaal account aangemaakt voor ${selectedTenant.name}! Login: ${selectedTenant.email}`);
+      setShowPortalDialog(false);
+      setPortalPassword('');
+      setSelectedTenant(null);
+      fetchTenantAccounts();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij aanmaken account');
+    } finally {
+      setCreatingPortal(false);
+    }
+  };
+
+  const handleOpenPortalDialog = (tenant) => {
+    if (!tenant.email) {
+      toast.error('Deze huurder heeft geen e-mailadres. Voeg eerst een e-mailadres toe.');
+      return;
+    }
+    setSelectedTenant(tenant);
+    setPortalPassword('');
+    setShowPortalDialog(true);
   };
 
   const handleSubmit = async (e) => {
