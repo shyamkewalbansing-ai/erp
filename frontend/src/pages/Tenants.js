@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getTenants, createTenant, updateTenant, deleteTenant, getTenantBalance, formatCurrency } from '../lib/api';
+import api from '../lib/api';
 import { triggerRefresh, REFRESH_EVENTS } from '../lib/refreshEvents';
 import { toast } from 'sonner';
 import { 
@@ -25,7 +26,10 @@ import {
   User,
   IdCard,
   ChevronRight,
-  Eye
+  Eye,
+  Key,
+  Send,
+  Loader2
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -37,6 +41,8 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '../components/ui/dialog';
 import {
   DropdownMenu,
