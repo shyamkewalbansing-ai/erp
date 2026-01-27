@@ -125,10 +125,11 @@ Complete self-service portaal voor huurders:
 - [x] Huurders portaal met eigen login
 - [x] Huurders kunnen zelf meterstanden invoeren
 - [x] Dashboard met appartement, betalingen, saldo
+- [x] UI/UX redesign met moderne glassmorphism styling
 
 ### P1 (High Priority)
+- [ ] **server.py refactoring** (>10000 lines) - Split into modular routers
 - [ ] **Herinneringen voor maandelijkse meteropname** (email notificaties)
-- [ ] **server.py refactoring** (>10000 lines) - Split into routers
 
 ### P2 (Medium Priority)
 - [ ] Huurder kan betalingen doen via portaal
