@@ -382,7 +382,15 @@ export default function Tenants() {
                           </div>
                         </div>
                         <div>
-                          <h3 className="font-semibold text-foreground text-lg">{tenant.name}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold text-foreground text-lg">{tenant.name}</h3>
+                            {tenantAccounts[tenant.id] && (
+                              <Badge variant="outline" className="text-emerald-600 border-emerald-300 text-xs">
+                                <Key className="w-3 h-3 mr-1" />
+                                Portaal
+                              </Badge>
+                            )}
+                          </div>
                           {tenant.id_number && (
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <IdCard className="w-3 h-3 text-muted-foreground" />
