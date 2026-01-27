@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
 import { lazy, Suspense, memo } from "react";
 
 // Critical pages - load immediately
@@ -9,6 +10,10 @@ import Register from "./pages/Register";
 import LandingPage from "./pages/LandingPage";
 import Layout from "./components/Layout";
 import "@/App.css";
+
+// Tenant Portal pages
+const TenantLogin = lazy(() => import("./pages/TenantLogin"));
+const TenantDashboard = lazy(() => import("./pages/TenantDashboard"));
 
 // Lazy load non-critical pages for faster initial load
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -53,6 +58,21 @@ const PageLoader = memo(() => (
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
   </div>
 ));
+
+// Tenant Protected Route
+const TenantProtectedRoute = ({ children }) => {
+  const { tenant, loading } = useTenantAuth();
+  
+  if (loading) {
+    return <PageLoader />;
+  }
+  
+  if (!tenant) {
+    return <Navigate to="/huurder/login" replace />;
+  }
+  
+  return children;
+};
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
