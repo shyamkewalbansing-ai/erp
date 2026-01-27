@@ -8,12 +8,34 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - **Frontend**: React met Shadcn UI, lazy loading
 - **Database**: MongoDB
 - **AI**: OpenAI GPT-4o via Emergent LLM Key
-- **Styling**: Tailwind CSS
+- **Styling**: Tailwind CSS met glassmorphism effecten
+- **Fonts**: Outfit (headings), Plus Jakarta Sans (body)
 - **Primary Color**: #0caf60 (groen)
 
 ## What's Been Implemented (27 Jan 2026)
 
-### Huurders Portaal ✅ (NIEUW - 27 Jan 2026)
+### UI/UX Redesign ✅ (NIEUW - 27 Jan 2026)
+Complete moderne redesign van de applicatie:
+
+**Features:**
+- [x] Glassmorphism navigatie header
+- [x] Moderne hero sectie met gradient tekst en trust indicators
+- [x] Feature cards met backdrop-blur en hover animaties
+- [x] Bento-grid style modules sectie
+- [x] Gradient CTA sectie met decoratieve elementen
+- [x] Multi-kolom footer met sociale media links
+- [x] Moderne login pagina met split layout
+- [x] Verbeterde tenant dashboard styling
+- [x] Pill-shaped buttons met shadows
+- [x] Custom fonts (Outfit, Plus Jakarta Sans)
+
+**Bestanden gewijzigd:**
+- `/app/frontend/tailwind.config.js` - Font families toegevoegd
+- `/app/frontend/src/pages/LandingPage.js` - Volledig gemoderniseerd
+- `/app/frontend/src/pages/Login.js` - Split layout met gradient overlay
+- `/app/frontend/src/pages/TenantDashboard.js` - Glassmorphism styling
+
+### Huurders Portaal ✅ (27 Jan 2026)
 Complete self-service portaal voor huurders:
 
 **Features:**
