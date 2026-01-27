@@ -462,14 +462,14 @@ class MaintenanceResponse(BaseModel):
 EBS_TARIFFS = [
     {"min": 0, "max": 150, "rate": 0.35},      # 0-150 kWh: SRD 0.35/kWh
     {"min": 150, "max": 500, "rate": 0.55},    # 150-500 kWh: SRD 0.55/kWh
-    {"min": 500, "max": float('inf'), "rate": 0.85}  # 500+ kWh: SRD 0.85/kWh
+    {"min": 500, "max": 999999, "rate": 0.85}  # 500+ kWh: SRD 0.85/kWh
 ]
 
 # SWM Tarieven Suriname (2024)
 SWM_TARIFFS = [
     {"min": 0, "max": 10, "rate": 2.50},       # 0-10 m³: SRD 2.50/m³
     {"min": 10, "max": 30, "rate": 4.50},      # 10-30 m³: SRD 4.50/m³
-    {"min": 30, "max": float('inf'), "rate": 7.50}  # 30+ m³: SRD 7.50/m³
+    {"min": 30, "max": 999999, "rate": 7.50}   # 30+ m³: SRD 7.50/m³
 ]
 
 def calculate_ebs_cost(usage_kwh: float) -> float:
@@ -478,7 +478,8 @@ def calculate_ebs_cost(usage_kwh: float) -> float:
     remaining = usage_kwh
     
     for tier in EBS_TARIFFS:
-        tier_usage = min(remaining, tier["max"] - tier["min"])
+        tier_max = tier["max"] if tier["max"] < 999999 else float('inf')
+        tier_usage = min(remaining, tier_max - tier["min"])
         if tier_usage > 0:
             total_cost += tier_usage * tier["rate"]
             remaining -= tier_usage
@@ -493,7 +494,8 @@ def calculate_swm_cost(usage_m3: float) -> float:
     remaining = usage_m3
     
     for tier in SWM_TARIFFS:
-        tier_usage = min(remaining, tier["max"] - tier["min"])
+        tier_max = tier["max"] if tier["max"] < 999999 else float('inf')
+        tier_usage = min(remaining, tier_max - tier["min"])
         if tier_usage > 0:
             total_cost += tier_usage * tier["rate"]
             remaining -= tier_usage
