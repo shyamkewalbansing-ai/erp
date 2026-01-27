@@ -1,144 +1,161 @@
 {
-  "project_name": "Facturatie N.V.",
-  "design_philosophy": {
-    "persona": "E1 - The Anti-AI Designer",
-    "core_concept": "Crystal Forest",
-    "vibe": "Professional, Transparent, Organic, Efficient",
+  "identity": {
+    "name": "E1 - The Anti-AI Designer",
+    "mission": "Create a unique, emotionally resonant design for Facturatie N.V. that breaks the generic SaaS mold.",
     "principles": [
-      "Fusion: Glassmorphism meets Tropical Business (Suriname context)",
-      "Depth: Layered interfaces using z-index and blur, not just flat cards",
-      "Clarity: Data is dense but breathable",
-      "Tactility: Micro-interactions on every touchpoint"
+      "Fusion over Imitation",
+      "Emotion First",
+      "Content is King",
+      "Zoom In",
+      "Negative Space",
+      "Contrast"
     ]
   },
   "typography": {
-    "font_family": {
-      "headings": "Outfit, sans-serif",
-      "body": "Plus Jakarta Sans, sans-serif",
-      "mono": "JetBrains Mono, monospace"
+    "headings": {
+      "font_family": "Outfit, sans-serif",
+      "weights": ["500", "700"],
+      "tracking": "tracking-tight",
+      "usage": "Use for all H1-H6. H1 should be text-5xl or larger on desktop."
     },
-    "usage_rules": [
-      "Headings (H1-H3): Outfit. Weight: 600/700. Tracking: -0.02em. Use for page titles and major section headers.",
-      "Subheadings (H4-H6): Plus Jakarta Sans. Weight: 600. Tracking: normal. Use for card titles.",
-      "Body: Plus Jakarta Sans. Weight: 400/500. Leading: relaxed.",
-      "Data/Numbers: Plus Jakarta Sans (tabular-nums) or JetBrains Mono for financial data."
-    ],
-    "scale": {
-      "h1": "text-4xl md:text-5xl font-bold tracking-tight",
-      "h2": "text-3xl font-bold tracking-tight",
-      "h3": "text-2xl font-semibold",
-      "body_lg": "text-lg leading-relaxed",
-      "body_base": "text-base leading-relaxed",
-      "caption": "text-sm text-muted-foreground"
+    "body": {
+      "font_family": "Plus Jakarta Sans, sans-serif",
+      "weights": ["400", "500", "600"],
+      "leading": "leading-relaxed",
+      "usage": "Use for all paragraphs, labels, and inputs."
+    },
+    "mono": {
+      "font_family": "JetBrains Mono, monospace",
+      "usage": "Use for code snippets, API keys, or technical data."
     }
   },
   "colors": {
-    "primary": {
-      "hex": "#0caf60",
-      "tailwind": "bg-[#0caf60]",
-      "description": "The core brand color. Use for primary actions, active states, and key highlights."
-    },
-    "palettes": {
-      "light_mode": {
-        "background": "#f8faf9",
-        "surface": "#ffffff",
-        "surface_glass": "rgba(255, 255, 255, 0.7)",
-        "text_primary": "#0f172a",
-        "text_secondary": "#64748b",
-        "border": "#e2e8f0"
+    "palette": {
+      "primary": {
+        "default": "#0caf60",
+        "hover": "#099954",
+        "foreground": "#ffffff"
       },
-      "dark_mode": {
-        "background": "#050a07",
-        "surface": "#0f1c15",
-        "surface_glass": "rgba(15, 28, 21, 0.6)",
-        "text_primary": "#f8fafc",
-        "text_secondary": "#94a3b8",
-        "border": "#1e293b"
+      "secondary": {
+        "default": "#052e16",
+        "foreground": "#ffffff"
+      },
+      "background": {
+        "light": "#f8faf9",
+        "dark": "#050a07"
+      },
+      "surface": {
+        "light": "#ffffff",
+        "dark": "#0f1c15"
+      },
+      "accent": {
+        "default": "#e6f7ed",
+        "foreground": "#0caf60"
+      },
+      "muted": {
+        "default": "#f1f5f9",
+        "foreground": "#64748b"
       }
     },
-    "semantic": {
-      "success": "#0caf60",
-      "warning": "#f59e0b",
-      "error": "#ef4444",
-      "info": "#3b82f6"
-    },
     "gradients": {
-      "primary_glass": "linear-gradient(135deg, rgba(12, 175, 96, 0.1) 0%, rgba(12, 175, 96, 0.05) 100%)",
-      "surface_glass": "linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0.4) 100%)"
+      "hero": "bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950 dark:to-black",
+      "primary_btn": "bg-gradient-to-r from-[#0caf60] to-[#099954]",
+      "glass": "bg-white/70 backdrop-blur-xl border-white/20"
     }
   },
-  "glassmorphism_rules": {
-    "sidebar": {
-      "style": "Crystal Glass",
-      "classes": "bg-white/80 dark:bg-black/60 backdrop-blur-xl border-r border-white/20 dark:border-white/10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]"
+  "visual_enhancers": {
+    "texture": {
+      "grain": "grain-overlay",
+      "usage": "Apply 'grain-overlay' class to the main wrapper of marketing pages to kill digital flatness."
     },
-    "header": {
-      "style": "Floating Glass",
-      "classes": "bg-white/70 dark:bg-black/50 backdrop-blur-md border-b border-white/20 dark:border-white/10 sticky top-0 z-50"
+    "shadows": {
+      "glass": "shadow-[0_8px_32px_rgba(0,0,0,0.08)]",
+      "hover": "shadow-[0_12px_40px_-12px_rgba(12,175,96,0.2)]"
     },
-    "cards": {
-      "style": "Tactile Surface",
-      "classes": "bg-white/60 dark:bg-white/5 backdrop-blur-lg border border-white/40 dark:border-white/10 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1"
-    },
-    "modals": {
-      "style": "Deep Freeze",
-      "classes": "bg-white/90 dark:bg-[#0a120e]/90 backdrop-blur-2xl border border-white/20 shadow-2xl"
+    "borders": {
+      "glass": "border border-white/20",
+      "subtle": "border border-emerald-100 dark:border-emerald-900/30"
     }
   },
   "layout_strategies": {
-    "dashboard_grid": {
-      "type": "Bento Grid",
-      "classes": "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-6",
-      "rules": "Use col-span-2 for main charts, col-span-1 for summary cards. Maintain strict alignment."
+    "marketing": {
+      "grid_system": "Bento Grid (Tetris Mode)",
+      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+      "spacing": "Generous. Use py-20 or py-32 for section spacing.",
+      "alignment": "Asymmetrical. Avoid centering everything. Use offsets."
     },
-    "data_tables": {
-      "style": "Clean Rows",
-      "classes": "w-full border-collapse",
-      "header_classes": "text-xs uppercase tracking-wider text-muted-foreground font-semibold bg-muted/30 p-4 text-left",
-      "row_classes": "border-b border-border/50 hover:bg-primary/5 transition-colors duration-200"
-    },
-    "spacing": {
-      "container_padding": "p-6 md:p-8 lg:p-10",
-      "section_gap": "gap-8",
-      "element_gap": "gap-4"
+    "dashboard": {
+      "grid_system": "High Density Grid",
+      "container": "w-full px-4 py-4",
+      "spacing": "Compact. gap-4 or gap-6.",
+      "alignment": "Strict grid alignment. Fill height."
     }
   },
   "components": {
     "buttons": {
-      "primary": "bg-[#0caf60] hover:bg-[#099954] text-white shadow-lg shadow-[#0caf60]/20 rounded-lg px-6 py-2.5 font-medium transition-all active:scale-95",
-      "secondary": "bg-white dark:bg-white/10 border border-border hover:bg-muted text-foreground rounded-lg px-6 py-2.5 font-medium transition-all",
-      "ghost": "hover:bg-primary/10 text-primary hover:text-primary/80 rounded-lg px-4 py-2 transition-all"
+      "primary": "rounded-full px-8 py-3 font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95",
+      "secondary": "rounded-full px-8 py-3 font-medium border border-emerald-200 hover:bg-emerald-50 text-emerald-900 transition-all"
+    },
+    "cards": {
+      "feature": "glass-card p-8 hover:-translate-y-1 transition-transform duration-300",
+      "pricing": "relative overflow-hidden border border-emerald-100 rounded-2xl p-8 hover:shadow-2xl transition-all"
     },
     "inputs": {
-      "base": "bg-white/50 dark:bg-black/20 border border-border focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-2.5 outline-none transition-all backdrop-blur-sm"
-    },
-    "status_badges": {
-      "base": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1 ring-inset",
-      "paid": "bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-900/30 dark:text-green-400",
-      "pending": "bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-900/30 dark:text-yellow-500",
-      "overdue": "bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-900/30 dark:text-red-400"
+      "style": "rounded-lg border-emerald-100 bg-white/50 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
     }
   },
-  "assets": {
-    "images": {
-      "login_background": "https://images.unsplash.com/photo-1617341623760-1919df79274c?crop=entropy&cs=srgb&fm=jpg&q=85",
-      "dashboard_hero": "https://images.unsplash.com/photo-1675118546055-32c56579cc58?crop=entropy&cs=srgb&fm=jpg&q=85",
-      "placeholder_avatar": "https://ui.shadcn.com/avatars/01.png"
+  "image_urls": {
+    "hero_background": {
+      "url": "https://images.unsplash.com/photo-1765046255479-669cf07a0230?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "description": "Abstract white wavy lines. Use as a subtle background layer with low opacity (10-20%) in Hero or Feature sections.",
+      "category": "background"
     },
-    "icons": {
-      "library": "lucide-react",
-      "style": "Stroke width 1.5px for elegance, 2px for active states"
+    "team_collaboration": {
+      "url": "https://images.unsplash.com/photo-1758518729685-f88df7890776?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "description": "Top view of business team. Use in 'About Us' or 'Careers' section.",
+      "category": "content"
+    },
+    "trust_handshake": {
+      "url": "https://images.unsplash.com/photo-1758518730384-be3d205838e8?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "description": "Professional handshake. Use in 'Contact' or 'Partners' section.",
+      "category": "content"
+    },
+    "abstract_tech": {
+      "url": "https://images.unsplash.com/photo-1762279388952-85187155e48d?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "description": "Neon lines digital landscape. Use for 'AI Features' or 'Tech Specs' section (maybe with a filter to match brand green).",
+      "category": "content"
     }
   },
-  "universal_guidelines": [
-    "DO NOT use generic gradients. Use the 'Crystal Forest' palette.",
-    "Ensure all interactive elements have `data-testid` attributes.",
-    "Use `sonner` for toasts.",
-    "Use `lucide-react` for icons.",
-    "Files are `.js` (React), not `.tsx`. Adapt code accordingly.",
-    "Dark mode is toggled via class 'dark' on the HTML element.",
-    "Always prioritize mobile responsiveness. Use `hidden md:block` for non-essential desktop elements.",
-    "For charts, use `recharts` with custom tooltips styled like glass cards."
+  "motion": {
+    "library": "framer-motion",
+    "entrance": {
+      "initial": { "opacity": 0, "y": 20 },
+      "animate": { "opacity": 1, "y": 0 },
+      "transition": { "duration": 0.5, "ease": "easeOut" }
+    },
+    "hover": {
+      "scale": 1.02,
+      "transition": { "duration": 0.2 }
+    }
+  },
+  "instructions_to_main_agent": [
+    "1. IMPLEMENT THE THEME: Ensure 'Outfit' and 'Plus Jakarta Sans' are correctly loaded and applied.",
+    "2. USE THE IMAGES: Place the mapped images in their respective sections. Do not use placeholders.",
+    "3. BUILD THE LANDING PAGE: Use the 'Tetris' Bento grid for the features section. Don't just stack cards.",
+    "4. PRICING PAGE: Implement a 'Monthly/Yearly' toggle and highlight the 'Pro' plan with a 'Tracing Beam' or 'Glow' effect.",
+    "5. GLASSMORPHISM: Use the provided '.glass-card' and '.glass-header' classes from App.css.",
+    "6. DATA-TESTID: Add 'data-testid' to all interactive elements (buttons, inputs, links).",
+    "7. NO LOREM IPSUM: Use realistic copy relevant to a Surinamese ERP (e.g., 'Beheer uw administratie', 'SRD Facturatie').",
+    "8. MOBILE FIRST: Ensure all grids collapse to 1 column on mobile.",
+    "9. NAVIGATION: The sidebar is for the App, but the Landing Page needs a top horizontal Navbar.",
+    "10. FOOTER: Create a large, multi-column footer with a 'Let's Talk' CTA."
   ],
-  "instructions_to_main_agent": "You are building the frontend for Facturatie N.V. Follow these guidelines strictly. Start by updating the Tailwind config to match the colors and border radius. Then, refactor the App.css to implement the glassmorphism utility classes. Finally, build the components and pages using the specified layout strategies. Remember: The user wants a 'Professional SaaS' look, so keep animations smooth (0.2s - 0.3s) and avoid excessive bouncing."
+  "universal_guidelines": [
+    "Avoid 'AI Slop': No generic centered layouts, no default blue/purple gradients.",
+    "Dark colors must be solid or subtle gradients, not harsh.",
+    "Use 2-3x more spacing than you think is necessary.",
+    "Micro-animations on everything (hover, focus, active).",
+    "Never use 'Inter' for headings.",
+    "Use 'sonner' for toasts."
+  ]
 }
