@@ -370,26 +370,28 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Partners Section */}
-      <section className="py-12 bg-gray-50 border-y border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-gray-500 mb-8" data-testid="partners-content">
-            {getCmsSectionContent('partners', 'content', 'Onze beste partners en meer dan 500+ klanten in Suriname zijn tevreden over onze diensten').split('500+')[0]}
-            <strong className="text-gray-700">500+ klanten</strong> in Suriname zijn tevreden over onze diensten
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-8">
-            {partners.map((partner, i) => (
-              <div key={i} className="grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
-                <img 
-                  src={partner.logo} 
-                  alt={partner.name}
-                  className="h-10 w-auto"
-                />
-              </div>
-            ))}
+      {/* Partners Section - Only show if there are partners with logos */}
+      {partners.length > 0 && (
+        <section className="py-12 bg-gray-50 border-y border-gray-100">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p className="text-center text-gray-500 mb-8" data-testid="partners-content">
+              {getCmsSectionContent('partners', 'content', 'Onze beste partners en meer dan 500+ klanten in Suriname zijn tevreden over onze diensten').split('500+')[0]}
+              <strong className="text-gray-700">500+ klanten</strong> in Suriname zijn tevreden over onze diensten
+            </p>
+            <div className="flex flex-wrap justify-center items-center gap-8">
+              {partners.map((partner, i) => (
+                <div key={i} className="grayscale hover:grayscale-0 transition-all opacity-60 hover:opacity-100">
+                  <img 
+                    src={partner.logo} 
+                    alt={partner.name}
+                    className="h-10 w-auto"
+                  />
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Features Section */}
       <section className="py-20 bg-white">
