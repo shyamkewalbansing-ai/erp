@@ -744,12 +744,26 @@ export default function WebsiteBeheer() {
               </div>
 
               <div className="space-y-2">
-                <Label>Logo URL</Label>
-                <Input 
-                  value={settings.logo_url || ''}
-                  onChange={e => setSettings({...settings, logo_url: e.target.value})}
-                  placeholder="https://..."
-                />
+                <Label>Logo</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    value={settings.logo_url || ''}
+                    onChange={e => setSettings({...settings, logo_url: e.target.value})}
+                    placeholder="https://... of upload"
+                    className="flex-1"
+                  />
+                  <label className="cursor-pointer">
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={e => handleImageUpload(e, 'logo_url', (url) => setSettings({...settings, logo_url: url}))}
+                    />
+                    <Button variant="outline" type="button" asChild disabled={uploading}>
+                      <span>{uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}</span>
+                    </Button>
+                  </label>
+                </div>
                 {settings.logo_url && (
                   <img src={settings.logo_url} alt="Logo" className="h-16 mt-2" />
                 )}
