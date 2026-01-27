@@ -3852,6 +3852,430 @@ async def delete_kasgeld_transaction(kasgeld_id: str, current_user: dict = Depen
         raise HTTPException(status_code=404, detail="Transactie niet gevonden")
     return {"message": "Transactie verwijderd"}
 
+# ==================== METERSTANDEN (METER READINGS) ROUTES ====================
+
+@api_router.post("/meter-readings", response_model=MeterReadingResponse)
+async def create_meter_reading(reading_data: MeterReadingCreate, current_user: dict = Depends(get_current_active_user)):
+    """Create a new meter reading for an apartment"""
+    # Verify apartment exists
+    apt = await db.apartments.find_one(
+        {"id": reading_data.apartment_id, "user_id": current_user["id"]},
+        {"_id": 0, "name": 1}
+    )
+    if not apt:
+        raise HTTPException(status_code=404, detail="Appartement niet gevonden")
+    
+    # Get tenant info if provided
+    tenant_name = None
+    if reading_data.tenant_id:
+        tenant = await db.tenants.find_one(
+            {"id": reading_data.tenant_id, "user_id": current_user["id"]},
+            {"_id": 0, "name": 1}
+        )
+        if tenant:
+            tenant_name = tenant["name"]
+    
+    # Parse reading date to get period
+    from datetime import datetime
+    try:
+        reading_dt = datetime.fromisoformat(reading_data.reading_date.replace('Z', '+00:00'))
+    except:
+        reading_dt = datetime.now(timezone.utc)
+    
+    period_month = reading_dt.month
+    period_year = reading_dt.year
+    
+    # Get previous reading for this apartment to calculate usage
+    prev_reading = await db.meter_readings.find_one(
+        {
+            "apartment_id": reading_data.apartment_id,
+            "user_id": current_user["id"],
+            "$or": [
+                {"period_year": {"$lt": period_year}},
+                {"$and": [{"period_year": period_year}, {"period_month": {"$lt": period_month}}]}
+            ]
+        },
+        {"_id": 0},
+        sort=[("period_year", -1), ("period_month", -1)]
+    )
+    
+    # Calculate usage and costs
+    ebs_previous = prev_reading.get("ebs_reading") if prev_reading else None
+    swm_previous = prev_reading.get("swm_reading") if prev_reading else None
+    
+    ebs_usage = None
+    ebs_cost = None
+    if reading_data.ebs_reading is not None and ebs_previous is not None:
+        ebs_usage = max(0, reading_data.ebs_reading - ebs_previous)
+        ebs_cost = calculate_ebs_cost(ebs_usage)
+    
+    swm_usage = None
+    swm_cost = None
+    if reading_data.swm_reading is not None and swm_previous is not None:
+        swm_usage = max(0, reading_data.swm_reading - swm_previous)
+        swm_cost = calculate_swm_cost(swm_usage)
+    
+    total_cost = (ebs_cost or 0) + (swm_cost or 0)
+    
+    reading_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    reading_doc = {
+        "id": reading_id,
+        "apartment_id": reading_data.apartment_id,
+        "apartment_name": apt["name"],
+        "tenant_id": reading_data.tenant_id,
+        "tenant_name": tenant_name,
+        "reading_date": reading_data.reading_date,
+        "period_month": period_month,
+        "period_year": period_year,
+        "ebs_reading": reading_data.ebs_reading,
+        "ebs_previous": ebs_previous,
+        "ebs_usage": ebs_usage,
+        "ebs_cost": ebs_cost,
+        "swm_reading": reading_data.swm_reading,
+        "swm_previous": swm_previous,
+        "swm_usage": swm_usage,
+        "swm_cost": swm_cost,
+        "total_cost": total_cost if total_cost > 0 else None,
+        "payment_status": "pending",
+        "paid_at": None,
+        "notes": reading_data.notes,
+        "created_at": now.isoformat(),
+        "submitted_by": "admin",
+        "user_id": current_user["id"]
+    }
+    
+    await db.meter_readings.insert_one(reading_doc)
+    reading_doc.pop("_id", None)
+    
+    return MeterReadingResponse(**reading_doc)
+
+
+@api_router.get("/meter-readings", response_model=List[MeterReadingResponse])
+async def get_meter_readings(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    apartment_id: Optional[str] = None,
+    payment_status: Optional[str] = None,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get all meter readings with optional filters"""
+    query = {"user_id": current_user["id"]}
+    
+    if month:
+        query["period_month"] = month
+    if year:
+        query["period_year"] = year
+    if apartment_id:
+        query["apartment_id"] = apartment_id
+    if payment_status:
+        query["payment_status"] = payment_status
+    
+    readings = await db.meter_readings.find(
+        query, {"_id": 0}
+    ).sort([("period_year", -1), ("period_month", -1), ("apartment_name", 1)]).to_list(1000)
+    
+    return [MeterReadingResponse(**r) for r in readings]
+
+
+@api_router.get("/meter-readings/summary")
+async def get_meter_summary(
+    month: Optional[int] = None,
+    year: Optional[int] = None,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get summary of meter readings for a period"""
+    now = datetime.now(timezone.utc)
+    period_month = month or now.month
+    period_year = year or now.year
+    
+    # Get total apartments count
+    total_apartments = await db.apartments.count_documents({"user_id": current_user["id"]})
+    
+    # Get readings for the period
+    readings = await db.meter_readings.find(
+        {
+            "user_id": current_user["id"],
+            "period_month": period_month,
+            "period_year": period_year
+        },
+        {"_id": 0}
+    ).to_list(1000)
+    
+    submitted_count = len(readings)
+    pending_count = total_apartments - submitted_count
+    
+    total_ebs_usage = sum(r.get("ebs_usage") or 0 for r in readings)
+    total_ebs_cost = sum(r.get("ebs_cost") or 0 for r in readings)
+    total_swm_usage = sum(r.get("swm_usage") or 0 for r in readings)
+    total_swm_cost = sum(r.get("swm_cost") or 0 for r in readings)
+    total_cost = total_ebs_cost + total_swm_cost
+    
+    paid_readings = [r for r in readings if r.get("payment_status") == "paid"]
+    unpaid_readings = [r for r in readings if r.get("payment_status") != "paid"]
+    
+    return MeterSummaryResponse(
+        period_month=period_month,
+        period_year=period_year,
+        total_apartments=total_apartments,
+        submitted_count=submitted_count,
+        pending_count=pending_count,
+        total_ebs_usage=round(total_ebs_usage, 2),
+        total_ebs_cost=round(total_ebs_cost, 2),
+        total_swm_usage=round(total_swm_usage, 2),
+        total_swm_cost=round(total_swm_cost, 2),
+        total_cost=round(total_cost, 2),
+        paid_count=len(paid_readings),
+        unpaid_count=len(unpaid_readings),
+        unpaid_total=round(sum(r.get("total_cost") or 0 for r in unpaid_readings), 2)
+    )
+
+
+@api_router.put("/meter-readings/{reading_id}")
+async def update_meter_reading(
+    reading_id: str,
+    update_data: MeterReadingUpdate,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Update a meter reading"""
+    reading = await db.meter_readings.find_one(
+        {"id": reading_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not reading:
+        raise HTTPException(status_code=404, detail="Meterstand niet gevonden")
+    
+    update_dict = {k: v for k, v in update_data.dict().items() if v is not None}
+    
+    # Recalculate costs if readings changed
+    if "ebs_reading" in update_dict and reading.get("ebs_previous") is not None:
+        ebs_usage = max(0, update_dict["ebs_reading"] - reading["ebs_previous"])
+        update_dict["ebs_usage"] = ebs_usage
+        update_dict["ebs_cost"] = calculate_ebs_cost(ebs_usage)
+    
+    if "swm_reading" in update_dict and reading.get("swm_previous") is not None:
+        swm_usage = max(0, update_dict["swm_reading"] - reading["swm_previous"])
+        update_dict["swm_usage"] = swm_usage
+        update_dict["swm_cost"] = calculate_swm_cost(swm_usage)
+    
+    # Update total cost if either changed
+    if "ebs_cost" in update_dict or "swm_cost" in update_dict:
+        ebs_cost = update_dict.get("ebs_cost", reading.get("ebs_cost") or 0)
+        swm_cost = update_dict.get("swm_cost", reading.get("swm_cost") or 0)
+        update_dict["total_cost"] = ebs_cost + swm_cost
+    
+    if update_dict:
+        await db.meter_readings.update_one(
+            {"id": reading_id, "user_id": current_user["id"]},
+            {"$set": update_dict}
+        )
+    
+    updated = await db.meter_readings.find_one(
+        {"id": reading_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    return MeterReadingResponse(**updated)
+
+
+@api_router.post("/meter-readings/{reading_id}/pay")
+async def mark_meter_reading_paid(
+    reading_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Mark a meter reading as paid and deduct from kasgeld"""
+    reading = await db.meter_readings.find_one(
+        {"id": reading_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not reading:
+        raise HTTPException(status_code=404, detail="Meterstand niet gevonden")
+    
+    if reading.get("payment_status") == "paid":
+        raise HTTPException(status_code=400, detail="Deze meterstand is al betaald")
+    
+    total_cost = reading.get("total_cost") or 0
+    if total_cost <= 0:
+        raise HTTPException(status_code=400, detail="Geen kosten om te betalen")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Mark as paid
+    await db.meter_readings.update_one(
+        {"id": reading_id, "user_id": current_user["id"]},
+        {"$set": {
+            "payment_status": "paid",
+            "paid_at": now.isoformat()
+        }}
+    )
+    
+    # Create kasgeld withdrawal for the payment
+    kasgeld_id = str(uuid.uuid4())
+    apt_name = reading.get("apartment_name", "Onbekend")
+    period = f"{reading.get('period_month', '?')}/{reading.get('period_year', '?')}"
+    
+    kasgeld_doc = {
+        "id": kasgeld_id,
+        "amount": total_cost,
+        "transaction_type": "withdrawal",
+        "description": f"Nutsvoorzieningen {apt_name} - {period} (EBS/SWM)",
+        "transaction_date": now.strftime("%Y-%m-%d"),
+        "created_at": now.isoformat(),
+        "user_id": current_user["id"],
+        "meter_reading_id": reading_id  # Link to meter reading
+    }
+    
+    await db.kasgeld.insert_one(kasgeld_doc)
+    
+    return {
+        "message": f"Betaling van SRD {total_cost:.2f} verwerkt en afgetrokken van kasgeld",
+        "kasgeld_transaction_id": kasgeld_id
+    }
+
+
+@api_router.post("/meter-readings/{reading_id}/unpay")
+async def mark_meter_reading_unpaid(
+    reading_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Mark a meter reading as unpaid and reverse kasgeld deduction"""
+    reading = await db.meter_readings.find_one(
+        {"id": reading_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not reading:
+        raise HTTPException(status_code=404, detail="Meterstand niet gevonden")
+    
+    if reading.get("payment_status") != "paid":
+        raise HTTPException(status_code=400, detail="Deze meterstand is niet betaald")
+    
+    # Mark as unpaid
+    await db.meter_readings.update_one(
+        {"id": reading_id, "user_id": current_user["id"]},
+        {"$set": {
+            "payment_status": "pending",
+            "paid_at": None
+        }}
+    )
+    
+    # Remove the kasgeld withdrawal
+    await db.kasgeld.delete_one({
+        "meter_reading_id": reading_id,
+        "user_id": current_user["id"]
+    })
+    
+    return {"message": "Betaling ongedaan gemaakt"}
+
+
+@api_router.delete("/meter-readings/{reading_id}")
+async def delete_meter_reading(
+    reading_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Delete a meter reading"""
+    reading = await db.meter_readings.find_one(
+        {"id": reading_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not reading:
+        raise HTTPException(status_code=404, detail="Meterstand niet gevonden")
+    
+    # If paid, also remove kasgeld transaction
+    if reading.get("payment_status") == "paid":
+        await db.kasgeld.delete_one({
+            "meter_reading_id": reading_id,
+            "user_id": current_user["id"]
+        })
+    
+    result = await db.meter_readings.delete_one(
+        {"id": reading_id, "user_id": current_user["id"]}
+    )
+    
+    return {"message": "Meterstand verwijderd"}
+
+
+@api_router.get("/meter-settings")
+async def get_meter_settings(current_user: dict = Depends(get_current_active_user)):
+    """Get meter settings including tariffs"""
+    settings = await db.meter_settings.find_one(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not settings:
+        # Return defaults
+        return {
+            "id": None,
+            "ebs_tariffs": EBS_TARIFFS,
+            "swm_tariffs": SWM_TARIFFS,
+            "reminder_day": 25,
+            "reminder_enabled": True,
+            "user_id": current_user["id"]
+        }
+    
+    return settings
+
+
+@api_router.put("/meter-settings")
+async def update_meter_settings(
+    settings_data: MeterSettingsCreate,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Update meter settings"""
+    existing = await db.meter_settings.find_one(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    update_dict = {
+        "ebs_tariffs": settings_data.ebs_tariffs or EBS_TARIFFS,
+        "swm_tariffs": settings_data.swm_tariffs or SWM_TARIFFS,
+        "reminder_day": settings_data.reminder_day,
+        "reminder_enabled": settings_data.reminder_enabled,
+        "user_id": current_user["id"]
+    }
+    
+    if existing:
+        await db.meter_settings.update_one(
+            {"user_id": current_user["id"]},
+            {"$set": update_dict}
+        )
+    else:
+        update_dict["id"] = str(uuid.uuid4())
+        await db.meter_settings.insert_one(update_dict)
+    
+    result = await db.meter_settings.find_one(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    return result
+
+
+@api_router.get("/apartments/{apartment_id}/meter-history")
+async def get_apartment_meter_history(
+    apartment_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get meter reading history for a specific apartment"""
+    apt = await db.apartments.find_one(
+        {"id": apartment_id, "user_id": current_user["id"]},
+        {"_id": 0, "name": 1}
+    )
+    if not apt:
+        raise HTTPException(status_code=404, detail="Appartement niet gevonden")
+    
+    readings = await db.meter_readings.find(
+        {"apartment_id": apartment_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort([("period_year", -1), ("period_month", -1)]).to_list(100)
+    
+    return {
+        "apartment_id": apartment_id,
+        "apartment_name": apt["name"],
+        "readings": readings
+    }
+
+
 # ==================== ONDERHOUD (MAINTENANCE) ROUTES ====================
 
 @api_router.post("/maintenance", response_model=MaintenanceResponse)
