@@ -1362,53 +1362,9 @@ async def get_tenants(current_user: dict = Depends(get_current_active_user)):
             continue
     return result
 
-@api_router.get("/tenants/{tenant_id}", response_model=TenantResponse)
-async def get_tenant(tenant_id: str, current_user: dict = Depends(get_current_active_user)):
-    tenant = await db.tenants.find_one(
-        {"id": tenant_id, "user_id": current_user["id"]},
-        {"_id": 0}
-    )
-    if not tenant:
-        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
-    
-    # Safely build response with defaults
-    return TenantResponse(
-        id=tenant.get("id", tenant_id),
-        name=tenant.get("name", "Onbekend"),
-        email=tenant.get("email"),
-        phone=tenant.get("phone", ""),
-        address=tenant.get("address"),
-        id_number=tenant.get("id_number"),
-        created_at=tenant.get("created_at", ""),
-        user_id=tenant.get("user_id", current_user["id"])
-    )
-
-@api_router.put("/tenants/{tenant_id}", response_model=TenantResponse)
-async def update_tenant(tenant_id: str, tenant_data: TenantUpdate, current_user: dict = Depends(get_current_active_user)):
-    update_data = {k: v for k, v in tenant_data.model_dump().items() if v is not None}
-    if not update_data:
-        raise HTTPException(status_code=400, detail="Geen gegevens om bij te werken")
-    
-    result = await db.tenants.update_one(
-        {"id": tenant_id, "user_id": current_user["id"]},
-        {"$set": update_data}
-    )
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
-    
-    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
-    return TenantResponse(**tenant)
-
-@api_router.delete("/tenants/{tenant_id}")
-async def delete_tenant(tenant_id: str, current_user: dict = Depends(get_current_active_user)):
-    result = await db.tenants.delete_one({"id": tenant_id, "user_id": current_user["id"]})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
-    return {"message": "Huurder verwijderd"}
-
 
 # ==================== TENANT PORTAL ACCOUNT MANAGEMENT (by landlord) ====================
+# Note: These routes MUST come BEFORE /tenants/{tenant_id} to avoid path conflicts
 
 class CreatePortalAccountRequest(BaseModel):
     tenant_id: str
@@ -1476,6 +1432,54 @@ async def create_tenant_portal_account(
         "account_id": account_id,
         "email": tenant["email"]
     }
+
+
+# ==================== TENANT CRUD (must come after static routes) ====================
+
+@api_router.get("/tenants/{tenant_id}", response_model=TenantResponse)
+async def get_tenant(tenant_id: str, current_user: dict = Depends(get_current_active_user)):
+    tenant = await db.tenants.find_one(
+        {"id": tenant_id, "user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    # Safely build response with defaults
+    return TenantResponse(
+        id=tenant.get("id", tenant_id),
+        name=tenant.get("name", "Onbekend"),
+        email=tenant.get("email"),
+        phone=tenant.get("phone", ""),
+        address=tenant.get("address"),
+        id_number=tenant.get("id_number"),
+        created_at=tenant.get("created_at", ""),
+        user_id=tenant.get("user_id", current_user["id"])
+    )
+
+@api_router.put("/tenants/{tenant_id}", response_model=TenantResponse)
+async def update_tenant(tenant_id: str, tenant_data: TenantUpdate, current_user: dict = Depends(get_current_active_user)):
+    update_data = {k: v for k, v in tenant_data.model_dump().items() if v is not None}
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Geen gegevens om bij te werken")
+    
+    result = await db.tenants.update_one(
+        {"id": tenant_id, "user_id": current_user["id"]},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    tenant = await db.tenants.find_one({"id": tenant_id}, {"_id": 0})
+    return TenantResponse(**tenant)
+
+@api_router.delete("/tenants/{tenant_id}")
+async def delete_tenant(tenant_id: str, current_user: dict = Depends(get_current_active_user)):
+    result = await db.tenants.delete_one({"id": tenant_id, "user_id": current_user["id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    return {"message": "Huurder verwijderd"}
 
 
 @api_router.delete("/tenants/portal-accounts/{tenant_id}")
