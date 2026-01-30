@@ -1819,7 +1819,8 @@ async def create_apartment(apt_data: ApartmentCreate, current_user: dict = Depen
         "status": "available",
         "tenant_id": None,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "user_id": current_user["id"]
+        "user_id": current_user["id"],
+        "workspace_id": current_user.get("workspace_id")  # Workspace isolation
     }
     
     await db.apartments.insert_one(apt_doc)
@@ -1828,10 +1829,15 @@ async def create_apartment(apt_data: ApartmentCreate, current_user: dict = Depen
 
 @api_router.get("/apartments", response_model=List[ApartmentResponse])
 async def get_apartments(current_user: dict = Depends(get_current_active_user)):
-    apartments = await db.apartments.find(
-        {"user_id": current_user["id"]},
-        {"_id": 0}
-    ).to_list(1000)
+    # Use workspace filter for data isolation
+    query_filter = {"user_id": current_user["id"]}
+    if current_user.get("workspace_id"):
+        query_filter = {"$or": [
+            {"workspace_id": current_user["workspace_id"]},
+            {"user_id": current_user["id"], "workspace_id": {"$exists": False}}  # Legacy data
+        ]}
+    
+    apartments = await db.apartments.find(query_filter, {"_id": 0}).to_list(1000)
     
     # Batch fetch tenant names to avoid N+1 queries
     tenant_ids = [apt["tenant_id"] for apt in apartments if apt.get("tenant_id")]
