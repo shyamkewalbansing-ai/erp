@@ -308,10 +308,10 @@ export default function WebsiteEditor() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="w-5 h-5 text-emerald-600" />
-            Vaste Pagina's
+            Vaste Pagina&apos;s
           </CardTitle>
           <CardDescription>
-            Klik op "Bewerken" om de inhoud van een pagina aan te passen
+            Klik op &quot;Bewerken&quot; om de inhoud van een pagina aan te passen
           </CardDescription>
         </CardHeader>
         <CardContent>
