@@ -176,18 +176,11 @@ export default function Layout() {
                 className="h-8 w-auto max-w-[140px] object-contain"
               />
             ) : (
-              <div className="flex items-center gap-2">
-                <img 
-                  src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-                  alt="Facturatie N.V." 
-                  className="h-5 w-auto"
-                />
-                {workspace && !isSuperAdmin() && (
-                  <span className="text-xs text-muted-foreground truncate max-w-[100px]">
-                    {branding?.portal_name || workspace.name}
-                  </span>
-                )}
-              </div>
+              <img 
+                src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+                alt="Facturatie N.V." 
+                className="h-5 w-auto"
+              />
             )}
           </div>
         </div>
