@@ -1203,6 +1203,42 @@ export default function HRM() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Portal Account Section - only for new employees */}
+            {!editingItem && (
+              <div className="col-span-2 border-t pt-4 mt-2">
+                <div className="flex items-center gap-3 mb-3">
+                  <input 
+                    type="checkbox" 
+                    id="create_portal" 
+                    checked={employeeForm.create_portal_account}
+                    onChange={(e) => setEmployeeForm({...employeeForm, create_portal_account: e.target.checked})}
+                    className="w-4 h-4 rounded border-gray-300"
+                  />
+                  <Label htmlFor="create_portal" className="cursor-pointer flex items-center gap-2">
+                    <Briefcase className="w-4 h-4 text-purple-600" />
+                    Portaal account aanmaken
+                  </Label>
+                </div>
+                {employeeForm.create_portal_account && (
+                  <div className="ml-7 p-3 bg-purple-50 rounded-lg space-y-3">
+                    <p className="text-sm text-purple-700">
+                      Werknemer kan inloggen op <strong>/werknemer/login</strong> om loonstroken en verlof te bekijken.
+                    </p>
+                    <div>
+                      <Label>Wachtwoord voor portaal *</Label>
+                      <Input 
+                        type="password" 
+                        value={employeeForm.portal_password} 
+                        onChange={(e) => setEmployeeForm({...employeeForm, portal_password: e.target.value})}
+                        placeholder="Minimaal 6 tekens"
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500">E-mailadres hierboven wordt gebruikt als login</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEmployeeDialog(false)}>Annuleren</Button>
