@@ -30,8 +30,15 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - `DELETE /api/workspace/backups/{id}` - Verwijderen
 - `GET /api/workspace/backups/{id}/download` - Downloaden
 
-**Gebackupte Collections:**
-tenants, apartments, payments, deposits, loans, kasgeld, maintenance, employees, salaries, meter_readings, contracts, invoices, workspace_users, workspace_logs
+**Gebackupte Collections (Volledige Lijst):**
+
+| Module | Collections |
+|--------|-------------|
+| **Vastgoed Beheer** | tenants, apartments, payments, deposits, loans, kasgeld, maintenance, meter_readings, contracts, invoices |
+| **HRM Module** | employees, salaries, hrm_employees, hrm_departments, hrm_attendance, hrm_leave_requests, hrm_payroll, hrm_settings |
+| **Huurders Portaal** | tenant_accounts |
+| **AI Chat** | ai_chat_history |
+| **Workspace** | workspace_users, workspace_logs, user_addons |
 
 ### Klant Workspace Beheer ✅ (NIEUW - 30 Jan 2026)
 Klanten kunnen nu hun eigen workspace volledig beheren:
