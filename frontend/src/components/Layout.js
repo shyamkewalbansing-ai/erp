@@ -428,7 +428,7 @@ export default function Layout() {
       <main className="main-content">
         {/* Desktop header with notifications */}
         <header className="desktop-header hidden lg:flex header-glass px-8 py-3 items-center justify-between border-b border-border/50">
-          {/* Left side - User info & Workspace button */}
+          {/* Left side - User info */}
           <div className="flex items-center gap-4">
             {/* User info */}
             <div className="flex items-center gap-3">
@@ -442,8 +442,20 @@ export default function Layout() {
                 <p className="text-xs text-muted-foreground truncate max-w-[150px]">{user?.email}</p>
               </div>
             </div>
-            
-            {/* Workspace button */}
+          </div>
+          
+          {/* Right side - Theme, Workspace, Notifications, Logout */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDarkMode}
+              className="theme-toggle"
+              data-testid="theme-toggle-btn"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+            {/* Workspace button - between theme and notifications */}
             {!isSuperAdmin() && workspace && (
               <Button
                 variant="outline"
@@ -456,19 +468,6 @@ export default function Layout() {
                 <Globe className="w-4 h-4" />
               </Button>
             )}
-          </div>
-          
-          {/* Right side - Theme, Notifications, Logout */}
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={toggleDarkMode}
-              className="theme-toggle"
-              data-testid="theme-toggle-btn"
-            >
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </Button>
             {!isSuperAdmin() && <NotificationBell />}
             <Button 
               variant="outline" 
