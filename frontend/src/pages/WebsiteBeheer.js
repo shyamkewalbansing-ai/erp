@@ -904,7 +904,7 @@ export default function WebsiteBeheer() {
                 </div>
                 {(!settings.partners || settings.partners.length === 0) && (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    Nog geen partners toegevoegd. Klik op "Partner Toevoegen" om te beginnen.
+                    Nog geen partners toegevoegd. Klik op &quot;Partner Toevoegen&quot; om te beginnen.
                   </p>
                 )}
               </div>
