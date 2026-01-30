@@ -691,6 +691,22 @@ export default function HRM() {
                           </div>
                         )}
                         <div className="flex gap-1">
+                          {/* Portal Account Button */}
+                          {hasAccount(emp.id) ? (
+                            <Badge className="bg-green-100 text-green-700 mr-2"><UserCheck className="w-3 h-3 mr-1" />Portaal</Badge>
+                          ) : (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="mr-2 text-purple-600 border-purple-200 hover:bg-purple-50"
+                              onClick={() => {
+                                setAccountForm({ employee_id: emp.id, email: emp.email || '', name: emp.name, password: '' });
+                                setAccountDialog(true);
+                              }}
+                            >
+                              <Briefcase className="w-3 h-3 mr-1" />Account
+                            </Button>
+                          )}
                           <Button variant="ghost" size="icon" onClick={() => openEditEmployee(emp)}><Edit className="w-4 h-4" /></Button>
                           <Button variant="ghost" size="icon" onClick={() => handleDeleteEmployee(emp.id)}><Trash2 className="w-4 h-4 text-red-500" /></Button>
                         </div>
