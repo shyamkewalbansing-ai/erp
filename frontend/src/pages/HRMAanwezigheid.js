@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -13,9 +13,7 @@ export default function HRMAanwezigheid() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
 
-  useEffect(() => { loadData(); }, [selectedDate]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [employeesRes, attendanceRes] = await Promise.all([
         api.get('/hrm/employees'),
@@ -28,13 +26,15 @@ export default function HRMAanwezigheid() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedDate]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleClockIn = async (employeeId) => {
     try {
       const res = await api.post(`/hrm/attendance/clock-in?employee_id=${employeeId}`);
       toast.success(res.data.message);
-      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
+      loadData();
     } catch (error) {
       toast.error('Fout bij inklokken');
     }
@@ -44,7 +44,7 @@ export default function HRMAanwezigheid() {
     try {
       const res = await api.post(`/hrm/attendance/clock-out?employee_id=${employeeId}`);
       toast.success(res.data.message);
-      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
+      loadData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij uitklokken');
     }
