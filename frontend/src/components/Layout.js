@@ -36,7 +36,9 @@ import {
   ExternalLink,
   Save,
   Loader2,
-  Briefcase
+  Briefcase,
+  Car,
+  ShoppingCart
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
