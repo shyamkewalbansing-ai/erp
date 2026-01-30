@@ -1324,10 +1324,21 @@ async def register(user_data: UserCreate):
         "role": "superadmin" if is_superadmin else "customer",
         "subscription_end_date": trial_end_date,
         "is_trial": is_trial,
-        "created_at": now.isoformat()
+        "created_at": now.isoformat(),
+        "workspace_id": None  # Will be set after workspace creation
     }
     
     await db.users.insert_one(user_doc)
+    
+    # Automatically create workspace for non-superadmin users
+    workspace = None
+    if not is_superadmin:
+        workspace = await create_workspace_for_user(
+            user_id, 
+            user_data.name, 
+            user_data.company_name
+        )
+        user_doc["workspace_id"] = workspace["id"]
     
     token = create_token(user_id, user_data.email)
     
