@@ -15,6 +15,24 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (30 Jan 2026)
 
+### Workspace Backup & Restore ✅ (NIEUW - 30 Jan 2026)
+- [x] Backup maken van alle workspace data
+- [x] Backup lijst met details (grootte, records, datum)
+- [x] Backup herstellen met automatische veiligheidsbackup
+- [x] Backup downloaden als JSON
+- [x] Backup verwijderen
+- [x] UI in Workspace Instellingen pagina
+
+**API Endpoints:**
+- `GET /api/workspace/backups` - Lijst van backups
+- `POST /api/workspace/backups` - Nieuwe backup maken
+- `POST /api/workspace/backups/{id}/restore?confirm=true` - Herstellen
+- `DELETE /api/workspace/backups/{id}` - Verwijderen
+- `GET /api/workspace/backups/{id}/download` - Downloaden
+
+**Gebackupte Collections:**
+tenants, apartments, payments, deposits, loans, kasgeld, maintenance, employees, salaries, meter_readings, contracts, invoices, workspace_users, workspace_logs
+
 ### Volledige Multi-Tenant Systeem ✅
 
 #### 1. Klant Workspaces (Admin)
@@ -25,13 +43,13 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - [x] DNS verificatie & SSL tracking
 - [x] Nginx config generator
 
-#### 2. Frontend Branding Context ✅ (NIEUW)
+#### 2. Frontend Branding Context ✅
 - [x] Workspace branding automatisch geladen na login
 - [x] CSS variabelen dynamisch ingesteld (--brand-primary, --brand-secondary)
 - [x] Logo en portaal naam in sidebar
 - [x] Branding opslaan per workspace
 
-#### 3. Workspace Users Beheer ✅ (NIEUW)
+#### 3. Workspace Users Beheer ✅
 - [x] "Workspace & Team" pagina onder Instellingen
 - [x] Gebruikers uitnodigen met rollen (Admin, Lid, Viewer)
 - [x] Gebruikers verwijderen
