@@ -33,7 +33,11 @@ export default function CMSPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [slug]);
+
+  useEffect(() => {
+    loadPage();
+  }, [loadPage]);
 
   // Render a section based on its type
   const renderSection = (section, index) => {
