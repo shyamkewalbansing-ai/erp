@@ -325,6 +325,29 @@ Volledige deployment documentatie en scripts gemaakt:
 - [ ] Huurder kan betalingen doen via portaal
 - [ ] Email notificaties voor HRM
 
+### Modules Landing Pagina's ✅ (NIEUW - 30 Jan 2026)
+Nieuwe modules overzicht en detail pagina's voor marketing:
+
+**Pagina's:**
+| Pagina | URL | Beschrijving |
+|--------|-----|--------------|
+| Modules Overzicht | `/modules-overzicht` | Grid met alle modules en korte beschrijving |
+| HRM Module | `/modules/hrm` | Detail pagina met alle HRM features |
+| Vastgoed Beheer | `/modules/vastgoed-beheer` | Detail pagina met vastgoed features |
+| Auto Dealer | `/modules/auto-dealer` | Detail pagina met auto dealer features |
+| AI Chatbot | `/modules/ai-chatbot` | Detail pagina met chatbot features |
+| Website CMS | `/modules/website-cms` | Detail pagina met CMS features |
+| Multi-Tenant | `/modules/multi-tenant` | Detail pagina met workspace features |
+
+**Features:**
+- [x] Hero sectie met gradient achtergrond per module
+- [x] Feature secties met afbeeldingen (Unsplash)
+- [x] Bullet points met alle mogelijkheden
+- [x] Prijs informatie per module
+- [x] CTA knoppen naar registratie
+- [x] Responsive design
+- [x] Populair/Nieuw badges
+
 ### P3 (Nice to Have)
 - [ ] Meterstanden exporteren naar PDF
 - [ ] Grafiek met verbruikshistorie
