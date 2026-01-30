@@ -5723,7 +5723,7 @@ async def get_tenant_loans(tenant_id: str, current_user: dict = Depends(get_curr
     ).to_list(100)
     
     # Get loan payments
-    loan_ids = [loan["id"] for l in loans]
+    loan_ids = [loan["id"] for loan in loans]
     loan_payments = await db.payments.find(
         {"loan_id": {"$in": loan_ids}, "payment_type": "loan"},
         {"_id": 0, "loan_id": 1, "amount": 1}
