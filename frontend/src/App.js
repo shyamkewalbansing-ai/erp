@@ -291,6 +291,8 @@ function MainAppRoutes() {
         {/* Landing Page - Critical, loaded immediately */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/modules" element={<ModulesPage />} />
+        <Route path="/modules-overzicht" element={<ModulesOverviewPage />} />
+        <Route path="/modules/:slug" element={<ModuleDetailPage />} />
         <Route path="/prijzen" element={<PrijzenPage />} />
         <Route path="/over-ons" element={<OverOnsPage />} />
         <Route path="/voorwaarden" element={<VoorwaardenPage />} />
