@@ -883,7 +883,7 @@ export default function HRM() {
                         </div>
                         <p className="text-sm text-muted-foreground capitalize">{req.leave_type} • {req.days} dag(en)</p>
                         <p className="text-sm">{new Date(req.start_date).toLocaleDateString('nl-NL')} - {new Date(req.end_date).toLocaleDateString('nl-NL')}</p>
-                        {req.reason && <p className="text-sm mt-1 italic">"{req.reason}"</p>}
+                        {req.reason && <p className="text-sm mt-1 italic">&ldquo;{req.reason}&rdquo;</p>}
                       </div>
                       {req.status === 'pending' && (
                         <div className="flex gap-2">
