@@ -35,6 +35,7 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage
 
 # Import routers
 from routers.autodealer import router as autodealer_router
+from routers.tenant_portal import router as tenant_portal_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
