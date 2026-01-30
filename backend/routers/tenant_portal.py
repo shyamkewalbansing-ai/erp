@@ -146,8 +146,9 @@ async def tenant_portal_login(data: TenantLogin):
 @router.get("/me")
 async def tenant_portal_me(authorization: str = None):
     """Get current tenant info"""
+    from fastapi import Header
+    
     if not authorization:
-        from fastapi import Header
         raise HTTPException(status_code=401, detail="Authorization header missing")
     
     account = await get_current_tenant(authorization)
