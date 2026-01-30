@@ -830,7 +830,7 @@ async def restore_workspace_backup(
     })
     
     return {
-        "message": f"Backup succesvol hersteld",
+        "message": "Backup succesvol hersteld",
         "records_restored": restored_count,
         "safety_backup_id": safety_backup_id,
         "warning": "Een veiligheidsbackup is automatisch aangemaakt voor het herstel"
