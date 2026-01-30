@@ -455,13 +455,13 @@ export default function Layout() {
             {!isSuperAdmin() && workspace && (
               <Button
                 variant="outline"
-                size="sm"
+                size="icon"
                 onClick={openWorkspaceDialog}
                 className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                 data-testid="workspace-btn"
+                title="Workspace Beheren"
               >
-                <Globe className="w-4 h-4 mr-2" />
-                {workspace.name || 'Workspace'}
+                <Globe className="w-4 h-4" />
               </Button>
             )}
           </div>
