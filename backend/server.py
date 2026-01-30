@@ -4187,7 +4187,7 @@ async def get_invoice_pdf(tenant_id: str, year: int, month: int, current_user: d
     loans = await db.loans.find({"user_id": user_id, "tenant_id": tenant_id}, {"_id": 0}).to_list(100)
     loan_payments = [p for p in all_payments if p.get("payment_type") == "loan" and p.get("tenant_id") == tenant_id]
     
-    total_loan_amount = sum(loan["amount"] for l in loans)
+    total_loan_amount = sum(loan["amount"] for loan in loans)
     total_loan_paid = sum(p["amount"] for p in loan_payments)
     loan_balance = max(0, total_loan_amount - total_loan_paid)
     
