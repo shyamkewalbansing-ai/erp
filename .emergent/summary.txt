@@ -1,165 +1,164 @@
 <analysis>**original_problem_statement:**
-The user wants to build a generic, modular ERP SaaS system. The core requirements have evolved to include:
-1.  A powerful CMS for the superadmin to control the public-facing website's content, layout, and pages, including managing all text and images (like partner logos).
-2.  A seamless ordering process for customers to select modules and create an account.
-3.  A superadmin interface to approve customer module requests.
-4.  Implementation of specific modules, with a detailed HRM module and a Vastgoed Beheer (Real Estate Management) module.
-5.  An AI-powered chatbot on the public website.
-6.  A complete Vastgoed Beheer module with features for managing apartments, tenants, and finances. This has now been expanded to include a comprehensive utility meter reading system (EBS & SWM) with automatic tariff calculations for Suriname.
-7.  A self-service portal for tenants to view their details, outstanding balances, and submit their own monthly meter readings.
-8.  A modern, professional UI/UX design for the entire application.
+The user wants to build a generic, modular ERP SaaS system with a multi-tenant architecture. Each customer (tenant) should have their own isolated Workspace with its own data, users, and branding.
 
 **PRODUCT REQUIREMENTS:**
-*   **Complete Website Redesign:** Modernize the public-facing site and the application's internal pages based on professional design guidelines.
-*   **Integrated CMS Editor:** A Website tab in the superadmin dashboard to manage all public page content, including image uploads for logos and other media.
-*   **AI Assistant:** An OpenAI GPT-4o powered chatbot widget on public pages.
-*   **Module E-commerce Flow:** A working order form for customers to subscribe to modules.
-*   **HRM Module (Expanded):** A functional Human Resource Management module with a dedicated sidebar section.
-*   **Vastgoed Beheer Module (Expanded):**
-    *   Full management of apartments, tenants, and finances ().
-    *   **Meter Reading System:** Ability for the manager to add/view/manage EBS (electricity) and SWM (water) meter readings for each apartment. The system must automatically calculate consumption and costs based on official Surinamese tariff structures.
-    *   **Tenant Portal:** A separate login () for tenants. Tenants can view their apartment details, payment history, outstanding balance, and submit their monthly meter readings.
-    *   **Tenant Account Management:** The landlord/manager can create and manage portal accounts for tenants directly from the main application's Huurders page.
-*   **Critical Backend Refactor:** Break down the monolithic  into modular, domain-specific routers.
+*   **Core ERP Features:**
+    *   A powerful CMS for the superadmin to control a public-facing website.
+    *   HRM Module.
+    *   Vastgoed Beheer (Real Estate Management) Module with utility meter readings and a tenant self-service portal.
+    *   AI-powered chatbot.
+*   **Multi-Tenant Workspace System:**
+    *   **Workspace Management:** A superadmin dashboard to create and manage client workspaces.
+    *   **Automatic Provisioning:** Workspaces are automatically created for new customers upon registration.
+    *   **Data Isolation:** Each workspace must be a fully separated environment. All data (tenants, apartments, invoices, etc.) must be scoped to the workspace.
+    *   **Domain Management (Fully Automated):**
+        *   Provide an automatic subdomain (e.g., ).
+        *   Allow customers to connect their own custom domains with automated DNS validation and SSL certificate generation.
+    *   **Custom Branding:** Allow each workspace to set its own logo, colors, and portal name.
+    *   **User Management:** Workspace owners can invite and manage their own users and roles within their workspace.
+*   **System Operations:**
+    *   **Automated Deployment:** A button in the superadmin panel to trigger a  based deployment on a production server via a webhook.
+    *   **Backup & Restore:** Each workspace owner must be able to create and restore backups of their own environment.
 
 **User's preferred language**: The user communicates in **Dutch**. The next agent MUST respond in Dutch.
 
 **what currently exists?**
-The application is a complex, multi-tenant ERP system with three distinct roles: Superadmin, Client/Landlord, and Tenant. The agent has just completed a significant feature expansion by building a comprehensive utility meter reading system and a full-featured tenant portal. This portal allows tenants to log in, view their financial status, and submit their meter readings, which the landlord can then see in the main application. A recurring Maximum update depth exceeded bug on the public order form was also fixed by replacing a problematic UI component. The CMS was enhanced to allow image uploads and dynamic management of partner logos. The agent was just beginning a full UI modernization when the session ended.
+The application is a functional multi-tenant ERP. A superadmin can manage the system, while clients (landlords) can manage modules like HRM and Vastgoed. A key feature is the Workspace system, where each client gets an isolated environment. Workspaces are created automatically on registration and can be managed by the superadmin. This includes setting a subdomain and custom branding. A UI/UX redesign was completed, and a system update feature (via webhooks) was added. The backend data isolation logic for workspaces has been partially implemented. The agent was about to start building the backup/restore functionality.
 
 **Last working item**:
-*   **Last item agent was working**: Implementing a modern UI/UX redesign across the application. The agent had just received design guidelines from the  and started by adding the specified custom fonts (, ) to .
-*   **Status**: IN PROGRESS
-*   **Agent Testing Done**: N (Not applicable, just started).
-*   **Which testing method agent to use?**: both. After implementing the design changes, the agent should call  with a focus on frontend regression to ensure no functionality was broken by the UI overhaul.
+*   **Last item agent was working**: The user requested a backup and restore function for each workspace. The agent acknowledged the request and was about to start implementation after the user confirmed to ga verder (go on). No code has been written for this feature yet.
+*   **Status**: NOT STARTED
+*   **Agent Testing Done**: N
+*   **Which testing method agent to use?**: backend testing agent. This feature will involve running  and  commands on the server, which is a pure backend operation.
 *   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-*   **Issue 1: React infinite loop on Order Form (P1)**
-    *   **Description**: The order form on the  was causing a Maximum update depth exceeded error. The agent fixed it by replacing the Shadcn  component with a custom . The user confirmed the fix. However, this component has been fragile and the issue has recurred before.
-    *   **Status**: RESOLVED (but high risk of recurrence).
-    *   **Is recurring issue?**: Y
-    *   **Should Test frontend/backend/both after fix?**: frontend. Any changes to  should trigger a specific test of the order dialog.
+*   **Issue 1: Login Redirect Bug (P1)**
+    *   **Description**: After the UI redesign, both admin and customer logins were failing, redirecting the user back to the landing page instead of their respective dashboards ( or ).
+    *   **Attempted fixes**: The agent identified that , , and other routing components in  were redirecting to root-level paths (e.g., ) instead of the correct nested paths (e.g., ). The agent fixed all relevant  components to use the correct  prefixes. The fix was verified with screenshots.
+    *   **Status**: RESOLVED
+    *   **Is recurring issue?**: Y (Routing logic in  is complex; future changes could reintroduce similar issues).
+    *   **Should Test frontend/backend/both after fix?**: frontend.
 
 **In progress Task List**:
-*   **Task 1: Modern UI/UX Redesign (P0)**
-    *   **Where to resume**: The agent just added the fonts to . The next step is to update the  and  files to apply the new color palette, fonts, and spacing defined in . Then, refactor key components (, , , etc.) to align with the new design.
-    *   **What will be achieved with this?**: A more professional, modern, and visually appealing application, as requested by the user.
+*   **Task 1: Critical  Refactoring (P1)**
+    *   **Where to resume**: The  file is now over 11,000 lines long. The agent started the refactoring by creating a  directory, a  file for shared dependencies, and moved all workspace-related endpoints into a new  router. The next step is to methodically create new router files (e.g., , , , ) and move the corresponding Pydantic models and endpoints from  into them.
+    *   **What will be achieved with this?**: This will break down the monolithic backend into manageable, domain-specific modules, drastically improving maintainability, readability, and scalability. It is a critical piece of technical debt.
     *   **Status**: IN PROGRESS
-    *   **Should Test frontend/backend/both after fix?**: frontend
-*   **Task 2: Critical  Refactoring (P1)**
-    *   **Where to resume**: The agent previously paused this task. The plan is to create a  directory and incrementally move endpoint groups (e.g., , , , , , ) from the monolithic  into their own  files.
-    *   **What will be achieved with this?**: Drastically improve the maintainability, readability, and scalability of the backend codebase, which is currently a single file of over 9,900 lines. This is a critical technical debt.
-    *   **Status**: IN PROGRESS (Paused)
-    *   **Should Test frontend/backend/both after fix?**: backend
+    *   **Should Test frontend/backend/both after fix?**: backend.
+    *   **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks**:
-    *   **(P1) Email notifications for HRM**: The user previously requested this. It would involve setting up an email service and triggering emails for various HRM events (e.g., leave requests, new contracts).
-    *   **(P1) Herinneringen voor maandelijkse meteropname**: Implement reminders (likely email or in-app notifications) for both tenants and landlords regarding the monthly submission of meter readings.
-    *   **(P2) Finalize Meter Reading Financials**: When a landlord marks utility bills as paid, the total amount should be automatically deducted from the  (cash box) balance.
+    *   **(P0) Workspace Backup and Restore**: Implement backend endpoints in  to trigger  and  commands, scoped to a . Add UI elements in  for users to initiate and manage backups.
+    *   **(P1) Complete Frontend Branding**: The backend provides branding info (logo, colors), and the  sidebar uses it. This needs to be extended. Create a  or use CSS variables to apply the primary/secondary colors and logo throughout the entire client-facing application, not just the sidebar.
+    *   **(P1) Complete Workspace User Management**: The UI and backend endpoints for inviting users and assigning roles (, ) exist. This needs to be fully tested and integrated. The logic should ensure invited users are correctly associated with the .
+    *   **(P1) Automate Server Deployment & SSL**: The user requested full automation. The  is a manual first step. The next step is to build scripts that the backend can trigger to:
+        *   Dynamically update the Nginx configuration to add new subdomains/custom domains.
+        *   Automatically run  or a similar tool to provision Let's Encrypt SSL certificates for the newly added domains.
+    *   **(P2) Email notifications for HRM**: Set up an email service to send notifications for HRM events.
 *   **Future Tasks**:
-    *   **(P2)** Build out other requested ERP modules (Inventory, CRM, Accounting).
+    *   Build out other requested ERP modules (Inventory, CRM, Accounting).
+    *   Deduct paid utility bills from the  (cash box) balance.
+    *   Implement workspace-specific invoicing and reporting.
 
 **Completed work in this session**
-- **Meter Reading Module (Vastgoed)**: A complete system for landlords to manage and calculate tenant utility costs (EBS/SWM) based on official Surinamese tariffs. (DONE)
-- **Tenant Portal**: A secure, separate portal for tenants () to log in, view their apartment/financial data, and submit their monthly meter readings. (DONE)
-- **Tenant Account Management**: Functionality for landlords to create/manage portal accounts for their tenants directly from the admin UI. (DONE)
-- **Order Form Bug Fix**: Resolved a recurring Maximum update depth exceeded React infinite loop error. (DONE)
-- **CMS Image & Partner Logo Management**: Implemented server-side image uploads for the CMS and made the partner logos on the landing page fully manageable by the admin. (DONE)
-- **HRM Module Verification**: Confirmed via API tests and a  run that the previously built HRM module is fully functional. (DONE)
+- **Multi-Tenant Workspace System (Phase 1)**: A new core feature allowing clients to have isolated environments. This includes superadmin management, automatic creation on registration, and configuration for subdomains and custom branding. (DONE)
+- **Workspace Data Isolation (Backend - Phase 1)**: Core endpoints (, ) were updated to filter by . (DONE)
+- **Workspace User Management (UI/Backend - Phase 1)**: UI and API for inviting/managing users within a workspace. (DONE)
+- **System Update Feature**: A System Update tab was added to the superadmin dashboard, allowing an admin to trigger a deployment webhook. (DONE)
+- **Application-wide UI/UX Redesign**: Modernized the entire public and internal application aesthetic, including landing page, login, and dashboards, using glassmorphism and a new design system. (DONE)
+- **Login Redirect Bug Fix**: Resolved a critical bug that prevented users from logging in after the UI redesign. (DONE)
+- ** Refactoring (Started)**: Created the  directory and moved all workspace endpoints into . (DONE)
+- **VPS Setup Guide**: Created a detailed manual guide () for deploying the application. (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-*   None. All raised issues in this session were addressed.
+*   None.
 
 **Known issue recurrence from previous fork**
-*   None.
+*   **Issue**: Maximum update depth exceeded on the public order form.
+*   **Recurrence count**: 1 (in a previous session)
+*   **Status**: RESOLVED (The fix of replacing a UI component has held up so far, but the component is fragile).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-*   **Backend**: Monolithic FastAPI, MongoDB (), Pydantic models. JWT for auth.
+*   **Backend**: Monolithic FastAPI (being refactored), MongoDB (), Pydantic models.
 *   **Frontend**: React, Tailwind CSS, Shadcn UI, .
-*   **State Management**: React Context ( for main app,  for tenant portal).
-*   **Routing**: , including protected routes and separate routing structures for the main app and tenant portal.
-*   **Multi-tenancy**: The architecture now clearly separates Superadmin, Client/Landlord, and Tenant roles and data access.
+*   **Multi-tenancy**: Workspace-based architecture. Data is isolated using a  field in MongoDB collections.
+*   **Authentication**: JWT for main app, separate JWT for tenant portal.
+*   **Deployment**: Webhook-triggered deployment via a custom endpoint.
 
 **key DB schema**
-*   **meter_readings**: { apartment_id, tenant_id, ebs_reading, swm_reading, month, year, cost, status }
-*   **meter_settings**: Stores EBS and SWM tariff tiers.
-*   **tenant_accounts**: { tenant_id, email, hashed_password } - Manages login for the tenant portal.
-*   **users, tenants, apartments**: Existing collections were heavily used for the new features.
+*   **workspaces**: 
+*   **users**: Now includes  reference.
+*   **tenants, apartments, meter_readings, etc**: All now contain a  field for data isolation.
 
 **changes in tech stack**
 *   None.
 
 **All files of reference**
-*   **/app/backend/server.py**: Grew from ~9300 to over 9900 lines. Contains all new endpoints for meter readings and the tenant portal. Urgently needs refactoring.
-*   **/app/frontend/src/App.js**: Heavily refactored to support two separate authentication contexts and routing systems (main app vs. tenant portal).
-*   **/app/frontend/src/pages/LandingPage.js**: Fixed a critical bug and updated for dynamic partner logos.
-*   **/app/frontend/src/pages/Meterstanden.js**: New page for landlords to manage utility readings.
-*   **/app/frontend/src/pages/TenantLogin.js**: New login page for tenants.
-*   **/app/frontend/src/pages/TenantDashboard.js**: New dashboard for tenants.
-*   **/app/frontend/src/pages/Tenants.js**: Modified to allow landlords to manage tenant portal access.
-*   **/app/design_guidelines.json**: New file containing UI/UX rules for the modernization task.
+*   : The monolith, grew to over 11,000 lines. The refactoring process has started.
+*   : The first successfully refactored module, contains all logic for workspace management.
+*   : Heavily modified to become the superadmin hub, with new tabs and dialogs for Workspaces and System Update.
+*   : A new page for clients to manage their workspace branding and users.
+*   : Critical routing logic was fixed here. It also contains the new route for workspace settings.
+*   : Updated to fetch and store workspace and branding information for the logged-in user.
+*   : A new document with detailed instructions for manual server deployment.
 
 **Areas that need refactoring**:
-*   **CRITICAL**:  is the single biggest risk to the project's stability and future development. The refactoring task that was started but paused is the highest technical priority.
-*   **/app/frontend/src/App.js**: The routing and provider logic has become very complex. It could potentially be simplified.
+*   **CRITICAL**: . It is over 11,000 lines long. Continuing the refactoring into modular  is the highest technical priority to ensure the project's long-term health.
 
 **key api endpoints**
-*   **POST **, **POST **: New authentication endpoints for the tenant portal.
-*   **GET **: New endpoint to fetch all data for the logged-in tenant.
-*   **POST **: New endpoint for tenants to submit their readings.
-*   **POST **: New endpoint for landlords to create accounts for tenants.
-*   **GET, POST **: New endpoints for landlords to manage all meter readings.
-*   **GET, PUT **: New endpoints to manage utility tariffs.
+*   **Workspaces**: , , 
+*   **Workspace Branding**: 
+*   **Workspace Users**: , 
+*   **Deployment**: , , 
 
 **Critical Info for New Agent**
-*   The immediate task is the UI/UX redesign. The user is expecting a visual upgrade. Follow the  file.
-*   After the UI redesign, the  refactoring is the most important task to ensure the project doesn't become unmanageable. Propose this to the user as the next logical step.
-*   The application now has three distinct user journeys. Testing must cover all three:
-    1.  **Superadmin ()**: Manages the CMS and system-wide settings.
-    2.  **Client/Landlord ()**: Manages their modules (Vastgoed, HRM), including tenants and meter readings.
-    3.  **Tenant ()**: Logs into a separate portal () to see their own data and submit readings.
-*   The bug on the  order form was tricky. Be cautious when editing this file.
+*   The user's request for alles (everything) regarding the workspace feature should be interpreted as a desire for a complete, enterprise-grade solution. Continue breaking it down into smaller, testable features (Backup -> Branding -> User Roles -> Automation).
+*   The  refactoring is not just a cleanup task; it's essential for future development. Prioritize moving endpoint groups out of it whenever you touch a related feature.
+*   The workspace system is the new foundation. All new features and data models must include  for proper data isolation.
+*   The VPS deployment process is currently manual (via the ). The user's end goal is full automation, which is a significant upcoming task involving Nginx and SSL scripting.
 
 **documents and test reports created in this job**
 *   
 *   
 
 **Last 10 User Messages and any pending HUMAN messages**
-10. **User**: Requests a fix for the Uncaught runtime errors on the order form.
-9.  **User**: Confirms the order form bug is fixed (Ja het werkt).
-8.  **User**: Requests a major new feature: a utility meter reading system (EBS/SWM) for the Vastgoed module.
-7.  **User**: Provides detailed requirements for the meter reading system, including automatic tariff calculation, tenant self-service, payment tracking, and reminders.
-6.  **User**: Requests the next step: building the tenant portal for self-service.
-5.  **User**: Provides detailed requirements for the tenant portal dashboard.
-4.  **User**: Points out that landlords cannot create portal accounts for tenants and requests this feature.
-3.  **User**: Requests a modern look and feel for the entire website.
-2.  **Agent**: Calls the  to get design guidelines.
-1.  **Agent**: Begins implementing the redesign by adding new fonts.
+10. **User**: Requests a new feature: an Update button in the superadmin panel to update the system from GitHub.
+9.  **User**: Confirms requirements for the update feature (VPS, Webhook, post-update actions).
+8.  **User**: Requests a massive new feature: a complete multi-tenant Klant Workspaces system with data isolation, custom domains, branding, and full automation.
+7.  **Agent**: Asks clarifying questions about the Workspace feature (Database isolation, Domain options, server access).
+6.  **User**: Answers clarification questions, confirming preferences for logical data isolation, subdomains, and providing server details. Requests everything to be built.
+5.  **User**: Asks if the agent will build the workspace middleware for data isolation.
+4.  **Agent**: Confirms and asks for user approval to build it.
+3.  **User**: Approves by sending A.
+2.  **User**: After seeing the progress, replies alles (everything) to the agent's proposed plan, indicating a desire to build all remaining P0, P1, and P2 tasks.
+1.  **User**: Requests a backup and restore function for each workspace.
 
 **Project Health Check:**
-*   **Broken**: None. The application is functional.
-*   **Mocked**: None.
-*   **Unverified**: The newly implemented Meter Reading and Tenant Portal features have only been tested via API calls and screenshots. They have not undergone a full regression test by the .
+*   **Broken**: None.
+*   **Mocked**: The deployment automation is mocked. The backend endpoint exists, but the server-side scripts for Nginx/SSL are not implemented, only documented in a guide.
+*   **Unverified**: The full end-to-end custom domain flow (DNS validation, SSL generation) has not been tested.
 
 **3rd Party Integrations**
-*   **OpenAI GPT-4o**: Used for the public AI chatbot, via  and the Emergent LLM Key.
-*   **Mope Payment Gateway**: () - Requires a User API Key.
+*   **OpenAI GPT-4o**: Powers the AI chatbot. Uses Emergent LLM Key.
+*   **Mope Payment Gateway**: Integrated for payments. Requires User API Key.
 
 **Testing status**
-*   **Testing agent used after significant changes**: YES,  was generated to verify the CMS image upload feature.
-*   **Troubleshoot agent used after agent stuck in loop**: NO
+*   **Testing agent used after significant changes**: YES,  was generated after the major UI/UX redesign.
+*   **Troubleshoot agent used after agent stuck in loop**: NO.
 *   **Test files created**: []
 *   **Known regressions**: None.
 
 **Credentials to test flow:**
 *   **Superadmin**:  / 
-*   **Test Customer/Landlord**:  /  (password was reset to this). Has active HRM and Vastgoed modules.
-*   **Test Tenant**:  / . Belongs to an apartment managed by the superadmin, not the test customer.
+*   **Test Customer/Landlord**:  / 
+*   **Test Tenant**:  / 
+*   **Workspace User (auto-created)**:  / 
 
 **What agent forgot to execute**
-*   The agent correctly prioritized user-facing features and bug fixes over the internal  refactoring. This task was not forgotten but strategically postponed.</analysis>
+*   The agent has a good plan for the  refactoring but has only completed a small fraction of it. The file remains a huge liability.
+*   The full application of workspace branding (colors/logo) across the client-facing UI was planned but only implemented in the main sidebar. It needs to be applied globally.</analysis>
