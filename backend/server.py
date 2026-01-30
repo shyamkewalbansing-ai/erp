@@ -63,7 +63,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ==================== GLOBAL EXCEPTION HANDLER ====================
-from fastapi.responses import JSONResponse
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
