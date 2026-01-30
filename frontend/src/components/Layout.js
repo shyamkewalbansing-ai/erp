@@ -428,7 +428,7 @@ export default function Layout() {
       <main className="main-content">
         {/* Desktop header with notifications */}
         <header className="desktop-header hidden lg:flex header-glass px-8 py-3 items-center justify-between border-b border-border/50">
-          {/* Left side - User info */}
+          {/* Left side - User info & Workspace/Portal buttons */}
           <div className="flex items-center gap-4">
             {/* User info */}
             <div className="flex items-center gap-3">
@@ -442,9 +442,41 @@ export default function Layout() {
                 <p className="text-xs text-muted-foreground truncate max-w-[150px]">{user?.email}</p>
               </div>
             </div>
+            
+            {/* Workspace & Portal buttons */}
+            {!isSuperAdmin() && (
+              <div className="flex items-center gap-2">
+                {/* Workspace button */}
+                {workspace && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={openWorkspaceDialog}
+                    className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                    data-testid="workspace-btn"
+                    title="Workspace Beheren"
+                  >
+                    <Globe className="w-4 h-4" />
+                  </Button>
+                )}
+                {/* Tenant Portal button - only if vastgoed_beheer addon is active */}
+                {hasAddon('vastgoed_beheer') && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => window.open('/huurder/login', '_blank')}
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                    data-testid="tenant-portal-btn"
+                    title="Huurders Portaal"
+                  >
+                    <Building2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
           
-          {/* Right side - Theme, Workspace, Notifications, Logout */}
+          {/* Right side - Theme, Notifications, Logout */}
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -455,19 +487,6 @@ export default function Layout() {
             >
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
-            {/* Workspace button - between theme and notifications */}
-            {!isSuperAdmin() && workspace && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={openWorkspaceDialog}
-                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
-                data-testid="workspace-btn"
-                title="Workspace Beheren"
-              >
-                <Globe className="w-4 h-4" />
-              </Button>
-            )}
             {!isSuperAdmin() && <NotificationBell />}
             <Button 
               variant="outline" 
