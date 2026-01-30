@@ -9042,6 +9042,181 @@ async def get_workspace_stats(current_user: dict = Depends(get_superadmin)):
     }
 
 # ============================================
+# WORKSPACE USERS MANAGEMENT
+# ============================================
+
+class WorkspaceUserRole(str, Enum):
+    admin = "admin"
+    member = "member"
+    viewer = "viewer"
+
+class WorkspaceUserInvite(BaseModel):
+    email: str
+    name: str
+    role: str = "member"
+
+class WorkspaceUserResponse(BaseModel):
+    id: str
+    user_id: str
+    workspace_id: str
+    email: str
+    name: str
+    role: str
+    status: str  # 'active', 'invited', 'disabled'
+    invited_at: str
+    joined_at: Optional[str] = None
+
+@api_router.get("/workspace/users", response_model=List[WorkspaceUserResponse])
+async def get_workspace_users(current_user: dict = Depends(get_current_user)):
+    """Get all users in current workspace"""
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        if current_user.get("role") == "superadmin":
+            raise HTTPException(status_code=400, detail="Superadmin heeft geen workspace")
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    # Check if user is workspace admin
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    if workspace["owner_id"] != current_user["id"]:
+        # Check if user has admin role in workspace
+        user_role = await db.workspace_users.find_one({
+            "workspace_id": workspace_id,
+            "user_id": current_user["id"]
+        })
+        if not user_role or user_role.get("role") not in ["admin", "owner"]:
+            raise HTTPException(status_code=403, detail="Geen toegang tot gebruikersbeheer")
+    
+    users = await db.workspace_users.find(
+        {"workspace_id": workspace_id},
+        {"_id": 0}
+    ).to_list(100)
+    
+    return users
+
+@api_router.post("/workspace/users/invite", response_model=WorkspaceUserResponse)
+async def invite_workspace_user(invite: WorkspaceUserInvite, current_user: dict = Depends(get_current_user)):
+    """Invite a user to the current workspace"""
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace niet gevonden")
+    
+    # Only owner or admin can invite
+    if workspace["owner_id"] != current_user["id"]:
+        user_role = await db.workspace_users.find_one({
+            "workspace_id": workspace_id,
+            "user_id": current_user["id"],
+            "role": {"$in": ["admin", "owner"]}
+        })
+        if not user_role:
+            raise HTTPException(status_code=403, detail="Geen rechten om gebruikers uit te nodigen")
+    
+    # Check if already invited
+    existing = await db.workspace_users.find_one({
+        "workspace_id": workspace_id,
+        "email": invite.email
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Gebruiker is al uitgenodigd")
+    
+    # Check if user exists
+    existing_user = await db.users.find_one({"email": invite.email}, {"_id": 0})
+    
+    invitation_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    invitation = {
+        "id": invitation_id,
+        "user_id": existing_user["id"] if existing_user else None,
+        "workspace_id": workspace_id,
+        "email": invite.email,
+        "name": invite.name,
+        "role": invite.role,
+        "status": "active" if existing_user else "invited",
+        "invited_at": now,
+        "joined_at": now if existing_user else None,
+        "invited_by": current_user["id"]
+    }
+    
+    await db.workspace_users.insert_one(invitation)
+    
+    # If user exists, update their workspace_id
+    if existing_user and not existing_user.get("workspace_id"):
+        await db.users.update_one(
+            {"id": existing_user["id"]},
+            {"$set": {"workspace_id": workspace_id}}
+        )
+    
+    return WorkspaceUserResponse(**invitation)
+
+@api_router.put("/workspace/users/{user_id}/role")
+async def update_workspace_user_role(user_id: str, role: str, current_user: dict = Depends(get_current_user)):
+    """Update a workspace user's role"""
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    
+    # Only owner can change roles
+    if workspace["owner_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Alleen de eigenaar kan rollen wijzigen")
+    
+    # Can't change owner's role
+    if user_id == workspace["owner_id"]:
+        raise HTTPException(status_code=400, detail="Kan de eigenaar's rol niet wijzigen")
+    
+    result = await db.workspace_users.update_one(
+        {"workspace_id": workspace_id, "user_id": user_id},
+        {"$set": {"role": role}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Gebruiker niet gevonden")
+    
+    return {"message": "Rol bijgewerkt"}
+
+@api_router.delete("/workspace/users/{user_id}")
+async def remove_workspace_user(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Remove a user from the workspace"""
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    
+    # Only owner or admin can remove
+    if workspace["owner_id"] != current_user["id"]:
+        user_role = await db.workspace_users.find_one({
+            "workspace_id": workspace_id,
+            "user_id": current_user["id"],
+            "role": "admin"
+        })
+        if not user_role:
+            raise HTTPException(status_code=403, detail="Geen rechten om gebruikers te verwijderen")
+    
+    # Can't remove owner
+    if user_id == workspace["owner_id"]:
+        raise HTTPException(status_code=400, detail="Kan de eigenaar niet verwijderen")
+    
+    # Remove from workspace_users
+    await db.workspace_users.delete_one({
+        "workspace_id": workspace_id,
+        "user_id": user_id
+    })
+    
+    # Clear user's workspace_id
+    await db.users.update_one(
+        {"id": user_id, "workspace_id": workspace_id},
+        {"$set": {"workspace_id": None}}
+    )
+    
+    return {"message": "Gebruiker verwijderd"}
+
+# ============================================
 # CMS - COMPLETE WEBSITE BUILDER
 # ============================================
 
