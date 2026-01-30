@@ -217,6 +217,20 @@ function TenantPortalRoutes() {
   );
 }
 
+// Employee Portal Routes
+function EmployeePortalRoutes() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/login" element={<EmployeePortalLogin />} />
+        <Route path="/dashboard" element={<EmployeePortalDashboard />} />
+        <Route path="/" element={<Navigate to="/werknemer/login" replace />} />
+        <Route path="*" element={<Navigate to="/werknemer/login" replace />} />
+      </Routes>
+    </Suspense>
+  );
+}
+
 // Main App with both portals
 function AppWithRoutes() {
   return (
@@ -225,6 +239,9 @@ function AppWithRoutes() {
         <Routes>
           {/* Tenant Portal Routes */}
           <Route path="/huurder/*" element={<TenantPortalRoutes />} />
+          
+          {/* Employee Portal Routes */}
+          <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
           
           {/* Main App Routes */}
           <Route path="/*" element={<MainAppRoutes />} />
