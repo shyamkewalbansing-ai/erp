@@ -412,6 +412,203 @@ Bij problemen:
 
 ---
 
+## 🗂️ Beschikbare Scripts
+
+Na installatie heb je de volgende scripts beschikbaar:
+
+| Script | Functie |
+|--------|---------|
+| `CLOUDPANEL_INSTALL.sh` | Volledige eerste installatie |
+| `UPDATE.sh` | Update na git pull of code wijzigingen |
+| `BACKUP.sh` | Maak een complete backup |
+| `RESTORE.sh` | Herstel een backup |
+| `WEBHOOK_DEPLOY.sh` | Automatisch deployen via webhook |
+
+### Update Script Gebruiken
+
+```bash
+# Volledige update
+sudo ./UPDATE.sh
+
+# Alleen backend updaten
+sudo ./UPDATE.sh --backend-only
+
+# Alleen frontend updaten  
+sudo ./UPDATE.sh --frontend-only
+
+# Update zonder services te herstarten
+sudo ./UPDATE.sh --no-restart
+```
+
+### Backup & Restore
+
+```bash
+# Backup maken
+sudo ./BACKUP.sh
+
+# Backups worden opgeslagen in: /var/backups/facturatie/
+ls -la /var/backups/facturatie/
+
+# Restore uitvoeren
+sudo ./RESTORE.sh /var/backups/facturatie/facturatie_backup_20240101_120000.tar.gz
+```
+
+### Automatische Backups (Cron)
+
+```bash
+# Backup elke nacht om 2:00
+sudo crontab -e
+
+# Voeg toe:
+0 2 * * * /var/www/facturatie/BACKUP.sh >> /var/log/facturatie_backup.log 2>&1
+```
+
+---
+
+## 🔄 Automatische Deployment (CI/CD)
+
+### GitHub Actions Voorbeeld
+
+Maak `.github/workflows/deploy.yml`:
+
+```yaml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/facturatie
+            ./UPDATE.sh
+```
+
+### Webhook Configuratie
+
+1. Genereer een webhook secret:
+```bash
+openssl rand -hex 32
+```
+
+2. Pas `WEBHOOK_DEPLOY.sh` aan met je secret
+
+3. Configureer webhook in GitHub/GitLab:
+   - URL: `https://jouwdomein.nl/api/webhook/deploy`
+   - Secret: Je gegenereerde secret
+   - Events: Push events
+
+---
+
+## 📊 Performance Optimalisatie
+
+### Nginx Caching
+
+Voeg toe aan je Nginx config voor betere performance:
+
+```nginx
+# Proxy caching
+proxy_cache_path /var/cache/nginx levels=1:2 keys_zone=facturatie_cache:10m inactive=60m;
+
+# In location /api/
+proxy_cache facturatie_cache;
+proxy_cache_valid 200 5m;
+proxy_cache_bypass $http_cache_control;
+```
+
+### MongoDB Index Optimalisatie
+
+```bash
+mongosh facturatie_db --eval "
+    // Workspace indexes
+    db.workspaces.createIndex({ 'subdomain': 1 }, { unique: true });
+    db.workspaces.createIndex({ 'custom_domain': 1 });
+    
+    // User indexes
+    db.users.createIndex({ 'email': 1, 'workspace_id': 1 });
+    db.users.createIndex({ 'workspace_id': 1 });
+    
+    // Auto Dealer indexes
+    db.autodealer_vehicles.createIndex({ 'workspace_id': 1 });
+    db.autodealer_sales.createIndex({ 'workspace_id': 1, 'sale_date': -1 });
+"
+```
+
+### Process Manager (PM2 alternatief)
+
+Als je PM2 prefereert boven Supervisor:
+
+```bash
+npm install -g pm2
+
+# Backend
+cd /var/www/facturatie/backend
+pm2 start "source venv/bin/activate && uvicorn server:app --host 0.0.0.0 --port 8001" --name facturatie-backend
+
+# Frontend
+cd /var/www/facturatie/frontend
+pm2 start "npx serve -s build -l 3000" --name facturatie-frontend
+
+# Save configuration
+pm2 save
+pm2 startup
+```
+
+---
+
+## 🌐 Multi-Tenant Subdomain Setup
+
+Voor workspace subdomains (bijv. `klant1.facturatie.nl`):
+
+### Wildcard DNS
+
+Voeg een wildcard A-record toe:
+```
+*.facturatie.nl    A    [SERVER_IP]
+```
+
+### Wildcard SSL
+
+```bash
+# Installeer certbot plugin voor Cloudflare/DNS
+sudo apt install python3-certbot-dns-cloudflare
+
+# Vraag wildcard certificaat aan
+sudo certbot certonly --dns-cloudflare \
+    --dns-cloudflare-credentials /root/.cloudflare.ini \
+    -d facturatie.nl \
+    -d *.facturatie.nl
+```
+
+### Nginx voor Subdomains
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name ~^(?<subdomain>.+)\.facturatie\.nl$;
+    
+    # SSL config...
+    
+    # Pass subdomain to backend
+    location /api/ {
+        proxy_pass http://127.0.0.1:8001/api/;
+        proxy_set_header X-Workspace-Subdomain $subdomain;
+        # ... other headers
+    }
+}
+```
+
+---
+
 ## 📄 Licentie
 
 © 2024-2026 Facturatie N.V. Suriname
