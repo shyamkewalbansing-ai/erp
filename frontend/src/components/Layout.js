@@ -369,7 +369,7 @@ export default function Layout() {
 
         {/* User section - fixed at bottom */}
         <div className="p-4 border-t border-border mt-auto flex-shrink-0">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
               <span className="text-sm font-semibold text-primary">
                 {user?.name?.charAt(0).toUpperCase()}
@@ -381,20 +381,11 @@ export default function Layout() {
             </div>
           </div>
           {isSuperAdmin() && (
-            <Badge className="mb-3 w-full justify-center bg-primary/10 text-primary border-primary/20">
+            <Badge className="mt-3 w-full justify-center bg-primary/10 text-primary border-primary/20">
               <Crown className="w-3 h-3 mr-1" />
               Super Admin
             </Badge>
           )}
-          <Button 
-            variant="ghost" 
-            className="w-full justify-start text-muted-foreground hover:text-destructive"
-            onClick={handleLogout}
-            data-testid="logout-btn"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Uitloggen
-          </Button>
         </div>
       </aside>
 
