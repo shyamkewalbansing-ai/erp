@@ -452,9 +452,9 @@ export default function Layout() {
             </Button>
             {!isSuperAdmin() && <NotificationBell />}
             <Button 
-              variant="ghost" 
+              variant="outline" 
               size="icon"
-              className="text-muted-foreground hover:text-destructive w-9 h-9"
+              className="border-red-200 text-red-600 hover:bg-red-50 w-9 h-9"
               onClick={handleLogout}
               data-testid="logout-btn-mobile"
             >
