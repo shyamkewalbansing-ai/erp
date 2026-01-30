@@ -553,7 +553,7 @@ export default function Instellingen() {
                     <h3 className="font-semibold text-foreground">Betaaldeadline</h3>
                   </div>
                   <p className="text-sm text-muted-foreground">
-                    Stel in wanneer de huur uiterlijk betaald moet zijn (bijv. "Januari huur moet voor 6 februari betaald zijn")
+                    Stel in wanneer de huur uiterlijk betaald moet zijn (bijv. &quot;Januari huur moet voor 6 februari betaald zijn&quot;)
                   </p>
                   
                   <div className="grid md:grid-cols-2 gap-4">
