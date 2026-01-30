@@ -357,7 +357,7 @@ class TestLoansFeature:
         loans = data["loans"]
         
         # Filter open loans (status != 'paid')
-        open_loans = [l for loan_item in loans if loan_item["status"] != "paid"]
+        open_loans = [item for item in loans if item["status"] != "paid"]
         assert len(open_loans) >= 1, "Should have at least 1 open loan"
         
         # Verify loan has required fields for dropdown
