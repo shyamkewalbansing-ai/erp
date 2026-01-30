@@ -15,6 +15,42 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (30 Jan 2026)
 
+### AUTO DEALER MODULE ✅ (NIEUW - 30 Jan 2026)
+Complete autohandelmodule voor Suriname met multi-valuta ondersteuning:
+
+**Features:**
+- [x] Dashboard met statistieken (voertuigen, klanten, omzet)
+- [x] Multi-valuta ondersteuning (SRD, EUR, USD)
+- [x] Voertuigen beheer (CRUD met alle velden)
+- [x] Klanten beheer (particulier en zakelijk)
+- [x] Verkoop registratie met automatische status updates
+- [x] Valuta selector op alle pagina's
+- [x] Sidebar navigatie met AUTO DEALER sectie
+
+**API Endpoints:**
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/autodealer/stats | GET | Dashboard statistieken |
+| /api/autodealer/vehicles | GET/POST | Voertuigen lijst/aanmaken |
+| /api/autodealer/vehicles/{id} | GET/PUT/DELETE | Voertuig CRUD |
+| /api/autodealer/customers | GET/POST | Klanten lijst/aanmaken |
+| /api/autodealer/customers/{id} | GET/PUT/DELETE | Klant CRUD |
+| /api/autodealer/sales | GET/POST | Verkopen lijst/aanmaken |
+| /api/autodealer/sales/{id} | GET/PUT/DELETE | Verkoop CRUD |
+
+**Database Collections:**
+- `autodealer_vehicles` - Voertuigen met multi-valuta prijzen
+- `autodealer_customers` - Klanten (particulier/zakelijk)
+- `autodealer_sales` - Verkopen met betaalstatus
+
+**Frontend Pagina's:**
+- `/app/autodealer` - Dashboard
+- `/app/autodealer/voertuigen` - Voertuigen beheer
+- `/app/autodealer/klanten` - Klanten beheer
+- `/app/autodealer/verkopen` - Verkopen beheer
+
+**Test Resultaten:** 100% geslaagd (23/23 backend tests, alle UI flows)
+
 ### Workspace Backup & Restore ✅ (NIEUW - 30 Jan 2026)
 - [x] Backup maken van alle workspace data
 - [x] Backup lijst met details (grootte, records, datum)
