@@ -312,7 +312,7 @@ export default function Layout() {
             <div className="mt-2">
               <button
                 onClick={() => setSettingsOpen(!settingsOpen)}
-                className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement') ? 'active' : ''}`}
+                className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace') ? 'active' : ''}`}
                 data-testid="nav-instellingen-dropdown"
               >
                 <div className="flex items-center gap-3">
@@ -323,8 +323,20 @@ export default function Layout() {
               </button>
               
               {/* Dropdown items */}
-              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="pl-4 mt-1 space-y-1">
+                  {/* Workspace Settings - for customers only */}
+                  {!isSuperAdmin() && (
+                    <NavLink
+                      to="/app/workspace"
+                      onClick={() => setSidebarOpen(false)}
+                      className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                      data-testid="nav-workspace"
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Workspace & Team</span>
+                    </NavLink>
+                  )}
                   {/* Huurinstellingen - only visible with Vastgoed Beheer add-on */}
                   {hasAddon('vastgoed_beheer') && (
                     <NavLink
