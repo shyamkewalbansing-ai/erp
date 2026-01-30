@@ -395,18 +395,6 @@ export default function Layout() {
                       <span>Workspace & Team</span>
                     </NavLink>
                   )}
-                  {/* Huurinstellingen - only visible with Vastgoed Beheer add-on */}
-                  {hasAddon('vastgoed_beheer') && (
-                    <NavLink
-                      to="/app/instellingen"
-                      onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
-                      data-testid="nav-instellingen-sub"
-                    >
-                      <Settings className="w-4 h-4" />
-                      <span>Huurinstellingen</span>
-                    </NavLink>
-                  )}
                   <NavLink
                     to="/app/abonnement"
                     onClick={() => setSidebarOpen(false)}
