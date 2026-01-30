@@ -828,8 +828,8 @@ export default function WebsiteBeheer() {
               <div className="border-t pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h3 className="font-semibold">Partner Logo's</h3>
-                    <p className="text-sm text-muted-foreground">Logo's van partners die op de homepage worden getoond</p>
+                    <h3 className="font-semibold">Partner Logo&apos;s</h3>
+                    <p className="text-sm text-muted-foreground">Logo&apos;s van partners die op de homepage worden getoond</p>
                   </div>
                   <Button 
                     variant="outline" 
