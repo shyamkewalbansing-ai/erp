@@ -30,7 +30,7 @@ export default function OndertekeningPage() {
   const [signed, setSigned] = useState(false);
 
   useEffect(() => {
-    fetchContract(); // eslint-disable-line react-hooks/exhaustive-deps
+    fetchContract();
   }, [token]);
 
   const fetchContract = async () => {
