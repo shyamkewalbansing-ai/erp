@@ -36,6 +36,22 @@ export default function EmployeePortalDashboard() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    const token = localStorage.getItem('employee_token');
+    const user = localStorage.getItem('employee_user');
+    
+    if (!token) {
+      navigate('/werknemer/login');
+      return;
+    }
+    
+    if (user) {
+      setEmployee(JSON.parse(user));
+    }
+    
+    loadDashboard(token);
+  }, [navigate, loadDashboard]);
+
   const handleLogout = () => {
     localStorage.removeItem('employee_token');
     localStorage.removeItem('employee_user');
