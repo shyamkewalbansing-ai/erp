@@ -53,6 +53,10 @@ const OverOnsPage = lazy(() => import("./pages/OverOnsPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const WorkspaceSettings = lazy(() => import("./pages/WorkspaceSettings"));
 
+// Employee Portal
+const EmployeePortalLogin = lazy(() => import("./pages/EmployeePortalLogin"));
+const EmployeePortalDashboard = lazy(() => import("./pages/EmployeePortalDashboard"));
+
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
   <div className="min-h-screen flex items-center justify-center bg-background">
