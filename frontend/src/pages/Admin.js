@@ -3223,7 +3223,7 @@ echo "Deploy completed at $(date)"`}</pre>
           <DialogHeader>
             <DialogTitle>Add-on Verzoek Goedkeuren</DialogTitle>
             <DialogDescription>
-              Keur het verzoek van {selectedAddonRequest?.user_name} goed voor "{selectedAddonRequest?.addon_name}"
+              Keur het verzoek van {selectedAddonRequest?.user_name} goed voor &quot;{selectedAddonRequest?.addon_name}&quot;
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
