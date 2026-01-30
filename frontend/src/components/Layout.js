@@ -35,7 +35,8 @@ import {
   Copy,
   ExternalLink,
   Save,
-  Loader2
+  Loader2,
+  Briefcase
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
