@@ -12328,8 +12328,7 @@ async def delete_employee_account(account_id: str, current_user: dict = Depends(
     return {"message": "Account verwijderd"}
 
 
-# Import and include routers
-from routers.autodealer import router as autodealer_router
+# Include routers
 api_router.include_router(autodealer_router)
 
 # Include the router in the main app
