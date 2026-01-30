@@ -218,13 +218,35 @@ export default function HRM() {
     setSaving(true);
     try {
       const data = { ...employeeForm, salary: parseFloat(employeeForm.salary) || 0 };
+      // Remove portal fields from employee data
+      const { create_portal_account, portal_password, ...employeeData } = data;
+      
+      let employeeId;
       if (editingItem) {
-        await api.put(`/hrm/employees/${editingItem.id}`, data);
+        await api.put(`/hrm/employees/${editingItem.id}`, employeeData);
+        employeeId = editingItem.id;
         toast.success('Werknemer bijgewerkt');
       } else {
-        await api.post('/hrm/employees', data);
+        const res = await api.post('/hrm/employees', employeeData);
+        employeeId = res.data.id;
         toast.success('Werknemer toegevoegd');
       }
+      
+      // Create portal account if requested
+      if (create_portal_account && portal_password && employeeData.email && !editingItem) {
+        try {
+          await api.post('/hrm/employee-accounts', {
+            employee_id: employeeId,
+            email: employeeData.email,
+            name: employeeData.name,
+            password: portal_password
+          });
+          toast.success('Portaal account aangemaakt! Werknemer kan inloggen op /werknemer/login');
+        } catch (accError) {
+          toast.error('Werknemer toegevoegd, maar portaal account aanmaken mislukt: ' + (accError.response?.data?.detail || 'Onbekende fout'));
+        }
+      }
+      
       setEmployeeDialog(false);
       resetEmployeeForm();
       loadAllData();
