@@ -11,10 +11,46 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - **Styling**: Tailwind CSS met glassmorphism effecten
 - **Fonts**: Outfit (headings), Plus Jakarta Sans (body)
 - **Primary Color**: #0caf60 (groen)
+- **Multi-tenant**: Workspace-based isolatie per klant
 
-## What's Been Implemented (27 Jan 2026)
+## What's Been Implemented (30 Jan 2026)
 
-### UI/UX Redesign ✅ (NIEUW - 27 Jan 2026)
+### Klant Workspaces / Multi-Tenant ✅ (NIEUW - 30 Jan 2026)
+Complete multi-tenant workspace systeem:
+
+**Features:**
+- [x] Workspace management in superadmin dashboard (prominent bovenaan)
+- [x] Statistieken: Totaal, Actief, In Afwachting
+- [x] Workspace aanmaken met naam, slug, eigenaar
+- [x] Domein keuze: Subdomein (auto-actief) of Custom domein (DNS verificatie)
+- [x] Custom branding per workspace (logo, kleuren, naam)
+- [x] DNS verificatie voor custom domeinen
+- [x] Nginx configuratie generator per workspace
+- [x] SSL status tracking
+- [x] Workspace bewerken en verwijderen
+
+**Domein Opties:**
+- **Subdomein**: klantnaam.facturatie.sr (direct actief, auto-SSL)
+- **Custom Domein**: portal.klantdomein.nl (DNS A-record naar server IP)
+
+**API Endpoints:**
+- `GET/POST /api/admin/workspaces` - Lijst en aanmaken
+- `PUT/DELETE /api/admin/workspaces/{id}` - Bewerken en verwijderen
+- `POST /api/admin/workspaces/{id}/verify-dns` - DNS verificatie
+- `GET /api/admin/workspaces/{id}/nginx-config` - Nginx config
+
+### Systeem Update Functie ✅ (30 Jan 2026)
+Update productie server via webhook:
+
+**Features:**
+- [x] Update knop in superadmin dashboard
+- [x] Webhook URL configuratie
+- [x] HMAC-SHA256 signature voor veiligheid
+- [x] Opties: Backend herstarten, Frontend rebuilden, Migraties
+- [x] Deployment logs met status tracking
+- [x] VPS setup instructies
+
+### UI/UX Redesign ✅ (27 Jan 2026)
 Complete moderne redesign van de applicatie:
 
 **Features:**
@@ -28,12 +64,6 @@ Complete moderne redesign van de applicatie:
 - [x] Verbeterde tenant dashboard styling
 - [x] Pill-shaped buttons met shadows
 - [x] Custom fonts (Outfit, Plus Jakarta Sans)
-
-**Bestanden gewijzigd:**
-- `/app/frontend/tailwind.config.js` - Font families toegevoegd
-- `/app/frontend/src/pages/LandingPage.js` - Volledig gemoderniseerd
-- `/app/frontend/src/pages/Login.js` - Split layout met gradient overlay
-- `/app/frontend/src/pages/TenantDashboard.js` - Glassmorphism styling
 
 ### Huurders Portaal ✅ (27 Jan 2026)
 Complete self-service portaal voor huurders:
