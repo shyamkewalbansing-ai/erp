@@ -9553,9 +9553,18 @@ async def remove_workspace_user(user_id: str, current_user: dict = Depends(get_c
 # ==================== WORKSPACE BACKUPS ====================
 
 BACKUP_COLLECTIONS = [
+    # Vastgoed Beheer (Real Estate)
     "tenants", "apartments", "payments", "deposits", "loans",
-    "kasgeld", "maintenance", "employees", "salaries",
-    "meter_readings", "contracts", "invoices", "workspace_users", "workspace_logs"
+    "kasgeld", "maintenance", "meter_readings", "contracts", "invoices",
+    # HRM Module
+    "employees", "salaries", "hrm_employees", "hrm_departments", 
+    "hrm_attendance", "hrm_leave_requests", "hrm_payroll", "hrm_settings",
+    # Tenant Portal
+    "tenant_accounts",
+    # AI Chat History
+    "ai_chat_history",
+    # Workspace specifiek
+    "workspace_users", "workspace_logs", "user_addons"
 ]
 
 class BackupCreate(BaseModel):
