@@ -26,22 +26,46 @@ export const AuthProvider = ({ children }) => {
       const response = await axios.get(`${API_URL}/auth/me`);
       setUser(response.data);
       // Fetch workspace after user is loaded
-      await fetchWorkspace();
-    } catch (error) {
-      console.error('Error fetching user:', error);
-      logout();
+      try {
+        const wsResponse = await axios.get(`${API_URL}/workspace/current`);
+        setWorkspace(wsResponse.data.workspace);
+        setBranding(wsResponse.data.branding || DEFAULT_BRANDING);
+      } catch {
+        setBranding(DEFAULT_BRANDING);
+      }
+    } catch {
+      localStorage.removeItem('token');
+      delete axios.defaults.headers.common['Authorization'];
+      setToken(null);
+      setUser(null);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (token) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      fetchUser();
+    } else {
+      setLoading(false);
+    }
+  }, [token, fetchUser]);
+
+  // Apply branding CSS variables
+  useEffect(() => {
+    if (branding) {
+      document.documentElement.style.setProperty('--brand-primary', branding.primary_color || '#0caf60');
+      document.documentElement.style.setProperty('--brand-secondary', branding.secondary_color || '#059669');
+    }
+  }, [branding]);
 
   const fetchWorkspace = async () => {
     try {
       const response = await axios.get(`${API_URL}/workspace/current`);
       setWorkspace(response.data.workspace);
       setBranding(response.data.branding || DEFAULT_BRANDING);
-    } catch (error) {
-      console.error('Error fetching workspace:', error);
+    } catch {
       setBranding(DEFAULT_BRANDING);
     }
   };
@@ -52,8 +76,7 @@ export const AuthProvider = ({ children }) => {
       setUser(response.data);
       await fetchWorkspace();
       return response.data;
-    } catch (error) {
-      console.error('Error refreshing user:', error);
+    } catch {
       return null;
     }
   };
