@@ -28,7 +28,12 @@ import {
   deactivateUserAddon,
   getAddonRequests,
   approveAddonRequest,
-  rejectAddonRequest
+  rejectAddonRequest,
+  // Deployment
+  getDeploymentSettings,
+  updateDeploymentSettings,
+  triggerSystemUpdate,
+  getDeploymentLogs
 } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
