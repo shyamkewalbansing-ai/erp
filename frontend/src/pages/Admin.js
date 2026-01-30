@@ -2414,7 +2414,7 @@ echo "Deploy completed at $(date)"`}</pre>
           <DialogHeader>
             <DialogTitle className="text-red-600">Workspace Verwijderen</DialogTitle>
             <DialogDescription>
-              Weet u zeker dat u "{selectedWorkspace?.name}" wilt verwijderen? Dit verwijdert ook alle gebruikers en data van deze workspace.
+              Weet u zeker dat u &quot;{selectedWorkspace?.name}&quot; wilt verwijderen? Dit verwijdert ook alle gebruikers en data van deze workspace.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
