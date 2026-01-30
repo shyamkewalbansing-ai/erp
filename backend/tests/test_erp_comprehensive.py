@@ -6,7 +6,6 @@ import pytest
 import requests
 import os
 import uuid
-import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -203,7 +202,7 @@ class TestModuleOrdering:
                 headers={"Authorization": f"Bearer {token}"}
             )
             assert me_response.status_code == 200
-            print(f"✓ Auto-login successful")
+            print("✓ Auto-login successful")
         
         return data
     
@@ -291,7 +290,7 @@ class TestAIChatbot:
         if response.status_code == 200:
             data = response.json()
             assert "response" in data or "message" in data
-            print(f"✓ Chat response received")
+            print("✓ Chat response received")
         elif response.status_code == 401:
             print("⚠ Chat requires authentication")
         else:
@@ -313,8 +312,8 @@ class TestAIChatbot:
         )
         
         if response.status_code == 200:
-            data = response.json()
-            print(f"✓ Authenticated chat response received")
+            response.json()
+            print("✓ Authenticated chat response received")
         else:
             print(f"⚠ Chat status: {response.status_code}")
 

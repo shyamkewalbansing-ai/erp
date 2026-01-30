@@ -109,7 +109,7 @@ class TestFeature6Outstanding:
         assert response.status_code == 200
         
         data = response.json()
-        assert data["has_outstanding"] == False
+        assert not data["has_outstanding"]
         assert data["outstanding_amount"] == 0
         assert data["outstanding_months"] == []
         assert data["suggestion"] is None
@@ -145,7 +145,7 @@ class TestFeature6Outstanding:
         
         data = response.json()
         # Should have at least current month as outstanding
-        assert data["has_outstanding"] == True
+        assert data["has_outstanding"]
         assert data["outstanding_amount"] > 0
         assert len(data["outstanding_months"]) >= 1
         assert data["rent_amount"] == 1500.00

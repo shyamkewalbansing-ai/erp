@@ -210,7 +210,7 @@ class TestNotificationsAPI:
                 # These should have related_name at minimum
                 assert "related_name" in notification, f"Notification type {notification['type']} missing related_name"
         
-        print(f"✓ Notifications have related info where applicable")
+        print("✓ Notifications have related info where applicable")
 
 
 class TestNotificationsIntegration:

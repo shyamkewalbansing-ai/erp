@@ -262,7 +262,7 @@ class TestMaintenanceTenantCosts:
         assert response.status_code == 200
         
         data = response.json()
-        assert data["has_outstanding"] == True, "Should have outstanding balance"
+        assert data["has_outstanding"], "Should have outstanding balance"
         assert data["total_maintenance"] == 500.0, f"Expected maintenance 500.0, got {data['total_maintenance']}"
         assert "maintenance_costs" in data, "maintenance_costs field missing"
         assert len(data["maintenance_costs"]) > 0, "maintenance_costs is empty"

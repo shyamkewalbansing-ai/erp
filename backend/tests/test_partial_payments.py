@@ -9,7 +9,7 @@ import pytest
 import requests
 import os
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://modular-erp-22.preview.emergentagent.com')
 
@@ -227,7 +227,7 @@ class TestPartialPaymentsFeature:
         # Create tenant with apartment created in previous month
         tenant_id, apt_id = self._create_test_tenant_and_apartment(rent_amount=1500.0)
         
-        now = datetime.now()
+        datetime.now()
         
         # We need to check if there are multiple months of invoices
         # The apartment was just created, so it will only have current month

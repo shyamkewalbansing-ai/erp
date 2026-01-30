@@ -70,7 +70,7 @@ class TestPublicOrdersEndpoint:
         assert data["order"]["status"] == "pending"
         assert addon_id in data["order"]["addon_ids"]
         
-        print(f"✓ Order created successfully with token for auto-login")
+        print("✓ Order created successfully with token for auto-login")
         return data
     
     def test_create_order_duplicate_email(self, unique_email):
@@ -100,7 +100,7 @@ class TestPublicOrdersEndpoint:
         assert response2.status_code == 400
         assert "al geregistreerd" in response2.json().get("detail", "").lower()
         
-        print(f"✓ Duplicate email correctly rejected")
+        print("✓ Duplicate email correctly rejected")
     
     def test_create_order_no_addons(self, unique_email):
         """Test that order without addons is rejected"""
@@ -116,7 +116,7 @@ class TestPublicOrdersEndpoint:
         assert response.status_code == 400
         assert "minimaal één module" in response.json().get("detail", "").lower()
         
-        print(f"✓ Order without addons correctly rejected")
+        print("✓ Order without addons correctly rejected")
     
     def test_create_order_short_password(self, unique_email):
         """Test that short password is rejected"""
@@ -138,7 +138,7 @@ class TestPublicOrdersEndpoint:
         assert response.status_code == 400
         assert "6 tekens" in response.json().get("detail", "")
         
-        print(f"✓ Short password correctly rejected")
+        print("✓ Short password correctly rejected")
 
 
 class TestMyAddonRequestsEndpoint:
@@ -194,7 +194,7 @@ class TestMyAddonRequestsEndpoint:
         response = requests.get(f"{BASE_URL}/api/my-addon-requests")
         assert response.status_code in [401, 403]
         
-        print(f"✓ Unauthorized access correctly rejected")
+        print("✓ Unauthorized access correctly rejected")
 
 
 class TestMyActiveAddonsEndpoint:
@@ -242,7 +242,7 @@ class TestMyActiveAddonsEndpoint:
         response = requests.get(f"{BASE_URL}/api/my-active-addons")
         assert response.status_code in [401, 403]
         
-        print(f"✓ Unauthorized access correctly rejected")
+        print("✓ Unauthorized access correctly rejected")
 
 
 class TestAdminAddonRequestsEndpoint:
@@ -306,7 +306,7 @@ class TestAdminAddonRequestsEndpoint:
         response = requests.get(f"{BASE_URL}/api/admin/addon-requests", headers=headers)
         assert response.status_code == 403, "Non-admin should not access admin endpoint"
         
-        print(f"✓ Non-admin access correctly rejected")
+        print("✓ Non-admin access correctly rejected")
 
 
 class TestApproveRejectAddonRequests:
@@ -386,7 +386,7 @@ class TestApproveRejectAddonRequests:
         assert active_addon is not None, "The approved addon should be in active addons"
         assert active_addon["status"] == "active"
         
-        print(f"✓ Addon request approved successfully")
+        print("✓ Addon request approved successfully")
     
     def test_reject_addon_request(self, superadmin_token):
         """Test rejecting an addon request"""
@@ -435,7 +435,7 @@ class TestApproveRejectAddonRequests:
         assert rejected_request is not None
         assert rejected_request["status"] == "rejected"
         
-        print(f"✓ Addon request rejected successfully")
+        print("✓ Addon request rejected successfully")
     
     def test_approve_nonexistent_request(self, superadmin_token):
         """Test approving a non-existent request"""
@@ -448,7 +448,7 @@ class TestApproveRejectAddonRequests:
         )
         assert response.status_code == 404
         
-        print(f"✓ Non-existent request correctly returns 404")
+        print("✓ Non-existent request correctly returns 404")
 
 
 class TestAutoLoginFlow:
@@ -495,7 +495,7 @@ class TestAutoLoginFlow:
         active_res = requests.get(f"{BASE_URL}/api/my-active-addons", headers=headers)
         assert active_res.status_code == 200
         
-        print(f"✓ Auto-login token can access all protected endpoints")
+        print("✓ Auto-login token can access all protected endpoints")
 
 
 class TestPublicAddonsEndpoint:
@@ -516,7 +516,7 @@ class TestPublicAddonsEndpoint:
             assert "name" in addon
             assert "price" in addon
             assert "is_active" in addon
-            assert addon["is_active"] == True  # Only active addons should be returned
+            assert addon["is_active"]  # Only active addons should be returned
         
         print(f"✓ Public addons returned {len(addons)} addon(s)")
 

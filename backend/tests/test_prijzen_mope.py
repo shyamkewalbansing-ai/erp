@@ -216,7 +216,7 @@ class TestMopeSettingsAdmin:
             f"{BASE_URL}/api/admin/mope/settings",
             headers={"Authorization": f"Bearer {superadmin_token}"}
         )
-        original_settings = get_response.json()
+        get_response.json()
         
         # Update settings
         new_settings = {
@@ -240,7 +240,7 @@ class TestMopeSettingsAdmin:
             headers={"Authorization": f"Bearer {superadmin_token}"}
         )
         updated = verify_response.json()
-        assert updated.get("is_enabled") == True, "is_enabled should be True"
+        assert updated.get("is_enabled"), "is_enabled should be True"
         assert updated.get("test_token") == "test_mope_token_12345", "test_token should be updated"
         
         print("SUCCESS: PUT /api/admin/mope/settings updates settings correctly")
@@ -332,7 +332,7 @@ class TestCustomerLogin:
         assert "access_token" in data, "Should have access_token"
         assert data["user"]["email"] == unique_email.lower(), "Email should match"
         
-        print(f"SUCCESS: Customer can login after order creation")
+        print("SUCCESS: Customer can login after order creation")
         print(f"  - Email: {data['user']['email']}")
         print(f"  - Role: {data['user']['role']}")
 

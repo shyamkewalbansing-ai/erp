@@ -142,7 +142,7 @@ class TestOutstandingWarningFeature:
         response = self.session.get(f"{BASE_URL}/api/tenants/{tenant['id']}/outstanding")
         data = response.json()
         
-        assert data["has_outstanding"] == True, "Warning should show for unpaid month"
+        assert data["has_outstanding"], "Warning should show for unpaid month"
         print("✓ Feature 1: Warning shows for unpaid month")
     
     def test_warning_shows_for_partially_paid_month(self):
@@ -160,7 +160,7 @@ class TestOutstandingWarningFeature:
         response = self.session.get(f"{BASE_URL}/api/tenants/{tenant['id']}/outstanding")
         data = response.json()
         
-        assert data["has_outstanding"] == True, "Warning should STILL show for partially paid month"
+        assert data["has_outstanding"], "Warning should STILL show for partially paid month"
         assert data["outstanding_amount"] == 1000.0, "Outstanding should be 1000 (1500-500)"
         print("✓ Feature 1: Warning stays visible for partially paid month")
     
@@ -290,7 +290,7 @@ class TestOutstandingWarningFeature:
         
         assert month_entry is not None, "Current month should be in outstanding_months"
         assert month_entry["status"] == "partial", f"Status should be 'partial', got {month_entry['status']}"
-        print(f"✓ Feature 4: Outstanding month has status='partial'")
+        print("✓ Feature 4: Outstanding month has status='partial'")
     
     def test_outstanding_month_has_remaining_amount(self):
         """Feature 4: Outstanding month has remaining amount for ⚡ display"""
@@ -337,7 +337,7 @@ class TestOutstandingWarningFeature:
         
         assert month_entry is not None, "Current month should be in outstanding"
         assert month_entry["status"] == "unpaid", f"Status should be 'unpaid', got {month_entry['status']}"
-        print(f"✓ Feature 5: Unpaid month has status='unpaid'")
+        print("✓ Feature 5: Unpaid month has status='unpaid'")
     
     def test_status_distinguishes_partial_from_unpaid(self):
         """Feature 5: Status correctly distinguishes partial from unpaid"""
@@ -369,7 +369,7 @@ class TestOutstandingWarningFeature:
             None
         )
         assert month_entry["status"] == "partial", "Should be 'partial' after partial payment"
-        print(f"✓ Feature 5: Status correctly changes from 'unpaid' to 'partial'")
+        print("✓ Feature 5: Status correctly changes from 'unpaid' to 'partial'")
     
     # ==================== FEATURE 6: Summary counts ====================
     
@@ -529,7 +529,7 @@ class TestOutstandingWarningScenario:
         data = outstanding_response.json()
         
         # Verify has_outstanding is True
-        assert data["has_outstanding"] == True, "Should have outstanding balance"
+        assert data["has_outstanding"], "Should have outstanding balance"
         
         # Verify total outstanding is 1000 (1500 - 500)
         assert data["outstanding_amount"] == 1000.0, f"Outstanding should be 1000, got {data['outstanding_amount']}"
@@ -556,9 +556,9 @@ class TestOutstandingWarningScenario:
         expected_label = f"{months_nl[current_month]} {current_year}"
         assert current_partial["label"] == expected_label, f"Label should be '{expected_label}', got '{current_partial['label']}'"
         
-        print(f"✓ Scenario test passed:")
-        print(f"  - Rent: 1500 SRD")
-        print(f"  - Partial payment: 500 SRD")
+        print("✓ Scenario test passed:")
+        print("  - Rent: 1500 SRD")
+        print("  - Partial payment: 500 SRD")
         print(f"  - Outstanding: {data['outstanding_amount']} SRD")
         print(f"  - partial_count: {data['partial_count']}")
         print(f"  - Partial details: {current_partial['label']}: {current_partial['amount_paid']} betaald, {current_partial['remaining']} nog open")

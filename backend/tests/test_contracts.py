@@ -191,7 +191,7 @@ class TestContractSigningPublicEndpoint:
             landlord = data["landlord"]
             assert "name" in landlord
             
-            print(f"✓ Contract for signing retrieved successfully")
+            print("✓ Contract for signing retrieved successfully")
             print(f"  - Tenant: {tenant['name']}")
             print(f"  - Apartment: {apartment['name']}")
             print(f"  - Rent: {contract['rent_amount']}")

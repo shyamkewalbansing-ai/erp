@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, status, UploadFile, File, Request
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import StreamingResponse, Response
 from dotenv import load_dotenv
@@ -7,7 +7,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
+from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from enum import Enum
 import uuid
@@ -19,9 +19,9 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable
-from reportlab.lib.units import cm, mm
-from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
-from reportlab.lib.colors import HexColor, white as WHITE
+from reportlab.lib.units import cm
+from reportlab.lib.enums import TA_RIGHT, TA_CENTER
+from reportlab.lib.colors import HexColor
 import httpx
 import base64
 import smtplib
@@ -29,7 +29,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PIL import Image as PILImage
 import json
-import asyncio
 
 # AI Chat imports
 from emergentintegrations.llm.chat import LlmChat, UserMessage
@@ -64,7 +63,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # ==================== GLOBAL EXCEPTION HANDLER ====================
-from fastapi import Request
 from fastapi.responses import JSONResponse
 
 @app.exception_handler(Exception)
@@ -2580,7 +2578,6 @@ def create_deposit_refund_pdf(deposit, tenant, apt, user):
     company_name = user.get("company_name") if user and user.get("company_name") else "Facturatie N.V."
     
     # === HEADER SECTION ===
-    header_data = []
     
     # Left side: Logo or Company name
     left_content = []
@@ -2688,8 +2685,8 @@ def create_deposit_refund_pdf(deposit, tenant, apt, user):
     table_header = ['OMSCHRIJVING', 'DATUM', 'BEDRAG']
     table_data = [
         table_header,
-        [f'Oorspronkelijke borg gestort', deposit_date, format_currency(original_amount)],
-        [f'Terugbetaald bedrag', return_date, format_currency(return_amount)],
+        ['Oorspronkelijke borg gestort', deposit_date, format_currency(original_amount)],
+        ['Terugbetaald bedrag', return_date, format_currency(return_amount)],
     ]
     
     items_table = Table(table_data, colWidths=[9*cm, 4*cm, 4*cm])
@@ -2822,8 +2819,8 @@ def create_modern_receipt_pdf(payment, tenant, apt, user, payment_id):
     from reportlab.lib import colors
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
-    from reportlab.lib.units import cm, mm
-    from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+    from reportlab.lib.units import cm
+    from reportlab.lib.enums import TA_RIGHT, TA_CENTER
     from reportlab.platypus import HRFlowable
     
     buffer = BytesIO()
@@ -2901,7 +2898,7 @@ def create_modern_receipt_pdf(payment, tenant, apt, user, payment_id):
         fontName='Helvetica-Bold'
     )
     
-    total_style = ParagraphStyle(
+    ParagraphStyle(
         'TotalStyle',
         parent=styles['Normal'],
         fontSize=16,
@@ -2917,7 +2914,6 @@ def create_modern_receipt_pdf(payment, tenant, apt, user, payment_id):
     
     # === HEADER SECTION ===
     # Create header table with logo/company on left and KWITANTIE on right
-    header_data = []
     
     # Left side: Logo or Company name
     left_content = []
@@ -3165,7 +3161,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     
     # Get this month's income - based on payment_date in current month
     now = datetime.now(timezone.utc)
-    first_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%d")
+    now.replace(day=1, hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%d")
     
     # Get all payments and filter by payment_date in current month
     all_payments_cursor = await db.payments.find({
@@ -3200,7 +3196,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     
     # Calculate outstanding loans
     loans = await db.loans.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
-    loan_ids = [l.get("id") for l in loans if l.get("id")]
+    [l.get("id") for l in loans if l.get("id")]
     
     # Get loan payments
     loan_payments = await db.payments.find(
@@ -4961,7 +4957,7 @@ async def delete_meter_reading(
             "user_id": current_user["id"]
         })
     
-    result = await db.meter_readings.delete_one(
+    await db.meter_readings.delete_one(
         {"id": reading_id, "user_id": current_user["id"]}
     )
     
@@ -5361,7 +5357,6 @@ def create_payslip_pdf(salary, employee, user):
     company_name = user.get("company_name") if user and user.get("company_name") else "Facturatie N.V."
     
     # === HEADER SECTION ===
-    header_data = []
     
     # Left side: Logo or Company name
     left_content = []
@@ -6072,7 +6067,7 @@ async def get_contract_pdf(contract_id: str, current_user: dict = Depends(get_cu
     PRIMARY_GREEN = HexColor("#0caf60")
     DARK_TEXT = HexColor("#1a1a1a")
     GRAY_TEXT = HexColor("#666666")
-    LIGHT_GRAY = HexColor("#f5f5f5")
+    HexColor("#f5f5f5")
     
     # Custom styles
     title_style = ParagraphStyle(
@@ -6260,8 +6255,8 @@ async def get_contract_pdf(contract_id: str, current_user: dict = Depends(get_cu
             sig_image = Image(img_buffer, width=6*cm, height=2*cm)
             elements.append(sig_image)
             elements.append(Paragraph(f"Ondertekend op: {contract['signed_at'][:10]}", small_text))
-        except Exception as e:
-            elements.append(Paragraph(f"[Handtekening beschikbaar]", small_text))
+        except Exception:
+            elements.append(Paragraph("[Handtekening beschikbaar]", small_text))
     
     # Build PDF
     doc.build(elements)
@@ -6966,7 +6961,7 @@ async def create_payment_for_order(order_id: str, redirect_url: str = ""):
         raise HTTPException(status_code=400, detail="Mope betalingen zijn niet geconfigureerd. Neem contact op met de beheerder.")
     
     # Get landing settings for redirect URL
-    landing_settings = await db.landing_settings.find_one({}, {"_id": 0})
+    await db.landing_settings.find_one({}, {"_id": 0})
     base_url = redirect_url or "/"
     
     # Create payment request to Mope
@@ -8121,7 +8116,7 @@ async def generate_subscription_receipt_pdf(subscription_id: str, current_user: 
     table_header = ['NR', 'OMSCHRIJVING', 'PERIODE', 'METHODE', 'BEDRAG']
     table_data = [
         table_header,
-        ['1', f"Abonnement Facturatie N.V.", f"{subscription.get('months', 1)} maand(en)", payment_method, format_currency(subscription["amount"])]
+        ['1', "Abonnement Facturatie N.V.", f"{subscription.get('months', 1)} maand(en)", payment_method, format_currency(subscription["amount"])]
     ]
     
     items_table = Table(table_data, colWidths=[1.5*cm, 6*cm, 3*cm, 3.5*cm, 3*cm])
@@ -8743,7 +8738,7 @@ async def check_expired_subscriptions():
 async def send_subscription_reminders():
     """Send reminders for subscriptions expiring in 3 days"""
     now = datetime.now(timezone.utc)
-    reminder_date = now + timedelta(days=3)
+    now + timedelta(days=3)
     reminders_sent = 0
     
     customers = await db.users.find({
@@ -9149,7 +9144,7 @@ async def update_workspace(workspace_id: str, workspace_data: WorkspaceUpdate, c
     
     # Handle domain changes
     if workspace_data.domain_type:
-        current_domain = workspace.get("domain", {})
+        workspace.get("domain", {})
         
         if workspace_data.domain_type == "subdomain":
             subdomain = workspace_data.subdomain or workspace["slug"]
@@ -9736,7 +9731,7 @@ async def restore_workspace_backup(backup_id: str, current_user: dict = Depends(
     for coll_name in BACKUP_COLLECTIONS:
         safety_content["collections"][coll_name] = await db[coll_name].find({"workspace_id": workspace_id}, {"_id": 0}).to_list(10000)
     await db.workspace_backup_data.insert_one({"backup_id": safety_id, "workspace_id": workspace_id, "content": safety_content, "created_at": now})
-    await db.workspace_backups.insert_one({"id": safety_id, "workspace_id": workspace_id, "name": f"Auto-backup voor herstel", "size_bytes": 0, "collections_count": len(BACKUP_COLLECTIONS), "records_count": 0, "created_at": now, "created_by": "system", "status": "completed"})
+    await db.workspace_backups.insert_one({"id": safety_id, "workspace_id": workspace_id, "name": "Auto-backup voor herstel", "size_bytes": 0, "collections_count": len(BACKUP_COLLECTIONS), "records_count": 0, "created_at": now, "created_by": "system", "status": "completed"})
     
     # Restore
     restored_count = 0
@@ -11147,10 +11142,6 @@ async def ai_get_dashboard_stats(user_id: str):
     monthly_income = payments_result[0]["total"] if payments_result else 0
     
     # Outstanding balance
-    outstanding_pipeline = [
-        {"$match": {"user_id": user_id, "balance": {"$gt": 0}}},
-        {"$group": {"_id": None, "total": {"$sum": "$balance"}}}
-    ]
     # This is simplified - actual implementation would calculate from payments
     
     return {
@@ -12120,8 +12111,8 @@ async def employee_portal_me(account: dict = Depends(get_employee_account)):
 async def employee_portal_dashboard(account: dict = Depends(get_employee_account)):
     """Get employee dashboard with all relevant information"""
     employee_id = account["employee_id"]
-    employer_id = account.get("employer_user_id")
-    workspace_id = account.get("workspace_id")
+    account.get("employer_user_id")
+    account.get("workspace_id")
     
     # Get employee info from hrm_employees
     employee = await db.hrm_employees.find_one({"id": employee_id}, {"_id": 0})

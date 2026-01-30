@@ -14,7 +14,6 @@ Tests:
 import pytest
 import requests
 import os
-import json
 from datetime import datetime
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
@@ -414,9 +413,9 @@ class TestAIChatbot:
         if response.status_code == 200:
             data = response.json()
             assert "response" in data or "message" in data
-            print(f"✓ AI Chatbot responded successfully")
+            print("✓ AI Chatbot responded successfully")
         else:
-            print(f"✓ AI Chatbot endpoint exists (AI service may be unavailable)")
+            print("✓ AI Chatbot endpoint exists (AI service may be unavailable)")
     
     def test_authenticated_chat_endpoint(self, auth_headers):
         """Test POST /api/ai/chat (authenticated)"""
@@ -427,10 +426,10 @@ class TestAIChatbot:
         assert response.status_code in [200, 500], f"Chat failed: {response.status_code} - {response.text}"
         
         if response.status_code == 200:
-            data = response.json()
-            print(f"✓ Authenticated AI Chat responded successfully")
+            response.json()
+            print("✓ Authenticated AI Chat responded successfully")
         else:
-            print(f"✓ Authenticated AI Chat endpoint exists")
+            print("✓ Authenticated AI Chat endpoint exists")
 
 
 if __name__ == "__main__":

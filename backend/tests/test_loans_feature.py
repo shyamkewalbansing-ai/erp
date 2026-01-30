@@ -270,7 +270,7 @@ class TestLoansFeature:
         assert loan["status"] == "partial", f"Expected status 'partial', got: {loan['status']}"
         assert loan["amount_paid"] == 200.00, f"Expected amount_paid=200, got: {loan['amount_paid']}"
         assert loan["remaining"] == 300.00, f"Expected remaining=300, got: {loan['remaining']}"
-        print(f"✓ Loan status changed to 'partial' after partial payment")
+        print("✓ Loan status changed to 'partial' after partial payment")
     
     def test_loan_status_partial_to_paid(self):
         """Test loan status changes from 'partial' to 'paid' after full payment"""
@@ -328,7 +328,7 @@ class TestLoansFeature:
         assert loan["status"] == "paid", f"Expected status 'paid', got: {loan['status']}"
         assert loan["amount_paid"] == 400.00, f"Expected amount_paid=400, got: {loan['amount_paid']}"
         assert loan["remaining"] == 0, f"Expected remaining=0, got: {loan['remaining']}"
-        print(f"✓ Loan status changed to 'paid' after full payment")
+        print("✓ Loan status changed to 'paid' after full payment")
     
     # ==================== Tenant Loans in Payments ====================
     def test_tenant_loans_for_payment_dropdown(self):
@@ -342,7 +342,7 @@ class TestLoansFeature:
         tenant_id = tenant_resp.json()["id"]
         
         # Create open loan
-        loan1_resp = self.session.post(f"{BASE_URL}/api/loans", json={
+        self.session.post(f"{BASE_URL}/api/loans", json={
             "tenant_id": tenant_id,
             "amount": 600.00,
             "description": "TEST_Open_Loan",
@@ -489,7 +489,7 @@ class TestLeningenSummaryCards:
         
         # Create loans with different statuses
         # Loan 1: Open (no payments)
-        loan1_resp = self.session.post(f"{BASE_URL}/api/loans", json={
+        self.session.post(f"{BASE_URL}/api/loans", json={
             "tenant_id": tenant_id,
             "amount": 500.00,
             "description": "TEST_Summary_Open",
@@ -537,7 +537,7 @@ class TestLeningenSummaryCards:
         assert open_count == 1, f"Expected 1 open loan, got: {open_count}"
         assert partial_count == 1, f"Expected 1 partial loan, got: {partial_count}"
         
-        print(f"✓ Summary cards data verified:")
+        print("✓ Summary cards data verified:")
         print(f"  - Total: {total_amount}")
         print(f"  - Paid: {total_paid}")
         print(f"  - Remaining: {total_remaining}")

@@ -12,7 +12,6 @@ import pytest
 import requests
 import os
 import uuid
-from datetime import datetime
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 
@@ -219,7 +218,7 @@ class TestFeature2MaintenanceCostType(TestSetup):
         # Check kasgeld after kasgeld-type maintenance
         after_kasgeld_maint = api_client.get(f"{BASE_URL}/api/kasgeld").json()
         assert after_kasgeld_maint["total_maintenance_costs"] == initial_maintenance_costs + 200.00, \
-            f"Kasgeld maintenance should be added to total_maintenance_costs"
+            "Kasgeld maintenance should be added to total_maintenance_costs"
         
         # Create maintenance with cost_type='tenant' (should NOT be deducted)
         maint_tenant = api_client.post(f"{BASE_URL}/api/maintenance", json={

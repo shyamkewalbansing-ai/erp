@@ -1,14 +1,13 @@
 # Shared dependencies for all routers
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic import BaseModel, Field, EmailStr
-from typing import List, Optional
+from pydantic import BaseModel, EmailStr
+from typing import Optional
 from datetime import datetime, timezone, timedelta
 import os
 import jwt
 import bcrypt
-import uuid
 import logging
 from pathlib import Path
 from dotenv import load_dotenv

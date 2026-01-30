@@ -7,7 +7,6 @@ Tests: GET /api/workspace/backups, POST /api/workspace/backups,
 import pytest
 import requests
 import os
-import json
 import time
 
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')

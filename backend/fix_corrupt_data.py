@@ -206,7 +206,7 @@ async def fix_data():
         if not payment.get("id"):
             import uuid
             updates["id"] = str(uuid.uuid4())
-            print(f"  - Payment (no id): Adding missing id")
+            print("  - Payment (no id): Adding missing id")
         
         # Fix missing created_at
         if not payment.get("created_at"):
@@ -218,7 +218,7 @@ async def fix_data():
             await db.payments.update_one({"_id": payment["_id"]}, {"$set": updates})
             fixed_count += 1
     
-    print(f"\n=== Summary ===")
+    print("\n=== Summary ===")
     print(f"Total records fixed: {fixed_count}")
     print("\nData repair complete!")
     print("Please restart the backend service: sudo systemctl restart facturatie.service")

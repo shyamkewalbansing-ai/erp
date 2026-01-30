@@ -4,11 +4,9 @@ Complete module for managing an auto dealership in Suriname with multi-currency 
 """
 
 from fastapi import APIRouter, Depends, HTTPException
-from starlette import status as http_status
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
-from bson import ObjectId
 import uuid
 
 # Import shared dependencies
@@ -621,7 +619,7 @@ async def delete_sale(sale_id: str, current_user: dict = Depends(get_current_use
         {"$set": {"status": "in_stock", "sold_date": None, "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     
-    result = await db.autodealer_sales.delete_one(query)
+    await db.autodealer_sales.delete_one(query)
     
     return {"message": "Verkoop verwijderd en voertuig terug op voorraad"}
 

@@ -1,7 +1,6 @@
 # Auth Router - Authentication endpoints
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, EmailStr
-from typing import Optional
 from datetime import datetime, timezone, timedelta
 import uuid
 import os
@@ -10,8 +9,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 from deps import (
-    db, logger, security, 
-    hash_password, verify_password, create_token, get_current_user,
+    db, logger, hash_password, verify_password, create_token, get_current_user,
     get_subscription_status, TRIAL_DAYS, SUPER_ADMIN_EMAIL,
     UserCreate, UserLogin, UserResponse, TokenResponse,
     SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD
