@@ -7416,6 +7416,22 @@ async def seed_default_addons():
         }
         await db.addons.insert_one(hrm_doc)
         logger.info("Default 'HRM' add-on created")
+    
+    # Auto Dealer Module
+    existing_autodealer = await db.addons.find_one({"slug": "autodealer"}, {"_id": 0})
+    if not existing_autodealer:
+        autodealer_doc = {
+            "id": str(uuid.uuid4()),
+            "name": "Auto Dealer",
+            "slug": "autodealer",
+            "description": "Complete autohandelmodule voor Suriname. Voertuigenbeheer, klanten, verkoop en multi-valuta ondersteuning (SRD, EUR, USD).",
+            "price": 2500.0,
+            "is_active": True,
+            "category": "handel",
+            "created_at": now
+        }
+        await db.addons.insert_one(autodealer_doc)
+        logger.info("Default 'Auto Dealer' add-on created")
 
 async def seed_default_cms_pages():
     """Seed default CMS pages if they don't exist"""
