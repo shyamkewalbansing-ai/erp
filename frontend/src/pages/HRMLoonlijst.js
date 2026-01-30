@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -32,9 +32,7 @@ export default function HRMLoonlijst() {
     overtime_hours: 0, overtime_rate: 1.5, bonuses: 0, deductions: 0, tax_amount: 0
   });
 
-  useEffect(() => { loadData(); }, [selectedPeriod]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [payrollRes, employeesRes] = await Promise.all([
         api.get(`/hrm/payroll?period=${selectedPeriod}`),
@@ -47,7 +45,9 @@ export default function HRMLoonlijst() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedPeriod]);
+
+  useEffect(() => { loadData(); }, [loadData]);
 
   const handleSubmit = async () => {
     if (!formData.employee_id || !formData.basic_salary) {
@@ -74,7 +74,7 @@ export default function HRMLoonlijst() {
       }
       setShowModal(false);
       resetForm();
-      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
+      loadData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij opslaan');
     } finally {
@@ -86,7 +86,7 @@ export default function HRMLoonlijst() {
     try {
       const res = await api.post(`/hrm/payroll/generate?period=${selectedPeriod}`);
       toast.success(res.data.message);
-      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
+      loadData();
     } catch (error) {
       toast.error('Fout bij genereren');
     }
@@ -96,7 +96,7 @@ export default function HRMLoonlijst() {
     try {
       await api.put(`/hrm/payroll/${id}/${action}`);
       toast.success(action === 'approve' ? 'Loonstrook goedgekeurd' : 'Loonstrook uitbetaald');
-      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
+      loadData();
     } catch (error) {
       toast.error('Fout bij actie');
     }
