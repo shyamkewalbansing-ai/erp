@@ -1548,7 +1548,7 @@ server {
                             </span>
                           </div>
                           {request.notes && (
-                            <p className="text-sm text-muted-foreground mt-1">"{request.notes}"</p>
+                            <p className="text-sm text-muted-foreground mt-1">&quot;{request.notes}&quot;</p>
                           )}
                         </div>
                         <div className="flex gap-2">
