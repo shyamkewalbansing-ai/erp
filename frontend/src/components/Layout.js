@@ -532,7 +532,7 @@ export default function Layout() {
         </header>
 
         {/* Page content */}
-        <div className="p-6 lg:p-8">
+        <div className="page-content p-6 lg:p-8">
           <Outlet />
         </div>
       </main>
