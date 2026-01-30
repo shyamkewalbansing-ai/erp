@@ -5,10 +5,21 @@ const AuthContext = createContext(null);
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
+// Default branding
+const DEFAULT_BRANDING = {
+  logo_url: null,
+  favicon_url: null,
+  primary_color: '#0caf60',
+  secondary_color: '#059669',
+  portal_name: 'Facturatie'
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
+  const [workspace, setWorkspace] = useState(null);
+  const [branding, setBranding] = useState(DEFAULT_BRANDING);
 
   useEffect(() => {
     if (token) {
@@ -19,10 +30,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token]);
 
+  // Apply branding CSS variables
+  useEffect(() => {
+    if (branding) {
+      document.documentElement.style.setProperty('--brand-primary', branding.primary_color || '#0caf60');
+      document.documentElement.style.setProperty('--brand-secondary', branding.secondary_color || '#059669');
+    }
+  }, [branding]);
+
   const fetchUser = async () => {
     try {
       const response = await axios.get(`${API_URL}/auth/me`);
       setUser(response.data);
+      // Fetch workspace after user is loaded
+      await fetchWorkspace();
     } catch (error) {
       console.error('Error fetching user:', error);
       logout();
@@ -31,10 +52,22 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const fetchWorkspace = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/workspace/current`);
+      setWorkspace(response.data.workspace);
+      setBranding(response.data.branding || DEFAULT_BRANDING);
+    } catch (error) {
+      console.error('Error fetching workspace:', error);
+      setBranding(DEFAULT_BRANDING);
+    }
+  };
+
   const refreshUser = async () => {
     try {
       const response = await axios.get(`${API_URL}/auth/me`);
       setUser(response.data);
+      await fetchWorkspace();
       return response.data;
     } catch (error) {
       console.error('Error refreshing user:', error);
@@ -50,6 +83,9 @@ export const AuthProvider = ({ children }) => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
     setToken(access_token);
     setUser(userData);
+    
+    // Fetch workspace branding after login
+    setTimeout(fetchWorkspace, 100);
     
     return userData;
   };
@@ -68,6 +104,9 @@ export const AuthProvider = ({ children }) => {
     setToken(access_token);
     setUser(userData);
     
+    // Fetch workspace branding after register
+    setTimeout(fetchWorkspace, 100);
+    
     return userData;
   };
 
@@ -76,6 +115,19 @@ export const AuthProvider = ({ children }) => {
     delete axios.defaults.headers.common['Authorization'];
     setToken(null);
     setUser(null);
+    setWorkspace(null);
+    setBranding(DEFAULT_BRANDING);
+  };
+
+  const updateBranding = async (newBranding) => {
+    try {
+      await axios.put(`${API_URL}/workspace/branding`, newBranding);
+      setBranding(prev => ({ ...prev, ...newBranding }));
+      return true;
+    } catch (error) {
+      console.error('Error updating branding:', error);
+      return false;
+    }
   };
 
   // Check if user has active subscription
@@ -100,7 +152,11 @@ export const AuthProvider = ({ children }) => {
       token,
       refreshUser,
       hasActiveSubscription,
-      isSuperAdmin
+      isSuperAdmin,
+      workspace,
+      branding,
+      updateBranding,
+      fetchWorkspace
     }}>
       {children}
     </AuthContext.Provider>
