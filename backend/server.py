@@ -3196,7 +3196,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     
     # Calculate outstanding loans
     loans = await db.loans.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
-    [loan.get("id") for l in loans if loan.get("id")]
+    loan_ids = [loan.get("id") for loan in loans if loan.get("id")]
     
     # Get loan payments
     loan_payments = await db.payments.find(
@@ -3214,7 +3214,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     for loan in loans:
         try:
             loan_id = loan.get("id")
-            loan_amount = l.get("amount") or 0
+            loan_amount = loan.get("amount") or 0
             if loan_id:
                 paid = loan_payments_by_id.get(loan_id, 0)
                 total_outstanding_loans += max(0, loan_amount - paid)
