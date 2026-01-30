@@ -474,7 +474,7 @@ export default function Abonnement() {
           <DialogHeader>
             <DialogTitle>Add-on Activeren Aanvragen</DialogTitle>
             <DialogDescription>
-              Vraag activatie aan voor "{selectedAddon?.name}"
+              Vraag activatie aan voor &quot;{selectedAddon?.name}&quot;
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
