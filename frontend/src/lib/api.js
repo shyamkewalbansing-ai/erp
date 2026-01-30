@@ -301,4 +301,30 @@ export const restoreWorkspaceBackup = (backupId, confirm = false) => api.post(`/
 export const deleteWorkspaceBackup = (backupId) => api.delete(`/workspace/backups/${backupId}`);
 export const downloadWorkspaceBackup = (backupId) => api.get(`/workspace/backups/${backupId}/download`);
 
+// ==================== AUTO DEALER MODULE ====================
+
+// Auto Dealer Stats
+export const getAutoDealerStats = () => api.get('/autodealer/stats');
+
+// Auto Dealer Vehicles
+export const getAutoDealerVehicles = (params) => api.get('/autodealer/vehicles', { params });
+export const getAutoDealerVehicle = (id) => api.get(`/autodealer/vehicles/${id}`);
+export const createAutoDealerVehicle = (data) => api.post('/autodealer/vehicles', data);
+export const updateAutoDealerVehicle = (id, data) => api.put(`/autodealer/vehicles/${id}`, data);
+export const deleteAutoDealerVehicle = (id) => api.delete(`/autodealer/vehicles/${id}`);
+
+// Auto Dealer Customers
+export const getAutoDealerCustomers = (params) => api.get('/autodealer/customers', { params });
+export const getAutoDealerCustomer = (id) => api.get(`/autodealer/customers/${id}`);
+export const createAutoDealerCustomer = (data) => api.post('/autodealer/customers', data);
+export const updateAutoDealerCustomer = (id, data) => api.put(`/autodealer/customers/${id}`, data);
+export const deleteAutoDealerCustomer = (id) => api.delete(`/autodealer/customers/${id}`);
+
+// Auto Dealer Sales
+export const getAutoDealerSales = (params) => api.get('/autodealer/sales', { params });
+export const getAutoDealerSale = (id) => api.get(`/autodealer/sales/${id}`);
+export const createAutoDealerSale = (data) => api.post('/autodealer/sales', data);
+export const updateAutoDealerSale = (id, data) => api.put(`/autodealer/sales/${id}`, data);
+export const deleteAutoDealerSale = (id) => api.delete(`/autodealer/sales/${id}`);
+
 export default api;
