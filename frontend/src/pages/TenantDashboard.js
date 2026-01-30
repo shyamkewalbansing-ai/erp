@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTenantAuth } from '../context/TenantAuthContext';
 import axios from 'axios';
@@ -64,11 +64,7 @@ export default function TenantDashboard() {
   const [meterForm, setMeterForm] = useState({ ebs_reading: '', swm_reading: '', notes: '' });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('tenant_token');
