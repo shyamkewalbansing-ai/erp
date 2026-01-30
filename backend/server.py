@@ -5572,7 +5572,7 @@ async def get_loans(current_user: dict = Depends(get_current_active_user)):
     ).to_list(1000)
     
     # Get tenant names and calculate payments
-    tenant_ids = list(set(loan["tenant_id"] for l in loans))
+    tenant_ids = list(set(loan["tenant_id"] for loan in loans))
     tenants = await db.tenants.find(
         {"id": {"$in": tenant_ids}},
         {"_id": 0, "id": 1, "name": 1}
