@@ -20,6 +20,10 @@ mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get('DB_NAME', 'surirentals')]
 
+async def get_db():
+    """Get database instance - async compatible"""
+    return db
+
 # JWT Configuration
 JWT_SECRET = os.environ.get('JWT_SECRET') or os.environ.get('SECRET_KEY') or 'suri-rentals-default-secret-change-in-production'
 JWT_ALGORITHM = 'HS256'
