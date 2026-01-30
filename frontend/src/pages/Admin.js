@@ -33,7 +33,16 @@ import {
   getDeploymentSettings,
   updateDeploymentSettings,
   triggerSystemUpdate,
-  getDeploymentLogs
+  getDeploymentLogs,
+  // Workspaces
+  getWorkspaces,
+  createWorkspace,
+  updateWorkspace,
+  deleteWorkspace,
+  verifyWorkspaceDns,
+  activateWorkspaceSsl,
+  getWorkspaceNginxConfig,
+  getWorkspaceStats
 } from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
