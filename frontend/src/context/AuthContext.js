@@ -87,8 +87,34 @@ export const AuthProvider = ({ children }) => {
   // Apply branding CSS variables
   useEffect(() => {
     if (branding) {
-      document.documentElement.style.setProperty('--brand-primary', branding.primary_color || '#0caf60');
-      document.documentElement.style.setProperty('--brand-secondary', branding.secondary_color || '#059669');
+      const root = document.documentElement;
+      
+      // Set hex values for direct use
+      root.style.setProperty('--brand-primary', branding.primary_color || '#0caf60');
+      root.style.setProperty('--brand-secondary', branding.secondary_color || '#059669');
+      
+      // Convert to HSL and update shadcn/tailwind CSS variables
+      const primaryHSL = hexToHSL(branding.primary_color);
+      const secondaryHSL = hexToHSL(branding.secondary_color);
+      
+      if (primaryHSL) {
+        root.style.setProperty('--primary', primaryHSL);
+        root.style.setProperty('--ring', primaryHSL);
+        root.style.setProperty('--chart-1', primaryHSL);
+      }
+      
+      // Update favicon if available
+      if (branding.favicon_url) {
+        const favicon = document.querySelector("link[rel='icon']");
+        if (favicon) {
+          favicon.href = branding.favicon_url;
+        }
+      }
+      
+      // Update page title if portal name is set
+      if (branding.portal_name) {
+        document.title = branding.portal_name;
+      }
     }
   }, [branding]);
 
