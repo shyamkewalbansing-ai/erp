@@ -198,7 +198,7 @@ async def get_customer_profile(account: dict = Depends(get_customer_account)):
                     "address": customer.get("address"),
                     "city": customer.get("city")
                 }
-        except:
+        except Exception:
             pass
     
     return response
@@ -298,7 +298,7 @@ async def get_customer_purchases(account: dict = Depends(get_customer_account)):
                         "transmission": vehicle.get("transmission"),
                         "image_url": vehicle.get("image_url")
                     }
-            except:
+            except Exception:
                 pass
         
         purchases.append(purchase)
@@ -360,7 +360,7 @@ async def get_purchase_details(purchase_id: str, account: dict = Depends(get_cus
                     "image_url": vehicle.get("image_url"),
                     "images": vehicle.get("images", [])
                 }
-        except:
+        except Exception:
             pass
     
     return purchase
@@ -427,7 +427,7 @@ async def get_customer_dashboard(account: dict = Depends(get_customer_account)):
                 if vehicle:
                     purchase["vehicle_name"] = f"{vehicle.get('brand', '')} {vehicle.get('model', '')} ({vehicle.get('year', '')})"
                     purchase["vehicle_image"] = vehicle.get("image_url")
-            except:
+            except Exception:
                 pass
         
         dashboard["recent_purchases"].append(purchase)
