@@ -256,10 +256,42 @@ Complete self-service portaal voor huurders:
 - [x] **Auto Dealer Module** met multi-valuta (SRD, EUR, USD)
 
 ### P1 (High Priority)
-- [ ] **server.py refactoring** (>12000 lines) - Split into modular routers
-- [ ] **Login bug na uitloggen** - Verificatie nodig van gebruiker
+- [ ] **server.py refactoring** (>12000 lines) - Split into modular routers (GESTART - tenant_portal.py verplaatst)
+- [ ] **Login bug na uitloggen** - Verificatie nodig van gebruiker (TESTEN VEREIST)
 - [ ] **Herinneringen voor maandelijkse meteropname** (email notificaties)
 - [ ] **Workspace branding globaal toepassen** - Colors/logo op alle pagina's
+
+### CloudPanel Deployment ✅ (NIEUW - 30 Jan 2026)
+Volledige deployment documentatie en scripts gemaakt:
+
+**Scripts:**
+| Script | Beschrijving |
+|--------|--------------|
+| `CLOUDPANEL_INSTALL.sh` | Volledige eerste installatie (13KB) |
+| `UPDATE.sh` | Update na git pull met opties (--backend-only, --frontend-only) |
+| `BACKUP.sh` | Complete backup (DB + uploads + config) |
+| `RESTORE.sh` | Backup terugzetten met validatie |
+| `WEBHOOK_DEPLOY.sh` | Automatisch deployen via CI/CD webhook |
+
+**Documentatie:**
+| Document | Beschrijving |
+|----------|--------------|
+| `INSTALLATIE_HANDLEIDING.md` | Complete CloudPanel guide (14KB) |
+| `VPS_SETUP_GUIDE.md` | Uitgebreide VPS setup met architectuur |
+| `README.md` | Project overzicht en quick start |
+
+**Features:**
+- [x] Automatisch MongoDB 6.0 installatie
+- [x] Node.js 18 + Yarn setup
+- [x] Python venv met dependencies
+- [x] Supervisor configuratie voor services
+- [x] Nginx reverse proxy met SSL
+- [x] Let's Encrypt SSL automatisering
+- [x] Backup retentie (30 dagen default)
+- [x] Health check na updates
+- [x] Multi-tenant subdomain instructies
+- [x] Performance optimalisatie tips
+- [x] CI/CD webhook deployment
 
 ### P2 (Medium Priority)
 - [ ] Huurder kan betalingen doen via portaal
