@@ -814,8 +814,15 @@ server {
       )}
 
       {/* Tabs for Customers and Payments */}
-      <Tabs defaultValue="customers" className="space-y-4">
-        <TabsList>
+      <Tabs defaultValue="workspaces" className="space-y-4">
+        <TabsList className="flex-wrap">
+          <TabsTrigger value="workspaces" className="text-emerald-600">
+            <Layers className="w-4 h-4 mr-1" />
+            Workspaces
+            {workspaceStats.pending > 0 && (
+              <Badge className="ml-2 bg-orange-500 text-white text-xs">{workspaceStats.pending}</Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="customers">Klanten</TabsTrigger>
           <TabsTrigger value="payments">Betalingen</TabsTrigger>
           <TabsTrigger value="addons">
@@ -835,6 +842,256 @@ server {
             Update
           </TabsTrigger>
         </TabsList>
+
+        {/* Workspaces Tab - FIRST AND PROMINENT */}
+        <TabsContent value="workspaces">
+          <div className="space-y-6">
+            {/* Workspace Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-emerald-100 text-sm">Totaal Workspaces</p>
+                      <p className="text-3xl font-bold">{workspaceStats.total}</p>
+                    </div>
+                    <Layers className="w-10 h-10 text-emerald-200" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-500 text-sm">Actief</p>
+                      <p className="text-3xl font-bold text-green-600">{workspaceStats.active}</p>
+                    </div>
+                    <CheckCircle className="w-10 h-10 text-green-200" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-500 text-sm">In Afwachting</p>
+                      <p className="text-3xl font-bold text-orange-600">{workspaceStats.pending}</p>
+                    </div>
+                    <Clock className="w-10 h-10 text-orange-200" />
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-dashed border-2 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setCreateWorkspaceDialogOpen(true)}>
+                <CardContent className="p-6 flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <Plus className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                    <p className="font-medium text-gray-600">Nieuwe Workspace</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Workspaces List */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5" />
+                      Klant Workspaces
+                    </CardTitle>
+                    <CardDescription>Beheer alle klant omgevingen en domeinen</CardDescription>
+                  </div>
+                  <Button onClick={() => setCreateWorkspaceDialogOpen(true)} className="bg-emerald-500 hover:bg-emerald-600">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nieuwe Workspace
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {workspaces.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Layers className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Geen workspaces</h3>
+                    <p className="text-gray-500 mb-4">Maak uw eerste workspace aan om te beginnen</p>
+                    <Button onClick={() => setCreateWorkspaceDialogOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Workspace Aanmaken
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {workspaces.map((workspace) => (
+                      <div key={workspace.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-start gap-4">
+                            {/* Logo/Icon */}
+                            <div 
+                              className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg"
+                              style={{ backgroundColor: workspace.branding?.primary_color || '#0caf60' }}
+                            >
+                              {workspace.branding?.logo_url ? (
+                                <img src={workspace.branding.logo_url} alt={workspace.name} className="w-full h-full object-contain rounded-lg" />
+                              ) : (
+                                workspace.name.charAt(0).toUpperCase()
+                              )}
+                            </div>
+                            
+                            {/* Info */}
+                            <div>
+                              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                {workspace.name}
+                                {workspace.status === 'active' && (
+                                  <Badge className="bg-green-100 text-green-700">Actief</Badge>
+                                )}
+                                {workspace.status === 'pending' && (
+                                  <Badge className="bg-orange-100 text-orange-700">In Afwachting</Badge>
+                                )}
+                                {workspace.status === 'error' && (
+                                  <Badge className="bg-red-100 text-red-700">Fout</Badge>
+                                )}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                Eigenaar: {workspace.owner_name || workspace.owner_email || 'Onbekend'}
+                              </p>
+                              
+                              {/* Domain Info */}
+                              <div className="mt-2 flex items-center gap-4 text-sm">
+                                <div className="flex items-center gap-1">
+                                  <Globe className="w-4 h-4 text-gray-400" />
+                                  {workspace.domain?.type === 'subdomain' ? (
+                                    <a href={`https://${workspace.domain.subdomain}.facturatie.sr`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                      {workspace.domain.subdomain}.facturatie.sr
+                                    </a>
+                                  ) : (
+                                    <span className="text-gray-600">{workspace.domain?.custom_domain || 'Geen domein'}</span>
+                                  )}
+                                </div>
+                                
+                                {workspace.domain?.dns_verified && (
+                                  <span className="flex items-center gap-1 text-green-600">
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    DNS OK
+                                  </span>
+                                )}
+                                
+                                {workspace.domain?.ssl_active && (
+                                  <span className="flex items-center gap-1 text-green-600">
+                                    <Shield className="w-4 h-4" />
+                                    SSL
+                                  </span>
+                                )}
+                                
+                                <span className="flex items-center gap-1 text-gray-500">
+                                  <Users className="w-4 h-4" />
+                                  {workspace.users_count} gebruikers
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Actions */}
+                          <div className="flex items-center gap-2">
+                            {workspace.domain?.type === 'custom' && !workspace.domain?.dns_verified && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={async () => {
+                                  setVerifyingDns(true);
+                                  try {
+                                    const res = await verifyWorkspaceDns(workspace.id);
+                                    if (res.data.success) {
+                                      toast.success(res.data.message);
+                                      loadData();
+                                    } else {
+                                      toast.error(res.data.message);
+                                    }
+                                  } catch (error) {
+                                    toast.error('DNS verificatie mislukt');
+                                  } finally {
+                                    setVerifyingDns(false);
+                                  }
+                                }}
+                                disabled={verifyingDns}
+                              >
+                                {verifyingDns ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1" />}
+                                DNS Verifiëren
+                              </Button>
+                            )}
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={async () => {
+                                try {
+                                  const res = await getWorkspaceNginxConfig(workspace.id);
+                                  setNginxConfig(res.data.config);
+                                  setSelectedWorkspace(workspace);
+                                  setNginxConfigDialogOpen(true);
+                                } catch (error) {
+                                  toast.error('Kon configuratie niet laden');
+                                }
+                              }}
+                            >
+                              <Terminal className="w-4 h-4 mr-1" />
+                              Nginx
+                            </Button>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedWorkspace(workspace);
+                                setNewWorkspace({
+                                  name: workspace.name,
+                                  slug: workspace.slug,
+                                  owner_id: workspace.owner_id,
+                                  domain_type: workspace.domain?.type || 'subdomain',
+                                  subdomain: workspace.domain?.subdomain || '',
+                                  custom_domain: workspace.domain?.custom_domain || '',
+                                  branding: workspace.branding || {
+                                    logo_url: '',
+                                    favicon_url: '',
+                                    primary_color: '#0caf60',
+                                    secondary_color: '#059669',
+                                    portal_name: ''
+                                  }
+                                });
+                                setEditWorkspaceDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-red-600 hover:bg-red-50"
+                              onClick={() => {
+                                setSelectedWorkspace(workspace);
+                                setDeleteWorkspaceDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        {/* Error message if any */}
+                        {workspace.error_message && (
+                          <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
+                            <AlertCircle className="w-4 h-4 inline mr-1" />
+                            {workspace.error_message}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
         {/* Customers Tab */}
         <TabsContent value="customers">
