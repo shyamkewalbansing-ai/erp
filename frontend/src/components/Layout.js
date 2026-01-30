@@ -484,7 +484,7 @@ export default function Layout() {
         </header>
 
         {/* Mobile header */}
-        <header className="lg:hidden sticky top-0 z-20 header-glass px-4 py-3 flex items-center justify-between">
+        <header className="mobile-header lg:hidden header-glass px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
