@@ -12015,6 +12015,309 @@ async def tenant_portal_submit_meter_reading(
     }
 
 
+# ==================== EMPLOYEE PORTAL ====================
+
+class EmployeeLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class EmployeeAccountCreate(BaseModel):
+    employee_id: str
+    email: EmailStr
+    name: str
+    password: str
+
+@api_router.post("/employee-portal/login")
+async def employee_portal_login(credentials: EmployeeLogin):
+    """Login for employee portal"""
+    account = await db.employee_accounts.find_one({"email": credentials.email}, {"_id": 0})
+    
+    if not account:
+        raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
+    
+    if not verify_password(credentials.password, account["password"]):
+        raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
+    
+    if not account.get("is_active", True):
+        raise HTTPException(status_code=403, detail="Uw account is gedeactiveerd")
+    
+    # Update last login
+    await db.employee_accounts.update_one(
+        {"id": account["id"]},
+        {"$set": {"last_login": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Create JWT token
+    token = jwt.encode({
+        "user_id": account["id"],
+        "employee_id": account["employee_id"],
+        "type": "employee_portal",
+        "exp": datetime.now(timezone.utc) + timedelta(hours=24)
+    }, JWT_SECRET, algorithm=JWT_ALGORITHM)
+    
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "employee": {
+            "id": account["id"],
+            "employee_id": account["employee_id"],
+            "email": account["email"],
+            "name": account["name"]
+        }
+    }
+
+async def get_employee_account(credentials: HTTPAuthorizationCredentials = Depends(security)) -> dict:
+    """Get current employee account from JWT token"""
+    try:
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if payload.get("type") != "employee_portal":
+            raise HTTPException(status_code=401, detail="Ongeldige token type")
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Ongeldige token")
+        
+        account = await db.employee_accounts.find_one({"id": user_id}, {"_id": 0})
+        if not account:
+            raise HTTPException(status_code=401, detail="Werknemer account niet gevonden")
+        if not account.get("is_active", True):
+            raise HTTPException(status_code=403, detail="Uw account is gedeactiveerd")
+        return account
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token is verlopen")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Ongeldige token")
+
+@api_router.get("/employee-portal/me")
+async def employee_portal_me(account: dict = Depends(get_employee_account)):
+    """Get current employee account info"""
+    return {
+        "id": account["id"],
+        "employee_id": account["employee_id"],
+        "email": account["email"],
+        "name": account["name"],
+        "created_at": account.get("created_at")
+    }
+
+@api_router.get("/employee-portal/dashboard")
+async def employee_portal_dashboard(account: dict = Depends(get_employee_account)):
+    """Get employee dashboard with all relevant information"""
+    employee_id = account["employee_id"]
+    employer_id = account.get("employer_user_id")
+    workspace_id = account.get("workspace_id")
+    
+    # Get employee info from hrm_employees
+    employee = await db.hrm_employees.find_one({"id": employee_id}, {"_id": 0})
+    if not employee:
+        # Try regular employees collection
+        employee = await db.employees.find_one({"id": employee_id}, {"_id": 0})
+    
+    if not employee:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    
+    # Get recent salary payments
+    salaries = await db.hrm_payroll.find(
+        {"employee_id": employee_id},
+        {"_id": 0}
+    ).sort("pay_date", -1).to_list(12)
+    
+    if not salaries:
+        salaries = await db.salaries.find(
+            {"employee_id": employee_id},
+            {"_id": 0}
+        ).sort("payment_date", -1).to_list(12)
+    
+    # Get leave requests
+    leave_requests = await db.hrm_leave_requests.find(
+        {"employee_id": employee_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(10)
+    
+    # Get attendance records for current month
+    now = datetime.now(timezone.utc)
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    attendance = await db.hrm_attendance.find(
+        {
+            "employee_id": employee_id,
+            "date": {"$gte": month_start.strftime("%Y-%m-%d")}
+        },
+        {"_id": 0}
+    ).to_list(31)
+    
+    # Calculate stats
+    total_earned = sum(s.get("net_salary", s.get("amount", 0)) for s in salaries)
+    days_worked = len([a for a in attendance if a.get("status") == "present"])
+    pending_leave = len([l for l in leave_requests if l.get("status") == "pending"])
+    
+    return {
+        "employee_id": employee_id,
+        "employee_name": employee.get("name", account["name"]),
+        "department": employee.get("department"),
+        "position": employee.get("position", employee.get("function")),
+        "hire_date": employee.get("hire_date", employee.get("start_date")),
+        "salary": employee.get("salary", employee.get("base_salary")),
+        "email": employee.get("email"),
+        "phone": employee.get("phone"),
+        "stats": {
+            "total_earned_ytd": total_earned,
+            "days_worked_month": days_worked,
+            "pending_leave_requests": pending_leave
+        },
+        "recent_salaries": [{
+            "id": s.get("id"),
+            "period": s.get("pay_period", f"{s.get('month')}/{s.get('year')}"),
+            "gross": s.get("gross_salary", s.get("amount")),
+            "net": s.get("net_salary", s.get("amount")),
+            "date": s.get("pay_date", s.get("payment_date")),
+            "status": s.get("status", "paid")
+        } for s in salaries[:6]],
+        "leave_requests": [{
+            "id": l.get("id"),
+            "type": l.get("leave_type"),
+            "start_date": l.get("start_date"),
+            "end_date": l.get("end_date"),
+            "days": l.get("days"),
+            "status": l.get("status"),
+            "reason": l.get("reason")
+        } for l in leave_requests[:5]],
+        "attendance_summary": {
+            "month": now.strftime("%B %Y"),
+            "present": days_worked,
+            "absent": len([a for a in attendance if a.get("status") == "absent"]),
+            "late": len([a for a in attendance if a.get("status") == "late"]),
+            "leave": len([a for a in attendance if a.get("status") == "leave"])
+        }
+    }
+
+@api_router.post("/employee-portal/leave-request")
+async def employee_portal_submit_leave(
+    leave_type: str,
+    start_date: str,
+    end_date: str,
+    reason: Optional[str] = None,
+    account: dict = Depends(get_employee_account)
+):
+    """Submit a leave request"""
+    employee_id = account["employee_id"]
+    
+    # Calculate days
+    start = datetime.strptime(start_date, "%Y-%m-%d")
+    end = datetime.strptime(end_date, "%Y-%m-%d")
+    days = (end - start).days + 1
+    
+    leave_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    leave_doc = {
+        "id": leave_id,
+        "employee_id": employee_id,
+        "employee_name": account["name"],
+        "leave_type": leave_type,
+        "start_date": start_date,
+        "end_date": end_date,
+        "days": days,
+        "reason": reason,
+        "status": "pending",
+        "created_at": now,
+        "workspace_id": account.get("workspace_id"),
+        "employer_user_id": account.get("employer_user_id")
+    }
+    
+    await db.hrm_leave_requests.insert_one(leave_doc)
+    
+    return {"message": "Verlofaanvraag ingediend", "leave_request": {k: v for k, v in leave_doc.items() if k != "_id"}}
+
+@api_router.get("/employee-portal/payslips")
+async def employee_portal_payslips(account: dict = Depends(get_employee_account)):
+    """Get all payslips for the employee"""
+    employee_id = account["employee_id"]
+    
+    payslips = await db.hrm_payroll.find(
+        {"employee_id": employee_id},
+        {"_id": 0}
+    ).sort("pay_date", -1).to_list(50)
+    
+    if not payslips:
+        payslips = await db.salaries.find(
+            {"employee_id": employee_id},
+            {"_id": 0}
+        ).sort("payment_date", -1).to_list(50)
+    
+    return payslips
+
+# Admin endpoint to create employee accounts
+@api_router.post("/hrm/employee-accounts")
+async def create_employee_account(
+    data: EmployeeAccountCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a portal account for an employee"""
+    # Check if employee exists
+    employee = await db.hrm_employees.find_one({"id": data.employee_id})
+    if not employee:
+        employee = await db.employees.find_one({"id": data.employee_id})
+    if not employee:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    
+    # Check if account already exists
+    existing = await db.employee_accounts.find_one({"email": data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Er bestaat al een account met dit emailadres")
+    
+    account_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    account_doc = {
+        "id": account_id,
+        "employee_id": data.employee_id,
+        "email": data.email,
+        "name": data.name,
+        "password": hash_password(data.password),
+        "is_active": True,
+        "created_at": now,
+        "last_login": None,
+        "employer_user_id": current_user["id"],
+        "workspace_id": current_user.get("workspace_id")
+    }
+    
+    await db.employee_accounts.insert_one(account_doc)
+    
+    return {
+        "message": "Werknemersaccount aangemaakt",
+        "account": {
+            "id": account_id,
+            "employee_id": data.employee_id,
+            "email": data.email,
+            "name": data.name
+        }
+    }
+
+@api_router.get("/hrm/employee-accounts")
+async def get_employee_accounts(current_user: dict = Depends(get_current_user)):
+    """Get all employee portal accounts"""
+    workspace_id = current_user.get("workspace_id")
+    
+    query = {"employer_user_id": current_user["id"]}
+    if workspace_id:
+        query = {"$or": [query, {"workspace_id": workspace_id}]}
+    
+    accounts = await db.employee_accounts.find(query, {"_id": 0, "password": 0}).to_list(100)
+    return accounts
+
+@api_router.delete("/hrm/employee-accounts/{account_id}")
+async def delete_employee_account(account_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete an employee portal account"""
+    result = await db.employee_accounts.delete_one({
+        "id": account_id,
+        "$or": [
+            {"employer_user_id": current_user["id"]},
+            {"workspace_id": current_user.get("workspace_id")}
+        ]
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Account niet gevonden")
+    return {"message": "Account verwijderd"}
+
+
 # Include the router in the main app
 app.include_router(api_router)
 
