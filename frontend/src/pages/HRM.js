@@ -125,6 +125,10 @@ export default function HRM() {
     cover_letter: '', status: 'new'
   });
 
+  const [accountForm, setAccountForm] = useState({
+    employee_id: '', email: '', name: '', password: ''
+  });
+
   useEffect(() => {
     loadAllData();
   }, []);
@@ -135,7 +139,7 @@ export default function HRM() {
       const [
         dashboardRes, employeesRes, departmentsRes, contractsRes,
         vacanciesRes, applicationsRes, leaveRes, attendanceRes,
-        payrollRes, documentsRes, settingsRes
+        payrollRes, documentsRes, settingsRes, accountsRes
       ] = await Promise.all([
         api.get('/hrm/dashboard').catch(() => ({ data: null })),
         api.get('/hrm/employees').catch(() => ({ data: [] })),
@@ -147,7 +151,8 @@ export default function HRM() {
         api.get('/hrm/attendance').catch(() => ({ data: [] })),
         api.get('/hrm/payroll').catch(() => ({ data: [] })),
         api.get('/hrm/documents').catch(() => ({ data: [] })),
-        api.get('/hrm/settings').catch(() => ({ data: {} }))
+        api.get('/hrm/settings').catch(() => ({ data: {} })),
+        api.get('/hrm/employee-accounts').catch(() => ({ data: [] }))
       ]);
       
       setDashboard(dashboardRes.data);
