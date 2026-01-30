@@ -3196,7 +3196,7 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     
     # Calculate outstanding loans
     loans = await db.loans.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
-    [l.get("id") for l in loans if l.get("id")]
+    [loan.get("id") for l in loans if loan.get("id")]
     
     # Get loan payments
     loan_payments = await db.payments.find(
@@ -3211,9 +3211,9 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
             loan_payments_by_id[lid] = loan_payments_by_id.get(lid, 0) + (lp.get("amount") or 0)
     
     total_outstanding_loans = 0
-    for l in loans:
+    for loan in loans:
         try:
-            loan_id = l.get("id")
+            loan_id = loan.get("id")
             loan_amount = l.get("amount") or 0
             if loan_id:
                 paid = loan_payments_by_id.get(loan_id, 0)
@@ -3535,7 +3535,7 @@ async def get_notifications(current_user: dict = Depends(get_current_active_user
     
     # === 4. OUTSTANDING LOAN REMINDERS ===
     loans = await db.loans.find({"user_id": user_id}, {"_id": 0}).to_list(1000)
-    loan_ids = [l.get("id") for l in loans if l.get("id")]
+    loan_ids = [loan.get("id") for l in loans if loan.get("id")]
     
     if loan_ids:
         loan_payments = await db.payments.find(
@@ -4187,7 +4187,7 @@ async def get_invoice_pdf(tenant_id: str, year: int, month: int, current_user: d
     loans = await db.loans.find({"user_id": user_id, "tenant_id": tenant_id}, {"_id": 0}).to_list(100)
     loan_payments = [p for p in all_payments if p.get("payment_type") == "loan" and p.get("tenant_id") == tenant_id]
     
-    total_loan_amount = sum(l["amount"] for l in loans)
+    total_loan_amount = sum(loan["amount"] for l in loans)
     total_loan_paid = sum(p["amount"] for p in loan_payments)
     loan_balance = max(0, total_loan_amount - total_loan_paid)
     
@@ -5572,7 +5572,7 @@ async def get_loans(current_user: dict = Depends(get_current_active_user)):
     ).to_list(1000)
     
     # Get tenant names and calculate payments
-    tenant_ids = list(set(l["tenant_id"] for l in loans))
+    tenant_ids = list(set(loan["tenant_id"] for l in loans))
     tenants = await db.tenants.find(
         {"id": {"$in": tenant_ids}},
         {"_id": 0, "id": 1, "name": 1}
@@ -5723,7 +5723,7 @@ async def get_tenant_loans(tenant_id: str, current_user: dict = Depends(get_curr
     ).to_list(100)
     
     # Get loan payments
-    loan_ids = [l["id"] for l in loans]
+    loan_ids = [loan["id"] for l in loans]
     loan_payments = await db.payments.find(
         {"loan_id": {"$in": loan_ids}, "payment_type": "loan"},
         {"_id": 0, "loan_id": 1, "amount": 1}
@@ -12155,7 +12155,7 @@ async def employee_portal_dashboard(account: dict = Depends(get_employee_account
     # Calculate stats
     total_earned = sum(s.get("net_salary", s.get("amount", 0)) for s in salaries)
     days_worked = len([a for a in attendance if a.get("status") == "present"])
-    pending_leave = len([l for l in leave_requests if l.get("status") == "pending"])
+    pending_leave = len([l for leave in leave_requests if leave.get("status") == "pending"])
     
     return {
         "employee_id": employee_id,
@@ -12180,14 +12180,14 @@ async def employee_portal_dashboard(account: dict = Depends(get_employee_account
             "status": s.get("status", "paid")
         } for s in salaries[:6]],
         "leave_requests": [{
-            "id": l.get("id"),
+            "id": loan.get("id"),
             "type": l.get("leave_type"),
             "start_date": l.get("start_date"),
             "end_date": l.get("end_date"),
             "days": l.get("days"),
-            "status": l.get("status"),
+            "status": leave.get("status"),
             "reason": l.get("reason")
-        } for l in leave_requests[:5]],
+        } for leave in leave_requests[:5]],
         "attendance_summary": {
             "month": now.strftime("%B %Y"),
             "present": days_worked,
