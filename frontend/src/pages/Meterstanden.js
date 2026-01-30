@@ -99,11 +99,7 @@ export default function Meterstanden() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    loadData(); // eslint-disable-line react-hooks/exhaustive-deps
-  }, [selectedMonth, selectedYear]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [readingsRes, apartmentsRes, tenantsRes, summaryRes, settingsRes] = await Promise.all([
@@ -125,7 +121,11 @@ export default function Meterstanden() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const filteredReadings = useMemo(() => {
     return readings.filter(reading => {
