@@ -51,6 +51,7 @@ const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const PrijzenPage = lazy(() => import("./pages/PrijzenPage"));
 const OverOnsPage = lazy(() => import("./pages/OverOnsPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const WorkspaceSettings = lazy(() => import("./pages/WorkspaceSettings"));
 
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
