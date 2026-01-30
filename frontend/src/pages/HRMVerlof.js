@@ -198,7 +198,7 @@ export default function HRMVerlof() {
                         </span>
                       </div>
                       {req.reason && (
-                        <p className="text-sm mt-2 italic text-muted-foreground">"{req.reason}"</p>
+                        <p className="text-sm mt-2 italic text-muted-foreground">&quot;{req.reason}&quot;</p>
                       )}
                     </div>
                   </div>
