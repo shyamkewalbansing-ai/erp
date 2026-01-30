@@ -1609,7 +1609,8 @@ async def create_tenant(tenant_data: TenantCreate, current_user: dict = Depends(
         "address": tenant_data.address,
         "id_number": tenant_data.id_number,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "user_id": current_user["id"]
+        "user_id": current_user["id"],
+        "workspace_id": current_user.get("workspace_id")  # Workspace isolation
     }
     
     await db.tenants.insert_one(tenant_doc)
@@ -1619,10 +1620,15 @@ async def create_tenant(tenant_data: TenantCreate, current_user: dict = Depends(
 
 @api_router.get("/tenants", response_model=List[TenantResponse])
 async def get_tenants(current_user: dict = Depends(get_current_active_user)):
-    tenants = await db.tenants.find(
-        {"user_id": current_user["id"]}, 
-        {"_id": 0}
-    ).to_list(1000)
+    # Use workspace filter for data isolation
+    query_filter = {"user_id": current_user["id"]}
+    if current_user.get("workspace_id"):
+        query_filter = {"$or": [
+            {"workspace_id": current_user["workspace_id"]},
+            {"user_id": current_user["id"], "workspace_id": {"$exists": False}}  # Legacy data
+        ]}
+    
+    tenants = await db.tenants.find(query_filter, {"_id": 0}).to_list(1000)
     
     result = []
     for t in tenants:
