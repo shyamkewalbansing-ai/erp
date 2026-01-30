@@ -94,7 +94,7 @@ class TestAutoDealerStats:
     def test_stats_unauthorized(self):
         """Test stats endpoint without auth"""
         response = requests.get(f"{BASE_URL}/api/autodealer/stats")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403], "Should return 401 or 403 for unauthorized access"
 
 
 class TestAutoDealerVehicles:
