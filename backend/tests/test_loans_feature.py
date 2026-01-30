@@ -521,15 +521,15 @@ class TestLeningenSummaryCards:
         assert loans_resp.status_code == 200
         
         loans = loans_resp.json()
-        test_loans = [l for loan_item in loans if l.get("description", "").startswith("TEST_Summary")]
+        test_loans = [item for item in loans if item.get("description", "").startswith("TEST_Summary")]
         
         # Calculate summary
-        total_amount = sum(loan_item["amount"] for loan_item in test_loans)
-        total_paid = sum(l["amount_paid"] for loan_item in test_loans)
-        total_remaining = sum(loan_item["remaining"] for loan_item in test_loans)
-        open_count = len([l for loan_item in test_loans if loan_item["status"] == "open"])
-        partial_count = len([l for loan_item in test_loans if loan_item["status"] == "partial"])
-        paid_count = len([l for loan_item in test_loans if loan_item["status"] == "paid"])
+        total_amount = sum(item["amount"] for item in test_loans)
+        total_paid = sum(item["amount_paid"] for item in test_loans)
+        total_remaining = sum(item["remaining"] for item in test_loans)
+        open_count = len([item for item in test_loans if item["status"] == "open"])
+        partial_count = len([item for item in test_loans if item["status"] == "partial"])
+        paid_count = len([item for item in test_loans if item["status"] == "paid"])
         
         assert total_amount == 900.00, f"Expected total=900, got: {total_amount}"
         assert total_paid == 150.00, f"Expected paid=150, got: {total_paid}"
