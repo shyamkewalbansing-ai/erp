@@ -101,7 +101,7 @@ export default function Facturen() {
       try {
         const year = new Date(p.payment_date).getFullYear();
         years.add(year);
-      } catch {}
+      } catch { /* ignore invalid dates */ }
     });
     return Array.from(years).sort((a, b) => b - a);
   };

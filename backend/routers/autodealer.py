@@ -3,7 +3,8 @@ Auto Dealer Module Router
 Complete module for managing an auto dealership in Suriname with multi-currency support (SRD, EUR, USD)
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
+from starlette import status as http_status
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone
