@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import SignatureCanvas from 'react-signature-canvas';
 import { getContractForSigning, signContract, formatCurrency } from '../lib/api';
@@ -29,16 +29,12 @@ export default function OndertekeningPage() {
   const [signing, setSigning] = useState(false);
   const [signed, setSigned] = useState(false);
 
-  useEffect(() => {
-    fetchContract();
-  }, [token]);
-
-  const fetchContract = async () => {
+  const fetchContract = useCallback(async () => {
     try {
       const response = await getContractForSigning(token);
       setContractData(response.data);
-    } catch (error) {
-      if (error.response?.status === 400) {
+    } catch (err) {
+      if (err.response?.status === 400) {
         setError('Dit contract is al ondertekend.');
         setSigned(true);
       } else {
@@ -47,7 +43,11 @@ export default function OndertekeningPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchContract();
+  }, [fetchContract]);
 
   const clearSignature = () => {
     sigCanvas.current?.clear();
