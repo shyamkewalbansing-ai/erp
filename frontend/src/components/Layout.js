@@ -449,27 +449,46 @@ export default function Layout() {
       {/* Main content */}
       <main className="main-content">
         {/* Desktop header with notifications */}
-        <header className="hidden lg:flex sticky top-0 z-20 header-glass px-8 py-3 items-center justify-end gap-3 border-b border-border/50">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleDarkMode}
-            className="theme-toggle"
-            data-testid="theme-toggle-btn"
-          >
-            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
-          {!isSuperAdmin() && <NotificationBell />}
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
-            onClick={handleLogout}
-            data-testid="logout-btn"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Uitloggen
-          </Button>
+        <header className="hidden lg:flex sticky top-0 z-20 header-glass px-8 py-3 items-center justify-between border-b border-border/50">
+          {/* Left side - Workspace button */}
+          <div className="flex items-center gap-3">
+            {!isSuperAdmin() && workspace && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openWorkspaceDialog}
+                className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                data-testid="workspace-btn"
+              >
+                <Globe className="w-4 h-4 mr-2" />
+                {workspace.name || 'Workspace'}
+              </Button>
+            )}
+          </div>
+          
+          {/* Right side - Theme, Notifications, Logout */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleDarkMode}
+              className="theme-toggle"
+              data-testid="theme-toggle-btn"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </Button>
+            {!isSuperAdmin() && <NotificationBell />}
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+              onClick={handleLogout}
+              data-testid="logout-btn"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Uitloggen
+            </Button>
+          </div>
         </header>
 
         {/* Mobile header */}
