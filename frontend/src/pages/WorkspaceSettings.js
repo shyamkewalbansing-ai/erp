@@ -1,6 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getWorkspaceUsers, inviteWorkspaceUser, updateWorkspaceUserRole, removeWorkspaceUser, updateWorkspaceBranding } from '../lib/api';
+import { 
+  getWorkspaceUsers, 
+  inviteWorkspaceUser, 
+  updateWorkspaceUserRole, 
+  removeWorkspaceUser, 
+  updateWorkspaceBranding,
+  getWorkspaceBackups,
+  createWorkspaceBackup,
+  restoreWorkspaceBackup,
+  deleteWorkspaceBackup,
+  downloadWorkspaceBackup
+} from '../lib/api';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -20,7 +31,15 @@ import {
   Eye,
   Mail,
   Loader2,
-  Save
+  Save,
+  Database,
+  Download,
+  RotateCcw,
+  Plus,
+  AlertTriangle,
+  Clock,
+  HardDrive,
+  FileJson
 } from 'lucide-react';
 
 export default function WorkspaceSettings() {
