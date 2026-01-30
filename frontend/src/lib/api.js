@@ -283,4 +283,10 @@ export const getWorkspaceStats = () => api.get('/admin/workspace-stats');
 export const getCurrentWorkspace = () => api.get('/workspace/current');
 export const updateWorkspaceBranding = (branding) => api.put('/workspace/branding', branding);
 
+// Workspace Users
+export const getWorkspaceUsers = () => api.get('/workspace/users');
+export const inviteWorkspaceUser = (data) => api.post('/workspace/users/invite', data);
+export const updateWorkspaceUserRole = (userId, role) => api.put(`/workspace/users/${userId}/role`, null, { params: { role } });
+export const removeWorkspaceUser = (userId) => api.delete(`/workspace/users/${userId}`);
+
 export default api;
