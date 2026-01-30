@@ -1163,6 +1163,135 @@ def format_currency(amount: float) -> str:
     """Format amount as SRD currency"""
     return f"SRD {amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
 
+# ==================== WORKSPACE MIDDLEWARE & HELPERS ====================
+
+async def get_workspace_from_host(host: str) -> Optional[dict]:
+    """Get workspace based on host/subdomain"""
+    if not host:
+        return None
+    
+    # Remove port if present
+    host = host.split(':')[0]
+    
+    # Check for subdomain (e.g., klantnaam.facturatie.sr)
+    if '.' in host and not host.startswith('www.'):
+        subdomain = host.split('.')[0]
+        if subdomain not in ['www', 'api', 'admin', 'localhost', 'modular-erp-20']:
+            workspace = await db.workspaces.find_one(
+                {"domain.subdomain": subdomain, "status": "active"},
+                {"_id": 0}
+            )
+            if workspace:
+                return workspace
+    
+    # Check for custom domain
+    workspace = await db.workspaces.find_one(
+        {"domain.custom_domain": host, "status": "active"},
+        {"_id": 0}
+    )
+    return workspace
+
+async def get_user_workspace(user_id: str) -> Optional[dict]:
+    """Get workspace for a user"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0, "workspace_id": 1})
+    if user and user.get("workspace_id"):
+        return await db.workspaces.find_one({"id": user["workspace_id"]}, {"_id": 0})
+    return None
+
+async def create_workspace_for_user(user_id: str, user_name: str, company_name: str = None) -> dict:
+    """Automatically create a workspace for a new user"""
+    import re
+    
+    # Generate slug from company name or user name
+    base_name = company_name or user_name
+    slug = re.sub(r'[^a-z0-9]', '', base_name.lower())[:20]
+    
+    # Ensure unique slug
+    existing = await db.workspaces.find_one({"slug": slug})
+    if existing:
+        slug = f"{slug}-{str(uuid.uuid4())[:8]}"
+    
+    workspace_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    workspace = {
+        "id": workspace_id,
+        "name": company_name or f"{user_name}'s Workspace",
+        "slug": slug,
+        "owner_id": user_id,
+        "status": "active",
+        "domain": {
+            "type": "subdomain",
+            "subdomain": slug,
+            "custom_domain": None,
+            "dns_verified": True,
+            "ssl_active": True,
+            "dns_record_type": "A",
+            "dns_record_value": SERVER_IP
+        },
+        "branding": {
+            "logo_url": None,
+            "favicon_url": None,
+            "primary_color": "#0caf60",
+            "secondary_color": "#059669",
+            "portal_name": company_name or f"{user_name}'s Portaal"
+        },
+        "created_at": now,
+        "updated_at": now,
+        "error_message": None
+    }
+    
+    await db.workspaces.insert_one(workspace)
+    
+    # Update user with workspace_id
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"workspace_id": workspace_id}}
+    )
+    
+    return workspace
+
+async def get_current_user_with_workspace(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    request: Request = None
+):
+    """Get current user and their workspace context"""
+    user = await get_current_user(credentials)
+    
+    # Superadmin has no workspace restriction
+    if user.get("role") == "superadmin":
+        user["workspace"] = None
+        user["workspace_id"] = None
+        return user
+    
+    # Get user's workspace
+    workspace_id = user.get("workspace_id")
+    if workspace_id:
+        workspace = await db.workspaces.find_one({"id": workspace_id}, {"_id": 0})
+        user["workspace"] = workspace
+        user["workspace_id"] = workspace_id
+    else:
+        user["workspace"] = None
+        user["workspace_id"] = None
+    
+    return user
+
+def workspace_filter(user: dict, extra_filter: dict = None) -> dict:
+    """Create a MongoDB filter that includes workspace_id for non-superadmin users"""
+    base_filter = extra_filter or {}
+    
+    # Superadmin sees all
+    if user.get("role") == "superadmin":
+        return base_filter
+    
+    # Regular users only see their workspace data
+    workspace_id = user.get("workspace_id")
+    if workspace_id:
+        return {**base_filter, "workspace_id": workspace_id}
+    
+    # No workspace = no data (shouldn't happen)
+    return {**base_filter, "workspace_id": "none"}
+
 # ==================== AUTH ROUTES ====================
 
 @api_router.post("/auth/register", response_model=TokenResponse)
