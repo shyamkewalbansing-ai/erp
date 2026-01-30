@@ -140,7 +140,8 @@ export default function Layout() {
   const getVisibleNavItems = () => {
     const vastgoedItems = vastgoedNavItems.filter(item => hasAddon(item.addon));
     const hrmItems = hrmNavItems.filter(item => hasAddon(item.addon));
-    return [...vastgoedItems, ...hrmItems];
+    const autoDealerItems = autoDealerNavItems.filter(item => hasAddon(item.addon));
+    return [...vastgoedItems, ...hrmItems, ...autoDealerItems];
   };
 
   // Auto-expand settings menu if on settings or subscription page
