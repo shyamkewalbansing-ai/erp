@@ -368,6 +368,20 @@ function MainAppRoutes() {
           <Route path="hrm/instellingen" element={
             <SubscriptionRoute requiredAddon="hrm"><HRMInstellingen /></SubscriptionRoute>
           } />
+          
+          {/* Auto Dealer Module Routes */}
+          <Route path="autodealer" element={
+            <SubscriptionRoute requiredAddon="autodealer"><AutoDealerDashboard /></SubscriptionRoute>
+          } />
+          <Route path="autodealer/voertuigen" element={
+            <SubscriptionRoute requiredAddon="autodealer"><AutoDealerVoertuigen /></SubscriptionRoute>
+          } />
+          <Route path="autodealer/klanten" element={
+            <SubscriptionRoute requiredAddon="autodealer"><AutoDealerKlanten /></SubscriptionRoute>
+          } />
+          <Route path="autodealer/verkopen" element={
+            <SubscriptionRoute requiredAddon="autodealer"><AutoDealerVerkopen /></SubscriptionRoute>
+          } />
         </Route>
         
         {/* Redirect old routes to new app routes */}
