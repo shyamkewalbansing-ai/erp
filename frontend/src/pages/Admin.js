@@ -87,7 +87,14 @@ import {
   Copy,
   ExternalLink,
   Package,
-  Puzzle
+  Puzzle,
+  RefreshCw,
+  Github,
+  Server,
+  Terminal,
+  Settings,
+  History,
+  Shield
 } from 'lucide-react';
 
 export default function Admin() {
