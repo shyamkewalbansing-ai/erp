@@ -190,6 +190,32 @@ export default function Admin() {
   const [updating, setUpdating] = useState(false);
   const [savingDeploySettings, setSavingDeploySettings] = useState(false);
   
+  // Workspace states
+  const [workspaces, setWorkspaces] = useState([]);
+  const [workspaceStats, setWorkspaceStats] = useState({ total: 0, active: 0, pending: 0 });
+  const [selectedWorkspace, setSelectedWorkspace] = useState(null);
+  const [createWorkspaceDialogOpen, setCreateWorkspaceDialogOpen] = useState(false);
+  const [editWorkspaceDialogOpen, setEditWorkspaceDialogOpen] = useState(false);
+  const [deleteWorkspaceDialogOpen, setDeleteWorkspaceDialogOpen] = useState(false);
+  const [nginxConfigDialogOpen, setNginxConfigDialogOpen] = useState(false);
+  const [nginxConfig, setNginxConfig] = useState('');
+  const [verifyingDns, setVerifyingDns] = useState(false);
+  const [newWorkspace, setNewWorkspace] = useState({
+    name: '',
+    slug: '',
+    owner_id: '',
+    domain_type: 'subdomain',
+    subdomain: '',
+    custom_domain: '',
+    branding: {
+      logo_url: '',
+      favicon_url: '',
+      primary_color: '#0caf60',
+      secondary_color: '#059669',
+      portal_name: ''
+    }
+  });
+  
   // Create customer form
   const [newCustomer, setNewCustomer] = useState({
     name: '',
