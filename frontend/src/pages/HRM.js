@@ -166,6 +166,7 @@ export default function HRM() {
       setPayroll(payrollRes.data || []);
       setDocuments(documentsRes.data || []);
       setSettings(settingsRes.data || {});
+      setEmployeeAccounts(accountsRes.data || []);
     } catch (error) {
       console.error('Error loading HRM data:', error);
       toast.error('Fout bij laden van gegevens');
@@ -173,6 +174,43 @@ export default function HRM() {
       setLoading(false);
     }
   };
+
+  // Employee Account Functions
+  const handleCreateAccount = async () => {
+    if (!accountForm.employee_id || !accountForm.email || !accountForm.password) {
+      toast.error('Vul alle verplichte velden in');
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.post('/hrm/employee-accounts', accountForm);
+      toast.success('Portaal account aangemaakt! Werknemer kan nu inloggen op /werknemer/login');
+      setAccountDialog(false);
+      setAccountForm({ employee_id: '', email: '', name: '', password: '' });
+      // Reload accounts
+      const res = await api.get('/hrm/employee-accounts');
+      setEmployeeAccounts(res.data || []);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Account aanmaken mislukt');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async (accountId) => {
+    if (!window.confirm('Weet u zeker dat u dit account wilt verwijderen?')) return;
+    try {
+      await api.delete(`/hrm/employee-accounts/${accountId}`);
+      toast.success('Account verwijderd');
+      const res = await api.get('/hrm/employee-accounts');
+      setEmployeeAccounts(res.data || []);
+    } catch (error) {
+      toast.error('Verwijderen mislukt');
+    }
+  };
+
+  const getEmployeeById = (id) => employees.find(e => e.id === id);
+  const hasAccount = (employeeId) => employeeAccounts.some(a => a.employee_id === employeeId);
 
   // CRUD Functions
   const handleSaveEmployee = async () => {
