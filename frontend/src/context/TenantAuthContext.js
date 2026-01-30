@@ -24,6 +24,10 @@ export function TenantAuthProvider({ children }) {
     setLoading(false);
   };
 
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
   const login = async (email, password) => {
     const response = await axios.post(`${API_URL}/tenant-portal/login`, { email, password });
     const { access_token, tenant: tenantData } = response.data;
