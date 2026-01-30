@@ -80,6 +80,14 @@ const hrmNavItems = [
   { to: '/app/hrm/instellingen', icon: Settings, label: 'HRM Instellingen', addon: 'hrm' },
 ];
 
+// Navigation items for Auto Dealer add-on
+const autoDealerNavItems = [
+  { to: '/app/autodealer', icon: LayoutDashboard, label: 'Auto Dashboard', addon: 'autodealer' },
+  { to: '/app/autodealer/voertuigen', icon: Car, label: 'Voertuigen', addon: 'autodealer' },
+  { to: '/app/autodealer/klanten', icon: Users, label: 'Klanten', addon: 'autodealer' },
+  { to: '/app/autodealer/verkopen', icon: ShoppingCart, label: 'Verkopen', addon: 'autodealer' },
+];
+
 export default function Layout() {
   const { user, logout, hasActiveSubscription, isSuperAdmin, workspace, branding } = useAuth();
   const navigate = useNavigate();
