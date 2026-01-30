@@ -445,6 +445,49 @@ export default function WorkspaceSettings() {
                 <Badge className="bg-yellow-100 text-yellow-700"><Crown className="w-3 h-3 mr-1" /> Eigenaar</Badge>
               )}
             </div>
+            
+            {/* Portal Login URL - clearly visible for customers */}
+            <div className="mt-4 p-4 bg-white rounded-lg border border-emerald-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Uw Portaal Login URL</p>
+                  <p className="text-xs text-gray-500">Deel deze URL met uw team om toegang te krijgen tot uw workspace</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <code className="px-3 py-2 bg-gray-100 rounded-lg text-sm font-mono">
+                    {domain.type === 'subdomain' 
+                      ? `https://${domain.full_subdomain || `${domain.subdomain}.facturatie.sr`}/login`
+                      : domain.custom_domain 
+                        ? `https://${domain.custom_domain}/login`
+                        : 'https://facturatie.sr/login'}
+                  </code>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => copyToClipboard(
+                      domain.type === 'subdomain' 
+                        ? `https://${domain.full_subdomain || `${domain.subdomain}.facturatie.sr`}/login`
+                        : domain.custom_domain 
+                          ? `https://${domain.custom_domain}/login`
+                          : 'https://facturatie.sr/login'
+                    )}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <a 
+                    href={domain.type === 'subdomain' 
+                      ? `https://${domain.full_subdomain || `${domain.subdomain}.facturatie.sr`}/login`
+                      : domain.custom_domain 
+                        ? `https://${domain.custom_domain}/login`
+                        : 'https://facturatie.sr/login'} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    <Button variant="outline" size="sm"><ExternalLink className="w-4 h-4" /></Button>
+                  </a>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
