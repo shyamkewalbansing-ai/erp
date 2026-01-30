@@ -262,4 +262,10 @@ export const formatCurrencyEUR = (amount) => {
   }).format(amount)}`;
 };
 
+// System Update / Deployment
+export const getDeploymentSettings = () => api.get('/admin/deployment/settings');
+export const updateDeploymentSettings = (data) => api.put('/admin/deployment/settings', data);
+export const triggerSystemUpdate = () => api.post('/admin/deployment/update');
+export const getDeploymentLogs = () => api.get('/admin/deployment/logs');
+
 export default api;
