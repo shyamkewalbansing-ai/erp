@@ -113,15 +113,15 @@ export default function Layout() {
   // Load user's active add-ons
   useEffect(() => {
     const loadAddons = async () => {
-      if (!isSuperAdmin() && user) {
+      const isAdmin = user?.role === 'superadmin';
+      if (!isAdmin && user) {
         try {
           const res = await getMyAddons();
           const activeSlugs = res.data
             .filter(a => a.status === 'active')
             .map(a => a.addon_slug);
           setActiveAddons(activeSlugs);
-        } catch (error) {
-          console.error('Error loading addons:', error);
+        } catch {
           setActiveAddons([]);
         }
       }
