@@ -90,7 +90,11 @@ export default function TenantDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [logout, navigate]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleSubmitMeterReading = async (e) => {
     e.preventDefault();
