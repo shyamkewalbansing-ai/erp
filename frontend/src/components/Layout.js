@@ -156,12 +156,61 @@ export default function Layout() {
     navigate('/login');
   };
 
+  // Workspace popup handlers
+  const openWorkspaceDialog = async () => {
+    try {
+      const res = await getWorkspaceSettings();
+      setWorkspaceData(res.data);
+      if (res.data?.workspace) {
+        setWorkspaceForm({
+          name: res.data.workspace.name || '',
+          slug: res.data.workspace.slug || ''
+        });
+        if (res.data.domain) {
+          setDomainForm({
+            domain_type: res.data.domain.type || 'subdomain',
+            subdomain: res.data.domain.subdomain || '',
+            custom_domain: res.data.domain.custom_domain || ''
+          });
+        }
+      }
+      setWorkspaceDialogOpen(true);
+    } catch (error) {
+      toast.error('Kon workspace gegevens niet laden');
+    }
+  };
+
+  const handleSaveWorkspace = async () => {
+    setSavingWorkspace(true);
+    try {
+      await updateWorkspaceSettings(workspaceForm);
+      await updateWorkspaceDomain(domainForm);
+      toast.success('Workspace instellingen opgeslagen');
+      setWorkspaceDialogOpen(false);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Opslaan mislukt');
+    } finally {
+      setSavingWorkspace(false);
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Gekopieerd');
+  };
+
+  const getPortalUrl = () => {
+    if (!workspaceData?.domain) return '';
+    const d = workspaceData.domain;
+    if (d.type === 'subdomain') {
+      return `https://${d.full_subdomain || `${d.subdomain}.facturatie.sr`}`;
+    }
+    return d.custom_domain ? `https://${d.custom_domain}` : '';
+  };
+
   const isSubscriptionActive = hasActiveSubscription();
   const showTrialBadge = user?.subscription_status === 'trial';
   const showExpiredBadge = user?.subscription_status === 'expired';
-  
-  // Get branding from context
-  const { branding, workspace } = useAuth();
 
   return (
     <div className="app-container grain-overlay">
