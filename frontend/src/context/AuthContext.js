@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext(null);
@@ -21,24 +21,7 @@ export const AuthProvider = ({ children }) => {
   const [workspace, setWorkspace] = useState(null);
   const [branding, setBranding] = useState(DEFAULT_BRANDING);
 
-  useEffect(() => {
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
-
-  // Apply branding CSS variables
-  useEffect(() => {
-    if (branding) {
-      document.documentElement.style.setProperty('--brand-primary', branding.primary_color || '#0caf60');
-      document.documentElement.style.setProperty('--brand-secondary', branding.secondary_color || '#059669');
-    }
-  }, [branding]);
-
-  const fetchUser = async () => {
+  const fetchUser = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/auth/me`);
       setUser(response.data);
