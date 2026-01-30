@@ -63,6 +63,11 @@ const AutoDealerVoertuigen = lazy(() => import("./pages/AutoDealerVoertuigen"));
 const AutoDealerKlanten = lazy(() => import("./pages/AutoDealerKlanten"));
 const AutoDealerVerkopen = lazy(() => import("./pages/AutoDealerVerkopen"));
 
+// Auto Dealer Customer Portal
+const AutoDealerPortalLogin = lazy(() => import("./pages/AutoDealerPortalLogin"));
+const AutoDealerPortalDashboard = lazy(() => import("./pages/AutoDealerPortalDashboard"));
+const AutoDealerPortalPurchases = lazy(() => import("./pages/AutoDealerPortalPurchases"));
+
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
   <div className="min-h-screen flex items-center justify-center bg-background">
