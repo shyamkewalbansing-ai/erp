@@ -261,7 +261,7 @@ export default function Tenants() {
             Huurders
           </h1>
           <p className="text-muted-foreground mt-1">
-            Beheer uw huurders en bekijk hun saldo's
+            Beheer uw huurders en bekijk hun saldo&apos;s
           </p>
         </div>
         <Button 
