@@ -1396,6 +1396,80 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         logo=current_user.get("logo")
     )
 
+@api_router.get("/workspace/current")
+async def get_current_workspace(current_user: dict = Depends(get_current_user)):
+    """Get the current user's workspace with branding"""
+    if current_user.get("role") == "superadmin":
+        return {
+            "workspace": None,
+            "branding": {
+                "logo_url": None,
+                "primary_color": "#0caf60",
+                "secondary_color": "#059669",
+                "portal_name": "Facturatie Admin"
+            }
+        }
+    
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        # Create workspace if user doesn't have one (legacy users)
+        workspace = await create_workspace_for_user(
+            current_user["id"],
+            current_user["name"],
+            current_user.get("company_name")
+        )
+    else:
+        workspace = await db.workspaces.find_one({"id": workspace_id}, {"_id": 0})
+    
+    if not workspace:
+        return {
+            "workspace": None,
+            "branding": {
+                "logo_url": None,
+                "primary_color": "#0caf60",
+                "secondary_color": "#059669",
+                "portal_name": "Facturatie"
+            }
+        }
+    
+    return {
+        "workspace": {
+            "id": workspace["id"],
+            "name": workspace["name"],
+            "slug": workspace["slug"],
+            "domain": workspace.get("domain", {})
+        },
+        "branding": workspace.get("branding", {
+            "logo_url": None,
+            "primary_color": "#0caf60",
+            "secondary_color": "#059669",
+            "portal_name": workspace["name"]
+        })
+    }
+
+@api_router.put("/workspace/branding")
+async def update_workspace_branding(
+    branding: WorkspaceBranding,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update the current user's workspace branding"""
+    if current_user.get("role") == "superadmin":
+        raise HTTPException(status_code=400, detail="Superadmin heeft geen workspace")
+    
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    await db.workspaces.update_one(
+        {"id": workspace_id},
+        {"$set": {
+            "branding": branding.dict(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Branding bijgewerkt"}
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
