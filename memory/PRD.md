@@ -256,10 +256,38 @@ Complete self-service portaal voor huurders:
 - [x] **Auto Dealer Module** met multi-valuta (SRD, EUR, USD)
 
 ### P1 (High Priority)
-- [ ] **server.py refactoring** (>12000 lines) - Split into modular routers (GESTART - tenant_portal.py verplaatst)
+- [x] **server.py refactoring** (>12000 lines) - Split into modular routers (IN PROGRESS - tenant_portal.py, hrm.py, autodealer_portal.py gemaakt)
 - [ ] **Login bug na uitloggen** - Verificatie nodig van gebruiker (TESTEN VEREIST)
 - [ ] **Herinneringen voor maandelijkse meteropname** (email notificaties)
-- [ ] **Workspace branding globaal toepassen** - Colors/logo op alle pagina's
+- [x] **Workspace branding globaal toepassen** - CSS variabelen met HSL conversie (VOLTOOID)
+
+### Auto Dealer Klantportaal ✅ (NIEUW - 30 Jan 2026)
+Complete klantportaal voor Auto Dealer module:
+
+**Frontend Pagina's:**
+| Pagina | URL | Beschrijving |
+|--------|-----|--------------|
+| Login/Registratie | `/klant-portaal/login` | Tabs voor inloggen en registreren |
+| Dashboard | `/klant-portaal` | Statistieken, snelle acties, recente aankopen |
+| Aankopen | `/klant-portaal/aankopen` | Overzicht met zoeken en filteren |
+
+**API Endpoints:**
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| `/api/autodealer-portal/login` | POST | Klant login |
+| `/api/autodealer-portal/register` | POST | Klant registratie |
+| `/api/autodealer-portal/me` | GET/PUT | Profiel ophalen/bijwerken |
+| `/api/autodealer-portal/dashboard` | GET | Dashboard met stats |
+| `/api/autodealer-portal/purchases` | GET | Alle aankopen |
+| `/api/autodealer-portal/support` | POST/GET | Ondersteuningsverzoeken |
+
+**Features:**
+- [x] Aparte authenticatie voor klanten (autodealer_customer_token)
+- [x] Registratie met automatische koppeling aan klantrecord
+- [x] Dashboard met totaal aankopen, voertuigen, besteed bedrag
+- [x] Aankopen overzicht met zoeken en status filter
+- [x] Ondersteuningsverzoeken indienen
+- [x] Modern dark theme UI
 
 ### CloudPanel Deployment ✅ (NIEUW - 30 Jan 2026)
 Volledige deployment documentatie en scripts gemaakt:
