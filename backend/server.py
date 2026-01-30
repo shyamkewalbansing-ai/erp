@@ -1471,6 +1471,339 @@ async def update_workspace_branding(
     
     return {"message": "Branding bijgewerkt"}
 
+# ==================== WORKSPACE SETTINGS (Customer) ====================
+
+class WorkspaceSettingsUpdate(BaseModel):
+    name: Optional[str] = None
+    slug: Optional[str] = None
+
+class WorkspaceDomainUpdate(BaseModel):
+    domain_type: str  # "subdomain" or "custom"
+    subdomain: Optional[str] = None
+    custom_domain: Optional[str] = None
+
+class WorkspaceCreateRequest(BaseModel):
+    name: str
+    slug: Optional[str] = None
+
+@api_router.get("/workspace/settings")
+async def get_workspace_settings(current_user: dict = Depends(get_current_user)):
+    """Get full workspace settings for the current user"""
+    if current_user.get("role") == "superadmin":
+        raise HTTPException(status_code=400, detail="Superadmin heeft geen workspace")
+    
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        return {"workspace": None, "has_workspace": False}
+    
+    workspace = await db.workspaces.find_one({"id": workspace_id}, {"_id": 0})
+    if not workspace:
+        return {"workspace": None, "has_workspace": False}
+    
+    # Get server IP for DNS instructions
+    server_ip = "45.79.123.456"  # Update with actual server IP
+    main_domain = "facturatie.sr"
+    
+    domain = workspace.get("domain", {})
+    domain_info = {
+        **domain,
+        "full_subdomain": f"{domain.get('subdomain', workspace['slug'])}.{main_domain}" if domain.get("type") == "subdomain" else None,
+        "server_ip": server_ip,
+        "dns_instructions": None
+    }
+    
+    # Add DNS instructions for custom domains
+    if domain.get("type") == "custom" and domain.get("custom_domain"):
+        domain_info["dns_instructions"] = {
+            "record_type": "A",
+            "host": domain["custom_domain"],
+            "value": server_ip,
+            "ttl": "3600",
+            "instructions": f"Maak een A-record aan voor {domain['custom_domain']} die wijst naar {server_ip}"
+        }
+    
+    return {
+        "workspace": {
+            "id": workspace["id"],
+            "name": workspace["name"],
+            "slug": workspace["slug"],
+            "status": workspace.get("status", "active"),
+            "owner_id": workspace.get("owner_id"),
+            "created_at": workspace.get("created_at"),
+            "updated_at": workspace.get("updated_at")
+        },
+        "domain": domain_info,
+        "branding": workspace.get("branding", {}),
+        "has_workspace": True,
+        "is_owner": workspace.get("owner_id") == current_user["id"]
+    }
+
+@api_router.put("/workspace/settings")
+async def update_workspace_settings(
+    settings: WorkspaceSettingsUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update workspace name and/or slug"""
+    if current_user.get("role") == "superadmin":
+        raise HTTPException(status_code=400, detail="Superadmin heeft geen workspace")
+    
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace niet gevonden")
+    
+    # Only owner can update settings
+    if workspace["owner_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Alleen de eigenaar kan workspace instellingen wijzigen")
+    
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    
+    if settings.name:
+        update_data["name"] = settings.name
+        # Update portal name in branding if it matches old name
+        if workspace.get("branding", {}).get("portal_name") == workspace["name"]:
+            update_data["branding.portal_name"] = settings.name
+    
+    if settings.slug:
+        import re
+        slug = settings.slug.lower().strip()
+        if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$', slug):
+            raise HTTPException(status_code=400, detail="Slug mag alleen kleine letters, cijfers en koppeltekens bevatten")
+        
+        # Check if slug is already in use
+        existing = await db.workspaces.find_one({"slug": slug, "id": {"$ne": workspace_id}})
+        if existing:
+            raise HTTPException(status_code=400, detail="Deze slug is al in gebruik")
+        
+        update_data["slug"] = slug
+        # Update subdomain if using subdomain type
+        if workspace.get("domain", {}).get("type") == "subdomain":
+            update_data["domain.subdomain"] = slug
+    
+    await db.workspaces.update_one({"id": workspace_id}, {"$set": update_data})
+    
+    return {"message": "Workspace instellingen bijgewerkt"}
+
+@api_router.put("/workspace/domain")
+async def update_workspace_domain(
+    domain_data: WorkspaceDomainUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update workspace domain settings"""
+    if current_user.get("role") == "superadmin":
+        raise HTTPException(status_code=400, detail="Superadmin heeft geen workspace")
+    
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace niet gevonden")
+    
+    if workspace["owner_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Alleen de eigenaar kan domein instellingen wijzigen")
+    
+    server_ip = "45.79.123.456"
+    
+    if domain_data.domain_type == "subdomain":
+        subdomain = domain_data.subdomain or workspace["slug"]
+        
+        # Check if subdomain is available
+        existing = await db.workspaces.find_one({
+            "domain.subdomain": subdomain,
+            "id": {"$ne": workspace_id}
+        })
+        if existing:
+            raise HTTPException(status_code=400, detail="Dit subdomein is al in gebruik")
+        
+        domain_config = {
+            "type": "subdomain",
+            "subdomain": subdomain,
+            "custom_domain": None,
+            "dns_verified": True,
+            "ssl_active": True,
+            "dns_record_type": "A",
+            "dns_record_value": server_ip
+        }
+        status = "active"
+        
+    elif domain_data.domain_type == "custom":
+        if not domain_data.custom_domain:
+            raise HTTPException(status_code=400, detail="Custom domein is verplicht")
+        
+        # Clean domain
+        custom_domain = domain_data.custom_domain.lower().strip()
+        if custom_domain.startswith("http://") or custom_domain.startswith("https://"):
+            custom_domain = custom_domain.split("://")[1]
+        custom_domain = custom_domain.rstrip("/")
+        
+        # Check if domain is available
+        existing = await db.workspaces.find_one({
+            "domain.custom_domain": custom_domain,
+            "id": {"$ne": workspace_id}
+        })
+        if existing:
+            raise HTTPException(status_code=400, detail="Dit domein is al in gebruik")
+        
+        domain_config = {
+            "type": "custom",
+            "subdomain": None,
+            "custom_domain": custom_domain,
+            "dns_verified": False,
+            "ssl_active": False,
+            "dns_record_type": "A",
+            "dns_record_value": server_ip
+        }
+        status = "pending"
+    else:
+        raise HTTPException(status_code=400, detail="Ongeldig domein type")
+    
+    await db.workspaces.update_one(
+        {"id": workspace_id},
+        {"$set": {
+            "domain": domain_config,
+            "status": status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "message": "Domein instellingen bijgewerkt",
+        "domain": domain_config,
+        "status": status
+    }
+
+@api_router.post("/workspace/domain/verify")
+async def verify_workspace_domain(current_user: dict = Depends(get_current_user)):
+    """Verify DNS for custom domain"""
+    import socket
+    
+    if current_user.get("role") == "superadmin":
+        raise HTTPException(status_code=400, detail="Superadmin heeft geen workspace")
+    
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    workspace = await db.workspaces.find_one({"id": workspace_id}, {"_id": 0})
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace niet gevonden")
+    
+    domain = workspace.get("domain", {})
+    if domain.get("type") != "custom" or not domain.get("custom_domain"):
+        raise HTTPException(status_code=400, detail="Geen custom domein geconfigureerd")
+    
+    custom_domain = domain["custom_domain"]
+    server_ip = "45.79.123.456"
+    
+    try:
+        ip_addresses = socket.gethostbyname_ex(custom_domain)[2]
+        
+        if server_ip in ip_addresses:
+            await db.workspaces.update_one(
+                {"id": workspace_id},
+                {"$set": {
+                    "domain.dns_verified": True,
+                    "status": "active",
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            return {
+                "success": True,
+                "message": f"DNS geverifieerd! {custom_domain} wijst naar {server_ip}",
+                "next_step": "SSL-certificaat wordt automatisch aangevraagd"
+            }
+        else:
+            return {
+                "success": False,
+                "message": f"DNS wijst naar {', '.join(ip_addresses)} in plaats van {server_ip}",
+                "instructions": f"Wijzig het A-record van {custom_domain} naar {server_ip}"
+            }
+    except socket.gaierror:
+        return {
+            "success": False,
+            "message": f"Domein {custom_domain} niet gevonden in DNS",
+            "instructions": f"Maak een A-record aan voor {custom_domain} dat wijst naar {server_ip}"
+        }
+
+@api_router.post("/workspace/create")
+async def create_user_workspace(
+    workspace_data: WorkspaceCreateRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new workspace for a user who doesn't have one"""
+    import re
+    
+    if current_user.get("role") == "superadmin":
+        raise HTTPException(status_code=400, detail="Superadmin kan geen workspace aanmaken")
+    
+    # Check if user already has a workspace
+    if current_user.get("workspace_id"):
+        existing = await db.workspaces.find_one({"id": current_user["workspace_id"]})
+        if existing:
+            raise HTTPException(status_code=400, detail="Je hebt al een workspace")
+    
+    # Generate slug from name if not provided
+    slug = workspace_data.slug or re.sub(r'[^a-z0-9]', '', workspace_data.name.lower())[:20]
+    
+    # Validate slug
+    if not re.match(r'^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$', slug):
+        raise HTTPException(status_code=400, detail="Slug mag alleen kleine letters, cijfers en koppeltekens bevatten")
+    
+    # Check if slug is available
+    existing = await db.workspaces.find_one({"slug": slug})
+    if existing:
+        # Add random suffix
+        slug = f"{slug}-{str(uuid.uuid4())[:8]}"
+    
+    workspace_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    server_ip = "45.79.123.456"
+    
+    workspace = {
+        "id": workspace_id,
+        "name": workspace_data.name,
+        "slug": slug,
+        "owner_id": current_user["id"],
+        "status": "active",
+        "domain": {
+            "type": "subdomain",
+            "subdomain": slug,
+            "custom_domain": None,
+            "dns_verified": True,
+            "ssl_active": True,
+            "dns_record_type": "A",
+            "dns_record_value": server_ip
+        },
+        "branding": {
+            "logo_url": None,
+            "favicon_url": None,
+            "primary_color": "#0caf60",
+            "secondary_color": "#059669",
+            "portal_name": workspace_data.name
+        },
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.workspaces.insert_one(workspace)
+    await db.users.update_one({"id": current_user["id"]}, {"$set": {"workspace_id": workspace_id}})
+    
+    return {
+        "message": "Workspace aangemaakt",
+        "workspace": {
+            "id": workspace_id,
+            "name": workspace_data.name,
+            "slug": slug,
+            "domain": workspace["domain"]
+        }
+    }
+
 class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
