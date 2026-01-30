@@ -9567,6 +9567,29 @@ BACKUP_COLLECTIONS = [
     "workspace_users", "workspace_logs", "user_addons"
 ]
 
+async def get_all_workspace_collections():
+    """
+    Dynamisch alle collecties ophalen die workspace_id bevatten.
+    Dit zorgt ervoor dat nieuwe modules automatisch worden gebackupt.
+    """
+    all_collections = await db.list_collection_names()
+    workspace_collections = set(BACKUP_COLLECTIONS)  # Start met bekende collecties
+    
+    # Controleer elke collectie of het workspace_id bevat
+    for coll_name in all_collections:
+        # Skip system en backup collecties
+        if coll_name.startswith('system.') or coll_name in ['workspace_backups', 'workspace_backup_data', 'workspaces']:
+            continue
+        try:
+            # Check of collectie documenten met workspace_id heeft
+            sample = await db[coll_name].find_one({"workspace_id": {"$exists": True}})
+            if sample:
+                workspace_collections.add(coll_name)
+        except Exception:
+            pass
+    
+    return list(workspace_collections)
+
 class BackupCreate(BaseModel):
     name: str
     description: Optional[str] = None
