@@ -554,3 +554,375 @@ async def remove_workspace_user(user_id: str, current_user: dict = Depends(get_c
     )
     
     return {"message": "Gebruiker verwijderd"}
+
+
+
+# ==================== WORKSPACE BACKUPS ====================
+
+class BackupResponse(BaseModel):
+    id: str
+    workspace_id: str
+    name: str
+    description: Optional[str] = None
+    size_bytes: int
+    collections_count: int
+    records_count: int
+    created_at: str
+    created_by: str
+    status: str
+
+class BackupCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+class RestoreRequest(BaseModel):
+    confirm: bool = False
+
+# Collections to backup per workspace
+BACKUP_COLLECTIONS = [
+    "tenants",
+    "apartments", 
+    "payments",
+    "deposits",
+    "loans",
+    "kasgeld",
+    "maintenance",
+    "employees",
+    "salaries",
+    "meter_readings",
+    "contracts",
+    "invoices",
+    "workspace_users",
+    "workspace_logs"
+]
+
+@router.get("/workspace/backups", response_model=List[BackupResponse])
+async def get_workspace_backups(current_user: dict = Depends(get_current_user)):
+    """Get all backups for the current workspace"""
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        if current_user.get("role") == "superadmin":
+            raise HTTPException(status_code=400, detail="Superadmin heeft geen workspace")
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    # Check if user is owner or admin
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace niet gevonden")
+    
+    if workspace["owner_id"] != current_user["id"]:
+        user_role = await db.workspace_users.find_one({
+            "workspace_id": workspace_id,
+            "user_id": current_user["id"],
+            "role": {"$in": ["admin", "owner"]}
+        })
+        if not user_role:
+            raise HTTPException(status_code=403, detail="Geen rechten voor backup beheer")
+    
+    backups = await db.workspace_backups.find(
+        {"workspace_id": workspace_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    return backups
+
+@router.post("/workspace/backups", response_model=BackupResponse)
+async def create_workspace_backup(
+    backup_data: BackupCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a backup of the current workspace data"""
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        if current_user.get("role") == "superadmin":
+            raise HTTPException(status_code=400, detail="Superadmin heeft geen workspace")
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    # Check permissions
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace niet gevonden")
+    
+    if workspace["owner_id"] != current_user["id"]:
+        user_role = await db.workspace_users.find_one({
+            "workspace_id": workspace_id,
+            "user_id": current_user["id"],
+            "role": {"$in": ["admin", "owner"]}
+        })
+        if not user_role:
+            raise HTTPException(status_code=403, detail="Geen rechten om backups te maken")
+    
+    backup_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Collect all workspace data
+    backup_content = {
+        "workspace": workspace,
+        "collections": {}
+    }
+    
+    total_records = 0
+    
+    for collection_name in BACKUP_COLLECTIONS:
+        collection = db[collection_name]
+        # Get all records for this workspace
+        records = await collection.find(
+            {"workspace_id": workspace_id},
+            {"_id": 0}
+        ).to_list(10000)
+        
+        # Also get records linked to owner (legacy support)
+        if collection_name in ["tenants", "apartments", "payments", "employees"]:
+            legacy_records = await collection.find(
+                {
+                    "user_id": workspace["owner_id"],
+                    "workspace_id": {"$exists": False}
+                },
+                {"_id": 0}
+            ).to_list(10000)
+            records.extend(legacy_records)
+        
+        backup_content["collections"][collection_name] = records
+        total_records += len(records)
+    
+    # Calculate size (rough estimate)
+    import json
+    backup_json = json.dumps(backup_content, default=str)
+    size_bytes = len(backup_json.encode('utf-8'))
+    
+    # Store backup metadata
+    backup_record = {
+        "id": backup_id,
+        "workspace_id": workspace_id,
+        "name": backup_data.name,
+        "description": backup_data.description,
+        "size_bytes": size_bytes,
+        "collections_count": len(BACKUP_COLLECTIONS),
+        "records_count": total_records,
+        "created_at": now,
+        "created_by": current_user["id"],
+        "created_by_name": current_user.get("name", "Onbekend"),
+        "status": "completed"
+    }
+    
+    await db.workspace_backups.insert_one(backup_record)
+    
+    # Store actual backup data
+    await db.workspace_backup_data.insert_one({
+        "backup_id": backup_id,
+        "workspace_id": workspace_id,
+        "content": backup_content,
+        "created_at": now
+    })
+    
+    # Log the action
+    await db.workspace_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "workspace_id": workspace_id,
+        "action": "backup_created",
+        "details": f"Backup '{backup_data.name}' aangemaakt ({total_records} records)",
+        "user_id": current_user["id"],
+        "user_name": current_user.get("name"),
+        "created_at": now
+    })
+    
+    return BackupResponse(**backup_record)
+
+@router.post("/workspace/backups/{backup_id}/restore")
+async def restore_workspace_backup(
+    backup_id: str,
+    restore_request: RestoreRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Restore a workspace from a backup - DANGEROUS operation"""
+    if not restore_request.confirm:
+        raise HTTPException(
+            status_code=400, 
+            detail="Bevestig het herstel door 'confirm: true' in te stellen. Dit overschrijft alle huidige data!"
+        )
+    
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    # Check permissions - only owner can restore
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace niet gevonden")
+    
+    if workspace["owner_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Alleen de eigenaar kan een backup herstellen")
+    
+    # Get backup metadata
+    backup = await db.workspace_backups.find_one({
+        "id": backup_id,
+        "workspace_id": workspace_id
+    })
+    if not backup:
+        raise HTTPException(status_code=404, detail="Backup niet gevonden")
+    
+    # Get backup data
+    backup_data = await db.workspace_backup_data.find_one({"backup_id": backup_id})
+    if not backup_data or not backup_data.get("content"):
+        raise HTTPException(status_code=404, detail="Backup data niet gevonden of corrupt")
+    
+    content = backup_data["content"]
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # First, create a safety backup before restoring
+    safety_backup_id = str(uuid.uuid4())
+    safety_content = {"workspace": workspace, "collections": {}}
+    
+    for collection_name in BACKUP_COLLECTIONS:
+        records = await db[collection_name].find(
+            {"workspace_id": workspace_id},
+            {"_id": 0}
+        ).to_list(10000)
+        safety_content["collections"][collection_name] = records
+    
+    await db.workspace_backup_data.insert_one({
+        "backup_id": safety_backup_id,
+        "workspace_id": workspace_id,
+        "content": safety_content,
+        "created_at": now,
+        "type": "safety_before_restore"
+    })
+    
+    await db.workspace_backups.insert_one({
+        "id": safety_backup_id,
+        "workspace_id": workspace_id,
+        "name": f"Auto-backup voor herstel ({backup['name']})",
+        "description": "Automatisch aangemaakt voor het herstellen van een backup",
+        "size_bytes": 0,
+        "collections_count": len(BACKUP_COLLECTIONS),
+        "records_count": 0,
+        "created_at": now,
+        "created_by": "system",
+        "created_by_name": "Systeem",
+        "status": "completed"
+    })
+    
+    # Delete current data and restore from backup
+    restored_count = 0
+    
+    for collection_name, records in content.get("collections", {}).items():
+        if collection_name in BACKUP_COLLECTIONS:
+            # Delete existing records for this workspace
+            await db[collection_name].delete_many({"workspace_id": workspace_id})
+            
+            # Insert restored records
+            if records:
+                # Ensure all records have workspace_id
+                for record in records:
+                    record["workspace_id"] = workspace_id
+                await db[collection_name].insert_many(records)
+                restored_count += len(records)
+    
+    # Log the restore action
+    await db.workspace_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "workspace_id": workspace_id,
+        "action": "backup_restored",
+        "details": f"Backup '{backup['name']}' hersteld ({restored_count} records). Veiligheidsbackup: {safety_backup_id}",
+        "user_id": current_user["id"],
+        "user_name": current_user.get("name"),
+        "created_at": now
+    })
+    
+    return {
+        "message": f"Backup succesvol hersteld",
+        "records_restored": restored_count,
+        "safety_backup_id": safety_backup_id,
+        "warning": "Een veiligheidsbackup is automatisch aangemaakt voor het herstel"
+    }
+
+@router.delete("/workspace/backups/{backup_id}")
+async def delete_workspace_backup(backup_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a workspace backup"""
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    # Check permissions
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    if workspace["owner_id"] != current_user["id"]:
+        user_role = await db.workspace_users.find_one({
+            "workspace_id": workspace_id,
+            "user_id": current_user["id"],
+            "role": {"$in": ["admin", "owner"]}
+        })
+        if not user_role:
+            raise HTTPException(status_code=403, detail="Geen rechten om backups te verwijderen")
+    
+    # Check if backup exists and belongs to workspace
+    backup = await db.workspace_backups.find_one({
+        "id": backup_id,
+        "workspace_id": workspace_id
+    })
+    if not backup:
+        raise HTTPException(status_code=404, detail="Backup niet gevonden")
+    
+    # Delete backup data and metadata
+    await db.workspace_backup_data.delete_one({"backup_id": backup_id})
+    await db.workspace_backups.delete_one({"id": backup_id})
+    
+    # Log the action
+    await db.workspace_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "workspace_id": workspace_id,
+        "action": "backup_deleted",
+        "details": f"Backup '{backup['name']}' verwijderd",
+        "user_id": current_user["id"],
+        "user_name": current_user.get("name"),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return {"message": "Backup verwijderd"}
+
+@router.get("/workspace/backups/{backup_id}/download")
+async def download_workspace_backup(backup_id: str, current_user: dict = Depends(get_current_user)):
+    """Download backup as JSON (for external storage)"""
+    workspace_id = current_user.get("workspace_id")
+    if not workspace_id:
+        raise HTTPException(status_code=404, detail="Geen workspace gevonden")
+    
+    # Check permissions
+    workspace = await db.workspaces.find_one({"id": workspace_id})
+    if workspace["owner_id"] != current_user["id"]:
+        user_role = await db.workspace_users.find_one({
+            "workspace_id": workspace_id,
+            "user_id": current_user["id"],
+            "role": {"$in": ["admin", "owner"]}
+        })
+        if not user_role:
+            raise HTTPException(status_code=403, detail="Geen rechten voor deze backup")
+    
+    # Get backup
+    backup = await db.workspace_backups.find_one({
+        "id": backup_id,
+        "workspace_id": workspace_id
+    })
+    if not backup:
+        raise HTTPException(status_code=404, detail="Backup niet gevonden")
+    
+    backup_data = await db.workspace_backup_data.find_one({"backup_id": backup_id})
+    if not backup_data:
+        raise HTTPException(status_code=404, detail="Backup data niet gevonden")
+    
+    from fastapi.responses import JSONResponse
+    
+    return JSONResponse(
+        content={
+            "backup_info": {
+                "id": backup["id"],
+                "name": backup["name"],
+                "workspace_id": workspace_id,
+                "created_at": backup["created_at"],
+                "records_count": backup["records_count"]
+            },
+            "data": backup_data["content"]
+        },
+        headers={
+            "Content-Disposition": f'attachment; filename="backup_{workspace_id}_{backup_id}.json"'
+        }
+    )
