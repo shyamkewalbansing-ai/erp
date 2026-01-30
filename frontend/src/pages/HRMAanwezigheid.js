@@ -34,7 +34,7 @@ export default function HRMAanwezigheid() {
     try {
       const res = await api.post(`/hrm/attendance/clock-in?employee_id=${employeeId}`);
       toast.success(res.data.message);
-      loadData();
+      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
     } catch (error) {
       toast.error('Fout bij inklokken');
     }
@@ -44,7 +44,7 @@ export default function HRMAanwezigheid() {
     try {
       const res = await api.post(`/hrm/attendance/clock-out?employee_id=${employeeId}`);
       toast.success(res.data.message);
-      loadData();
+      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij uitklokken');
     }

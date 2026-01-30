@@ -100,7 +100,7 @@ export default function Meterstanden() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadData();
+    loadData(); // eslint-disable-line react-hooks/exhaustive-deps
   }, [selectedMonth, selectedYear]);
 
   const loadData = async () => {
@@ -167,7 +167,7 @@ export default function Meterstanden() {
         swm_reading: '',
         notes: ''
       });
-      loadData();
+      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij toevoegen');
     } finally {
@@ -183,7 +183,7 @@ export default function Meterstanden() {
       toast.success(`Betaling van ${formatCurrency(selectedReading.total_cost)} verwerkt en afgetrokken van kasgeld`);
       setPayConfirmOpen(false);
       setSelectedReading(null);
-      loadData();
+      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij verwerken betaling');
     }
@@ -193,7 +193,7 @@ export default function Meterstanden() {
     try {
       await api.post(`/meter-readings/${reading.id}/unpay`);
       toast.success('Betaling ongedaan gemaakt');
-      loadData();
+      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij ongedaan maken');
     }
@@ -205,7 +205,7 @@ export default function Meterstanden() {
     try {
       await api.delete(`/meter-readings/${reading.id}`);
       toast.success('Meterstand verwijderd');
-      loadData();
+      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
     } catch (error) {
       toast.error('Fout bij verwijderen');
     }

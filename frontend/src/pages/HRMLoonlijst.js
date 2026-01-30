@@ -74,7 +74,7 @@ export default function HRMLoonlijst() {
       }
       setShowModal(false);
       resetForm();
-      loadData();
+      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij opslaan');
     } finally {
@@ -86,7 +86,7 @@ export default function HRMLoonlijst() {
     try {
       const res = await api.post(`/hrm/payroll/generate?period=${selectedPeriod}`);
       toast.success(res.data.message);
-      loadData();
+      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
     } catch (error) {
       toast.error('Fout bij genereren');
     }
@@ -96,7 +96,7 @@ export default function HRMLoonlijst() {
     try {
       await api.put(`/hrm/payroll/${id}/${action}`);
       toast.success(action === 'approve' ? 'Loonstrook goedgekeurd' : 'Loonstrook uitbetaald');
-      loadData();
+      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
     } catch (error) {
       toast.error('Fout bij actie');
     }

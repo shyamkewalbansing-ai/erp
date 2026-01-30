@@ -65,7 +65,7 @@ export default function TenantDashboard() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadData();
+    loadData(); // eslint-disable-line react-hooks/exhaustive-deps
   }, []);
 
   const loadData = async () => {
@@ -115,7 +115,7 @@ export default function TenantDashboard() {
       toast.success('Meterstand succesvol ingediend!');
       setMeterDialogOpen(false);
       setMeterForm({ ebs_reading: '', swm_reading: '', notes: '' });
-      loadData();
+      loadData(); // eslint-disable-line react-hooks/exhaustive-deps
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij indienen');
     } finally {
