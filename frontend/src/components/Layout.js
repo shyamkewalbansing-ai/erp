@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyAddons } from '../lib/api';
+import { getMyAddons, getWorkspaceSettings, updateWorkspaceSettings, updateWorkspaceDomain } from '../lib/api';
 import { 
   LayoutDashboard, 
   Users, 
@@ -30,12 +30,22 @@ import {
   Target,
   Clock,
   Calendar,
-  Zap
+  Zap,
+  Globe,
+  Copy,
+  ExternalLink,
+  Save,
+  Loader2
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import NotificationBell from './NotificationBell';
 import AIAssistant from './AIAssistant';
+import { toast } from 'sonner';
 
 // Navigation items for Vastgoed Beheer add-on
 const vastgoedNavItems = [
