@@ -2085,6 +2085,389 @@ echo "Deploy completed at $(date)"`}</pre>
         </TabsContent>
       </Tabs>
 
+      {/* Create Workspace Dialog */}
+      <Dialog open={createWorkspaceDialogOpen} onOpenChange={setCreateWorkspaceDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Layers className="w-5 h-5" />
+              Nieuwe Workspace Aanmaken
+            </DialogTitle>
+            <DialogDescription>
+              Maak een gescheiden omgeving aan voor een klant
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Basic Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Workspace Naam *</Label>
+                <Input
+                  placeholder="Bedrijfsnaam B.V."
+                  value={newWorkspace.name}
+                  onChange={(e) => setNewWorkspace({...newWorkspace, name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Slug (URL) *</Label>
+                <Input
+                  placeholder="bedrijfsnaam"
+                  value={newWorkspace.slug}
+                  onChange={(e) => setNewWorkspace({...newWorkspace, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})}
+                />
+                <p className="text-xs text-gray-500">Alleen kleine letters, cijfers en koppeltekens</p>
+              </div>
+            </div>
+
+            {/* Owner Selection */}
+            <div className="space-y-2">
+              <Label>Eigenaar (Klant) *</Label>
+              <Select value={newWorkspace.owner_id} onValueChange={(v) => setNewWorkspace({...newWorkspace, owner_id: v})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecteer een klant" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.filter(c => c.role !== 'superadmin').map(customer => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.name} ({customer.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Domain Settings */}
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                Domein Configuratie
+              </h4>
+              
+              <div className="space-y-4">
+                <div className="flex gap-4">
+                  <label className={`flex-1 p-4 border-2 rounded-lg cursor-pointer transition-colors ${newWorkspace.domain_type === 'subdomain' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input
+                      type="radio"
+                      name="domain_type"
+                      value="subdomain"
+                      checked={newWorkspace.domain_type === 'subdomain'}
+                      onChange={() => setNewWorkspace({...newWorkspace, domain_type: 'subdomain'})}
+                      className="sr-only"
+                    />
+                    <div className="font-medium mb-1">Subdomein</div>
+                    <p className="text-sm text-gray-500">klantnaam.facturatie.sr</p>
+                    <p className="text-xs text-green-600 mt-2">✓ Direct actief</p>
+                  </label>
+                  
+                  <label className={`flex-1 p-4 border-2 rounded-lg cursor-pointer transition-colors ${newWorkspace.domain_type === 'custom' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input
+                      type="radio"
+                      name="domain_type"
+                      value="custom"
+                      checked={newWorkspace.domain_type === 'custom'}
+                      onChange={() => setNewWorkspace({...newWorkspace, domain_type: 'custom'})}
+                      className="sr-only"
+                    />
+                    <div className="font-medium mb-1">Custom Domein</div>
+                    <p className="text-sm text-gray-500">portal.klantdomein.nl</p>
+                    <p className="text-xs text-orange-600 mt-2">⏳ DNS verificatie vereist</p>
+                  </label>
+                </div>
+
+                {newWorkspace.domain_type === 'subdomain' && (
+                  <div className="space-y-2">
+                    <Label>Subdomein</Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="klantnaam"
+                        value={newWorkspace.subdomain || newWorkspace.slug}
+                        onChange={(e) => setNewWorkspace({...newWorkspace, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})}
+                        className="flex-1"
+                      />
+                      <span className="text-gray-500">.facturatie.sr</span>
+                    </div>
+                  </div>
+                )}
+
+                {newWorkspace.domain_type === 'custom' && (
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label>Custom Domein</Label>
+                      <Input
+                        placeholder="portal.klantdomein.nl"
+                        value={newWorkspace.custom_domain}
+                        onChange={(e) => setNewWorkspace({...newWorkspace, custom_domain: e.target.value.toLowerCase()})}
+                      />
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <h5 className="font-medium text-blue-800 mb-2">DNS Instructies</h5>
+                      <p className="text-sm text-blue-700 mb-2">
+                        De klant moet een A-record aanmaken:
+                      </p>
+                      <div className="bg-white rounded p-2 font-mono text-sm">
+                        <span className="text-gray-500">Type:</span> A<br />
+                        <span className="text-gray-500">Naam:</span> {newWorkspace.custom_domain || 'portal.klantdomein.nl'}<br />
+                        <span className="text-gray-500">Waarde:</span> 45.79.123.456
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Branding Settings */}
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-3 flex items-center gap-2">
+                <Palette className="w-4 h-4" />
+                Branding
+              </h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Portaal Naam</Label>
+                  <Input
+                    placeholder="Klant Portaal"
+                    value={newWorkspace.branding.portal_name}
+                    onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, portal_name: e.target.value}})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Logo URL</Label>
+                  <Input
+                    placeholder="https://..."
+                    value={newWorkspace.branding.logo_url}
+                    onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, logo_url: e.target.value}})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Primaire Kleur</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={newWorkspace.branding.primary_color}
+                      onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, primary_color: e.target.value}})}
+                      className="w-12 h-10 p-1 cursor-pointer"
+                    />
+                    <Input
+                      value={newWorkspace.branding.primary_color}
+                      onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, primary_color: e.target.value}})}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Secundaire Kleur</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={newWorkspace.branding.secondary_color}
+                      onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, secondary_color: e.target.value}})}
+                      className="w-12 h-10 p-1 cursor-pointer"
+                    />
+                    <Input
+                      value={newWorkspace.branding.secondary_color}
+                      onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, secondary_color: e.target.value}})}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateWorkspaceDialogOpen(false)}>Annuleren</Button>
+            <Button 
+              className="bg-emerald-500 hover:bg-emerald-600"
+              onClick={async () => {
+                if (!newWorkspace.name || !newWorkspace.slug || !newWorkspace.owner_id) {
+                  toast.error('Vul alle verplichte velden in');
+                  return;
+                }
+                try {
+                  await createWorkspace(newWorkspace);
+                  toast.success('Workspace aangemaakt');
+                  setCreateWorkspaceDialogOpen(false);
+                  setNewWorkspace({
+                    name: '', slug: '', owner_id: '', domain_type: 'subdomain', subdomain: '', custom_domain: '',
+                    branding: { logo_url: '', favicon_url: '', primary_color: '#0caf60', secondary_color: '#059669', portal_name: '' }
+                  });
+                  loadData();
+                } catch (error) {
+                  toast.error(error.response?.data?.detail || 'Aanmaken mislukt');
+                }
+              }}
+            >
+              Workspace Aanmaken
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Workspace Dialog */}
+      <Dialog open={editWorkspaceDialogOpen} onOpenChange={setEditWorkspaceDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Workspace Bewerken</DialogTitle>
+            <DialogDescription>
+              Wijzig de instellingen van {selectedWorkspace?.name}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            {/* Basic Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Workspace Naam</Label>
+                <Input
+                  value={newWorkspace.name}
+                  onChange={(e) => setNewWorkspace({...newWorkspace, name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Slug (niet wijzigbaar)</Label>
+                <Input value={newWorkspace.slug} disabled className="bg-gray-100" />
+              </div>
+            </div>
+
+            {/* Branding */}
+            <div className="border-t pt-4">
+              <h4 className="font-medium mb-3">Branding</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Portaal Naam</Label>
+                  <Input
+                    value={newWorkspace.branding?.portal_name || ''}
+                    onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, portal_name: e.target.value}})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Logo URL</Label>
+                  <Input
+                    value={newWorkspace.branding?.logo_url || ''}
+                    onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, logo_url: e.target.value}})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Primaire Kleur</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={newWorkspace.branding?.primary_color || '#0caf60'}
+                      onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, primary_color: e.target.value}})}
+                      className="w-12 h-10 p-1"
+                    />
+                    <Input
+                      value={newWorkspace.branding?.primary_color || '#0caf60'}
+                      onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, primary_color: e.target.value}})}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Secundaire Kleur</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={newWorkspace.branding?.secondary_color || '#059669'}
+                      onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, secondary_color: e.target.value}})}
+                      className="w-12 h-10 p-1"
+                    />
+                    <Input
+                      value={newWorkspace.branding?.secondary_color || '#059669'}
+                      onChange={(e) => setNewWorkspace({...newWorkspace, branding: {...newWorkspace.branding, secondary_color: e.target.value}})}
+                      className="flex-1"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditWorkspaceDialogOpen(false)}>Annuleren</Button>
+            <Button 
+              onClick={async () => {
+                try {
+                  await updateWorkspace(selectedWorkspace.id, {
+                    name: newWorkspace.name,
+                    branding: newWorkspace.branding
+                  });
+                  toast.success('Workspace bijgewerkt');
+                  setEditWorkspaceDialogOpen(false);
+                  loadData();
+                } catch (error) {
+                  toast.error(error.response?.data?.detail || 'Bijwerken mislukt');
+                }
+              }}
+            >
+              Opslaan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Workspace Dialog */}
+      <Dialog open={deleteWorkspaceDialogOpen} onOpenChange={setDeleteWorkspaceDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-red-600">Workspace Verwijderen</DialogTitle>
+            <DialogDescription>
+              Weet u zeker dat u "{selectedWorkspace?.name}" wilt verwijderen? Dit verwijdert ook alle gebruikers en data van deze workspace.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteWorkspaceDialogOpen(false)}>Annuleren</Button>
+            <Button 
+              variant="destructive"
+              onClick={async () => {
+                try {
+                  await deleteWorkspace(selectedWorkspace.id);
+                  toast.success('Workspace verwijderd');
+                  setDeleteWorkspaceDialogOpen(false);
+                  loadData();
+                } catch (error) {
+                  toast.error('Verwijderen mislukt');
+                }
+              }}
+            >
+              Verwijderen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Nginx Config Dialog */}
+      <Dialog open={nginxConfigDialogOpen} onOpenChange={setNginxConfigDialogOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Terminal className="w-5 h-5" />
+              Nginx Configuratie - {selectedWorkspace?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Kopieer deze configuratie naar uw VPS server
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-sm overflow-x-auto max-h-96 overflow-y-auto">
+            <pre>{nginxConfig}</pre>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNginxConfigDialogOpen(false)}>Sluiten</Button>
+            <Button onClick={() => {
+              navigator.clipboard.writeText(nginxConfig);
+              toast.success('Configuratie gekopieerd');
+            }}>
+              <Copy className="w-4 h-4 mr-2" />
+              Kopiëren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Create Customer Dialog */}
       <Dialog open={createCustomerDialogOpen} onOpenChange={setCreateCustomerDialogOpen}>
         <DialogContent className="max-w-md">
