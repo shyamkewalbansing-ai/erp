@@ -424,34 +424,37 @@ export default function Layout() {
           )}
         </nav>
 
-        {/* User section - fixed at bottom */}
-        <div className="p-4 border-t border-border mt-auto flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center">
-              <span className="text-sm font-semibold text-primary">
-                {user?.name?.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-foreground truncate">{user?.name}</p>
-              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-            </div>
-          </div>
-          {isSuperAdmin() && (
-            <Badge className="mt-3 w-full justify-center bg-primary/10 text-primary border-primary/20">
+        {/* Super Admin badge at bottom */}
+        {isSuperAdmin() && (
+          <div className="p-4 border-t border-border mt-auto flex-shrink-0">
+            <Badge className="w-full justify-center bg-primary/10 text-primary border-primary/20">
               <Crown className="w-3 h-3 mr-1" />
               Super Admin
             </Badge>
-          )}
-        </div>
+          </div>
+        )}
       </aside>
 
       {/* Main content */}
       <main className="main-content">
         {/* Desktop header with notifications */}
         <header className="hidden lg:flex sticky top-0 z-20 header-glass px-8 py-3 items-center justify-between border-b border-border/50">
-          {/* Left side - Workspace button */}
-          <div className="flex items-center gap-3">
+          {/* Left side - User info & Workspace button */}
+          <div className="flex items-center gap-4">
+            {/* User info */}
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center">
+                <span className="text-sm font-semibold text-primary">
+                  {user?.name?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className="font-medium text-sm text-foreground truncate max-w-[150px]">{user?.name}</p>
+                <p className="text-xs text-muted-foreground truncate max-w-[150px]">{user?.email}</p>
+              </div>
+            </div>
+            
+            {/* Workspace button */}
             {!isSuperAdmin() && workspace && (
               <Button
                 variant="outline"
