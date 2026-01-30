@@ -516,7 +516,7 @@ server {
     listen 443 ssl http2;
     server_name ${domain} www.${domain};
     
-    # SSL certificaat (via CloudPanel Let's Encrypt)
+    # SSL certificaat (via CloudPanel Let&apos;s Encrypt)
     ssl_certificate /etc/letsencrypt/live/${domain}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/${domain}/privkey.pem;
     
@@ -3015,7 +3015,7 @@ echo "Deploy completed at $(date)"`}</pre>
                 <li>Ga naar CloudPanel → Sites → Add Site</li>
                 <li>Vul het domein in: <strong>{selectedDomain?.domain}</strong></li>
                 <li>Kies "Reverse Proxy" of "Static Site"</li>
-                <li>Vraag SSL certificaat aan (Let's Encrypt)</li>
+                <li>Vraag SSL certificaat aan (Let&apos;s Encrypt)</li>
                 <li>Pas de Nginx configuratie aan met onderstaande code</li>
               </ol>
             </div>
