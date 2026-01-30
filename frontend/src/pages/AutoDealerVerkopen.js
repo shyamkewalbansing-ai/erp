@@ -631,7 +631,7 @@ export default function AutoDealerVerkopen() {
           <DialogHeader>
             <DialogTitle>Verkoop Verwijderen</DialogTitle>
             <DialogDescription>
-              Weet u zeker dat u deze verkoop wilt verwijderen? Het voertuig wordt weer op "Op Voorraad" gezet.
+              Weet u zeker dat u deze verkoop wilt verwijderen? Het voertuig wordt weer op &quot;Op Voorraad&quot; gezet.
               {selectedSale && (
                 <span className="block mt-2 font-medium text-foreground">
                   {selectedSale.vehicle_info?.brand} {selectedSale.vehicle_info?.model}
