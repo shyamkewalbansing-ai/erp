@@ -289,4 +289,11 @@ export const inviteWorkspaceUser = (data) => api.post('/workspace/users/invite',
 export const updateWorkspaceUserRole = (userId, role) => api.put(`/workspace/users/${userId}/role`, null, { params: { role } });
 export const removeWorkspaceUser = (userId) => api.delete(`/workspace/users/${userId}`);
 
+// Workspace Backups
+export const getWorkspaceBackups = () => api.get('/workspace/backups');
+export const createWorkspaceBackup = (data) => api.post('/workspace/backups', data);
+export const restoreWorkspaceBackup = (backupId, confirm = false) => api.post(`/workspace/backups/${backupId}/restore`, { confirm });
+export const deleteWorkspaceBackup = (backupId) => api.delete(`/workspace/backups/${backupId}`);
+export const downloadWorkspaceBackup = (backupId) => api.get(`/workspace/backups/${backupId}/download`);
+
 export default api;
