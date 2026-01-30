@@ -142,25 +142,34 @@ h1, h2, h3, h4, h5, h6 {
     margin-left: 280px;
     min-height: 100vh;
     background: hsl(var(--background));
-    display: flex;
-    flex-direction: column;
+    padding-top: 60px; /* Space for fixed header */
 }
 
-.main-content > header {
-    position: sticky;
+.main-content > header.desktop-header {
+    position: fixed;
     top: 0;
+    left: 280px;
+    right: 0;
     z-index: 30;
-    flex-shrink: 0;
+    height: 60px;
 }
 
-.main-content > .page-content {
-    flex: 1;
-    overflow-y: auto;
+.main-content > header.mobile-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
 }
 
 @media (max-width: 1024px) {
     .main-content {
         margin-left: 0;
+        padding-top: 60px;
+    }
+    
+    .main-content > header.desktop-header {
+        display: none;
     }
 }
 
