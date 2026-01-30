@@ -609,6 +609,83 @@ server {
 
 ---
 
+---
+
+## 📋 Quick Reference Card
+
+### Belangrijke Paden
+
+```
+/var/www/facturatie/          # Applicatie root
+├── backend/
+│   ├── .env                  # Backend configuratie
+│   ├── venv/                 # Python virtual environment
+│   └── server.py             # Main FastAPI app
+├── frontend/
+│   ├── .env                  # Frontend configuratie
+│   ├── build/                # Production build
+│   └── src/                  # Source code
+├── UPDATE.sh                 # Update script
+├── BACKUP.sh                 # Backup script
+└── RESTORE.sh                # Restore script
+
+/etc/nginx/sites-available/   # Nginx configs
+/etc/supervisor/conf.d/       # Supervisor configs
+/var/log/supervisor/          # Service logs
+/var/backups/facturatie/      # Backups
+```
+
+### Veelgebruikte Commando's
+
+```bash
+# Service beheer
+sudo supervisorctl status                    # Status bekijken
+sudo supervisorctl restart all               # Alles herstarten
+sudo supervisorctl restart facturatie_backend  # Alleen backend
+
+# Logs
+tail -f /var/log/supervisor/facturatie_backend.err.log
+tail -f /var/log/supervisor/facturatie_frontend.err.log
+
+# Database
+mongosh facturatie_db                        # Database shell
+mongodump --db facturatie_db --out ./backup  # Manual backup
+
+# SSL
+sudo certbot renew --dry-run                 # Test vernieuwing
+sudo certbot certificates                    # Bekijk certificaten
+
+# Updates
+cd /var/www/facturatie && sudo ./UPDATE.sh   # Update uitvoeren
+```
+
+### Environment Variables
+
+**Backend (.env):**
+```
+MONGO_URL=mongodb://localhost:27017
+DB_NAME=facturatie_db
+SECRET_KEY=je-secret-key
+CORS_ORIGINS=https://jouwdomein.nl
+EMERGENT_LLM_KEY=sk-emergent-xxx    # Voor AI features
+```
+
+**Frontend (.env):**
+```
+REACT_APP_BACKEND_URL=https://jouwdomein.nl
+```
+
+### Ports
+
+| Service | Intern | Extern |
+|---------|--------|--------|
+| Frontend | 3000 | 80/443 |
+| Backend API | 8001 | /api/* |
+| MongoDB | 27017 | - |
+| CloudPanel | 8443 | 8443 |
+
+---
+
 ## 📄 Licentie
 
 © 2024-2026 Facturatie N.V. Suriname
