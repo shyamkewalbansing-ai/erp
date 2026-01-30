@@ -472,6 +472,19 @@ export default function Layout() {
                     <Building2 className="w-4 h-4" />
                   </Button>
                 )}
+                {/* Employee Portal button - only if hrm addon is active */}
+                {hasAddon('hrm') && (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => window.open('/werknemer/login', '_blank')}
+                    className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                    data-testid="employee-portal-btn"
+                    title="Werknemers Portaal"
+                  >
+                    <Briefcase className="w-4 h-4" />
+                  </Button>
+                )}
               </div>
             )}
           </div>
