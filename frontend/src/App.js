@@ -254,12 +254,30 @@ function AppWithRoutes() {
           {/* Employee Portal Routes */}
           <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
           
+          {/* Auto Dealer Customer Portal Routes */}
+          <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
+          
           {/* Main App Routes */}
           <Route path="/*" element={<MainAppRoutes />} />
         </Routes>
         <Toaster richColors position="top-right" />
       </AuthProvider>
     </BrowserRouter>
+  );
+}
+
+// Auto Dealer Customer Portal Routes
+function AutoDealerCustomerPortalRoutes() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Routes>
+        <Route path="/login" element={<AutoDealerPortalLogin />} />
+        <Route path="/" element={<AutoDealerPortalDashboard />} />
+        <Route path="/aankopen" element={<AutoDealerPortalPurchases />} />
+        <Route path="/aankopen/:id" element={<AutoDealerPortalPurchases />} />
+        <Route path="*" element={<Navigate to="/klant-portaal" replace />} />
+      </Routes>
+    </Suspense>
   );
 }
 
