@@ -268,4 +268,15 @@ export const updateDeploymentSettings = (data) => api.put('/admin/deployment/set
 export const triggerSystemUpdate = () => api.post('/admin/deployment/update');
 export const getDeploymentLogs = () => api.get('/admin/deployment/logs');
 
+// Workspaces / Multi-tenant
+export const getWorkspaces = () => api.get('/admin/workspaces');
+export const getWorkspace = (id) => api.get(`/admin/workspaces/${id}`);
+export const createWorkspace = (data) => api.post('/admin/workspaces', data);
+export const updateWorkspace = (id, data) => api.put(`/admin/workspaces/${id}`, data);
+export const deleteWorkspace = (id) => api.delete(`/admin/workspaces/${id}`);
+export const verifyWorkspaceDns = (id) => api.post(`/admin/workspaces/${id}/verify-dns`);
+export const activateWorkspaceSsl = (id) => api.post(`/admin/workspaces/${id}/activate-ssl`);
+export const getWorkspaceNginxConfig = (id) => api.get(`/admin/workspaces/${id}/nginx-config`);
+export const getWorkspaceStats = () => api.get('/admin/workspace-stats');
+
 export default api;
