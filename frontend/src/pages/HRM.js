@@ -1559,6 +1559,60 @@ export default function HRM() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Employee Portal Account Dialog */}
+      <Dialog open={accountDialog} onOpenChange={setAccountDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Briefcase className="w-5 h-5 text-purple-600" />
+              Portaal Account Aanmaken
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="p-3 bg-purple-50 rounded-lg text-sm text-purple-700">
+              Maak een portaal account aan zodat de werknemer kan inloggen op <strong>/werknemer/login</strong> om loonstroken, verlofaanvragen en aanwezigheid te bekijken.
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Werknemer</Label>
+              <Select value={accountForm.employee_id} onValueChange={(v) => {
+                const emp = employees.find(e => e.id === v);
+                setAccountForm({...accountForm, employee_id: v, name: emp?.name || '', email: emp?.email || ''});
+              }}>
+                <SelectTrigger><SelectValue placeholder="Selecteer werknemer" /></SelectTrigger>
+                <SelectContent>
+                  {employees.filter(e => !hasAccount(e.id)).map(emp => (
+                    <SelectItem key={emp.id} value={emp.id}>{emp.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Naam</Label>
+              <Input value={accountForm.name} onChange={(e) => setAccountForm({...accountForm, name: e.target.value})} />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>E-mailadres *</Label>
+              <Input type="email" value={accountForm.email} onChange={(e) => setAccountForm({...accountForm, email: e.target.value})} placeholder="werknemer@bedrijf.nl" />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Wachtwoord *</Label>
+              <Input type="password" value={accountForm.password} onChange={(e) => setAccountForm({...accountForm, password: e.target.value})} placeholder="Minimaal 6 tekens" />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAccountDialog(false)}>Annuleren</Button>
+            <Button onClick={handleCreateAccount} disabled={saving} className="bg-purple-600 hover:bg-purple-700">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Briefcase className="w-4 h-4 mr-2" />}
+              Account Aanmaken
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
