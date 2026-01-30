@@ -8205,8 +8205,164 @@ async def delete_notification(notification_id: str, current_user: dict = Depends
     """Delete a notification"""
     await db.notifications.delete_one({"id": notification_id})
     return {"message": "Notificatie verwijderd"}
+
+# ============================================
+# DEPLOYMENT / SYSTEM UPDATE ENDPOINTS
+# ============================================
+
+@api_router.get("/admin/deployment/settings")
+async def get_deployment_settings(current_user: dict = Depends(get_superadmin)):
+    """Get deployment/update settings - superadmin only"""
+    settings = await db.deployment_settings.find_one({}, {"_id": 0})
+    if not settings:
+        # Create default settings
+        settings = {
+            "webhook_url": "",
+            "webhook_secret": "",
+            "auto_restart_backend": True,
+            "auto_rebuild_frontend": True,
+            "run_migrations": True,
+            "last_update": None,
+            "last_update_status": None
+        }
+        await db.deployment_settings.insert_one(settings)
+    return settings
+
+@api_router.put("/admin/deployment/settings")
+async def update_deployment_settings(
+    settings: DeploymentSettings,
+    current_user: dict = Depends(get_superadmin)
+):
+    """Update deployment settings - superadmin only"""
+    await db.deployment_settings.update_one(
+        {},
+        {"$set": settings.dict(exclude_none=True)},
+        upsert=True
+    )
+    return {"message": "Instellingen opgeslagen"}
+
+@api_router.post("/admin/deployment/update")
+async def trigger_system_update(current_user: dict = Depends(get_superadmin)):
+    """Trigger system update via webhook - superadmin only"""
+    import httpx
     
-    return requests
+    settings = await db.deployment_settings.find_one({}, {"_id": 0})
+    if not settings or not settings.get("webhook_url"):
+        raise HTTPException(status_code=400, detail="Webhook URL niet geconfigureerd")
+    
+    webhook_url = settings["webhook_url"]
+    webhook_secret = settings.get("webhook_secret", "")
+    
+    # Create deployment log entry
+    log_id = str(uuid.uuid4())
+    log_entry = {
+        "id": log_id,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "status": "running",
+        "message": "Update gestart...",
+        "details": None
+    }
+    await db.deployment_logs.insert_one(log_entry)
+    
+    try:
+        # Prepare payload
+        payload = {
+            "action": "update",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "settings": {
+                "restart_backend": settings.get("auto_restart_backend", True),
+                "rebuild_frontend": settings.get("auto_rebuild_frontend", True),
+                "run_migrations": settings.get("run_migrations", True)
+            }
+        }
+        
+        # Prepare headers
+        headers = {"Content-Type": "application/json"}
+        if webhook_secret:
+            # Create HMAC signature
+            import hmac
+            import hashlib
+            import json
+            signature = hmac.new(
+                webhook_secret.encode(),
+                json.dumps(payload).encode(),
+                hashlib.sha256
+            ).hexdigest()
+            headers["X-Webhook-Signature"] = signature
+        
+        # Call webhook
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(webhook_url, json=payload, headers=headers)
+            
+            if response.status_code == 200:
+                # Update log and settings
+                await db.deployment_logs.update_one(
+                    {"id": log_id},
+                    {"$set": {
+                        "status": "success",
+                        "message": "Update succesvol gestart",
+                        "details": response.text[:500] if response.text else None
+                    }}
+                )
+                await db.deployment_settings.update_one(
+                    {},
+                    {"$set": {
+                        "last_update": datetime.now(timezone.utc).isoformat(),
+                        "last_update_status": "success"
+                    }}
+                )
+                return {
+                    "success": True,
+                    "message": "Update succesvol gestart op de productie server",
+                    "log_id": log_id
+                }
+            else:
+                await db.deployment_logs.update_one(
+                    {"id": log_id},
+                    {"$set": {
+                        "status": "failed",
+                        "message": f"Webhook fout: {response.status_code}",
+                        "details": response.text[:500] if response.text else None
+                    }}
+                )
+                await db.deployment_settings.update_one(
+                    {},
+                    {"$set": {
+                        "last_update": datetime.now(timezone.utc).isoformat(),
+                        "last_update_status": "failed"
+                    }}
+                )
+                raise HTTPException(status_code=500, detail=f"Webhook returned {response.status_code}")
+                
+    except httpx.TimeoutException:
+        await db.deployment_logs.update_one(
+            {"id": log_id},
+            {"$set": {
+                "status": "failed",
+                "message": "Timeout bij verbinden met server",
+                "details": None
+            }}
+        )
+        raise HTTPException(status_code=504, detail="Timeout bij verbinden met productie server")
+    except httpx.RequestError as e:
+        await db.deployment_logs.update_one(
+            {"id": log_id},
+            {"$set": {
+                "status": "failed",
+                "message": f"Verbindingsfout: {str(e)}",
+                "details": None
+            }}
+        )
+        raise HTTPException(status_code=500, detail=f"Kan niet verbinden met server: {str(e)}")
+
+@api_router.get("/admin/deployment/logs")
+async def get_deployment_logs(current_user: dict = Depends(get_superadmin)):
+    """Get deployment logs - superadmin only"""
+    logs = await db.deployment_logs.find(
+        {}, 
+        {"_id": 0}
+    ).sort("timestamp", -1).limit(20).to_list(20)
+    return logs
 
 # ============================================
 # CMS - COMPLETE WEBSITE BUILDER
