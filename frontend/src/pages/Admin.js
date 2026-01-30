@@ -3155,7 +3155,7 @@ echo "Deploy completed at $(date)"`}</pre>
           <DialogHeader>
             <DialogTitle>Add-on Verwijderen</DialogTitle>
             <DialogDescription>
-              Weet u zeker dat u de add-on "{selectedAddon?.name}" wilt verwijderen? 
+              Weet u zeker dat u de add-on &quot;{selectedAddon?.name}&quot; wilt verwijderen? 
               Dit zal ook alle klant-koppelingen verwijderen.
             </DialogDescription>
           </DialogHeader>
