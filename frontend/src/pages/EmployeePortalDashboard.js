@@ -34,7 +34,7 @@ export default function EmployeePortalDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('employee_token');
