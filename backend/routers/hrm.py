@@ -7,7 +7,7 @@ from typing import Optional, List
 from datetime import datetime, timezone
 from bson import ObjectId
 
-router = APIRouter(prefix="/api/hrm", tags=["HRM"])
+router = APIRouter(prefix="/hrm", tags=["HRM"])
 
 # Import shared dependencies
 from .deps import get_db, get_current_user, workspace_filter
