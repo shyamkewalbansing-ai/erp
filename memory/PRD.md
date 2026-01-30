@@ -15,29 +15,47 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (30 Jan 2026)
 
-### Klant Workspaces / Multi-Tenant ✅ (NIEUW - 30 Jan 2026)
-Complete multi-tenant workspace systeem:
+### Volledige Multi-Tenant Systeem ✅
 
-**Features:**
-- [x] Workspace management in superadmin dashboard (prominent bovenaan)
+#### 1. Klant Workspaces (Admin)
+- [x] Workspace management in superadmin dashboard
 - [x] Statistieken: Totaal, Actief, In Afwachting
-- [x] Workspace aanmaken met naam, slug, eigenaar
-- [x] Domein keuze: Subdomein (auto-actief) of Custom domein (DNS verificatie)
-- [x] Custom branding per workspace (logo, kleuren, naam)
-- [x] DNS verificatie voor custom domeinen
-- [x] Nginx configuratie generator per workspace
-- [x] SSL status tracking
-- [x] Workspace bewerken en verwijderen
+- [x] Workspace aanmaken/bewerken/verwijderen
+- [x] Domein keuze: Subdomein of Custom domein
+- [x] DNS verificatie & SSL tracking
+- [x] Nginx config generator
+
+#### 2. Frontend Branding Context ✅ (NIEUW)
+- [x] Workspace branding automatisch geladen na login
+- [x] CSS variabelen dynamisch ingesteld (--brand-primary, --brand-secondary)
+- [x] Logo en portaal naam in sidebar
+- [x] Branding opslaan per workspace
+
+#### 3. Workspace Users Beheer ✅ (NIEUW)
+- [x] "Workspace & Team" pagina onder Instellingen
+- [x] Gebruikers uitnodigen met rollen (Admin, Lid, Viewer)
+- [x] Gebruikers verwijderen
+- [x] Branding bewerken met color picker
+
+#### 4. Data Isolatie ✅
+- [x] Automatische workspace aanmaak bij registratie
+- [x] Data queries gefilterd op workspace_id
+- [x] Legacy data support via user_id fallback
+
+#### 5. Code Refactoring (Gestart)
+- [x] `/app/backend/routers/deps.py` - Gedeelde dependencies
+- [x] `/app/backend/routers/workspaces.py` - Workspace router
+- [ ] Overige routers (hrm, cms, tenants) - TODO
 
 **Domein Opties:**
 - **Subdomein**: klantnaam.facturatie.sr (direct actief, auto-SSL)
 - **Custom Domein**: portal.klantdomein.nl (DNS A-record naar server IP)
 
 **API Endpoints:**
-- `GET/POST /api/admin/workspaces` - Lijst en aanmaken
-- `PUT/DELETE /api/admin/workspaces/{id}` - Bewerken en verwijderen
-- `POST /api/admin/workspaces/{id}/verify-dns` - DNS verificatie
-- `GET /api/admin/workspaces/{id}/nginx-config` - Nginx config
+- `GET/POST /api/admin/workspaces` - Workspace CRUD
+- `GET /api/workspace/current` - Huidige workspace + branding
+- `PUT /api/workspace/branding` - Branding wijzigen
+- `GET/POST /api/workspace/users` - Gebruikersbeheer
 
 ### Systeem Update Functie ✅ (30 Jan 2026)
 Update productie server via webhook:
