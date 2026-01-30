@@ -33,6 +33,23 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 **Gebackupte Collections:**
 tenants, apartments, payments, deposits, loans, kasgeld, maintenance, employees, salaries, meter_readings, contracts, invoices, workspace_users, workspace_logs
 
+### Klant Workspace Beheer ✅ (NIEUW - 30 Jan 2026)
+Klanten kunnen nu hun eigen workspace volledig beheren:
+- [x] Workspace naam en slug wijzigen
+- [x] Domein type kiezen (subdomein of custom domain)
+- [x] DNS A-record instructies bekijken voor custom domains
+- [x] DNS verificatie uitvoeren
+- [x] SSL status bekijken
+- [x] Workspace aanmaken (als nog geen workspace)
+- [x] Tabbed UI: Algemeen, Domein, Branding, Gebruikers, Backups
+
+**API Endpoints:**
+- `GET /api/workspace/settings` - Volledige workspace instellingen
+- `PUT /api/workspace/settings` - Naam/slug wijzigen
+- `PUT /api/workspace/domain` - Domein wijzigen
+- `POST /api/workspace/domain/verify` - DNS verificatie
+- `POST /api/workspace/create` - Nieuwe workspace aanmaken
+
 ### Volledige Multi-Tenant Systeem ✅
 
 #### 1. Klant Workspaces (Admin)
