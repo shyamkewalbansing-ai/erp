@@ -318,7 +318,7 @@ export default function WebsiteBeheer() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Website Beheer</h1>
-          <p className="text-muted-foreground">Beheer uw volledige website - pagina's, menu, footer en instellingen</p>
+          <p className="text-muted-foreground">Beheer uw volledige website - pagina&apos;s, menu, footer en instellingen</p>
         </div>
         <Button variant="outline" onClick={() => window.open('/', '_blank')}>
           <Eye className="w-4 h-4 mr-2" />
@@ -328,7 +328,7 @@ export default function WebsiteBeheer() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid grid-cols-4 w-full max-w-2xl">
-          <TabsTrigger value="pages"><FileText className="w-4 h-4 mr-2" />Pagina's</TabsTrigger>
+          <TabsTrigger value="pages"><FileText className="w-4 h-4 mr-2" />Pagina&apos;s</TabsTrigger>
           <TabsTrigger value="footer"><Layout className="w-4 h-4 mr-2" />Footer</TabsTrigger>
           <TabsTrigger value="settings"><Settings className="w-4 h-4 mr-2" />Instellingen</TabsTrigger>
           <TabsTrigger value="design"><Palette className="w-4 h-4 mr-2" />Design</TabsTrigger>
@@ -342,7 +342,7 @@ export default function WebsiteBeheer() {
               <Card>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">Alle Pagina's</CardTitle>
+                    <CardTitle className="text-lg">Alle Pagina&apos;s</CardTitle>
                     <Button size="sm" onClick={() => setShowNewPageDialog(true)}>
                       <Plus className="w-4 h-4 mr-1" />
                       Nieuw
@@ -354,7 +354,7 @@ export default function WebsiteBeheer() {
                   {pages.length === 0 ? (
                     <div className="text-center py-8">
                       <FileText className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-                      <p className="text-muted-foreground">Nog geen pagina's</p>
+                      <p className="text-muted-foreground">Nog geen pagina&apos;s</p>
                       <Button className="mt-4" onClick={() => setShowNewPageDialog(true)}>
                         <Plus className="w-4 h-4 mr-2" />
                         Eerste Pagina Maken
