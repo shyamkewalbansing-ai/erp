@@ -279,4 +279,8 @@ export const activateWorkspaceSsl = (id) => api.post(`/admin/workspaces/${id}/ac
 export const getWorkspaceNginxConfig = (id) => api.get(`/admin/workspaces/${id}/nginx-config`);
 export const getWorkspaceStats = () => api.get('/admin/workspace-stats');
 
+// Current user workspace
+export const getCurrentWorkspace = () => api.get('/workspace/current');
+export const updateWorkspaceBranding = (branding) => api.put('/workspace/branding', branding);
+
 export default api;
