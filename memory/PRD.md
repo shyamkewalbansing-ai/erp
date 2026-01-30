@@ -253,10 +253,13 @@ Complete self-service portaal voor huurders:
 - [x] Huurders kunnen zelf meterstanden invoeren
 - [x] Dashboard met appartement, betalingen, saldo
 - [x] UI/UX redesign met moderne glassmorphism styling
+- [x] **Auto Dealer Module** met multi-valuta (SRD, EUR, USD)
 
 ### P1 (High Priority)
-- [ ] **server.py refactoring** (>10000 lines) - Split into modular routers
+- [ ] **server.py refactoring** (>12000 lines) - Split into modular routers
+- [ ] **Login bug na uitloggen** - Verificatie nodig van gebruiker
 - [ ] **Herinneringen voor maandelijkse meteropname** (email notificaties)
+- [ ] **Workspace branding globaal toepassen** - Colors/logo op alle pagina's
 
 ### P2 (Medium Priority)
 - [ ] Huurder kan betalingen doen via portaal
