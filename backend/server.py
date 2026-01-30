@@ -9575,6 +9575,8 @@ BACKUP_COLLECTIONS = [
     # HRM Module
     "employees", "salaries", "hrm_employees", "hrm_departments", 
     "hrm_attendance", "hrm_leave_requests", "hrm_payroll", "hrm_settings",
+    # Auto Dealer Module
+    "autodealer_vehicles", "autodealer_customers", "autodealer_sales",
     # Tenant Portal
     "tenant_accounts",
     # AI Chat History
