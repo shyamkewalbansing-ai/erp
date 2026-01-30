@@ -91,6 +91,17 @@ export default function WorkspaceSettings() {
     }
   };
 
+  const loadBackups = async () => {
+    try {
+      const res = await getWorkspaceBackups();
+      setBackups(res.data);
+    } catch (error) {
+      console.error('Error loading backups:', error);
+    } finally {
+      setBackupsLoading(false);
+    }
+  };
+
   const handleInvite = async () => {
     if (!inviteForm.email || !inviteForm.name) {
       toast.error('Vul alle velden in');
