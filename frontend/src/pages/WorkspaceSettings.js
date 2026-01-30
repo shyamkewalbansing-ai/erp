@@ -45,10 +45,18 @@ import {
 export default function WorkspaceSettings() {
   const { user, workspace, branding, updateBranding, fetchWorkspace } = useAuth();
   const [users, setUsers] = useState([]);
+  const [backups, setBackups] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [backupsLoading, setBackupsLoading] = useState(true);
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [backupDialogOpen, setBackupDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [selectedBackup, setSelectedBackup] = useState(null);
   const [savingBranding, setSavingBranding] = useState(false);
+  const [creatingBackup, setCreatingBackup] = useState(false);
+  const [restoringBackup, setRestoringBackup] = useState(false);
   const [inviteForm, setInviteForm] = useState({ email: '', name: '', role: 'member' });
+  const [backupForm, setBackupForm] = useState({ name: '', description: '' });
   const [brandingForm, setBrandingForm] = useState({
     logo_url: '',
     portal_name: '',
