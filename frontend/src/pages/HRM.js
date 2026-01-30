@@ -79,6 +79,10 @@ export default function HRM() {
   const [departmentDialog, setDepartmentDialog] = useState(false);
   const [documentDialog, setDocumentDialog] = useState(false);
   const [applicationDialog, setApplicationDialog] = useState(false);
+  const [accountDialog, setAccountDialog] = useState(false);
+  
+  // Employee accounts state
+  const [employeeAccounts, setEmployeeAccounts] = useState([]);
   
   // Edit states
   const [editingItem, setEditingItem] = useState(null);
