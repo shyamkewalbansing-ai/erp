@@ -322,7 +322,7 @@ class TestLoansFeature:
         # Check loan status
         loans_resp = self.session.get(f"{BASE_URL}/api/loans")
         loans = loans_resp.json()
-        loan = next((l for loan_item in loans if l["id"] == loan_id), None)
+        loan = next((item for item in loans if item["id"] == loan_id), None)
         
         assert loan is not None, "Loan not found"
         assert loan["status"] == "paid", f"Expected status 'paid', got: {loan['status']}"
