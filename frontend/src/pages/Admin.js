@@ -1482,6 +1482,298 @@ server {
             <WebsiteEditor />
           </Suspense>
         </TabsContent>
+
+        {/* Update/Deployment Tab */}
+        <TabsContent value="update">
+          <div className="grid gap-6">
+            {/* Status Card */}
+            <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-emerald-500 rounded-xl">
+                      <Server className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <CardTitle>Systeem Update</CardTitle>
+                      <CardDescription>
+                        Update uw productie server via GitHub
+                      </CardDescription>
+                    </div>
+                  </div>
+                  <Button 
+                    size="lg"
+                    className="bg-emerald-500 hover:bg-emerald-600"
+                    onClick={async () => {
+                      if (!deploymentSettings.webhook_url) {
+                        toast.error('Configureer eerst de webhook URL');
+                        return;
+                      }
+                      setUpdating(true);
+                      try {
+                        const response = await triggerSystemUpdate();
+                        toast.success(response.data.message || 'Update gestart!');
+                        // Refresh logs
+                        const logsRes = await getDeploymentLogs();
+                        setDeploymentLogs(logsRes.data);
+                        // Refresh settings for last update time
+                        const settingsRes = await getDeploymentSettings();
+                        setDeploymentSettings(settingsRes.data);
+                      } catch (error) {
+                        toast.error(error.response?.data?.detail || 'Update mislukt');
+                      } finally {
+                        setUpdating(false);
+                      }
+                    }}
+                    disabled={updating || !deploymentSettings.webhook_url}
+                    data-testid="trigger-update-btn"
+                  >
+                    {updating ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="w-5 h-5 mr-2" />
+                        Update Systeem
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              {deploymentSettings.last_update && (
+                <CardContent className="pt-0">
+                  <div className="flex items-center gap-2 text-sm">
+                    <History className="w-4 h-4 text-gray-500" />
+                    <span className="text-gray-600">
+                      Laatste update: {new Date(deploymentSettings.last_update).toLocaleString('nl-NL')}
+                    </span>
+                    {deploymentSettings.last_update_status === 'success' ? (
+                      <Badge className="bg-green-100 text-green-700">Succesvol</Badge>
+                    ) : deploymentSettings.last_update_status === 'failed' ? (
+                      <Badge className="bg-red-100 text-red-700">Mislukt</Badge>
+                    ) : null}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+
+            {/* Configuration Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Settings className="w-5 h-5" />
+                  Webhook Configuratie
+                </CardTitle>
+                <CardDescription>
+                  Configureer de webhook URL van uw productie server
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Webhook URL *</Label>
+                  <Input
+                    placeholder="https://uwdomein.com/api/deploy"
+                    value={deploymentSettings.webhook_url}
+                    onChange={(e) => setDeploymentSettings({...deploymentSettings, webhook_url: e.target.value})}
+                    data-testid="webhook-url-input"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Deze URL wordt aangeroepen om de update te starten op uw server
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Webhook Secret (optioneel)</Label>
+                  <Input
+                    type="password"
+                    placeholder="Geheime sleutel voor verificatie"
+                    value={deploymentSettings.webhook_secret}
+                    onChange={(e) => setDeploymentSettings({...deploymentSettings, webhook_secret: e.target.value})}
+                    data-testid="webhook-secret-input"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Wordt gebruikt om de webhook request te verifiëren (HMAC-SHA256)
+                  </p>
+                </div>
+
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="font-medium mb-3">Update Opties</h4>
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={deploymentSettings.auto_restart_backend}
+                        onChange={(e) => setDeploymentSettings({...deploymentSettings, auto_restart_backend: e.target.checked})}
+                        className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div>
+                        <span className="font-medium">Backend Herstarten</span>
+                        <p className="text-xs text-gray-500">Herstart de backend service na update</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={deploymentSettings.auto_rebuild_frontend}
+                        onChange={(e) => setDeploymentSettings({...deploymentSettings, auto_rebuild_frontend: e.target.checked})}
+                        className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div>
+                        <span className="font-medium">Frontend Rebuilden</span>
+                        <p className="text-xs text-gray-500">Bouw de frontend opnieuw na update</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={deploymentSettings.run_migrations}
+                        onChange={(e) => setDeploymentSettings({...deploymentSettings, run_migrations: e.target.checked})}
+                        className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                      />
+                      <div>
+                        <span className="font-medium">Database Migraties</span>
+                        <p className="text-xs text-gray-500">Voer database migraties uit na update</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <Button 
+                  className="w-full mt-4"
+                  onClick={async () => {
+                    setSavingDeploySettings(true);
+                    try {
+                      await updateDeploymentSettings(deploymentSettings);
+                      toast.success('Instellingen opgeslagen');
+                    } catch (error) {
+                      toast.error('Opslaan mislukt');
+                    } finally {
+                      setSavingDeploySettings(false);
+                    }
+                  }}
+                  disabled={savingDeploySettings}
+                  data-testid="save-deploy-settings-btn"
+                >
+                  {savingDeploySettings ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : null}
+                  Instellingen Opslaan
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Deployment Logs */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      <Terminal className="w-5 h-5" />
+                      Deployment Logs
+                    </CardTitle>
+                    <CardDescription>Geschiedenis van systeem updates</CardDescription>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const res = await getDeploymentLogs();
+                        setDeploymentLogs(res.data);
+                        toast.success('Logs vernieuwd');
+                      } catch (error) {
+                        toast.error('Laden mislukt');
+                      }
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-1" />
+                    Vernieuwen
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {deploymentLogs.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Nog geen deployment logs</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {deploymentLogs.map((log) => (
+                      <div key={log.id} className={`p-3 rounded-lg border ${
+                        log.status === 'success' ? 'bg-green-50 border-green-200' :
+                        log.status === 'failed' ? 'bg-red-50 border-red-200' :
+                        log.status === 'running' ? 'bg-blue-50 border-blue-200' :
+                        'bg-gray-50 border-gray-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {log.status === 'success' ? (
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                            ) : log.status === 'failed' ? (
+                              <XCircle className="w-4 h-4 text-red-600" />
+                            ) : log.status === 'running' ? (
+                              <Loader2 className="w-4 h-4 text-blue-600 animate-spin" />
+                            ) : (
+                              <Clock className="w-4 h-4 text-gray-500" />
+                            )}
+                            <span className="font-medium">{log.message}</span>
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {new Date(log.timestamp).toLocaleString('nl-NL')}
+                          </span>
+                        </div>
+                        {log.details && (
+                          <p className="text-sm text-gray-600 mt-2 font-mono bg-white/50 p-2 rounded">
+                            {log.details}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Server Setup Instructions */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  VPS Server Setup
+                </CardTitle>
+                <CardDescription>
+                  Instructies voor het opzetten van de webhook op uw VPS
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-sm overflow-x-auto">
+                  <p className="text-emerald-400 mb-2"># 1. Maak deploy.sh script op uw VPS:</p>
+                  <pre className="text-slate-300 mb-4">{`#!/bin/bash
+cd /pad/naar/uw/project
+git pull origin main
+npm install --prefix frontend
+npm run build --prefix frontend
+pip install -r backend/requirements.txt
+sudo systemctl restart facturatie-backend
+echo "Deploy completed at $(date)"`}</pre>
+                  
+                  <p className="text-emerald-400 mb-2"># 2. Maak webhook endpoint (Node.js/Express voorbeeld):</p>
+                  <pre className="text-slate-300">{`app.post('/api/deploy', (req, res) => {
+  exec('/home/user/deploy.sh', (error, stdout) => {
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
+    res.json({ success: true, output: stdout });
+  });
+});`}</pre>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Create Customer Dialog */}
