@@ -482,7 +482,8 @@ export default function HRM() {
     setEmployeeForm({
       name: '', email: '', phone: '', position: '', department: '',
       salary: '', hire_date: '', birth_date: '', address: '',
-      id_number: '', emergency_contact: '', emergency_phone: '', status: 'active'
+      id_number: '', emergency_contact: '', emergency_phone: '', status: 'active',
+      create_portal_account: false, portal_password: ''
     });
   };
 
