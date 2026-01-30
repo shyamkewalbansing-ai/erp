@@ -12155,7 +12155,7 @@ async def employee_portal_dashboard(account: dict = Depends(get_employee_account
     # Calculate stats
     total_earned = sum(s.get("net_salary", s.get("amount", 0)) for s in salaries)
     days_worked = len([a for a in attendance if a.get("status") == "present"])
-    pending_leave = len([l for leave in leave_requests if leave.get("status") == "pending"])
+    pending_leave = len([req for req in leave_requests if req.get("status") == "pending"])
     
     return {
         "employee_id": employee_id,
@@ -12180,14 +12180,14 @@ async def employee_portal_dashboard(account: dict = Depends(get_employee_account
             "status": s.get("status", "paid")
         } for s in salaries[:6]],
         "leave_requests": [{
-            "id": loan.get("id"),
-            "type": l.get("leave_type"),
-            "start_date": l.get("start_date"),
-            "end_date": l.get("end_date"),
-            "days": l.get("days"),
-            "status": leave.get("status"),
-            "reason": l.get("reason")
-        } for leave in leave_requests[:5]],
+            "id": req.get("id"),
+            "type": req.get("leave_type"),
+            "start_date": req.get("start_date"),
+            "end_date": req.get("end_date"),
+            "days": req.get("days"),
+            "status": req.get("status"),
+            "reason": req.get("reason")
+        } for req in leave_requests[:5]],
         "attendance_summary": {
             "month": now.strftime("%B %Y"),
             "present": days_worked,
