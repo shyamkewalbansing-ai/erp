@@ -547,6 +547,120 @@ export default function Layout() {
 
       {/* AI Assistant - only for customers */}
       {!isSuperAdmin() && <AIAssistant />}
+
+      {/* Workspace Management Dialog */}
+      <Dialog open={workspaceDialogOpen} onOpenChange={setWorkspaceDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Globe className="w-5 h-5 text-emerald-600" />
+              Workspace Beheren
+            </DialogTitle>
+            <DialogDescription>Beheer uw workspace instellingen en domein</DialogDescription>
+          </DialogHeader>
+          
+          {workspaceData?.has_workspace ? (
+            <div className="space-y-6 py-4">
+              {/* Portal URL */}
+              <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+                <p className="text-sm font-medium text-emerald-800 mb-2">Uw Portaal URL</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 px-3 py-2 bg-white rounded text-sm font-mono truncate">
+                    {getPortalUrl()}
+                  </code>
+                  <Button variant="outline" size="sm" onClick={() => copyToClipboard(getPortalUrl())}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <a href={getPortalUrl()} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm"><ExternalLink className="w-4 h-4" /></Button>
+                  </a>
+                </div>
+              </div>
+
+              {/* Workspace Name & Slug */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Workspace Naam</Label>
+                  <Input
+                    value={workspaceForm.name}
+                    onChange={(e) => setWorkspaceForm({...workspaceForm, name: e.target.value})}
+                    placeholder="Mijn Bedrijf"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Slug (URL)</Label>
+                  <Input
+                    value={workspaceForm.slug}
+                    onChange={(e) => setWorkspaceForm({...workspaceForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})}
+                    placeholder="mijn-bedrijf"
+                  />
+                </div>
+              </div>
+
+              {/* Domain Settings */}
+              <div className="space-y-3">
+                <Label>Domein Type</Label>
+                <Select value={domainForm.domain_type} onValueChange={(v) => setDomainForm({...domainForm, domain_type: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="subdomain">Subdomein (gratis)</SelectItem>
+                    <SelectItem value="custom">Eigen Domein</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {domainForm.domain_type === 'subdomain' ? (
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={domainForm.subdomain}
+                      onChange={(e) => setDomainForm({...domainForm, subdomain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})}
+                      placeholder={workspaceForm.slug || 'mijn-bedrijf'}
+                      className="flex-1"
+                    />
+                    <span className="text-gray-500 text-sm">.facturatie.sr</span>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Input
+                      value={domainForm.custom_domain}
+                      onChange={(e) => setDomainForm({...domainForm, custom_domain: e.target.value})}
+                      placeholder="portal.jouwbedrijf.nl"
+                    />
+                    <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
+                      Maak een A-record aan dat wijst naar {workspaceData?.domain?.server_ip || '45.79.123.456'}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Quick link to full settings */}
+              <div className="pt-2 border-t">
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-emerald-600"
+                  onClick={() => { setWorkspaceDialogOpen(false); navigate('/app/workspace'); }}
+                >
+                  Naar volledige workspace instellingen →
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-gray-500">
+              <Globe className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Geen workspace gevonden</p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setWorkspaceDialogOpen(false)}>Sluiten</Button>
+            {workspaceData?.has_workspace && (
+              <Button onClick={handleSaveWorkspace} disabled={savingWorkspace}>
+                {savingWorkspace ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                Opslaan
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
