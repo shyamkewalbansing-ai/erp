@@ -3177,7 +3177,7 @@ echo "Deploy completed at $(date)"`}</pre>
           <DialogHeader>
             <DialogTitle>Add-on Activeren</DialogTitle>
             <DialogDescription>
-              Activeer "{selectedAddon?.name}" voor {selectedCustomer?.name}
+              Activeer &quot;{selectedAddon?.name}&quot; voor {selectedCustomer?.name}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
