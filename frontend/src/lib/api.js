@@ -282,6 +282,11 @@ export const getWorkspaceStats = () => api.get('/admin/workspace-stats');
 // Current user workspace
 export const getCurrentWorkspace = () => api.get('/workspace/current');
 export const updateWorkspaceBranding = (branding) => api.put('/workspace/branding', branding);
+export const getWorkspaceSettings = () => api.get('/workspace/settings');
+export const updateWorkspaceSettings = (data) => api.put('/workspace/settings', data);
+export const updateWorkspaceDomain = (data) => api.put('/workspace/domain', data);
+export const verifyWorkspaceDomain = () => api.post('/workspace/domain/verify');
+export const createUserWorkspace = (data) => api.post('/workspace/create', data);
 
 // Workspace Users
 export const getWorkspaceUsers = () => api.get('/workspace/users');
