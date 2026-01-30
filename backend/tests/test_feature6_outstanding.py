@@ -53,19 +53,19 @@ class TestFeature6Outstanding:
         for payment_id in self.created_payment_ids:
             try:
                 self.session.delete(f"{BASE_URL}/api/payments/{payment_id}")
-            except:
+            except Exception:
                 pass
         
         if self.created_apartment_id:
             try:
                 self.session.delete(f"{BASE_URL}/api/apartments/{self.created_apartment_id}")
-            except:
+            except Exception:
                 pass
         
         if self.created_tenant_id:
             try:
                 self.session.delete(f"{BASE_URL}/api/tenants/{self.created_tenant_id}")
-            except:
+            except Exception:
                 pass
     
     def test_outstanding_endpoint_exists(self):
@@ -296,19 +296,19 @@ class TestFeature6Integration:
         for payment_id in self.created_payment_ids:
             try:
                 self.session.delete(f"{BASE_URL}/api/payments/{payment_id}")
-            except:
+            except Exception:
                 pass
         
         if self.created_apartment_id:
             try:
                 self.session.delete(f"{BASE_URL}/api/apartments/{self.created_apartment_id}")
-            except:
+            except Exception:
                 pass
         
         if self.created_tenant_id:
             try:
                 self.session.delete(f"{BASE_URL}/api/tenants/{self.created_tenant_id}")
-            except:
+            except Exception:
                 pass
     
     def test_outstanding_oldest_month_first(self):

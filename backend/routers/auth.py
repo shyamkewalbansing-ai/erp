@@ -198,7 +198,7 @@ async def reset_password(request: ResetPasswordRequest):
             expiry_dt = datetime.fromisoformat(expiry.replace("Z", "+00:00"))
             if datetime.now(timezone.utc) > expiry_dt:
                 raise HTTPException(status_code=400, detail="Reset link is verlopen")
-        except:
+        except Exception:
             raise HTTPException(status_code=400, detail="Ongeldige reset link")
     
     if len(request.new_password) < 6:

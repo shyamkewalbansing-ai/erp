@@ -57,28 +57,28 @@ class TestOutstandingWarningFeature:
         for payment_id in self.created_payment_ids:
             try:
                 self.session.delete(f"{BASE_URL}/api/payments/{payment_id}")
-            except:
+            except Exception:
                 pass
         
         # Remove tenant from apartment
         if self.created_apartment_id:
             try:
                 self.session.post(f"{BASE_URL}/api/apartments/{self.created_apartment_id}/remove-tenant")
-            except:
+            except Exception:
                 pass
         
         # Delete apartment
         if self.created_apartment_id:
             try:
                 self.session.delete(f"{BASE_URL}/api/apartments/{self.created_apartment_id}")
-            except:
+            except Exception:
                 pass
         
         # Delete tenant
         if self.created_tenant_id:
             try:
                 self.session.delete(f"{BASE_URL}/api/tenants/{self.created_tenant_id}")
-            except:
+            except Exception:
                 pass
     
     def _create_test_tenant(self, name="TEST_Outstanding_Tenant"):
@@ -457,20 +457,20 @@ class TestOutstandingWarningScenario:
         for payment_id in self.created_payment_ids:
             try:
                 self.session.delete(f"{BASE_URL}/api/payments/{payment_id}")
-            except:
+            except Exception:
                 pass
         
         if self.created_apartment_id:
             try:
                 self.session.post(f"{BASE_URL}/api/apartments/{self.created_apartment_id}/remove-tenant")
                 self.session.delete(f"{BASE_URL}/api/apartments/{self.created_apartment_id}")
-            except:
+            except Exception:
                 pass
         
         if self.created_tenant_id:
             try:
                 self.session.delete(f"{BASE_URL}/api/tenants/{self.created_tenant_id}")
-            except:
+            except Exception:
                 pass
     
     def test_scenario_1500_rent_500_partial(self):

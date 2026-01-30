@@ -1043,7 +1043,7 @@ def get_subscription_status(user: dict) -> tuple:
             return "active", end_date, False
         else:
             return "expired", end_date, is_trial
-    except:
+    except Exception:
         return "none", None, False
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -1115,7 +1115,7 @@ async def get_user_active_addons(user_id: str) -> List[str]:
                         {"$set": {"status": "expired"}}
                     )
                     continue
-            except:
+            except Exception:
                 pass
         
         # Get addon info
@@ -1909,7 +1909,7 @@ async def reset_password(request: ResetPasswordRequest):
             expiry_dt = datetime.fromisoformat(expiry.replace("Z", "+00:00"))
             if datetime.now(timezone.utc) > expiry_dt:
                 raise HTTPException(status_code=400, detail="Reset link is verlopen")
-        except:
+        except Exception:
             raise HTTPException(status_code=400, detail="Ongeldige reset link")
     
     # Validate new password
@@ -3466,7 +3466,7 @@ async def get_notifications(current_user: dict = Depends(get_current_active_user
             first_payment = min(tenant_payments, key=lambda x: x["payment_date"])
             try:
                 first_date = datetime.fromisoformat(first_payment["payment_date"].replace("Z", "+00:00"))
-            except:
+            except Exception:
                 first_date = now
         else:
             first_date = now
@@ -3530,7 +3530,7 @@ async def get_notifications(current_user: dict = Depends(get_current_active_user
                         amount=None,
                         due_date=contract["end_date"]
                     ))
-            except:
+            except Exception:
                 pass
     
     # === 4. OUTSTANDING LOAN REMINDERS ===
@@ -3575,7 +3575,7 @@ async def get_notifications(current_user: dict = Depends(get_current_active_user
                             days_since_loan = (now - loan_date).days
                         else:
                             days_since_loan = 0
-                    except:
+                    except Exception:
                         days_since_loan = 0
                     
                     priority = "high" if days_since_loan > 60 else ("medium" if days_since_loan > 30 else "low")
@@ -3788,7 +3788,7 @@ async def get_tenant_outstanding(tenant_id: str, current_user: dict = Depends(ge
                 created_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
                 start_year = created_dt.year
                 start_month = created_dt.month
-            except:
+            except Exception:
                 now = datetime.now(timezone.utc)
                 start_year = now.year
                 start_month = now.month
@@ -4026,7 +4026,7 @@ async def get_invoices(current_user: dict = Depends(get_current_active_user)):
                 start_dt = datetime.fromisoformat(created.replace("Z", "+00:00"))
             else:
                 start_dt = now
-        except:
+        except Exception:
             start_dt = now
         
         # Generate invoices from start month to current month
@@ -4180,7 +4180,7 @@ async def get_invoice_pdf(tenant_id: str, year: int, month: int, current_user: d
             if m_date.month == month and m_date.year == year:
                 month_maintenance.append(m)
                 maintenance_cost += m.get("cost", 0)
-        except:
+        except Exception:
             pass
     
     # Get loans info
@@ -4649,7 +4649,7 @@ async def create_meter_reading(reading_data: MeterReadingCreate, current_user: d
     from datetime import datetime
     try:
         reading_dt = datetime.fromisoformat(reading_data.reading_date.replace('Z', '+00:00'))
-    except:
+    except Exception:
         reading_dt = datetime.now(timezone.utc)
     
     period_month = reading_dt.month
@@ -6427,7 +6427,7 @@ async def get_my_addons(current_user: dict = Depends(get_current_user)):
                         {"$set": {"status": "expired"}}
                     )
                     ua["status"] = "expired"
-            except:
+            except Exception:
                 pass
         
         addon = await db.addons.find_one({"id": ua["addon_id"]}, {"_id": 0})
@@ -6581,7 +6581,7 @@ async def activate_user_addon(user_id: str, addon_data: UserAddonCreate, current
                 if current_end_dt > now:
                     # Extend from current end date
                     end_date = (current_end_dt + timedelta(days=30 * addon_data.months)).isoformat()
-            except:
+            except Exception:
                 pass
         
         await db.user_addons.update_one(
@@ -7701,7 +7701,7 @@ async def activate_subscription(sub_data: SubscriptionCreate, current_user: dict
             else:
                 # Start from now
                 start_date = now
-        except:
+        except Exception:
             start_date = now
     else:
         start_date = now
@@ -8574,7 +8574,7 @@ async def get_subscription_status_api(current_user: dict = Depends(get_current_u
         try:
             end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
             days_remaining = max(0, (end_dt - datetime.now(timezone.utc)).days)
-        except:
+        except Exception:
             pass
     
     # Get subscription history
@@ -10387,7 +10387,7 @@ async def create_hrm_leave_request(request: HRMLeaveRequest, current_user: dict 
         start = datetime.fromisoformat(request.start_date.replace('Z', '+00:00'))
         end = datetime.fromisoformat(request.end_date.replace('Z', '+00:00'))
         req_dict["days"] = (end - start).days + 1
-    except:
+    except Exception:
         req_dict["days"] = 1
     
     await db.hrm_leave_requests.insert_one(req_dict)
@@ -10759,7 +10759,7 @@ async def create_hrm_attendance(attendance: HRMAttendance, current_user: dict = 
             clock_out = datetime.strptime(attendance.clock_out, "%H:%M")
             worked_minutes = (clock_out - clock_in).seconds // 60 - attendance.break_minutes
             att_dict["worked_hours"] = round(worked_minutes / 60, 2)
-        except:
+        except Exception:
             att_dict["worked_hours"] = 0
     
     if existing:
@@ -10825,7 +10825,7 @@ async def clock_out(employee_id: str, current_user: dict = Depends(get_current_u
             clock_out = datetime.strptime(now_time, "%H:%M")
             worked_minutes = (clock_out - clock_in).seconds // 60 - existing.get("break_minutes", 0)
             worked_hours = round(worked_minutes / 60, 2)
-        except:
+        except Exception:
             pass
     
     await db.hrm_attendance.update_one(
@@ -11434,7 +11434,7 @@ Als je een actie uitvoert, bevestig dit duidelijk aan de gebruiker."""
                 elif action == "APPARTEMENT_TOEVOEGEN":
                     try:
                         rent = float(params.get("rent_amount", 0)) if params.get("rent_amount") else 0
-                    except:
+                    except Exception:
                         rent = 0
                     result = await ai_create_apartment(
                         user_id,
@@ -11453,7 +11453,7 @@ Als je een actie uitvoert, bevestig dit duidelijk aan de gebruiker."""
                 elif action == "BETALING_REGISTREREN":
                     try:
                         amount = float(params.get("amount", 0)) if params.get("amount") else 0
-                    except:
+                    except Exception:
                         amount = 0
                     result = await ai_register_payment(
                         user_id,
@@ -11484,7 +11484,7 @@ Als je een actie uitvoert, bevestig dit duidelijk aan de gebruiker."""
                 elif action == "LENING_AANMAKEN":
                     try:
                         amount = float(params.get("amount", 0)) if params.get("amount") else 0
-                    except:
+                    except Exception:
                         amount = 0
                     result = await ai_create_loan(
                         user_id,
@@ -11932,7 +11932,7 @@ async def tenant_portal_submit_meter_reading(
     if reading_data.reading_date:
         try:
             reading_dt = datetime.fromisoformat(reading_data.reading_date.replace('Z', '+00:00'))
-        except:
+        except Exception:
             reading_dt = datetime.now(timezone.utc)
     else:
         reading_dt = datetime.now(timezone.utc)
