@@ -1514,6 +1514,51 @@ export default function HRM() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Account Dialog */}
+      <Dialog open={accountDialog} onOpenChange={setAccountDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Portaal Account Aanmaken</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Werknemer</Label>
+              <Input value={accountForm.name} disabled className="bg-muted" />
+            </div>
+            <div>
+              <Label>E-mail *</Label>
+              <Input 
+                type="email" 
+                value={accountForm.email} 
+                onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value })} 
+                placeholder="werknemer@bedrijf.com"
+              />
+            </div>
+            <div>
+              <Label>Wachtwoord *</Label>
+              <Input 
+                type="password" 
+                value={accountForm.password} 
+                onChange={(e) => setAccountForm({ ...accountForm, password: e.target.value })} 
+                placeholder="Minimaal 6 karakters"
+              />
+            </div>
+            <div className="p-3 bg-blue-50 rounded-lg">
+              <p className="text-sm text-blue-700">
+                <strong>Let op:</strong> De werknemer kan inloggen op <code>/werknemer/login</code> met deze gegevens om hun persoonlijke portaal te bekijken.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAccountDialog(false)}>Annuleren</Button>
+            <Button onClick={handleCreateAccount} disabled={saving}>
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+              Account Aanmaken
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
