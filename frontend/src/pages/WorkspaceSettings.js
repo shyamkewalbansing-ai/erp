@@ -426,6 +426,190 @@ export default function WorkspaceSettings() {
         </Card>
       </div>
 
+      {/* Backup & Restore Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Database className="w-5 h-5" />
+                Backup & Herstel
+              </CardTitle>
+              <CardDescription>Maak backups van uw workspace data en herstel wanneer nodig</CardDescription>
+            </div>
+            <Button onClick={() => setBackupDialogOpen(true)} data-testid="create-backup-btn">
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuwe Backup
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {backupsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-emerald-500" />
+            </div>
+          ) : backups.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Database className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>Nog geen backups</p>
+              <p className="text-sm mt-1">Maak een backup om uw data veilig te stellen</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {backups.map((backup) => (
+                <div 
+                  key={backup.id} 
+                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100"
+                  data-testid={`backup-item-${backup.id}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                      <HardDrive className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="font-medium">{backup.name}</p>
+                      <div className="flex items-center gap-3 text-sm text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          {formatDate(backup.created_at)}
+                        </span>
+                        <span>{formatBytes(backup.size_bytes)}</span>
+                        <span>{backup.records_count} records</span>
+                      </div>
+                      {backup.description && (
+                        <p className="text-sm text-gray-400 mt-1">{backup.description}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadBackup(backup)}
+                      title="Download als JSON"
+                    >
+                      <Download className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedBackup(backup);
+                        setRestoreDialogOpen(true);
+                      }}
+                      title="Herstel backup"
+                      data-testid={`restore-backup-${backup.id}`}
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:bg-red-50"
+                      onClick={() => handleDeleteBackup(backup)}
+                      title="Verwijder backup"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Create Backup Dialog */}
+      <Dialog open={backupDialogOpen} onOpenChange={setBackupDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Database className="w-5 h-5" />
+              Nieuwe Backup Maken
+            </DialogTitle>
+            <DialogDescription>
+              Maak een backup van alle workspace data (huurders, appartementen, betalingen, etc.)
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Backup Naam *</Label>
+              <Input
+                value={backupForm.name}
+                onChange={(e) => setBackupForm({...backupForm, name: e.target.value})}
+                placeholder="Bijv: Maandelijkse backup januari"
+                data-testid="backup-name-input"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Beschrijving (optioneel)</Label>
+              <Input
+                value={backupForm.description}
+                onChange={(e) => setBackupForm({...backupForm, description: e.target.value})}
+                placeholder="Notities over deze backup..."
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBackupDialogOpen(false)}>Annuleren</Button>
+            <Button onClick={handleCreateBackup} disabled={creatingBackup} data-testid="confirm-create-backup">
+              {creatingBackup ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Database className="w-4 h-4 mr-2" />}
+              Backup Maken
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Restore Backup Dialog */}
+      <Dialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-amber-600">
+              <AlertTriangle className="w-5 h-5" />
+              Backup Herstellen
+            </DialogTitle>
+            <DialogDescription>
+              Weet u zeker dat u de backup wilt herstellen?
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedBackup && (
+            <div className="py-4">
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                <p className="font-medium text-amber-800 mb-2">Let op!</p>
+                <ul className="text-sm text-amber-700 space-y-1">
+                  <li>• Alle huidige data wordt overschreven</li>
+                  <li>• Er wordt automatisch een veiligheidsbackup gemaakt</li>
+                  <li>• Dit kan niet ongedaan worden gemaakt</li>
+                </ul>
+              </div>
+              
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="font-medium">{selectedBackup.name}</p>
+                <p className="text-sm text-gray-500">
+                  {formatDate(selectedBackup.created_at)} • {selectedBackup.records_count} records
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRestoreDialogOpen(false)}>Annuleren</Button>
+            <Button 
+              onClick={handleRestoreBackup} 
+              disabled={restoringBackup}
+              variant="destructive"
+              data-testid="confirm-restore-backup"
+            >
+              {restoringBackup ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RotateCcw className="w-4 h-4 mr-2" />}
+              Backup Herstellen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Invite Dialog */}
       <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
         <DialogContent>
