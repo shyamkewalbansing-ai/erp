@@ -224,7 +224,7 @@ async def get_hrm_leave_requests(current_user: dict = Depends(get_current_user))
                 emp = await db.hrm_employees.find_one({"_id": ObjectId(req["employee_id"])})
                 if emp:
                     req["employee_name"] = f"{emp.get('first_name', '')} {emp.get('last_name', '')}"
-            except:
+            except Exception:
                 pass
     return requests
 
@@ -242,7 +242,7 @@ async def create_hrm_leave_request(request: HRMLeaveRequest, current_user: dict 
         emp = await db.hrm_employees.find_one({"_id": ObjectId(request.employee_id)})
         if emp:
             req_dict["employee_name"] = f"{emp.get('first_name', '')} {emp.get('last_name', '')}"
-    except:
+    except Exception:
         pass
     
     result = await db.hrm_leave_requests.insert_one(req_dict)
@@ -295,7 +295,7 @@ async def get_hrm_contracts(current_user: dict = Depends(get_current_user)):
                 emp = await db.hrm_employees.find_one({"_id": ObjectId(contract["employee_id"])})
                 if emp:
                     contract["employee_name"] = f"{emp.get('first_name', '')} {emp.get('last_name', '')}"
-            except:
+            except Exception:
                 pass
     return contracts
 
@@ -402,7 +402,7 @@ async def get_hrm_applications(current_user: dict = Depends(get_current_user)):
                 vac = await db.hrm_vacancies.find_one({"_id": ObjectId(app["vacancy_id"])})
                 if vac:
                     app["vacancy_title"] = vac.get("title", "")
-            except:
+            except Exception:
                 pass
     return applications
 
