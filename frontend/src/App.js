@@ -46,6 +46,8 @@ const MijnModules = lazy(() => import("./pages/MijnModules"));
 const WebsiteBeheer = lazy(() => import("./pages/WebsiteBeheer"));
 const CMSPage = lazy(() => import("./pages/CMSPage"));
 const ModulesPage = lazy(() => import("./pages/ModulesPage"));
+const ModulesOverviewPage = lazy(() => import("./pages/ModulesOverviewPage"));
+const ModuleDetailPage = lazy(() => import("./pages/ModuleDetailPage"));
 const VoorwaardenPage = lazy(() => import("./pages/VoorwaardenPage"));
 const PrivacyPage = lazy(() => import("./pages/PrivacyPage"));
 const PrijzenPage = lazy(() => import("./pages/PrijzenPage"));
