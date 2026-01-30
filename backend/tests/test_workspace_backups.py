@@ -165,11 +165,10 @@ class TestWorkspaceBackupsAPI:
         """POST /api/workspace/backups/{id}/restore - Should fail without confirm=true"""
         assert TestWorkspaceBackupsAPI.created_backup_id, "No backup ID from previous test"
         
-        # Try restore without confirm
+        # Try restore without confirm (confirm is a query parameter)
         response = requests.post(
             f"{BASE_URL}/api/workspace/backups/{TestWorkspaceBackupsAPI.created_backup_id}/restore",
-            headers=auth_headers,
-            json={"confirm": False}
+            headers=auth_headers
         )
         
         # Should fail with 400
@@ -181,13 +180,13 @@ class TestWorkspaceBackupsAPI:
         print("✓ Restore correctly rejected without confirm=true")
     
     def test_06_restore_backup_with_confirm(self, auth_headers):
-        """POST /api/workspace/backups/{id}/restore - Restore with confirm=true"""
+        """POST /api/workspace/backups/{id}/restore - Restore with confirm=true (query param)"""
         assert TestWorkspaceBackupsAPI.created_backup_id, "No backup ID from previous test"
         
+        # confirm is a query parameter, not body
         response = requests.post(
-            f"{BASE_URL}/api/workspace/backups/{TestWorkspaceBackupsAPI.created_backup_id}/restore",
-            headers=auth_headers,
-            json={"confirm": True}
+            f"{BASE_URL}/api/workspace/backups/{TestWorkspaceBackupsAPI.created_backup_id}/restore?confirm=true",
+            headers=auth_headers
         )
         
         assert response.status_code == 200, f"Failed to restore backup: {response.text}"
