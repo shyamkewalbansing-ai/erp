@@ -106,6 +106,7 @@ export default function AutoDealerVoertuigen() {
       openNewVehicleDialog();
       setSearchParams({});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadVehicles = async () => {
