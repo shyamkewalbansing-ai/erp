@@ -12334,6 +12334,8 @@ async def delete_employee_account(account_id: str, current_user: dict = Depends(
 # Include routers
 api_router.include_router(autodealer_router)
 api_router.include_router(tenant_portal_router)
+api_router.include_router(hrm_router)
+api_router.include_router(autodealer_portal_router)
 
 # Include the router in the main app
 app.include_router(api_router)
