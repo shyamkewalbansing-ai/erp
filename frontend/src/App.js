@@ -57,6 +57,12 @@ const WorkspaceSettings = lazy(() => import("./pages/WorkspaceSettings"));
 const EmployeePortalLogin = lazy(() => import("./pages/EmployeePortalLogin"));
 const EmployeePortalDashboard = lazy(() => import("./pages/EmployeePortalDashboard"));
 
+// Auto Dealer Module
+const AutoDealerDashboard = lazy(() => import("./pages/AutoDealerDashboard"));
+const AutoDealerVoertuigen = lazy(() => import("./pages/AutoDealerVoertuigen"));
+const AutoDealerKlanten = lazy(() => import("./pages/AutoDealerKlanten"));
+const AutoDealerVerkopen = lazy(() => import("./pages/AutoDealerVerkopen"));
+
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
   <div className="min-h-screen flex items-center justify-center bg-background">
