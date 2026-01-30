@@ -192,14 +192,16 @@ export default function Admin() {
 
   const loadData = async () => {
     try {
-      const [dashboardRes, customersRes, requestsRes, subscriptionsRes, domainsRes, addonsRes, addonRequestsRes] = await Promise.all([
+      const [dashboardRes, customersRes, requestsRes, subscriptionsRes, domainsRes, addonsRes, addonRequestsRes, deploySettingsRes, deployLogsRes] = await Promise.all([
         getAdminDashboard(),
         getAdminCustomers(),
         getSubscriptionRequests(),
         getAdminSubscriptions(),
         getAdminDomains(),
         getAdminAddons(),
-        getAddonRequests()
+        getAddonRequests(),
+        getDeploymentSettings().catch(() => ({ data: {} })),
+        getDeploymentLogs().catch(() => ({ data: [] }))
       ]);
       setStats(dashboardRes.data);
       setCustomers(customersRes.data);
@@ -208,6 +210,10 @@ export default function Admin() {
       setDomains(domainsRes.data);
       setAddons(addonsRes.data);
       setAddonRequests(addonRequestsRes.data);
+      if (deploySettingsRes.data) {
+        setDeploymentSettings(prev => ({...prev, ...deploySettingsRes.data}));
+      }
+      setDeploymentLogs(deployLogsRes.data || []);
     } catch (error) {
       toast.error('Fout bij het laden van gegevens');
     } finally {
