@@ -160,6 +160,20 @@ export default function Admin() {
   });
   const [addonMonths, setAddonMonths] = useState('1');
   
+  // Deployment/Update states
+  const [deploymentSettings, setDeploymentSettings] = useState({
+    webhook_url: '',
+    webhook_secret: '',
+    auto_restart_backend: true,
+    auto_rebuild_frontend: true,
+    run_migrations: true,
+    last_update: null,
+    last_update_status: null
+  });
+  const [deploymentLogs, setDeploymentLogs] = useState([]);
+  const [updating, setUpdating] = useState(false);
+  const [savingDeploySettings, setSavingDeploySettings] = useState(false);
+  
   // Create customer form
   const [newCustomer, setNewCustomer] = useState({
     name: '',
