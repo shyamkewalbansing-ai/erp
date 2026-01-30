@@ -185,7 +185,7 @@ class TestLoansFeature:
         # Verify deletion
         get_resp = self.session.get(f"{BASE_URL}/api/loans")
         loans = get_resp.json()
-        loan_ids = [l["id"] for l in loans]
+        loan_ids = [loan_item["id"] for loan_item in loans]
         assert loan_id not in loan_ids, "Loan should be deleted"
         print(f"✓ Deleted loan {loan_id}")
     
@@ -264,7 +264,7 @@ class TestLoansFeature:
         # Check loan status
         loans_resp = self.session.get(f"{BASE_URL}/api/loans")
         loans = loans_resp.json()
-        loan = next((l for l in loans if l["id"] == loan_id), None)
+        loan = next((l for loan_item in loans if l["id"] == loan_id), None)
         
         assert loan is not None, "Loan not found"
         assert loan["status"] == "partial", f"Expected status 'partial', got: {loan['status']}"
@@ -322,7 +322,7 @@ class TestLoansFeature:
         # Check loan status
         loans_resp = self.session.get(f"{BASE_URL}/api/loans")
         loans = loans_resp.json()
-        loan = next((l for l in loans if l["id"] == loan_id), None)
+        loan = next((l for loan_item in loans if l["id"] == loan_id), None)
         
         assert loan is not None, "Loan not found"
         assert loan["status"] == "paid", f"Expected status 'paid', got: {loan['status']}"
@@ -357,7 +357,7 @@ class TestLoansFeature:
         loans = data["loans"]
         
         # Filter open loans (status != 'paid')
-        open_loans = [l for l in loans if l["status"] != "paid"]
+        open_loans = [l for loan_item in loans if loan_item["status"] != "paid"]
         assert len(open_loans) >= 1, "Should have at least 1 open loan"
         
         # Verify loan has required fields for dropdown
@@ -521,15 +521,15 @@ class TestLeningenSummaryCards:
         assert loans_resp.status_code == 200
         
         loans = loans_resp.json()
-        test_loans = [l for l in loans if l.get("description", "").startswith("TEST_Summary")]
+        test_loans = [l for loan_item in loans if l.get("description", "").startswith("TEST_Summary")]
         
         # Calculate summary
-        total_amount = sum(l["amount"] for l in test_loans)
-        total_paid = sum(l["amount_paid"] for l in test_loans)
-        total_remaining = sum(l["remaining"] for l in test_loans)
-        open_count = len([l for l in test_loans if l["status"] == "open"])
-        partial_count = len([l for l in test_loans if l["status"] == "partial"])
-        paid_count = len([l for l in test_loans if l["status"] == "paid"])
+        total_amount = sum(loan_item["amount"] for loan_item in test_loans)
+        total_paid = sum(l["amount_paid"] for loan_item in test_loans)
+        total_remaining = sum(loan_item["remaining"] for loan_item in test_loans)
+        open_count = len([l for loan_item in test_loans if loan_item["status"] == "open"])
+        partial_count = len([l for loan_item in test_loans if loan_item["status"] == "partial"])
+        paid_count = len([l for loan_item in test_loans if loan_item["status"] == "paid"])
         
         assert total_amount == 900.00, f"Expected total=900, got: {total_amount}"
         assert total_paid == 150.00, f"Expected paid=150, got: {total_paid}"
