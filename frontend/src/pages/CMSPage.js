@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Loader2, Menu, X, FileText, Lock } from 'lucide-react';
@@ -14,11 +14,7 @@ export default function CMSPage() {
   const [error, setError] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    loadPage();
-  }, [slug]);
-
-  const loadPage = async () => {
+  const loadPage = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);

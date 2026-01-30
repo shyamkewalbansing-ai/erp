@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -16,23 +16,7 @@ export default function EmployeePortalDashboard() {
   const [dashboard, setDashboard] = useState(null);
   const [employee, setEmployee] = useState(null);
 
-  useEffect(() => {
-    const token = localStorage.getItem('employee_token');
-    const user = localStorage.getItem('employee_user');
-    
-    if (!token) {
-      navigate('/werknemer/login');
-      return;
-    }
-    
-    if (user) {
-      setEmployee(JSON.parse(user));
-    }
-    
-    loadDashboard(token);
-  }, [navigate]);
-
-  const loadDashboard = async (token) => {
+  const loadDashboard = useCallback(async (token) => {
     try {
       const response = await api.get('/employee-portal/dashboard', {
         headers: { Authorization: `Bearer ${token}` }
@@ -41,7 +25,9 @@ export default function EmployeePortalDashboard() {
     } catch (error) {
       if (error.response?.status === 401) {
         toast.error('Sessie verlopen, log opnieuw in');
-        handleLogout();
+        localStorage.removeItem('employee_token');
+        localStorage.removeItem('employee_user');
+        navigate('/werknemer/login');
       } else {
         toast.error('Kon dashboard niet laden');
       }
