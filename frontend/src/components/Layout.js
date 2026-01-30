@@ -144,6 +144,9 @@ export default function Layout() {
   const isSubscriptionActive = hasActiveSubscription();
   const showTrialBadge = user?.subscription_status === 'trial';
   const showExpiredBadge = user?.subscription_status === 'expired';
+  
+  // Get branding from context
+  const { branding, workspace } = useAuth();
 
   return (
     <div className="app-container grain-overlay">
@@ -157,21 +160,34 @@ export default function Layout() {
 
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
-        {/* Logo */}
+        {/* Logo - Use workspace branding */}
         <div className="p-6 border-b border-border">
           <div className="flex items-center">
-            {user?.logo && !isSuperAdmin() ? (
+            {branding?.logo_url ? (
+              <img 
+                src={branding.logo_url} 
+                alt={branding.portal_name || 'Logo'} 
+                className="h-8 w-auto max-w-[140px] object-contain"
+              />
+            ) : user?.logo && !isSuperAdmin() ? (
               <img 
                 src={user.logo} 
                 alt="Bedrijfslogo" 
                 className="h-8 w-auto max-w-[140px] object-contain"
               />
             ) : (
-              <img 
-                src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-                alt="Facturatie N.V." 
-                className="h-5 w-auto"
-              />
+              <div className="flex items-center gap-2">
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+                  alt="Facturatie N.V." 
+                  className="h-5 w-auto"
+                />
+                {workspace && !isSuperAdmin() && (
+                  <span className="text-xs text-muted-foreground truncate max-w-[100px]">
+                    {branding?.portal_name || workspace.name}
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </div>
