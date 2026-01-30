@@ -427,7 +427,7 @@ export default function Layout() {
       {/* Main content */}
       <main className="main-content">
         {/* Desktop header with notifications */}
-        <header className="hidden lg:flex sticky top-0 z-20 header-glass px-8 py-3 items-center justify-between border-b border-border/50">
+        <header className="desktop-header hidden lg:flex header-glass px-8 py-3 items-center justify-between border-b border-border/50">
           {/* Left side - User info & Workspace button */}
           <div className="flex items-center gap-4">
             {/* User info */}
