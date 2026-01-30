@@ -77,13 +77,18 @@ const hrmNavItems = [
 ];
 
 export default function Layout() {
-  const { user, logout, hasActiveSubscription, isSuperAdmin } = useAuth();
+  const { user, logout, hasActiveSubscription, isSuperAdmin, workspace, branding } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeAddons, setActiveAddons] = useState([]);
   const [addonsLoaded, setAddonsLoaded] = useState(false);
+  const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
+  const [workspaceData, setWorkspaceData] = useState(null);
+  const [workspaceForm, setWorkspaceForm] = useState({ name: '', slug: '' });
+  const [domainForm, setDomainForm] = useState({ domain_type: 'subdomain', subdomain: '', custom_domain: '' });
+  const [savingWorkspace, setSavingWorkspace] = useState(false);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('darkMode');
