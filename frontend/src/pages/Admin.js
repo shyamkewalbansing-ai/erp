@@ -778,6 +778,10 @@ server {
             <Globe className="w-4 h-4 mr-1" />
             Website
           </TabsTrigger>
+          <TabsTrigger value="update" className="text-emerald-600">
+            <RefreshCw className="w-4 h-4 mr-1" />
+            Update
+          </TabsTrigger>
         </TabsList>
 
         {/* Customers Tab */}
