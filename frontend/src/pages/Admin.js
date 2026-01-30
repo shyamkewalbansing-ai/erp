@@ -103,7 +103,14 @@ import {
   Terminal,
   Settings,
   History,
-  Shield
+  Shield,
+  Building2,
+  Palette,
+  Link,
+  CheckCircle2,
+  AlertCircle,
+  Layers,
+  Eye
 } from 'lucide-react';
 
 export default function Admin() {
