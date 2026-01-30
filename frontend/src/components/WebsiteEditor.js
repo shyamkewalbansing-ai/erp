@@ -357,9 +357,9 @@ export default function WebsiteEditor() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Extra Pagina's</CardTitle>
+              <CardTitle>Extra Pagina&apos;s</CardTitle>
               <CardDescription>
-                Maak extra pagina's aan voor uw website
+                Maak extra pagina&apos;s aan voor uw website
               </CardDescription>
             </div>
             <Button onClick={() => setCreateDialogOpen(true)} className="bg-emerald-500 hover:bg-emerald-600">
@@ -372,8 +372,8 @@ export default function WebsiteEditor() {
           {pages.filter(p => !fixedPages.find(f => f.slug === p.slug)).length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-              <p>Nog geen extra pagina's aangemaakt</p>
-              <p className="text-sm">Klik op "Nieuwe Pagina" om te beginnen</p>
+              <p>Nog geen extra pagina&apos;s aangemaakt</p>
+              <p className="text-sm">Klik op &quot;Nieuwe Pagina&quot; om te beginnen</p>
             </div>
           ) : (
             <div className="space-y-2">
