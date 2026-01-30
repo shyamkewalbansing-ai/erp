@@ -734,6 +734,24 @@ class AdminDashboardStats(BaseModel):
     revenue_this_month: float
     recent_subscriptions: List[SubscriptionResponse]
 
+# ==================== DEPLOYMENT / SYSTEM UPDATE MODELS ====================
+
+class DeploymentSettings(BaseModel):
+    webhook_url: Optional[str] = None
+    webhook_secret: Optional[str] = None
+    auto_restart_backend: bool = True
+    auto_rebuild_frontend: bool = True
+    run_migrations: bool = True
+    last_update: Optional[str] = None
+    last_update_status: Optional[str] = None
+
+class DeploymentLog(BaseModel):
+    id: str
+    timestamp: str
+    status: str  # 'pending', 'running', 'success', 'failed'
+    message: str
+    details: Optional[str] = None
+
 # ==================== LANDING PAGE CMS MODELS ====================
 
 class LandingPageSection(BaseModel):
