@@ -72,6 +72,7 @@ Complete autohandelmodule voor Suriname met multi-valuta ondersteuning:
 |--------|-------------|
 | **Vastgoed Beheer** | tenants, apartments, payments, deposits, loans, kasgeld, maintenance, meter_readings, contracts, invoices |
 | **HRM Module** | employees, salaries, hrm_employees, hrm_departments, hrm_attendance, hrm_leave_requests, hrm_payroll, hrm_settings |
+| **Auto Dealer** | autodealer_vehicles, autodealer_customers, autodealer_sales |
 | **Huurders Portaal** | tenant_accounts |
 | **AI Chat** | ai_chat_history |
 | **Workspace** | workspace_users, workspace_logs, user_addons |
