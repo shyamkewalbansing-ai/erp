@@ -182,8 +182,8 @@ export default function OverOnsPage() {
                   </div>
                 </div>
                 <p className="text-gray-600">
-                  "Elke Surinaamse ondernemer verdient toegang tot wereldklasse bedrijfssoftware, 
-                  zonder de complexiteit en kosten van internationale oplossingen."
+                  &quot;Elke Surinaamse ondernemer verdient toegang tot wereldklasse bedrijfssoftware, 
+                  zonder de complexiteit en kosten van internationale oplossingen.&quot;
                 </p>
               </div>
             </div>
