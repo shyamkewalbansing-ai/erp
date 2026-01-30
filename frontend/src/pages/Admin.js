@@ -3014,7 +3014,7 @@ echo "Deploy completed at $(date)"`}</pre>
               <ol className="list-decimal list-inside space-y-1 text-sm text-muted-foreground">
                 <li>Ga naar CloudPanel → Sites → Add Site</li>
                 <li>Vul het domein in: <strong>{selectedDomain?.domain}</strong></li>
-                <li>Kies "Reverse Proxy" of "Static Site"</li>
+                <li>Kies &quot;Reverse Proxy&quot; of &quot;Static Site&quot;</li>
                 <li>Vraag SSL certificaat aan (Let&apos;s Encrypt)</li>
                 <li>Pas de Nginx configuratie aan met onderstaande code</li>
               </ol>
