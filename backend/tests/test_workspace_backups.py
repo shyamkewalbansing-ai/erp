@@ -208,9 +208,8 @@ class TestWorkspaceBackupsAPI:
         fake_id = "00000000-0000-0000-0000-000000000000"
         
         response = requests.post(
-            f"{BASE_URL}/api/workspace/backups/{fake_id}/restore",
-            headers=auth_headers,
-            json={"confirm": True}
+            f"{BASE_URL}/api/workspace/backups/{fake_id}/restore?confirm=true",
+            headers=auth_headers
         )
         
         assert response.status_code == 404, f"Expected 404, got {response.status_code}"
