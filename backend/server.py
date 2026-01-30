@@ -9656,13 +9656,20 @@ async def create_workspace_backup(backup_data: BackupCreate, current_user: dict 
     backup_content = {"workspace": {k: v for k, v in workspace.items() if k != "_id"}, "collections": {}}
     total_records = 0
     
-    for coll_name in BACKUP_COLLECTIONS:
-        records = await db[coll_name].find({"workspace_id": workspace_id}, {"_id": 0}).to_list(10000)
-        if coll_name in ["tenants", "apartments", "payments", "employees"]:
-            legacy = await db[coll_name].find({"user_id": workspace["owner_id"], "workspace_id": {"$exists": False}}, {"_id": 0}).to_list(10000)
-            records.extend(legacy)
-        backup_content["collections"][coll_name] = records
-        total_records += len(records)
+    # Dynamisch alle workspace collecties ophalen (inclusief nieuwe modules)
+    collections_to_backup = await get_all_workspace_collections()
+    
+    for coll_name in collections_to_backup:
+        try:
+            records = await db[coll_name].find({"workspace_id": workspace_id}, {"_id": 0}).to_list(10000)
+            if coll_name in ["tenants", "apartments", "payments", "employees"]:
+                legacy = await db[coll_name].find({"user_id": workspace["owner_id"], "workspace_id": {"$exists": False}}, {"_id": 0}).to_list(10000)
+                records.extend(legacy)
+            if records:  # Alleen toevoegen als er data is
+                backup_content["collections"][coll_name] = records
+                total_records += len(records)
+        except Exception as e:
+            logger.warning(f"Could not backup collection {coll_name}: {e}")
     
     backup_json = json.dumps(backup_content, default=str)
     size_bytes = len(backup_json.encode('utf-8'))
@@ -9670,9 +9677,10 @@ async def create_workspace_backup(backup_data: BackupCreate, current_user: dict 
     backup_record = {
         "id": backup_id, "workspace_id": workspace_id, "name": backup_data.name,
         "description": backup_data.description, "size_bytes": size_bytes,
-        "collections_count": len(BACKUP_COLLECTIONS), "records_count": total_records,
+        "collections_count": len(backup_content["collections"]), "records_count": total_records,
         "created_at": now, "created_by": current_user["id"],
-        "created_by_name": current_user.get("name", "Onbekend"), "status": "completed"
+        "created_by_name": current_user.get("name", "Onbekend"), "status": "completed",
+        "backed_up_collections": list(backup_content["collections"].keys())
     }
     await db.workspace_backups.insert_one(backup_record)
     await db.workspace_backup_data.insert_one({"backup_id": backup_id, "workspace_id": workspace_id, "content": backup_content, "created_at": now})
