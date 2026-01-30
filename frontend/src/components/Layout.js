@@ -451,6 +451,15 @@ export default function Layout() {
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
             {!isSuperAdmin() && <NotificationBell />}
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="text-muted-foreground hover:text-destructive w-9 h-9"
+              onClick={handleLogout}
+              data-testid="logout-btn-mobile"
+            >
+              <LogOut className="w-4 h-4" />
+            </Button>
           </div>
         </header>
 
