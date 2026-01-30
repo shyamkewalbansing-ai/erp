@@ -156,6 +156,89 @@ export default function WorkspaceSettings() {
     }
   };
 
+  // Backup functions
+  const handleCreateBackup = async () => {
+    if (!backupForm.name) {
+      toast.error('Geef een naam voor de backup');
+      return;
+    }
+    setCreatingBackup(true);
+    try {
+      await createWorkspaceBackup(backupForm);
+      toast.success('Backup succesvol aangemaakt');
+      setBackupDialogOpen(false);
+      setBackupForm({ name: '', description: '' });
+      loadBackups();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Backup maken mislukt');
+    } finally {
+      setCreatingBackup(false);
+    }
+  };
+
+  const handleRestoreBackup = async () => {
+    if (!selectedBackup) return;
+    setRestoringBackup(true);
+    try {
+      const res = await restoreWorkspaceBackup(selectedBackup.id, true);
+      toast.success(`Backup hersteld! ${res.data.records_restored} records teruggezet.`);
+      setRestoreDialogOpen(false);
+      setSelectedBackup(null);
+      loadBackups();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Herstel mislukt');
+    } finally {
+      setRestoringBackup(false);
+    }
+  };
+
+  const handleDeleteBackup = async (backup) => {
+    if (!window.confirm(`Weet u zeker dat u backup "${backup.name}" wilt verwijderen?`)) return;
+    try {
+      await deleteWorkspaceBackup(backup.id);
+      toast.success('Backup verwijderd');
+      loadBackups();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Verwijderen mislukt');
+    }
+  };
+
+  const handleDownloadBackup = async (backup) => {
+    try {
+      const res = await downloadWorkspaceBackup(backup.id);
+      const blob = new Blob([JSON.stringify(res.data, null, 2)], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup_${backup.name.replace(/\s+/g, '_')}_${backup.id.slice(0, 8)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('Backup gedownload');
+    } catch (error) {
+      toast.error('Download mislukt');
+    }
+  };
+
+  const formatBytes = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateStr) => {
+    return new Date(dateStr).toLocaleString('nl-NL', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   const getRoleIcon = (role) => {
     switch (role) {
       case 'owner': return <Crown className="w-4 h-4 text-yellow-500" />;
