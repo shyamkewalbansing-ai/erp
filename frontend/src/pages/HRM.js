@@ -1144,13 +1144,48 @@ export default function HRM() {
               <Input value={employeeForm.name} onChange={(e) => setEmployeeForm({ ...employeeForm, name: e.target.value })} />
             </div>
             <div>
-              <Label>E-mail</Label>
+              <Label>E-mail *</Label>
               <Input type="email" value={employeeForm.email} onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })} />
             </div>
             <div>
               <Label>Telefoon</Label>
               <Input value={employeeForm.phone} onChange={(e) => setEmployeeForm({ ...employeeForm, phone: e.target.value })} />
             </div>
+            
+            {/* Portal Account Section - MOVED UP and more visible */}
+            {!editingItem && (
+              <div className="col-span-2 p-4 bg-purple-50 border-2 border-purple-200 rounded-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  <input 
+                    type="checkbox" 
+                    id="create_portal" 
+                    checked={employeeForm.create_portal_account}
+                    onChange={(e) => setEmployeeForm({...employeeForm, create_portal_account: e.target.checked})}
+                    className="w-5 h-5 rounded border-purple-300 text-purple-600"
+                  />
+                  <Label htmlFor="create_portal" className="cursor-pointer flex items-center gap-2 text-purple-800 font-medium">
+                    <Briefcase className="w-5 h-5 text-purple-600" />
+                    Portaal account aanmaken (werknemer kan inloggen)
+                  </Label>
+                </div>
+                {employeeForm.create_portal_account && (
+                  <div className="ml-8 space-y-2">
+                    <div>
+                      <Label className="text-purple-700">Wachtwoord voor portaal *</Label>
+                      <Input 
+                        type="password" 
+                        value={employeeForm.portal_password} 
+                        onChange={(e) => setEmployeeForm({...employeeForm, portal_password: e.target.value})}
+                        placeholder="Minimaal 6 tekens"
+                        className="border-purple-300"
+                      />
+                    </div>
+                    <p className="text-xs text-purple-600">Login: e-mailadres + dit wachtwoord op /werknemer/login</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div>
               <Label>Functie</Label>
               <Input value={employeeForm.position} onChange={(e) => setEmployeeForm({ ...employeeForm, position: e.target.value })} />
@@ -1203,42 +1238,6 @@ export default function HRM() {
                 </SelectContent>
               </Select>
             </div>
-            
-            {/* Portal Account Section - only for new employees */}
-            {!editingItem && (
-              <div className="col-span-2 border-t pt-4 mt-2">
-                <div className="flex items-center gap-3 mb-3">
-                  <input 
-                    type="checkbox" 
-                    id="create_portal" 
-                    checked={employeeForm.create_portal_account}
-                    onChange={(e) => setEmployeeForm({...employeeForm, create_portal_account: e.target.checked})}
-                    className="w-4 h-4 rounded border-gray-300"
-                  />
-                  <Label htmlFor="create_portal" className="cursor-pointer flex items-center gap-2">
-                    <Briefcase className="w-4 h-4 text-purple-600" />
-                    Portaal account aanmaken
-                  </Label>
-                </div>
-                {employeeForm.create_portal_account && (
-                  <div className="ml-7 p-3 bg-purple-50 rounded-lg space-y-3">
-                    <p className="text-sm text-purple-700">
-                      Werknemer kan inloggen op <strong>/werknemer/login</strong> om loonstroken en verlof te bekijken.
-                    </p>
-                    <div>
-                      <Label>Wachtwoord voor portaal *</Label>
-                      <Input 
-                        type="password" 
-                        value={employeeForm.portal_password} 
-                        onChange={(e) => setEmployeeForm({...employeeForm, portal_password: e.target.value})}
-                        placeholder="Minimaal 6 tekens"
-                      />
-                    </div>
-                    <p className="text-xs text-gray-500">E-mailadres hierboven wordt gebruikt als login</p>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEmployeeDialog(false)}>Annuleren</Button>
