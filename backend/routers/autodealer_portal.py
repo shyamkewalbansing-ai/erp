@@ -11,7 +11,7 @@ import jwt
 import bcrypt
 import os
 
-router = APIRouter(prefix="/api/autodealer-portal", tags=["Auto Dealer Portal"])
+router = APIRouter(prefix="/autodealer-portal", tags=["Auto Dealer Portal"])
 
 security = HTTPBearer()
 
