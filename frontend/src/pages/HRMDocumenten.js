@@ -190,7 +190,7 @@ export default function HRMDocumenten() {
                           {isExpiringSoon(doc.expiry_date) && <AlertTriangle className="w-3 h-3 ml-1" />}
                         </p>
                       )}
-                      {doc.notes && <p className="text-xs text-muted-foreground mt-1 italic">"{doc.notes}"</p>}
+                      {doc.notes && <p className="text-xs text-muted-foreground mt-1 italic">&quot;{doc.notes}&quot;</p>}
                     </div>
                   </div>
                   <Button size="sm" variant="ghost" onClick={() => handleDelete(doc.id)}>
