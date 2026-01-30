@@ -734,6 +734,55 @@ class AdminDashboardStats(BaseModel):
     revenue_this_month: float
     recent_subscriptions: List[SubscriptionResponse]
 
+# ==================== WORKSPACE / MULTI-TENANT MODELS ====================
+
+class WorkspaceBranding(BaseModel):
+    logo_url: Optional[str] = None
+    favicon_url: Optional[str] = None
+    primary_color: str = "#0caf60"
+    secondary_color: str = "#059669"
+    portal_name: Optional[str] = None
+
+class WorkspaceDomain(BaseModel):
+    type: str  # 'subdomain' or 'custom'
+    subdomain: Optional[str] = None  # e.g., 'klantnaam' -> klantnaam.facturatie.sr
+    custom_domain: Optional[str] = None  # e.g., 'portal.klantdomein.nl'
+    dns_verified: bool = False
+    ssl_active: bool = False
+    dns_record_type: str = "A"
+    dns_record_value: Optional[str] = None  # Server IP
+
+class WorkspaceCreate(BaseModel):
+    name: str
+    slug: str  # URL-safe identifier
+    owner_id: str  # Customer user_id
+    domain_type: str = "subdomain"  # 'subdomain' or 'custom'
+    subdomain: Optional[str] = None
+    custom_domain: Optional[str] = None
+    branding: Optional[WorkspaceBranding] = None
+
+class WorkspaceUpdate(BaseModel):
+    name: Optional[str] = None
+    branding: Optional[WorkspaceBranding] = None
+    domain_type: Optional[str] = None
+    subdomain: Optional[str] = None
+    custom_domain: Optional[str] = None
+
+class WorkspaceResponse(BaseModel):
+    id: str
+    name: str
+    slug: str
+    owner_id: str
+    owner_name: Optional[str] = None
+    owner_email: Optional[str] = None
+    status: str  # 'pending', 'active', 'suspended', 'error'
+    domain: WorkspaceDomain
+    branding: WorkspaceBranding
+    created_at: str
+    updated_at: Optional[str] = None
+    users_count: int = 0
+    error_message: Optional[str] = None
+
 # ==================== DEPLOYMENT / SYSTEM UPDATE MODELS ====================
 
 class DeploymentSettings(BaseModel):
