@@ -259,10 +259,9 @@ export default function LandingPage() {
 
             <div className="hidden md:flex items-center gap-8">
               <Link to="/" className="text-sm font-medium text-emerald-600 font-body" data-testid="nav-home">Home</Link>
+              <Link to="/modules-overzicht" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-modules">Modules</Link>
               <Link to="/prijzen" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-prijzen">Prijzen</Link>
               <Link to="/over-ons" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-over-ons">Over Ons</Link>
-              <Link to="/voorwaarden" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-voorwaarden">Voorwaarden</Link>
-              <Link to="/privacy" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-privacy">Privacy</Link>
             </div>
 
             <div className="hidden md:flex items-center gap-3">
@@ -284,10 +283,9 @@ export default function LandingPage() {
           <div className="md:hidden bg-white/95 backdrop-blur-xl border-b border-gray-100 animate-fade-in">
             <div className="px-4 py-4 space-y-3">
               <Link to="/" className="block text-emerald-600 py-2 font-medium font-body" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+              <Link to="/modules-overzicht" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Modules</Link>
               <Link to="/prijzen" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Prijzen</Link>
               <Link to="/over-ons" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Over Ons</Link>
-              <Link to="/voorwaarden" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Voorwaarden</Link>
-              <Link to="/privacy" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Privacy</Link>
               <div className="pt-3 space-y-2">
                 <Button variant="outline" className="w-full font-body" onClick={() => navigate('/login')}>Inloggen</Button>
                 <Button className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 font-body font-semibold" onClick={() => navigate('/prijzen')}>Gratis Starten</Button>
