@@ -86,6 +86,7 @@ const autoDealerNavItems = [
   { to: '/app/autodealer/voertuigen', icon: Car, label: 'Voertuigen', addon: 'autodealer' },
   { to: '/app/autodealer/klanten', icon: Users, label: 'Klanten', addon: 'autodealer' },
   { to: '/app/autodealer/verkopen', icon: ShoppingCart, label: 'Verkopen', addon: 'autodealer' },
+  { to: '/klant-portaal', icon: Globe, label: 'Klant Portaal', addon: 'autodealer', external: true },
 ];
 
 export default function Layout() {
