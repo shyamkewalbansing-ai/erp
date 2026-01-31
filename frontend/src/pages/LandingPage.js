@@ -635,7 +635,7 @@ export default function LandingPage() {
           </div>
 
           <div className="text-center mt-14">
-            <Button size="lg" onClick={() => navigate('/prijzen')} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-full px-8 shadow-lg shadow-emerald-500/25 font-body font-semibold" data-testid="view-all-prices-btn">
+            <Button size="lg" onClick={() => navigate('/modules')} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-full px-8 shadow-lg shadow-emerald-500/25 font-body font-semibold" data-testid="view-all-prices-btn">
               Bekijk alle prijzen
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
