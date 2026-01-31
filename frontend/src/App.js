@@ -365,6 +365,9 @@ function MainAppRoutes() {
           <Route path="admin" element={
             <AdminRoute><Admin /></AdminRoute>
           } />
+          <Route path="admin/domeinen" element={
+            <AdminRoute><DomainManagementPage /></AdminRoute>
+          } />
           <Route path="mijn-modules" element={<MijnModules />} />
           <Route path="website-beheer" element={
             <AdminRoute><WebsiteBeheer /></AdminRoute>
