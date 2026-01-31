@@ -142,7 +142,7 @@ export default function ModulesPage() {
         is_trial: paymentMethod === 'trial'
       };
       
-      const response = await api.post('/public/order', orderData);
+      const response = await api.post('/public/orders', orderData);
       
       if (response.data.success) {
         toast.success(
