@@ -55,6 +55,7 @@ const OverOnsPage = lazy(() => import("./pages/OverOnsPage"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const WorkspaceSettings = lazy(() => import("./pages/WorkspaceSettings"));
 const BetaalmethodesPage = lazy(() => import("./pages/BetaalmethodesPage"));
+const DomainManagementPage = lazy(() => import("./pages/DomainManagementPage"));
 
 // Employee Portal
 const EmployeePortalLogin = lazy(() => import("./pages/EmployeePortalLogin"));
