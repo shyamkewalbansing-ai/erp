@@ -210,43 +210,7 @@ export default function OverOnsPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="md:col-span-2">
-              <img 
-                src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
-                alt="Facturatie N.V."
-                className="h-8 w-auto mb-4 brightness-0 invert"
-              />
-              <p className="text-gray-400 max-w-md">
-                Facturatie.sr is hét Surinaamse platform voor digitale facturatie en bedrijfsadministratie.
-              </p>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Links</h4>
-              <ul className="space-y-2">
-                <li><Link to="/" className="text-gray-400 hover:text-white">Home</Link></li>
-                <li><Link to="/prijzen" className="text-gray-400 hover:text-white">Prijzen</Link></li>
-                <li><Link to="/over-ons" className="text-gray-400 hover:text-white">Over Ons</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-4">Juridisch</h4>
-              <ul className="space-y-2">
-                <li><Link to="/voorwaarden" className="text-gray-400 hover:text-white">Algemene Voorwaarden</Link></li>
-                <li><Link to="/privacy" className="text-gray-400 hover:text-white">Privacybeleid</Link></li>
-              </ul>
-              <p className="text-gray-400 flex items-center gap-2 mt-6">
-                <Phone className="w-4 h-4" /> +597 893-4982
-              </p>
-            </div>
-          </div>
-          <div className="border-t border-slate-800 mt-12 pt-8 text-center text-gray-500">
-            <p>© {new Date().getFullYear()} Facturatie N.V. Alle rechten voorbehouden.</p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
       {/* Chat Widget */}
       <Suspense fallback={null}>
