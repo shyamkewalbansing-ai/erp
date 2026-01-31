@@ -363,17 +363,33 @@ export default function Layout() {
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Auto Dealer</p>
                   </div>
                   {autoDealerNavItems.filter(item => hasAddon(item.addon)).map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''}`}
-                      data-testid={`nav-${item.label.toLowerCase()}`}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.label}</span>
-                      <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />
-                    </NavLink>
+                    item.external ? (
+                      <a
+                        key={item.to}
+                        href={item.to}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => setSidebarOpen(false)}
+                        className={`nav-item ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''}`}
+                        data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span>{item.label}</span>
+                        <ExternalLink className="w-4 h-4 ml-auto" />
+                      </a>
+                    ) : (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setSidebarOpen(false)}
+                        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''}`}
+                        data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                      >
+                        <item.icon className="w-5 h-5" />
+                        <span>{item.label}</span>
+                        <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />
+                      </NavLink>
+                    )
                   ))}
                 </div>
               )}
