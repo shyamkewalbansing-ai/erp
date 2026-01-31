@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
@@ -21,14 +21,14 @@ import {
   ArrowRight, 
   Check, 
   Loader2,
-  Menu,
-  X,
   Phone,
   Package,
   Star,
   Sparkles,
   CheckCircle
 } from 'lucide-react';
+import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 
 const ChatWidget = lazy(() => import('../components/ChatWidget'));
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -38,7 +38,6 @@ export default function PrijzenPage() {
   const [settings, setSettings] = useState(null);
   const [addons, setAddons] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isYearly, setIsYearly] = useState(false);
   const [selectedAddons, setSelectedAddons] = useState([]);
   
