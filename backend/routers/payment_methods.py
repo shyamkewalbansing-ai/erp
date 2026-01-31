@@ -257,7 +257,10 @@ async def toggle_payment_method(
     workspace_id = current_user.get("workspace_id")
     
     if not workspace_id:
-        raise HTTPException(status_code=400, detail="Geen workspace gevonden")
+        if current_user.get("role") == "superadmin" or current_user.get("is_admin"):
+            workspace_id = "global"
+        else:
+            raise HTTPException(status_code=400, detail="Geen workspace gevonden")
     
     settings = await get_or_create_payment_settings(workspace_id)
     methods = settings.get("payment_methods", [])
