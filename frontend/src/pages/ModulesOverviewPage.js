@@ -163,9 +163,7 @@ const MODULES_DATA = [
 export default function ModulesOverviewPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
-  const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -173,13 +171,8 @@ export default function ModulesOverviewPage() {
 
   const loadData = async () => {
     try {
-      const [settingsRes, menuRes] = await Promise.all([
-        api.get('/public/landing/settings').catch(() => ({ data: {} })),
-        api.get('/public/cms/menu').catch(() => ({ data: { items: [] } }))
-      ]);
-      
+      const settingsRes = await api.get('/public/landing/settings').catch(() => ({ data: {} }));
       setSettings(settingsRes.data || {});
-      setMenuItems(menuRes.data?.items?.filter(item => item.is_visible) || []);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -198,6 +191,7 @@ export default function ModulesOverviewPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       {/* Navigation */}
+      <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
