@@ -13,9 +13,45 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - **Primary Color**: #0caf60 (groen)
 - **Multi-tenant**: Workspace-based isolatie per klant
 
-## What's Been Implemented (30 Jan 2026)
+## What's Been Implemented (31 Jan 2026)
 
-### AUTO DEALER MODULE ✅ (NIEUW - 30 Jan 2026)
+### NGINX/SSL AUTOMATISERING ✅ (NIEUW - 31 Jan 2026)
+Complete automatisering voor custom domain configuratie:
+
+**Features:**
+- [x] Admin dashboard voor domain management (`/app/admin/domeinen`)
+- [x] Automatische DNS verificatie
+- [x] Nginx configuratie generatie en installatie
+- [x] Let's Encrypt SSL certificaat provisioning
+- [x] One-click volledige setup (DNS → Nginx → SSL)
+- [x] Config preview voor transparantie
+- [x] Real-time status monitoring (DNS, Nginx, SSL)
+- [x] Verwijder functionaliteit
+
+**API Endpoints:**
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/domains/status | GET | Overzicht alle custom domeinen |
+| /api/domains/status/{workspace_id} | GET | Status specifiek domein |
+| /api/domains/verify-dns/{workspace_id} | POST | DNS verificatie |
+| /api/domains/provision/nginx/{workspace_id} | POST | Nginx installeren |
+| /api/domains/provision/ssl/{workspace_id} | POST | SSL installeren |
+| /api/domains/provision/full/{workspace_id} | POST | Volledige setup |
+| /api/domains/provision/{workspace_id} | DELETE | Config verwijderen |
+
+**Shell Scripts:**
+- `scripts/configure_domain.sh` - Nginx configuratie script
+- `scripts/remove_domain.sh` - Domain verwijderen script
+- `scripts/renew_ssl.sh` - SSL renewal script
+
+**Documentatie:**
+- `docs/NGINX_SSL_HANDLEIDING.md` - Complete handleiding
+
+### AUTO DEALER KLANT PORTAAL BUG FIX ✅ (31 Jan 2026)
+- [x] Opgelost: `KeyError: 'id'` in `/api/user/addons` endpoint
+- [x] Auto Dealer sectie nu zichtbaar in sidebar voor klanten met addon
+
+### AUTO DEALER MODULE ✅ (30 Jan 2026)
 Complete autohandelmodule voor Suriname met multi-valuta ondersteuning:
 
 **Features:**
