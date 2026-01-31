@@ -10,7 +10,7 @@ import logging
 
 from .deps import db, get_superadmin, get_current_user, SERVER_IP, MAIN_DOMAIN
 
-router = APIRouter(prefix="/api/domains", tags=["domain-management"])
+router = APIRouter(prefix="/domains", tags=["domain-management"])
 logger = logging.getLogger(__name__)
 
 # Configuration paths - adjust for your server setup
