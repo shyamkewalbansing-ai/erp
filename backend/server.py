@@ -6481,39 +6481,45 @@ async def delete_addon(addon_id: str, current_user: dict = Depends(get_superadmi
 async def get_my_addons(current_user: dict = Depends(get_current_user)):
     """Get current user's active add-ons"""
     user_addons = await db.user_addons.find(
-        {"user_id": current_user["id"]},
-        {"_id": 0}
+        {"user_id": current_user["id"]}
     ).to_list(100)
     
     result = []
     now = datetime.now(timezone.utc)
     
     for ua in user_addons:
+        # Convert _id to id
+        ua_id = str(ua.pop("_id", ""))
+        
         # Check if expired
-        end_date = ua.get("end_date")
+        end_date = ua.get("end_date") or ua.get("expires_at")
         if end_date:
             try:
                 end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
                 if end_dt < now and ua.get("status") == "active":
                     await db.user_addons.update_one(
-                        {"id": ua["id"]},
+                        {"_id": ObjectId(ua_id)},
                         {"$set": {"status": "expired"}}
                     )
                     ua["status"] = "expired"
             except Exception:
                 pass
         
-        addon = await db.addons.find_one({"id": ua["addon_id"]}, {"_id": 0})
+        addon = await db.addons.find_one(
+            {"$or": [{"id": ua.get("addon_id")}, {"slug": ua.get("addon_slug")}]},
+            {"_id": 0}
+        )
+        
         result.append(UserAddonResponse(
-            id=ua["id"],
-            user_id=ua["user_id"],
-            addon_id=ua["addon_id"],
-            addon_name=addon.get("name") if addon else None,
-            addon_slug=addon.get("slug") if addon else None,
+            id=ua_id or ua.get("id", ""),
+            user_id=ua.get("user_id", ""),
+            addon_id=ua.get("addon_id") or ua.get("addon_slug", ""),
+            addon_name=addon.get("name") if addon else ua.get("addon_slug"),
+            addon_slug=ua.get("addon_slug") or (addon.get("slug") if addon else None),
             status=ua.get("status", "active"),
-            start_date=ua.get("start_date", ua.get("created_at")),
-            end_date=ua.get("end_date"),
-            created_at=ua.get("created_at")
+            start_date=ua.get("start_date") or ua.get("activated_at") or ua.get("created_at"),
+            end_date=ua.get("end_date") or ua.get("expires_at"),
+            created_at=ua.get("created_at") or ua.get("activated_at")
         ))
     
     return result
