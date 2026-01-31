@@ -12337,6 +12337,7 @@ api_router.include_router(autodealer_router)
 api_router.include_router(tenant_portal_router)
 api_router.include_router(hrm_router)
 api_router.include_router(autodealer_portal_router)
+api_router.include_router(payment_methods_router)
 
 # Include the router in the main app
 app.include_router(api_router)
