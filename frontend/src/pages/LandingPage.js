@@ -686,11 +686,11 @@ export default function LandingPage() {
             {getCmsSectionContent('cta', 'content', 'Beheer facturering, boekhouding en voorraad in één systeem. Bespaar tijd, verhoog efficiëntie en voldoe moeiteloos aan fiscale verplichtingen.')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="h-14 px-8 text-base bg-white text-emerald-700 hover:bg-emerald-50 rounded-full shadow-lg font-body font-semibold" onClick={() => navigate('/prijzen')} data-testid="cta-pricing-btn">
+            <Button size="lg" className="h-14 px-8 text-base bg-white text-emerald-700 hover:bg-emerald-50 rounded-full shadow-lg font-body font-semibold" onClick={() => navigate('/modules')} data-testid="cta-pricing-btn">
               Bekijk Prijzen
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
-            <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-white/30 text-white hover:bg-white/10 rounded-full font-body font-medium" onClick={() => setOrderDialogOpen(true)} data-testid="cta-order-btn">
+            <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-white/30 text-white hover:bg-white/10 rounded-full font-body font-medium" onClick={() => navigate('/modules')} data-testid="cta-order-btn">
               Direct Bestellen
             </Button>
           </div>
