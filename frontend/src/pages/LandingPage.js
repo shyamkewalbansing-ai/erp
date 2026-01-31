@@ -22,8 +22,6 @@ import {
   Headphones,
   Phone,
   Loader2,
-  Menu,
-  X,
   Building2,
   Users,
   BarChart3,
@@ -35,6 +33,8 @@ import {
   Settings,
   Sparkles
 } from 'lucide-react';
+import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 
 // Lazy load ChatWidget
 const ChatWidget = lazy(() => import('../components/ChatWidget'));
