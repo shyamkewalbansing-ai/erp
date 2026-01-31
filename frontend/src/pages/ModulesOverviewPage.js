@@ -352,7 +352,7 @@ export default function ModulesOverviewPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => navigate('/register')}
+              onClick={() => navigate('/modules')}
               className="bg-white text-primary hover:bg-white/90"
             >
               Start Gratis Proefperiode
