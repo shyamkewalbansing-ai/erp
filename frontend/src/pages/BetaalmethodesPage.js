@@ -577,6 +577,5 @@ export default function BetaalmethodesPage() {
           </CardContent>
         </Card>
       </div>
-    </Layout>
   );
 }
