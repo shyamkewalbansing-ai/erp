@@ -348,6 +348,37 @@ Nieuwe modules overzicht en detail pagina's voor marketing:
 - [x] Responsive design
 - [x] Populair/Nieuw badges
 
+### Betaalmethodes Configuratie ✅ (NIEUW - 31 Jan 2026)
+Complete betaalmethodes beheer voor alle modules:
+
+**Backend Router:** `/app/backend/routers/payment_methods.py`
+**Frontend Pagina:** `/app/frontend/src/pages/BetaalmethodesPage.js`
+
+**Ondersteunde Betaalmethodes:**
+| Methode | Beschrijving | Status |
+|---------|--------------|--------|
+| Bankoverschrijving | Bank naam, rekeninghouder, nummer, IBAN | ✅ Standaard |
+| Mope | Online payment gateway voor Suriname | ✅ Configureerbaar |
+| Contant | Contante betaling op kantoor | ✅ Actief |
+| Cheque | Betaling per cheque | ✅ Optioneel |
+
+**API Endpoints:**
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| `/api/payment-methods/settings` | GET/PUT | Betaalinstellingen ophalen/opslaan |
+| `/api/payment-methods/methods` | GET | Actieve betaalmethodes |
+| `/api/payment-methods/mope/settings` | GET/PUT | Mope configuratie |
+| `/api/payment-methods/invoices/{id}/pay` | POST | Factuur betalen |
+
+**Features:**
+- [x] Superadmin en workspace eigenaren kunnen configureren
+- [x] Mope integratie met test en live tokens
+- [x] Bankgegevens configuratie
+- [x] Standaard betaalmethode selectie
+- [x] Betaalinstructies per methode
+- [x] Live/Test modus toggle voor Mope
+- [x] Automatisch beschikbaar in alle modules (Vastgoed, HRM, Auto Dealer)
+
 ### P3 (Nice to Have)
 - [ ] Meterstanden exporteren naar PDF
 - [ ] Grafiek met verbruikshistorie
