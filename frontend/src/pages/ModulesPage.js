@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Checkbox } from '../components/ui/checkbox';
 import { Badge } from '../components/ui/badge';
-import { Loader2, Menu, X, Puzzle, RefreshCw } from 'lucide-react';
+import { Loader2, Puzzle, RefreshCw } from 'lucide-react';
 import api, { getPublicAddons, formatCurrency } from '../lib/api';
+import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 
 export default function ModulesPage() {
   const navigate = useNavigate();
   const [addons, setAddons] = useState([]);
   const [settings, setSettings] = useState(null);
-  const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Selection state
   const [selectedAddons, setSelectedAddons] = useState([]);
@@ -24,15 +24,13 @@ export default function ModulesPage() {
 
   const loadData = async () => {
     try {
-      const [addonsRes, settingsRes, menuRes] = await Promise.all([
+      const [addonsRes, settingsRes] = await Promise.all([
         getPublicAddons(),
-        api.get('/public/landing/settings').catch(() => ({ data: {} })),
-        api.get('/public/cms/menu').catch(() => ({ data: { items: [] } }))
+        api.get('/public/landing/settings').catch(() => ({ data: {} }))
       ]);
       
       setAddons(addonsRes.data || []);
       setSettings(settingsRes.data || {});
-      setMenuItems(menuRes.data?.items?.filter(item => item.is_visible) || []);
     } catch (error) {
       console.error('Error loading modules:', error);
     } finally {
