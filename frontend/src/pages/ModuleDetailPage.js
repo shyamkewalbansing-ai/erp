@@ -510,7 +510,6 @@ export default function ModuleDetailPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const module = MODULES_DETAIL[slug];
 
