@@ -63,7 +63,7 @@ export default function PublicNav({ logoUrl, companyName }) {
               Inloggen
             </Button>
             <Button 
-              onClick={() => navigate('/register')} 
+              onClick={() => navigate('/modules')} 
               className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-500/25"
               data-testid="nav-register-btn"
             >
@@ -109,7 +109,7 @@ export default function PublicNav({ logoUrl, companyName }) {
                 </Button>
                 <Button 
                   className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600"
-                  onClick={() => { navigate('/register'); setMobileMenuOpen(false); }}
+                  onClick={() => { navigate('/modules'); setMobileMenuOpen(false); }}
                 >
                   Gratis Starten
                 </Button>
