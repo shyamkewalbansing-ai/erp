@@ -256,10 +256,17 @@ Complete self-service portaal voor huurders:
 - [x] **Auto Dealer Module** met multi-valuta (SRD, EUR, USD)
 
 ### P1 (High Priority)
-- [x] **server.py refactoring** (>12000 lines) - Split into modular routers (IN PROGRESS - tenant_portal.py, hrm.py, autodealer_portal.py gemaakt)
+- [x] **server.py refactoring** (>12000 lines) - Split into modular routers (IN PROGRESS)
+  - ✅ tenant_portal.py (178 lines) - Huurders portaal
+  - ✅ hrm.py (805 lines) - HRM module
+  - ✅ autodealer_portal.py (483 lines) - Auto Dealer klantportaal
+  - ✅ payment_methods.py (576 lines) - Betaalmethodes
+  - ✅ admin.py (530 lines) - Admin/superadmin endpoints
+  - **Totaal verplaatst: ~4.700 regels naar /app/backend/routers/**
 - [ ] **Login bug na uitloggen** - Verificatie nodig van gebruiker (TESTEN VEREIST)
 - [ ] **Herinneringen voor maandelijkse meteropname** (email notificaties)
 - [x] **Workspace branding globaal toepassen** - CSS variabelen met HSL conversie (VOLTOOID)
+- [x] **Betaalmethodes in facturen** - PDF facturen tonen nu bankgegevens en Mope info (VOLTOOID)
 
 ### Auto Dealer Klantportaal ✅ (NIEUW - 30 Jan 2026)
 Complete klantportaal voor Auto Dealer module:
