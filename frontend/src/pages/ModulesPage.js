@@ -239,11 +239,7 @@ export default function ModulesPage() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-primary text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p>© {new Date().getFullYear()} {settings?.company_name || "Facturatie N.V."}. Alle rechten voorbehouden.</p>
-        </div>
-      </footer>
+      <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
     </div>
   );
 }
