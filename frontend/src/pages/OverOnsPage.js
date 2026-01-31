@@ -69,50 +69,7 @@ export default function OverOnsPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <img 
-                src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
-                alt="Facturatie N.V."
-                className="h-8 w-auto"
-              />
-            </Link>
-
-            <div className="hidden md:flex items-center gap-8">
-              <Link to="/" className="text-sm font-medium text-gray-700 hover:text-emerald-600">Home</Link>
-              <Link to="/prijzen" className="text-sm font-medium text-gray-700 hover:text-emerald-600">Prijzen</Link>
-              <Link to="/over-ons" className="text-sm font-medium text-emerald-600">Over Ons</Link>
-              <Link to="/voorwaarden" className="text-sm font-medium text-gray-700 hover:text-emerald-600">Voorwaarden</Link>
-              <Link to="/privacy" className="text-sm font-medium text-gray-700 hover:text-emerald-600">Privacy</Link>
-            </div>
-
-            <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" onClick={() => navigate('/login')}>Inloggen</Button>
-              <Button onClick={() => navigate('/prijzen')} className="bg-emerald-500 hover:bg-emerald-600">Gratis Starten</Button>
-            </div>
-
-            <button className="md:hidden p-2" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-b">
-            <div className="px-4 py-4 space-y-3">
-              <Link to="/" className="block py-2" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-              <Link to="/prijzen" className="block py-2" onClick={() => setMobileMenuOpen(false)}>Prijzen</Link>
-              <Link to="/over-ons" className="block py-2 text-emerald-600 font-medium" onClick={() => setMobileMenuOpen(false)}>Over Ons</Link>
-              <div className="pt-3 space-y-2">
-                <Button variant="outline" className="w-full" onClick={() => navigate('/login')}>Inloggen</Button>
-                <Button className="w-full bg-emerald-500" onClick={() => navigate('/prijzen')}>Gratis Starten</Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </nav>
+      <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 bg-gradient-to-br from-slate-50 to-emerald-50/30">
