@@ -4448,6 +4448,73 @@ async def get_invoice_pdf(tenant_id: str, year: int, month: int, current_user: d
         ]))
         elements.append(maint_table)
     
+    # Payment Methods Section - only show if there's an outstanding balance
+    if remaining > 0 or cumulative_balance > 0:
+        # Get payment settings for this workspace/user
+        workspace_id = current_user.get("workspace_id") or "global"
+        payment_settings = await db.workspace_payment_settings.find_one({"workspace_id": workspace_id})
+        
+        if payment_settings and payment_settings.get("payment_methods"):
+            enabled_methods = [m for m in payment_settings.get("payment_methods", []) if m.get("is_enabled")]
+            
+            if enabled_methods:
+                elements.append(Spacer(1, 20))
+                elements.append(Paragraph("BETAALMETHODES", section_header))
+                
+                for method in enabled_methods:
+                    method_id = method.get("method_id")
+                    method_name = method.get("name", "")
+                    instructions = method.get("instructions", "")
+                    
+                    elements.append(Paragraph(f"<b>{method_name}</b>", ParagraphStyle(
+                        'MethodName',
+                        parent=styles['Normal'],
+                        fontSize=10,
+                        textColor=DARK_TEXT,
+                        spaceBefore=8,
+                        spaceAfter=2
+                    )))
+                    
+                    if method_id == "bank_transfer" and method.get("bank_settings"):
+                        bank = method.get("bank_settings", {})
+                        bank_info = []
+                        if bank.get("bank_name"):
+                            bank_info.append(f"Bank: {bank.get('bank_name')}")
+                        if bank.get("account_holder"):
+                            bank_info.append(f"T.n.v.: {bank.get('account_holder')}")
+                        if bank.get("account_number"):
+                            bank_info.append(f"Rekeningnr: {bank.get('account_number')}")
+                        if bank.get("iban"):
+                            bank_info.append(f"IBAN: {bank.get('iban')}")
+                        
+                        for info in bank_info:
+                            elements.append(Paragraph(info, ParagraphStyle(
+                                'BankInfo',
+                                parent=styles['Normal'],
+                                fontSize=9,
+                                textColor=GRAY_TEXT,
+                                leftIndent=10
+                            )))
+                    
+                    elif method_id == "mope" and method.get("mope_settings", {}).get("is_enabled"):
+                        elements.append(Paragraph("Online betalen via Mope - vraag de betaallink aan bij uw verhuurder", ParagraphStyle(
+                            'MopeInfo',
+                            parent=styles['Normal'],
+                            fontSize=9,
+                            textColor=GRAY_TEXT,
+                            leftIndent=10
+                        )))
+                    
+                    if instructions:
+                        elements.append(Paragraph(instructions, ParagraphStyle(
+                            'Instructions',
+                            parent=styles['Normal'],
+                            fontSize=9,
+                            textColor=GRAY_TEXT,
+                            leftIndent=10,
+                            spaceBefore=2
+                        )))
+    
     # Footer
     elements.append(Spacer(1, 30))
     elements.append(Paragraph(
