@@ -1,9 +1,11 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
-import { Menu, X, Phone, FileText, Shield, Scale, Users, CheckCircle } from 'lucide-react';
+import { Phone, FileText, Shield, Scale, Users, CheckCircle } from 'lucide-react';
+import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 
 const ChatWidget = lazy(() => import('../components/ChatWidget'));
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
@@ -11,7 +13,6 @@ const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 export default function VoorwaardenPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     axios.get(`${API_URL}/public/landing/settings`).then(res => setSettings(res.data)).catch(() => {});
