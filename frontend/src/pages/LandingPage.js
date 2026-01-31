@@ -697,62 +697,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer - Modern Multi-column */}
-      <footer className="bg-slate-950 text-white pt-20 pb-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10 lg:gap-12 mb-16">
-            {/* Brand column */}
-            <div className="lg:col-span-2">
-              <img 
-                src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
-                alt="Facturatie N.V."
-                className="h-9 w-auto mb-5 brightness-0 invert"
-              />
-              <p className="text-gray-400 max-w-md leading-relaxed font-body mb-6">
-                Facturatie.sr is hét Surinaamse platform voor digitale facturatie en bedrijfsadministratie. Speciaal ontwikkeld voor Surinaamse bedrijven.
-              </p>
-              <div className="flex items-center gap-4">
-                <a href="#" className="w-10 h-10 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/30 flex items-center justify-center transition-all">
-                  <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
-                </a>
-                <a href="#" className="w-10 h-10 rounded-full bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/30 flex items-center justify-center transition-all">
-                  <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                </a>
-              </div>
-            </div>
-            
-            {/* Links column */}
-            <div>
-              <h4 className="font-heading font-semibold text-white mb-5">Links</h4>
-              <ul className="space-y-3">
-                <li><Link to="/" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Home</Link></li>
-                <li><Link to="/prijzen" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Prijzen</Link></li>
-                <li><Link to="/over-ons" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Over Ons</Link></li>
-                <li><Link to="/login" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Aanmelden</Link></li>
-              </ul>
-            </div>
-            
-            {/* Legal + Contact column */}
-            <div>
-              <h4 className="font-heading font-semibold text-white mb-5">Juridisch</h4>
-              <ul className="space-y-3 mb-8">
-                <li><Link to="/voorwaarden" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Algemene Voorwaarden</Link></li>
-                <li><Link to="/privacy" className="text-gray-400 hover:text-emerald-400 transition-colors font-body">Privacybeleid</Link></li>
-              </ul>
-              <h4 className="font-heading font-semibold text-white mb-3">Contact</h4>
-              <a href="tel:+5978934982" className="text-gray-400 hover:text-emerald-400 transition-colors flex items-center gap-2 font-body">
-                <Phone className="w-4 h-4" /> +597 893-4982
-              </a>
-            </div>
-          </div>
-          
-          {/* Bottom bar */}
-          <div className="border-t border-slate-800 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-gray-500 text-sm font-body">© {new Date().getFullYear()} Facturatie N.V. Alle rechten voorbehouden.</p>
-            <p className="text-gray-600 text-sm font-body">Ontwikkeld met ❤️ in Suriname</p>
-          </div>
-        </div>
-      </footer>
+      {/* Footer */}
+      <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
       {/* Chat Widget */}
       <Suspense fallback={null}>
