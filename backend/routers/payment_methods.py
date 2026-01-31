@@ -161,10 +161,6 @@ async def update_payment_settings(
             workspace_id = "global"
         else:
             raise HTTPException(status_code=400, detail="Geen workspace gevonden")
-    workspace_id = current_user.get("workspace_id")
-    
-    if not workspace_id:
-        raise HTTPException(status_code=400, detail="Geen workspace gevonden")
     
     settings_dict = settings.model_dump()
     settings_dict["workspace_id"] = workspace_id
