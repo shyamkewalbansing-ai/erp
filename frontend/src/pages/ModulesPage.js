@@ -146,7 +146,12 @@ export default function ModulesPage() {
       
       const response = await api.post('/public/orders', orderData);
       
-      if (response.data.success) {
+      if (response.data) {
+        // Store token for auto-login
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+        }
+        
         toast.success(
           paymentMethod === 'trial' 
             ? 'Account aangemaakt! U heeft 3 dagen gratis toegang.' 
@@ -155,11 +160,23 @@ export default function ModulesPage() {
         setOrderDialogOpen(false);
         
         // Redirect based on payment method
-        if (paymentMethod === 'mope' && response.data.payment_url) {
-          window.location.href = response.data.payment_url;
-        } else {
-          navigate('/login');
+        if (paymentMethod === 'mope' && response.data.order?.id) {
+          // Create Mope payment
+          try {
+            const paymentRes = await api.post(`/public/orders/${response.data.order.id}/pay`, null, {
+              params: { redirect_url: window.location.origin + '/app/dashboard' }
+            });
+            if (paymentRes.data?.payment_url) {
+              window.location.href = paymentRes.data.payment_url;
+              return;
+            }
+          } catch (payErr) {
+            console.error('Payment creation error:', payErr);
+          }
         }
+        
+        // For trial and bank transfer, go to dashboard
+        navigate('/app/dashboard');
       }
     } catch (error) {
       console.error('Order error:', error);
