@@ -181,7 +181,10 @@ async def get_payment_methods(current_user: dict = Depends(get_current_user)):
     """Get available payment methods for current workspace"""
     workspace_id = current_user.get("workspace_id")
     if not workspace_id:
-        raise HTTPException(status_code=400, detail="Geen workspace gevonden")
+        if current_user.get("role") == "superadmin" or current_user.get("is_admin"):
+            workspace_id = "global"
+        else:
+            raise HTTPException(status_code=400, detail="Geen workspace gevonden")
     
     settings = await get_or_create_payment_settings(workspace_id)
     
@@ -205,7 +208,10 @@ async def update_payment_method(
     workspace_id = current_user.get("workspace_id")
     
     if not workspace_id:
-        raise HTTPException(status_code=400, detail="Geen workspace gevonden")
+        if current_user.get("role") == "superadmin" or current_user.get("is_admin"):
+            workspace_id = "global"
+        else:
+            raise HTTPException(status_code=400, detail="Geen workspace gevonden")
     
     settings = await get_or_create_payment_settings(workspace_id)
     methods = settings.get("payment_methods", [])
