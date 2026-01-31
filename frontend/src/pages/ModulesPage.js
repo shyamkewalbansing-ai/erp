@@ -135,11 +135,13 @@ export default function ModulesPage() {
     
     try {
       const orderData = {
-        ...orderForm,
-        selected_addons: selectedAddons,
-        payment_method: paymentMethod,
-        total_amount: calculateTotal(),
-        is_trial: paymentMethod === 'trial'
+        name: orderForm.name,
+        email: orderForm.email,
+        phone: orderForm.phone || '',
+        password: orderForm.password,
+        company_name: orderForm.company_name,
+        addon_ids: selectedAddons,
+        message: `Betaalmethode: ${paymentMethod === 'trial' ? '3 dagen gratis' : paymentMethod === 'mope' ? 'Mope' : 'Bankoverschrijving'}`
       };
       
       const response = await api.post('/public/orders', orderData);
