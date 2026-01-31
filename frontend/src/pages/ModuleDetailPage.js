@@ -5,8 +5,6 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { 
   Loader2, 
-  Menu, 
-  X, 
   Users, 
   Building2, 
   Car, 
@@ -39,6 +37,8 @@ import {
   RefreshCw
 } from 'lucide-react';
 import api from '../lib/api';
+import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 
 // Detailed module information with feature sections
 const MODULES_DETAIL = {
