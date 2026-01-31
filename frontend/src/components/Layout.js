@@ -298,6 +298,15 @@ export default function Layout() {
                 <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>
               </NavLink>
               <NavLink
+                to="/app/admin/domeinen"
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                data-testid="nav-admin-domeinen"
+              >
+                <Globe className="w-5 h-5" />
+                <span>Domeinen</span>
+              </NavLink>
+              <NavLink
                 to="/app/betaalmethodes"
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
