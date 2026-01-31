@@ -78,7 +78,6 @@ export default function LandingPage() {
   const [addons, setAddons] = useState([]);
   const [cmsContent, setCmsContent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Order dialog state
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
