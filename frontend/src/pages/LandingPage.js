@@ -243,56 +243,8 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-emerald-50/30 to-white grain-overlay">
-      {/* Navigation - Glass morphism */}
-      <nav className="fixed top-0 left-0 right-0 z-50 glass-header">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16 md:h-20">
-            <Link to="/" className="flex items-center gap-2">
-              <img 
-                src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
-                alt="Facturatie N.V."
-                className="h-8 md:h-9 w-auto"
-                data-testid="nav-logo"
-              />
-            </Link>
-
-            <div className="hidden md:flex items-center gap-8">
-              <Link to="/" className="text-sm font-medium text-emerald-600 font-body" data-testid="nav-home">Home</Link>
-              <Link to="/modules-overzicht" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-modules">Modules</Link>
-              <Link to="/prijzen" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-prijzen">Prijzen</Link>
-              <Link to="/over-ons" className="text-sm font-medium text-gray-700 hover:text-emerald-600 transition-colors font-body" data-testid="nav-over-ons">Over Ons</Link>
-            </div>
-
-            <div className="hidden md:flex items-center gap-3">
-              <Button variant="ghost" onClick={() => navigate('/login')} className="text-gray-700 font-body font-medium" data-testid="nav-login-btn">
-                Inloggen
-              </Button>
-              <Button onClick={() => navigate('/prijzen')} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all font-body font-semibold" data-testid="nav-cta-btn">
-                Gratis Starten
-              </Button>
-            </div>
-
-            <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} data-testid="mobile-menu-toggle">
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-          </div>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white/95 backdrop-blur-xl border-b border-gray-100 animate-fade-in">
-            <div className="px-4 py-4 space-y-3">
-              <Link to="/" className="block text-emerald-600 py-2 font-medium font-body" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-              <Link to="/modules-overzicht" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Modules</Link>
-              <Link to="/prijzen" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Prijzen</Link>
-              <Link to="/over-ons" className="block text-gray-700 py-2 font-body" onClick={() => setMobileMenuOpen(false)}>Over Ons</Link>
-              <div className="pt-3 space-y-2">
-                <Button variant="outline" className="w-full font-body" onClick={() => navigate('/login')}>Inloggen</Button>
-                <Button className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 font-body font-semibold" onClick={() => navigate('/prijzen')}>Gratis Starten</Button>
-              </div>
-            </div>
-          </div>
-        )}
-      </nav>
+      {/* Navigation */}
+      <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
       {/* Hero Section - Modern asymmetrical layout */}
       <section className="relative pt-28 pb-20 md:pt-40 md:pb-32 overflow-hidden">
