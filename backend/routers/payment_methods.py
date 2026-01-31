@@ -132,10 +132,15 @@ async def get_or_create_payment_settings(workspace_id: str):
 
 @router.get("/settings")
 async def get_payment_settings(current_user: dict = Depends(get_current_user)):
-    """Get payment settings for current workspace"""
+    """Get payment settings for current workspace or global settings for superadmin"""
     workspace_id = current_user.get("workspace_id")
+    
+    # For superadmin without workspace, use "global" as workspace_id
     if not workspace_id:
-        raise HTTPException(status_code=400, detail="Geen workspace gevonden")
+        if current_user.get("role") == "superadmin" or current_user.get("is_admin"):
+            workspace_id = "global"
+        else:
+            raise HTTPException(status_code=400, detail="Geen workspace gevonden")
     
     settings = await get_or_create_payment_settings(workspace_id)
     return settings
@@ -148,6 +153,14 @@ async def update_payment_settings(
 ):
     """Update payment settings for current workspace"""
     db = await get_db()
+    workspace_id = current_user.get("workspace_id")
+    
+    # For superadmin without workspace, use "global" as workspace_id
+    if not workspace_id:
+        if current_user.get("role") == "superadmin" or current_user.get("is_admin"):
+            workspace_id = "global"
+        else:
+            raise HTTPException(status_code=400, detail="Geen workspace gevonden")
     workspace_id = current_user.get("workspace_id")
     
     if not workspace_id:
