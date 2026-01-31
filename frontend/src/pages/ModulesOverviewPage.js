@@ -209,7 +209,7 @@ export default function ModulesOverviewPage() {
             wij hebben de perfecte oplossing voor uw onderneming.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate('/register')} className="bg-primary hover:bg-primary/90">
+            <Button size="lg" onClick={() => navigate('/modules')} className="bg-primary hover:bg-primary/90">
               Start Gratis Proefperiode
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
