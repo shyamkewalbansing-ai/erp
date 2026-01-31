@@ -5,8 +5,6 @@ import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { 
   Loader2, 
-  Menu, 
-  X, 
   Users, 
   Building2, 
   Car, 
@@ -20,6 +18,8 @@ import {
   Sparkles
 } from 'lucide-react';
 import api from '../lib/api';
+import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 
 // Module data with detailed information
 const MODULES_DATA = [
