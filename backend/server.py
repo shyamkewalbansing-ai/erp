@@ -38,6 +38,7 @@ from routers.autodealer import router as autodealer_router
 from routers.tenant_portal import router as tenant_portal_router
 from routers.hrm import router as hrm_router
 from routers.autodealer_portal import router as autodealer_portal_router
+from routers.payment_methods import router as payment_methods_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
