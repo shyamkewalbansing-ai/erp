@@ -370,58 +370,7 @@ export default function ModulesOverviewPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <img 
-                src={settings?.logo_url || "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"}
-                alt={settings?.company_name || "Facturatie N.V."}
-                className="h-8 w-auto mb-4 brightness-0 invert"
-              />
-              <p className="text-slate-400 text-sm">
-                De complete ERP-oplossing voor Surinaamse ondernemingen.
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Modules</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
-                {MODULES_DATA.slice(0, 4).map(module => (
-                  <li key={module.id}>
-                    <Link to={`/modules/${module.slug}`} className="hover:text-white transition-colors">
-                      {module.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Links</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
-                <li><Link to="/modules" className="hover:text-white transition-colors">Prijzen</Link></li>
-                <li><Link to="/over-ons" className="hover:text-white transition-colors">Over Ons</Link></li>
-                <li><Link to="/voorwaarden" className="hover:text-white transition-colors">Voorwaarden</Link></li>
-                <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy</Link></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="font-semibold mb-4">Contact</h4>
-              <ul className="space-y-2 text-sm text-slate-400">
-                <li>info@facturatie.sr</li>
-                <li>+597 123 4567</li>
-                <li>Paramaribo, Suriname</li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-slate-800 pt-8 text-center text-sm text-slate-500">
-            <p>© {new Date().getFullYear()} {settings?.company_name || "Facturatie N.V."}. Alle rechten voorbehouden.</p>
-          </div>
-        </div>
-      </footer>
+      <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
     </div>
   );
 }
