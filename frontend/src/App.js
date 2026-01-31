@@ -357,6 +357,7 @@ function MainAppRoutes() {
           } />
           <Route path="abonnement" element={<Abonnement />} />
           <Route path="instellingen" element={<Instellingen />} />
+          <Route path="betaalmethodes" element={<BetaalmethodesPage />} />
           <Route path="workspace" element={
             <CustomerOnlyRoute><WorkspaceSettings /></CustomerOnlyRoute>
           } />
