@@ -77,7 +77,7 @@ export default function PublicNav({ logoUrl, companyName }) {
               Demo
             </Button>
             <Button 
-              onClick={() => navigate('/login')} 
+              onClick={() => window.location.href = getAppUrl('/login')} 
               className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-500/25"
               data-testid="nav-login-btn"
             >
