@@ -85,9 +85,7 @@ async def login(credentials: UserLogin):
         raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
     
     token = create_token(user["id"], user["email"])
-    print(f"AUTH DEBUG: User subscription_end_date from DB: {user.get('subscription_end_date')}")
     status, end_date, _ = get_subscription_status(user)
-    print(f"AUTH DEBUG: Subscription status: {status}, end_date: {end_date}")
     
     return TokenResponse(
         access_token=token,
