@@ -52,7 +52,7 @@ DOMAIN=""
 EMAIL=""
 DB_PASSWORD=""
 ADMIN_PASSWORD=""
-GITHUB_REPO="https://github.com/JOUW_USERNAME/facturatie.git"  # PAS DIT AAN!
+GITHUB_REPO="https://github.com/shyamkewalbansing-ai/erp.git"
 
 APP_DIR=""
 BACKEND_PORT=8001
