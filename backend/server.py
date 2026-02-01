@@ -245,9 +245,32 @@ async def demo_cleanup_scheduler():
         await cleanup_demo_data()
         await asyncio.sleep(3600)  # Wait 1 hour
 
+async def ensure_demo_has_all_modules():
+    """Ensure demo account has ALL modules activated"""
+    try:
+        # Get all active addons
+        all_addons = await db.addons.find({"is_active": True}).to_list(100)
+        addon_ids = [a.get('id') or str(a.get('_id')) for a in all_addons]
+        
+        # Update demo user with all addon IDs
+        result = await db.users.update_one(
+            {"email": DEMO_ACCOUNT_EMAIL},
+            {"$set": {"active_addons": addon_ids}}
+        )
+        
+        if result.modified_count > 0:
+            logger.info(f"Demo account updated with {len(addon_ids)} modules")
+        
+    except Exception as e:
+        logger.error(f"Error updating demo modules: {e}")
+
 @app.on_event("startup")
 async def start_demo_cleanup():
-    """Start the demo cleanup background task"""
+    """Start the demo cleanup background task and ensure demo has all modules"""
+    # Ensure demo account has all modules
+    await ensure_demo_has_all_modules()
+    # Start cleanup scheduler
+    asyncio.create_task(demo_cleanup_scheduler())
     asyncio.create_task(demo_cleanup_scheduler())
     logger.info("Demo cleanup scheduler started - runs every hour")
 
