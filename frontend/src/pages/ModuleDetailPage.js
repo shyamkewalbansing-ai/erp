@@ -351,6 +351,67 @@ const MODULES_DETAIL = {
       }
     ]
   },
+  'beauty-spa': {
+    id: 'beauty',
+    name: 'Beauty Spa',
+    title: 'Beauty Spa Management Systeem',
+    subtitle: 'Complete oplossing voor schoonheidssalons en spa\'s in Suriname',
+    description: 'Beheer uw spa met klantprofielen, afspraken, behandelingen, voorraad en kassasysteem. Speciaal ontwikkeld voor de Surinaamse markt met lokale betaalmethoden en Surinaamse specialiteiten.',
+    icon: Scissors,
+    gradient: 'from-pink-500 to-rose-600',
+    lightGradient: 'from-pink-50 to-rose-50',
+    accentColor: 'pink',
+    category: 'Beauty & Wellness',
+    price: 'SRD 2.500',
+    priceAmount: 2500,
+    priceNote: 'per maand',
+    heroImage: 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=1200&q=80',
+    highlights: ['CRM', 'Afspraken', 'POS', 'Wachtrij'],
+    sections: [
+      {
+        title: 'Klantenbeheer (CRM)',
+        description: 'Houd alle klantinformatie bij inclusief behandelgeschiedenis.',
+        icon: Heart,
+        features: ['Klantprofielen met huidtype en allergieën', 'Behandelgeschiedenis per klant', 'Loyaliteitspunten systeem', 'Lidmaatschappen (Bronze, Silver, Gold, Platinum)', 'Automatische herinneringen'],
+        image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&q=80'
+      },
+      {
+        title: 'Afspraak- & Roosterbeheer',
+        description: 'Online afspraken maken en personeel inroosteren.',
+        icon: Calendar,
+        features: ['Online afspraken boeken', 'Personeel roosters', 'Automatische herinneringen', 'Walk-in wachtrij beheer', 'No-show registratie'],
+        image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&q=80'
+      },
+      {
+        title: 'Behandelingen & Pakketten',
+        description: 'Catalogus met alle spa diensten.',
+        icon: Sparkles,
+        features: ['Behandelingscatalogus', 'Combinatiepakketten', 'Surinaamse specialiteiten (kruiden, aloë)', 'Duur en prijs per behandeling', 'Producten per behandeling'],
+        image: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=800&q=80'
+      },
+      {
+        title: 'Kassasysteem (POS)',
+        description: 'Afrekenen met Surinaamse betaalmethoden.',
+        icon: ShoppingCart,
+        features: ['Contant en PIN', 'Telesur Pay QR', 'Finabank QR', 'Hakrinbank QR', 'Vouchers en cadeaubonnen'],
+        image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80'
+      },
+      {
+        title: 'Voorraad & Producten',
+        description: 'Beheer spa producten met automatische waarschuwingen.',
+        icon: Package,
+        features: ['Productcatalogus', 'Batchnummers en vervaldatums', 'Lage voorraad waarschuwingen', 'Inkoopbeheer', 'Verkoop tracking'],
+        image: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=800&q=80'
+      },
+      {
+        title: 'Personeelsbeheer',
+        description: 'Beheer medewerkers, roosters en commissies.',
+        icon: Users,
+        features: ['Medewerkersprofielen', 'Specialisaties per medewerker', 'Commissie per behandeling', 'Prestatie tracking', 'Certificaten bijhouden'],
+        image: 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80'
+      }
+    ]
+  },
   'multi-tenant': {
     id: 'multi-tenant',
     name: 'Multi-Tenant Workspace',
