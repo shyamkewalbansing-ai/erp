@@ -212,67 +212,48 @@ export default function DemoPage() {
             {/* Header */}
             <div className="bg-gradient-to-r from-emerald-500 to-teal-600 p-6 text-center">
               <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/30">
-                <Lock className="w-8 h-8 text-white" />
+                <Globe className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-xl font-bold text-white">Demo Inloggegevens</h2>
-              <p className="text-emerald-100 text-sm mt-1">Kopieer of log direct in</p>
+              <h2 className="text-xl font-bold text-white">Demo Omgeving</h2>
+              <p className="text-emerald-100 text-sm mt-1">Probeer alle functies gratis uit</p>
             </div>
             
             <div className="p-6 space-y-4">
-              {/* Email */}
+              {/* Demo URL */}
               <div className="bg-gradient-to-r from-slate-50 to-emerald-50 rounded-xl p-4 border border-slate-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-11 h-11 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-200">
-                      <Mail className="w-5 h-5 text-white" />
+                      <Globe className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 font-medium">E-mailadres</p>
-                      <p className="text-slate-800 font-mono font-semibold">{DEMO_EMAIL}</p>
+                      <p className="text-xs text-slate-500 font-medium">Demo URL</p>
+                      <p className="text-slate-800 font-mono font-semibold text-sm">{DEMO_URL}</p>
                     </div>
                   </div>
                   <Button 
                     size="sm" 
                     variant="ghost" 
                     className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-10 w-10 p-0 rounded-xl"
-                    onClick={() => copyToClipboard(DEMO_EMAIL, 'email')}
+                    onClick={() => copyToClipboard(DEMO_URL, 'url')}
                   >
-                    {copied.email ? <Check className="w-5 h-5 text-emerald-600" /> : <Copy className="w-5 h-5" />}
+                    {copied.url ? <Check className="w-5 h-5 text-emerald-600" /> : <Copy className="w-5 h-5" />}
                   </Button>
                 </div>
               </div>
 
-              {/* Password */}
-              <div className="bg-gradient-to-r from-slate-50 to-emerald-50 rounded-xl p-4 border border-slate-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-xl flex items-center justify-center shadow-lg shadow-teal-200">
-                      <Lock className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 font-medium">Wachtwoord</p>
-                      <p className="text-slate-800 font-mono font-semibold">
-                        {showPassword ? DEMO_PASSWORD : '••••••••'}
-                      </p>
-                    </div>
+              {/* Info Box */}
+              <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-4 border border-blue-100">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Sparkles className="w-5 h-5 text-white" />
                   </div>
-                  <div className="flex gap-1">
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-10 w-10 p-0 rounded-xl"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 h-10 w-10 p-0 rounded-xl"
-                      onClick={() => copyToClipboard(DEMO_PASSWORD, 'password')}
-                    >
-                      {copied.password ? <Check className="w-5 h-5 text-emerald-600" /> : <Copy className="w-5 h-5" />}
-                    </Button>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-700">Automatisch inloggen</p>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Klik op "Start Demo" om automatisch in te loggen en alle functies te verkennen. 
+                      Demo data wordt na 1 uur automatisch verwijderd.
+                    </p>
                   </div>
                 </div>
               </div>
