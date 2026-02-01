@@ -338,8 +338,9 @@ export default function ModulesOverviewPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
                 size="lg" 
-                onClick={handleStartTrial}
+                onClick={() => handleStartOrder()}
                 className="h-14 px-8 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all"
+                data-testid="start-trial-btn"
               >
                 <Gift className="w-5 h-5 mr-2" />
                 Start Gratis Proefperiode
@@ -349,6 +350,7 @@ export default function ModulesOverviewPage() {
                 variant="outline"
                 onClick={() => navigate('/prijzen')}
                 className="h-14 px-8 border-2 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 rounded-full transition-all"
+                data-testid="view-prices-btn"
               >
                 Bekijk Prijzen
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -364,14 +366,14 @@ export default function ModulesOverviewPage() {
                 <span>3 dagen gratis</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Shield className="w-4 h-4 text-blue-600" />
+                <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-teal-600" />
                 </div>
                 <span>Geen creditcard nodig</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Zap className="w-4 h-4 text-purple-600" />
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-green-600" />
                 </div>
                 <span>Direct starten</span>
               </div>
@@ -380,7 +382,7 @@ export default function ModulesOverviewPage() {
         </div>
       </section>
 
-      {/* Modules Grid - Modern Cards */}
+      {/* Modules Grid - Modern Cards from Backend */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
@@ -393,9 +395,11 @@ export default function ModulesOverviewPage() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {MODULES_DATA.map((module) => {
-              const IconComponent = module.icon;
-              const isSelected = selectedModules.includes(module.id);
+            {addons.map((addon, index) => {
+              const moduleUI = getModuleUI(addon.slug);
+              const IconComponent = moduleUI.icon;
+              const isSelected = selectedModules.includes(addon.id);
+              const isPopular = index === 0;
               
               return (
                 <Card 
