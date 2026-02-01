@@ -324,17 +324,26 @@ function isSubdomain() {
   return true;
 }
 
-// Component that redirects subdomains to login
-function SubdomainRedirect({ children }) {
-  if (isSubdomain() && window.location.pathname === '/') {
-    return <Navigate to="/login" replace />;
+// Helper to check if we should redirect to app subdomain
+function shouldRedirectToApp() {
+  const hostname = window.location.hostname;
+  return hostname === 'facturatie.sr' || hostname === 'www.facturatie.sr';
+}
+
+// Component that redirects main domain /login to app.facturatie.sr/login
+function MainDomainAuthRedirect() {
+  if (shouldRedirectToApp()) {
+    const path = window.location.pathname;
+    window.location.href = `https://app.facturatie.sr${path}`;
+    return null;
   }
-  return children;
+  return null;
 }
 
 // Main App Routes (existing)
 function MainAppRoutes() {
   const onSubdomain = isSubdomain();
+  const onMainDomain = shouldRedirectToApp();
   
   return (
     <Suspense fallback={<PageLoader />}>
