@@ -403,19 +403,20 @@ export default function ModulesOverviewPage() {
               
               return (
                 <Card 
-                  key={module.id} 
+                  key={addon.id} 
+                  data-testid={`module-card-${addon.slug}`}
                   className={`group relative overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-white ${
                     isSelected ? 'ring-2 ring-emerald-500 shadow-emerald-500/20' : ''
                   }`}
-                  onClick={() => toggleModule(module.id)}
+                  onClick={() => toggleModule(addon.id)}
                 >
                   {/* Gradient Top Bar */}
-                  <div className={`h-2 bg-gradient-to-r ${module.gradient}`}></div>
+                  <div className={`h-2 bg-gradient-to-r ${moduleUI.gradient}`}></div>
                   
                   {/* Popular Badge */}
-                  {module.popular && (
+                  {isPopular && (
                     <div className="absolute top-4 right-4">
-                      <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg">
+                      <Badge className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white border-0 shadow-lg">
                         <Star className="w-3 h-3 mr-1 fill-current" />
                         Populair
                       </Badge>
@@ -433,32 +434,34 @@ export default function ModulesOverviewPage() {
                   
                   <CardContent className="p-8">
                     {/* Icon */}
-                    <div className={`w-16 h-16 ${module.iconBg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-16 h-16 ${moduleUI.iconBg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                       <IconComponent className="w-8 h-8 text-white" />
                     </div>
                     
                     {/* Category */}
-                    <Badge variant="secondary" className="mb-3 bg-slate-100 text-slate-600">
-                      {module.category}
+                    <Badge variant="secondary" className="mb-3 bg-emerald-50 text-emerald-700 border-emerald-200">
+                      {moduleUI.category}
                     </Badge>
                     
                     {/* Title & Description */}
                     <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
-                      {module.name}
+                      {addon.name}
                     </h3>
                     <p className="text-slate-600 mb-4 line-clamp-2">
-                      {module.description}
+                      {addon.description}
                     </p>
                     
                     {/* Price */}
                     <div className="mb-6">
-                      <span className="text-2xl font-bold text-slate-900">{module.price}</span>
+                      <span className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                        {formatCurrency(addon.price)}
+                      </span>
                       <span className="text-slate-500 text-sm">/maand</span>
                     </div>
                     
                     {/* Features */}
                     <ul className="space-y-2 mb-6">
-                      {module.features.slice(0, 3).map((feature, i) => (
+                      {moduleUI.features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
                           <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
                           <span>{feature}</span>
@@ -470,24 +473,26 @@ export default function ModulesOverviewPage() {
                     <div className="flex gap-3">
                       <Button 
                         variant="outline"
-                        className="flex-1 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50"
+                        className="flex-1 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 text-emerald-700"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/modules/${module.slug}`);
+                          navigate('/prijzen');
                         }}
+                        data-testid={`details-btn-${addon.slug}`}
                       >
                         Details
                         <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
                       <Button 
-                        className={`flex-1 ${isSelected ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-slate-900 hover:bg-slate-800'}`}
+                        className={`flex-1 ${isSelected 
+                          ? 'bg-emerald-500 hover:bg-emerald-600' 
+                          : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700'
+                        } text-white`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (!isSelected) {
-                            toggleModule(module.id);
-                          }
-                          handleStartTrial();
+                          handleStartOrder(addon.id);
                         }}
+                        data-testid={`order-btn-${addon.slug}`}
                       >
                         {isSelected ? 'Geselecteerd' : 'Probeer Gratis'}
                       </Button>
@@ -501,7 +506,7 @@ export default function ModulesOverviewPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 relative overflow-hidden">
+      <section className="py-24 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 relative overflow-hidden">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.3),transparent_50%)]"></div>
