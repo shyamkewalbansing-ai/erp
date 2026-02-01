@@ -1839,8 +1839,9 @@ async def update_workspace_domain(
 
 @api_router.post("/workspace/domain/verify")
 async def verify_workspace_domain(current_user: dict = Depends(get_current_user)):
-    """Verify DNS for custom domain"""
+    """Verify DNS for custom domain and auto-configure Nginx + SSL"""
     import socket
+    import subprocess
     
     if current_user.get("role") == "superadmin":
         raise HTTPException(status_code=400, detail="Superadmin heeft geen workspace")
@@ -1864,20 +1865,70 @@ async def verify_workspace_domain(current_user: dict = Depends(get_current_user)
         ip_addresses = socket.gethostbyname_ex(custom_domain)[2]
         
         if server_ip in ip_addresses:
-            await db.workspaces.update_one(
-                {"id": workspace_id},
-                {"$set": {
-                    "domain.dns_verified": True,
-                    "status": "active",
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }}
-            )
-            
-            return {
-                "success": True,
-                "message": f"DNS geverifieerd! {custom_domain} wijst naar {server_ip}",
-                "next_step": "SSL-certificaat wordt automatisch aangevraagd"
-            }
+            # DNS is correct! Now auto-configure Nginx and SSL
+            try:
+                # Run auto domain setup script
+                script_path = "/home/clp/htdocs/facturatie.sr/auto_domain_setup.sh"
+                result = subprocess.run(
+                    ["sudo", script_path, custom_domain, workspace_id],
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+                
+                ssl_success = "SUCCESS" in result.stdout
+                
+                await db.workspaces.update_one(
+                    {"id": workspace_id},
+                    {"$set": {
+                        "domain.dns_verified": True,
+                        "domain.ssl_active": ssl_success,
+                        "status": "active",
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                
+                if ssl_success:
+                    return {
+                        "success": True,
+                        "message": f"DNS geverifieerd en domein geconfigureerd!",
+                        "domain": f"https://{custom_domain}",
+                        "ssl_active": True,
+                        "details": "Nginx en SSL zijn automatisch geconfigureerd"
+                    }
+                else:
+                    return {
+                        "success": True,
+                        "message": f"DNS geverifieerd! SSL wordt nog geconfigureerd.",
+                        "domain": f"https://{custom_domain}",
+                        "ssl_active": False,
+                        "details": result.stderr or "SSL configuratie in behandeling"
+                    }
+                    
+            except subprocess.TimeoutExpired:
+                return {
+                    "success": True,
+                    "message": f"DNS geverifieerd! Server configuratie duurt langer dan verwacht.",
+                    "domain": f"https://{custom_domain}",
+                    "ssl_active": False
+                }
+            except Exception as e:
+                logger.error(f"Auto domain setup error: {e}")
+                await db.workspaces.update_one(
+                    {"id": workspace_id},
+                    {"$set": {
+                        "domain.dns_verified": True,
+                        "status": "active",
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                return {
+                    "success": True,
+                    "message": f"DNS geverifieerd! Handmatige server configuratie nodig.",
+                    "domain": f"https://{custom_domain}",
+                    "ssl_active": False,
+                    "manual_setup": True
+                }
         else:
             return {
                 "success": False,
