@@ -322,6 +322,9 @@ function MainAppRoutes() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/demo" element={<DemoPage />} />
         
+        {/* Public Spa Booking Portal */}
+        <Route path="/booking/spa/:workspaceId" element={<SpaBookingPage />} />
+        
         {/* Dynamic CMS Pages */}
         <Route path="/pagina/:slug" element={<CMSPage />} />
         
