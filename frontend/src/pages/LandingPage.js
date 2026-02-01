@@ -622,8 +622,7 @@ export default function LandingPage() {
                         <span className="text-sm text-gray-500 font-body">/mnd</span>
                       </div>
                       <Button size="sm" variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50 font-body" onClick={() => {
-                        setSelectedAddons([addon.id]);
-                        setOrderDialogOpen(true);
+                        navigate(`/prijzen?addon=${addon.id}`);
                       }} data-testid={`order-addon-${addon.id}`}>
                         Bestellen
                       </Button>
