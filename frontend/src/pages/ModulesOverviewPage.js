@@ -127,6 +127,20 @@ const MODULE_UI_DATA = {
       'Walk-in wachtrij beheer'
     ]
   },
+  'pompstation': {
+    icon: Fuel,
+    gradient: 'from-orange-500 to-amber-600',
+    lightBg: 'from-orange-50 to-amber-50',
+    shadowColor: 'shadow-orange-200',
+    detailSlug: 'pompstation',
+    image: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=800&q=80',
+    features: [
+      'Brandstoftank beheer & monitoring',
+      'POS/Kassa met brandstof & winkel',
+      'Diensten & personeelsbeheer',
+      'Veiligheid & compliance tracking'
+    ]
+  },
   'multi-tenant': {
     icon: Shield,
     gradient: 'from-slate-500 to-slate-700',
