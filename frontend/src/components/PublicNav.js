@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Play } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: 'Home', path: '/' },
   { label: 'Prijzen', path: '/prijzen' },
   { label: 'Modules', path: '/modules-overzicht' },
   { label: 'FAQ', path: '/faq' },
-  { label: 'Over Ons', path: '/over-ons' },
+  { label: 'Contact', path: '/contact' },
 ];
 
 export default function PublicNav({ logoUrl, companyName }) {
