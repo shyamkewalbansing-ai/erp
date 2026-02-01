@@ -59,7 +59,12 @@ import {
   Heart,
   Smile,
   Package,
-  Ticket
+  Ticket,
+  Fuel,
+  Gauge,
+  Truck,
+  AlertTriangle,
+  ClipboardList
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
