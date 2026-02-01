@@ -583,23 +583,31 @@ export default function ModulesOverviewPage() {
                           ? 'border-emerald-500 bg-emerald-50' 
                           : 'border-slate-200 hover:border-slate-300'
                       }`}
-                      onClick={() => toggleModule(module.id)}
+                      onClick={() => toggleModule(addon.id)}
                     >
                       <Checkbox 
                         checked={isSelected}
                         onCheckedChange={() => {}}
                         className="pointer-events-none"
                       />
-                      <div className={`w-8 h-8 ${module.iconBg} rounded-lg flex items-center justify-center`}>
+                      <div className={`w-8 h-8 ${moduleUI.iconBg} rounded-lg flex items-center justify-center`}>
                         <IconComponent className="w-4 h-4 text-white" />
                       </div>
-                      <span className="text-sm font-medium">{module.name.split(' ')[0]}</span>
+                      <span className="text-sm font-medium">{addon.name}</span>
                     </div>
                   );
                 })}
               </div>
               {selectedModules.length === 0 && (
                 <p className="text-sm text-amber-600">Selecteer minimaal één module</p>
+              )}
+              {selectedModules.length > 0 && (
+                <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-emerald-700">Totaal per maand:</span>
+                    <span className="font-bold text-emerald-600">{formatCurrency(getTotalPrice())}</span>
+                  </div>
+                </div>
               )}
             </div>
 
@@ -618,8 +626,8 @@ export default function ModulesOverviewPage() {
                     <Input
                       id="name"
                       placeholder="Uw naam"
-                      value={trialForm.name}
-                      onChange={(e) => setTrialForm({...trialForm, name: e.target.value})}
+                      value={orderForm.name}
+                      onChange={(e) => setOrderForm({...orderForm, name: e.target.value})}
                       className="pl-10"
                       required
                     />
@@ -634,8 +642,8 @@ export default function ModulesOverviewPage() {
                       id="email"
                       type="email"
                       placeholder="uw@email.com"
-                      value={trialForm.email}
-                      onChange={(e) => setTrialForm({...trialForm, email: e.target.value})}
+                      value={orderForm.email}
+                      onChange={(e) => setOrderForm({...orderForm, email: e.target.value})}
                       className="pl-10"
                       required
                     />
@@ -651,8 +659,8 @@ export default function ModulesOverviewPage() {
                     <Input
                       id="phone"
                       placeholder="+597 xxx xxxx"
-                      value={trialForm.phone}
-                      onChange={(e) => setTrialForm({...trialForm, phone: e.target.value})}
+                      value={orderForm.phone}
+                      onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})}
                       className="pl-10"
                     />
                   </div>
@@ -665,8 +673,8 @@ export default function ModulesOverviewPage() {
                     <Input
                       id="company_name"
                       placeholder="Uw bedrijf"
-                      value={trialForm.company_name}
-                      onChange={(e) => setTrialForm({...trialForm, company_name: e.target.value})}
+                      value={orderForm.company_name}
+                      onChange={(e) => setOrderForm({...orderForm, company_name: e.target.value})}
                       className="pl-10"
                       required
                     />
@@ -683,8 +691,8 @@ export default function ModulesOverviewPage() {
                       id="password"
                       type="password"
                       placeholder="Min. 6 karakters"
-                      value={trialForm.password}
-                      onChange={(e) => setTrialForm({...trialForm, password: e.target.value})}
+                      value={orderForm.password}
+                      onChange={(e) => setOrderForm({...orderForm, password: e.target.value})}
                       className="pl-10"
                       required
                     />
@@ -699,8 +707,8 @@ export default function ModulesOverviewPage() {
                       id="password_confirm"
                       type="password"
                       placeholder="Herhaal wachtwoord"
-                      value={trialForm.password_confirm}
-                      onChange={(e) => setTrialForm({...trialForm, password_confirm: e.target.value})}
+                      value={orderForm.password_confirm}
+                      onChange={(e) => setOrderForm({...orderForm, password_confirm: e.target.value})}
                       className="pl-10"
                       required
                     />
@@ -709,20 +717,69 @@ export default function ModulesOverviewPage() {
               </div>
             </div>
 
-            {/* Trial Info */}
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Gift className="w-5 h-5 text-white" />
+            {/* Payment Method Selection */}
+            <div className="space-y-4">
+              <Label className="text-base font-semibold flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                Betaalmethode
+              </Label>
+              
+              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+                <div 
+                  className={`flex items-start space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'trial' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                  onClick={() => setPaymentMethod('trial')}
+                >
+                  <RadioGroupItem value="trial" id="trial" className="mt-1" />
+                  <div className="flex-1">
+                    <Label htmlFor="trial" className="flex items-center gap-2 cursor-pointer font-semibold">
+                      <Gift className="w-5 h-5 text-emerald-600" />
+                      3 Dagen Gratis Proberen
+                      <Badge className="bg-emerald-100 text-emerald-700 border-0">Aanbevolen</Badge>
+                    </Label>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Probeer alle functies gratis. Na 3 dagen kiest u een betaalmethode.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-emerald-800">3 Dagen Gratis Proefperiode</h4>
-                  <p className="text-sm text-emerald-600 mt-1">
-                    U krijgt volledige toegang tot alle geselecteerde modules. 
-                    Na 3 dagen kiest u een betaalmethode om door te gaan.
-                  </p>
+
+                <div 
+                  className={`flex items-start space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'mope' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                  onClick={() => setPaymentMethod('mope')}
+                >
+                  <RadioGroupItem value="mope" id="mope" className="mt-1" />
+                  <div className="flex-1">
+                    <Label htmlFor="mope" className="flex items-center gap-2 cursor-pointer font-semibold">
+                      <CreditCard className="w-5 h-5 text-teal-500" />
+                      Betalen met Mope
+                    </Label>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Direct betalen via Mope. Uw account wordt direct geactiveerd.
+                    </p>
+                  </div>
                 </div>
-              </div>
+
+                <div 
+                  className={`flex items-start space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'bank' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                  onClick={() => setPaymentMethod('bank')}
+                >
+                  <RadioGroupItem value="bank" id="bank" className="mt-1" />
+                  <div className="flex-1">
+                    <Label htmlFor="bank" className="flex items-center gap-2 cursor-pointer font-semibold">
+                      <Building2 className="w-5 h-5 text-slate-600" />
+                      Bankoverschrijving
+                    </Label>
+                    <p className="text-sm text-slate-500 mt-1">
+                      U ontvangt een factuur per e-mail. Na betaling wordt uw account geactiveerd.
+                    </p>
+                  </div>
+                </div>
+              </RadioGroup>
             </div>
 
             {/* Submit Button */}
@@ -731,7 +788,7 @@ export default function ModulesOverviewPage() {
                 type="button" 
                 variant="outline" 
                 className="flex-1"
-                onClick={() => setTrialDialogOpen(false)}
+                onClick={() => setOrderDialogOpen(false)}
               >
                 Annuleren
               </Button>
@@ -747,7 +804,7 @@ export default function ModulesOverviewPage() {
                   </>
                 ) : (
                   <>
-                    Start Gratis
+                    {paymentMethod === 'trial' ? 'Start Gratis Proefperiode' : 'Bestelling Plaatsen'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 )}
