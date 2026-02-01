@@ -1814,10 +1814,6 @@ server {
                     size="lg"
                     className="bg-emerald-500 hover:bg-emerald-600"
                     onClick={async () => {
-                      if (!deploymentSettings.webhook_url) {
-                        toast.error('Configureer eerst de webhook URL');
-                        return;
-                      }
                       setUpdating(true);
                       try {
                         const response = await triggerSystemUpdate();
@@ -1834,7 +1830,7 @@ server {
                         setUpdating(false);
                       }
                     }}
-                    disabled={updating || !deploymentSettings.webhook_url}
+                    disabled={updating}
                     data-testid="trigger-update-btn"
                   >
                     {updating ? (
@@ -1873,10 +1869,10 @@ server {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Settings className="w-5 h-5" />
-                  Webhook Configuratie
+                  Update Instellingen
                 </CardTitle>
                 <CardDescription>
-                  Configureer de webhook URL van uw productie server
+                  Configureer wat er tijdens een update moet gebeuren
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
