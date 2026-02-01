@@ -40,7 +40,8 @@ import {
   MessageSquare,
   Globe,
   BarChart3,
-  Scissors
+  Scissors,
+  Fuel
 } from 'lucide-react';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
@@ -57,7 +58,8 @@ const MODULE_ICONS = {
   'cms': Globe,
   'rapportage': BarChart3,
   'beauty': Scissors,
-  'chatbot': MessageSquare
+  'chatbot': MessageSquare,
+  'pompstation': Fuel
 };
 
 export default function PrijzenPage() {
