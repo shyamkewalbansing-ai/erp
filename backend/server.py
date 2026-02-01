@@ -1590,15 +1590,82 @@ async def register(user_data: UserCreate):
     )
 
 @api_router.post("/auth/login", response_model=TokenResponse)
-async def login(credentials: UserLogin):
+async def login(credentials: UserLogin, request: Request):
+    """Login with workspace validation for subdomains/custom domains"""
+    
+    # Get the origin domain from the request headers
+    origin = request.headers.get("origin", "")
+    referer = request.headers.get("referer", "")
+    x_workspace_domain = request.headers.get("x-workspace-domain", "")
+    
+    # Determine the domain being accessed
+    access_domain = x_workspace_domain or ""
+    if not access_domain and origin:
+        # Extract domain from origin (e.g., https://subdomain.facturatie.sr -> subdomain.facturatie.sr)
+        access_domain = origin.replace("https://", "").replace("http://", "").split("/")[0]
+    if not access_domain and referer:
+        access_domain = referer.replace("https://", "").replace("http://", "").split("/")[0]
+    
+    # Define main domains (where anyone can login)
+    main_domains = ['facturatie.sr', 'www.facturatie.sr', 'app.facturatie.sr', 'localhost', '127.0.0.1', 'localhost:3000']
+    
+    # Check if accessing from a workspace subdomain or custom domain
+    workspace_slug = None
+    custom_domain = None
+    
+    if access_domain and access_domain not in main_domains:
+        if access_domain.endswith('.facturatie.sr'):
+            # Subdomain - extract workspace slug
+            workspace_slug = access_domain.replace('.facturatie.sr', '')
+        else:
+            # Custom domain
+            custom_domain = access_domain
+    
+    # Find the user
     user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
     if not user:
         logger.warning(f"Login failed: User not found for email {credentials.email}")
         raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
     
+    # Verify password
     if not verify_password(credentials.password, user["password"]):
         logger.warning(f"Login failed: Invalid password for {credentials.email}")
         raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
+    
+    # If accessing from workspace subdomain or custom domain, validate workspace membership
+    if workspace_slug or custom_domain:
+        # Skip workspace validation for superadmin and demo account
+        if user.get("role") != "superadmin" and user.get("email") != DEMO_ACCOUNT_EMAIL:
+            # Find the workspace
+            workspace = None
+            if workspace_slug:
+                workspace = await db.workspaces.find_one({"slug": workspace_slug})
+            elif custom_domain:
+                workspace = await db.workspaces.find_one({
+                    "$or": [
+                        {"domain.custom_domain": custom_domain},
+                        {"domain.subdomain": custom_domain}
+                    ]
+                })
+            
+            if workspace:
+                # Check if user belongs to this workspace
+                user_workspace_id = user.get("workspace_id")
+                workspace_id = workspace.get("id")
+                
+                # Also check if user is in the workspace's users list
+                workspace_users = workspace.get("users", [])
+                user_id = user.get("id")
+                
+                if user_workspace_id != workspace_id and user_id not in workspace_users:
+                    logger.warning(f"Login failed: User {credentials.email} does not belong to workspace {workspace_slug or custom_domain}")
+                    raise HTTPException(
+                        status_code=403, 
+                        detail="U heeft geen toegang tot deze workspace. Neem contact op met de beheerder."
+                    )
+            else:
+                # Workspace not found - might be a new/unconfigured domain
+                logger.warning(f"Login attempt on unknown workspace domain: {workspace_slug or custom_domain}")
     
     token = create_token(user["id"], user["email"])
     
