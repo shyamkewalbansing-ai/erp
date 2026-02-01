@@ -271,7 +271,6 @@ async def start_demo_cleanup():
     await ensure_demo_has_all_modules()
     # Start cleanup scheduler
     asyncio.create_task(demo_cleanup_scheduler())
-    asyncio.create_task(demo_cleanup_scheduler())
     logger.info("Demo cleanup scheduler started - runs every hour")
 
 # ==================== GLOBAL EXCEPTION HANDLER ====================
