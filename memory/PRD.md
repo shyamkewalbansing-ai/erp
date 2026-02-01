@@ -353,10 +353,11 @@ Complete self-service portaal voor huurders:
   - ✅ payment_methods.py (576 lines) - Betaalmethodes
   - ✅ admin.py (530 lines) - Admin/superadmin endpoints
   - **Totaal verplaatst: ~4.700 regels naar /app/backend/routers/**
-- [ ] **Login bug na uitloggen** - Verificatie nodig van gebruiker (TESTEN VEREIST)
+- [x] **Login bug na uitloggen** - GEVERIFIEERD OPGELOST (iteration_26, 1 Feb 2026)
 - [ ] **Herinneringen voor maandelijkse meteropname** (email notificaties)
 - [x] **Workspace branding globaal toepassen** - CSS variabelen met HSL conversie (VOLTOOID)
 - [x] **Betaalmethodes in facturen** - PDF facturen tonen nu bankgegevens en Mope info (VOLTOOID)
+- [ ] **Mope betalingen valideren** - Test API token nodig van gebruiker
 
 ### Auto Dealer Klantportaal ✅ (NIEUW - 30 Jan 2026)
 Complete klantportaal voor Auto Dealer module:
