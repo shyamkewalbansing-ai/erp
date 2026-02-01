@@ -68,7 +68,7 @@ const MODULE_FAQ_DATA = {
     color: 'emerald',
     gradient: 'from-emerald-500 to-teal-600',
     description: 'Complete Human Resource Management voor uw bedrijf',
-    image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80',
+    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/fc3a6f7a9ded44ab9a2fee6d6e23c9bba1f549b78f124edd0f36b657e15319fb.png',
     features: [
       {
         title: 'Personeelsbeheer',
