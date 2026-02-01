@@ -1529,7 +1529,12 @@ async def register(user_data: UserCreate):
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(credentials: UserLogin):
     user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
-    if not user or not verify_password(credentials.password, user["password"]):
+    if not user:
+        logger.warning(f"Login failed: User not found for email {credentials.email}")
+        raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
+    
+    if not verify_password(credentials.password, user["password"]):
+        logger.warning(f"Login failed: Invalid password for {credentials.email}")
         raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
     
     token = create_token(user["id"], user["email"])
