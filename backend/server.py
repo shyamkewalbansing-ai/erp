@@ -2270,6 +2270,7 @@ async def create_apartment(apt_data: ApartmentCreate, current_user: dict = Depen
     }
     
     await db.apartments.insert_one(apt_doc)
+    apt_doc.pop("_id", None)
     
     return ApartmentResponse(**apt_doc)
 
