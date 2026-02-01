@@ -279,7 +279,7 @@ async def get_tanks(current_user: dict = Depends(get_current_user)):
     return tanks
 
 @router.post("/tanks", response_model=TankResponse)
-async def create_tank(tank: TankCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def create_tank(tank: TankCreate, current_user: dict = Depends(get_current_user)):
     """Create a new fuel tank"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -301,7 +301,7 @@ async def create_tank(tank: TankCreate, db = Depends(get_db), current_user: dict
     return tank_doc
 
 @router.put("/tanks/{tank_id}", response_model=TankResponse)
-async def update_tank(tank_id: str, tank: TankCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def update_tank(tank_id: str, tank: TankCreate, current_user: dict = Depends(get_current_user)):
     """Update a tank"""
     query = {**get_workspace_filter(current_user), "id": tank_id}
     
@@ -320,7 +320,7 @@ async def update_tank(tank_id: str, tank: TankCreate, db = Depends(get_db), curr
     return updated
 
 @router.post("/tanks/{tank_id}/readings", response_model=TankReadingResponse)
-async def add_tank_reading(tank_id: str, reading: TankReadingCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def add_tank_reading(tank_id: str, reading: TankReadingCreate, current_user: dict = Depends(get_current_user)):
     """Add a tank level reading"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -346,7 +346,7 @@ async def add_tank_reading(tank_id: str, reading: TankReadingCreate, db = Depend
     return reading_doc
 
 @router.get("/tanks/{tank_id}/history")
-async def get_tank_history(tank_id: str, days: int = 30, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_tank_history(tank_id: str, days: int = 30, current_user: dict = Depends(get_current_user)):
     """Get tank level history"""
     from_date = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
     
@@ -360,14 +360,14 @@ async def get_tank_history(tank_id: str, days: int = 30, db = Depends(get_db), c
 # ==================== FUEL DELIVERY ENDPOINTS ====================
 
 @router.get("/deliveries", response_model=List[FuelDeliveryResponse])
-async def get_deliveries(db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_deliveries(current_user: dict = Depends(get_current_user)):
     """Get all fuel deliveries"""
     query = get_workspace_filter(current_user)
     deliveries = await db.pompstation_deliveries.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
     return deliveries
 
 @router.post("/deliveries", response_model=FuelDeliveryResponse)
-async def create_delivery(delivery: FuelDeliveryCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def create_delivery(delivery: FuelDeliveryCreate, current_user: dict = Depends(get_current_user)):
     """Register a new fuel delivery"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -408,7 +408,7 @@ async def create_delivery(delivery: FuelDeliveryCreate, db = Depends(get_db), cu
 # ==================== PUMP ENDPOINTS ====================
 
 @router.get("/pumps", response_model=List[PumpResponse])
-async def get_pumps(db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_pumps(current_user: dict = Depends(get_current_user)):
     """Get all pumps"""
     query = get_workspace_filter(current_user)
     pumps = await db.pompstation_pumps.find(query, {"_id": 0}).to_list(50)
@@ -439,7 +439,7 @@ async def get_pumps(db = Depends(get_db), current_user: dict = Depends(get_curre
     return pumps
 
 @router.post("/pumps", response_model=PumpResponse)
-async def create_pump(pump: PumpCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def create_pump(pump: PumpCreate, current_user: dict = Depends(get_current_user)):
     """Create a new pump"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -468,7 +468,7 @@ async def create_pump(pump: PumpCreate, db = Depends(get_db), current_user: dict
 # ==================== FUEL PRICES ENDPOINTS ====================
 
 @router.get("/prices")
-async def get_fuel_prices(db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_fuel_prices(current_user: dict = Depends(get_current_user)):
     """Get current fuel prices"""
     query = get_workspace_filter(current_user)
     prices = await db.pompstation_prices.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
@@ -482,7 +482,7 @@ async def get_fuel_prices(db = Depends(get_db), current_user: dict = Depends(get
     return {"prices": list(latest.values()), "all_history": prices[:20]}
 
 @router.post("/prices", response_model=FuelPriceResponse)
-async def set_fuel_price(price: FuelPriceCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def set_fuel_price(price: FuelPriceCreate, current_user: dict = Depends(get_current_user)):
     """Set a new fuel price"""
     now = datetime.now(timezone.utc).isoformat()
     query = get_workspace_filter(current_user)
@@ -537,7 +537,7 @@ async def get_sales(
     return {"sales": sales, "count": len(sales), "total": total}
 
 @router.post("/sales", response_model=POSSaleResponse)
-async def create_sale(sale: POSSaleCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def create_sale(sale: POSSaleCreate, current_user: dict = Depends(get_current_user)):
     """Create a new POS sale"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -615,7 +615,7 @@ async def create_sale(sale: POSSaleCreate, db = Depends(get_db), current_user: d
 # ==================== SHOP PRODUCTS ENDPOINTS ====================
 
 @router.get("/products", response_model=List[ShopProductResponse])
-async def get_products(category: Optional[str] = None, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_products(category: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     """Get shop products"""
     query = get_workspace_filter(current_user)
     if category:
@@ -638,7 +638,7 @@ async def get_products(category: Optional[str] = None, db = Depends(get_db), cur
     return products
 
 @router.post("/products", response_model=ShopProductResponse)
-async def create_product(product: ShopProductCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def create_product(product: ShopProductCreate, current_user: dict = Depends(get_current_user)):
     """Create a shop product"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -662,7 +662,7 @@ async def create_product(product: ShopProductCreate, db = Depends(get_db), curre
     return product_doc
 
 @router.put("/products/{product_id}")
-async def update_product(product_id: str, product: ShopProductCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def update_product(product_id: str, product: ShopProductCreate, current_user: dict = Depends(get_current_user)):
     """Update a product"""
     query = {**get_workspace_filter(current_user), "id": product_id}
     
@@ -679,7 +679,7 @@ async def update_product(product_id: str, product: ShopProductCreate, db = Depen
 # ==================== SHIFT ENDPOINTS ====================
 
 @router.get("/shifts")
-async def get_shifts(status: Optional[str] = None, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_shifts(status: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     """Get shifts"""
     query = get_workspace_filter(current_user)
     if status:
@@ -689,7 +689,7 @@ async def get_shifts(status: Optional[str] = None, db = Depends(get_db), current
     return shifts
 
 @router.post("/shifts/start", response_model=ShiftResponse)
-async def start_shift(shift: ShiftCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def start_shift(shift: ShiftCreate, current_user: dict = Depends(get_current_user)):
     """Start a new shift"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -726,7 +726,7 @@ async def start_shift(shift: ShiftCreate, db = Depends(get_db), current_user: di
     return shift_doc
 
 @router.post("/shifts/{shift_id}/close")
-async def close_shift(shift_id: str, ending_cash: float, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def close_shift(shift_id: str, ending_cash: float, current_user: dict = Depends(get_current_user)):
     """Close a shift"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -786,7 +786,7 @@ async def close_shift(shift_id: str, ending_cash: float, db = Depends(get_db), c
 # ==================== EMPLOYEE ENDPOINTS ====================
 
 @router.get("/employees", response_model=List[PompstationEmployeeResponse])
-async def get_employees(db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_employees(current_user: dict = Depends(get_current_user)):
     """Get all employees"""
     query = get_workspace_filter(current_user)
     employees = await db.pompstation_employees.find(query, {"_id": 0}).to_list(100)
@@ -800,7 +800,7 @@ async def get_employees(db = Depends(get_db), current_user: dict = Depends(get_c
     return employees
 
 @router.post("/employees", response_model=PompstationEmployeeResponse)
-async def create_employee(employee: PompstationEmployeeCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def create_employee(employee: PompstationEmployeeCreate, current_user: dict = Depends(get_current_user)):
     """Create an employee"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -823,14 +823,14 @@ async def create_employee(employee: PompstationEmployeeCreate, db = Depends(get_
 # ==================== SAFETY & COMPLIANCE ENDPOINTS ====================
 
 @router.get("/inspections")
-async def get_inspections(db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_inspections(current_user: dict = Depends(get_current_user)):
     """Get safety inspections"""
     query = get_workspace_filter(current_user)
     inspections = await db.pompstation_inspections.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
     return inspections
 
 @router.post("/inspections", response_model=SafetyInspectionResponse)
-async def create_inspection(inspection: SafetyInspectionCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def create_inspection(inspection: SafetyInspectionCreate, current_user: dict = Depends(get_current_user)):
     """Record a safety inspection"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -849,7 +849,7 @@ async def create_inspection(inspection: SafetyInspectionCreate, db = Depends(get
     return insp_doc
 
 @router.get("/incidents")
-async def get_incidents(resolved: Optional[bool] = None, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_incidents(resolved: Optional[bool] = None, current_user: dict = Depends(get_current_user)):
     """Get incidents"""
     query = get_workspace_filter(current_user)
     if resolved is not None:
@@ -859,7 +859,7 @@ async def get_incidents(resolved: Optional[bool] = None, db = Depends(get_db), c
     return incidents
 
 @router.post("/incidents", response_model=IncidentResponse)
-async def create_incident(incident: IncidentCreate, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def create_incident(incident: IncidentCreate, current_user: dict = Depends(get_current_user)):
     """Report an incident"""
     now = datetime.now(timezone.utc).isoformat()
     
@@ -882,7 +882,7 @@ async def create_incident(incident: IncidentCreate, db = Depends(get_db), curren
 # ==================== DASHBOARD & REPORTS ====================
 
 @router.get("/dashboard")
-async def get_dashboard(db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_dashboard(current_user: dict = Depends(get_current_user)):
     """Get dashboard overview"""
     query = get_workspace_filter(current_user)
     today = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0).isoformat()
@@ -960,7 +960,7 @@ async def get_dashboard(db = Depends(get_db), current_user: dict = Depends(get_c
     }
 
 @router.get("/reports/daily")
-async def get_daily_report(date: Optional[str] = None, db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_daily_report(date: Optional[str] = None, current_user: dict = Depends(get_current_user)):
     """Get daily closing report"""
     query = get_workspace_filter(current_user)
     
