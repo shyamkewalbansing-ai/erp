@@ -35,7 +35,8 @@ import {
   TrendingUp,
   Clock,
   CreditCard,
-  Puzzle
+  Puzzle,
+  Shield
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
