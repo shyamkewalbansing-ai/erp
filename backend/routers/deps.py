@@ -36,7 +36,7 @@ security = HTTPBearer()
 SUPER_ADMIN_EMAIL = "admin@facturatie.sr"
 SUBSCRIPTION_PRICE = 7500
 TRIAL_DAYS = 3
-SERVER_IP = "45.79.123.456"  # Update with your actual server IP
+SERVER_IP = "72.62.174.117"  # Update with your actual server IP
 MAIN_DOMAIN = "facturatie.sr"
 
 # Logger

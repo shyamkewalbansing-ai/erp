@@ -1647,7 +1647,7 @@ async def get_workspace_settings(current_user: dict = Depends(get_current_user))
         return {"workspace": None, "has_workspace": False}
     
     # Get server IP for DNS instructions
-    server_ip = "45.79.123.456"  # Update with actual server IP
+    server_ip = "72.62.174.117"  # Update with actual server IP
     main_domain = "facturatie.sr"
     
     domain = workspace.get("domain", {})
@@ -1753,7 +1753,7 @@ async def update_workspace_domain(
     if workspace["owner_id"] != current_user["id"]:
         raise HTTPException(status_code=403, detail="Alleen de eigenaar kan domein instellingen wijzigen")
     
-    server_ip = "45.79.123.456"
+    server_ip = "72.62.174.117"
     
     if domain_data.domain_type == "subdomain":
         subdomain = domain_data.subdomain or workspace["slug"]
@@ -1844,7 +1844,7 @@ async def verify_workspace_domain(current_user: dict = Depends(get_current_user)
         raise HTTPException(status_code=400, detail="Geen custom domein geconfigureerd")
     
     custom_domain = domain["custom_domain"]
-    server_ip = "45.79.123.456"
+    server_ip = "72.62.174.117"
     
     try:
         ip_addresses = socket.gethostbyname_ex(custom_domain)[2]
@@ -1909,7 +1909,7 @@ async def create_user_workspace(
     
     workspace_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
-    server_ip = "45.79.123.456"
+    server_ip = "72.62.174.117"
     
     workspace = {
         "id": workspace_id,
@@ -9285,7 +9285,7 @@ async def get_deployment_logs(current_user: dict = Depends(get_superadmin)):
 # ============================================
 
 # Server IP for DNS instructions (configure this)
-SERVER_IP = "45.79.123.456"  # Replace with actual server IP
+SERVER_IP = "72.62.174.117"  # Replace with actual server IP
 MAIN_DOMAIN = "facturatie.sr"
 
 @api_router.get("/admin/workspaces", response_model=List[WorkspaceResponse])
