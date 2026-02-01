@@ -1195,21 +1195,33 @@ def get_subscription_status(user: dict) -> tuple:
     if user.get("role") == "superadmin":
         return "active", None, False
     
-    end_date = user.get("subscription_end_date")
+    end_date_str = user.get("subscription_end_date")
     is_trial = user.get("is_trial", False)
     
-    if not end_date:
+    if not end_date_str:
         return "none", None, False
     
     try:
-        end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+        # Handle both timezone-aware and naive datetime strings
+        if isinstance(end_date_str, str):
+            if '+' in end_date_str or 'Z' in end_date_str:
+                end_dt = datetime.fromisoformat(end_date_str.replace("Z", "+00:00"))
+            else:
+                # Assume UTC for naive datetime strings
+                end_dt = datetime.fromisoformat(end_date_str).replace(tzinfo=timezone.utc)
+        else:
+            end_dt = end_date_str
+            if end_dt.tzinfo is None:
+                end_dt = end_dt.replace(tzinfo=timezone.utc)
+        
         if end_dt > datetime.now(timezone.utc):
             if is_trial:
-                return "trial", end_date, True
-            return "active", end_date, False
+                return "trial", end_dt.isoformat(), True
+            return "active", end_dt.isoformat(), False
         else:
-            return "expired", end_date, is_trial
-    except Exception:
+            return "expired", end_dt.isoformat(), is_trial
+    except Exception as e:
+        logger.error(f"Error parsing subscription_end_date: {e}")
         return "none", None, False
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
