@@ -90,6 +90,18 @@ const BeautySpaQueue = lazy(() => import("./pages/beautyspa/QueuePage"));
 const BeautySpaReports = lazy(() => import("./pages/beautyspa/ReportsPage"));
 const BeautySpaVouchers = lazy(() => import("./pages/beautyspa/VouchersPage"));
 
+// Pompstation (Gas Station) Module
+const PompstationDashboard = lazy(() => import("./pages/pompstation/DashboardPage"));
+const PompstationTanks = lazy(() => import("./pages/pompstation/TanksPage"));
+const PompstationLeveringen = lazy(() => import("./pages/pompstation/LeveringenPage"));
+const PompstationPompen = lazy(() => import("./pages/pompstation/PompenPage"));
+const PompstationPOS = lazy(() => import("./pages/pompstation/POSPage"));
+const PompstationWinkel = lazy(() => import("./pages/pompstation/WinkelPage"));
+const PompstationDiensten = lazy(() => import("./pages/pompstation/DienstenPage"));
+const PompstationPersoneel = lazy(() => import("./pages/pompstation/PersoneelPage"));
+const PompstationVeiligheid = lazy(() => import("./pages/pompstation/VeiligheidPage"));
+const PompstationRapportages = lazy(() => import("./pages/pompstation/RapportagesPage"));
+
 
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
