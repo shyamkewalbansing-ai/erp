@@ -3,6 +3,18 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Menu, X, Play } from 'lucide-react';
 
+// Helper function to get app URL (for login/register)
+const getAppUrl = (path = '') => {
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return path;
+  }
+  if (hostname === 'facturatie.sr' || hostname === 'www.facturatie.sr') {
+    return `https://app.facturatie.sr${path}`;
+  }
+  return path;
+};
+
 const NAV_ITEMS = [
   { label: 'Home', path: '/' },
   { label: 'Prijzen', path: '/prijzen' },
