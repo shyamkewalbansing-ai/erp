@@ -274,6 +274,7 @@ async def create_vehicle(vehicle: VehicleCreate, current_user: dict = Depends(ge
         vehicle_doc["selling_price"] = vehicle_doc["selling_price"].model_dump()
     
     await db.autodealer_vehicles.insert_one(vehicle_doc)
+    vehicle_doc.pop("_id", None)
     
     return VehicleResponse(**vehicle_doc)
 
@@ -404,6 +405,7 @@ async def create_customer(customer: CustomerCreate, current_user: dict = Depends
     }
     
     await db.autodealer_customers.insert_one(customer_doc)
+    customer_doc.pop("_id", None)
     
     return CustomerResponse(**customer_doc)
 
