@@ -20,7 +20,8 @@ import {
   Zap,
   Clock,
   Headphones,
-  CheckCircle
+  CheckCircle,
+  Scissors
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
