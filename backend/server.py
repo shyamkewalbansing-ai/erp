@@ -158,6 +158,20 @@ async def cleanup_demo_data():
             ("autodealer_customers", "workspace_id"),
             ("autodealer_sales", "workspace_id"),
             
+            # Beauty Spa data
+            ("spa_clients", "workspace_id"),
+            ("spa_treatments", "workspace_id"),
+            ("spa_staff", "workspace_id"),
+            ("spa_appointments", "workspace_id"),
+            ("spa_products", "workspace_id"),
+            ("spa_sales", "workspace_id"),
+            ("spa_vouchers", "workspace_id"),
+            ("spa_queue", "workspace_id"),
+            ("spa_schedules", "workspace_id"),
+            ("spa_branches", "workspace_id"),
+            ("spa_intake_forms", "workspace_id"),
+            ("spa_stock_movements", "workspace_id"),
+            
             # General data
             ("ai_chat_history", "user_id"),
             ("public_chats", "user_id"),
