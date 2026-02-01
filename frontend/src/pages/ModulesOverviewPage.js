@@ -16,7 +16,11 @@ import {
   ChevronRight,
   Shield,
   Layers,
-  Star
+  Star,
+  Zap,
+  Clock,
+  Headphones,
+  CheckCircle
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
@@ -26,8 +30,9 @@ import PublicFooter from '../components/PublicFooter';
 const MODULE_UI_DATA = {
   'hrm': {
     icon: Users,
-    color: 'emerald',
-    gradient: 'from-emerald-500 to-teal-600',
+    gradient: 'from-blue-500 to-indigo-600',
+    lightBg: 'from-blue-50 to-indigo-50',
+    shadowColor: 'shadow-blue-200',
     detailSlug: 'hrm',
     image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&q=80',
     features: [
@@ -39,8 +44,9 @@ const MODULE_UI_DATA = {
   },
   'vastgoed_beheer': {
     icon: Building2,
-    color: 'teal',
-    gradient: 'from-teal-500 to-emerald-600',
+    gradient: 'from-emerald-500 to-teal-600',
+    lightBg: 'from-emerald-50 to-teal-50',
+    shadowColor: 'shadow-emerald-200',
     detailSlug: 'vastgoed-beheer',
     image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80',
     features: [
@@ -52,8 +58,9 @@ const MODULE_UI_DATA = {
   },
   'autodealer': {
     icon: Car,
-    color: 'green',
-    gradient: 'from-emerald-600 to-green-500',
+    gradient: 'from-orange-500 to-red-600',
+    lightBg: 'from-orange-50 to-red-50',
+    shadowColor: 'shadow-orange-200',
     detailSlug: 'auto-dealer',
     image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&q=80',
     features: [
@@ -65,8 +72,9 @@ const MODULE_UI_DATA = {
   },
   'ai-chatbot': {
     icon: MessageSquare,
-    color: 'cyan',
-    gradient: 'from-teal-600 to-cyan-500',
+    gradient: 'from-purple-500 to-pink-600',
+    lightBg: 'from-purple-50 to-pink-50',
+    shadowColor: 'shadow-purple-200',
     detailSlug: 'ai-chatbot',
     image: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=800&q=80',
     features: [
@@ -78,8 +86,9 @@ const MODULE_UI_DATA = {
   },
   'cms': {
     icon: Globe,
-    color: 'emerald',
-    gradient: 'from-green-500 to-emerald-600',
+    gradient: 'from-cyan-500 to-blue-600',
+    lightBg: 'from-cyan-50 to-blue-50',
+    shadowColor: 'shadow-cyan-200',
     detailSlug: 'website-cms',
     image: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=800&q=80',
     features: [
@@ -91,8 +100,9 @@ const MODULE_UI_DATA = {
   },
   'rapportage': {
     icon: BarChart3,
-    color: 'teal',
-    gradient: 'from-cyan-500 to-teal-600',
+    gradient: 'from-teal-500 to-emerald-600',
+    lightBg: 'from-teal-50 to-emerald-50',
+    shadowColor: 'shadow-teal-200',
     detailSlug: 'rapportage',
     image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',
     features: [
@@ -104,8 +114,9 @@ const MODULE_UI_DATA = {
   },
   'multi-tenant': {
     icon: Shield,
-    color: 'slate',
-    gradient: 'from-slate-500 to-slate-600',
+    gradient: 'from-slate-500 to-slate-700',
+    lightBg: 'from-slate-50 to-gray-50',
+    shadowColor: 'shadow-slate-200',
     detailSlug: 'multi-tenant',
     image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&q=80',
     features: [
@@ -119,8 +130,9 @@ const MODULE_UI_DATA = {
 
 const DEFAULT_UI = {
   icon: Sparkles,
-  color: 'emerald',
   gradient: 'from-emerald-500 to-teal-600',
+  lightBg: 'from-emerald-50 to-teal-50',
+  shadowColor: 'shadow-emerald-200',
   detailSlug: null,
   image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
   features: ['Volledige functionaliteit', 'Professionele ondersteuning', 'Regelmatige updates']
@@ -135,7 +147,7 @@ export default function ModulesOverviewPage() {
   const [settings, setSettings] = useState(null);
   const [addons, setAddons] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeModule, setActiveModule] = useState(null);
+  const [hoveredModule, setHoveredModule] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -177,231 +189,211 @@ export default function ModulesOverviewPage() {
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
-      {/* Hero Section - Same style as FAQ */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 relative overflow-hidden">
+      {/* Hero Section */}
+      <section className="pt-24 pb-20 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.3),transparent_50%)]"></div>
           <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(20,184,166,0.3),transparent_50%)]"></div>
         </div>
         
+        {/* Floating shapes */}
+        <div className="absolute top-20 left-10 w-20 h-20 bg-emerald-500/20 rounded-full blur-xl"></div>
+        <div className="absolute bottom-20 right-20 w-32 h-32 bg-teal-500/20 rounded-full blur-xl"></div>
+        <div className="absolute top-40 right-40 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl"></div>
+        
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-          <Badge className="mb-6 bg-white/10 text-emerald-300 border-emerald-400/30">
+          <Badge className="mb-6 bg-white/10 text-emerald-300 border-emerald-400/30 px-4 py-2">
             <Layers className="w-4 h-4 mr-2" />
             Modulair Platform
           </Badge>
           
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Onze Modules
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            Krachtige{' '}
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              Modules
+            </span>
           </h1>
           
-          <p className="text-lg text-slate-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
             Kies alleen de modules die u nodig heeft. Van HRM tot vastgoedbeheer, 
             van autohandel tot AI-chatbot. Elk bedrijf is uniek.
           </p>
+
+          {/* Quick Stats */}
+          <div className="flex flex-wrap justify-center gap-8 mt-8">
+            {[
+              { value: '6+', label: 'Modules', icon: Layers },
+              { value: '24/7', label: 'Support', icon: Headphones },
+              { value: '99.9%', label: 'Uptime', icon: Zap },
+            ].map((stat, i) => (
+              <div key={i} className="flex items-center gap-3 bg-white/5 backdrop-blur-sm rounded-full px-6 py-3 border border-white/10">
+                <stat.icon className="w-5 h-5 text-emerald-400" />
+                <div className="text-left">
+                  <div className="text-xl font-bold text-white">{stat.value}</div>
+                  <div className="text-xs text-slate-400">{stat.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Quick Filter Buttons */}
-      <section className="py-8 border-b border-slate-200">
+      {/* Modules Grid */}
+      <section className="py-20 -mt-10 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap justify-center gap-3">
-            {addons.map((addon) => {
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {addons.map((addon, index) => {
               const moduleUI = getModuleUI(addon.slug);
               const IconComponent = moduleUI.icon;
+              const isHovered = hoveredModule === addon.id;
+              const isPopular = index === 0;
+              
               return (
-                <Button
+                <div
                   key={addon.id}
-                  variant={activeModule === addon.slug ? "default" : "outline"}
-                  className={`rounded-full ${activeModule === addon.slug 
-                    ? `bg-gradient-to-r ${moduleUI.gradient} text-white border-0` 
-                    : 'border-slate-200 hover:border-emerald-300'
-                  }`}
-                  onClick={() => setActiveModule(activeModule === addon.slug ? null : addon.slug)}
+                  className="group relative"
+                  onMouseEnter={() => setHoveredModule(addon.id)}
+                  onMouseLeave={() => setHoveredModule(null)}
                 >
-                  <IconComponent className="w-4 h-4 mr-2" />
-                  {addon.name}
-                </Button>
+                  {/* Glow Effect */}
+                  <div className={`absolute -inset-1 bg-gradient-to-r ${moduleUI.gradient} rounded-3xl blur-lg opacity-0 group-hover:opacity-30 transition-all duration-500`}></div>
+                  
+                  {/* Card */}
+                  <div className={`relative bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2`}>
+                    {/* Image Header */}
+                    <div className="relative h-48 overflow-hidden">
+                      <img 
+                        src={moduleUI.image} 
+                        alt={addon.name}
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                      />
+                      <div className={`absolute inset-0 bg-gradient-to-t ${moduleUI.gradient} opacity-80`}></div>
+                      
+                      {/* Icon */}
+                      <div className="absolute bottom-4 left-4">
+                        <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/30 shadow-xl">
+                          <IconComponent className="w-7 h-7 text-white" />
+                        </div>
+                      </div>
+                      
+                      {/* Popular Badge */}
+                      {isPopular && (
+                        <div className="absolute top-4 right-4">
+                          <Badge className="bg-amber-400 text-amber-900 border-0 shadow-lg px-3 py-1">
+                            <Star className="w-3 h-3 mr-1 fill-current" />
+                            Populair
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="p-6">
+                      <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                        {addon.name}
+                      </h3>
+                      
+                      <p className="text-slate-500 text-sm mb-5 line-clamp-2 min-h-[40px]">
+                        {addon.description}
+                      </p>
+                      
+                      {/* Features */}
+                      <div className={`bg-gradient-to-br ${moduleUI.lightBg} rounded-xl p-4 mb-5`}>
+                        <ul className="space-y-2">
+                          {moduleUI.features.slice(0, 3).map((feature, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                              <CheckCircle className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                              <span className="line-clamp-1">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      {/* Button */}
+                      <Button 
+                        className={`w-full h-12 bg-gradient-to-r ${moduleUI.gradient} text-white hover:opacity-90 shadow-lg ${moduleUI.shadowColor} font-semibold`}
+                        onClick={() => handleViewDetails(addon)}
+                      >
+                        Bekijk Details
+                        <ChevronRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               );
             })}
           </div>
         </div>
       </section>
 
-      {/* Active Module Detail View */}
-      {activeModule && (() => {
-        const addon = addons.find(a => a.slug === activeModule);
-        if (!addon) return null;
-        const moduleUI = getModuleUI(addon.slug);
-        const IconComponent = moduleUI.icon;
-        
-        return (
-          <section className="py-16 bg-white">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="space-y-12">
-                {/* Module Header */}
-                <div className="grid lg:grid-cols-2 gap-12 items-center">
-                  <div>
-                    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r ${moduleUI.gradient} text-white text-sm mb-4`}>
-                      <IconComponent className="w-4 h-4" />
-                      {addon.name}
-                    </div>
-                    <h2 className="text-3xl font-bold text-slate-900 mb-4">
-                      {addon.description}
-                    </h2>
-                    <p className="text-lg text-slate-600 mb-6">
-                      Ontdek alle functies en mogelijkheden van de {addon.name} module.
-                      Klik op "Bekijk Alle Details" voor uitgebreide informatie met foto's.
-                    </p>
-                    <Button
-                      size="lg"
-                      className={`bg-gradient-to-r ${moduleUI.gradient} text-white rounded-full px-8`}
-                      onClick={() => handleViewDetails(addon)}
-                    >
-                      Bekijk Alle Details
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
-                  </div>
-                  <div className="relative">
-                    <div className={`absolute -inset-4 bg-gradient-to-r ${moduleUI.gradient} rounded-3xl blur-2xl opacity-20`}></div>
-                    <img
-                      src={moduleUI.image}
-                      alt={addon.name}
-                      className="relative rounded-2xl shadow-2xl w-full h-72 object-cover"
-                    />
-                  </div>
-                </div>
-
-                {/* Features Grid */}
-                <div>
-                  <h3 className="text-2xl font-bold text-slate-900 mb-8 flex items-center gap-2">
-                    <Sparkles className="w-6 h-6 text-emerald-500" />
-                    Hoofdfuncties
-                  </h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {moduleUI.features.map((feature, index) => (
-                      <div
-                        key={index}
-                        className="flex items-start gap-3 bg-gradient-to-br from-slate-50 to-emerald-50/50 rounded-xl p-4 border border-slate-100"
-                      >
-                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${moduleUI.gradient} flex items-center justify-center flex-shrink-0`}>
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                        <span className="text-slate-700">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        );
-      })()}
-
-      {/* All Modules Grid */}
-      <section className={`py-16 ${activeModule ? 'bg-slate-50' : 'bg-white'}`}>
+      {/* Features Section */}
+      <section className="py-20 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {!activeModule && (
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-slate-900 mb-4">
-                Alle Beschikbare Modules
-              </h2>
-              <p className="text-lg text-slate-600">
-                Klik op een module om meer details te zien
-              </p>
-            </div>
-          )}
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {addons.map((addon, index) => {
-              const moduleUI = getModuleUI(addon.slug);
-              const IconComponent = moduleUI.icon;
-              const isActive = activeModule === addon.slug;
-              
-              return (
-                <div
-                  key={addon.id}
-                  className={`group bg-white rounded-2xl shadow-lg border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer ${
-                    isActive ? 'border-emerald-300 ring-2 ring-emerald-100' : 'border-slate-100'
-                  }`}
-                  onClick={() => setActiveModule(activeModule === addon.slug ? null : addon.slug)}
-                >
-                  {/* Header with gradient */}
-                  <div className={`relative h-32 bg-gradient-to-br ${moduleUI.gradient} p-5`}>
-                    <div className="absolute inset-0 opacity-20">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                      <div className="absolute bottom-0 left-0 w-20 h-20 bg-white rounded-full translate-y-1/2 -translate-x-1/2"></div>
-                    </div>
-                    <div className="relative w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-lg">
-                      <IconComponent className="w-7 h-7 text-white" />
-                    </div>
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="p-5">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">
-                      {addon.name}
-                    </h3>
-                    <p className="text-slate-500 text-sm mb-5 min-h-[40px]">
-                      {addon.description}
-                    </p>
-                    
-                    {/* Features */}
-                    <ul className="space-y-2 mb-5">
-                      {moduleUI.features.slice(0, 3).map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                          <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <Check className="w-3 h-3 text-emerald-600" />
-                          </div>
-                          <span className="line-clamp-1">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    
-                    {/* Details Button */}
-                    <Button 
-                      className={`w-full bg-gradient-to-r ${moduleUI.gradient} text-white hover:opacity-90`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewDetails(addon);
-                      }}
-                    >
-                      Bekijk Details
-                      <ChevronRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+              Voordelen
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Waarom onze modules?
+            </h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              Alles wat u nodig heeft voor uw bedrijf, in één platform
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: Layers, title: 'Modulair', desc: 'Betaal alleen voor wat u gebruikt', color: 'from-emerald-400 to-teal-500' },
+              { icon: Zap, title: 'Snel & Modern', desc: 'Gebouwd met nieuwste technologie', color: 'from-teal-400 to-cyan-500' },
+              { icon: Shield, title: 'Veilig', desc: 'Enterprise-grade beveiliging', color: 'from-cyan-400 to-blue-500' },
+              { icon: Clock, title: 'Altijd Updates', desc: 'Gratis nieuwe functies', color: 'from-blue-400 to-indigo-500' },
+            ].map((feature, i) => (
+              <div key={i} className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:bg-white/10 transition-all group">
+                <div className={`w-14 h-14 mb-4 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center shadow-lg`}>
+                  <feature.icon className="w-7 h-7 text-white" />
                 </div>
-              );
-            })}
+                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-slate-400 text-sm">{feature.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
-            Interesse in onze modules?
-          </h2>
-          <p className="text-lg text-slate-600 mb-8">
-            Probeer alle modules gratis of neem contact met ons op voor meer informatie
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg"
-              className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full px-8"
-              onClick={() => navigate('/demo')}
-            >
-              <Star className="w-5 h-5 mr-2" />
-              Probeer Demo
-            </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              className="rounded-full px-8 border-slate-200"
-              onClick={() => navigate('/contact')}
-            >
-              Contact Opnemen
-            </Button>
+      <section className="py-20 bg-gradient-to-br from-emerald-50 to-teal-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-3xl shadow-2xl p-10 text-center border border-slate-100">
+            <div className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl shadow-emerald-200">
+              <Sparkles className="w-10 h-10 text-white" />
+            </div>
+            
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">
+              Klaar om te starten?
+            </h2>
+            <p className="text-lg text-slate-600 mb-8 max-w-xl mx-auto">
+              Probeer alle modules gratis met onze demo account of neem contact met ons op voor meer informatie
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg"
+                className="h-14 px-8 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full shadow-xl shadow-emerald-200 hover:shadow-2xl hover:shadow-emerald-300 transition-all"
+                onClick={() => navigate('/demo')}
+              >
+                <Star className="w-5 h-5 mr-2" />
+                Probeer Demo
+              </Button>
+              <Button 
+                size="lg"
+                variant="outline"
+                className="h-14 px-8 rounded-full border-slate-300 hover:border-emerald-300 hover:bg-emerald-50"
+                onClick={() => navigate('/contact')}
+              >
+                Contact Opnemen
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
           </div>
         </div>
       </section>
