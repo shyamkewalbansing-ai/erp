@@ -77,7 +77,7 @@ export default function BeautySpaLayout() {
   };
 
   // If we're at the root beautyspa path, show the dashboard
-  const showDashboard = location.pathname === '/beautyspa';
+  const showDashboard = location.pathname === '/app/beautyspa' || location.pathname === '/beautyspa';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-rose-50">
