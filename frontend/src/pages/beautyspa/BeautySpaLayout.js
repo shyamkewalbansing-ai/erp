@@ -70,8 +70,8 @@ export default function BeautySpaLayout() {
   };
 
   const isActive = (path) => {
-    if (path === '/beautyspa') {
-      return location.pathname === '/beautyspa';
+    if (path === '/app/beautyspa') {
+      return location.pathname === '/app/beautyspa';
     }
     return location.pathname.startsWith(path);
   };
