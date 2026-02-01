@@ -247,6 +247,7 @@ async def create_hrm_leave_request(request: HRMLeaveRequest, current_user: dict 
         pass
     
     result = await db.hrm_leave_requests.insert_one(req_dict)
+    req_dict.pop("_id", None)
     req_dict["id"] = str(result.inserted_id)
     return req_dict
 
@@ -309,6 +310,7 @@ async def create_hrm_contract(contract: HRMContract, current_user: dict = Depend
     contract_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     
     result = await db.hrm_contracts.insert_one(contract_dict)
+    contract_dict.pop("_id", None)
     contract_dict["id"] = str(result.inserted_id)
     return contract_dict
 
@@ -358,6 +360,7 @@ async def create_hrm_vacancy(vacancy: HRMVacancy, current_user: dict = Depends(g
     vac_dict["user_id"] = str(current_user["_id"])
     vac_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.hrm_vacancies.insert_one(vac_dict)
+    vac_dict.pop("_id", None)
     vac_dict["id"] = str(result.inserted_id)
     return vac_dict
 
@@ -416,6 +419,7 @@ async def create_hrm_application(application: HRMApplication, current_user: dict
     app_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     
     result = await db.hrm_applications.insert_one(app_dict)
+    app_dict.pop("_id", None)
     app_dict["id"] = str(result.inserted_id)
     return app_dict
 
