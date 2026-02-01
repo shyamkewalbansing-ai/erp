@@ -1,8 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Checkbox } from '../components/ui/checkbox';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 import { 
   Loader2, 
   Users, 
@@ -15,11 +27,24 @@ import {
   Shield,
   ArrowRight,
   Check,
-  Sparkles
+  Sparkles,
+  Zap,
+  Gift,
+  User,
+  Mail,
+  Lock,
+  Phone,
+  Building,
+  Star,
+  TrendingUp,
+  Clock,
+  ChevronRight
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 // Module data with detailed information
 const MODULES_DATA = [
@@ -28,21 +53,19 @@ const MODULES_DATA = [
     slug: 'hrm',
     name: 'HRM Module',
     shortDescription: 'Complete Human Resource Management voor uw bedrijf',
+    description: 'Beheer uw personeel, verlofaanvragen, salarissen en meer in één systeem.',
     icon: Users,
-    color: 'from-blue-500 to-blue-600',
-    bgColor: 'bg-blue-500/10',
-    iconColor: 'text-blue-500',
+    gradient: 'from-blue-500 to-indigo-600',
+    bgGradient: 'from-blue-500/10 to-indigo-500/10',
+    iconBg: 'bg-blue-500',
     category: 'Personeel',
     popular: true,
+    price: 'SRD 1.500',
     features: [
       'Personeelsbeheer met alle werknemergegevens',
       'Verlofaanvragen en goedkeuringsworkflow',
       'Aanwezigheidsregistratie met in/uitklokken',
       'Salarisbeheer en loonstrookgeneratie',
-      'Contractbeheer met verloopmeldingen',
-      'Wervings- en sollicitatiebeheer',
-      'Documentenbeheer per werknemer',
-      'Afdelingenbeheer',
       'Employee Self-Service Portal'
     ]
   },
@@ -50,112 +73,105 @@ const MODULES_DATA = [
     id: 'vastgoed',
     slug: 'vastgoed-beheer',
     name: 'Vastgoed Beheer',
-    shortDescription: 'Beheer uw huurwoningen en appartementen efficiënt',
+    shortDescription: 'Professioneel vastgoedbeheer voor verhuurders',
+    description: 'Complete oplossing voor het beheren van uw vastgoedportefeuille.',
     icon: Building2,
-    color: 'from-emerald-500 to-emerald-600',
-    bgColor: 'bg-emerald-500/10',
-    iconColor: 'text-emerald-500',
+    gradient: 'from-emerald-500 to-teal-600',
+    bgGradient: 'from-emerald-500/10 to-teal-500/10',
+    iconBg: 'bg-emerald-500',
     category: 'Vastgoed',
     popular: true,
+    price: 'SRD 3.500',
     features: [
-      'Huurders- en appartementenbeheer',
-      'Automatische huurinning en facturatie',
-      'Meterstanden beheer (EBS/SWM)',
-      'Borg- en leningen administratie',
-      'Onderhoudsverzoeken tracking',
-      'Contractbeheer met sjablonen',
-      'Huurders Self-Service Portal',
-      'Kassabeheer voor contante betalingen',
-      'PDF facturen en kwitanties'
+      'Panden en units beheer',
+      'Huurdersbeheer met contracten',
+      'Automatische facturatie',
+      'Onderhoudsbeheer met meldingen',
+      'Huurders Self-Service Portal'
     ]
   },
   {
     id: 'autodealer',
     slug: 'auto-dealer',
     name: 'Auto Dealer',
-    shortDescription: 'Voertuigbeheer en verkoop voor autodealers',
+    shortDescription: 'Complete autohandel management',
+    description: 'Van voorraad tot verkoop, alles onder controle.',
     icon: Car,
-    color: 'from-orange-500 to-orange-600',
-    bgColor: 'bg-orange-500/10',
-    iconColor: 'text-orange-500',
-    category: 'Verkoop',
+    gradient: 'from-orange-500 to-red-600',
+    bgGradient: 'from-orange-500/10 to-red-500/10',
+    iconBg: 'bg-orange-500',
+    category: 'Automotive',
     popular: false,
-    isNew: true,
+    price: 'SRD 2.500',
     features: [
-      'Voertuigeninventaris beheer',
-      'Multi-valuta ondersteuning (SRD, EUR, USD)',
-      'Klantenbeheer (particulier & zakelijk)',
-      'Verkoopregistratie en tracking',
-      'Klant Self-Service Portal',
-      'Aankoopgeschiedenis per klant',
-      'Voertuigstatus tracking',
-      'Dashboard met verkoop statistieken'
+      'Voertuigvoorraad beheer',
+      'Verkoop- en aankoopregistratie',
+      'Multi-valuta ondersteuning',
+      'Klantenbeheer met historie',
+      'Klanten Self-Service Portal'
     ]
   },
   {
-    id: 'ai-chatbot',
+    id: 'chatbot',
     slug: 'ai-chatbot',
     name: 'AI Chatbot',
-    shortDescription: 'Intelligente assistent powered by GPT',
+    shortDescription: 'Intelligente klantenservice automatisering',
+    description: 'AI-gestuurde chatbot die uw klanten 24/7 helpt.',
     icon: MessageSquare,
-    color: 'from-purple-500 to-purple-600',
-    bgColor: 'bg-purple-500/10',
-    iconColor: 'text-purple-500',
+    gradient: 'from-purple-500 to-pink-600',
+    bgGradient: 'from-purple-500/10 to-pink-500/10',
+    iconBg: 'bg-purple-500',
     category: 'AI',
     popular: false,
+    price: 'SRD 500',
     features: [
-      'AI-powered klantenservice',
-      'Automatische antwoorden op veelgestelde vragen',
-      'Integratie met alle modules',
+      'GPT-4 aangedreven conversaties',
       'Meertalige ondersteuning',
-      'Chat geschiedenis per sessie',
-      'Slimme suggesties',
-      'Publieke chat widget voor website',
-      '24/7 beschikbaarheid'
+      '24/7 beschikbaarheid',
+      'Aanpasbare antwoorden',
+      'Integratie met alle modules'
     ]
   },
   {
     id: 'cms',
-    slug: 'website-cms',
-    name: 'Website CMS',
-    shortDescription: 'Beheer uw publieke website met gemak',
+    slug: 'cms',
+    name: 'CMS & Website',
+    shortDescription: 'Beheer uw website content',
+    description: 'Eenvoudig uw website content beheren zonder technische kennis.',
     icon: Globe,
-    color: 'from-cyan-500 to-cyan-600',
-    bgColor: 'bg-cyan-500/10',
-    iconColor: 'text-cyan-500',
-    category: 'Marketing',
+    gradient: 'from-cyan-500 to-blue-600',
+    bgGradient: 'from-cyan-500/10 to-blue-500/10',
+    iconBg: 'bg-cyan-500',
+    category: 'Content',
     popular: false,
+    price: 'SRD 750',
     features: [
       'Drag & drop pagina builder',
       'Menu en navigatie beheer',
-      'Footer aanpassing',
-      'Afbeeldingen uploaden',
-      'SEO optimalisatie',
-      'Template systeem',
-      'Live preview',
-      'Responsive design'
+      'SEO optimalisatie tools',
+      'Media bibliotheek',
+      'Blog functionaliteit'
     ]
   },
   {
-    id: 'workspace',
-    slug: 'multi-tenant',
-    name: 'Multi-Tenant Workspace',
-    shortDescription: 'Eigen workspace met branding en gebruikersbeheer',
-    icon: Shield,
-    color: 'from-slate-500 to-slate-600',
-    bgColor: 'bg-slate-500/10',
-    iconColor: 'text-slate-500',
-    category: 'Platform',
+    id: 'rapportage',
+    slug: 'rapportage',
+    name: 'Rapportage & Analytics',
+    shortDescription: 'Inzichten in uw bedrijfsprestaties',
+    description: 'Uitgebreide rapporten en dashboards voor datagedreven beslissingen.',
+    icon: BarChart3,
+    gradient: 'from-amber-500 to-orange-600',
+    bgGradient: 'from-amber-500/10 to-orange-500/10',
+    iconBg: 'bg-amber-500',
+    category: 'Analytics',
     popular: false,
+    price: 'SRD 400',
     features: [
-      'Eigen subdomain (bedrijf.facturatie.sr)',
-      'Custom domain ondersteuning',
-      'Eigen branding (logo, kleuren)',
-      'Gebruikersbeheer per workspace',
-      'Data isolatie per klant',
-      'Backup & restore functionaliteit',
-      'SSL beveiliging',
-      'Rollenbeheer'
+      'Real-time dashboards',
+      'Aangepaste rapportages',
+      'Export naar PDF/Excel',
+      'Trends en voorspellingen',
+      'KPI monitoring'
     ]
   }
 ];
@@ -164,6 +180,19 @@ export default function ModulesOverviewPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Trial dialog state
+  const [trialDialogOpen, setTrialDialogOpen] = useState(false);
+  const [selectedModules, setSelectedModules] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [trialForm, setTrialForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company_name: '',
+    password: '',
+    password_confirm: ''
+  });
 
   useEffect(() => {
     loadData();
@@ -180,6 +209,94 @@ export default function ModulesOverviewPage() {
     }
   };
 
+  const toggleModule = (moduleId) => {
+    setSelectedModules(prev => 
+      prev.includes(moduleId) 
+        ? prev.filter(id => id !== moduleId)
+        : [...prev, moduleId]
+    );
+  };
+
+  const handleStartTrial = () => {
+    if (selectedModules.length === 0) {
+      // Pre-select the most popular modules
+      setSelectedModules(['hrm', 'vastgoed']);
+    }
+    setTrialDialogOpen(true);
+  };
+
+  const handleTrialSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!trialForm.name || !trialForm.email || !trialForm.password || !trialForm.company_name) {
+      toast.error('Vul alle verplichte velden in');
+      return;
+    }
+    
+    if (trialForm.password !== trialForm.password_confirm) {
+      toast.error('Wachtwoorden komen niet overeen');
+      return;
+    }
+    
+    if (trialForm.password.length < 6) {
+      toast.error('Wachtwoord moet minimaal 6 karakters zijn');
+      return;
+    }
+
+    if (selectedModules.length === 0) {
+      toast.error('Selecteer minimaal één module');
+      return;
+    }
+
+    setSubmitting(true);
+    
+    try {
+      // Map module slugs to actual addon IDs from backend
+      const addonsRes = await api.get('/public/addons').catch(() => ({ data: [] }));
+      const addons = addonsRes.data || [];
+      
+      const addonIds = selectedModules.map(modId => {
+        const mod = MODULES_DATA.find(m => m.id === modId);
+        const addon = addons.find(a => 
+          a.slug?.toLowerCase().includes(mod?.slug?.toLowerCase()) ||
+          a.name?.toLowerCase().includes(mod?.name?.toLowerCase().split(' ')[0])
+        );
+        return addon?.id;
+      }).filter(Boolean);
+
+      const orderData = {
+        name: trialForm.name,
+        email: trialForm.email,
+        phone: trialForm.phone || '',
+        password: trialForm.password,
+        company_name: trialForm.company_name,
+        addon_ids: addonIds.length > 0 ? addonIds : selectedModules,
+        message: '3 dagen gratis proefperiode via modules-overzicht'
+      };
+      
+      const response = await axios.post(`${API_URL}/public/orders`, orderData);
+      
+      if (response.data) {
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        }
+        
+        toast.success('Account aangemaakt! U heeft 3 dagen gratis toegang.');
+        setTrialDialogOpen(false);
+        
+        setTimeout(() => {
+          window.location.href = '/app/dashboard';
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Trial error:', error);
+      toast.error(error.response?.data?.detail || 'Er is een fout opgetreden');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -189,106 +306,191 @@ export default function ModulesOverviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
       {/* Navigation */}
       <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-16 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <Badge className="mb-4 bg-primary/10 text-primary border-0">
-            <Sparkles className="w-3 h-3 mr-1" />
-            Modulair & Flexibel
-          </Badge>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-6">
-            Krachtige Modules voor <br />
-            <span className="text-primary">Elk Bedrijf</span>
-          </h1>
-          <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-8">
-            Kies alleen de modules die u nodig heeft. Van personeelsbeheer tot vastgoedbeheer, 
-            wij hebben de perfecte oplossing voor uw onderneming.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" onClick={() => navigate('/modules')} className="bg-primary hover:bg-primary/90">
-              Start Gratis Proefperiode
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/modules')}>
-              Bekijk Prijzen
-            </Button>
+      {/* Hero Section - Modern Gradient */}
+      <section className="relative pt-32 pb-20 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-[600px] h-[600px] bg-gradient-to-tr from-blue-400/20 to-indigo-400/20 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          <div className="text-center max-w-4xl mx-auto">
+            <Badge className="mb-6 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-600 border-emerald-200 px-4 py-2">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Modulair & Flexibel Platform
+            </Badge>
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-6 leading-tight">
+              Krachtige Modules voor{' '}
+              <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+                Uw Bedrijf
+              </span>
+            </h1>
+            
+            <p className="text-lg md:text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed">
+              Kies alleen de modules die u nodig heeft. Van HRM tot vastgoedbeheer, 
+              van autohandel tot AI-chatbot – bouw uw perfecte bedrijfsoplossing.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                onClick={handleStartTrial}
+                className="h-14 px-8 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-full shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all"
+              >
+                <Gift className="w-5 h-5 mr-2" />
+                Start Gratis Proefperiode
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                onClick={() => navigate('/prijzen')}
+                className="h-14 px-8 border-2 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50 rounded-full transition-all"
+              >
+                Bekijk Prijzen
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+            
+            {/* Trust Indicators */}
+            <div className="flex flex-wrap items-center justify-center gap-6 mt-12 text-sm text-slate-500">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                  <Clock className="w-4 h-4 text-emerald-600" />
+                </div>
+                <span>3 dagen gratis</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <Shield className="w-4 h-4 text-blue-600" />
+                </div>
+                <span>Geen creditcard nodig</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                  <Zap className="w-4 h-4 text-purple-600" />
+                </div>
+                <span>Direct starten</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Modules Grid */}
-      <section className="py-16 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Modules Grid - Modern Cards */}
+      <section className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Alle Modules
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Ontdek onze krachtige modules en kies wat bij uw bedrijf past
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {MODULES_DATA.map((module) => {
               const IconComponent = module.icon;
+              const isSelected = selectedModules.includes(module.id);
+              
               return (
                 <Card 
-                  key={module.id}
-                  className="group relative overflow-hidden border-slate-200 hover:border-primary/50 hover:shadow-xl transition-all duration-300"
-                  data-testid={`module-card-${module.id}`}
+                  key={module.id} 
+                  className={`group relative overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-white ${
+                    isSelected ? 'ring-2 ring-emerald-500 shadow-emerald-500/20' : ''
+                  }`}
+                  onClick={() => toggleModule(module.id)}
                 >
-                  <CardContent className="p-6">
-                    {/* Badges */}
-                    <div className="flex items-center gap-2 mb-4">
-                      {module.popular && (
-                        <Badge className="bg-amber-500/10 text-amber-600 border-0">
-                          Populair
-                        </Badge>
-                      )}
-                      {module.isNew && (
-                        <Badge className="bg-emerald-500/10 text-emerald-600 border-0">
-                          Nieuw
-                        </Badge>
-                      )}
-                      <Badge variant="outline" className="text-slate-500 border-slate-300">
-                        {module.category}
+                  {/* Gradient Top Bar */}
+                  <div className={`h-2 bg-gradient-to-r ${module.gradient}`}></div>
+                  
+                  {/* Popular Badge */}
+                  {module.popular && (
+                    <div className="absolute top-4 right-4">
+                      <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg">
+                        <Star className="w-3 h-3 mr-1 fill-current" />
+                        Populair
                       </Badge>
                     </div>
-
-                    {/* Icon */}
-                    <div className={`w-14 h-14 rounded-2xl ${module.bgColor} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                      <IconComponent className={`w-7 h-7 ${module.iconColor}`} />
+                  )}
+                  
+                  {/* Selected Indicator */}
+                  {isSelected && (
+                    <div className="absolute top-4 left-4">
+                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
+                        <Check className="w-4 h-4 text-white" />
+                      </div>
                     </div>
-
-                    {/* Content */}
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">{module.name}</h3>
-                    <p className="text-slate-600 mb-4">{module.shortDescription}</p>
-
-                    {/* Features Preview */}
+                  )}
+                  
+                  <CardContent className="p-8">
+                    {/* Icon */}
+                    <div className={`w-16 h-16 ${module.iconBg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                      <IconComponent className="w-8 h-8 text-white" />
+                    </div>
+                    
+                    {/* Category */}
+                    <Badge variant="secondary" className="mb-3 bg-slate-100 text-slate-600">
+                      {module.category}
+                    </Badge>
+                    
+                    {/* Title & Description */}
+                    <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                      {module.name}
+                    </h3>
+                    <p className="text-slate-600 mb-4 line-clamp-2">
+                      {module.description}
+                    </p>
+                    
+                    {/* Price */}
+                    <div className="mb-6">
+                      <span className="text-2xl font-bold text-slate-900">{module.price}</span>
+                      <span className="text-slate-500 text-sm">/maand</span>
+                    </div>
+                    
+                    {/* Features */}
                     <ul className="space-y-2 mb-6">
-                      {module.features.slice(0, 3).map((feature, index) => (
-                        <li key={index} className="flex items-start gap-2 text-sm text-slate-600">
-                          <Check className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                      {module.features.slice(0, 3).map((feature, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                          <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
                           <span>{feature}</span>
                         </li>
                       ))}
-                      {module.features.length > 3 && (
-                        <li className="text-sm text-primary font-medium">
-                          +{module.features.length - 3} meer functies
-                        </li>
-                      )}
                     </ul>
-
-                    {/* CTA */}
-                    <Link to={`/modules/${module.slug}`}>
+                    
+                    {/* Actions */}
+                    <div className="flex gap-3">
                       <Button 
-                        className="w-full group-hover:bg-primary group-hover:text-white transition-colors"
                         variant="outline"
-                        data-testid={`module-btn-${module.id}`}
+                        className="flex-1 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/modules/${module.slug}`);
+                        }}
                       >
-                        Meer Informatie
-                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                        Details
+                        <ChevronRight className="w-4 h-4 ml-1" />
                       </Button>
-                    </Link>
+                      <Button 
+                        className={`flex-1 ${isSelected ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-slate-900 hover:bg-slate-800'}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!isSelected) {
+                            toggleModule(module.id);
+                          }
+                          handleStartTrial();
+                        }}
+                      >
+                        {isSelected ? 'Geselecteerd' : 'Probeer Gratis'}
+                      </Button>
+                    </div>
                   </CardContent>
-
-                  {/* Gradient overlay on hover */}
-                  <div className={`absolute inset-0 bg-gradient-to-br ${module.color} opacity-0 group-hover:opacity-5 transition-opacity pointer-events-none`} />
                 </Card>
               );
             })}
@@ -296,74 +498,45 @@ export default function ModulesOverviewPage() {
         </div>
       </section>
 
-      {/* Benefits Section */}
-      <section className="py-16 px-4 bg-slate-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Waarom Kiezen voor Ons Platform?</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              Onze modulaire aanpak geeft u de flexibiliteit om te groeien op uw eigen tempo.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <BarChart3 className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Betaal Wat U Gebruikt</h3>
-              <p className="text-slate-600">
-                Geen verplichte pakketten. Kies alleen de modules die u echt nodig heeft.
-              </p>
-            </div>
-
-            <div className="text-center p-6">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-                <Shield className="w-8 h-8 text-emerald-500" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Veilig & Betrouwbaar</h3>
-              <p className="text-slate-600">
-                Uw data is veilig met SSL encryptie en dagelijkse backups.
-              </p>
-            </div>
-
-            <div className="text-center p-6">
-              <div className="w-16 h-16 rounded-2xl bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-8 h-8 text-blue-500" />
-              </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Lokaal Aangepast</h3>
-              <p className="text-slate-600">
-                Speciaal ontwikkeld voor de Surinaamse markt met lokale tarieven en valuta.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-br from-primary to-emerald-600 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Klaar om te Beginnen?
+      <section className="py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 relative overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.3),transparent_50%)]"></div>
+          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(20,184,166,0.3),transparent_50%)]"></div>
+        </div>
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-emerald-300 text-sm mb-8">
+            <TrendingUp className="w-4 h-4" />
+            <span>Meer dan 500+ bedrijven gebruiken onze modules</span>
+          </div>
+          
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-6">
+            Klaar om te starten?
           </h2>
-          <p className="text-lg text-white/80 mb-8">
-            Start vandaag nog met een gratis proefperiode van 3 dagen. Geen creditcard nodig.
+          <p className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto">
+            Probeer 3 dagen gratis en ontdek hoe onze modules uw bedrijf kunnen transformeren.
+            Geen creditcard nodig, geen verplichtingen.
           </p>
+          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => navigate('/modules')}
-              className="bg-white text-primary hover:bg-white/90"
+              onClick={handleStartTrial}
+              className="h-14 px-8 bg-white text-slate-900 hover:bg-slate-100 rounded-full shadow-xl"
             >
+              <Gift className="w-5 h-5 mr-2" />
               Start Gratis Proefperiode
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
-              onClick={() => navigate('/modules')}
-              className="border-white text-white hover:bg-white/10"
+              onClick={() => navigate('/prijzen')}
+              className="h-14 px-8 border-2 border-white/20 text-white hover:bg-white/10 rounded-full"
             >
               Bekijk Alle Prijzen
+              <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
         </div>
@@ -371,6 +544,210 @@ export default function ModulesOverviewPage() {
 
       {/* Footer */}
       <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
+
+      {/* Trial Dialog */}
+      <Dialog open={trialDialogOpen} onOpenChange={setTrialDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <Gift className="w-6 h-6 text-emerald-500" />
+              Start Gratis Proefperiode
+            </DialogTitle>
+            <DialogDescription>
+              Maak een account aan en probeer 3 dagen gratis alle geselecteerde modules
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleTrialSubmit} className="space-y-6 mt-4">
+            {/* Module Selection */}
+            <div className="space-y-3">
+              <Label className="text-base font-semibold">Selecteer Modules</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {MODULES_DATA.map((module) => {
+                  const IconComponent = module.icon;
+                  const isSelected = selectedModules.includes(module.id);
+                  
+                  return (
+                    <div
+                      key={module.id}
+                      className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        isSelected 
+                          ? 'border-emerald-500 bg-emerald-50' 
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                      onClick={() => toggleModule(module.id)}
+                    >
+                      <Checkbox 
+                        checked={isSelected}
+                        onCheckedChange={() => {}}
+                        className="pointer-events-none"
+                      />
+                      <div className={`w-8 h-8 ${module.iconBg} rounded-lg flex items-center justify-center`}>
+                        <IconComponent className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-sm font-medium">{module.name.split(' ')[0]}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              {selectedModules.length === 0 && (
+                <p className="text-sm text-amber-600">Selecteer minimaal één module</p>
+              )}
+            </div>
+
+            {/* Account Information */}
+            <div className="space-y-4">
+              <Label className="text-base font-semibold flex items-center gap-2">
+                <User className="w-4 h-4" />
+                Account Gegevens
+              </Label>
+              
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Volledige Naam *</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="name"
+                      placeholder="Uw naam"
+                      value={trialForm.name}
+                      onChange={(e) => setTrialForm({...trialForm, name: e.target.value})}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-mailadres *</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="uw@email.com"
+                      value={trialForm.email}
+                      onChange={(e) => setTrialForm({...trialForm, email: e.target.value})}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefoonnummer</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="phone"
+                      placeholder="+597 xxx xxxx"
+                      value={trialForm.phone}
+                      onChange={(e) => setTrialForm({...trialForm, phone: e.target.value})}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="company_name">Bedrijfsnaam *</Label>
+                  <div className="relative">
+                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="company_name"
+                      placeholder="Uw bedrijf"
+                      value={trialForm.company_name}
+                      onChange={(e) => setTrialForm({...trialForm, company_name: e.target.value})}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="password">Wachtwoord *</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="Min. 6 karakters"
+                      value={trialForm.password}
+                      onChange={(e) => setTrialForm({...trialForm, password: e.target.value})}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="password_confirm">Bevestig Wachtwoord *</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="password_confirm"
+                      type="password"
+                      placeholder="Herhaal wachtwoord"
+                      value={trialForm.password_confirm}
+                      onChange={(e) => setTrialForm({...trialForm, password_confirm: e.target.value})}
+                      className="pl-10"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Trial Info */}
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Gift className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-emerald-800">3 Dagen Gratis Proefperiode</h4>
+                  <p className="text-sm text-emerald-600 mt-1">
+                    U krijgt volledige toegang tot alle geselecteerde modules. 
+                    Na 3 dagen kiest u een betaalmethode om door te gaan.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex gap-3 pt-4 border-t">
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => setTrialDialogOpen(false)}
+              >
+                Annuleren
+              </Button>
+              <Button 
+                type="submit" 
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
+                disabled={submitting || selectedModules.length === 0}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Bezig...
+                  </>
+                ) : (
+                  <>
+                    Start Gratis
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
