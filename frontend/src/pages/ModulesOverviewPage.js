@@ -158,12 +158,15 @@ export default function ModulesOverviewPage() {
     loadData();
   }, []);
 
-  // Auto-open order dialog if ?order=true is in URL
+  // Auto-open order dialog if ?order=true is in URL (only once)
   useEffect(() => {
-    if (searchParams.get('order') === 'true' && addons.length > 0 && !loading) {
+    const shouldOpenOrder = searchParams.get('order') === 'true';
+    if (shouldOpenOrder && addons.length > 0 && !loading && !orderDialogOpen) {
       setOrderDialogOpen(true);
+      // Remove the query param to prevent re-opening
+      window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [searchParams, addons, loading]);
+  }, [addons.length, loading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {
