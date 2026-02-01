@@ -11,8 +11,11 @@ The user wants to build a generic, modular ERP SaaS system with a multi-tenant a
     *   A complete module for managing an auto dealership in Suriname.
     *   Must support multiple currencies: Surinamese Dollar (SRD), Euro (EUR), and US Dollar (USD).
     *   A customer-facing portal where customers can view their purchases.
-*   **Public Website:**
-    *   A landing page with a section that details all available modules, including features and images.
+*   **Public Website & Order Flow:**
+    *   A landing page with a section that details all available modules.
+    *   A consistent navigation and footer across all public pages.
+    *   Clicking an order button should lead to a pricing page where modules can be selected.
+    *   The final order step should be a pop-up modal for creating an account and selecting a payment method (Mope, Bank Transfer, or a 3-day free trial).
 *   **Payment Integration:**
     *   Re-integrate the Mope payment gateway alongside Bank Transfer.
     *   These payment methods should be available for all modules and for superadmin invoicing.
@@ -23,285 +26,63 @@ The user wants to build a generic, modular ERP SaaS system with a multi-tenant a
     *   **Custom Branding:** Workspace-specific logo and colors.
 *   **System Operations:**
     *   **Automated Deployment:** A complete set of scripts and a manual for deploying the application on CloudPanel, including updates.
+    *   **Automated Nginx/SSL for Custom Domains**: A system for superadmins to manage custom domains for tenants, with automated Nginx configuration and SSL certificate provisioning.
 
 **User's preferred language**: The user communicates in **Dutch**. The next agent MUST respond in Dutch.
 
 **what currently exists?**
-The application is a comprehensive multi-tenant ERP system. In the last session, several major features were completed:
-1.  **Deployment Documentation**: A full set of scripts (, , etc.) and a detailed manual () for CloudPanel deployment were created.
-2.  **Modules Landing Page**: A new public-facing page () was built, which showcases each ERP module with detailed descriptions, images, and pricing, with individual detail pages for each module (e.g., ).
-3.  **Payment Methods Management**: A full-featured settings page () was created for both superadmins and workspace admins to configure payment methods, including Bank Transfer, Mope, Cash, and Cheque. This includes a new backend router ().
-4.  **Auto Dealer Customer Portal**: The basic frontend and backend for a customer-facing portal for the auto dealer module have been created.
-5.  ** Refactoring**: The refactoring of the monolithic  continued. Logic for HRM, the Auto Dealer Portal, and Admin functions was moved into dedicated router files (, , ).
-
-The agent was fixing a bug where the Auto Dealer Klant Portaal link did not appear in the sidebar for users with the addon enabled.
+The application is a multi-tenant ERP system. In the last session, several major features were implemented and bugs fixed:
+1.  **Bug Fix**: A  in the  endpoint was fixed and verified, which now correctly displays the Auto Dealer Klant Portaal link in the sidebar for authorized users.
+2.  **Nginx/SSL Automation**: A full framework for managing custom tenant domains was built. This includes a new backend router (), an admin UI page (), and a set of shell scripts (, etc.) for automating Nginx and SSL certificate management.
+3.  **UI Consistency**: Reusable  and  components were created and implemented across all public-facing pages (, , , etc.) to ensure a consistent header and footer with the user-specified link order.
+4.  **New Order Flow**: The public-facing purchasing flow was completely overhauled. Now, all Order buttons lead to the  page. On both the  and  pages, clicking to order opens a modal popup where a new user can create an account and select a payment method (Mope, Bank Transfer, or a 3-day free trial) to complete the purchase.
+5.  **UI Modernization**: The  and  pages were rewritten with a more modern design to incorporate the new popup order flow.
 
 **Last working item**:
-*   **Last item agent was working**: Fixing a  in the  endpoint. This error prevented the frontend from correctly identifying which addons a user has, causing the Auto Dealer Klant Portaal link to be hidden. The agent identified that the MongoDB query was not correctly mapping the  field to the uid=0(root) gid=0(root) groups=0(root) field expected by the Pydantic response model.
+*   **Last item agent was working**: The agent just finished a major overhaul of the public-facing pages to modernize the design and implement a new popup-based order flow. The files  and  were completely overwritten with the new logic and modern UI.
 *   **Status**: IN PROGRESS
 *   **Agent Testing Done**: N
-*   **Which testing method agent to use?**: backend testing agent. First, restart the backend. Then, test the API endpoint directly using  to confirm the  is gone. Finally, use the screenshot tool to log in as the test user () and verify that the Auto Dealer section with the Klant Portaal link appears in the sidebar.
+*   **Which testing method agent to use?**: screenshot tool. The agent needs to test the newly redesigned pages:
+    1.  Navigate to  and take a screenshot. Verify the new modern design. Click the Start Gratis Proefperiode button on a module to confirm the order popup appears correctly.
+    2.  Navigate to  and take a screenshot. Verify its new modern design and confirm the popup order flow still works as intended.
+    3.  Check that all links on  (like Bekijk prijzen) correctly navigate to the  page.
 *   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
-*   **Issue 1: Auto Dealer Klant Portaal link does not appear in sidebar (P0)**
-    *   **Attempted fixes**: The agent identified the  in the  endpoint. A fix was applied in  at line 6508 to correctly project the MongoDB  to an uid=0(root) gid=0(root) groups=0(root) field using . The backend has not been restarted or tested since the fix.
-    *   **Next debug checklist**:
-        1.  Restart the backend service: backend: stopped
-backend: started.
-        2.  Verify the backend is running without errors: ==> /var/log/supervisor/backend.err.log <==
-  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 776, in app
-    await route.handle(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 297, in handle
-    await self.app(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 77, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
-    raise exc
-  File "/root/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    await app(scope, receive, sender)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 72, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/root/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 278, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/root/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/backend/server.py", line 6508, in get_my_addons
-    id=ua["id"],
-       ~~^^^^^^
-KeyError: 'id'
-ERROR:    Exception in ASGI application
-Traceback (most recent call last):
-  File "/root/.venv/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 408, in run_asgi
-    result = await app(  # type: ignore[func-returns-value]
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/root/.venv/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
-    return await self.app(scope, receive, send)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/root/.venv/lib/python3.11/site-packages/fastapi/applications.py", line 1054, in __call__
-    await super().__call__(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/applications.py", line 123, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 186, in __call__
-    raise exc
-  File "/root/.venv/lib/python3.11/site-packages/starlette/middleware/errors.py", line 164, in __call__
-    await self.app(scope, receive, _send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/middleware/cors.py", line 85, in __call__
-    await self.app(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 65, in __call__
-    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
-    raise exc
-  File "/root/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    await app(scope, receive, sender)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 756, in __call__
-    await self.middleware_stack(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 776, in app
-    await route.handle(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 297, in handle
-    await self.app(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 77, in app
-    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 64, in wrapped_app
-    raise exc
-  File "/root/.venv/lib/python3.11/site-packages/starlette/_exception_handler.py", line 53, in wrapped_app
-    await app(scope, receive, sender)
-  File "/root/.venv/lib/python3.11/site-packages/starlette/routing.py", line 72, in app
-    response = await func(request)
-               ^^^^^^^^^^^^^^^^^^^
-  File "/root/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 278, in app
-    raw_response = await run_endpoint_function(
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/root/.venv/lib/python3.11/site-packages/fastapi/routing.py", line 191, in run_endpoint_function
-    return await dependant.call(**values)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/backend/server.py", line 6508, in get_my_addons
-    id=ua["id"],
-       ~~^^^^^^
-KeyError: 'id'
-WARNING:  WatchFiles detected changes in 'server.py'. Reloading...
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [373]
-INFO:     Started server process [1663]
-INFO:     Waiting for application startup.
-2026-01-31 20:11:52,367 - server - INFO - Startup tasks completed
-INFO:     Application startup complete.
-INFO:     Shutting down
-INFO:     Waiting for application shutdown.
-INFO:     Application shutdown complete.
-INFO:     Finished server process [1663]
-INFO:     Stopping reloader process [263]
-INFO:     Will watch for changes in these directories: ['/app/backend']
-INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [1675] using WatchFiles
-INFO:     Started server process [1677]
-INFO:     Waiting for application startup.
-2026-01-31 20:12:00,164 - server - INFO - Startup tasks completed
-INFO:     Application startup complete.
-INFO:     Will watch for changes in these directories: ['/app/backend']
-INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [48] using WatchFiles
-INFO:     Stopping reloader process [48]
-INFO:     Will watch for changes in these directories: ['/app/backend']
-INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
-INFO:     Started reloader process [170] using WatchFiles
-
-==> /var/log/supervisor/backend.out.log <==
-INFO:     10.64.131.206:59042 - "OPTIONS /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.203:54222 - "GET /api/notifications HTTP/1.1" 200 OK
-INFO:     10.64.131.202:50158 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.204:60090 - "GET /api/user/addons HTTP/1.1" 500 Internal Server Error
-INFO:     10.64.131.206:59032 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.205:46908 - "GET /api/user/addons HTTP/1.1" 500 Internal Server Error
-INFO:     10.64.131.203:54222 - "GET /api/user/addons HTTP/1.1" 500 Internal Server Error
-INFO:     10.64.131.206:59042 - "GET /api/notifications HTTP/1.1" 200 OK
-INFO:     10.64.131.202:50158 - "GET /api/user/addons HTTP/1.1" 500 Internal Server Error
-INFO:     10.64.131.204:60108 - "GET /api/notifications HTTP/1.1" 200 OK
-INFO:     10.64.131.205:46940 - "GET /api/user/addons HTTP/1.1" 500 Internal Server Error
-INFO:     10.64.131.205:46924 - "GET /api/notifications HTTP/1.1" 200 OK
-INFO:     10.64.131.202:50170 - "GET /api/user/addons HTTP/1.1" 500 Internal Server Error
-INFO:     10.64.131.7:43316 - "GET /api/workspace/settings HTTP/1.1" 200 OK
-INFO:     10.64.129.13:49018 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     10.64.131.206:33300 - "GET /api/my-addons HTTP/1.1" 404 Not Found
-INFO:     10.64.129.7:43646 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     10.64.129.10:38890 - "GET /api/user/addons HTTP/1.1" 500 Internal Server Error
-INFO:     10.64.131.7:60762 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.131.34:33274 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.7:51578 - "POST /api/auth/login HTTP/1.1" 200 OK
-INFO:     10.64.138.62:42970 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.136.245:32870 - "GET /api/user/addons HTTP/1.1" 200 OK
-INFO:     10.64.131.7:51578 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.7:51578 - "GET /api/user/addons HTTP/1.1" 200 OK
-INFO:     10.64.131.34:60304 - "GET /api/notifications HTTP/1.1" 200 OK
-INFO:     10.64.131.34:60304 - "GET /api/dashboard HTTP/1.1" 200 OK
-INFO:     10.64.131.34:60304 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.138.62:42970 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.138.62:42970 - "GET /api/notifications HTTP/1.1" 200 OK
-INFO:     10.64.131.7:51578 - "GET /api/user/addons HTTP/1.1" 200 OK
-INFO:     10.64.131.34:60304 - "GET /api/dashboard HTTP/1.1" 200 OK
-INFO:     10.64.131.7:51578 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.131.34:60304 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.34:60304 - "GET /api/notifications HTTP/1.1" 200 OK
-INFO:     10.64.131.34:60306 - "GET /api/user/addons HTTP/1.1" 200 OK
-INFO:     10.64.131.7:51578 - "GET /api/dashboard HTTP/1.1" 200 OK
-INFO:     10.64.138.62:34462 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.131.7:37028 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.34:58012 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.138.62:44868 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.7:59010 - "GET /api/autodealer/customers HTTP/1.1" 200 OK
-INFO:     10.64.131.34:53740 - "POST /api/autodealer-portal/register HTTP/1.1" 200 OK
-INFO:     10.64.138.62:51642 - "GET /api/autodealer-portal/dashboard HTTP/1.1" 200 OK
-INFO:     10.64.131.34:53740 - "GET /api/autodealer-portal/me HTTP/1.1" 200 OK
-INFO:     10.64.131.34:50912 - "GET /api/autodealer-portal/purchases HTTP/1.1" 200 OK
-INFO:     10.64.138.62:46498 - "GET /api/autodealer-portal/dashboard HTTP/1.1" 200 OK
-INFO:     10.64.131.7:34838 - "GET /api/autodealer-portal/me HTTP/1.1" 200 OK
-INFO:     10.64.131.34:50912 - "GET /api/autodealer-portal/me HTTP/1.1" 200 OK
-INFO:     10.64.131.7:34838 - "GET /api/autodealer-portal/dashboard HTTP/1.1" 200 OK
-INFO:     10.64.138.62:46880 - "GET /api/public/landing/settings HTTP/1.1" 200 OK
-INFO:     10.64.131.34:43478 - "GET /api/public/cms/page/home HTTP/1.1" 200 OK
-INFO:     10.64.131.7:48250 - "GET /api/public/cms/page/home HTTP/1.1" 200 OK
-INFO:     10.64.131.34:43486 - "GET /api/public/landing/settings HTTP/1.1" 200 OK
-INFO:     10.64.131.7:48248 - "GET /api/public/addons HTTP/1.1" 200 OK
-INFO:     10.64.131.34:43494 - "GET /api/public/addons HTTP/1.1" 200 OK
-INFO:     10.64.138.62:46888 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.138.62:46880 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.34:43494 - "GET /api/user/addons HTTP/1.1" 200 OK
-INFO:     10.64.138.62:46880 - "GET /api/notifications HTTP/1.1" 200 OK
-INFO:     10.64.131.7:48248 - "GET /api/dashboard HTTP/1.1" 200 OK
-INFO:     10.64.131.34:43494 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.138.62:46880 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.7:48248 - "GET /api/notifications HTTP/1.1" 200 OK
-INFO:     10.64.131.7:48248 - "GET /api/user/addons HTTP/1.1" 200 OK
-INFO:     10.64.131.7:48248 - "GET /api/dashboard HTTP/1.1" 200 OK
-INFO:     10.64.131.7:48248 - "GET /api/autodealer/customers HTTP/1.1" 200 OK
-INFO:     10.64.131.7:49790 - "GET /api/autodealer/sales HTTP/1.1" 200 OK
-INFO:     10.64.131.34:54862 - "GET /api/autodealer/vehicles HTTP/1.1" 200 OK
-INFO:     10.64.138.62:34878 - "GET /api/autodealer/customers HTTP/1.1" 200 OK
-INFO:     10.64.138.62:34878 - "GET /api/autodealer/customers HTTP/1.1" 200 OK
-INFO:     10.64.138.62:34878 - "GET /api/auth/me HTTP/1.1" 200 OK
-INFO:     10.64.131.7:49790 - "GET /api/workspace/current HTTP/1.1" 200 OK
-INFO:     10.64.131.7:49790 - "GET /api/notifications HTTP/1.1" 200 OK
-INFO:     10.64.131.34:54862 - "GET /api/user/addons HTTP/1.1" 200 OK
-INFO:     10.64.131.7:49794 - "GET /api/autodealer/customers HTTP/1.1" 200 OK
-INFO:     10.64.131.7:33118 - "GET /api/user/addons HTTP/1.1" 200 OK
-INFO:     10.64.138.62:45838 - "GET /api/dashboard HTTP/1.1" 200 OK
-INFO:     10.64.131.34:47294 - "GET /api/tenants HTTP/1.1" 200 OK
-INFO:     10.64.131.34:47302 - "GET /api/tenants/portal-accounts HTTP/1.1" 200 OK
-INFO:     10.64.131.7:33118 - "GET /api/apartments HTTP/1.1" 200 OK
-INFO:     10.64.131.34:47302 - "GET /api/tenants HTTP/1.1" 200 OK
-INFO:     10.64.138.62:45838 - "GET /api/contracts HTTP/1.1" 200 OK
-INFO:     10.64.138.62:45838 - "GET /api/tenants HTTP/1.1" 200 OK
-INFO:     10.64.138.62:36874 - "GET /api/apartments HTTP/1.1" 200 OK
-INFO:     10.64.131.34:47302 - "GET /api/user/addons HTTP/1.1" 200 OK
-INFO:     10.64.138.62:36874 - "GET /api/dashboard HTTP/1.1" 200 OK
-INFO:     10.64.131.34:47302 - "GET /api/hrm/employees HTTP/1.1" 200 OK
-INFO:     10.64.138.62:36874 - "GET /api/hrm/departments HTTP/1.1" 200 OK
-INFO:     10.64.138.62:36874 - "GET /api/hrm/contracts HTTP/1.1" 200 OK
-INFO:     10.64.131.34:47302 - "GET /api/hrm/employees HTTP/1.1" 200 OK
-INFO:     10.64.131.7:43526 - "GET /api/hrm/leave-requests HTTP/1.1" 200 OK
-INFO:     10.64.131.34:47302 - "GET /api/hrm/employees HTTP/1.1" 200 OK
-INFO:     10.64.131.34:47302 - "GET /api/autodealer/stats HTTP/1.1" 200 OK
-INFO:     10.64.138.62:36874 - "GET /api/autodealer/vehicles HTTP/1.1" 200 OK
-INFO:     10.64.138.62:45168 - "GET /api/public/landing/settings HTTP/1.1" 200 OK
-INFO:     10.64.131.7:41914 - "GET /api/public/addons HTTP/1.1" 200 OK
-INFO:     10.64.131.7:41898 - "GET /api/public/cms/page/home HTTP/1.1" 200 OK
-INFO:     10.64.131.7:39946 - "GET /api/public/landing/settings HTTP/1.1" 200 OK
-INFO:     10.64.138.62:48010 - "GET /api/public/cms/menu HTTP/1.1" 200 OK.
-        3.  Log in as  /  and use  to hit the  endpoint, confirming it returns a valid JSON array of addons without a server error.
-        4.  Use the screenshot tool to log in as the same user and capture the  page to visually confirm the Klant Portaal link is now visible in the sidebar under the Auto Dealer section.
-    *   **Why fix this issue and what will be achieved with the fix?**: This is a bug blocking a user-facing feature. Fixing it will make the newly created Auto Dealer portal accessible to customers who have the addon.
-    *   **Status**: IN PROGRESS
-    *   **Is recurring issue?**: N
-    *   **Should Test frontend/backend/both after fix?**: both
-    *   **Blocked on other issue**: No
-*   **Issue 2: Login Fails After Logout (P1)**
-    *   **Description**: A previously critical bug where users couldn't log back in after logging out. It was believed to be fixed after a major code cleanup, but final user confirmation was never received.
-    *   **Next debug checklist**: Before starting new tasks, politely ask the user (in Dutch) to verify if the login/logout/login flow now works consistently for them.
-    *   **Why fix this issue and what will be achieved with the fix?**: This is a potential critical usability issue. Confirmation is needed to close it.
+*   **Issue 1: Login Fails After Logout (P1)**
+    *   **Description**: A critical bug where users couldn't log back in after logging out. It was believed to be fixed, but user confirmation is pending. The agent asked for verification, but the user changed the task priority.
+    *   **Next debug checklist**: Politely ask the user again (in Dutch) to verify if the login/logout/login flow now works consistently for them. This should be done after the current task is completed.
+    *   **Why fix this issue and what will be achieved with the fix?**: This is a critical usability issue. Confirmation is needed to close it.
     *   **Status**: USER VERIFICATION PENDING
     *   **Is recurring issue?**: Y
     *   **Should Test frontend/backend/both after fix?**: frontend
     *   **Blocked on other issue**: No
 
 **In progress Task List**:
-*   **Task 1: Integrate Payment Methods into PDF Invoices (P1)**
-    *   **Where to resume**: The agent located the PDF generation logic in  (around line 4146). The code to fetch the workspace's payment settings has been added to the endpoint. The next step is to use the fetched  object to render the bank/Mope details onto the PDF canvas using  drawing methods, just before the footer section.
-    *   **What will be achieved with this?**: Fulfills the user's request to have payment instructions directly on the invoices sent to customers, making it easier for them to pay.
+*   **Task 1: Test and Finalize Modernized UI & Order Flow (P0)**
+    *   **Where to resume**: The files  and  have just been overwritten. The immediate next step is to test them thoroughly using the screenshot tool as described in Last working item.
+    *   **What will be achieved with this?**: This will complete the user's latest request for a modern UI and a unified popup-based ordering system.
     *   **Status**: IN PROGRESS
-    *   **Should Test frontend/backend/both after fix?**: backend
-    *   **Blocked on something**: No.
-*   **Task 2: Continue  Refactoring (P2)**
-    *   **Where to resume**: The  router was the last one created. The process is: identify a logical group of endpoints in  (e.g., Backup/Restore, CMS, PDF Generation), move them to a new file in , register the new router in , test thoroughly, and then (in a later step) remove the old code from .
-    *   **What will be achieved with this?**: Reduces the size of the 12,000+ line monolith, improving maintainability, stability, and developer velocity.
-    *   **Status**: IN PROGRESS
-    *   **Should Test frontend/backend/both after fix?**: backend
+    *   **Should Test frontend/backend/both after fix?**: frontend
     *   **Blocked on something**: No.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks**:
-    *   **(P1) Finalize  refactoring**: Systematically move all remaining business logic out of  into the  directory until  is primarily for app initialization and including routers.
-    *   **(P1) Automate Nginx/SSL for Custom Domains**: Build the backend scripts to dynamically update Nginx configuration and provision SSL certificates for custom domains added by tenants.
-    *   **(P2) Implement Mope Webhook & Reporting**: Create the webhook endpoint in the backend to listen for payment confirmations from Mope and automatically update invoice statuses. Build reporting for payments.
+    *   **(P1) Integrate Payment Methods into PDF Invoices**: Resume the task of adding bank/Mope details to generated PDF invoices. The logic to fetch settings was added to the endpoint in  (around line 4146), but the PDF rendering part is not done.
+    *   **(P1) Finalize  refactoring**: Continue moving logic out of the monolithic  into dedicated routers in . Good candidates are the Backup/Restore, CMS, or PDF Generation endpoints.
+    *   **(P2) Implement Mope Webhook & Reporting**: Create the webhook endpoint to listen for payment confirmations from Mope and automatically update invoice statuses. Build reporting for payments.
 *   **Future Tasks**:
     *   Build other requested ERP modules (Inventory, CRM, Accounting).
     *   Implement workspace-specific invoicing and reporting.
     *   Introduce subscription tiers for workspaces.
     *   Extend the Auto Dealer customer portal with more features (e.g., detailed purchase history, service records).
-    *   Implement email notifications for key HRM events (e.g., leave request approval).
 
 **Completed work in this session**
-- **CloudPanel Deployment Documentation**: Created a complete set of installation/update scripts and a comprehensive manual. (DONE)
-- **Public Modules Showcase Page**: Built a new multi-page section on the landing page to detail all available modules with images and features. (DONE)
-- **Payment Methods Configuration**: Implemented a new backend router and a full UI for admins to manage Bank, Mope, and other payment methods. (DONE)
-- **Auto Dealer Customer Portal**: Created the basic structure (backend/frontend) for the portal. (DONE)
-- ** Refactoring**: Continued refactoring by moving HRM, Admin, and Auto Dealer Portal logic to separate routers. (DONE)
-- **UI/UX Fixes**: Added the Modules link to the main navigation and fixed a layout bug causing a double sidebar. (DONE)
-- **Testing**: Used  to validate the Auto Dealer portal and new HRM endpoints. (DONE)
+- **Bug Fix**: Fixed the  in the  endpoint, making the Auto Dealer Klant Portaal visible. (DONE)
+- **Nginx/SSL Automation**: Built a complete system for superadmins to manage custom domains, including backend API, frontend UI, and deployment scripts. (DONE)
+- **Consistent Public UI**: Created shared  and  components and refactored all public pages to use them, unifying the site's look and feel. (DONE)
+- **New Order Flow**: Implemented a modal-based popup on  and  for account creation and payment selection, replacing the old form-based page. (DONE)
+- **Unified Navigation**: Updated all public Order and Start for free buttons to navigate to the  page, with support for pre-selecting modules via URL parameters. (DONE)
 
 **Earlier issues found/mentioned but not fixed**
 *   None.
@@ -313,107 +94,80 @@ INFO:     10.64.138.62:48010 - "GET /api/public/cms/menu HTTP/1.1" 200 OK.
 
 
 **Key Technical Concepts**
-*   **Backend**: FastAPI, MongoDB (). The architecture is being actively refactored from a monolith () into a modular system of routers.
-*   **Frontend**: React, Tailwind CSS, Shadcn UI, ,  for state management.
-*   **Multi-tenancy**: Workspace-based architecture using a  field for data isolation. Addons are managed per user/workspace.
-*   **Deployment**: A set of bash scripts and markdown guides have been created for deployment on CloudPanel.
+*   **Backend**: FastAPI, MongoDB ().
+*   **Frontend**: React, Tailwind CSS, Shadcn UI. A new pattern using shared components (, ) for public pages was established. A modal-based order flow was implemented.
+*   **System Automation**: Python and Bash scripts are used to automate Nginx configuration and SSL certificate provisioning via Certbot for tenant custom domains.
 
 **key DB schema**
-*   **payment_settings**: 
-*   **user_addons**: 
+*   No new schemas were added, but the  collection is now read by the new  router.
 
 **changes in tech stack**
 *   None.
 
 **All files of reference**
-*   : The monolith being refactored. The  fix was applied here.
-*   : Controls sidebar navigation. This is where the visibility logic for the Klant Portaal link exists.
-*   : New router for payment settings.
-*   : New frontend for payment settings.
-*   : New public-facing module list.
-*   : New public-facing module detail page.
+*   : Recently overwritten, needs testing.
+*   : Recently overwritten, needs testing.
+*   : Was overwritten to implement the new popup order flow.
+*   : New shared component for public navigation.
+*   : New shared component for public footer.
+*   : New router for Nginx/SSL automation.
+*   : New UI for custom domain management.
+*   Gebruik: /app/scripts/configure_domain.sh <domain> <workspace_slug> [--ssl]
+Voorbeeld: /app/scripts/configure_domain.sh portal.example.com myworkspace --ssl: New script for automating domain configuration.
+*   : New documentation for the automation feature.
 
 **Areas that need refactoring**:
-*   **CRITICAL**: . Refactoring must continue. The next targets could be backup/restore logic, PDF generation, or CMS endpoints.
+*    remains a high-priority refactoring target.
 
 **key api endpoints**
-*   : **(BUGGY)** Endpoint that was causing a . A fix has been applied but needs testing.
-*   : Endpoints for managing payment methods (new).
-*   , : Routes for the new public module pages.
-*   : Login for the new customer portal.
+*   : New endpoints for managing custom domains.
+*   : Existing endpoint that was heavily utilized for the new popup order flow.
 
 **Critical Info for New Agent**
-*   **Priority 1 (Bug Fix)**: You must immediately test the fix for the  endpoint. Restart the backend, use  to verify the API response, and then use the screenshot tool to confirm the UI is correct for user .
-*   **Priority 2 (User Query)**: After fixing the bug, your first  must politely ask the user in Dutch to confirm if the old login fails after logout bug is resolved for them.
-*   **Refactoring Rule**: Continue the established pattern for refactoring . Do not add any new logic to . Place all new or moved code into the  directory.
+*   Your first priority is to **test the modernized UI** on the  and  pages to ensure the new design and the popup order flow are working correctly.
+*   After completing the current task, you MUST **ask the user again to verify the login/logout bug**. This is a lingering, potentially critical issue that needs confirmation.
+*   The user is now directing the project towards improving the public-facing purchasing experience. Be prepared for more UI/UX focused tasks.
 
 **documents and test reports created in this job**
+*   Gebruik: /app/scripts/configure_domain.sh <domain> <workspace_slug> [--ssl]
+Voorbeeld: /app/scripts/configure_domain.sh portal.example.com myworkspace --ssl
+*   [2026-02-01 01:18:22] Starting SSL certificate renewal check...
+*   Gebruik: /app/scripts/remove_domain.sh <domain>
+Voorbeeld: /app/scripts/remove_domain.sh portal.example.com
 *   
-*   
-============================================================
-   FACTURATIE ERP - CLOUDPANEL INSTALLATIE
-============================================================
-
-[0;31m[ERROR][0m CloudPanel is niet geïnstalleerd!
-Installeer eerst CloudPanel: https://www.cloudpanel.io/docs/v2/getting-started/
-*   
-*   
-============================================================
-   FACTURATIE ERP - UPDATE
-============================================================
-
-[1;33m[1/5][0m Backup maken...
-[0;32m✓[0m Backup gemaakt: /var/backups/facturatie/backup_20260131_202029
-[1;33m[2/5][0m Code updaten...
-*   [2026-01-31 20:20:30] ==========================================
-[2026-01-31 20:20:30] DEPLOYMENT GESTART
-[2026-01-31 20:20:30] ==========================================
-*   
-============================================================
-   FACTURATIE ERP - BACKUP
-============================================================
-
-[0;34m[INFO][0m Backup gestart: 20260131_202030
-[0;34m[INFO][0m Database backup maken...
-[0;31m[ERROR][0m Database backup mislukt!
-*   [0;31m[ERROR][0m Gebruik: /app/RESTORE.sh <backup-bestand.tar.gz>
-
-Beschikbare backups:
-  Geen backups gevonden
-*   
-*    (heavily updated)
+*    (updated)
 
 **Last 10 User Messages and any pending HUMAN messages**
-10.  (User reports the bug that the Auto Dealer portal link is missing). (IN PROGRESS)
-9.   (User confirms priorities: 1. Integrate payment methods into invoices, 2. Continue server.py refactoring). (IN PROGRESS)
-8.   (Agent confirms the module detail pages work). (COMPLETED)
-7.   (User reports the Modules link is missing from the main navigation). (COMPLETED)
-6.   (COMPLETED)
-5.   (User requests the Mope payment method to be re-integrated and made available everywhere). (COMPLETED - management page is done, integration into invoices is next)
-4.   (COMPLETED)
-3.   (User requests a detailed showcase page for all modules on the landing page). (COMPLETED)
-2.   (User confirms to proceed with all three suggested tasks: refactoring, branding, and auto dealer portal). (IN PROGRESS)
-1.   (User confirms to proceed after the CloudPanel documentation task). (COMPLETED)
+10. **Request**: On , make Start gratis proefperiode open a popup, link other buttons to , and modernize the UI of both  and . (IN PROGRESS)
+9.  **Request**: Make the order form on the  page the same as . Make all landing page buttons point to , pre-selecting the module if applicable. (COMPLETED)
+8.  **Request**: On the  page, change the order flow to a popup for account creation and payment method selection (Mope, Bank, 3-day trial). (COMPLETED)
+7.  **Request**: Make all Direct bestellen buttons on public pages go to the  selection page. (COMPLETED)
+6.  **Bug Report**: The  page has an inconsistent menu and mobile menu. (COMPLETED)
+5.  **Clarification**: User points out the inconsistency is on the  page, not . (COMPLETED)
+4.  **Bug Report**: User reports inconsistent navigation menu across public pages and requests a specific order. (COMPLETED)
+3.  **Request**: User prioritizes Nginx/SSL automation for custom domains. (COMPLETED)
+2.  **Confirmation**: User asks to continue with the bug fix for the Auto Dealer portal link. (COMPLETED)
+1.  **Pending HUMAN message**: The agent asked the user to verify a login/logout bug, but the user changed the topic. This verification is still pending.
 
 **Project Health Check:**
-*   **Broken**: The  endpoint is currently broken, blocking the display of addon-specific UI elements. A fix is pending testing.
+*   **Broken**: None.
 *   **Mocked**: None.
-*   **Unverified**: The fix for the historical Login Fails After Logout bug.
+*   **Unverified**: The fix for the historical Login Fails After Logout bug. The new UI on  and  is also unverified.
 
 **3rd Party Integrations**
 *   **OpenAI GPT-4o**: Powers the AI chatbot. Uses Emergent LLM Key.
-*   **Mope Payment Gateway**: Integrated for payments. Requires User API Key. A full management UI was just built for it.
+*   **Mope Payment Gateway**: Integrated for payments. Requires User API Key.
 
 **Testing status**
-*   **Testing agent used after significant changes**: YES, for the Auto Dealer customer portal. It passed all tests.
+*   **Testing agent used after significant changes**: NO. The agent performed extensive manual testing with the screenshot tool and curl for all completed tasks in this session.
 *   **Troubleshoot agent used after agent stuck in loop**: NO.
 *   **Test files created**: None.
-*   **Known regressions**: The bug in  is a new regression introduced during recent work.
+*   **Known regressions**: None.
 
 **Credentials to test flow:**
 *   **Superadmin**:  / 
 *   **Test Customer w/ Auto Dealer**:  / 
-*   **Test Customer w/o Auto Dealer**:  / 
 
 **What agent forgot to execute**
-*   The agent did not restart and test the backend after applying the fix for the . This is the immediate next step.</analysis>
+*   The agent successfully prioritized user requests. The task to Integrate Payment Methods into PDF Invoices was deferred due to the user's change in priorities and remains in the backlog.
+*   The agent needs to follow up on the user verification for the Login Fails After Logout bug, as the first request was overlooked.</analysis>
