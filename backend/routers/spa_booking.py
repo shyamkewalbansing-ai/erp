@@ -50,7 +50,6 @@ async def get_spa_info(workspace_id: str):
     # Check if user has beauty module
     if "beauty" not in user.get("modules", []):
         raise HTTPException(status_code=404, detail="Deze spa heeft geen online boekingen")
-        raise HTTPException(status_code=404, detail="Deze spa heeft geen online boekingen")
     
     return {
         "spa_name": user.get("company_name", "Beauty Spa"),
