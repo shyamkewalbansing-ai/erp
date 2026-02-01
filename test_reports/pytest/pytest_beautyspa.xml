@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="2" failures="29" skipped="0" tests="31" time="4.043" timestamp="2026-02-01T04:37:11.698288+00:00" hostname="agent-env-64454025-2df7-49aa-9185-c8bbcc7c4a15"><testcase classname="backend.tests.test_beautyspa.TestBeautySpaDashboard" name="test_dashboard_loads" time="0.346"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:47: in test_dashboard_loads
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaClients" name="test_list_clients" time="0.295"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:69: in test_list_clients
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaClients" name="test_create_client" time="0.034"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:86: in test_create_client
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaClients" name="test_update_client" time="0.044"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:112: in test_update_client
+    assert create_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaClients" name="test_delete_client" time="0.034"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:140: in test_delete_client
+    assert create_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaTreatments" name="test_list_treatments" time="0.298"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:159: in test_list_treatments
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaTreatments" name="test_create_treatment" time="0.038"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:176: in test_create_treatment
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaTreatments" name="test_update_treatment" time="0.037"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:194: in test_update_treatment
+    assert create_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaTreatments" name="test_delete_treatment_soft" time="0.035"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:216: in test_delete_treatment_soft
+    assert create_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaStaff" name="test_list_staff" time="0.297"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:231: in test_list_staff
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaStaff" name="test_create_staff" time="0.031"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:248: in test_create_staff
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaStaff" name="test_update_staff" time="0.033"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:264: in test_update_staff
+    assert create_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaProducts" name="test_list_products" time="0.298"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:283: in test_list_products
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaProducts" name="test_create_product" time="0.036"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:301: in test_create_product
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaProducts" name="test_adjust_stock" time="0.035"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:319: in test_adjust_stock
+    assert create_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaProducts" name="test_delete_product" time="0.035"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:342: in test_delete_product
+    assert create_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaAppointments" name="test_list_appointments" time="0.296"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:386: in test_list_appointments
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaAppointments" name="test_create_appointment" time="0.032"><error message="failed on setup with &quot;KeyError: 'id'&quot;">backend/tests/test_beautyspa.py:362: in test_data
+    client_id = client_response.json()["id"]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'id'</error></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaAppointments" name="test_update_appointment" time="0.000"><error message="failed on setup with &quot;KeyError: 'id'&quot;">backend/tests/test_beautyspa.py:362: in test_data
+    client_id = client_response.json()["id"]
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'id'</error></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaPOS" name="test_list_sales" time="0.291"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:442: in test_list_sales
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaPOS" name="test_create_sale" time="0.031"><failure message="KeyError: 'id'">backend/tests/test_beautyspa.py:455: in test_create_sale
+    treatment_id = treatment_response.json()["id"]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'id'</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaQueue" name="test_get_queue" time="0.291"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:487: in test_get_queue
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaQueue" name="test_add_to_queue" time="0.034"><failure message="KeyError: 'id'">backend/tests/test_beautyspa.py:500: in test_add_to_queue
+    treatment_id = treatment_response.json()["id"]
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'id'</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaVouchers" name="test_list_vouchers" time="0.292"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:520: in test_list_vouchers
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaVouchers" name="test_create_voucher" time="0.033"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:536: in test_create_voucher
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaVouchers" name="test_delete_voucher" time="0.034"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:555: in test_delete_voucher
+    assert create_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaReports" name="test_revenue_report" time="0.298"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:570: in test_revenue_report
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaReports" name="test_treatments_report" time="0.033"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:582: in test_treatments_report
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaReports" name="test_products_report" time="0.036"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:589: in test_products_report
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaReports" name="test_staff_report" time="0.031"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:596: in test_staff_report
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_beautyspa.TestBeautySpaReports" name="test_clients_report" time="0.035"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_beautyspa.py:603: in test_clients_report
+    assert response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase></testsuite></testsuites>
