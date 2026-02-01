@@ -90,6 +90,11 @@ const autoDealerNavItems = [
   { to: '/klant-portaal', icon: Globe, label: 'Klant Portaal', addon: 'autodealer', external: true },
 ];
 
+// Beauty Spa Module
+const beautySpaItems = [
+  { to: '/app/beautyspa', icon: Sparkles, label: 'Spa Dashboard', addon: 'beauty' },
+];
+
 export default function Layout() {
   const { user, logout, hasActiveSubscription, isSuperAdmin, workspace, branding } = useAuth();
   const navigate = useNavigate();
