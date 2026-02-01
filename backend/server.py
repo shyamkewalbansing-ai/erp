@@ -1344,6 +1344,9 @@ async def create_workspace_for_user(user_id: str, user_name: str, company_name: 
     
     await db.workspaces.insert_one(workspace)
     
+    # Remove MongoDB's _id field to prevent serialization errors
+    workspace.pop("_id", None)
+    
     # Update user with workspace_id
     await db.users.update_one(
         {"id": user_id},
