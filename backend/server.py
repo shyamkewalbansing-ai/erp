@@ -7163,6 +7163,74 @@ async def check_payment_status(order_id: str):
         logger.error(f"Error checking payment status: {e}")
         return {"status": order.get("status", "pending"), "paid": False}
 
+@api_router.get("/test/mope/status")
+async def test_mope_status():
+    """Test endpoint to check Mope configuration status"""
+    settings = await get_mope_settings()
+    token = await get_mope_token()
+    
+    return {
+        "is_enabled": settings.is_enabled,
+        "use_live_mode": settings.use_live_mode,
+        "has_test_token": bool(settings.test_token),
+        "has_live_token": bool(settings.live_token),
+        "active_token_available": bool(token),
+        "api_url": MOPE_API_URL,
+        "message": "Mope is geconfigureerd en klaar voor gebruik" if token else "Mope is niet geconfigureerd. Ga naar Admin > Instellingen > Betalingen om Mope in te stellen."
+    }
+
+@api_router.post("/test/mope/payment")
+async def test_mope_payment(amount: float = 10.0, description: str = "Test betaling"):
+    """Test endpoint to create a Mope test payment"""
+    import httpx
+    
+    token = await get_mope_token()
+    if not token:
+        return {
+            "success": False,
+            "error": "Mope is niet geconfigureerd",
+            "instructions": "Ga naar Admin > Instellingen > Betalingen om Mope API tokens in te stellen"
+        }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{MOPE_API_URL}/shop/payment_request",
+                headers={
+                    "Authorization": f"Bearer {token}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "amount": amount,
+                    "description": description,
+                    "redirect_url": "https://modulerp.preview.emergentagent.com/betaling-voltooid"
+                },
+                timeout=30.0
+            )
+            
+            if response.status_code in [200, 201]:
+                mope_response = response.json()
+                return {
+                    "success": True,
+                    "payment_id": mope_response.get("id"),
+                    "payment_url": mope_response.get("payment_url") or mope_response.get("url"),
+                    "amount": amount,
+                    "description": description,
+                    "message": "Test betaling aangemaakt! Klik op de payment_url om te betalen."
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": f"Mope API error: {response.status_code}",
+                    "details": response.text
+                }
+                
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
+
 @api_router.post("/webhooks/mope")
 async def mope_webhook(request: Request):
     """Handle Mope payment webhooks"""
