@@ -300,6 +300,8 @@ function MainAppRoutes() {
         <Route path="/over-ons" element={<OverOnsPage />} />
         <Route path="/voorwaarden" element={<VoorwaardenPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/help" element={<FaqPage />} />
         
         {/* Dynamic CMS Pages */}
         <Route path="/pagina/:slug" element={<CMSPage />} />
