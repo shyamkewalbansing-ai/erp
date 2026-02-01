@@ -119,9 +119,16 @@ def get_subscription_status(user: dict) -> tuple:
     
     try:
         if isinstance(end_date_str, str):
-            end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+            # Handle both timezone-aware and naive datetime strings
+            if '+' in end_date_str or 'Z' in end_date_str:
+                end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+            else:
+                # Assume UTC for naive datetime strings
+                end_date = datetime.fromisoformat(end_date_str).replace(tzinfo=timezone.utc)
         else:
             end_date = end_date_str
+            if end_date.tzinfo is None:
+                end_date = end_date.replace(tzinfo=timezone.utc)
         
         now = datetime.now(timezone.utc)
         days_remaining = (end_date - now).days
@@ -133,7 +140,8 @@ def get_subscription_status(user: dict) -> tuple:
             return ("trial", end_date.isoformat(), days_remaining)
         
         return ("active", end_date.isoformat(), days_remaining)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Error parsing subscription_end_date: {e}")
         return ("none", None, 0)
 
 def format_currency(amount: float) -> str:
