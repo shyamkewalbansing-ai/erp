@@ -79,7 +79,7 @@ const AutoDealerPortalDashboard = lazy(() => import("./pages/AutoDealerPortalDas
 const AutoDealerPortalPurchases = lazy(() => import("./pages/AutoDealerPortalPurchases"));
 
 // Beauty Spa Module
-const BeautySpaLayout = lazy(() => import("./pages/beautyspa/BeautySpaLayout"));
+const BeautySpaDashboard = lazy(() => import("./pages/BeautySpaDashboard"));
 const BeautySpaClients = lazy(() => import("./pages/beautyspa/ClientsPage"));
 const BeautySpaAppointments = lazy(() => import("./pages/beautyspa/AppointmentsPage"));
 const BeautySpaTreatments = lazy(() => import("./pages/beautyspa/TreatmentsPage"));
@@ -89,6 +89,7 @@ const BeautySpaStaff = lazy(() => import("./pages/beautyspa/StaffPage"));
 const BeautySpaQueue = lazy(() => import("./pages/beautyspa/QueuePage"));
 const BeautySpaReports = lazy(() => import("./pages/beautyspa/ReportsPage"));
 const BeautySpaVouchers = lazy(() => import("./pages/beautyspa/VouchersPage"));
+
 
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
