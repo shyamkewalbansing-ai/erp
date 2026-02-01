@@ -148,7 +148,7 @@ export default function ModulesOverviewPage() {
   const handleViewDetails = (addon) => {
     const moduleUI = getModuleUI(addon.slug);
     if (moduleUI.detailSlug) {
-      navigate(`/module/${moduleUI.detailSlug}`);
+      navigate(`/modules/${moduleUI.detailSlug}`);
     } else {
       navigate(`/faq#${addon.slug}`);
     }
