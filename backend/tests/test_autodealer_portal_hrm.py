@@ -6,7 +6,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://erp-workspace-2.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://modular-erp-24.preview.emergentagent.com').rstrip('/')
 
 # ==================== FIXTURES ====================
 
