@@ -15,6 +15,31 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (1 Feb 2026)
 
+### LOGIN & REGISTER UI REDESIGN ✅ (NIEUW - 1 Feb 2026)
+Complete herontwerp van Login en Register pagina's met moderne styling:
+
+**Features:**
+- [x] Split-screen layout met gradient linker paneel
+- [x] Modern formulier met glassmorphism accenten
+- [x] Trust indicators (klant avatars, sterren, stats)
+- [x] Demo link sectie met call-to-action
+- [x] "3 Dagen Gratis" banner op register pagina
+- [x] Vergeten wachtwoord modal
+- [x] Consistente styling met rest van de site
+
+**Bug Verificatie:**
+- [x] **"Login faalt na uitloggen" bug - GEVERIFIEERD OPGELOST** (iteration_26)
+- [x] Login -> Dashboard -> Logout -> Login flow werkt correct
+- [x] Alle auth API endpoints getest en werkend
+
+**Frontend Pagina's:**
+- `/login` - Moderne login pagina met features sidebar
+- `/register` - Moderne registratie pagina met gratis proefperiode info
+
+**Test Rapport:** `/app/test_reports/iteration_26.json` - 100% geslaagd
+
+---
+
 ### DEMO ACCOUNT SYSTEEM ✅ (NIEUW - 1 Feb 2026)
 Complete demo omgeving voor potentiële klanten:
 
