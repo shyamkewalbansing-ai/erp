@@ -49,128 +49,89 @@ import PublicFooter from '../components/PublicFooter';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
-// Module data with detailed information
-const MODULES_DATA = [
-  {
-    id: 'hrm',
-    slug: 'hrm',
-    name: 'HRM Module',
-    shortDescription: 'Complete Human Resource Management voor uw bedrijf',
-    description: 'Beheer uw personeel, verlofaanvragen, salarissen en meer in één systeem.',
+// Module UI metadata for display
+const MODULE_UI_DATA = {
+  'hrm': {
     icon: Users,
-    gradient: 'from-blue-500 to-indigo-600',
-    bgGradient: 'from-blue-500/10 to-indigo-500/10',
-    iconBg: 'bg-blue-500',
+    gradient: 'from-emerald-500 to-teal-600',
+    iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
     category: 'Personeel',
-    popular: true,
-    price: 'SRD 1.500',
     features: [
       'Personeelsbeheer met alle werknemergegevens',
       'Verlofaanvragen en goedkeuringsworkflow',
-      'Aanwezigheidsregistratie met in/uitklokken',
-      'Salarisbeheer en loonstrookgeneratie',
-      'Employee Self-Service Portal'
+      'Aanwezigheidsregistratie met in/uitklokken'
     ]
   },
-  {
-    id: 'vastgoed',
-    slug: 'vastgoed-beheer',
-    name: 'Vastgoed Beheer',
-    shortDescription: 'Professioneel vastgoedbeheer voor verhuurders',
-    description: 'Complete oplossing voor het beheren van uw vastgoedportefeuille.',
+  'vastgoed_beheer': {
     icon: Building2,
-    gradient: 'from-emerald-500 to-teal-600',
-    bgGradient: 'from-emerald-500/10 to-teal-500/10',
-    iconBg: 'bg-emerald-500',
+    gradient: 'from-teal-500 to-emerald-600',
+    iconBg: 'bg-gradient-to-br from-teal-500 to-emerald-600',
     category: 'Vastgoed',
-    popular: true,
-    price: 'SRD 3.500',
     features: [
       'Panden en units beheer',
       'Huurdersbeheer met contracten',
-      'Automatische facturatie',
-      'Onderhoudsbeheer met meldingen',
-      'Huurders Self-Service Portal'
+      'Automatische facturatie'
     ]
   },
-  {
-    id: 'autodealer',
-    slug: 'auto-dealer',
-    name: 'Auto Dealer',
-    shortDescription: 'Complete autohandel management',
-    description: 'Van voorraad tot verkoop, alles onder controle.',
+  'autodealer': {
     icon: Car,
-    gradient: 'from-orange-500 to-red-600',
-    bgGradient: 'from-orange-500/10 to-red-500/10',
-    iconBg: 'bg-orange-500',
+    gradient: 'from-emerald-600 to-green-500',
+    iconBg: 'bg-gradient-to-br from-emerald-600 to-green-500',
     category: 'Automotive',
-    popular: false,
-    price: 'SRD 2.500',
     features: [
       'Voertuigvoorraad beheer',
       'Verkoop- en aankoopregistratie',
-      'Multi-valuta ondersteuning',
-      'Klantenbeheer met historie',
-      'Klanten Self-Service Portal'
+      'Multi-valuta ondersteuning'
     ]
   },
-  {
-    id: 'chatbot',
-    slug: 'ai-chatbot',
-    name: 'AI Chatbot',
-    shortDescription: 'Intelligente klantenservice automatisering',
-    description: 'AI-gestuurde chatbot die uw klanten 24/7 helpt.',
+  'ai-chatbot': {
     icon: MessageSquare,
-    gradient: 'from-purple-500 to-pink-600',
-    bgGradient: 'from-purple-500/10 to-pink-500/10',
-    iconBg: 'bg-purple-500',
+    gradient: 'from-teal-600 to-cyan-500',
+    iconBg: 'bg-gradient-to-br from-teal-600 to-cyan-500',
     category: 'AI',
-    popular: false,
-    price: 'SRD 500',
     features: [
       'GPT-4 aangedreven conversaties',
       'Meertalige ondersteuning',
-      '24/7 beschikbaarheid',
-      'Aanpasbare antwoorden',
-      'Integratie met alle modules'
+      '24/7 beschikbaarheid'
     ]
   },
-  {
-    id: 'cms',
-    slug: 'cms',
-    name: 'CMS & Website',
-    shortDescription: 'Beheer uw website content',
-    description: 'Eenvoudig uw website content beheren zonder technische kennis.',
+  'cms': {
     icon: Globe,
-    gradient: 'from-cyan-500 to-blue-600',
-    bgGradient: 'from-cyan-500/10 to-blue-500/10',
-    iconBg: 'bg-cyan-500',
+    gradient: 'from-green-500 to-emerald-600',
+    iconBg: 'bg-gradient-to-br from-green-500 to-emerald-600',
     category: 'Content',
-    popular: false,
-    price: 'SRD 750',
     features: [
       'Drag & drop pagina builder',
       'Menu en navigatie beheer',
-      'SEO optimalisatie tools',
-      'Media bibliotheek',
-      'Blog functionaliteit'
+      'SEO optimalisatie tools'
     ]
   },
-  {
-    id: 'rapportage',
-    slug: 'rapportage',
-    name: 'Rapportage & Analytics',
-    shortDescription: 'Inzichten in uw bedrijfsprestaties',
-    description: 'Uitgebreide rapporten en dashboards voor datagedreven beslissingen.',
+  'rapportage': {
     icon: BarChart3,
-    gradient: 'from-amber-500 to-orange-600',
-    bgGradient: 'from-amber-500/10 to-orange-500/10',
-    iconBg: 'bg-amber-500',
+    gradient: 'from-cyan-500 to-teal-600',
+    iconBg: 'bg-gradient-to-br from-cyan-500 to-teal-600',
     category: 'Analytics',
-    popular: false,
-    price: 'SRD 400',
     features: [
       'Real-time dashboards',
+      'Exporteer naar PDF/Excel',
+      'Automatische rapportages'
+    ]
+  }
+};
+
+// Default UI data for unknown modules
+const DEFAULT_UI_DATA = {
+  icon: Puzzle,
+  gradient: 'from-emerald-500 to-teal-600',
+  iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
+  category: 'Module',
+  features: ['Volledige functionaliteit', 'Professionele ondersteuning', 'Regelmatige updates']
+};
+
+// Get UI data for a module based on slug
+const getModuleUI = (slug) => {
+  return MODULE_UI_DATA[slug] || MODULE_UI_DATA[slug?.replace('-', '_')] || DEFAULT_UI_DATA;
+};
       'Aangepaste rapportages',
       'Export naar PDF/Excel',
       'Trends en voorspellingen',
