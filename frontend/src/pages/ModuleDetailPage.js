@@ -472,6 +472,74 @@ const MODULES_DETAIL = {
         image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80'
       }
     ]
+  },
+  'pompstation': {
+    id: 'pompstation',
+    name: 'Pompstation',
+    title: 'Tankstation Management Systeem',
+    subtitle: 'Complete oplossing voor tankstations in Suriname',
+    description: 'Beheer uw tankstation met brandstoftanks, pompen, POS/kassa, winkelvoorraad, personeel en veiligheidscompliance. Speciaal ontwikkeld voor de Surinaamse markt.',
+    icon: Fuel,
+    gradient: 'from-orange-500 to-amber-600',
+    lightGradient: 'from-orange-50 to-amber-50',
+    accentColor: 'orange',
+    category: 'Retail & Energie',
+    price: 'SRD 2.500',
+    priceAmount: 2500,
+    priceNote: 'per maand',
+    heroImage: 'https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=1200&q=80',
+    highlights: ['Tankbeheer', 'POS/Kassa', 'Winkel', 'Veiligheid'],
+    sections: [
+      {
+        title: 'Brandstoftank Beheer',
+        description: 'Monitor en beheer al uw brandstoftanks in real-time.',
+        icon: Gauge,
+        features: ['Tank capaciteit en vulniveau monitoring', 'Automatische waarschuwingen bij lage voorraad', 'Lekkage detectie systeem', 'Historische verbruiksgrafieken', 'Multi-brandstof ondersteuning (Benzine, Diesel, LPG)'],
+        image: 'https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?w=800&q=80'
+      },
+      {
+        title: 'Leveringen & Inkoop',
+        description: 'Registreer brandstof leveringen en beheer leveranciers.',
+        icon: Truck,
+        features: ['Leveringsregistratie met bonnen', 'Leveranciersbeheer', 'Inkoopprijzen per levering', 'Automatische voorraad update', 'Leveringshistorie en rapporten'],
+        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'
+      },
+      {
+        title: 'POS/Kassa Systeem',
+        description: 'Verkoop brandstof en winkelproducten met één systeem.',
+        icon: ShoppingCart,
+        features: ['Brandstof verkoop per pomp', 'Winkelproducten verkoop', 'Multi-valuta (SRD, EUR, USD)', 'Contant en PIN betalingen', 'Dagelijkse kasafsluiting'],
+        image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80'
+      },
+      {
+        title: 'Winkel Voorraad',
+        description: 'Beheer uw shop-voorraad met automatische waarschuwingen.',
+        icon: Package,
+        features: ['Productcatalogus beheer', 'Voorraad tracking', 'Lage voorraad alerts', 'Barcode scanning', 'Marge berekening'],
+        image: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
+      },
+      {
+        title: 'Diensten & Personeel',
+        description: 'Plan diensten en beheer uw personeel.',
+        icon: Users,
+        features: ['Dienstrooster planning', 'Inklokken per dienst', 'Prestatie tracking', 'Commissie berekening', 'Verlofbeheer'],
+        image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&q=80'
+      },
+      {
+        title: 'Veiligheid & Compliance',
+        description: 'Voldoe aan alle veiligheidsvoorschriften.',
+        icon: AlertTriangle,
+        features: ['Veiligheidsinspecties checklist', 'Incident registratie', 'Certificaat tracking (brandveiligheid)', 'Noodprocedures documentatie', 'Audit trail voor compliance'],
+        image: 'https://images.unsplash.com/photo-1582139329536-e7284fece509?w=800&q=80'
+      },
+      {
+        title: 'Rapportages & Analytics',
+        description: 'Inzicht in uw bedrijfsprestaties met AI-aangedreven rapporten.',
+        icon: BarChart3,
+        features: ['Dagelijkse omzetrapportages', 'Brandstof verbruik analyse', 'Winstmarge per product', 'Trend voorspellingen', 'Export naar PDF/Excel'],
+        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'
+      }
+    ]
   }
 };
 
