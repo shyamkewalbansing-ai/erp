@@ -55,6 +55,9 @@ JWT_SECRET = os.environ.get('JWT_SECRET') or os.environ.get('SECRET_KEY') or 'su
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 
+# Demo account email for cleanup
+DEMO_ACCOUNT_EMAIL = "demo@facturatie.sr"
+
 # Create the main app
 app = FastAPI(title="Facturatie N.V. API", version="1.0.0")
 
@@ -70,6 +73,95 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# ==================== DEMO ACCOUNT CLEANUP ====================
+
+import asyncio
+
+async def cleanup_demo_data():
+    """Clean up demo account data older than 1 hour"""
+    try:
+        demo_user = await db.users.find_one({"email": DEMO_ACCOUNT_EMAIL})
+        if not demo_user:
+            return
+        
+        demo_user_id = str(demo_user['_id'])
+        demo_workspace_id = demo_user.get('workspace_id')
+        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+        
+        logger.info(f"Running demo data cleanup for user {DEMO_ACCOUNT_EMAIL}")
+        
+        # Collections to clean up with their user/workspace field names
+        collections_to_clean = [
+            # HRM data
+            ("hrm_employees", "workspace_id"),
+            ("hrm_departments", "workspace_id"),
+            ("hrm_leave_requests", "workspace_id"),
+            ("hrm_attendance", "workspace_id"),
+            ("hrm_payroll", "workspace_id"),
+            
+            # Vastgoed data
+            ("apartments", "workspace_id"),
+            ("tenants", "workspace_id"),
+            ("payments", "workspace_id"),
+            ("deposits", "workspace_id"),
+            ("maintenance", "workspace_id"),
+            ("loans", "workspace_id"),
+            
+            # Auto dealer data
+            ("autodealer_vehicles", "workspace_id"),
+            ("autodealer_customers", "workspace_id"),
+            ("autodealer_sales", "workspace_id"),
+            
+            # General data
+            ("ai_chat_history", "user_id"),
+            ("public_chats", "user_id"),
+        ]
+        
+        total_deleted = 0
+        
+        for collection_name, filter_field in collections_to_clean:
+            try:
+                collection = db[collection_name]
+                
+                # Build filter based on field type
+                if filter_field == "workspace_id" and demo_workspace_id:
+                    filter_query = {
+                        filter_field: demo_workspace_id,
+                        "created_at": {"$lt": one_hour_ago}
+                    }
+                elif filter_field == "user_id":
+                    filter_query = {
+                        filter_field: demo_user_id,
+                        "created_at": {"$lt": one_hour_ago}
+                    }
+                else:
+                    continue
+                
+                result = await collection.delete_many(filter_query)
+                if result.deleted_count > 0:
+                    logger.info(f"Deleted {result.deleted_count} demo records from {collection_name}")
+                    total_deleted += result.deleted_count
+            except Exception as e:
+                logger.error(f"Error cleaning {collection_name}: {e}")
+        
+        if total_deleted > 0:
+            logger.info(f"Demo cleanup completed: {total_deleted} total records deleted")
+        
+    except Exception as e:
+        logger.error(f"Demo cleanup error: {e}")
+
+async def demo_cleanup_scheduler():
+    """Run demo cleanup every hour"""
+    while True:
+        await cleanup_demo_data()
+        await asyncio.sleep(3600)  # Wait 1 hour
+
+@app.on_event("startup")
+async def start_demo_cleanup():
+    """Start the demo cleanup background task"""
+    asyncio.create_task(demo_cleanup_scheduler())
+    logger.info("Demo cleanup scheduler started - runs every hour")
 
 # ==================== GLOBAL EXCEPTION HANDLER ====================
 
