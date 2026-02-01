@@ -92,6 +92,20 @@ DEMO_ACCOUNT_EMAIL = "demo@facturatie.sr"
 # Create the main app
 app = FastAPI(title="Facturatie N.V. API", version="1.0.0")
 
+# Custom JSON Response that handles MongoDB ObjectId
+class MongoJSONResponse(JSONResponse):
+    def render(self, content) -> bytes:
+        return json.dumps(
+            jsonable_encoder_fix(content),
+            ensure_ascii=False,
+            allow_nan=False,
+            indent=None,
+            separators=(",", ":"),
+        ).encode("utf-8")
+
+# Set default response class for the app
+app.default_response_class = MongoJSONResponse
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
