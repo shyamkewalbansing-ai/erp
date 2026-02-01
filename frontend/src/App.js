@@ -304,6 +304,8 @@ function MainAppRoutes() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/faq" element={<FaqPage />} />
         <Route path="/help" element={<FaqPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/demo" element={<DemoPage />} />
         
         {/* Dynamic CMS Pages */}
         <Route path="/pagina/:slug" element={<CMSPage />} />
