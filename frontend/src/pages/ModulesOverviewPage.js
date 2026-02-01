@@ -192,11 +192,10 @@ export default function ModulesOverviewPage() {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('nl-SR', { 
-      style: 'currency', 
-      currency: 'SRD',
-      minimumFractionDigits: 0 
-    }).format(amount).replace('SRD', 'SRD ');
+    return `SRD ${new Intl.NumberFormat('nl-NL', { 
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)}`;
   };
 
   const getTotalPrice = () => {
