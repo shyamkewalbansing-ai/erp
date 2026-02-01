@@ -226,14 +226,14 @@ export default function PrijzenPage() {
     }
   };
 
-  // Gradient colors for cards
+  // Gradient colors for cards - Consistent emerald/teal theme
   const cardGradients = [
-    { gradient: 'from-emerald-500 to-teal-600', icon: 'bg-emerald-500', light: 'from-emerald-50 to-teal-50' },
-    { gradient: 'from-blue-500 to-indigo-600', icon: 'bg-blue-500', light: 'from-blue-50 to-indigo-50' },
-    { gradient: 'from-orange-500 to-red-600', icon: 'bg-orange-500', light: 'from-orange-50 to-red-50' },
-    { gradient: 'from-purple-500 to-pink-600', icon: 'bg-purple-500', light: 'from-purple-50 to-pink-50' },
-    { gradient: 'from-cyan-500 to-blue-600', icon: 'bg-cyan-500', light: 'from-cyan-50 to-blue-50' },
-    { gradient: 'from-amber-500 to-orange-600', icon: 'bg-amber-500', light: 'from-amber-50 to-orange-50' },
+    { gradient: 'from-emerald-500 to-teal-600', icon: 'bg-gradient-to-br from-emerald-500 to-teal-600', light: 'from-emerald-50 to-teal-50' },
+    { gradient: 'from-teal-500 to-emerald-600', icon: 'bg-gradient-to-br from-teal-500 to-emerald-600', light: 'from-teal-50 to-emerald-50' },
+    { gradient: 'from-emerald-600 to-green-500', icon: 'bg-gradient-to-br from-emerald-600 to-green-500', light: 'from-emerald-50 to-green-50' },
+    { gradient: 'from-green-500 to-teal-600', icon: 'bg-gradient-to-br from-green-500 to-teal-600', light: 'from-green-50 to-teal-50' },
+    { gradient: 'from-teal-600 to-cyan-500', icon: 'bg-gradient-to-br from-teal-600 to-cyan-500', light: 'from-teal-50 to-cyan-50' },
+    { gradient: 'from-cyan-500 to-emerald-600', icon: 'bg-gradient-to-br from-cyan-500 to-emerald-600', light: 'from-cyan-50 to-emerald-50' },
   ];
 
   if (loading) {
