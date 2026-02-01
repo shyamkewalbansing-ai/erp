@@ -91,6 +91,7 @@ async def get_superadmin(current_user: dict = Depends(get_current_user)) -> dict
 
 def get_subscription_status(user: dict) -> tuple:
     """Returns (status, end_date, days_remaining)"""
+    print(f"DEBUG get_subscription_status called with user role: {user.get('role')}, end_date: {user.get('subscription_end_date')}")
     if user.get("role") == "superadmin":
         return ("active", None, None)
     
@@ -98,6 +99,7 @@ def get_subscription_status(user: dict) -> tuple:
     is_trial = user.get("is_trial", False)
     
     if not end_date_str:
+        print("DEBUG: No subscription_end_date found")
         return ("none", None, None)
     
     try:
@@ -115,14 +117,17 @@ def get_subscription_status(user: dict) -> tuple:
         
         now = datetime.now(timezone.utc)
         days_remaining = (end_date - now).days
+        print(f"DEBUG: end_date={end_date}, now={now}, days_remaining={days_remaining}")
         
         if days_remaining < 0:
             return ("expired", end_date.isoformat(), 0)
         elif is_trial:
             return ("trial", end_date.isoformat(), days_remaining)
         else:
+            print(f"DEBUG: Returning active status")
             return ("active", end_date.isoformat(), days_remaining)
     except Exception as e:
+        print(f"DEBUG: Exception: {e}")
         logger.error(f"Error parsing subscription_end_date: {e}")
         return ("none", None, None)
 
