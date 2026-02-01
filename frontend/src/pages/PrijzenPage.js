@@ -3,13 +3,10 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
-import { Checkbox } from '../components/ui/checkbox';
 import { Switch } from '../components/ui/switch';
-import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import {
   Dialog,
   DialogContent,
@@ -25,7 +22,6 @@ import {
   Package,
   Star,
   Sparkles,
-  CheckCircle,
   CreditCard,
   Building2,
   Gift,
@@ -33,7 +29,6 @@ import {
   Mail,
   Lock,
   Building,
-  Puzzle,
   Zap,
   Shield,
   Clock,
