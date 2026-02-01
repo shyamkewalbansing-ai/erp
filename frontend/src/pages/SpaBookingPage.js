@@ -706,26 +706,39 @@ export default function SpaBookingPage() {
             </div>
           )}
         </Card>
-
-        {/* Contact info */}
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Vragen? Neem contact op met {spaInfo.spa_name}</p>
-          {spaInfo.phone && (
-            <p className="flex items-center justify-center gap-1 mt-1">
-              <Phone className="w-4 h-4" />
-              {spaInfo.phone}
-            </p>
-          )}
-          {spaInfo.email && (
-            <p className="flex items-center justify-center gap-1">
-              <Mail className="w-4 h-4" />
-              {spaInfo.email}
-            </p>
-          )}
-        </div>
       </main>
 
-      <PublicFooter />
+      {/* Spa Branded Footer */}
+      <footer className="bg-white border-t border-pink-100 mt-auto">
+        <div className="container mx-auto px-4 py-6">
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-rose-500 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <span className="font-semibold text-gray-900">{spaInfo.spa_name}</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-2">Vragen over uw boeking?</p>
+            <div className="flex items-center justify-center gap-4 text-sm">
+              {spaInfo.phone && (
+                <a href={`tel:${spaInfo.phone}`} className="text-pink-600 hover:text-pink-700 flex items-center gap-1">
+                  <Phone className="w-4 h-4" />
+                  {spaInfo.phone}
+                </a>
+              )}
+              {spaInfo.email && (
+                <a href={`mailto:${spaInfo.email}`} className="text-pink-600 hover:text-pink-700 flex items-center gap-1">
+                  <Mail className="w-4 h-4" />
+                  {spaInfo.email}
+                </a>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-4">
+              Powered by Facturatie.sr
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
