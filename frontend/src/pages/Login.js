@@ -272,26 +272,6 @@ export default function Login() {
           )}
         </div>
       </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Bottom stats */}
-          <div className="flex gap-8">
-            {[
-              { value: '99.9%', label: 'Uptime' },
-              { value: '24/7', label: 'Support' },
-              { value: '6+', label: 'Modules' },
-            ].map((stat, i) => (
-              <div key={i}>
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <div className="text-sm text-slate-400">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* Right side - Login Form */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-8 bg-gradient-to-br from-slate-50 to-emerald-50/30">
@@ -299,23 +279,37 @@ export default function Login() {
           {/* Mobile Logo */}
           <div className="lg:hidden mb-8">
             <Link to="/">
-              <img 
-                src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-                alt="Facturatie N.V." 
-                className="h-10 w-auto"
-              />
+              {brandingLogo ? (
+                <img 
+                  src={brandingLogo} 
+                  alt={brandingName} 
+                  className="h-10 w-auto object-contain"
+                />
+              ) : (
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+                  alt="Facturatie N.V." 
+                  className="h-10 w-auto"
+                />
+              )}
             </Link>
           </div>
 
           {/* Header */}
           <div className="mb-8">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-sm font-medium mb-4">
+            <div 
+              className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium mb-4"
+              style={{ 
+                backgroundColor: `${brandingPrimaryColor}20`, 
+                color: brandingPrimaryColor 
+              }}
+            >
               <Sparkles className="w-4 h-4" />
               Welkom terug
             </div>
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Inloggen</h1>
             <p className="text-slate-600">
-              Log in om uw bedrijf te beheren
+              {isWorkspace ? `Log in bij ${brandingName}` : 'Log in om uw bedrijf te beheren'}
             </p>
           </div>
 
