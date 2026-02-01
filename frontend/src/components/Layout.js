@@ -107,6 +107,20 @@ const beautySpaItems = [
   { to: '/app/beautyspa/vouchers', icon: Gift, label: 'Vouchers', addon: 'beauty' },
 ];
 
+// Pompstation (Gas Station) Module
+const pompstationNavItems = [
+  { to: '/app/pompstation', icon: LayoutDashboard, label: 'Pompstation Dashboard', addon: 'pompstation' },
+  { to: '/app/pompstation/tanks', icon: Boxes, label: 'Brandstoftanks', addon: 'pompstation' },
+  { to: '/app/pompstation/leveringen', icon: Briefcase, label: 'Leveringen', addon: 'pompstation' },
+  { to: '/app/pompstation/pompen', icon: Zap, label: 'Pompen', addon: 'pompstation' },
+  { to: '/app/pompstation/kassa', icon: ShoppingCart, label: 'Kassa (POS)', addon: 'pompstation' },
+  { to: '/app/pompstation/winkel', icon: Package, label: 'Winkel Voorraad', addon: 'pompstation' },
+  { to: '/app/pompstation/diensten', icon: Clock, label: 'Diensten', addon: 'pompstation' },
+  { to: '/app/pompstation/personeel', icon: Users, label: 'Personeel', addon: 'pompstation' },
+  { to: '/app/pompstation/veiligheid', icon: Target, label: 'Veiligheid', addon: 'pompstation' },
+  { to: '/app/pompstation/rapportages', icon: BarChart3, label: 'Rapportages', addon: 'pompstation' },
+];
+
 export default function Layout() {
   const { user, logout, hasActiveSubscription, isSuperAdmin, workspace, branding } = useAuth();
   const navigate = useNavigate();
