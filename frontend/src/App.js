@@ -442,20 +442,37 @@ function MainAppRoutes() {
             <SubscriptionRoute requiredAddon="autodealer"><AutoDealerVerkopen /></SubscriptionRoute>
           } />
           
-          {/* Beauty Spa Module */}
+          {/* Beauty Spa Module Routes */}
           <Route path="beautyspa" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaLayout /></SubscriptionRoute>
-          }>
-            <Route path="clients" element={<BeautySpaClients />} />
-            <Route path="appointments" element={<BeautySpaAppointments />} />
-            <Route path="treatments" element={<BeautySpaTreatments />} />
-            <Route path="products" element={<BeautySpaProducts />} />
-            <Route path="pos" element={<BeautySpaPOS />} />
-            <Route path="staff" element={<BeautySpaStaff />} />
-            <Route path="queue" element={<BeautySpaQueue />} />
-            <Route path="reports" element={<BeautySpaReports />} />
-            <Route path="vouchers" element={<BeautySpaVouchers />} />
-          </Route>
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaDashboard /></SubscriptionRoute>
+          } />
+          <Route path="beautyspa/clients" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaClients /></SubscriptionRoute>
+          } />
+          <Route path="beautyspa/appointments" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaAppointments /></SubscriptionRoute>
+          } />
+          <Route path="beautyspa/treatments" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaTreatments /></SubscriptionRoute>
+          } />
+          <Route path="beautyspa/products" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaProducts /></SubscriptionRoute>
+          } />
+          <Route path="beautyspa/pos" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaPOS /></SubscriptionRoute>
+          } />
+          <Route path="beautyspa/staff" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaStaff /></SubscriptionRoute>
+          } />
+          <Route path="beautyspa/queue" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaQueue /></SubscriptionRoute>
+          } />
+          <Route path="beautyspa/reports" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaReports /></SubscriptionRoute>
+          } />
+          <Route path="beautyspa/vouchers" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaVouchers /></SubscriptionRoute>
+          } />
         </Route>
         
         {/* Redirect old routes to new app routes */}
