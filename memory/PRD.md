@@ -15,6 +15,37 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (1 Feb 2026)
 
+### ONLINE BOOKING PORTAL (Beauty Spa) ✅ (NIEUW - 1 Feb 2026)
+Publiek toegankelijk boekingsportaal voor spa klanten:
+
+**Features:**
+- [x] Stap-voor-stap boekingsproces (4 stappen)
+- [x] Behandelingen per categorie (massage, facial, manicure, pedicure, body, pakketten)
+- [x] Surinaamse specialiteiten gemarkeerd (Awara olie, Aloë Vera, Kokos)
+- [x] Datum/tijd selectie met beschikbaarheid controle
+- [x] Automatische klant aanmaak bij eerste boeking
+- [x] Boeking bevestiging met booking ID
+- [x] Annulering met telefoon verificatie
+
+**Backend API's:** `/app/backend/routers/spa_booking.py` - 7 endpoints
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/spa-booking/spa/{id}/info | GET | Spa informatie ophalen |
+| /api/spa-booking/spa/{id}/treatments | GET | Behandelingen per categorie |
+| /api/spa-booking/spa/{id}/staff | GET | Beschikbare medewerkers |
+| /api/spa-booking/spa/{id}/availability | GET | Tijdslots voor datum |
+| /api/spa-booking/spa/{id}/book | POST | Nieuwe boeking aanmaken |
+| /api/spa-booking/spa/{id}/booking/{bid} | GET | Boeking details |
+| /api/spa-booking/spa/{id}/cancel/{bid} | POST | Boeking annuleren |
+
+**Frontend:** `/app/frontend/src/pages/SpaBookingPage.js`
+**Route:** `/booking/spa/:workspaceId`
+**Demo:** `/booking/spa/demo-spa` (Tropical Wellness Spa)
+
+**Test Rapport:** `/app/test_reports/iteration_28.json` - 100% geslaagd (20/20 backend, full frontend flow)
+
+---
+
 ### BEAUTY SPA MODULE ✅ (NIEUW - 1 Feb 2026)
 Complete Beauty Spa Management module met 12 submodules speciaal voor Suriname:
 
