@@ -395,12 +395,12 @@ function MainAppRoutes() {
           onSubdomain ? <Navigate to="/login" replace /> : <CMSPage />
         } />
         
-        {/* Public Auth Routes */}
+        {/* Auth Routes - Redirect to app subdomain on main domain */}
         <Route path="/login" element={
-          <PublicRoute><Login /></PublicRoute>
+          onMainDomain ? <MainDomainAuthRedirect /> : <PublicRoute><Login /></PublicRoute>
         } />
         <Route path="/register" element={
-          <PublicRoute><Register /></PublicRoute>
+          onMainDomain ? <MainDomainAuthRedirect /> : <PublicRoute><Register /></PublicRoute>
         } />
         <Route path="/reset-wachtwoord/:token" element={<ResetPassword />} />
         
