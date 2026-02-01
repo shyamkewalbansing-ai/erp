@@ -191,7 +191,7 @@ export default function LandingPage() {
                   size="lg" 
                   variant="outline"
                   className="h-14 px-8 border-white/20 text-white hover:bg-white/10 rounded-full text-base font-semibold"
-                  onClick={() => navigate('/login')}
+                  onClick={() => window.location.href = getAppUrl('/login')}
                 >
                   Inloggen
                   <ArrowRight className="w-5 h-5 ml-2" />
