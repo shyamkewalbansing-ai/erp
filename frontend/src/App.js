@@ -57,6 +57,8 @@ const WorkspaceSettings = lazy(() => import("./pages/WorkspaceSettings"));
 const BetaalmethodesPage = lazy(() => import("./pages/BetaalmethodesPage"));
 const DomainManagementPage = lazy(() => import("./pages/DomainManagementPage"));
 const FaqPage = lazy(() => import("./pages/FaqPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const DemoPage = lazy(() => import("./pages/DemoPage"));
 
 // Employee Portal
 const EmployeePortalLogin = lazy(() => import("./pages/EmployeePortalLogin"));
