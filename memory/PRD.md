@@ -15,6 +15,27 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (1 Feb 2026)
 
+### BEAUTY SPA MODULE ✅ (NIEUW - 1 Feb 2026)
+Complete Beauty Spa Management module met 12 submodules speciaal voor Suriname:
+
+**Features:**
+- [x] Dashboard met statistieken en komende afspraken
+- [x] Klantenbeheer (CRM) - huidtype, allergieën, voorkeuren, lidmaatschappen, loyaliteitspunten
+- [x] Afspraak- en roosterbeheer - online boeken, herinneringen, no-show registratie
+- [x] Behandelingen & Services - catalogus, pakketten, Surinaamse specialiteiten (kruiden, aloë)
+- [x] Product- en voorraadbeheer - batchnummers, vervaldatums, automatische waarschuwingen
+- [x] Kassasysteem (POS) - Surinaamse betaalmethoden (Telesur Pay, Finabank QR, Hakrinbank QR)
+- [x] Personeelsbeheer - commissies, specialisaties, salarissen
+- [x] Rapportages & Analytics - omzet, bestsellers, prestaties
+- [x] Walk-in wachtrij beheer
+- [x] Vouchers & cadeaubonnen
+
+**Backend:** `/app/backend/routers/beautyspa.py` - 31 API endpoints
+**Frontend:** `/app/frontend/src/pages/beautyspa/` - 10 pagina's
+**Test Rapport:** `/app/test_reports/iteration_27.json` - 100% geslaagd
+
+---
+
 ### LOGIN & REGISTER UI REDESIGN ✅ (NIEUW - 1 Feb 2026)
 Complete herontwerp van Login en Register pagina's met moderne styling:
 
