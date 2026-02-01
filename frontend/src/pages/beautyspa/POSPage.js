@@ -274,14 +274,14 @@ export default function POSPage() {
             </CardHeader>
             <CardContent>
               <Select 
-                value={selectedClient?.id || ''} 
-                onValueChange={(v) => setSelectedClient(clients.find(c => c.id === v) || null)}
+                value={selectedClient?.id || 'walk-in'} 
+                onValueChange={(v) => setSelectedClient(v === 'walk-in' ? null : clients.find(c => c.id === v) || null)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecteer klant (optioneel)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Walk-in (geen klant)</SelectItem>
+                  <SelectItem value="walk-in">Walk-in (geen klant)</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name} - {client.phone}
