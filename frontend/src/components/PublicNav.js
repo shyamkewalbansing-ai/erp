@@ -7,9 +7,8 @@ const NAV_ITEMS = [
   { label: 'Home', path: '/' },
   { label: 'Prijzen', path: '/prijzen' },
   { label: 'Modules', path: '/modules-overzicht' },
+  { label: 'FAQ', path: '/faq' },
   { label: 'Over Ons', path: '/over-ons' },
-  { label: 'Algemene Voorwaarden', path: '/voorwaarden' },
-  { label: 'Privacybeleid', path: '/privacy' },
 ];
 
 export default function PublicNav({ logoUrl, companyName }) {
