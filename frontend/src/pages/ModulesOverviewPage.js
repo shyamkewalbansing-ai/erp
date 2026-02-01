@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Checkbox } from '../components/ui/checkbox';
-import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import {
   Dialog,
   DialogContent,
@@ -24,8 +21,6 @@ import {
   MessageSquare, 
   Globe,
   BarChart3,
-  FileText,
-  Shield,
   ArrowRight,
   Check,
   Sparkles,
@@ -39,7 +34,6 @@ import {
   Star,
   TrendingUp,
   Clock,
-  ChevronRight,
   CreditCard,
   Puzzle
 } from 'lucide-react';
