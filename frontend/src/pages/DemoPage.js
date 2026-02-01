@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { 
   Users, 
   Building2, 
@@ -10,12 +11,19 @@ import {
   BarChart3,
   LogIn,
   Loader2,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  Check,
+  Eye,
+  EyeOff,
+  Mail,
+  Lock
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import { useAuth } from '../context/AuthContext';
 import PublicNav from '../components/PublicNav';
+import PublicFooter from '../components/PublicFooter';
 
 // Demo credentials
 const DEMO_EMAIL = 'demo@facturatie.sr';
@@ -79,6 +87,8 @@ export default function DemoPage() {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loggingIn, setLoggingIn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [copied, setCopied] = useState({ email: false, password: false });
 
   useEffect(() => {
     loadSettings();
@@ -95,16 +105,19 @@ export default function DemoPage() {
     }
   };
 
+  const copyToClipboard = (text, field) => {
+    navigator.clipboard.writeText(text);
+    setCopied({ ...copied, [field]: true });
+    toast.success(`${field === 'email' ? 'E-mailadres' : 'Wachtwoord'} gekopieerd!`);
+    setTimeout(() => setCopied({ ...copied, [field]: false }), 2000);
+  };
+
   const handleDemoLogin = async () => {
     setLoggingIn(true);
     
     try {
-      // Use AuthContext login to properly set user state
       await login(DEMO_EMAIL, DEMO_PASSWORD);
-      
       toast.success('Welkom bij de demo!');
-      
-      // Navigate to dashboard
       navigate('/app/dashboard');
     } catch (error) {
       console.error('Login error:', error);
@@ -126,8 +139,8 @@ export default function DemoPage() {
     <div className="min-h-screen bg-slate-950">
       <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
       
-      {/* Hero */}
-      <section className="pt-32 pb-20 relative overflow-hidden">
+      {/* Hero Section */}
+      <section className="pt-28 pb-16 relative overflow-hidden">
         {/* Background effects */}
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl"></div>
@@ -135,88 +148,86 @@ export default function DemoPage() {
         </div>
 
         <div className="max-w-5xl mx-auto px-4 text-center relative z-10">
-          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+          <Badge className="mb-6 bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+            Live Demo
+          </Badge>
+          
+          <h1 className="text-4xl md:text-6xl font-bold mb-4">
             <span className="text-white">Probeer de </span>
             <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Demo</span>
           </h1>
           
-          <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-400 mb-10 max-w-xl mx-auto">
             Ervaar alle modules direct. Geen registratie nodig.
           </p>
 
-          <Button 
-            size="lg"
-            onClick={handleDemoLogin}
-            disabled={loggingIn}
-            className="h-16 px-12 text-lg font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-full shadow-2xl shadow-emerald-500/25 transition-all duration-300 hover:scale-105"
-          >
-            {loggingIn ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                Inloggen...
-              </>
-            ) : (
-              <>
-                <LogIn className="w-5 h-5 mr-3" />
-                Direct Starten
-                <ArrowRight className="w-5 h-5 ml-3" />
-              </>
-            )}
-          </Button>
-        </div>
-      </section>
-
-      {/* Modules Grid */}
-      <section className="pb-32 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {MODULES.map((module) => {
-              const IconComponent = module.icon;
-              
-              return (
-                <div
-                  key={module.id}
-                  className="group relative bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-6 hover:border-slate-700 transition-all duration-300 hover:-translate-y-1"
-                >
-                  {/* Icon */}
-                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${module.color} flex items-center justify-center mb-5 shadow-lg`}>
-                    <IconComponent className="w-7 h-7 text-white" />
+          {/* Credentials Card */}
+          <div className="max-w-md mx-auto bg-slate-900/80 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 mb-8">
+            <h3 className="text-white font-semibold mb-4 flex items-center justify-center gap-2">
+              <Lock className="w-4 h-4 text-emerald-400" />
+              Inloggegevens
+            </h3>
+            
+            {/* Email */}
+            <div className="bg-slate-800/50 rounded-xl p-4 mb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Mail className="w-4 h-4 text-emerald-400" />
+                  <div className="text-left">
+                    <p className="text-xs text-slate-500">E-mailadres</p>
+                    <p className="text-white font-mono text-sm">{DEMO_EMAIL}</p>
                   </div>
-                  
-                  {/* Content */}
-                  <h3 className="text-xl font-bold text-white mb-2">
-                    {module.name}
-                  </h3>
-                  <p className="text-slate-400 text-sm mb-5">
-                    {module.description}
-                  </p>
-                  
-                  {/* Features */}
-                  <div className="flex flex-wrap gap-2">
-                    {module.features.map((feature, i) => (
-                      <span 
-                        key={i}
-                        className="text-xs px-3 py-1.5 bg-slate-800 text-slate-300 rounded-full"
-                      >
-                        {feature}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Hover glow effect */}
-                  <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${module.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
                 </div>
-              );
-            })}
-          </div>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-slate-400 hover:text-white hover:bg-slate-700 h-8 w-8 p-0"
+                  onClick={() => copyToClipboard(DEMO_EMAIL, 'email')}
+                >
+                  {copied.email ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
 
-          {/* Bottom CTA */}
-          <div className="mt-16 text-center">
+            {/* Password */}
+            <div className="bg-slate-800/50 rounded-xl p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Lock className="w-4 h-4 text-emerald-400" />
+                  <div className="text-left">
+                    <p className="text-xs text-slate-500">Wachtwoord</p>
+                    <p className="text-white font-mono text-sm">
+                      {showPassword ? DEMO_PASSWORD : '••••••••'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="text-slate-400 hover:text-white hover:bg-slate-700 h-8 w-8 p-0"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="text-slate-400 hover:text-white hover:bg-slate-700 h-8 w-8 p-0"
+                    onClick={() => copyToClipboard(DEMO_PASSWORD, 'password')}
+                  >
+                    {copied.password ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Login Button */}
             <Button 
               size="lg"
               onClick={handleDemoLogin}
               disabled={loggingIn}
-              className="h-14 px-10 text-base font-semibold bg-white text-slate-900 hover:bg-slate-100 rounded-full transition-all duration-300"
+              className="w-full h-12 font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-xl"
             >
               {loggingIn ? (
                 <>
@@ -226,17 +237,68 @@ export default function DemoPage() {
               ) : (
                 <>
                   <LogIn className="w-5 h-5 mr-2" />
-                  Start de Demo
+                  Direct Inloggen
+                  <ArrowRight className="w-5 h-5 ml-2" />
                 </>
               )}
             </Button>
-            
-            <p className="mt-6 text-slate-500 text-sm">
-              Alle data wordt automatisch opgeruimd
-            </p>
           </div>
         </div>
       </section>
+
+      {/* Modules Grid */}
+      <section className="pb-24 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl font-bold text-white text-center mb-10">
+            Beschikbare Modules
+          </h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {MODULES.map((module) => {
+              const IconComponent = module.icon;
+              
+              return (
+                <div
+                  key={module.id}
+                  className="group bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-5 hover:border-slate-700 transition-all duration-300 hover:-translate-y-1"
+                >
+                  {/* Icon */}
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${module.color} flex items-center justify-center mb-4 shadow-lg`}>
+                    <IconComponent className="w-6 h-6 text-white" />
+                  </div>
+                  
+                  {/* Content */}
+                  <h3 className="text-lg font-bold text-white mb-1">
+                    {module.name}
+                  </h3>
+                  <p className="text-slate-400 text-sm mb-4">
+                    {module.description}
+                  </p>
+                  
+                  {/* Features */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {module.features.map((feature, i) => (
+                      <span 
+                        key={i}
+                        className="text-xs px-2.5 py-1 bg-slate-800 text-slate-300 rounded-full"
+                      >
+                        {feature}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Bottom Note */}
+          <p className="mt-10 text-center text-slate-500 text-sm">
+            Demo data wordt automatisch opgeruimd
+          </p>
+        </div>
+      </section>
+
+      <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
     </div>
   );
 }
