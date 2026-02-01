@@ -47,6 +47,13 @@ from routers.spa_booking import router as spa_booking_router
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
+# Helper function to remove MongoDB _id field from documents
+def clean_mongo_doc(doc: dict) -> dict:
+    """Remove MongoDB _id field from document to prevent ObjectId serialization errors"""
+    if doc and "_id" in doc:
+        doc.pop("_id", None)
+    return doc
+
 # MongoDB connection
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 client = AsyncIOMotorClient(mongo_url)
