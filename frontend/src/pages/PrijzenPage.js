@@ -55,7 +55,9 @@ const MODULE_ICONS = {
   'autodealer': Car,
   'ai-chatbot': MessageSquare,
   'cms': Globe,
-  'rapportage': BarChart3
+  'rapportage': BarChart3,
+  'beauty': Scissors,
+  'chatbot': MessageSquare
 };
 
 export default function PrijzenPage() {
