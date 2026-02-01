@@ -129,23 +129,15 @@ export default function DemoPage() {
   const copyToClipboard = (text, field) => {
     navigator.clipboard.writeText(text);
     setCopied({ ...copied, [field]: true });
-    toast.success(`${field === 'email' ? 'E-mailadres' : 'Wachtwoord'} gekopieerd!`);
+    toast.success(`${field === 'url' ? 'Demo URL' : field === 'email' ? 'E-mailadres' : 'Wachtwoord'} gekopieerd!`);
     setTimeout(() => setCopied({ ...copied, [field]: false }), 2000);
   };
 
   const handleDemoLogin = async () => {
     setLoggingIn(true);
     
-    try {
-      await login(DEMO_EMAIL, DEMO_PASSWORD);
-      toast.success('Welkom bij de demo!');
-      navigate('/app/dashboard');
-    } catch (error) {
-      console.error('Login error:', error);
-      toast.error('Inloggen mislukt. Probeer het opnieuw.');
-    } finally {
-      setLoggingIn(false);
-    }
+    // Redirect to demo subdomain - will auto-login there
+    window.location.href = DEMO_URL + '/login?auto=true';
   };
 
   if (loading) {
