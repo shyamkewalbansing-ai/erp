@@ -284,7 +284,7 @@ const MODULE_FAQ_DATA = {
     color: 'cyan',
     gradient: 'from-teal-600 to-cyan-500',
     description: 'Intelligente klantenservice automatisering',
-    image: 'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800&q=80',
+    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/9f87c486b6222e0495bd7d942a77b2dbce2cef6ecd8dbba1361aa856344351d8.png',
     features: [
       {
         title: 'AI Conversaties',
