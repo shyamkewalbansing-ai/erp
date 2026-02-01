@@ -226,7 +226,7 @@ export default function ModulesOverviewPage() {
       return;
     }
     
-    if (trialForm.password.length < 6) {
+    if (orderForm.password.length < 6) {
       toast.error('Wachtwoord moet minimaal 6 karakters zijn');
       return;
     }
@@ -239,27 +239,16 @@ export default function ModulesOverviewPage() {
     setSubmitting(true);
     
     try {
-      // Map module slugs to actual addon IDs from backend
-      const addonsRes = await api.get('/public/addons').catch(() => ({ data: [] }));
-      const addons = addonsRes.data || [];
-      
-      const addonIds = selectedModules.map(modId => {
-        const mod = MODULES_DATA.find(m => m.id === modId);
-        const addon = addons.find(a => 
-          a.slug?.toLowerCase().includes(mod?.slug?.toLowerCase()) ||
-          a.name?.toLowerCase().includes(mod?.name?.toLowerCase().split(' ')[0])
-        );
-        return addon?.id;
-      }).filter(Boolean);
-
       const orderData = {
-        name: trialForm.name,
-        email: trialForm.email,
-        phone: trialForm.phone || '',
-        password: trialForm.password,
-        company_name: trialForm.company_name,
-        addon_ids: addonIds.length > 0 ? addonIds : selectedModules,
-        message: '3 dagen gratis proefperiode via modules-overzicht'
+        name: orderForm.name,
+        email: orderForm.email,
+        phone: orderForm.phone || '',
+        password: orderForm.password,
+        company_name: orderForm.company_name,
+        addon_ids: selectedModules,
+        message: paymentMethod === 'trial' 
+          ? '3 dagen gratis proefperiode via modules-overzicht'
+          : `Bestelling via modules-overzicht - ${paymentMethod}`
       };
       
       const response = await axios.post(`${API_URL}/public/orders`, orderData);
@@ -270,15 +259,36 @@ export default function ModulesOverviewPage() {
           axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         }
         
-        toast.success('Account aangemaakt! U heeft 3 dagen gratis toegang.');
-        setTrialDialogOpen(false);
+        toast.success(paymentMethod === 'trial' 
+          ? 'Account aangemaakt! U heeft 3 dagen gratis toegang.'
+          : 'Account aangemaakt! Uw bestelling wordt verwerkt.');
+        
+        setOrderDialogOpen(false);
+        setOrderForm({ name: '', email: '', phone: '', company_name: '', password: '', password_confirm: '' });
+        setSelectedModules([]);
+        
+        // Handle Mope payment
+        if (paymentMethod === 'mope' && response.data.order?.id) {
+          try {
+            const paymentRes = await axios.post(`${API_URL}/public/orders/${response.data.order.id}/pay`, null, {
+              params: { redirect_url: window.location.origin + '/app/dashboard' }
+            });
+            if (paymentRes.data?.payment_url) {
+              window.location.href = paymentRes.data.payment_url;
+              return;
+            }
+          } catch (payErr) {
+            console.error('Payment creation error:', payErr);
+            toast.error('Kon Mope betaling niet starten. Probeer later opnieuw.');
+          }
+        }
         
         setTimeout(() => {
           window.location.href = '/app/dashboard';
         }, 1000);
       }
     } catch (error) {
-      console.error('Trial error:', error);
+      console.error('Order error:', error);
       toast.error(error.response?.data?.detail || 'Er is een fout opgetreden');
     } finally {
       setSubmitting(false);
