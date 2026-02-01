@@ -1876,73 +1876,41 @@ server {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Webhook URL *</Label>
-                  <Input
-                    placeholder="https://uwdomein.com/api/deploy"
-                    value={deploymentSettings.webhook_url}
-                    onChange={(e) => setDeploymentSettings({...deploymentSettings, webhook_url: e.target.value})}
-                    data-testid="webhook-url-input"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Deze URL wordt aangeroepen om de update te starten op uw server
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Webhook Secret (optioneel)</Label>
-                  <Input
-                    type="password"
-                    placeholder="Geheime sleutel voor verificatie"
-                    value={deploymentSettings.webhook_secret}
-                    onChange={(e) => setDeploymentSettings({...deploymentSettings, webhook_secret: e.target.value})}
-                    data-testid="webhook-secret-input"
-                  />
-                  <p className="text-xs text-gray-500">
-                    Wordt gebruikt om de webhook request te verifiëren (HMAC-SHA256)
-                  </p>
-                </div>
-
-                <div className="border-t pt-4 mt-4">
+                <div className="space-y-3">
                   <h4 className="font-medium mb-3">Update Opties</h4>
-                  <div className="space-y-3">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={deploymentSettings.auto_restart_backend}
-                        onChange={(e) => setDeploymentSettings({...deploymentSettings, auto_restart_backend: e.target.checked})}
-                        className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                      />
-                      <div>
-                        <span className="font-medium">Backend Herstarten</span>
-                        <p className="text-xs text-gray-500">Herstart de backend service na update</p>
-                      </div>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={deploymentSettings.auto_rebuild_frontend}
-                        onChange={(e) => setDeploymentSettings({...deploymentSettings, auto_rebuild_frontend: e.target.checked})}
-                        className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                      />
-                      <div>
-                        <span className="font-medium">Frontend Rebuilden</span>
-                        <p className="text-xs text-gray-500">Bouw de frontend opnieuw na update</p>
-                      </div>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={deploymentSettings.run_migrations}
-                        onChange={(e) => setDeploymentSettings({...deploymentSettings, run_migrations: e.target.checked})}
-                        className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
-                      />
-                      <div>
-                        <span className="font-medium">Database Migraties</span>
-                        <p className="text-xs text-gray-500">Voer database migraties uit na update</p>
-                      </div>
-                    </label>
-                  </div>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={deploymentSettings.auto_rebuild_frontend}
+                      onChange={(e) => setDeploymentSettings({...deploymentSettings, auto_rebuild_frontend: e.target.checked})}
+                      className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <div>
+                      <span className="font-medium">Frontend Rebuilden</span>
+                      <p className="text-xs text-gray-500">Bouw de frontend opnieuw na git pull</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={deploymentSettings.sync_modules !== false}
+                      onChange={(e) => setDeploymentSettings({...deploymentSettings, sync_modules: e.target.checked})}
+                      className="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                    />
+                    <div>
+                      <span className="font-medium">Modules Synchroniseren</span>
+                      <p className="text-xs text-gray-500">Synchroniseer nieuwe modules naar de database</p>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                  <h4 className="font-medium text-blue-900 mb-2">ℹ️ Hoe werkt het?</h4>
+                  <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                    <li>Sla code op naar GitHub in Emergent ("Save to Github")</li>
+                    <li>Klik op "Update Systeem" knop hierboven</li>
+                    <li>Het systeem doet automatisch: git pull, frontend build, modules sync</li>
+                  </ol>
                 </div>
 
                 <Button 
