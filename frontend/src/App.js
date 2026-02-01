@@ -304,30 +304,87 @@ function AutoDealerCustomerPortalRoutes() {
   );
 }
 
+// Helper function to check if current domain is a subdomain
+function isSubdomain() {
+  const hostname = window.location.hostname;
+  // Main domains that should show landing page
+  const mainDomains = ['facturatie.sr', 'www.facturatie.sr', 'localhost', '127.0.0.1'];
+  
+  // Check if it's a main domain
+  if (mainDomains.includes(hostname)) {
+    return false;
+  }
+  
+  // Check if it's a subdomain of facturatie.sr
+  if (hostname.endsWith('.facturatie.sr')) {
+    return true;
+  }
+  
+  // Any other domain is treated as custom domain (subdomain behavior)
+  return true;
+}
+
+// Component that redirects subdomains to login
+function SubdomainRedirect({ children }) {
+  if (isSubdomain() && window.location.pathname === '/') {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
 // Main App Routes (existing)
 function MainAppRoutes() {
+  const onSubdomain = isSubdomain();
+  
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        {/* Landing Page - Critical, loaded immediately */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/modules" element={<ModulesPage />} />
-        <Route path="/modules-overzicht" element={<ModulesOverviewPage />} />
-        <Route path="/modules/:slug" element={<ModuleDetailPage />} />
-        <Route path="/prijzen" element={<PrijzenPage />} />
-        <Route path="/over-ons" element={<OverOnsPage />} />
-        <Route path="/voorwaarden" element={<VoorwaardenPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/faq" element={<FaqPage />} />
-        <Route path="/help" element={<FaqPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/demo" element={<DemoPage />} />
+        {/* Landing Page - Only on main domain */}
+        <Route path="/" element={
+          onSubdomain ? <Navigate to="/login" replace /> : <LandingPage />
+        } />
         
-        {/* Public Spa Booking Portal */}
+        {/* Public pages - Only on main domain */}
+        {!onSubdomain && (
+          <>
+            <Route path="/modules" element={<ModulesPage />} />
+            <Route path="/modules-overzicht" element={<ModulesOverviewPage />} />
+            <Route path="/modules/:slug" element={<ModuleDetailPage />} />
+            <Route path="/prijzen" element={<PrijzenPage />} />
+            <Route path="/over-ons" element={<OverOnsPage />} />
+            <Route path="/voorwaarden" element={<VoorwaardenPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/faq" element={<FaqPage />} />
+            <Route path="/help" element={<FaqPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/demo" element={<DemoPage />} />
+          </>
+        )}
+        
+        {/* Redirect public pages to login on subdomains */}
+        {onSubdomain && (
+          <>
+            <Route path="/modules" element={<Navigate to="/login" replace />} />
+            <Route path="/modules-overzicht" element={<Navigate to="/login" replace />} />
+            <Route path="/modules/:slug" element={<Navigate to="/login" replace />} />
+            <Route path="/prijzen" element={<Navigate to="/login" replace />} />
+            <Route path="/over-ons" element={<Navigate to="/login" replace />} />
+            <Route path="/voorwaarden" element={<Navigate to="/login" replace />} />
+            <Route path="/privacy" element={<Navigate to="/login" replace />} />
+            <Route path="/faq" element={<Navigate to="/login" replace />} />
+            <Route path="/help" element={<Navigate to="/login" replace />} />
+            <Route path="/contact" element={<Navigate to="/login" replace />} />
+            <Route path="/demo" element={<Navigate to="/login" replace />} />
+          </>
+        )}
+        
+        {/* Public Spa Booking Portal - Always available */}
         <Route path="/booking/spa/:workspaceId" element={<SpaBookingPage />} />
         
-        {/* Dynamic CMS Pages */}
-        <Route path="/pagina/:slug" element={<CMSPage />} />
+        {/* Dynamic CMS Pages - Only on main domain */}
+        <Route path="/pagina/:slug" element={
+          onSubdomain ? <Navigate to="/login" replace /> : <CMSPage />
+        } />
         
         {/* Public Auth Routes */}
         <Route path="/login" element={
