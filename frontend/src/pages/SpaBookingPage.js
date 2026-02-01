@@ -503,14 +503,12 @@ export default function SpaBookingPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white">
-        <PublicNav />
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <Loader2 className="w-10 h-10 animate-spin text-pink-500 mx-auto mb-4" />
             <p className="text-gray-600">Spa informatie laden...</p>
           </div>
         </div>
-        <PublicFooter />
       </div>
     );
   }
@@ -518,8 +516,7 @@ export default function SpaBookingPage() {
   if (!spaInfo) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white">
-        <PublicNav />
-        <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex items-center justify-center min-h-screen">
           <Card className="max-w-md mx-4">
             <CardContent className="p-8 text-center">
               <div className="w-16 h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
@@ -530,33 +527,56 @@ export default function SpaBookingPage() {
                 Deze spa heeft geen actief online boekingsportaal.
               </p>
               <Button onClick={() => navigate('/')} variant="outline">
-                Terug naar Home
+                Terug
               </Button>
             </CardContent>
           </Card>
         </div>
-        <PublicFooter />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-pink-50 to-white">
-      <PublicNav />
+    <div className="min-h-screen bg-gradient-to-b from-pink-50 via-white to-pink-50">
+      {/* Spa Branded Header */}
+      <header className="bg-white/80 backdrop-blur-sm border-b border-pink-100 sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg shadow-pink-200">
+              <Sparkles className="w-5 h-5 text-white" />
+            </div>
+            <div className="text-center">
+              <h1 className="text-xl font-bold text-gray-900">{spaInfo.spa_name}</h1>
+              <p className="text-xs text-gray-500">Online Reserveren</p>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Spa Header */}
+        {/* Spa Info Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-pink-100 rounded-full mb-4">
-            <Sparkles className="w-8 h-8 text-pink-500" />
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{spaInfo.spa_name}</h1>
-          <p className="text-gray-600">Online Afspraak Boeken</p>
           {spaInfo.address && (
-            <p className="text-sm text-gray-500 flex items-center justify-center gap-1 mt-2">
+            <p className="text-sm text-gray-500 flex items-center justify-center gap-1">
               <MapPin className="w-4 h-4" />
               {spaInfo.address}
             </p>
+          )}
+          {(spaInfo.phone || spaInfo.email) && (
+            <div className="flex items-center justify-center gap-4 mt-2 text-sm text-gray-500">
+              {spaInfo.phone && (
+                <span className="flex items-center gap-1">
+                  <Phone className="w-4 h-4" />
+                  {spaInfo.phone}
+                </span>
+              )}
+              {spaInfo.email && (
+                <span className="flex items-center gap-1">
+                  <Mail className="w-4 h-4" />
+                  {spaInfo.email}
+                </span>
+              )}
+            </div>
           )}
         </div>
 
