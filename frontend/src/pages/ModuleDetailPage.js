@@ -1,7 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from '../components/ui/dialog';
 import { 
   Loader2, 
   Users, 
@@ -37,11 +47,20 @@ import {
   Play,
   Star,
   CheckCircle,
-  ChevronRight
+  ChevronRight,
+  ShoppingCart,
+  User,
+  Mail,
+  Phone,
+  Building,
+  Gift,
+  CreditCard
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 // Detailed module information with feature sections
 const MODULES_DETAIL = {
@@ -57,6 +76,7 @@ const MODULES_DETAIL = {
     accentColor: 'blue',
     category: 'Personeel',
     price: 'SRD 2.500',
+    priceAmount: 2500,
     priceNote: 'per maand',
     heroImage: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1200&q=80',
     highlights: ['Verlofbeheer', 'Aanwezigheid', 'Loonstroken', 'Werving'],
@@ -92,7 +112,7 @@ const MODULES_DETAIL = {
     ]
   },
   'vastgoed-beheer': {
-    id: 'vastgoed',
+    id: 'vastgoed_beheer',
     name: 'Vastgoed Beheer',
     title: 'Vastgoed Management Systeem',
     subtitle: 'De complete oplossing voor vastgoedbeheerders',
@@ -103,6 +123,7 @@ const MODULES_DETAIL = {
     accentColor: 'emerald',
     category: 'Vastgoed',
     price: 'SRD 3.000',
+    priceAmount: 3000,
     priceNote: 'per maand',
     heroImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=80',
     highlights: ['Huurdersbeheer', 'Facturatie', 'Meterstanden', 'Onderhoud'],
@@ -149,6 +170,7 @@ const MODULES_DETAIL = {
     accentColor: 'orange',
     category: 'Automotive',
     price: 'SRD 3.500',
+    priceAmount: 3500,
     priceNote: 'per maand',
     heroImage: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=1200&q=80',
     highlights: ['Voertuigbeheer', 'Multi-valuta', 'Verkoop', 'Klanten Portal'],
@@ -184,7 +206,7 @@ const MODULES_DETAIL = {
     ]
   },
   'ai-chatbot': {
-    id: 'chatbot',
+    id: 'ai-chatbot',
     name: 'AI Chatbot',
     title: 'GPT-4 Powered Chatbot',
     subtitle: 'Intelligente klantenservice die 24/7 beschikbaar is',
@@ -195,6 +217,7 @@ const MODULES_DETAIL = {
     accentColor: 'purple',
     category: 'AI & Automatisering',
     price: 'SRD 1.500',
+    priceAmount: 1500,
     priceNote: 'per maand',
     heroImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80',
     highlights: ['GPT-4', 'Meertalig', '24/7 Online', 'Aanpasbaar'],
@@ -241,6 +264,7 @@ const MODULES_DETAIL = {
     accentColor: 'cyan',
     category: 'Website',
     price: 'SRD 2.000',
+    priceAmount: 2000,
     priceNote: 'per maand',
     heroImage: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=1200&q=80',
     highlights: ['Drag & Drop', 'SEO Tools', 'Templates', 'Media'],
@@ -287,6 +311,7 @@ const MODULES_DETAIL = {
     accentColor: 'teal',
     category: 'Analytics',
     price: 'SRD 1.500',
+    priceAmount: 1500,
     priceNote: 'per maand',
     heroImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80',
     highlights: ['Dashboards', 'PDF Export', 'Grafieken', 'Automatisch'],
@@ -322,7 +347,7 @@ const MODULES_DETAIL = {
     ]
   },
   'multi-tenant': {
-    id: 'workspace',
+    id: 'multi-tenant',
     name: 'Multi-Tenant Workspace',
     title: 'Eigen Workspace Platform',
     subtitle: 'Volledige controle over uw bedrijfsomgeving',
@@ -333,6 +358,7 @@ const MODULES_DETAIL = {
     accentColor: 'slate',
     category: 'Platform',
     price: 'Inclusief',
+    priceAmount: 0,
     priceNote: 'bij abonnement',
     heroImage: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&q=80',
     highlights: ['Custom Domain', 'Branding', 'Gebruikers', 'Beveiliging'],
@@ -374,6 +400,20 @@ export default function ModuleDetailPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [addons, setAddons] = useState([]);
+  
+  // Order dialog state
+  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('trial');
+  const [submitting, setSubmitting] = useState(false);
+  const [orderForm, setOrderForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    company_name: '',
+    password: '',
+    password_confirm: ''
+  });
 
   const module = MODULES_DETAIL[slug];
 
@@ -384,12 +424,99 @@ export default function ModuleDetailPage() {
 
   const loadData = async () => {
     try {
-      const settingsRes = await api.get('/public/landing/settings').catch(() => ({ data: {} }));
+      const [settingsRes, addonsRes] = await Promise.all([
+        api.get('/public/landing/settings').catch(() => ({ data: {} })),
+        api.get('/public/addons').catch(() => ({ data: [] }))
+      ]);
       setSettings(settingsRes.data || {});
+      setAddons(addonsRes.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOrderSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!orderForm.name || !orderForm.email || !orderForm.password || !orderForm.company_name) {
+      toast.error('Vul alle verplichte velden in');
+      return;
+    }
+    
+    if (orderForm.password !== orderForm.password_confirm) {
+      toast.error('Wachtwoorden komen niet overeen');
+      return;
+    }
+    
+    if (orderForm.password.length < 6) {
+      toast.error('Wachtwoord moet minimaal 6 karakters zijn');
+      return;
+    }
+
+    setSubmitting(true);
+    
+    try {
+      // Find the addon ID that matches this module
+      const matchingAddon = addons.find(a => 
+        a.slug === module.id || 
+        a.slug === slug || 
+        a.slug?.replace('_', '-') === slug ||
+        a.slug?.replace('-', '_') === module.id
+      );
+      
+      const addonIds = matchingAddon ? [matchingAddon.id] : [];
+      
+      const orderData = {
+        name: orderForm.name,
+        email: orderForm.email,
+        phone: orderForm.phone || '',
+        password: orderForm.password,
+        company_name: orderForm.company_name,
+        addon_ids: addonIds,
+        message: `Module: ${module.name} - Betaalmethode: ${paymentMethod === 'trial' ? '3 dagen gratis' : paymentMethod === 'mope' ? 'Mope' : 'Bankoverschrijving'}`
+      };
+      
+      const response = await axios.post(`${API_URL}/public/orders`, orderData);
+      
+      if (response.data) {
+        if (response.data.token) {
+          localStorage.setItem('token', response.data.token);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        }
+        
+        toast.success(
+          paymentMethod === 'trial' 
+            ? 'Account aangemaakt! U heeft 3 dagen gratis toegang.' 
+            : 'Bestelling ontvangen! U ontvangt een e-mail met betalingsinstructies.'
+        );
+        setOrderDialogOpen(false);
+        setOrderForm({ name: '', email: '', phone: '', company_name: '', password: '', password_confirm: '' });
+        
+        if (paymentMethod === 'mope' && response.data.order?.id) {
+          try {
+            const paymentRes = await axios.post(`${API_URL}/public/orders/${response.data.order.id}/pay`, null, {
+              params: { redirect_url: window.location.origin + '/app/dashboard' }
+            });
+            if (paymentRes.data?.payment_url) {
+              window.location.href = paymentRes.data.payment_url;
+              return;
+            }
+          } catch (payErr) {
+            console.error('Payment creation error:', payErr);
+          }
+        }
+        
+        setTimeout(() => {
+          window.location.href = '/app/dashboard';
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Order error:', error);
+      toast.error(error.response?.data?.detail || 'Er is een fout opgetreden');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -481,11 +608,11 @@ export default function ModuleDetailPage() {
                 </div>
                 <Button 
                   size="lg" 
-                  onClick={() => navigate('/prijzen')}
+                  onClick={() => setOrderDialogOpen(true)}
                   className="h-14 px-8 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-full shadow-xl shadow-emerald-500/25"
                 >
-                  <Play className="w-5 h-5 mr-2" />
-                  Start Gratis
+                  <ShoppingCart className="w-5 h-5 mr-2" />
+                  Nu Bestellen
                 </Button>
               </div>
             </div>
@@ -576,11 +703,11 @@ export default function ModuleDetailPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => navigate('/prijzen')}
+              onClick={() => setOrderDialogOpen(true)}
               className="h-14 px-10 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-full shadow-xl shadow-emerald-500/25"
             >
-              <Star className="w-5 h-5 mr-2" />
-              Start Gratis Proefperiode
+              <ShoppingCart className="w-5 h-5 mr-2" />
+              Nu Bestellen
             </Button>
             <Button 
               size="lg" 
@@ -594,6 +721,176 @@ export default function ModuleDetailPage() {
           </div>
         </div>
       </section>
+
+      {/* Order Dialog */}
+      <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden">
+          {/* Header */}
+          <div className={`bg-gradient-to-r ${module.gradient} p-6 text-white`}>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                <IconComponent className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="text-xl font-bold text-white">
+                  {module.name} Bestellen
+                </DialogTitle>
+                <DialogDescription className="text-white/80">
+                  {module.price} {module.priceNote}
+                </DialogDescription>
+              </div>
+            </div>
+          </div>
+
+          <form onSubmit={handleOrderSubmit} className="p-6 space-y-5">
+            {/* Personal Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-sm font-medium">Naam *</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    id="name"
+                    placeholder="Uw naam"
+                    value={orderForm.name}
+                    onChange={(e) => setOrderForm({...orderForm, name: e.target.value})}
+                    className="pl-10 h-11"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="company_name" className="text-sm font-medium">Bedrijf *</Label>
+                <div className="relative">
+                  <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    id="company_name"
+                    placeholder="Bedrijfsnaam"
+                    value={orderForm.company_name}
+                    onChange={(e) => setOrderForm({...orderForm, company_name: e.target.value})}
+                    className="pl-10 h-11"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium">E-mail *</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="uw@email.com"
+                    value={orderForm.email}
+                    onChange={(e) => setOrderForm({...orderForm, email: e.target.value})}
+                    className="pl-10 h-11"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium">Telefoon</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    id="phone"
+                    placeholder="+597 xxx xxxx"
+                    value={orderForm.phone}
+                    onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})}
+                    className="pl-10 h-11"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Password */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium">Wachtwoord *</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Min. 6 karakters"
+                    value={orderForm.password}
+                    onChange={(e) => setOrderForm({...orderForm, password: e.target.value})}
+                    className="pl-10 h-11"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password_confirm" className="text-sm font-medium">Bevestig *</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    id="password_confirm"
+                    type="password"
+                    placeholder="Herhaal wachtwoord"
+                    value={orderForm.password_confirm}
+                    onChange={(e) => setOrderForm({...orderForm, password_confirm: e.target.value})}
+                    className="pl-10 h-11"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Payment Method */}
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">Betaalmethode</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { id: 'trial', label: '3 Dagen Gratis', icon: Gift, desc: 'Geen betaling' },
+                  { id: 'mope', label: 'Mope', icon: CreditCard, desc: 'Online betalen' },
+                  { id: 'bank', label: 'Bank', icon: Building2, desc: 'Overschrijving' },
+                ].map((method) => (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() => setPaymentMethod(method.id)}
+                    className={`p-3 rounded-xl border-2 text-center transition-all ${
+                      paymentMethod === method.id
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <method.icon className={`w-5 h-5 mx-auto mb-1 ${
+                      paymentMethod === method.id ? 'text-emerald-600' : 'text-slate-400'
+                    }`} />
+                    <p className={`text-xs font-medium ${
+                      paymentMethod === method.id ? 'text-emerald-700' : 'text-slate-600'
+                    }`}>{method.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <Button 
+              type="submit" 
+              className={`w-full h-12 bg-gradient-to-r ${module.gradient} hover:opacity-90`}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Verwerken...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  {paymentMethod === 'trial' ? 'Start Gratis Proefperiode' : 'Bestelling Plaatsen'}
+                </>
+              )}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
     </div>
