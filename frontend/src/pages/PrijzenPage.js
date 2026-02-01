@@ -39,7 +39,8 @@ import {
   Car,
   MessageSquare,
   Globe,
-  BarChart3
+  BarChart3,
+  Scissors
 } from 'lucide-react';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
