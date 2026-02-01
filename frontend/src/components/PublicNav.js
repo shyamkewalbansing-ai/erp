@@ -124,7 +124,7 @@ export default function PublicNav({ logoUrl, companyName }) {
                 </Button>
                 <Button 
                   className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600"
-                  onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
+                  onClick={() => { window.location.href = getAppUrl('/login'); setMobileMenuOpen(false); }}
                 >
                   Inloggen
                 </Button>
