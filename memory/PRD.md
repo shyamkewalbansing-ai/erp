@@ -23,8 +23,8 @@ Complete demo omgeving voor potentiële klanten:
 - [x] Alle 3 modules geactiveerd (Vastgoed Beheer, HRM, Auto Dealer)
 - [x] Automatische data cleanup (elk uur)
 - [x] Handmatige cleanup trigger via admin endpoint
-- [x] Demo pagina met kopieerbare credentials
-- [x] Demo login redirect naar dashboard met alle modules
+- [x] Modern donker design demo pagina met credentials
+- [x] **Directe login** - één klik → automatisch inloggen → dashboard
 
 **API Endpoints:**
 | Endpoint | Methode | Beschrijving |
@@ -37,7 +37,8 @@ Complete demo omgeving voor potentiële klanten:
 - Toegang: Alle modules (Vastgoed, HRM, Auto Dealer)
 
 **Frontend Pagina's:**
-- `/demo` - Demo pagina met credentials en module overzicht
+- `/demo` - Modern demo pagina met credentials en directe login
+- `/modules-overzicht` - Modern modules overzicht (geen prijzen, details → FAQ)
 
 ---
 
