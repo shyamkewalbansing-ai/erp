@@ -1,0 +1,10 @@
+export { default as BeautySpaLayout } from './BeautySpaLayout';
+export { default as ClientsPage } from './ClientsPage';
+export { default as AppointmentsPage } from './AppointmentsPage';
+export { default as TreatmentsPage } from './TreatmentsPage';
+export { default as ProductsPage } from './ProductsPage';
+export { default as POSPage } from './POSPage';
+export { default as StaffPage } from './StaffPage';
+export { default as QueuePage } from './QueuePage';
+export { default as ReportsPage } from './ReportsPage';
+export { default as VouchersPage } from './VouchersPage';
