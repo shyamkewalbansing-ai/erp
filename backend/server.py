@@ -900,6 +900,12 @@ class WorkspaceBranding(BaseModel):
     primary_color: str = "#0caf60"
     secondary_color: str = "#059669"
     portal_name: Optional[str] = None
+    # Login/Register page customization
+    login_background_url: Optional[str] = None
+    login_image_url: Optional[str] = None
+    register_image_url: Optional[str] = None
+    welcome_text: Optional[str] = None
+    tagline: Optional[str] = None
 
 class WorkspaceDomain(BaseModel):
     type: str  # 'subdomain' or 'custom'
