@@ -38,24 +38,16 @@ class ClientRegistration(BaseModel):
 @router.get("/spa/{workspace_id}/info")
 async def get_spa_info(workspace_id: str):
     """Get spa info for booking portal"""
-    import logging
-    logger = logging.getLogger(__name__)
-    logger.info(f"Looking for spa with workspace_id: {workspace_id}")
-    
     # Find the spa owner by workspace
     user = await db.users.find_one({"id": workspace_id}, {"_id": 0})
-    logger.info(f"Found user by id: {user is not None}")
-    
     if not user:
         # Try to find by company name or other identifier
         user = await db.users.find_one({"company_name": {"$regex": workspace_id, "$options": "i"}}, {"_id": 0})
-        logger.info(f"Found user by company_name: {user is not None}")
     
     if not user:
         raise HTTPException(status_code=404, detail="Spa niet gevonden")
     
     # Check if user has beauty module
-    logger.info(f"User modules: {user.get('modules', [])}")
     if "beauty" not in user.get("modules", []):
         raise HTTPException(status_code=404, detail="Deze spa heeft geen online boekingen")
         raise HTTPException(status_code=404, detail="Deze spa heeft geen online boekingen")
