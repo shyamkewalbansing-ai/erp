@@ -54,7 +54,12 @@ import {
   Phone,
   Building,
   Gift,
-  CreditCard
+  CreditCard,
+  Scissors,
+  Heart,
+  Smile,
+  Package,
+  Ticket
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
