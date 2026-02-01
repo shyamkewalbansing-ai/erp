@@ -283,7 +283,8 @@ async def create_client(client: ClientCreate, current_user: dict = Depends(get_c
     }
     
     await db.spa_clients.insert_one(client_doc)
-    del client_doc["_id"] if "_id" in client_doc else None
+    if "_id" in client_doc:
+        del client_doc["_id"]
     return client_doc
 
 @router.get("/clients/{client_id}")
