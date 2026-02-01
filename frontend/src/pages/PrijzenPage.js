@@ -389,7 +389,7 @@ export default function PrijzenPage() {
                     </div>
                     
                     {/* Category */}
-                    <Badge variant="secondary" className="mb-3 bg-slate-100 text-slate-600">
+                    <Badge variant="secondary" className="mb-3 bg-emerald-50 text-emerald-700 border-emerald-200">
                       {addon.category || 'Module'}
                     </Badge>
                     
