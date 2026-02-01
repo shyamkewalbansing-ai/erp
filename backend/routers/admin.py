@@ -288,6 +288,7 @@ async def create_addon(addon_data: AddonCreate, current_user: dict = Depends(get
     addon_dict["created_by"] = current_user.get("id")
     
     result = await db.addons.insert_one(addon_dict)
+    addon_dict.pop("_id", None)
     addon_dict["id"] = str(result.inserted_id)
     
     return addon_dict
