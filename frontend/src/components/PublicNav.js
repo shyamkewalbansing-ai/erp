@@ -109,7 +109,7 @@ export default function PublicNav({ logoUrl, companyName }) {
                 </Button>
                 <Button 
                   className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600"
-                  onClick={() => { navigate('/modules'); setMobileMenuOpen(false); }}
+                  onClick={() => { navigate('/modules-overzicht?order=true'); setMobileMenuOpen(false); }}
                 >
                   Gratis Starten
                 </Button>
