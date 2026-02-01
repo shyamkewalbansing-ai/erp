@@ -562,6 +562,7 @@ async def create_sale(sale: SaleCreate, current_user: dict = Depends(get_current
         sale_doc["amount_paid"] = sale_doc["amount_paid"].model_dump()
     
     await db.autodealer_sales.insert_one(sale_doc)
+    sale_doc.pop("_id", None)
     
     # Update vehicle status to sold
     await db.autodealer_vehicles.update_one(
