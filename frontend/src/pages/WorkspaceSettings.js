@@ -730,6 +730,94 @@ export default function WorkspaceSettings() {
                 </div>
               </div>
 
+              {/* Login Page Customization */}
+              <div className="border-t pt-6 mt-6">
+                <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <ImageIcon className="w-5 h-5" />
+                  Login Pagina Aanpassen
+                </h3>
+                
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Welkomst Tekst</Label>
+                    <Input
+                      value={brandingForm.welcome_text}
+                      onChange={(e) => setBrandingForm({...brandingForm, welcome_text: e.target.value})}
+                      placeholder="Welkom bij Mijn Bedrijf"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Tagline / Ondertitel</Label>
+                    <Input
+                      value={brandingForm.tagline}
+                      onChange={(e) => setBrandingForm({...brandingForm, tagline: e.target.value})}
+                      placeholder="Beheer uw bedrijf eenvoudig en efficiënt"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Login Achtergrond Afbeelding (URL)</Label>
+                    <Input
+                      value={brandingForm.login_background_url}
+                      onChange={(e) => setBrandingForm({...brandingForm, login_background_url: e.target.value})}
+                      placeholder="https://example.com/background.jpg"
+                    />
+                    {brandingForm.login_background_url && (
+                      <div className="mt-2 rounded-lg overflow-hidden border h-32">
+                        <img 
+                          src={brandingForm.login_background_url} 
+                          alt="Background Preview" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Deze afbeelding wordt getoond als achtergrond op de login pagina
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Login Pagina Afbeelding (URL)</Label>
+                    <Input
+                      value={brandingForm.login_image_url}
+                      onChange={(e) => setBrandingForm({...brandingForm, login_image_url: e.target.value})}
+                      placeholder="https://example.com/login-image.jpg"
+                    />
+                    {brandingForm.login_image_url && (
+                      <div className="mt-2 rounded-lg overflow-hidden border h-32 w-48">
+                        <img 
+                          src={brandingForm.login_image_url} 
+                          alt="Login Image Preview" 
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Een afbeelding die getoond wordt naast de login formulier
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Registratie Pagina Afbeelding (URL)</Label>
+                    <Input
+                      value={brandingForm.register_image_url}
+                      onChange={(e) => setBrandingForm({...brandingForm, register_image_url: e.target.value})}
+                      placeholder="https://example.com/register-image.jpg"
+                    />
+                    {brandingForm.register_image_url && (
+                      <div className="mt-2 rounded-lg overflow-hidden border h-32 w-48">
+                        <img 
+                          src={brandingForm.register_image_url} 
+                          alt="Register Image Preview" 
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <Button onClick={handleSaveBranding} disabled={savingBranding} className="w-full">
                 {savingBranding ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Branding Opslaan
