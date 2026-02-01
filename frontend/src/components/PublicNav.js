@@ -54,19 +54,20 @@ export default function PublicNav({ logoUrl, companyName }) {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
             <Button 
-              variant="ghost" 
-              onClick={() => navigate('/login')}
-              className="text-slate-700"
+              variant="outline"
+              onClick={() => navigate('/demo')}
+              className="rounded-full px-5 border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+              data-testid="nav-demo-btn"
+            >
+              <Play className="w-4 h-4 mr-2" />
+              Demo
+            </Button>
+            <Button 
+              onClick={() => navigate('/login')} 
+              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-500/25"
               data-testid="nav-login-btn"
             >
               Inloggen
-            </Button>
-            <Button 
-              onClick={() => navigate('/modules-overzicht?order=true')} 
-              className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-500/25"
-              data-testid="nav-register-btn"
-            >
-              Gratis Starten
             </Button>
           </div>
 
