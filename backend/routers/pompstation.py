@@ -8,7 +8,7 @@ from datetime import datetime, timezone, timedelta
 from bson import ObjectId
 import uuid
 
-router = APIRouter(prefix="/api/pompstation", tags=["Pompstation"])
+router = APIRouter(prefix="/pompstation", tags=["Pompstation"])
 
 # ==================== PYDANTIC MODELS ====================
 
