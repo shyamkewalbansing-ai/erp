@@ -775,7 +775,7 @@ export default function ModuleDetailPage() {
             Start vandaag nog met een gratis proefperiode van 3 dagen. Geen creditcard nodig.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center flex-wrap">
             <Button 
               size="lg" 
               onClick={() => setOrderDialogOpen(true)}
@@ -784,6 +784,16 @@ export default function ModuleDetailPage() {
               <ShoppingCart className="w-5 h-5 mr-2" />
               Nu Bestellen
             </Button>
+            {module.hasBookingPortal && (
+              <Button 
+                size="lg" 
+                onClick={() => navigate('/booking/spa/demo-spa')}
+                className="h-14 px-10 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 rounded-full shadow-xl shadow-pink-500/25"
+              >
+                <Calendar className="w-5 h-5 mr-2" />
+                Bekijk Online Booking Demo
+              </Button>
+            )}
             <Button 
               size="lg" 
               variant="outline" 
