@@ -428,7 +428,7 @@ const MODULE_FAQ_DATA = {
     color: 'teal',
     gradient: 'from-cyan-500 to-teal-600',
     description: 'Inzichten in uw bedrijfsprestaties',
-    image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80',
+    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/b0ecf9c0e7ed690581dd5f0b448f579c1be0099d6e30400e9d2e3cea021ba320.png',
     features: [
       {
         title: 'Dashboards',
