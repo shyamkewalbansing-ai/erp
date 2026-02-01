@@ -214,6 +214,7 @@ async def create_workspace_for_user(user_id: str, user_name: str, company_name: 
     }
     
     await db.workspaces.insert_one(workspace)
+    workspace.pop("_id", None)
     await db.users.update_one({"id": user_id}, {"$set": {"workspace_id": workspace_id}})
     
     return workspace
