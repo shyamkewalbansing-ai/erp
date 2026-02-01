@@ -140,7 +140,7 @@ const MODULE_FAQ_DATA = {
     color: 'teal',
     gradient: 'from-teal-500 to-emerald-600',
     description: 'Professioneel vastgoedbeheer voor verhuurders',
-    image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80',
+    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/e79a18984e934f67abb761a7bbf10de82cffc3b7005f7905f865589c73b5d5d8.png',
     features: [
       {
         title: 'Pandenbeheer',
