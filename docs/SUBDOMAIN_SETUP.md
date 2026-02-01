@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://modular-erp-23.preview.emergentagent.com/           → Landing page
-https://modular-erp-23.preview.emergentagent.com/login      → Login
-https://modular-erp-23.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://modular-erp-23.preview.emergentagent.com/booking/   → Publieke booking portals
+https://erp-workspace-2.preview.emergentagent.com/           → Landing page
+https://erp-workspace-2.preview.emergentagent.com/login      → Login
+https://erp-workspace-2.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://erp-workspace-2.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
