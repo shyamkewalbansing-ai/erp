@@ -250,13 +250,8 @@ class DailyClosingResponse(BaseModel):
 
 # ==================== DEPENDENCY ====================
 
-async def get_db():
-    from server import db
-    return db
-
-async def get_current_user(credentials = None):
-    from server import get_current_user as server_get_current_user, security
-    return await server_get_current_user(credentials)
+# Import from shared deps
+from .deps import db, get_current_user, security
 
 def get_workspace_filter(user: dict) -> dict:
     workspace_id = user.get("workspace_id")
@@ -267,7 +262,7 @@ def get_workspace_filter(user: dict) -> dict:
 # ==================== TANK ENDPOINTS ====================
 
 @router.get("/tanks", response_model=List[TankResponse])
-async def get_tanks(db = Depends(get_db), current_user: dict = Depends(get_current_user)):
+async def get_tanks(current_user: dict = Depends(get_current_user)):
     """Get all fuel tanks"""
     query = get_workspace_filter(current_user)
     tanks = await db.pompstation_tanks.find(query, {"_id": 0}).to_list(100)
