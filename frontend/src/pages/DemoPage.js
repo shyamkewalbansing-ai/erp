@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
+import { useAuth } from '../context/AuthContext';
 import PublicNav from '../components/PublicNav';
 
 // Demo credentials
@@ -74,6 +75,7 @@ const MODULES = [
 
 export default function DemoPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loggingIn, setLoggingIn] = useState(false);
@@ -97,21 +99,13 @@ export default function DemoPage() {
     setLoggingIn(true);
     
     try {
-      const response = await api.post('/auth/login', {
-        email: DEMO_EMAIL,
-        password: DEMO_PASSWORD
-      });
-
-      if (response.data?.access_token) {
-        // Store token and user data
-        localStorage.setItem('token', response.data.access_token);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
-        
-        toast.success('Welkom bij de demo!');
-        
-        // Navigate to dashboard
-        navigate('/app/dashboard');
-      }
+      // Use AuthContext login to properly set user state
+      await login(DEMO_EMAIL, DEMO_PASSWORD);
+      
+      toast.success('Welkom bij de demo!');
+      
+      // Navigate to dashboard
+      navigate('/app/dashboard');
     } catch (error) {
       console.error('Login error:', error);
       toast.error('Inloggen mislukt. Probeer het opnieuw.');
