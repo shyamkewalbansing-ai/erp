@@ -530,8 +530,8 @@ export default function ModulesOverviewPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={handleStartTrial}
-              className="h-14 px-8 bg-white text-slate-900 hover:bg-slate-100 rounded-full shadow-xl"
+              onClick={() => handleStartOrder()}
+              className="h-14 px-8 bg-white text-emerald-900 hover:bg-slate-100 rounded-full shadow-xl"
             >
               <Gift className="w-5 h-5 mr-2" />
               Start Gratis Proefperiode
@@ -552,31 +552,32 @@ export default function ModulesOverviewPage() {
       {/* Footer */}
       <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
-      {/* Trial Dialog */}
-      <Dialog open={trialDialogOpen} onOpenChange={setTrialDialogOpen}>
+      {/* Order Dialog with Payment Options */}
+      <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl flex items-center gap-2">
-              <Gift className="w-6 h-6 text-emerald-500" />
-              Start Gratis Proefperiode
+              <Sparkles className="w-6 h-6 text-emerald-500" />
+              Account Aanmaken & Bestellen
             </DialogTitle>
             <DialogDescription>
-              Maak een account aan en probeer 3 dagen gratis alle geselecteerde modules
+              Maak een account aan en kies uw betaalmethode
             </DialogDescription>
           </DialogHeader>
           
-          <form onSubmit={handleTrialSubmit} className="space-y-6 mt-4">
+          <form onSubmit={handleOrderSubmit} className="space-y-6 mt-4">
             {/* Module Selection */}
             <div className="space-y-3">
               <Label className="text-base font-semibold">Selecteer Modules</Label>
               <div className="grid grid-cols-2 gap-2">
-                {MODULES_DATA.map((module) => {
-                  const IconComponent = module.icon;
-                  const isSelected = selectedModules.includes(module.id);
+                {addons.map((addon) => {
+                  const moduleUI = getModuleUI(addon.slug);
+                  const IconComponent = moduleUI.icon;
+                  const isSelected = selectedModules.includes(addon.id);
                   
                   return (
                     <div
-                      key={module.id}
+                      key={addon.id}
                       className={`flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                         isSelected 
                           ? 'border-emerald-500 bg-emerald-50' 
