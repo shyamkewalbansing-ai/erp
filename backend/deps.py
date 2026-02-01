@@ -101,17 +101,29 @@ def get_subscription_status(user: dict) -> tuple:
         return ("none", None, None)
     
     try:
-        end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+        # Handle both timezone-aware and naive datetime strings
+        if isinstance(end_date_str, str):
+            if '+' in end_date_str or 'Z' in end_date_str:
+                end_date = datetime.fromisoformat(end_date_str.replace('Z', '+00:00'))
+            else:
+                # Assume UTC for naive datetime strings
+                end_date = datetime.fromisoformat(end_date_str).replace(tzinfo=timezone.utc)
+        else:
+            end_date = end_date_str
+            if end_date.tzinfo is None:
+                end_date = end_date.replace(tzinfo=timezone.utc)
+        
         now = datetime.now(timezone.utc)
         days_remaining = (end_date - now).days
         
         if days_remaining < 0:
-            return ("expired", end_date_str, 0)
+            return ("expired", end_date.isoformat(), 0)
         elif is_trial:
-            return ("trial", end_date_str, days_remaining)
+            return ("trial", end_date.isoformat(), days_remaining)
         else:
-            return ("active", end_date_str, days_remaining)
-    except Exception:
+            return ("active", end_date.isoformat(), days_remaining)
+    except Exception as e:
+        logger.error(f"Error parsing subscription_end_date: {e}")
         return ("none", None, None)
 
 # ==================== PYDANTIC MODELS ====================
