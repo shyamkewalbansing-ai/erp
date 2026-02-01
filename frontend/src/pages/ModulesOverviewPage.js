@@ -21,7 +21,8 @@ import {
   Clock,
   Headphones,
   CheckCircle,
-  Scissors
+  Scissors,
+  Fuel
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
