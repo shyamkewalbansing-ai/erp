@@ -32,12 +32,32 @@ export default function Login() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [settings, setSettings] = useState(null);
+  const [autoLoginInProgress, setAutoLoginInProgress] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     getLandingSettings().then(res => setSettings(res.data)).catch(() => {});
+    
+    // Check for auto-login parameter (for demo)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('auto') === 'true') {
+      handleAutoLogin();
+    }
   }, []);
+
+  const handleAutoLogin = async () => {
+    setAutoLoginInProgress(true);
+    try {
+      await login('demo@facturatie.sr', 'demo2024');
+      toast.success('Welkom bij de demo!');
+      navigate('/app/dashboard');
+    } catch (error) {
+      console.error('Auto-login failed:', error);
+      toast.error('Auto-login mislukt. Probeer handmatig in te loggen.');
+      setAutoLoginInProgress(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
