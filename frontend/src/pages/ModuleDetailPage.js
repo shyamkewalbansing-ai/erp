@@ -409,8 +409,17 @@ const MODULES_DETAIL = {
         icon: Users,
         features: ['Medewerkersprofielen', 'Specialisaties per medewerker', 'Commissie per behandeling', 'Prestatie tracking', 'Certificaten bijhouden'],
         image: 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80'
+      },
+      {
+        title: 'Online Booking Portal',
+        description: 'Laat klanten zelf online afspraken boeken via uw eigen portaal.',
+        icon: Calendar,
+        features: ['Publieke boekingswebsite', 'Klanten kiezen behandeling en tijdstip', 'Automatische beschikbaarheid controle', 'Direct bevestiging na boeking', 'Annuleren en wijzigen mogelijk'],
+        image: 'https://images.unsplash.com/photo-1596178065887-1198b6148b2b?w=800&q=80',
+        hasDemo: true
       }
-    ]
+    ],
+    hasBookingPortal: true
   },
   'multi-tenant': {
     id: 'multi-tenant',
