@@ -268,19 +268,19 @@ export default function DemoPage() {
                 {loggingIn ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Inloggen...
+                    Demo laden...
                   </>
                 ) : (
                   <>
-                    <LogIn className="w-5 h-5 mr-2" />
-                    Direct Inloggen
+                    <Play className="w-5 h-5 mr-2" />
+                    Start Demo
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </>
                 )}
               </Button>
 
               <p className="text-center text-sm text-slate-400">
-                Demo data wordt automatisch opgeruimd
+                U wordt automatisch ingelogd op de demo omgeving
               </p>
             </div>
           </div>
