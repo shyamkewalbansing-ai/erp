@@ -12857,6 +12857,7 @@ api_router.include_router(admin_router)
 api_router.include_router(domain_management_router)
 api_router.include_router(beautyspa_router)
 api_router.include_router(spa_booking_router)
+api_router.include_router(pompstation_router)
 
 # Include the router in the main app
 app.include_router(api_router)
