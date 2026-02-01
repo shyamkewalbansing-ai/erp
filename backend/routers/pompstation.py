@@ -27,7 +27,7 @@ class TankCreate(TankBase):
 
 class TankResponse(TankBase):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     percentage_full: float
     status: str  # normal, low, critical, leak_detected
     created_at: str
@@ -64,7 +64,7 @@ class FuelDeliveryCreate(BaseModel):
 
 class FuelDeliveryResponse(FuelDeliveryCreate):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     tank_name: str
     fuel_type: str
     total_cost: float
@@ -83,7 +83,7 @@ class PumpCreate(BaseModel):
 
 class PumpResponse(PumpCreate):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     tank_name: str
     fuel_type: str
     total_sales_today: float
@@ -98,7 +98,7 @@ class FuelPriceCreate(BaseModel):
 
 class FuelPriceResponse(FuelPriceCreate):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     previous_price: Optional[float] = None
     created_at: str
 
@@ -120,7 +120,7 @@ class POSSaleCreate(BaseModel):
 
 class POSSaleResponse(BaseModel):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     receipt_number: str
     items: List[dict]
     subtotal: float
@@ -149,7 +149,7 @@ class ShopProductCreate(BaseModel):
 
 class ShopProductResponse(ShopProductCreate):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     profit_margin: float
     stock_status: str  # ok, low, out_of_stock
     created_at: str
@@ -163,7 +163,7 @@ class ShiftCreate(BaseModel):
 
 class ShiftResponse(BaseModel):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     operator_id: str
     operator_name: str
     pump_numbers: List[int]
@@ -190,7 +190,7 @@ class PompstationEmployeeCreate(BaseModel):
 
 class PompstationEmployeeResponse(PompstationEmployeeCreate):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     is_active: bool
     total_shifts: int
     total_hours: float
@@ -207,7 +207,7 @@ class SafetyInspectionCreate(BaseModel):
 
 class SafetyInspectionResponse(SafetyInspectionCreate):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     inspection_date: str
     created_at: str
 
@@ -223,7 +223,7 @@ class IncidentCreate(BaseModel):
 
 class IncidentResponse(IncidentCreate):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     reported_by: str
     incident_date: str
     resolution_date: Optional[str] = None
@@ -232,7 +232,7 @@ class IncidentResponse(IncidentCreate):
 # Daily Closing Models
 class DailyClosingResponse(BaseModel):
     id: str
-    workspace_id: str
+    workspace_id: Optional[str] = None
     date: str
     total_fuel_sales: float
     total_fuel_liters: float
