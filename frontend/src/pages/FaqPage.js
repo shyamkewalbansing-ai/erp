@@ -212,7 +212,7 @@ const MODULE_FAQ_DATA = {
     color: 'green',
     gradient: 'from-emerald-600 to-green-500',
     description: 'Complete autohandel management',
-    image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80',
+    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/b40b09dfdbf4f1c39d50cd000bd68233668e94a6e24cfdb811cde13f6e1d3f42.png',
     features: [
       {
         title: 'Voertuigvoorraad',
