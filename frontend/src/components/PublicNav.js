@@ -102,16 +102,17 @@ export default function PublicNav({ logoUrl, companyName }) {
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-slate-100">
                 <Button 
                   variant="outline" 
-                  className="w-full" 
-                  onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
+                  className="w-full border-emerald-200 text-emerald-700" 
+                  onClick={() => { navigate('/demo'); setMobileMenuOpen(false); }}
                 >
-                  Inloggen
+                  <Play className="w-4 h-4 mr-2" />
+                  Demo
                 </Button>
                 <Button 
                   className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600"
-                  onClick={() => { navigate('/modules-overzicht?order=true'); setMobileMenuOpen(false); }}
+                  onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
                 >
-                  Gratis Starten
+                  Inloggen
                 </Button>
               </div>
             </div>
