@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { label: 'FAQ', path: '/faq' },
   { label: 'Contact', path: '/contact' },
   { label: 'Privacy', path: '/privacy' },
+  { label: 'Voorwaarden', path: '/voorwaarden' },
 ];
 
 export default function PublicNav({ logoUrl, companyName }) {
