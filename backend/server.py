@@ -12694,6 +12694,7 @@ api_router.include_router(autodealer_portal_router)
 api_router.include_router(payment_methods_router)
 api_router.include_router(admin_router)
 api_router.include_router(domain_management_router)
+api_router.include_router(beautyspa_router)
 
 # Include the router in the main app
 app.include_router(api_router)
