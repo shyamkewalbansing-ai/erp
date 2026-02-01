@@ -23,6 +23,24 @@ import {
 } from 'lucide-react';
 import api, { getLandingSettings } from '../lib/api';
 
+// Helper to check if on subdomain/custom domain
+function getWorkspaceFromDomain() {
+  const hostname = window.location.hostname;
+  const mainDomains = ['facturatie.sr', 'www.facturatie.sr', 'app.facturatie.sr', 'localhost', '127.0.0.1'];
+  
+  if (mainDomains.includes(hostname)) {
+    return null;
+  }
+  
+  // Extract subdomain from facturatie.sr
+  if (hostname.endsWith('.facturatie.sr')) {
+    return hostname.replace('.facturatie.sr', '');
+  }
+  
+  // Custom domain - return the full domain
+  return hostname;
+}
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,12 +50,25 @@ export default function Login() {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetSent, setResetSent] = useState(false);
   const [settings, setSettings] = useState(null);
+  const [workspaceBranding, setWorkspaceBranding] = useState(null);
   const [autoLoginInProgress, setAutoLoginInProgress] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    getLandingSettings().then(res => setSettings(res.data)).catch(() => {});
+    const workspaceSlug = getWorkspaceFromDomain();
+    
+    if (workspaceSlug) {
+      // Load workspace branding for subdomain/custom domain
+      api.get(`/workspace/branding-public/${workspaceSlug}`)
+        .then(res => setWorkspaceBranding(res.data))
+        .catch(() => {
+          // Fallback to default settings
+          getLandingSettings().then(res => setSettings(res.data)).catch(() => {});
+        });
+    } else {
+      getLandingSettings().then(res => setSettings(res.data)).catch(() => {});
+    }
     
     // Check for auto-login parameter (for demo)
     const urlParams = new URLSearchParams(window.location.search);
