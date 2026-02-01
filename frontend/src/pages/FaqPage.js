@@ -356,7 +356,7 @@ const MODULE_FAQ_DATA = {
     color: 'emerald',
     gradient: 'from-green-500 to-emerald-600',
     description: 'Beheer uw website content',
-    image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80',
+    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/ce27624b803e1d403726312d40b0044eeb4ddd4b1333dfc77aa00a43e4f3aa89.png',
     features: [
       {
         title: 'Pagina Builder',
