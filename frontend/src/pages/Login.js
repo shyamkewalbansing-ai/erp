@@ -597,7 +597,8 @@ export default function Login() {
             </Button>
           </form>
 
-          {/* Demo link */}
+          {/* Demo link - only show on main domain, not on workspace/custom domains */}
+          {!workspaceBranding && (
           <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-md">
@@ -612,8 +613,10 @@ export default function Login() {
               </div>
             </div>
           </div>
+          )}
 
-          {/* Trust indicators */}
+          {/* Trust indicators - only show on main domain */}
+          {!workspaceBranding && (
           <div className="mt-4 flex items-center justify-center gap-4">
             <div className="flex -space-x-2">
               {['JK', 'SM', 'RB'].map((initials, i) => (
@@ -626,8 +629,10 @@ export default function Login() {
               500+ klanten vertrouwen ons
             </div>
           </div>
+          )}
 
-          {/* Register link */}
+          {/* Register link - only show on main domain */}
+          {!workspaceBranding && (
           <p className="mt-8 text-center text-slate-600">
             Nog geen account?{' '}
             <Link 
@@ -638,6 +643,7 @@ export default function Login() {
               Registreer hier
             </Link>
           </p>
+          )}
         </div>
       </div>
 
