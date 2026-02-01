@@ -658,20 +658,24 @@ export default function PrijzenPage() {
                 Betaalmethode
               </h4>
               
-              <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
+              <div className="space-y-3">
                 <div 
                   className={`flex items-start space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                     paymentMethod === 'trial' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'
                   }`}
                   onClick={() => setPaymentMethod('trial')}
                 >
-                  <RadioGroupItem value="trial" id="trial" className="mt-1" />
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-1 ${
+                    paymentMethod === 'trial' ? 'border-emerald-500' : 'border-slate-300'
+                  }`}>
+                    {paymentMethod === 'trial' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                  </div>
                   <div className="flex-1">
-                    <Label htmlFor="trial" className="flex items-center gap-2 cursor-pointer font-semibold">
+                    <div className="flex items-center gap-2 font-semibold">
                       <Gift className="w-5 h-5 text-emerald-600" />
                       3 Dagen Gratis Proberen
                       <Badge className="bg-emerald-100 text-emerald-700 border-0">Aanbevolen</Badge>
-                    </Label>
+                    </div>
                     <p className="text-sm text-slate-500 mt-1">
                       Probeer alle functies gratis. Na 3 dagen kiest u een betaalmethode.
                     </p>
@@ -684,12 +688,16 @@ export default function PrijzenPage() {
                   }`}
                   onClick={() => setPaymentMethod('mope')}
                 >
-                  <RadioGroupItem value="mope" id="mope" className="mt-1" />
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-1 ${
+                    paymentMethod === 'mope' ? 'border-emerald-500' : 'border-slate-300'
+                  }`}>
+                    {paymentMethod === 'mope' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                  </div>
                   <div className="flex-1">
-                    <Label htmlFor="mope" className="flex items-center gap-2 cursor-pointer font-semibold">
-                      <CreditCard className="w-5 h-5 text-blue-500" />
+                    <div className="flex items-center gap-2 font-semibold">
+                      <CreditCard className="w-5 h-5 text-teal-500" />
                       Betalen met Mope
-                    </Label>
+                    </div>
                     <p className="text-sm text-slate-500 mt-1">
                       Direct betalen via Mope. Uw account wordt direct geactiveerd.
                     </p>
@@ -702,18 +710,22 @@ export default function PrijzenPage() {
                   }`}
                   onClick={() => setPaymentMethod('bank')}
                 >
-                  <RadioGroupItem value="bank" id="bank" className="mt-1" />
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-1 ${
+                    paymentMethod === 'bank' ? 'border-emerald-500' : 'border-slate-300'
+                  }`}>
+                    {paymentMethod === 'bank' && <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />}
+                  </div>
                   <div className="flex-1">
-                    <Label htmlFor="bank" className="flex items-center gap-2 cursor-pointer font-semibold">
+                    <div className="flex items-center gap-2 font-semibold">
                       <Building2 className="w-5 h-5 text-slate-600" />
                       Bankoverschrijving
-                    </Label>
+                    </div>
                     <p className="text-sm text-slate-500 mt-1">
                       U ontvangt een factuur per e-mail. Na betaling wordt uw account geactiveerd.
                     </p>
                   </div>
                 </div>
-              </RadioGroup>
+              </div>
             </div>
 
             {/* Submit Button */}
