@@ -273,12 +273,13 @@ export default function LandingPage() {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Button size="lg" className="h-14 px-8 text-base bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-full shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all font-body font-semibold" onClick={() => setOrderDialogOpen(true)} data-testid="hero-cta-primary">
-                  Gratis Starten
+                <Button size="lg" className="h-14 px-8 text-base bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-full shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 transition-all font-body font-semibold" onClick={() => navigate('/login')} data-testid="hero-cta-primary">
+                  Inloggen
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
-                <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-full transition-all font-body font-medium" onClick={() => navigate('/prijzen')} data-testid="hero-cta-secondary">
-                  Bekijk Prijzen
+                <Button size="lg" variant="outline" className="h-14 px-8 text-base border-2 border-emerald-200 text-emerald-700 hover:bg-emerald-50 rounded-full transition-all font-body font-medium" onClick={() => navigate('/demo')} data-testid="hero-cta-secondary">
+                  <Play className="w-5 h-5 mr-2" />
+                  Bekijk Demo
                 </Button>
               </div>
               
