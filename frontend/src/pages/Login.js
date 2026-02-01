@@ -100,6 +100,19 @@ export default function Login() {
     setResetSent(false);
   };
 
+  // Show loading screen during auto-login
+  if (autoLoginInProgress) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-2">Demo wordt geladen...</h2>
+          <p className="text-emerald-200">Even geduld, u wordt automatisch ingelogd.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex">
       {/* Left side - Beautiful gradient with features */}
