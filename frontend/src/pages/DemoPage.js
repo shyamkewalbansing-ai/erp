@@ -1,97 +1,74 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
-import { Input } from '../components/ui/input';
 import { 
-  Play, 
   Users, 
   Building2, 
   Car, 
   MessageSquare, 
   Globe,
   BarChart3,
-  ArrowRight,
-  Check,
-  Copy,
-  Eye,
-  EyeOff,
-  Sparkles,
-  Lock,
-  Mail,
   LogIn,
-  Star,
-  Shield,
-  Zap,
-  Clock
+  Loader2,
+  ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
-import PublicFooter from '../components/PublicFooter';
 
-// Demo account credentials
-const DEMO_CREDENTIALS = {
-  email: 'demo@facturatie.sr',
-  password: 'demo2024',
-  name: 'Demo Gebruiker'
-};
+// Demo credentials
+const DEMO_EMAIL = 'demo@facturatie.sr';
+const DEMO_PASSWORD = 'demo2024';
 
-// Module data with screenshots
-const DEMO_MODULES = [
-  {
-    id: 'hrm',
-    name: 'HRM Module',
-    description: 'Beheer personeel, verlof, aanwezigheid en meer',
-    icon: Users,
-    gradient: 'from-emerald-500 to-teal-600',
-    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/fc3a6f7a9ded44ab9a2fee6d6e23c9bba1f549b78f124edd0f36b657e15319fb.png',
-    features: ['Medewerker overzicht', 'Verlofbeheer', 'Aanwezigheid', 'Employee Portal']
-  },
+// Modules data
+const MODULES = [
   {
     id: 'vastgoed',
     name: 'Vastgoed Beheer',
-    description: 'Complete oplossing voor vastgoedbeheer',
+    description: 'Panden, huurders, betalingen en onderhoud',
     icon: Building2,
-    gradient: 'from-teal-500 to-emerald-600',
-    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/e79a18984e934f67abb761a7bbf10de82cffc3b7005f7905f865589c73b5d5d8.png',
-    features: ['Panden & Units', 'Huurdersbeheer', 'Automatische facturatie', 'Huurders Portal']
+    color: 'from-emerald-500 to-emerald-600',
+    features: ['Huurdersbeheer', 'Facturatie', 'Meterstanden', 'Huurders Portal']
+  },
+  {
+    id: 'hrm',
+    name: 'HRM Module',
+    description: 'Personeel, verlof en aanwezigheid',
+    icon: Users,
+    color: 'from-teal-500 to-teal-600',
+    features: ['Personeelsdossiers', 'Verlofbeheer', 'Aanwezigheid', 'Loonlijst']
   },
   {
     id: 'autodealer',
     name: 'Auto Dealer',
-    description: 'Autohandel management met multi-valuta',
+    description: 'Voertuigen, verkoop en multi-valuta',
     icon: Car,
-    gradient: 'from-emerald-600 to-green-500',
-    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/b40b09dfdbf4f1c39d50cd000bd68233668e94a6e24cfdb811cde13f6e1d3f42.png',
-    features: ['Voertuigvoorraad', 'Verkoop registratie', 'Multi-valuta (SRD/EUR/USD)', 'Klanten Portal']
+    color: 'from-cyan-500 to-cyan-600',
+    features: ['Voertuigbeheer', 'Verkoop', 'SRD/EUR/USD', 'Klanten Portal']
   },
   {
     id: 'chatbot',
     name: 'AI Chatbot',
-    description: 'Intelligente klantenservice automatisering',
+    description: 'GPT-4 powered klantenservice',
     icon: MessageSquare,
-    gradient: 'from-teal-600 to-cyan-500',
-    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/9f87c486b6222e0495bd7d942a77b2dbce2cef6ecd8dbba1361aa856344351d8.png',
-    features: ['GPT-4 Gesprekken', '24/7 Beschikbaar', 'Meertalig', 'Aanpasbaar']
+    color: 'from-violet-500 to-violet-600',
+    features: ['24/7 Support', 'Meertalig', 'Aanpasbaar', 'Chat History']
   },
   {
     id: 'cms',
     name: 'CMS & Website',
-    description: 'Beheer uw website content eenvoudig',
+    description: 'Beheer uw website content',
     icon: Globe,
-    gradient: 'from-green-500 to-emerald-600',
-    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/ce27624b803e1d403726312d40b0044eeb4ddd4b1333dfc77aa00a43e4f3aa89.png',
-    features: ['Pagina Builder', 'Menu Beheer', 'SEO Tools', 'Media Bibliotheek']
+    color: 'from-blue-500 to-blue-600',
+    features: ['Pagina Builder', 'Menu Beheer', 'SEO Tools', 'Media Library']
   },
   {
     id: 'rapportage',
-    name: 'Rapportage & Analytics',
-    description: 'Inzichten in uw bedrijfsprestaties',
+    name: 'Rapportage',
+    description: 'Analytics en inzichten',
     icon: BarChart3,
-    gradient: 'from-cyan-500 to-teal-600',
-    image: 'https://static.prod-images.emergentagent.com/jobs/3ec109f1-77d7-4f24-a83d-1791605b2728/images/b0ecf9c0e7ed690581dd5f0b448f579c1be0099d6e30400e9d2e3cea021ba320.png',
-    features: ['Real-time Dashboards', 'Gedetailleerde Rapporten', 'PDF/Excel Export', 'Automatische E-mail']
+    color: 'from-orange-500 to-orange-600',
+    features: ['Dashboards', 'PDF Export', 'Automatische Rapporten', 'Grafieken']
   }
 ];
 
@@ -99,335 +76,173 @@ export default function DemoPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
-  const [copied, setCopied] = useState({ email: false, password: false });
+  const [loggingIn, setLoggingIn] = useState(false);
 
   useEffect(() => {
-    loadData();
+    loadSettings();
   }, []);
 
-  const loadData = async () => {
+  const loadSettings = async () => {
     try {
-      const settingsRes = await api.get('/public/landing/settings').catch(() => ({ data: {} }));
-      setSettings(settingsRes.data || {});
+      const res = await api.get('/public/landing/settings').catch(() => ({ data: {} }));
+      setSettings(res.data || {});
     } catch (error) {
-      console.error('Error loading data:', error);
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const copyToClipboard = (text, field) => {
-    navigator.clipboard.writeText(text);
-    setCopied({ ...copied, [field]: true });
-    toast.success(`${field === 'email' ? 'E-mailadres' : 'Wachtwoord'} gekopieerd!`);
-    setTimeout(() => setCopied({ ...copied, [field]: false }), 2000);
-  };
+  const handleDemoLogin = async () => {
+    setLoggingIn(true);
+    
+    try {
+      const response = await api.post('/auth/login', {
+        email: DEMO_EMAIL,
+        password: DEMO_PASSWORD
+      });
 
-  const handleDemoLogin = () => {
-    // Store demo credentials for auto-fill
-    sessionStorage.setItem('demoLogin', 'true');
-    navigate('/login?demo=true');
+      if (response.data?.access_token) {
+        // Store token and user data
+        localStorage.setItem('token', response.data.access_token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+        
+        toast.success('Welkom bij de demo!');
+        
+        // Navigate to dashboard
+        navigate('/app/dashboard');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast.error('Inloggen mislukt. Probeer het opnieuw.');
+    } finally {
+      setLoggingIn(false);
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-slate-950">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-slate-950">
       <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
       
-      {/* Hero Section */}
-      <section className="pt-24 pb-16 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.3),transparent_50%)]"></div>
-          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(20,184,166,0.3),transparent_50%)]"></div>
+      {/* Hero */}
+      <section className="pt-32 pb-20 relative overflow-hidden">
+        {/* Background effects */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl"></div>
         </div>
-        
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
-          <Badge className="mb-6 bg-white/10 text-emerald-300 border-emerald-400/30">
-            <Play className="w-4 h-4 mr-2" />
-            Live Demo
-          </Badge>
-          
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            Ervaar het zelf met onze Demo
+
+        <div className="max-w-5xl mx-auto px-4 text-center relative z-10">
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            <span className="text-white">Probeer de </span>
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Demo</span>
           </h1>
           
-          <p className="text-lg text-slate-300 mb-10 max-w-2xl mx-auto">
-            Log in met het demo account en ontdek alle functionaliteiten van onze modules.
-            Geen registratie nodig - direct aan de slag!
+          <p className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto">
+            Ervaar alle modules direct. Geen registratie nodig.
           </p>
 
-          {/* Demo Credentials Card */}
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 max-w-lg mx-auto">
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <Lock className="w-5 h-5 text-emerald-400" />
-              <h3 className="text-xl font-bold text-white">Demo Inloggegevens</h3>
-            </div>
-            
-            <div className="space-y-4">
-              {/* Email */}
-              <div className="bg-white/10 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-emerald-400" />
-                    <div className="text-left">
-                      <p className="text-xs text-slate-400">E-mailadres</p>
-                      <p className="text-white font-mono font-semibold">{DEMO_CREDENTIALS.email}</p>
-                    </div>
-                  </div>
-                  <Button 
-                    size="sm" 
-                    variant="ghost" 
-                    className="text-white hover:bg-white/10"
-                    onClick={() => copyToClipboard(DEMO_CREDENTIALS.email, 'email')}
-                  >
-                    {copied.email ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                  </Button>
-                </div>
-              </div>
-
-              {/* Password */}
-              <div className="bg-white/10 rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <Lock className="w-5 h-5 text-emerald-400" />
-                    <div className="text-left">
-                      <p className="text-xs text-slate-400">Wachtwoord</p>
-                      <p className="text-white font-mono font-semibold">
-                        {showPassword ? DEMO_CREDENTIALS.password : '••••••••'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="text-white hover:bg-white/10"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="text-white hover:bg-white/10"
-                      onClick={() => copyToClipboard(DEMO_CREDENTIALS.password, 'password')}
-                    >
-                      {copied.password ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <Button 
-              size="lg" 
-              className="w-full mt-6 h-14 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-full text-base font-semibold"
-              onClick={handleDemoLogin}
-            >
-              <LogIn className="w-5 h-5 mr-2" />
-              Inloggen met Demo Account
-            </Button>
-          </div>
-
-          {/* Trust Indicators */}
-          <div className="flex flex-wrap items-center justify-center gap-6 mt-10 text-sm text-slate-400">
-            <div className="flex items-center gap-2">
-              <Shield className="w-4 h-4 text-emerald-400" />
-              <span>Veilige demo omgeving</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-emerald-400" />
-              <span>Onbeperkt toegang</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-emerald-400" />
-              <span>Alle modules inbegrepen</span>
-            </div>
-          </div>
+          <Button 
+            size="lg"
+            onClick={handleDemoLogin}
+            disabled={loggingIn}
+            className="h-16 px-12 text-lg font-semibold bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-full shadow-2xl shadow-emerald-500/25 transition-all duration-300 hover:scale-105"
+          >
+            {loggingIn ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+                Inloggen...
+              </>
+            ) : (
+              <>
+                <LogIn className="w-5 h-5 mr-3" />
+                Direct Starten
+                <ArrowRight className="w-5 h-5 ml-3" />
+              </>
+            )}
+          </Button>
         </div>
       </section>
 
-      {/* Modules Showcase */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <Badge className="mb-4 bg-emerald-50 text-emerald-700 border-emerald-200">
-              <Star className="w-4 h-4 mr-2" />
-              6 Complete Modules
-            </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Alle modules in de demo
-            </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Het demo account heeft toegang tot alle modules. Ontdek de functionaliteiten van elke module.
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {DEMO_MODULES.map((module, index) => {
+      {/* Modules Grid */}
+      <section className="pb-32 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {MODULES.map((module) => {
               const IconComponent = module.icon;
               
               return (
                 <div
                   key={module.id}
-                  className="group relative bg-white rounded-3xl overflow-hidden shadow-xl border border-slate-100 hover:shadow-2xl transition-all duration-500"
+                  className="group relative bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl p-6 hover:border-slate-700 transition-all duration-300 hover:-translate-y-1"
                 >
-                  {/* Image */}
-                  <div className="relative h-48 overflow-hidden">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${module.gradient} opacity-90`}></div>
-                    <img 
-                      src={module.image} 
-                      alt={module.name}
-                      className="w-full h-full object-cover mix-blend-overlay"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-                    
-                    {/* Icon Badge */}
-                    <div className="absolute bottom-4 left-4">
-                      <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                        <IconComponent className="w-6 h-6 text-white" />
-                      </div>
-                    </div>
-                    
-                    {/* Module Number */}
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30">
-                        Module {index + 1}
-                      </Badge>
-                    </div>
+                  {/* Icon */}
+                  <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${module.color} flex items-center justify-center mb-5 shadow-lg`}>
+                    <IconComponent className="w-7 h-7 text-white" />
                   </div>
                   
                   {/* Content */}
-                  <div className="p-6">
-                    <h3 className="text-xl font-bold text-slate-900 mb-2">
-                      {module.name}
-                    </h3>
-                    <p className="text-slate-600 mb-4">
-                      {module.description}
-                    </p>
-                    
-                    {/* Features */}
-                    <ul className="space-y-2">
-                      {module.features.map((feature, i) => (
-                        <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                          <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                            <Check className="w-3 h-3 text-emerald-600" />
-                          </div>
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  <h3 className="text-xl font-bold text-white mb-2">
+                    {module.name}
+                  </h3>
+                  <p className="text-slate-400 text-sm mb-5">
+                    {module.description}
+                  </p>
+                  
+                  {/* Features */}
+                  <div className="flex flex-wrap gap-2">
+                    {module.features.map((feature, i) => (
+                      <span 
+                        key={i}
+                        className="text-xs px-3 py-1.5 bg-slate-800 text-slate-300 rounded-full"
+                      >
+                        {feature}
+                      </span>
+                    ))}
                   </div>
+
+                  {/* Hover glow effect */}
+                  <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${module.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
                 </div>
               );
             })}
           </div>
-        </div>
-      </section>
 
-      {/* How it Works */}
-      <section className="py-20 bg-gradient-to-br from-slate-50 to-emerald-50">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">
-              Hoe werkt de demo?
-            </h2>
-            <p className="text-lg text-slate-600">
-              In 3 eenvoudige stappen kunt u alle modules uitproberen
+          {/* Bottom CTA */}
+          <div className="mt-16 text-center">
+            <Button 
+              size="lg"
+              onClick={handleDemoLogin}
+              disabled={loggingIn}
+              className="h-14 px-10 text-base font-semibold bg-white text-slate-900 hover:bg-slate-100 rounded-full transition-all duration-300"
+            >
+              {loggingIn ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Inloggen...
+                </>
+              ) : (
+                <>
+                  <LogIn className="w-5 h-5 mr-2" />
+                  Start de Demo
+                </>
+              )}
+            </Button>
+            
+            <p className="mt-6 text-slate-500 text-sm">
+              Alle data wordt automatisch opgeruimd
             </p>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
-                1
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Kopieer Gegevens</h3>
-              <p className="text-slate-600">
-                Kopieer het e-mailadres en wachtwoord van het demo account hierboven
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
-                2
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Log In</h3>
-              <p className="text-slate-600">
-                Klik op "Inloggen met Demo Account" en voer de gegevens in
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-emerald-600 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">
-                3
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 mb-2">Ontdek</h3>
-              <p className="text-slate-600">
-                Verken alle modules en functionaliteiten. Experimenteer vrijuit!
-              </p>
-            </div>
-          </div>
-
-          {/* Note */}
-          <div className="mt-12 bg-white rounded-2xl p-6 border border-amber-200 max-w-2xl mx-auto">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <Shield className="w-5 h-5 text-amber-600" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-slate-900 mb-1">Let op</h4>
-                <p className="text-sm text-slate-600">
-                  Het demo account is bedoeld om de functionaliteiten te verkennen. 
-                  Data die u toevoegt kan door anderen worden gezien of worden gereset. 
-                  Voor een eigen omgeving kunt u een account aanmaken.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
-
-      {/* CTA Section */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">
-            Klaar om te starten?
-          </h2>
-          <p className="text-lg text-slate-600 mb-8">
-            Probeer de demo of maak direct uw eigen account aan
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              size="lg"
-              className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full px-8"
-              onClick={handleDemoLogin}
-            >
-              <LogIn className="w-5 h-5 mr-2" />
-              Demo Proberen
-            </Button>
-            <Button 
-              size="lg"
-              variant="outline"
-              className="rounded-full px-8 border-slate-200"
-              onClick={() => navigate('/modules-overzicht?order=true')}
-            >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Eigen Account Aanmaken
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
     </div>
   );
 }
