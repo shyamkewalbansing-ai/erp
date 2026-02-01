@@ -75,6 +75,18 @@ const AutoDealerPortalLogin = lazy(() => import("./pages/AutoDealerPortalLogin")
 const AutoDealerPortalDashboard = lazy(() => import("./pages/AutoDealerPortalDashboard"));
 const AutoDealerPortalPurchases = lazy(() => import("./pages/AutoDealerPortalPurchases"));
 
+// Beauty Spa Module
+const BeautySpaLayout = lazy(() => import("./pages/beautyspa/BeautySpaLayout"));
+const BeautySpaClients = lazy(() => import("./pages/beautyspa/ClientsPage"));
+const BeautySpaAppointments = lazy(() => import("./pages/beautyspa/AppointmentsPage"));
+const BeautySpaTreatments = lazy(() => import("./pages/beautyspa/TreatmentsPage"));
+const BeautySpaProducts = lazy(() => import("./pages/beautyspa/ProductsPage"));
+const BeautySpaPOS = lazy(() => import("./pages/beautyspa/POSPage"));
+const BeautySpaStaff = lazy(() => import("./pages/beautyspa/StaffPage"));
+const BeautySpaQueue = lazy(() => import("./pages/beautyspa/QueuePage"));
+const BeautySpaReports = lazy(() => import("./pages/beautyspa/ReportsPage"));
+const BeautySpaVouchers = lazy(() => import("./pages/beautyspa/VouchersPage"));
+
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
   <div className="min-h-screen flex items-center justify-center bg-background">
