@@ -60,6 +60,9 @@ const FaqPage = lazy(() => import("./pages/FaqPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const DemoPage = lazy(() => import("./pages/DemoPage"));
 
+// Public Spa Booking Portal
+const SpaBookingPage = lazy(() => import("./pages/SpaBookingPage"));
+
 // Employee Portal
 const EmployeePortalLogin = lazy(() => import("./pages/EmployeePortalLogin"));
 const EmployeePortalDashboard = lazy(() => import("./pages/EmployeePortalDashboard"));
