@@ -767,7 +767,7 @@ export default function Layout() {
                       placeholder="portal.jouwbedrijf.nl"
                     />
                     <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">
-                      Maak een A-record aan dat wijst naar {workspaceData?.domain?.server_ip || '45.79.123.456'}
+                      Maak een A-record aan dat wijst naar {workspaceData?.domain?.server_ip || '72.62.174.117'}
                     </p>
                   </div>
                 )}

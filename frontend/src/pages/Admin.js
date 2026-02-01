@@ -2208,7 +2208,7 @@ echo "Deploy completed at $(date)"`}</pre>
                       <div className="bg-white rounded p-2 font-mono text-sm">
                         <span className="text-gray-500">Type:</span> A<br />
                         <span className="text-gray-500">Naam:</span> {newWorkspace.custom_domain || 'portal.klantdomein.nl'}<br />
-                        <span className="text-gray-500">Waarde:</span> 45.79.123.456
+                        <span className="text-gray-500">Waarde:</span> 72.62.174.117
                       </div>
                     </div>
                   </div>
