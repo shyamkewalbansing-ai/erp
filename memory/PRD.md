@@ -6,7 +6,7 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 ## Architecture & Tech Stack
 - **Backend**: FastAPI (Python) met JWT authenticatie
 - **Frontend**: React met Shadcn UI, lazy loading
-- **Database**: MongoDB (test_database)
+- **Database**: MongoDB (erp_db)
 - **AI**: OpenAI GPT-4o via Emergent LLM Key
 - **Styling**: Tailwind CSS met glassmorphism effecten
 - **Fonts**: Outfit (headings), Plus Jakarta Sans (body)
@@ -14,6 +14,62 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - **Multi-tenant**: Workspace-based isolatie per klant
 
 ## What's Been Implemented (1 Feb 2026)
+
+### POMPSTATION (GAS STATION) MODULE ✅ (NIEUW - 1 Feb 2026)
+Complete Pompstation module voor Surinaamse tankstations:
+
+**Features:**
+- [x] Dashboard met omzet, liters, actieve pompen, waarschuwingen
+- [x] Brandstoftank beheer - niveau monitoring, metingen, alerts
+- [x] Leveringen registratie - leverancier, chauffeur, variance tracking
+- [x] Pompen management - koppeling aan tanks, status beheer
+- [x] POS/Kassa systeem - brandstof + winkelartikelen, multi-betaalmethoden
+- [x] Winkel voorraad - producten, categorieën, barcode, voorraad alerts
+- [x] Diensten beheer - shift start/stop, kas reconciliatie
+- [x] Personeel - medewerkers, functies, PIN codes, uurlonen
+- [x] Veiligheid & Compliance - inspecties, incidenten, status tracking
+- [x] Rapportages - dagelijkse omzet, betaalmethode uitsplitsing
+
+**Backend:** `/app/backend/routers/pompstation.py` - 28 API endpoints
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/pompstation/dashboard | GET | Dashboard statistieken |
+| /api/pompstation/tanks | GET/POST | Tank CRUD |
+| /api/pompstation/tanks/{id} | PUT/DELETE | Tank update/delete |
+| /api/pompstation/tanks/{id}/readings | POST | Tank meting toevoegen |
+| /api/pompstation/deliveries | GET/POST | Leveringen |
+| /api/pompstation/pumps | GET/POST | Pompen beheer |
+| /api/pompstation/products | GET/POST | Winkelproducten |
+| /api/pompstation/products/{id} | PUT/DELETE | Product update/delete |
+| /api/pompstation/sales | GET/POST | Verkopen/POS |
+| /api/pompstation/shifts/start | POST | Dienst starten |
+| /api/pompstation/shifts/{id}/close | POST | Dienst afsluiten |
+| /api/pompstation/employees | GET/POST | Personeel |
+| /api/pompstation/inspections | GET/POST | Veiligheidsinspecties |
+| /api/pompstation/incidents | GET/POST | Incidenten |
+| /api/pompstation/reports/daily | GET | Dagrapportage |
+| /api/pompstation/prices | GET/POST | Brandstofprijzen |
+
+**Frontend:** `/app/frontend/src/pages/pompstation/` - 10 pagina's
+- DashboardPage.js - Overzicht met statistieken
+- TanksPage.js - Tank beheer met visuele niveau indicators
+- LeveringenPage.js - Leveringen registratie en overzicht
+- PompenPage.js - Pomp configuratie
+- POSPage.js - Kassa systeem met brandstof/winkel tabs
+- WinkelPage.js - Winkelvoorraad beheer
+- DienstenPage.js - Diensten start/stop met kas reconciliatie
+- PersoneelPage.js - Personeelsbeheer
+- VeiligheidPage.js - Inspecties en incidenten
+- RapportagesPage.js - Dagelijkse rapportages
+
+**Test Rapport:** `/app/test_reports/iteration_29.json` - 100% geslaagd (28/28 backend, frontend flow)
+
+**Test Credentials:**
+- Email: test@pompstation.sr
+- Wachtwoord: test123
+- Toegang: Pompstation module
+
+---
 
 ### ONLINE BOOKING PORTAL (Beauty Spa) ✅ (NIEUW - 1 Feb 2026)
 Publiek toegankelijk boekingsportaal voor spa klanten:
