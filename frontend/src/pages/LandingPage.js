@@ -30,6 +30,21 @@ import PublicFooter from '../components/PublicFooter';
 const ChatWidget = lazy(() => import('../components/ChatWidget'));
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
+// Helper function to get app URL (for login/register)
+const getAppUrl = (path = '') => {
+  const hostname = window.location.hostname;
+  // If on localhost or development, use same domain
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return path;
+  }
+  // If on main domain, redirect to app subdomain
+  if (hostname === 'facturatie.sr' || hostname === 'www.facturatie.sr') {
+    return `https://app.facturatie.sr${path}`;
+  }
+  // Otherwise use same domain
+  return path;
+};
+
 // Modules data
 const MODULES = [
   {
