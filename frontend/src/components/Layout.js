@@ -39,7 +39,10 @@ import {
   Briefcase,
   Car,
   ShoppingCart,
-  Sparkles
+  Sparkles,
+  Scissors,
+  BarChart3,
+  Gift
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
