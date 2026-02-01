@@ -5354,6 +5354,7 @@ async def create_employee(employee_data: EmployeeCreate, current_user: dict = De
     }
     
     await db.employees.insert_one(employee_doc)
+    employee_doc.pop("_id", None)
     
     return EmployeeResponse(**employee_doc)
 
@@ -5425,6 +5426,7 @@ async def create_salary_payment(salary_data: SalaryPaymentCreate, current_user: 
     }
     
     await db.salaries.insert_one(salary_doc)
+    salary_doc.pop("_id", None)
     
     return SalaryPaymentResponse(
         **salary_doc,
@@ -5835,6 +5837,7 @@ async def create_loan(loan_data: LoanCreate, current_user: dict = Depends(get_cu
     }
     
     await db.loans.insert_one(loan_doc)
+    loan_doc.pop("_id", None)
     
     return LoanResponse(
         **loan_doc,
