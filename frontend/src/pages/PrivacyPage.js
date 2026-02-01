@@ -1,9 +1,23 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
-import { Phone, Lock, Shield, Eye, Database, UserCheck, Cookie } from 'lucide-react';
+import { Badge } from '../components/ui/badge';
+import { 
+  Lock, 
+  Shield, 
+  Eye, 
+  Database, 
+  UserCheck, 
+  Cookie,
+  Server,
+  CheckCircle,
+  ArrowRight,
+  Mail,
+  Phone,
+  FileText,
+  Sparkles
+} from 'lucide-react';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
 
@@ -13,6 +27,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 export default function PrivacyPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
+  const [activeSection, setActiveSection] = useState(0);
 
   useEffect(() => {
     axios.get(`${API_URL}/public/landing/settings`).then(res => setSettings(res.data)).catch(() => {});
@@ -21,50 +36,48 @@ export default function PrivacyPage() {
   const sections = [
     {
       icon: Eye,
-      title: '1. Inleiding',
+      title: 'Inleiding',
       content: `Facturatie N.V. ("wij", "ons" of "onze") respecteert uw privacy en zet zich in voor de bescherming van uw persoonsgegevens. Dit privacybeleid informeert u over hoe wij omgaan met uw persoonsgegevens wanneer u onze website bezoekt en onze diensten gebruikt.
 
 Wij verwerken persoonsgegevens in overeenstemming met de geldende Surinaamse wetgeving inzake gegevensbescherming.`
     },
     {
       icon: Database,
-      title: '2. Welke gegevens verzamelen wij?',
-      content: `Wij kunnen de volgende categorieën persoonsgegevens verzamelen:
-
-• Identiteitsgegevens: naam, bedrijfsnaam, functietitel
-• Contactgegevens: e-mailadres, telefoonnummer, adres
-• Accountgegevens: gebruikersnaam, wachtwoord (versleuteld)
-• Financiële gegevens: factuurgegevens, betalingshistorie
-• Technische gegevens: IP-adres, browsertype, tijdzone, besturingssysteem
-• Gebruiksgegevens: informatie over hoe u onze diensten gebruikt`
+      title: 'Welke gegevens verzamelen wij?',
+      items: [
+        { label: 'Identiteitsgegevens', desc: 'naam, bedrijfsnaam, functietitel' },
+        { label: 'Contactgegevens', desc: 'e-mailadres, telefoonnummer, adres' },
+        { label: 'Accountgegevens', desc: 'gebruikersnaam, wachtwoord (versleuteld)' },
+        { label: 'Financiële gegevens', desc: 'factuurgegevens, betalingshistorie' },
+        { label: 'Technische gegevens', desc: 'IP-adres, browsertype, tijdzone' },
+        { label: 'Gebruiksgegevens', desc: 'hoe u onze diensten gebruikt' },
+      ]
     },
     {
       icon: UserCheck,
-      title: '3. Hoe gebruiken wij uw gegevens?',
-      content: `Wij gebruiken uw persoonsgegevens voor de volgende doeleinden:
-
-• Het leveren en verbeteren van onze diensten
-• Het verwerken van uw betalingen
-• Het communiceren met u over uw account en onze diensten
-• Het versturen van belangrijke updates en mededelingen
-• Het analyseren van het gebruik van onze diensten om deze te verbeteren
-• Het voldoen aan wettelijke verplichtingen
-• Het beschermen van onze rechten en eigendommen`
+      title: 'Hoe gebruiken wij uw gegevens?',
+      items: [
+        { label: 'Dienstverlening', desc: 'Het leveren en verbeteren van onze diensten' },
+        { label: 'Betalingen', desc: 'Het verwerken van uw betalingen' },
+        { label: 'Communicatie', desc: 'Updates over uw account en diensten' },
+        { label: 'Analyse', desc: 'Gebruik analyseren om te verbeteren' },
+        { label: 'Compliance', desc: 'Voldoen aan wettelijke verplichtingen' },
+      ]
     },
     {
       icon: Shield,
-      title: '4. Hoe beschermen wij uw gegevens?',
-      content: `Wij nemen de beveiliging van uw gegevens serieus en hebben passende technische en organisatorische maatregelen getroffen om uw gegevens te beschermen:
-
-• SSL/TLS-encryptie voor alle dataoverdracht
-• Versleutelde opslag van wachtwoorden
-• Regelmatige beveiligingsaudits
-• Beperkte toegang tot persoonsgegevens
-• Firewalls en beveiligde servers`
+      title: 'Hoe beschermen wij uw gegevens?',
+      items: [
+        { label: 'SSL/TLS-encryptie', desc: 'Voor alle dataoverdracht' },
+        { label: 'Versleutelde wachtwoorden', desc: 'Veilige opslag met hashing' },
+        { label: 'Beveiligingsaudits', desc: 'Regelmatige controles' },
+        { label: 'Toegangsbeperking', desc: 'Alleen geautoriseerd personeel' },
+        { label: 'Firewalls', desc: 'Beveiligde servers' },
+      ]
     },
     {
       icon: Eye,
-      title: '5. Met wie delen wij uw gegevens?',
+      title: 'Met wie delen wij uw gegevens?',
       content: `Wij verkopen uw persoonsgegevens niet aan derden. Wij kunnen uw gegevens delen met:
 
 • Dienstverleners die ons helpen bij het leveren van onze diensten (bijv. hosting, betalingsverwerking)
@@ -75,145 +88,238 @@ Al onze dienstverleners zijn contractueel verplicht om uw gegevens vertrouwelijk
     },
     {
       icon: Database,
-      title: '6. Hoe lang bewaren wij uw gegevens?',
-      content: `Wij bewaren uw persoonsgegevens zo lang als nodig is voor de doeleinden waarvoor ze zijn verzameld:
-
-• Accountgegevens: zolang uw account actief is, plus 2 jaar na beëindiging
-• Financiële gegevens: minimaal 7 jaar conform Surinaamse belastingwetgeving
-• Technische loggegevens: maximaal 12 maanden`
+      title: 'Hoe lang bewaren wij uw gegevens?',
+      items: [
+        { label: 'Accountgegevens', desc: 'Zolang account actief is + 2 jaar na beëindiging' },
+        { label: 'Financiële gegevens', desc: 'Minimaal 7 jaar (belastingwetgeving)' },
+        { label: 'Technische logs', desc: 'Maximaal 12 maanden' },
+      ]
     },
     {
       icon: UserCheck,
-      title: '7. Uw rechten',
-      content: `U heeft de volgende rechten met betrekking tot uw persoonsgegevens:
-
-• Recht op inzage: u kunt een kopie van uw gegevens opvragen
-• Recht op rectificatie: u kunt onjuiste gegevens laten corrigeren
-• Recht op verwijdering: u kunt verzoeken om verwijdering van uw gegevens
-• Recht op beperking: u kunt de verwerking van uw gegevens laten beperken
-• Recht op overdraagbaarheid: u kunt uw gegevens in een gangbaar formaat ontvangen
-
-Om deze rechten uit te oefenen, kunt u contact met ons opnemen via de onderstaande contactgegevens.`
+      title: 'Uw rechten',
+      items: [
+        { label: 'Recht op inzage', desc: 'U kunt een kopie van uw gegevens opvragen' },
+        { label: 'Recht op rectificatie', desc: 'U kunt onjuiste gegevens laten corrigeren' },
+        { label: 'Recht op verwijdering', desc: 'U kunt verzoeken om verwijdering' },
+        { label: 'Recht op beperking', desc: 'U kunt verwerking laten beperken' },
+        { label: 'Recht op overdraagbaarheid', desc: 'Gegevens in gangbaar formaat ontvangen' },
+      ]
     },
     {
       icon: Cookie,
-      title: '8. Cookies',
-      content: `Onze website maakt gebruik van cookies en vergelijkbare technologieën om uw ervaring te verbeteren. Cookies zijn kleine tekstbestanden die op uw apparaat worden opgeslagen.
-
-Wij gebruiken:
-• Essentiële cookies: nodig voor het functioneren van de website
-• Analytische cookies: om te begrijpen hoe bezoekers onze website gebruiken
-• Functionele cookies: om uw voorkeuren te onthouden
-
-U kunt cookies beheren via uw browserinstellingen.`
+      title: 'Cookies',
+      items: [
+        { label: 'Essentiële cookies', desc: 'Nodig voor website functionaliteit' },
+        { label: 'Analytische cookies', desc: 'Begrijpen hoe bezoekers de website gebruiken' },
+        { label: 'Functionele cookies', desc: 'Om uw voorkeuren te onthouden' },
+      ],
+      extra: 'U kunt cookies beheren via uw browserinstellingen.'
     },
-    {
-      icon: Eye,
-      title: '9. Wijzigingen in dit beleid',
-      content: `Wij kunnen dit privacybeleid van tijd tot tijd bijwerken. Wijzigingen worden op deze pagina gepubliceerd met een bijgewerkte "laatst gewijzigd" datum. Wij raden u aan dit beleid regelmatig te raadplegen.`
-    },
-    {
-      icon: Phone,
-      title: '10. Contact',
-      content: `Als u vragen heeft over dit privacybeleid of onze gegevensverwerkingspraktijken, kunt u contact met ons opnemen:
-
-Facturatie N.V.
-E-mail: privacy@facturatie.sr
-Telefoon: +597 893-4982
-Adres: Paramaribo, Suriname`
-    }
   ];
 
   const highlights = [
-    { icon: Lock, title: 'SSL Encryptie', description: '256-bit beveiliging' },
-    { icon: Shield, title: 'GDPR Compliant', description: 'Privacy by design' },
-    { icon: Database, title: 'Lokale Opslag', description: 'Servers in Suriname' }
+    { icon: Lock, title: 'SSL Encryptie', description: '256-bit beveiliging', color: 'emerald' },
+    { icon: Shield, title: 'Privacy by Design', description: 'Ingebouwde bescherming', color: 'teal' },
+    { icon: Server, title: 'Lokale Servers', description: 'Data in Suriname', color: 'cyan' },
   ];
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-16 bg-gradient-to-br from-slate-50 to-blue-50/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto">
-            <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Lock className="w-8 h-8 text-blue-600" />
-            </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-              Privacy<span className="text-blue-500">beleid</span>
-            </h1>
-            <p className="text-xl text-gray-600">
-              Uw privacy is onze prioriteit. Lees hoe wij uw gegevens beschermen.
-            </p>
-            <p className="text-sm text-gray-500 mt-4">Laatst bijgewerkt: 26 januari 2026</p>
-          </div>
+      <section className="pt-24 pb-20 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.3),transparent_50%)]"></div>
+          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(20,184,166,0.3),transparent_50%)]"></div>
+        </div>
+        
+        {/* Floating shapes */}
+        <div className="absolute top-20 left-10 w-20 h-20 bg-emerald-500/20 rounded-full blur-xl"></div>
+        <div className="absolute bottom-20 right-20 w-32 h-32 bg-teal-500/20 rounded-full blur-xl"></div>
+        <div className="absolute top-40 right-40 w-16 h-16 bg-cyan-500/20 rounded-full blur-xl"></div>
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+          <Badge className="mb-6 bg-white/10 text-emerald-300 border-emerald-400/30 px-4 py-2">
+            <Lock className="w-4 h-4 mr-2" />
+            Uw Privacy Beschermd
+          </Badge>
+          
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+            Privacy
+            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
+              beleid
+            </span>
+          </h1>
+          
+          <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-6">
+            Uw privacy is onze prioriteit. Wij zijn transparant over hoe wij uw gegevens verzamelen, gebruiken en beschermen.
+          </p>
+
+          <p className="text-sm text-slate-400">
+            Laatst bijgewerkt: 1 februari 2026
+          </p>
         </div>
       </section>
 
-      {/* Highlights */}
-      <section className="py-12 bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-6">
-            {highlights.map((item, index) => (
-              <Card key={index} className="border-0 shadow-md">
-                <CardContent className="p-6 flex items-center gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <item.icon className="w-6 h-6 text-blue-600" />
+      {/* Highlights Bar */}
+      <section className="py-8 -mt-8 relative z-10">
+        <div className="max-w-5xl mx-auto px-4">
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-100 p-6">
+            <div className="grid md:grid-cols-3 gap-6">
+              {highlights.map((item, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <div className={`w-14 h-14 bg-gradient-to-br from-${item.color}-500 to-${item.color}-600 rounded-xl flex items-center justify-center shadow-lg`}>
+                    <item.icon className="w-7 h-7 text-white" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{item.title}</h3>
-                    <p className="text-sm text-gray-500">{item.description}</p>
+                    <h3 className="font-bold text-slate-900">{item.title}</h3>
+                    <p className="text-sm text-slate-500">{item.description}</p>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Content */}
+      {/* Main Content */}
       <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="space-y-6">
             {sections.map((section, index) => (
-              <div key={index} className="bg-white rounded-xl border border-gray-100 p-8 shadow-sm hover:shadow-md transition-shadow">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <section.icon className="w-5 h-5 text-blue-600" />
+              <div 
+                key={index} 
+                className="bg-white rounded-2xl border border-slate-100 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+              >
+                {/* Header */}
+                <div 
+                  className="p-6 flex items-center gap-4 cursor-pointer hover:bg-slate-50 transition-colors"
+                  onClick={() => setActiveSection(activeSection === index ? -1 : index)}
+                >
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-md">
+                    <section.icon className="w-6 h-6 text-white" />
                   </div>
-                  {section.title}
-                </h2>
-                <div className="text-gray-600 whitespace-pre-line leading-relaxed pl-13 ml-13">
-                  {section.content}
+                  <div className="flex-1">
+                    <h2 className="text-xl font-bold text-slate-900">
+                      {index + 1}. {section.title}
+                    </h2>
+                  </div>
+                  <div className={`w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center transition-transform ${activeSection === index ? 'rotate-180' : ''}`}>
+                    <svg className="w-5 h-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className={`transition-all duration-300 ${activeSection === index ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+                  <div className="px-6 pb-6 pt-2 border-t border-slate-100">
+                    {section.content && (
+                      <p className="text-slate-600 whitespace-pre-line leading-relaxed">
+                        {section.content}
+                      </p>
+                    )}
+                    
+                    {section.items && (
+                      <div className="grid gap-3 mt-2">
+                        {section.items.map((item, i) => (
+                          <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                            <CheckCircle className="w-5 h-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                            <div>
+                              <span className="font-semibold text-slate-900">{item.label}</span>
+                              <span className="text-slate-500"> - {item.desc}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {section.extra && (
+                      <p className="mt-4 text-sm text-slate-500 italic">
+                        {section.extra}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Contact CTA */}
-          <div className="mt-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-8 text-center text-white">
-            <h3 className="text-2xl font-bold mb-4">Vragen over uw privacy?</h3>
-            <p className="text-blue-100 mb-6">Neem gerust contact met ons op</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="secondary" size="lg">
-                <Phone className="w-4 h-4 mr-2" />
-                +597 893-4982
-              </Button>
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10" onClick={() => navigate('/over-ons')}>
-                Neem Contact Op
-              </Button>
+          {/* Contact Section */}
+          <div className="mt-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-10 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"></div>
+            
+            <div className="relative">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 border border-white/30">
+                <Mail className="w-8 h-8 text-white" />
+              </div>
+              
+              <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                Vragen over uw privacy?
+              </h3>
+              <p className="text-emerald-100 mb-8 max-w-md mx-auto">
+                Neem gerust contact met ons op. Wij helpen u graag met al uw vragen.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="mailto:privacy@facturatie.sr">
+                  <Button size="lg" className="h-14 px-8 bg-white text-emerald-700 hover:bg-emerald-50 rounded-full shadow-xl">
+                    <Mail className="w-5 h-5 mr-2" />
+                    privacy@facturatie.sr
+                  </Button>
+                </a>
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="h-14 px-8 border-white/30 text-white hover:bg-white/10 rounded-full"
+                  onClick={() => navigate('/contact')}
+                >
+                  <Phone className="w-5 h-5 mr-2" />
+                  Contact Opnemen
+                </Button>
+              </div>
             </div>
+          </div>
+
+          {/* Related Links */}
+          <div className="mt-12 grid sm:grid-cols-2 gap-4">
+            <Link to="/voorwaarden" className="group">
+              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-lg hover:shadow-xl hover:border-emerald-200 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center group-hover:from-emerald-100 group-hover:to-teal-100 transition-colors">
+                    <FileText className="w-6 h-6 text-slate-600 group-hover:text-emerald-600 transition-colors" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Algemene Voorwaarden</h4>
+                    <p className="text-sm text-slate-500">Bekijk onze gebruiksvoorwaarden</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            </Link>
+            
+            <Link to="/contact" className="group">
+              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-lg hover:shadow-xl hover:border-emerald-200 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center group-hover:from-emerald-100 group-hover:to-teal-100 transition-colors">
+                    <Phone className="w-6 h-6 text-slate-600 group-hover:text-emerald-600 transition-colors" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors">Contact</h4>
+                    <p className="text-sm text-slate-500">Neem contact met ons op</p>
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-emerald-600 group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
       <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
-      {/* Chat Widget */}
       <Suspense fallback={null}>
         <ChatWidget />
       </Suspense>
