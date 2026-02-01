@@ -189,17 +189,6 @@ export default function Login() {
               Registreer hier
             </Link>
           </p>
-          
-          {/* Tenant portal link */}
-          <p className="mt-4 text-center">
-            <Link 
-              to="/huurder/login" 
-              className="text-sm text-gray-500 hover:text-emerald-600 transition-colors font-body"
-              data-testid="tenant-login-link"
-            >
-              Bent u een huurder? Klik hier
-            </Link>
-          </p>
         </div>
       </div>
 
