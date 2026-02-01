@@ -401,103 +401,129 @@ export default function ModulesOverviewPage() {
               const isPopular = index === 0;
               
               return (
-                <Card 
-                  key={addon.id} 
+                <div
+                  key={addon.id}
                   data-testid={`module-card-${addon.slug}`}
-                  className={`group relative overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-white ${
-                    isSelected ? 'ring-2 ring-emerald-500 shadow-emerald-500/20' : ''
+                  className={`group relative cursor-pointer transition-all duration-500 ${
+                    isSelected ? 'scale-[1.02]' : 'hover:scale-[1.02]'
                   }`}
                   onClick={() => toggleModule(addon.id)}
                 >
-                  {/* Gradient Top Bar */}
-                  <div className={`h-2 bg-gradient-to-r ${moduleUI.gradient}`}></div>
+                  {/* Glow Effect */}
+                  <div className={`absolute -inset-0.5 bg-gradient-to-r ${moduleUI.gradient} rounded-3xl blur opacity-0 group-hover:opacity-30 transition-opacity duration-500 ${isSelected ? 'opacity-40' : ''}`}></div>
                   
-                  {/* Popular Badge */}
-                  {isPopular && (
-                    <div className="absolute top-4 right-4">
-                      <Badge className="bg-gradient-to-r from-emerald-400 to-teal-500 text-white border-0 shadow-lg">
-                        <Star className="w-3 h-3 mr-1 fill-current" />
-                        Populair
-                      </Badge>
+                  {/* Card */}
+                  <div className={`relative bg-white rounded-3xl overflow-hidden border ${isSelected ? 'border-emerald-400' : 'border-slate-200'} shadow-xl`}>
+                    {/* Header with gradient background */}
+                    <div className={`relative h-32 bg-gradient-to-br ${moduleUI.gradient} p-6`}>
+                      {/* Pattern overlay */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                        <div className="absolute bottom-0 left-0 w-24 h-24 bg-white rounded-full translate-y-1/2 -translate-x-1/2"></div>
+                      </div>
+                      
+                      {/* Icon */}
+                      <div className="relative w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/30">
+                        <IconComponent className="w-8 h-8 text-white" />
+                      </div>
+                      
+                      {/* Popular Badge */}
+                      {isPopular && (
+                        <div className="absolute top-4 right-4">
+                          <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30 shadow-lg">
+                            <Star className="w-3 h-3 mr-1 fill-current" />
+                            Populair
+                          </Badge>
+                        </div>
+                      )}
+                      
+                      {/* Selected Indicator */}
+                      {isSelected && (
+                        <div className="absolute top-4 left-4">
+                          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-lg">
+                            <Check className="w-5 h-5 text-emerald-600" />
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  
-                  {/* Selected Indicator */}
-                  {isSelected && (
-                    <div className="absolute top-4 left-4">
-                      <div className="w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center">
-                        <Check className="w-4 h-4 text-white" />
+                    
+                    {/* Content */}
+                    <div className="p-6 pt-4">
+                      {/* Category */}
+                      <Badge variant="secondary" className="mb-3 bg-emerald-50 text-emerald-700 border-emerald-200">
+                        {moduleUI.category}
+                      </Badge>
+                      
+                      {/* Title */}
+                      <h3 className="text-xl font-bold text-slate-900 mb-2">
+                        {addon.name}
+                      </h3>
+                      
+                      {/* Description */}
+                      <p className="text-slate-600 text-sm mb-4 line-clamp-2 min-h-[40px]">
+                        {addon.description}
+                      </p>
+                      
+                      {/* Price Box */}
+                      <div className="bg-gradient-to-r from-slate-50 to-emerald-50 rounded-xl p-4 mb-4 border border-slate-100">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-bold text-slate-900">
+                            {formatCurrency(addon.price)}
+                          </span>
+                          <span className="text-slate-500 text-sm">/maand</span>
+                        </div>
+                        <p className="text-xs text-emerald-600 mt-1">Inclusief alle features</p>
+                      </div>
+                      
+                      {/* Features */}
+                      <ul className="space-y-2 mb-6">
+                        {moduleUI.features.map((feature, i) => (
+                          <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
+                            <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                              <Check className="w-3 h-3 text-emerald-600" />
+                            </div>
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      
+                      {/* Actions */}
+                      <div className="flex gap-3">
+                        <Button 
+                          variant="outline"
+                          className="flex-1 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate('/prijzen');
+                          }}
+                          data-testid={`details-btn-${addon.slug}`}
+                        >
+                          Details
+                        </Button>
+                        <Button 
+                          className={`flex-1 ${isSelected 
+                            ? 'bg-emerald-600 hover:bg-emerald-700' 
+                            : `bg-gradient-to-r ${moduleUI.gradient} hover:opacity-90`
+                          } text-white shadow-lg`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartOrder(addon.id);
+                          }}
+                          data-testid={`order-btn-${addon.slug}`}
+                        >
+                          {isSelected ? (
+                            <>
+                              <Check className="w-4 h-4 mr-1" />
+                              Gekozen
+                            </>
+                          ) : (
+                            'Probeer Gratis'
+                          )}
+                        </Button>
                       </div>
                     </div>
-                  )}
-                  
-                  <CardContent className="p-8">
-                    {/* Icon */}
-                    <div className={`w-16 h-16 ${moduleUI.iconBg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                      <IconComponent className="w-8 h-8 text-white" />
-                    </div>
-                    
-                    {/* Category */}
-                    <Badge variant="secondary" className="mb-3 bg-emerald-50 text-emerald-700 border-emerald-200">
-                      {moduleUI.category}
-                    </Badge>
-                    
-                    {/* Title & Description */}
-                    <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
-                      {addon.name}
-                    </h3>
-                    <p className="text-slate-600 mb-4 line-clamp-2">
-                      {addon.description}
-                    </p>
-                    
-                    {/* Price */}
-                    <div className="mb-6">
-                      <span className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-                        {formatCurrency(addon.price)}
-                      </span>
-                      <span className="text-slate-500 text-sm">/maand</span>
-                    </div>
-                    
-                    {/* Features */}
-                    <ul className="space-y-2 mb-6">
-                      {moduleUI.features.map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
-                          <Check className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
-                          <span>{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    
-                    {/* Actions */}
-                    <div className="flex gap-3">
-                      <Button 
-                        variant="outline"
-                        className="flex-1 border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 text-emerald-700"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate('/prijzen');
-                        }}
-                        data-testid={`details-btn-${addon.slug}`}
-                      >
-                        Details
-                        <ChevronRight className="w-4 h-4 ml-1" />
-                      </Button>
-                      <Button 
-                        className={`flex-1 ${isSelected 
-                          ? 'bg-emerald-500 hover:bg-emerald-600' 
-                          : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700'
-                        } text-white`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleStartOrder(addon.id);
-                        }}
-                        data-testid={`order-btn-${addon.slug}`}
-                      >
-                        {isSelected ? 'Geselecteerd' : 'Probeer Gratis'}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>
