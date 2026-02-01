@@ -405,7 +405,7 @@ export default function PrijzenPage() {
                     
                     {/* Price */}
                     <div className="mb-6">
-                      <span className="text-4xl font-bold text-slate-900">{formatCurrency(getPrice(addon))}</span>
+                      <span className="text-4xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">{formatCurrency(getPrice(addon))}</span>
                       <span className="text-slate-500 ml-1">/{isYearly ? 'jaar' : 'maand'}</span>
                       {isYearly && (
                         <p className="text-sm text-emerald-600 mt-1">
@@ -418,7 +418,7 @@ export default function PrijzenPage() {
                     <ul className="space-y-3 mb-8">
                       {(addon.features || ['Volledige toegang', 'Updates inbegrepen', 'Support', 'Data export']).slice(0, 4).map((feature, i) => (
                         <li key={i} className="flex items-start gap-3 text-slate-600">
-                          <div className={`w-5 h-5 rounded-full ${colors.icon} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                          <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
                             <Check className="w-3 h-3 text-white" />
                           </div>
                           <span className="text-sm">{feature}</span>
@@ -431,8 +431,8 @@ export default function PrijzenPage() {
                       className={`w-full h-12 text-base font-semibold ${
                         isSelected 
                           ? 'bg-emerald-500 hover:bg-emerald-600' 
-                          : `bg-gradient-to-r ${colors.gradient} hover:opacity-90`
-                      }`}
+                          : 'bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700'
+                      } text-white`}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!isSelected) {
