@@ -93,6 +93,15 @@ const autoDealerNavItems = [
 // Beauty Spa Module
 const beautySpaItems = [
   { to: '/app/beautyspa', icon: Sparkles, label: 'Spa Dashboard', addon: 'beauty' },
+  { to: '/app/beautyspa/clients', icon: Users, label: 'Klanten', addon: 'beauty' },
+  { to: '/app/beautyspa/appointments', icon: Calendar, label: 'Afspraken', addon: 'beauty' },
+  { to: '/app/beautyspa/treatments', icon: Scissors, label: 'Behandelingen', addon: 'beauty' },
+  { to: '/app/beautyspa/products', icon: Package, label: 'Producten', addon: 'beauty' },
+  { to: '/app/beautyspa/pos', icon: ShoppingCart, label: 'Kassa (POS)', addon: 'beauty' },
+  { to: '/app/beautyspa/staff', icon: UserCog, label: 'Personeel', addon: 'beauty' },
+  { to: '/app/beautyspa/reports', icon: BarChart3, label: 'Rapportages', addon: 'beauty' },
+  { to: '/app/beautyspa/queue', icon: Clock, label: 'Wachtrij', addon: 'beauty' },
+  { to: '/app/beautyspa/vouchers', icon: Gift, label: 'Vouchers', addon: 'beauty' },
 ];
 
 export default function Layout() {
