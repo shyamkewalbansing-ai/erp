@@ -335,12 +335,12 @@ export default function ClientsPage() {
                 className="pl-10"
               />
             </div>
-            <Select value={membershipFilter} onValueChange={setMembershipFilter}>
+            <Select value={membershipFilter || "all"} onValueChange={(v) => setMembershipFilter(v === "all" ? "" : v)}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder="Alle lidmaatschappen" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Alle lidmaatschappen</SelectItem>
+                <SelectItem value="all">Alle lidmaatschappen</SelectItem>
                 {membershipTypes.map((type) => (
                   <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                 ))}
