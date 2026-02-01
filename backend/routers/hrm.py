@@ -193,6 +193,7 @@ async def create_hrm_department(department: HRMDepartment, current_user: dict = 
     dept_dict["user_id"] = str(current_user["_id"])
     dept_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.hrm_departments.insert_one(dept_dict)
+    dept_dict.pop("_id", None)
     return {"id": str(result.inserted_id), **dept_dict}
 
 @router.delete("/departments/{dept_id}")
