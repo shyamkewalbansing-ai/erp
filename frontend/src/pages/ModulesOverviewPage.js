@@ -8,6 +8,7 @@ import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import {
   Dialog,
   DialogContent,
@@ -38,7 +39,9 @@ import {
   Star,
   TrendingUp,
   Clock,
-  ChevronRight
+  ChevronRight,
+  CreditCard,
+  Puzzle
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
