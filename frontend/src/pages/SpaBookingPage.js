@@ -22,8 +22,6 @@ import {
   Heart,
   Star
 } from "lucide-react";
-import PublicNav from "../components/PublicNav";
-import PublicFooter from "../components/PublicFooter";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
