@@ -76,7 +76,12 @@ export default function WorkspaceSettings() {
         logo_url: branding.logo_url || '',
         portal_name: branding.portal_name || '',
         primary_color: branding.primary_color || '#0caf60',
-        secondary_color: branding.secondary_color || '#059669'
+        secondary_color: branding.secondary_color || '#059669',
+        login_background_url: branding.login_background_url || '',
+        login_image_url: branding.login_image_url || '',
+        register_image_url: branding.register_image_url || '',
+        welcome_text: branding.welcome_text || '',
+        tagline: branding.tagline || ''
       });
     }
   }, [branding]);
