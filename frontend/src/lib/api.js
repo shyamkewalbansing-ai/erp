@@ -12,12 +12,14 @@ const api = axios.create({
   timeout: 15000, // 15 second timeout
 });
 
-// Add auth token to requests
+// Add auth token and workspace domain to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Add current domain as header for workspace validation
+  config.headers['X-Workspace-Domain'] = window.location.hostname;
   return config;
 });
 
