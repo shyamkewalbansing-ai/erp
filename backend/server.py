@@ -1902,6 +1902,8 @@ async def create_user_workspace(
     }
     
     await db.workspaces.insert_one(workspace)
+    # Remove MongoDB _id to prevent serialization errors
+    workspace.pop("_id", None)
     await db.users.update_one({"id": current_user["id"]}, {"$set": {"workspace_id": workspace_id}})
     
     return {
