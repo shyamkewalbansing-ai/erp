@@ -86,25 +86,25 @@ export default function ReportsPage() {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white border-0">
+            <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-pink-100 text-sm">Transacties</p>
+                    <p className="text-emerald-100 text-sm">Transacties</p>
                     <p className="text-3xl font-bold">{revenueData?.total_transactions || 0}</p>
                   </div>
-                  <BarChart3 className="w-12 h-12 text-pink-200" />
+                  <BarChart3 className="w-12 h-12 text-emerald-200" />
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0">
+            <Card className="bg-gradient-to-br from-teal-500 to-teal-600 text-white border-0">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-100 text-sm">Gem. Transactie</p>
+                    <p className="text-teal-100 text-sm">Gem. Transactie</p>
                     <p className="text-3xl font-bold">SRD {Math.round(revenueData?.average_transaction || 0).toLocaleString()}</p>
                   </div>
-                  <TrendingUp className="w-12 h-12 text-purple-200" />
+                  <TrendingUp className="w-12 h-12 text-teal-200" />
                 </div>
               </CardContent>
             </Card>

@@ -228,7 +228,7 @@ export default function POSPage() {
                 filteredTreatments.map((treatment) => (
                   <Card 
                     key={treatment.id} 
-                    className="cursor-pointer hover:shadow-lg hover:border-pink-300 transition-all"
+                    className="cursor-pointer hover:shadow-lg hover:border-emerald-300 transition-all"
                     onClick={() => addToCart(treatment, 'treatment')}
                   >
                     <CardContent className="p-4">
@@ -242,7 +242,7 @@ export default function POSPage() {
                 filteredProducts.map((product) => (
                   <Card 
                     key={product.id} 
-                    className={`cursor-pointer hover:shadow-lg transition-all ${product.stock_quantity <= 0 ? 'opacity-50' : 'hover:border-pink-300'}`}
+                    className={`cursor-pointer hover:shadow-lg transition-all ${product.stock_quantity <= 0 ? 'opacity-50' : 'hover:border-emerald-300'}`}
                     onClick={() => product.stock_quantity > 0 && addToCart(product, 'product')}
                   >
                     <CardContent className="p-4">
@@ -291,7 +291,7 @@ export default function POSPage() {
               </Select>
               {selectedClient && (
                 <div className="mt-3 p-3 bg-emerald-50 rounded-lg">
-                  <p className="font-medium text-pink-800">{selectedClient.name}</p>
+                  <p className="font-medium text-emerald-800">{selectedClient.name}</p>
                   <p className="text-sm text-emerald-600">Punten: {selectedClient.loyalty_points || 0}</p>
                 </div>
               )}

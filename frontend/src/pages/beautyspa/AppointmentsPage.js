@@ -193,7 +193,7 @@ export default function AppointmentsPage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-pink-600 hover:to-purple-700">
+            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700">
               <Plus className="w-4 h-4 mr-2" />
               Nieuwe Afspraak
             </Button>
@@ -377,7 +377,7 @@ export default function AppointmentsPage() {
           {appointments.sort((a, b) => a.appointment_time.localeCompare(b.appointment_time)).map((apt) => {
             const status = statusColors[apt.status] || statusColors.scheduled;
             return (
-              <Card key={apt.id} className={`border-l-4 ${apt.status === 'completed' ? 'border-l-green-500' : apt.status === 'in_progress' ? 'border-l-purple-500' : 'border-l-pink-500'}`}>
+              <Card key={apt.id} className={`border-l-4 ${apt.status === 'completed' ? 'border-l-green-500' : apt.status === 'in_progress' ? 'border-l-teal-500' : 'border-l-emerald-500'}`}>
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
@@ -440,7 +440,7 @@ export default function AppointmentsPage() {
                         <>
                           <Button
                             size="sm"
-                            className="bg-purple-600 hover:bg-purple-700"
+                            className="bg-primary hover:bg-primary/90"
                             onClick={() => updateStatus(apt.id, 'in_progress')}
                           >
                             Start Behandeling

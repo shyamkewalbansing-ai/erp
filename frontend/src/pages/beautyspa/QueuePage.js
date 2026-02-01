@@ -182,7 +182,7 @@ export default function QueuePage() {
         {/* In Service */}
         <Card>
           <CardHeader className="bg-teal-50 border-b">
-            <CardTitle className="flex items-center gap-2 text-purple-800">
+            <CardTitle className="flex items-center gap-2 text-teal-800">
               <Play className="w-5 h-5" /> In Behandeling ({inServiceQueue.length})
             </CardTitle>
           </CardHeader>

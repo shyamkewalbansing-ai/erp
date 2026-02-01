@@ -80,7 +80,7 @@ export default function BeautySpaLayout() {
   const showDashboard = location.pathname === '/app/beautyspa' || location.pathname === '/beautyspa';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-rose-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/30 to-slate-50">
       {/* Mobile Menu Button */}
       <div className="lg:hidden fixed top-4 left-4 z-50">
         <Button
@@ -107,7 +107,7 @@ export default function BeautySpaLayout() {
               </div>
               <div>
                 <h1 className="font-bold text-white text-lg">Beauty Spa</h1>
-                <p className="text-xs text-pink-100">Management System</p>
+                <p className="text-xs text-emerald-100">Management System</p>
               </div>
             </div>
           </div>
@@ -181,26 +181,26 @@ export default function BeautySpaLayout() {
               <>
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                  <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white border-0">
+                  <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-0">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-pink-100 text-sm">Klanten</p>
+                          <p className="text-emerald-100 text-sm">Klanten</p>
                           <p className="text-3xl font-bold">{stats.total_clients}</p>
                         </div>
-                        <Users className="w-12 h-12 text-pink-200" />
+                        <Users className="w-12 h-12 text-emerald-200" />
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0">
+                  <Card className="bg-gradient-to-br from-teal-500 to-teal-600 text-white border-0">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-purple-100 text-sm">Afspraken Vandaag</p>
+                          <p className="text-teal-100 text-sm">Afspraken Vandaag</p>
                           <p className="text-3xl font-bold">{stats.todays_appointments}</p>
                         </div>
-                        <Calendar className="w-12 h-12 text-purple-200" />
+                        <Calendar className="w-12 h-12 text-teal-200" />
                       </div>
                     </CardContent>
                   </Card>
