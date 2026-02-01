@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script om de demo account te activeren met alle modules en een 3-dagen trial
+Script om de demo account te activeren met alle modules - VOLLEDIG ACTIEF
 Data wordt na 1 uur automatisch verwijderd door de backend scheduler.
 Voer uit op de server: python3 setup_demo_account.py
 """
@@ -57,7 +57,8 @@ async def setup_demo():
     db = client[db_name]
     
     now = datetime.now(timezone.utc)
-    trial_end = (now + timedelta(days=3)).isoformat()
+    # PERMANENT active - 100 years from now
+    permanent_end = (now + timedelta(days=36500)).isoformat()
     
     # Demo account settings
     demo_email = "demo@facturatie.sr"
@@ -75,19 +76,19 @@ async def setup_demo():
         user_id = demo_user.get("id") or str(demo_user["_id"])
         print(f"✓ Demo user found: {user_id}")
         
-        # Update user with trial
+        # Update user - FULLY ACTIVE (not trial)
         await db.users.update_one(
             {"email": demo_email},
             {"$set": {
-                "subscription_end_date": trial_end,
-                "is_trial": True,
+                "subscription_end_date": permanent_end,
+                "is_trial": False,  # NOT a trial - fully active
                 "name": demo_name,
                 "company_name": demo_company
             }}
         )
-        print("✓ Updated demo user with 3-day trial")
+        print("✓ Demo account is nu VOLLEDIG ACTIEF (geen trial)")
     else:
-        # Create demo user
+        # Create demo user - FULLY ACTIVE
         user_id = str(uuid.uuid4())
         user_doc = {
             "id": user_id,
@@ -96,12 +97,12 @@ async def setup_demo():
             "name": demo_name,
             "company_name": demo_company,
             "role": "customer",
-            "subscription_end_date": trial_end,
-            "is_trial": True,
+            "subscription_end_date": permanent_end,
+            "is_trial": False,  # NOT a trial - fully active
             "created_at": now.isoformat()
         }
         await db.users.insert_one(user_doc)
-        print(f"✓ Created demo user: {user_id}")
+        print(f"✓ Created demo user (VOLLEDIG ACTIEF): {user_id}")
     
     # Ensure all modules exist in addons collection
     print("\n--- Ensuring all modules exist ---")
@@ -128,8 +129,8 @@ async def setup_demo():
             )
             print(f"  ✓ Addon exists: {module['name']}")
     
-    # Get all available addons and activate for demo user
-    print("\n--- Activating modules for demo user ---")
+    # Get all available addons and activate for demo user - PERMANENT
+    print("\n--- Activating modules for demo user (PERMANENT) ---")
     addons = await db.addons.find({"is_active": True}).to_list(100)
     
     for addon in addons:
@@ -143,7 +144,7 @@ async def setup_demo():
             "$or": [{"addon_id": addon_id}, {"addon_slug": addon_slug}]
         })
         
-        # Create fresh addon entry
+        # Create permanent addon entry
         user_addon = {
             "id": str(uuid.uuid4()),
             "user_id": user_id,
@@ -151,7 +152,7 @@ async def setup_demo():
             "addon_slug": addon_slug,
             "status": "active",
             "start_date": now.isoformat(),
-            "end_date": trial_end,
+            "end_date": permanent_end,  # Permanent
             "activated_at": now.isoformat(),
             "created_at": now.isoformat()
         }
@@ -198,11 +199,12 @@ async def setup_demo():
     print("=" * 50)
     print(f"   Email: {demo_email}")
     print(f"   Password: {demo_password}")
-    print(f"   Trial ends: {trial_end}")
-    print(f"   Modules: ALL ACTIVATED (including Beauty Spa)")
+    print(f"   Status: VOLLEDIG ACTIEF (geen limiet)")
+    print(f"   Modules: ALLE GEACTIVEERD")
     print("")
-    print("   ⏰ Demo data wordt automatisch na 1 uur verwijderd")
-    print("      door de backend cleanup scheduler.")
+    print("   ⏰ BELANGRIJK: Alle data die gebruikers invoeren")
+    print("      wordt NA 1 UUR automatisch verwijderd!")
+    print("      (door de backend cleanup scheduler)")
     print("=" * 50)
     
     client.close()
