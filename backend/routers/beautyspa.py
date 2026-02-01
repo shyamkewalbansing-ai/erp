@@ -7,16 +7,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
-from bson import ObjectId
 import uuid
 import os
+import logging
 
-# Import dependencies from main server
-import sys
-sys.path.append('/app/backend')
-from server import db, get_current_user, logger
+# Import shared dependencies
+from .deps import get_current_user, db
 
 router = APIRouter(prefix="/beautyspa", tags=["Beauty Spa"])
+logger = logging.getLogger(__name__)
 
 # ==================== PYDANTIC MODELS ====================
 
