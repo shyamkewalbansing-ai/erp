@@ -514,7 +514,6 @@ async def get_sales(
     date_from: Optional[str] = None, 
     date_to: Optional[str] = None,
     payment_method: Optional[str] = None,
-    db = Depends(get_db), 
     current_user: dict = Depends(get_current_user)
 ):
     """Get sales with filters"""
