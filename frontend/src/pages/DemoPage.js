@@ -33,7 +33,8 @@ import { useAuth } from '../context/AuthContext';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
 
-// Demo credentials
+// Demo URL
+const DEMO_URL = 'https://demogebruiker.facturatie.sr';
 const DEMO_EMAIL = 'demo@facturatie.sr';
 const DEMO_PASSWORD = 'demo2024';
 
