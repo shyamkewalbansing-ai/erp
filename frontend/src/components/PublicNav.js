@@ -63,7 +63,7 @@ export default function PublicNav({ logoUrl, companyName }) {
               Inloggen
             </Button>
             <Button 
-              onClick={() => navigate('/modules')} 
+              onClick={() => navigate('/modules-overzicht?order=true')} 
               className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-full px-6 shadow-lg shadow-emerald-500/25"
               data-testid="nav-register-btn"
             >
