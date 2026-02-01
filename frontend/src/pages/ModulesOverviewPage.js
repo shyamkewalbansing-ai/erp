@@ -830,26 +830,6 @@ export default function ModulesOverviewPage() {
               </div>
             </div>
 
-                <div 
-                  className={`flex items-start space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                    paymentMethod === 'bank' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'
-                  }`}
-                  onClick={() => setPaymentMethod('bank')}
-                >
-                  <RadioGroupItem value="bank" id="bank" className="mt-1" />
-                  <div className="flex-1">
-                    <Label htmlFor="bank" className="flex items-center gap-2 cursor-pointer font-semibold">
-                      <Building2 className="w-5 h-5 text-slate-600" />
-                      Bankoverschrijving
-                    </Label>
-                    <p className="text-sm text-slate-500 mt-1">
-                      U ontvangt een factuur per e-mail. Na betaling wordt uw account geactiveerd.
-                    </p>
-                  </div>
-                </div>
-              </RadioGroup>
-            </div>
-
             {/* Submit Button */}
             <div className="flex gap-3 pt-4 border-t">
               <Button 
