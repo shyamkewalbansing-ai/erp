@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Card, CardContent } from '../components/ui/card';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
@@ -33,7 +33,11 @@ import {
   Mail,
   Lock,
   Building,
-  Puzzle
+  Puzzle,
+  Zap,
+  Shield,
+  Clock,
+  TrendingUp
 } from 'lucide-react';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
@@ -114,7 +118,7 @@ export default function PrijzenPage() {
   const getPrice = (addon) => {
     const monthlyPrice = addon.price || 0;
     if (isYearly) {
-      return monthlyPrice * 12;
+      return monthlyPrice * 10; // 2 maanden gratis
     }
     return monthlyPrice;
   };
@@ -151,7 +155,6 @@ export default function PrijzenPage() {
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation
     if (!orderForm.name || !orderForm.email || !orderForm.password || !orderForm.company_name) {
       toast.error('Vul alle verplichte velden in');
       return;
@@ -183,7 +186,6 @@ export default function PrijzenPage() {
       const response = await axios.post(`${API_URL}/public/orders`, orderData);
       
       if (response.data) {
-        // Store token for auto-login
         if (response.data.token) {
           localStorage.setItem('token', response.data.token);
           axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
@@ -195,14 +197,10 @@ export default function PrijzenPage() {
             : 'Bestelling ontvangen! U ontvangt een e-mail met betalingsinstructies.'
         );
         setOrderDialogOpen(false);
-        
-        // Reset form
         setOrderForm({ name: '', email: '', phone: '', company_name: '', password: '', password_confirm: '' });
         setSelectedAddons([]);
         
-        // Redirect based on payment method
         if (paymentMethod === 'mope' && response.data.order?.id) {
-          // Create Mope payment
           try {
             const paymentRes = await axios.post(`${API_URL}/public/orders/${response.data.order.id}/pay`, null, {
               params: { redirect_url: window.location.origin + '/app/dashboard' }
@@ -216,7 +214,6 @@ export default function PrijzenPage() {
           }
         }
         
-        // For trial and bank transfer, go to dashboard
         setTimeout(() => {
           window.location.href = '/app/dashboard';
         }, 1000);
@@ -229,6 +226,16 @@ export default function PrijzenPage() {
     }
   };
 
+  // Gradient colors for cards
+  const cardGradients = [
+    { gradient: 'from-emerald-500 to-teal-600', icon: 'bg-emerald-500', light: 'from-emerald-50 to-teal-50' },
+    { gradient: 'from-blue-500 to-indigo-600', icon: 'bg-blue-500', light: 'from-blue-50 to-indigo-50' },
+    { gradient: 'from-orange-500 to-red-600', icon: 'bg-orange-500', light: 'from-orange-50 to-red-50' },
+    { gradient: 'from-purple-500 to-pink-600', icon: 'bg-purple-500', light: 'from-purple-50 to-pink-50' },
+    { gradient: 'from-cyan-500 to-blue-600', icon: 'bg-cyan-500', light: 'from-cyan-50 to-blue-50' },
+    { gradient: 'from-amber-500 to-orange-600', icon: 'bg-amber-500', light: 'from-amber-50 to-orange-50' },
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -238,52 +245,88 @@ export default function PrijzenPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-50">
       {/* Navigation */}
       <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
       {/* Hero Section */}
-      <section className="pt-32 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            <span className="text-emerald-500">Eenvoudige</span> prijsstelling
+      <section className="relative pt-32 pb-16 overflow-hidden">
+        {/* Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-[600px] h-[600px] bg-gradient-to-br from-emerald-400/20 to-teal-400/20 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-[400px] h-[400px] bg-gradient-to-tr from-blue-400/20 to-indigo-400/20 rounded-full blur-3xl"></div>
+        </div>
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative">
+          <Badge className="mb-6 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 text-emerald-600 border-emerald-200 px-4 py-2">
+            <Sparkles className="w-4 h-4 mr-2" />
+            Transparante Prijzen
+          </Badge>
+          
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900 mb-6">
+            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              Eenvoudige
+            </span>{' '}
+            Prijsstelling
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
-            Kies de extensies die het beste aansluiten bij uw bedrijfsbehoeften
+          
+          <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-10">
+            Betaal alleen voor wat u nodig heeft. Geen verborgen kosten, 
+            geen lange contracten.
           </p>
           
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <span className={`text-sm font-medium ${!isYearly ? 'text-emerald-600' : 'text-gray-500'}`}>Maandelijks</span>
-            <Switch checked={isYearly} onCheckedChange={setIsYearly} />
-            <span className={`text-sm font-medium ${isYearly ? 'text-emerald-600' : 'text-gray-500'}`}>
-              Jaarlijks
-              <Badge className="ml-2 bg-emerald-100 text-emerald-700">2 maanden gratis</Badge>
+          <div className="inline-flex items-center gap-4 p-2 bg-white rounded-full shadow-lg border border-slate-200">
+            <span className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${!isYearly ? 'bg-emerald-500 text-white' : 'text-slate-600'}`}>
+              Maandelijks
             </span>
+            <Switch checked={isYearly} onCheckedChange={setIsYearly} />
+            <span className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${isYearly ? 'bg-emerald-500 text-white' : 'text-slate-600'}`}>
+              Jaarlijks
+              {!isYearly && <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">-17%</Badge>}
+            </span>
+          </div>
+          
+          {/* Trust Indicators */}
+          <div className="flex flex-wrap items-center justify-center gap-6 mt-10 text-sm text-slate-500">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-emerald-500" />
+              <span>3 dagen gratis proberen</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-500" />
+              <span>Geen creditcard nodig</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-purple-500" />
+              <span>Direct annuleren mogelijk</span>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Pricing Cards */}
-      <section className="pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Selected Count & Total */}
-          {selectedAddons.length > 0 && (
-            <div className="mb-8 p-4 bg-emerald-50 rounded-xl border border-emerald-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-emerald-600" />
-                <span className="font-medium text-emerald-800">
+      {/* Selected Summary Bar */}
+      {selectedAddons.length > 0 && (
+        <div className="sticky top-16 z-40 bg-gradient-to-r from-emerald-500 to-teal-600 shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-3 text-white">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5" />
+                </div>
+                <span className="font-medium">
                   {selectedAddons.length} module{selectedAddons.length > 1 ? 's' : ''} geselecteerd
                 </span>
               </div>
-              <div className="flex items-center gap-4">
-                <span className="text-2xl font-bold text-emerald-600">
-                  {formatCurrency(getTotalPrice())}
-                  <span className="text-sm font-normal text-gray-600">/{isYearly ? 'jaar' : 'maand'}</span>
-                </span>
+              <div className="flex items-center gap-6">
+                <div className="text-white">
+                  <span className="text-sm opacity-80">Totaal:</span>
+                  <span className="text-2xl font-bold ml-2">{formatCurrency(getTotalPrice())}</span>
+                  <span className="text-sm opacity-80">/{isYearly ? 'jaar' : 'maand'}</span>
+                </div>
                 <Button 
                   onClick={handleOrder}
-                  className="bg-emerald-500 hover:bg-emerald-600"
+                  className="bg-white text-emerald-600 hover:bg-slate-100 shadow-lg"
                   data-testid="order-selected-btn"
                 >
                   Nu Bestellen
@@ -291,75 +334,105 @@ export default function PrijzenPage() {
                 </Button>
               </div>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-          {/* Addon Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Pricing Cards */}
+      <section className="py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {addons.map((addon, index) => {
               const isSelected = selectedAddons.includes(addon.id);
               const isPopular = index === 0;
+              const colors = cardGradients[index % cardGradients.length];
               
               return (
                 <Card 
                   key={addon.id} 
-                  className={`relative overflow-hidden transition-all cursor-pointer hover:shadow-lg ${
-                    isSelected ? 'ring-2 ring-emerald-500 bg-emerald-50/50' : ''
-                  } ${isPopular ? 'border-emerald-500' : ''}`}
+                  className={`group relative overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 cursor-pointer bg-white ${
+                    isSelected ? 'ring-2 ring-emerald-500 scale-[1.02]' : ''
+                  }`}
                   onClick={() => toggleAddonSelection(addon.id)}
                   data-testid={`addon-card-${addon.id}`}
                 >
+                  {/* Top Gradient Bar */}
+                  <div className={`h-2 bg-gradient-to-r ${colors.gradient}`}></div>
+                  
+                  {/* Popular Badge */}
                   {isPopular && (
-                    <div className="absolute top-0 right-0 bg-emerald-500 text-white px-3 py-1 text-xs font-medium rounded-bl-lg">
-                      Populair
+                    <div className="absolute top-6 right-6">
+                      <Badge className="bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0 shadow-lg px-3 py-1">
+                        <Star className="w-3 h-3 mr-1 fill-current" />
+                        Populair
+                      </Badge>
                     </div>
                   )}
                   
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                          {addon.icon_url ? (
-                            <img src={addon.icon_url} alt={addon.name} className="w-8 h-8" />
-                          ) : (
-                            <Package className="w-6 h-6 text-emerald-600" />
-                          )}
-                        </div>
-                        <div>
-                          <CardTitle className="text-xl">{addon.name}</CardTitle>
-                          <CardDescription>{addon.category || 'Module'}</CardDescription>
-                        </div>
+                  {/* Selected Checkmark */}
+                  {isSelected && (
+                    <div className="absolute top-6 left-6">
+                      <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg">
+                        <Check className="w-5 h-5 text-white" />
                       </div>
-                      <Checkbox 
-                        checked={isSelected}
-                        onCheckedChange={() => {}}
-                        onClick={(e) => e.stopPropagation()}
-                        className="mt-1"
-                      />
                     </div>
-                  </CardHeader>
+                  )}
                   
-                  <CardContent>
-                    <div className="mb-4">
-                      <span className="text-3xl font-bold text-gray-900">{formatCurrency(getPrice(addon))}</span>
-                      <span className="text-gray-500">/{isYearly ? 'jaar' : 'maand'}</span>
+                  <CardContent className="p-8 pt-6">
+                    {/* Icon */}
+                    <div className={`w-16 h-16 ${colors.icon} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                      {addon.icon_url ? (
+                        <img src={addon.icon_url} alt={addon.name} className="w-8 h-8" />
+                      ) : (
+                        <Package className="w-8 h-8 text-white" />
+                      )}
                     </div>
                     
+                    {/* Category */}
+                    <Badge variant="secondary" className="mb-3 bg-slate-100 text-slate-600">
+                      {addon.category || 'Module'}
+                    </Badge>
+                    
+                    {/* Name */}
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors">
+                      {addon.name}
+                    </h3>
+                    
+                    {/* Description */}
                     {addon.description && (
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">{addon.description}</p>
+                      <p className="text-slate-600 mb-6 line-clamp-2">{addon.description}</p>
                     )}
                     
-                    {/* Features List */}
-                    <ul className="space-y-2 mb-6">
-                      {(addon.features || ['Volledige toegang', 'Updates inbegrepen', 'Support']).slice(0, 4).map((feature, i) => (
-                        <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                          <Check className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                          <span>{feature}</span>
+                    {/* Price */}
+                    <div className="mb-6">
+                      <span className="text-4xl font-bold text-slate-900">{formatCurrency(getPrice(addon))}</span>
+                      <span className="text-slate-500 ml-1">/{isYearly ? 'jaar' : 'maand'}</span>
+                      {isYearly && (
+                        <p className="text-sm text-emerald-600 mt-1">
+                          Bespaar 2 maanden!
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* Features */}
+                    <ul className="space-y-3 mb-8">
+                      {(addon.features || ['Volledige toegang', 'Updates inbegrepen', 'Support', 'Data export']).slice(0, 4).map((feature, i) => (
+                        <li key={i} className="flex items-start gap-3 text-slate-600">
+                          <div className={`w-5 h-5 rounded-full ${colors.icon} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                            <Check className="w-3 h-3 text-white" />
+                          </div>
+                          <span className="text-sm">{feature}</span>
                         </li>
                       ))}
                     </ul>
                     
+                    {/* Button */}
                     <Button 
-                      className={`w-full ${isSelected ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-gray-900 hover:bg-gray-800'}`}
+                      className={`w-full h-12 text-base font-semibold ${
+                        isSelected 
+                          ? 'bg-emerald-500 hover:bg-emerald-600' 
+                          : `bg-gradient-to-r ${colors.gradient} hover:opacity-90`
+                      }`}
                       onClick={(e) => {
                         e.stopPropagation();
                         if (!isSelected) {
@@ -369,12 +442,50 @@ export default function PrijzenPage() {
                       }}
                       data-testid={`order-btn-${addon.id}`}
                     >
-                      {isSelected ? 'Geselecteerd' : 'Nu Bestellen'}
+                      {isSelected ? (
+                        <>
+                          <Check className="w-5 h-5 mr-2" />
+                          Geselecteerd
+                        </>
+                      ) : (
+                        'Nu Bestellen'
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-gradient-to-br from-slate-900 to-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Waarom kiezen voor ons?
+            </h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              Alles wat u nodig heeft voor uw bedrijf, in één platform
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { icon: Shield, title: 'Veilig & Betrouwbaar', desc: 'Uw data is veilig opgeslagen' },
+              { icon: Zap, title: 'Snel & Modern', desc: 'Gebouwd met de nieuwste technologie' },
+              { icon: TrendingUp, title: 'Schaalbaar', desc: 'Groeit mee met uw bedrijf' },
+              { icon: Gift, title: '3 Dagen Gratis', desc: 'Probeer zonder verplichtingen' },
+            ].map((feature, i) => (
+              <div key={i} className="text-center">
+                <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center">
+                  <feature.icon className="w-8 h-8 text-white" />
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
+                <p className="text-slate-400 text-sm">{feature.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -391,30 +502,33 @@ export default function PrijzenPage() {
       <Dialog open={orderDialogOpen} onOpenChange={setOrderDialogOpen}>
         <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Account Aanmaken & Bestellen</DialogTitle>
+            <DialogTitle className="text-2xl flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-emerald-500" />
+              Account Aanmaken & Bestellen
+            </DialogTitle>
             <DialogDescription>
-              Maak een account aan en kies uw betaalmethode om te starten
+              Maak een account aan en kies uw betaalmethode
             </DialogDescription>
           </DialogHeader>
           
           <form onSubmit={handleOrderSubmit} className="space-y-6 mt-4">
             {/* Selected Modules Summary */}
-            <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
-              <h4 className="font-semibold mb-2 flex items-center gap-2">
-                <Puzzle className="w-4 h-4 text-emerald-600" />
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border border-emerald-200">
+              <h4 className="font-semibold mb-3 flex items-center gap-2 text-emerald-800">
+                <Puzzle className="w-5 h-5" />
                 Geselecteerde Modules
               </h4>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {getSelectedAddonNames().map((name, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm">
-                    <Check className="w-4 h-4 text-emerald-600" />
+                  <div key={index} className="flex items-center gap-2 text-sm text-emerald-700">
+                    <Check className="w-4 h-4" />
                     <span>{name}</span>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 pt-3 border-t border-emerald-200 flex justify-between">
-                <span className="font-medium">Totaal per {isYearly ? 'jaar' : 'maand'}:</span>
-                <span className="font-bold text-emerald-600 text-lg">{formatCurrency(getTotalPrice())}</span>
+              <div className="mt-4 pt-4 border-t border-emerald-200 flex justify-between items-center">
+                <span className="font-medium text-emerald-800">Totaal per {isYearly ? 'jaar' : 'maand'}:</span>
+                <span className="font-bold text-emerald-600 text-xl">{formatCurrency(getTotalPrice())}</span>
               </div>
             </div>
 
@@ -429,7 +543,7 @@ export default function PrijzenPage() {
                 <div className="space-y-2">
                   <Label htmlFor="name">Volledige Naam *</Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       id="name"
                       placeholder="Uw naam"
@@ -444,7 +558,7 @@ export default function PrijzenPage() {
                 <div className="space-y-2">
                   <Label htmlFor="email">E-mailadres *</Label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       id="email"
                       type="email"
@@ -462,7 +576,7 @@ export default function PrijzenPage() {
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefoonnummer</Label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       id="phone"
                       placeholder="+597 xxx xxxx"
@@ -476,7 +590,7 @@ export default function PrijzenPage() {
                 <div className="space-y-2">
                   <Label htmlFor="company_name">Bedrijfsnaam *</Label>
                   <div className="relative">
-                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Building className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       id="company_name"
                       placeholder="Uw bedrijf"
@@ -493,7 +607,7 @@ export default function PrijzenPage() {
                 <div className="space-y-2">
                   <Label htmlFor="password">Wachtwoord *</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       id="password"
                       type="password"
@@ -509,7 +623,7 @@ export default function PrijzenPage() {
                 <div className="space-y-2">
                   <Label htmlFor="password_confirm">Bevestig Wachtwoord *</Label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       id="password_confirm"
                       type="password"
@@ -532,10 +646,9 @@ export default function PrijzenPage() {
               </h4>
               
               <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod} className="space-y-3">
-                {/* 3 Days Free Trial */}
                 <div 
-                  className={`flex items-start space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    paymentMethod === 'trial' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'
+                  className={`flex items-start space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'trial' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'
                   }`}
                   onClick={() => setPaymentMethod('trial')}
                 >
@@ -546,16 +659,15 @@ export default function PrijzenPage() {
                       3 Dagen Gratis Proberen
                       <Badge className="bg-emerald-100 text-emerald-700 border-0">Aanbevolen</Badge>
                     </Label>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1">
                       Probeer alle functies gratis. Na 3 dagen kiest u een betaalmethode.
                     </p>
                   </div>
                 </div>
 
-                {/* Mope Payment */}
                 <div 
-                  className={`flex items-start space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    paymentMethod === 'mope' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'
+                  className={`flex items-start space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'mope' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'
                   }`}
                   onClick={() => setPaymentMethod('mope')}
                 >
@@ -565,26 +677,25 @@ export default function PrijzenPage() {
                       <CreditCard className="w-5 h-5 text-blue-500" />
                       Betalen met Mope
                     </Label>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1">
                       Direct betalen via Mope. Uw account wordt direct geactiveerd.
                     </p>
                   </div>
                 </div>
 
-                {/* Bank Transfer */}
                 <div 
-                  className={`flex items-start space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                    paymentMethod === 'bank' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'
+                  className={`flex items-start space-x-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'bank' ? 'border-emerald-500 bg-emerald-50' : 'border-slate-200 hover:border-slate-300'
                   }`}
                   onClick={() => setPaymentMethod('bank')}
                 >
                   <RadioGroupItem value="bank" id="bank" className="mt-1" />
                   <div className="flex-1">
                     <Label htmlFor="bank" className="flex items-center gap-2 cursor-pointer font-semibold">
-                      <Building2 className="w-5 h-5 text-gray-600" />
+                      <Building2 className="w-5 h-5 text-slate-600" />
                       Bankoverschrijving
                     </Label>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-slate-500 mt-1">
                       U ontvangt een factuur per e-mail. Na betaling wordt uw account geactiveerd.
                     </p>
                   </div>
@@ -604,7 +715,7 @@ export default function PrijzenPage() {
               </Button>
               <Button 
                 type="submit" 
-                className="flex-1 bg-emerald-500 hover:bg-emerald-600"
+                className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700"
                 disabled={submitting}
               >
                 {submitting ? (
