@@ -36,8 +36,37 @@ const moduleCapabilities = {
       { label: 'Huurders', message: 'Toon alle huurders' },
       { label: 'Betalingen', message: 'Wat zijn de recente betalingen?' },
     ]
+  },
+  hrm: {
+    name: 'HRM Module',
+    capabilities: [
+      '• Werknemers toevoegen en beheren',
+      '• Verlofaanvragen goedkeuren/afwijzen',
+      '• Afdelingen beheren',
+      '• Salarissen bekijken',
+      '• Personeel overzicht'
+    ],
+    quickActions: [
+      { label: 'Personeel', message: 'Toon overzicht van alle werknemers' },
+      { label: 'Verlof', message: 'Zijn er openstaande verlofaanvragen?' },
+      { label: 'Toevoegen', message: 'Voeg een nieuwe werknemer toe' },
+    ]
+  },
+  autodealer: {
+    name: 'Auto Dealer',
+    capabilities: [
+      '• Voertuigen toevoegen en beheren',
+      '• Klanten registreren',
+      '• Verkopen vastleggen',
+      '• Voorraad overzicht',
+      '• Multi-valuta ondersteuning'
+    ],
+    quickActions: [
+      { label: 'Voorraad', message: 'Toon beschikbare voertuigen' },
+      { label: 'Verkopen', message: 'Wat zijn de recente verkopen?' },
+      { label: 'Toevoegen', message: 'Voeg een nieuw voertuig toe' },
+    ]
   }
-  // Future modules can be added here
 };
 
 const getWelcomeMessage = (activeModules) => {
