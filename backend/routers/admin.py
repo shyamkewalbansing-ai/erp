@@ -506,6 +506,101 @@ async def update_landing_settings(
     return {"message": "Landing page instellingen bijgewerkt"}
 
 
+# ==================== DEMO DATA CLEANUP ====================
+
+DEMO_ACCOUNT_EMAIL = "demo@facturatie.sr"
+
+@router.post("/cleanup-demo-data")
+async def cleanup_demo_data_endpoint(current_user: dict = Depends(get_superadmin)):
+    """Manually trigger demo data cleanup"""
+    db = await get_db()
+    
+    from datetime import timedelta
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        demo_user = await db.users.find_one({"email": DEMO_ACCOUNT_EMAIL})
+        if not demo_user:
+            raise HTTPException(status_code=404, detail="Demo gebruiker niet gevonden")
+        
+        demo_user_id = str(demo_user.get("id", demo_user.get("_id")))
+        demo_workspace_id = demo_user.get("workspace_id")
+        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+        
+        logger.info(f"Running manual demo data cleanup for user {DEMO_ACCOUNT_EMAIL}")
+        
+        # Collections to clean up with their user/workspace field names
+        collections_to_clean = [
+            # HRM data
+            ("hrm_employees", "workspace_id"),
+            ("hrm_departments", "workspace_id"),
+            ("hrm_leave_requests", "workspace_id"),
+            ("hrm_attendance", "workspace_id"),
+            ("hrm_payroll", "workspace_id"),
+            
+            # Vastgoed data
+            ("apartments", "workspace_id"),
+            ("tenants", "workspace_id"),
+            ("payments", "workspace_id"),
+            ("deposits", "workspace_id"),
+            ("maintenance", "workspace_id"),
+            ("loans", "workspace_id"),
+            
+            # Auto dealer data
+            ("autodealer_vehicles", "workspace_id"),
+            ("autodealer_customers", "workspace_id"),
+            ("autodealer_sales", "workspace_id"),
+            
+            # General data
+            ("ai_chat_history", "user_id"),
+            ("public_chats", "user_id"),
+        ]
+        
+        total_deleted = 0
+        deleted_details = {}
+        
+        for collection_name, filter_field in collections_to_clean:
+            try:
+                collection = db[collection_name]
+                
+                # Build filter based on field type
+                if filter_field == "workspace_id" and demo_workspace_id:
+                    filter_query = {
+                        filter_field: demo_workspace_id,
+                        "created_at": {"$lt": one_hour_ago.isoformat()}
+                    }
+                elif filter_field == "user_id":
+                    filter_query = {
+                        filter_field: demo_user_id,
+                        "created_at": {"$lt": one_hour_ago.isoformat()}
+                    }
+                else:
+                    continue
+                
+                result = await collection.delete_many(filter_query)
+                if result.deleted_count > 0:
+                    logger.info(f"Deleted {result.deleted_count} demo records from {collection_name}")
+                    total_deleted += result.deleted_count
+                    deleted_details[collection_name] = result.deleted_count
+            except Exception as e:
+                logger.error(f"Error cleaning {collection_name}: {e}")
+        
+        return {
+            "message": f"Demo data cleanup voltooid: {total_deleted} records verwijderd",
+            "total_deleted": total_deleted,
+            "details": deleted_details,
+            "demo_user_id": demo_user_id,
+            "demo_workspace_id": demo_workspace_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Demo cleanup error: {e}")
+        raise HTTPException(status_code=500, detail=f"Cleanup fout: {str(e)}")
+
+
 # ==================== SYSTEM STATS ====================
 
 @router.get("/stats/system")
