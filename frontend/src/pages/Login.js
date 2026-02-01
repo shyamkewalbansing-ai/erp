@@ -247,15 +247,30 @@ export default function Login() {
           {/* Demo link */}
           <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-md">
                 <Play className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1">
                 <p className="text-sm font-medium text-slate-900">Probeer eerst de demo?</p>
-                <Link to="/demo" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">
-                  Bekijk demo →
+                <Link to="/demo" className="text-sm text-emerald-600 hover:text-emerald-700 font-medium inline-flex items-center gap-1">
+                  Bekijk demo 
+                  <ArrowRight className="w-3 h-3" />
                 </Link>
               </div>
+            </div>
+          </div>
+
+          {/* Trust indicators */}
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <div className="flex -space-x-2">
+              {['JK', 'SM', 'RB'].map((initials, i) => (
+                <div key={i} className="w-7 h-7 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 border-2 border-white flex items-center justify-center text-white text-xs font-bold">
+                  {initials}
+                </div>
+              ))}
+            </div>
+            <div className="text-xs text-slate-500">
+              500+ klanten vertrouwen ons
             </div>
           </div>
 
