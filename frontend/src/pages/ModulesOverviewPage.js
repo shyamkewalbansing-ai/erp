@@ -113,6 +113,20 @@ const MODULE_UI_DATA = {
       'Visuele grafieken'
     ]
   },
+  'beauty': {
+    icon: Scissors,
+    gradient: 'from-pink-500 to-rose-600',
+    lightBg: 'from-pink-50 to-rose-50',
+    shadowColor: 'shadow-pink-200',
+    detailSlug: 'beauty-spa',
+    image: 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80',
+    features: [
+      'Klantenbeheer (CRM) met huidtype & allergieën',
+      'Afspraken & roosterbeheer',
+      'Kassasysteem met Surinaamse betaalmethoden',
+      'Walk-in wachtrij beheer'
+    ]
+  },
   'multi-tenant': {
     icon: Shield,
     gradient: 'from-slate-500 to-slate-700',
