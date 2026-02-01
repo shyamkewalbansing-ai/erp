@@ -28,7 +28,7 @@ import { toast } from 'sonner';
 import { 
   Users, UserPlus, Palette, Globe, Trash2, Crown, Shield, Eye, Mail, Loader2, Save,
   Database, Download, RotateCcw, Plus, AlertTriangle, Clock, HardDrive, Settings,
-  Link, Server, CheckCircle, XCircle, Copy, RefreshCw, Building2, ExternalLink
+  Link, Server, CheckCircle, XCircle, Copy, RefreshCw, Building2, ExternalLink, ImageIcon
 } from 'lucide-react';
 
 export default function WorkspaceSettings() {
