@@ -13,18 +13,20 @@ import {
   ArrowRight,
   Check,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Shield
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
 
-// Module UI metadata
+// Module UI metadata with detail page slugs
 const MODULE_UI_DATA = {
   'hrm': {
     icon: Users,
-    color: 'from-emerald-500 to-teal-600',
-    bgColor: 'bg-emerald-500',
+    color: 'from-blue-500 to-indigo-500',
+    bgColor: 'bg-blue-500',
+    detailSlug: 'hrm',
     features: [
       'Personeelsbeheer met alle werknemergegevens',
       'Verlofaanvragen en goedkeuringsworkflow',
@@ -34,8 +36,9 @@ const MODULE_UI_DATA = {
   },
   'vastgoed_beheer': {
     icon: Building2,
-    color: 'from-teal-500 to-emerald-600',
-    bgColor: 'bg-teal-500',
+    color: 'from-emerald-500 to-teal-500',
+    bgColor: 'bg-emerald-500',
+    detailSlug: 'vastgoed-beheer',
     features: [
       'Panden en units beheer',
       'Huurdersbeheer met contracten',
@@ -45,8 +48,9 @@ const MODULE_UI_DATA = {
   },
   'autodealer': {
     icon: Car,
-    color: 'from-cyan-500 to-blue-600',
-    bgColor: 'bg-cyan-500',
+    color: 'from-orange-500 to-red-500',
+    bgColor: 'bg-orange-500',
+    detailSlug: 'auto-dealer',
     features: [
       'Voertuigvoorraad beheer',
       'Verkoop- en aankoopregistratie',
@@ -56,8 +60,9 @@ const MODULE_UI_DATA = {
   },
   'ai-chatbot': {
     icon: MessageSquare,
-    color: 'from-violet-500 to-purple-600',
-    bgColor: 'bg-violet-500',
+    color: 'from-purple-500 to-pink-500',
+    bgColor: 'bg-purple-500',
+    detailSlug: 'ai-chatbot',
     features: [
       'GPT-4 aangedreven conversaties',
       'Meertalige ondersteuning',
@@ -67,8 +72,9 @@ const MODULE_UI_DATA = {
   },
   'cms': {
     icon: Globe,
-    color: 'from-blue-500 to-indigo-600',
-    bgColor: 'bg-blue-500',
+    color: 'from-cyan-500 to-blue-500',
+    bgColor: 'bg-cyan-500',
+    detailSlug: 'website-cms',
     features: [
       'Drag & drop pagina builder',
       'Menu en navigatie beheer',
@@ -78,21 +84,35 @@ const MODULE_UI_DATA = {
   },
   'rapportage': {
     icon: BarChart3,
-    color: 'from-orange-500 to-red-600',
-    bgColor: 'bg-orange-500',
+    color: 'from-green-500 to-emerald-500',
+    bgColor: 'bg-green-500',
+    detailSlug: 'rapportage',
     features: [
       'Real-time dashboards',
       'Exporteer naar PDF/Excel',
       'Automatische rapportages',
       'Visuele grafieken'
     ]
+  },
+  'multi-tenant': {
+    icon: Shield,
+    color: 'from-slate-500 to-slate-600',
+    bgColor: 'bg-slate-500',
+    detailSlug: 'multi-tenant',
+    features: [
+      'Eigen workspace omgeving',
+      'Custom branding',
+      'Gebruikersbeheer',
+      'Data isolatie'
+    ]
   }
 };
 
 const DEFAULT_UI = {
   icon: Sparkles,
-  color: 'from-emerald-500 to-teal-600',
+  color: 'from-emerald-500 to-teal-500',
   bgColor: 'bg-emerald-500',
+  detailSlug: null,
   features: ['Volledige functionaliteit', 'Professionele ondersteuning', 'Regelmatige updates']
 };
 
@@ -125,38 +145,45 @@ export default function ModulesOverviewPage() {
     }
   };
 
+  const handleViewDetails = (addon) => {
+    const moduleUI = getModuleUI(addon.slug);
+    if (moduleUI.detailSlug) {
+      navigate(`/module/${moduleUI.detailSlug}`);
+    } else {
+      navigate(`/faq#${addon.slug}`);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-950">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-emerald-50">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50">
       <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
       {/* Hero Section */}
       <section className="pt-28 pb-16 relative overflow-hidden">
-        {/* Background effects */}
-        <div className="absolute inset-0">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl"></div>
-        </div>
+        {/* Background decorations */}
+        <div className="absolute top-20 right-0 w-96 h-96 bg-emerald-200/30 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-96 h-96 bg-teal-200/30 rounded-full blur-3xl"></div>
 
         <div className="max-w-5xl mx-auto px-4 text-center relative z-10">
-          <Badge className="mb-6 bg-emerald-500/20 text-emerald-400 border-emerald-500/30">
+          <Badge className="mb-6 bg-emerald-100 text-emerald-700 border-emerald-200">
             <Sparkles className="w-4 h-4 mr-2" />
             Modulair Platform
           </Badge>
           
           <h1 className="text-4xl md:text-6xl font-bold mb-4">
-            <span className="text-white">Onze </span>
-            <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">Modules</span>
+            <span className="text-slate-800">Onze </span>
+            <span className="bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">Modules</span>
           </h1>
           
-          <p className="text-lg text-slate-400 mb-10 max-w-2xl mx-auto">
+          <p className="text-lg text-slate-600 mb-10 max-w-2xl mx-auto">
             Kies alleen de modules die u nodig heeft. Van HRM tot vastgoedbeheer, 
             van autohandel tot AI-chatbot.
           </p>
@@ -174,33 +201,34 @@ export default function ModulesOverviewPage() {
               return (
                 <div
                   key={addon.id}
-                  className="group bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-2xl overflow-hidden hover:border-slate-700 transition-all duration-300 hover:-translate-y-1"
+                  className="group bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1"
                 >
-                  {/* Header */}
-                  <div className={`relative h-24 bg-gradient-to-br ${moduleUI.color} p-5`}>
+                  {/* Header with gradient */}
+                  <div className={`relative h-28 bg-gradient-to-br ${moduleUI.color} p-5`}>
                     <div className="absolute inset-0 opacity-20">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                      <div className="absolute bottom-0 left-0 w-20 h-20 bg-white rounded-full translate-y-1/2 -translate-x-1/2"></div>
                     </div>
-                    <div className="relative w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                      <IconComponent className="w-6 h-6 text-white" />
+                    <div className="relative w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 shadow-lg">
+                      <IconComponent className="w-7 h-7 text-white" />
                     </div>
                   </div>
                   
                   {/* Content */}
                   <div className="p-5">
-                    <h3 className="text-xl font-bold text-white mb-2">
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">
                       {addon.name}
                     </h3>
-                    <p className="text-slate-400 text-sm mb-5 min-h-[40px]">
+                    <p className="text-slate-500 text-sm mb-5 min-h-[40px]">
                       {addon.description}
                     </p>
                     
                     {/* Features */}
                     <ul className="space-y-2 mb-5">
                       {moduleUI.features.slice(0, 3).map((feature, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                          <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <Check className="w-3 h-3 text-emerald-400" />
+                        <li key={i} className="flex items-start gap-2 text-sm text-slate-600">
+                          <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Check className="w-3 h-3 text-emerald-600" />
                           </div>
                           <span>{feature}</span>
                         </li>
@@ -209,9 +237,8 @@ export default function ModulesOverviewPage() {
                     
                     {/* Details Button */}
                     <Button 
-                      variant="outline"
-                      className="w-full border-slate-700 text-slate-300 hover:border-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
-                      onClick={() => navigate(`/faq#${addon.slug}`)}
+                      className="w-full bg-slate-100 text-slate-700 hover:bg-emerald-600 hover:text-white transition-all duration-300"
+                      onClick={() => handleViewDetails(addon)}
                     >
                       Bekijk Details
                       <ChevronRight className="w-4 h-4 ml-2" />
@@ -224,26 +251,31 @@ export default function ModulesOverviewPage() {
 
           {/* Bottom CTA */}
           <div className="mt-16 text-center">
-            <p className="text-slate-400 mb-6">
-              Interesse in een module? Neem contact met ons op.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg"
-                onClick={() => navigate('/contact')}
-                className="h-12 px-8 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-full"
-              >
-                Contact Opnemen
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
-              <Button 
-                size="lg"
-                variant="outline"
-                onClick={() => navigate('/demo')}
-                className="h-12 px-8 border-slate-700 text-slate-300 hover:border-emerald-500 hover:text-emerald-400 rounded-full"
-              >
-                Probeer Demo
-              </Button>
+            <div className="bg-white rounded-3xl shadow-xl border border-slate-100 p-8 max-w-2xl mx-auto">
+              <h3 className="text-2xl font-bold text-slate-800 mb-3">
+                Interesse in een module?
+              </h3>
+              <p className="text-slate-600 mb-6">
+                Neem contact met ons op voor meer informatie of probeer de demo.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button 
+                  size="lg"
+                  onClick={() => navigate('/contact')}
+                  className="h-12 px-8 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-full shadow-lg shadow-emerald-200"
+                >
+                  Contact Opnemen
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+                <Button 
+                  size="lg"
+                  variant="outline"
+                  onClick={() => navigate('/demo')}
+                  className="h-12 px-8 border-slate-200 text-slate-700 hover:border-emerald-300 hover:text-emerald-700 hover:bg-emerald-50 rounded-full"
+                >
+                  Probeer Demo
+                </Button>
+              </div>
             </div>
           </div>
         </div>
