@@ -63,7 +63,15 @@ export default function WorkspaceSettings() {
   const [domainForm, setDomainForm] = useState({ domain_type: 'subdomain', subdomain: '', custom_domain: '' });
   const [newWorkspaceForm, setNewWorkspaceForm] = useState({ name: '', slug: '' });
   const [brandingForm, setBrandingForm] = useState({
-    logo_url: '', portal_name: '', primary_color: '#0caf60', secondary_color: '#059669'
+    logo_url: '', 
+    portal_name: '', 
+    primary_color: '#0caf60', 
+    secondary_color: '#059669',
+    login_background_url: '',
+    login_image_url: '',
+    register_image_url: '',
+    welcome_text: '',
+    tagline: ''
   });
 
   useEffect(() => {
