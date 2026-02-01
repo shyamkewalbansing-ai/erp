@@ -132,24 +132,19 @@ const DEFAULT_UI_DATA = {
 const getModuleUI = (slug) => {
   return MODULE_UI_DATA[slug] || MODULE_UI_DATA[slug?.replace('-', '_')] || DEFAULT_UI_DATA;
 };
-      'Aangepaste rapportages',
-      'Export naar PDF/Excel',
-      'Trends en voorspellingen',
-      'KPI monitoring'
-    ]
-  }
-];
 
 export default function ModulesOverviewPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
+  const [addons, setAddons] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Trial dialog state
-  const [trialDialogOpen, setTrialDialogOpen] = useState(false);
+  // Order dialog state
+  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [selectedModules, setSelectedModules] = useState([]);
+  const [paymentMethod, setPaymentMethod] = useState('trial');
   const [submitting, setSubmitting] = useState(false);
-  const [trialForm, setTrialForm] = useState({
+  const [orderForm, setOrderForm] = useState({
     name: '',
     email: '',
     phone: '',
@@ -164,8 +159,12 @@ export default function ModulesOverviewPage() {
 
   const loadData = async () => {
     try {
-      const settingsRes = await api.get('/public/landing/settings').catch(() => ({ data: {} }));
+      const [settingsRes, addonsRes] = await Promise.all([
+        api.get('/public/landing/settings').catch(() => ({ data: {} })),
+        api.get('/public/addons').catch(() => ({ data: [] }))
+      ]);
       setSettings(settingsRes.data || {});
+      setAddons(addonsRes.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -173,31 +172,56 @@ export default function ModulesOverviewPage() {
     }
   };
 
-  const toggleModule = (moduleId) => {
+  const toggleModule = (addonId) => {
     setSelectedModules(prev => 
-      prev.includes(moduleId) 
-        ? prev.filter(id => id !== moduleId)
-        : [...prev, moduleId]
+      prev.includes(addonId) 
+        ? prev.filter(id => id !== addonId)
+        : [...prev, addonId]
     );
   };
 
-  const handleStartTrial = () => {
-    if (selectedModules.length === 0) {
-      // Pre-select the most popular modules
-      setSelectedModules(['hrm', 'vastgoed']);
+  const handleStartOrder = (addonId = null) => {
+    if (addonId && !selectedModules.includes(addonId)) {
+      setSelectedModules([...selectedModules, addonId]);
     }
-    setTrialDialogOpen(true);
+    if (selectedModules.length === 0 && addons.length > 0 && !addonId) {
+      // Pre-select first addon
+      setSelectedModules([addons[0].id]);
+    }
+    setOrderDialogOpen(true);
   };
 
-  const handleTrialSubmit = async (e) => {
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('nl-SR', { 
+      style: 'currency', 
+      currency: 'SRD',
+      minimumFractionDigits: 0 
+    }).format(amount).replace('SRD', 'SRD ');
+  };
+
+  const getTotalPrice = () => {
+    return selectedModules.reduce((total, addonId) => {
+      const addon = addons.find(a => a.id === addonId);
+      return total + (addon?.price || 0);
+    }, 0);
+  };
+
+  const getSelectedAddonNames = () => {
+    return selectedModules.map(addonId => {
+      const addon = addons.find(a => a.id === addonId);
+      return addon?.name || '';
+    }).filter(Boolean);
+  };
+
+  const handleOrderSubmit = async (e) => {
     e.preventDefault();
     
-    if (!trialForm.name || !trialForm.email || !trialForm.password || !trialForm.company_name) {
+    if (!orderForm.name || !orderForm.email || !orderForm.password || !orderForm.company_name) {
       toast.error('Vul alle verplichte velden in');
       return;
     }
     
-    if (trialForm.password !== trialForm.password_confirm) {
+    if (orderForm.password !== orderForm.password_confirm) {
       toast.error('Wachtwoorden komen niet overeen');
       return;
     }
