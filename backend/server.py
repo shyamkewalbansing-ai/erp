@@ -4659,6 +4659,7 @@ async def create_kasgeld_transaction(kasgeld_data: KasgeldCreate, current_user: 
     }
     
     await db.kasgeld.insert_one(kasgeld_doc)
+    kasgeld_doc.pop("_id", None)
     
     return KasgeldResponse(**kasgeld_doc)
 
@@ -5254,6 +5255,7 @@ async def create_maintenance(maintenance_data: MaintenanceCreate, current_user: 
     }
     
     await db.maintenance.insert_one(maintenance_doc)
+    maintenance_doc.pop("_id", None)
     
     return MaintenanceResponse(
         **maintenance_doc,
