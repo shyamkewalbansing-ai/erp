@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/button';
-import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { 
   Loader2, 
@@ -34,7 +33,11 @@ import {
   Palette,
   Lock,
   Database,
-  RefreshCw
+  RefreshCw,
+  Play,
+  Star,
+  CheckCircle,
+  ChevronRight
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
@@ -49,77 +52,42 @@ const MODULES_DETAIL = {
     subtitle: 'Beheer uw personeel efficiënt en professioneel',
     description: 'De HRM module biedt een complete oplossing voor personeelsbeheer, van werving tot salarisadministratie. Geoptimaliseerd voor de Surinaamse markt met lokale wet- en regelgeving.',
     icon: Users,
-    color: 'from-blue-500 to-blue-600',
-    bgColor: 'bg-blue-500',
+    gradient: 'from-blue-500 to-indigo-600',
+    lightGradient: 'from-blue-50 to-indigo-50',
+    accentColor: 'blue',
     category: 'Personeel',
     price: 'SRD 2.500',
     priceNote: 'per maand',
     heroImage: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1200&q=80',
+    highlights: ['Verlofbeheer', 'Aanwezigheid', 'Loonstroken', 'Werving'],
     sections: [
       {
         title: 'Personeelsbeheer',
         description: 'Houd alle werknemergegevens op één centrale plek bij.',
         icon: UserCheck,
-        features: [
-          'Volledige werknemerprofielen met foto',
-          'Contactgegevens en noodcontacten',
-          'Bankgegevens voor salarisuitbetaling',
-          'Documenten per werknemer opslaan',
-          'Werkhistorie en notities'
-        ],
+        features: ['Volledige werknemerprofielen met foto', 'Contactgegevens en noodcontacten', 'Bankgegevens voor salarisuitbetaling', 'Documenten per werknemer opslaan', 'Werkhistorie en notities'],
         image: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=800&q=80'
       },
       {
         title: 'Verlofbeheer',
         description: 'Automatische verlofaanvragen en goedkeuringsworkflow.',
         icon: Calendar,
-        features: [
-          'Online verlofaanvragen indienen',
-          'Automatische notificaties naar managers',
-          'Verlofsaldo automatisch bijgewerkt',
-          'Verschillende verloftypes ondersteunen',
-          'Jaaroverzicht per werknemer'
-        ],
+        features: ['Online verlofaanvragen indienen', 'Automatische notificaties naar managers', 'Verlofsaldo automatisch bijgewerkt', 'Verschillende verloftypes ondersteunen', 'Jaaroverzicht per werknemer'],
         image: 'https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&q=80'
       },
       {
         title: 'Aanwezigheid',
         description: 'Track werktijden met digitaal in- en uitklokken.',
         icon: Clock,
-        features: [
-          'Digitaal in- en uitklokken',
-          'Automatische urenberekening',
-          'Overwerk tracking',
-          'Maandelijkse aanwezigheidsrapporten',
-          'Integratie met salarisbeheer'
-        ],
+        features: ['Digitaal in- en uitklokken', 'Automatische urenberekening', 'Overwerk tracking', 'Maandelijkse aanwezigheidsrapporten', 'Integratie met salarisbeheer'],
         image: 'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=800&q=80'
       },
       {
         title: 'Salarisbeheer',
         description: 'Complete salarisadministratie met loonstrookgeneratie.',
         icon: DollarSign,
-        features: [
-          'Maandelijkse loonberekening',
-          'Automatische loonstrookgeneratie (PDF)',
-          'Toeslagen en inhoudingen beheren',
-          'Bulksalarissen verwerken',
-          'Salarishistorie per werknemer'
-        ],
+        features: ['Maandelijkse loonberekening', 'Automatische loonstrookgeneratie (PDF)', 'Toeslagen en inhoudingen beheren', 'Bulksalarissen verwerken', 'Salarishistorie per werknemer'],
         image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80'
-      },
-      {
-        title: 'Werving & Selectie',
-        description: 'Beheer vacatures en sollicitaties professioneel.',
-        icon: FileText,
-        features: [
-          'Vacatures aanmaken en publiceren',
-          'Online sollicitatieformulieren',
-          'Sollicitatiestatus tracking',
-          'CV en documenten opslaan',
-          'Automatische afwijzingsmails'
-        ],
-        image: 'https://images.unsplash.com/photo-1565688534245-05d6b5be184a?w=800&q=80'
       }
     ]
   },
@@ -130,295 +98,226 @@ const MODULES_DETAIL = {
     subtitle: 'De complete oplossing voor vastgoedbeheerders',
     description: 'Beheer uw huurwoningen, appartementen en commercieel vastgoed met gemak. Geïntegreerde facturatie, meterstanden en huurdersbeheer speciaal voor Suriname.',
     icon: Building2,
-    color: 'from-emerald-500 to-emerald-600',
-    bgColor: 'bg-emerald-500',
+    gradient: 'from-emerald-500 to-teal-600',
+    lightGradient: 'from-emerald-50 to-teal-50',
+    accentColor: 'emerald',
     category: 'Vastgoed',
     price: 'SRD 3.000',
     priceNote: 'per maand',
     heroImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=1200&q=80',
+    highlights: ['Huurdersbeheer', 'Facturatie', 'Meterstanden', 'Onderhoud'],
     sections: [
       {
         title: 'Huurdersbeheer',
         description: 'Alle informatie over uw huurders op één plek.',
         icon: Users,
-        features: [
-          'Volledige huurdersprofielen',
-          'Huurcontracten digitaal opslaan',
-          'Betalingshistorie per huurder',
-          'Communicatielogboek',
-          'Automatische herinneringen'
-        ],
+        features: ['Volledige huurdersprofielen', 'Huurcontracten digitaal opslaan', 'Betalingshistorie per huurder', 'Communicatielogboek', 'Automatische herinneringen'],
         image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80'
       },
       {
         title: 'Appartementenbeheer',
-        description: 'Beheer al uw panden en appartementen overzichtelijk.',
+        description: 'Overzicht van al uw panden en units.',
         icon: Home,
-        features: [
-          'Onbeperkt aantal panden toevoegen',
-          'Huurprijs en voorwaarden per eenheid',
-          'Bezettingsgraad dashboard',
-          'Foto\'s en documentatie',
-          'Meerdere locaties ondersteuning'
-        ],
+        features: ['Onbeperkt panden toevoegen', 'Units per pand beheren', 'Huurprijzen per unit', 'Bezettingsgraad inzicht', 'Foto\'s en documenten per unit'],
         image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80'
       },
       {
         title: 'Meterstanden (EBS/SWM)',
-        description: 'Automatische berekening van nutsvoorzieningen met Surinaamse tarieven.',
-        icon: Zap,
-        features: [
-          'EBS (elektra) meterstanden registreren',
-          'SWM (water) meterstanden registreren',
-          'Automatische kostenberekening',
-          'Surinaamse tarieven 2024 ingebouwd',
-          'Huurder self-service portaal'
-        ],
+        description: 'Registreer en beheer meterstanden voor nutsvoorzieningen.',
+        icon: BarChart3,
+        features: ['Maandelijkse meterstanden invoeren', 'Automatische verbruiksberekening', 'EBS en SWM ondersteuning', 'Historische grafieken', 'Doorberekening aan huurders'],
         image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&q=80'
       },
       {
-        title: 'Facturatie',
-        description: 'Professionele facturen automatisch genereren.',
-        icon: Receipt,
-        features: [
-          'Maandelijkse facturen automatisch',
-          'PDF facturen met uw logo',
-          'Betalingsherinneringen',
-          'Openstaande saldi overzicht',
-          'Kwitanties genereren'
-        ],
-        image: 'https://images.unsplash.com/photo-1554224155-1696413565d3?w=800&q=80'
-      },
-      {
         title: 'Onderhoud',
-        description: 'Track en beheer onderhoudsverzoeken efficiënt.',
+        description: 'Track en beheer onderhoudsverzoeken.',
         icon: Wrench,
-        features: [
-          'Onderhoudsverzoeken registreren',
-          'Status tracking (open, in behandeling, afgerond)',
-          'Kosten per onderhoud bijhouden',
-          'Foto\'s toevoegen',
-          'Geschiedenis per pand'
-        ],
+        features: ['Onderhoudsverzoeken ontvangen', 'Status tracking', 'Toewijzen aan aannemers', 'Kosten registreren', 'Huurder notificaties'],
         image: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=800&q=80'
       }
     ]
   },
   'auto-dealer': {
     id: 'autodealer',
-    name: 'Auto Dealer Module',
-    title: 'Autohandel Management',
-    subtitle: 'Complete oplossing voor autodealers in Suriname',
-    description: 'Beheer uw voertuigeninventaris, klanten en verkopen met multi-valuta ondersteuning. Inclusief klantportaal waar klanten hun aankopen kunnen bekijken.',
+    name: 'Auto Dealer',
+    title: 'Auto Dealer Management',
+    subtitle: 'Complete oplossing voor autohandel in Suriname',
+    description: 'Beheer uw autohandel met voorraad, verkoop, inkoop en klantenbeheer. Ondersteunt meerdere valuta (SRD, EUR, USD) voor import en export.',
     icon: Car,
-    color: 'from-orange-500 to-orange-600',
-    bgColor: 'bg-orange-500',
-    category: 'Verkoop',
-    price: 'SRD 2.000',
+    gradient: 'from-orange-500 to-red-600',
+    lightGradient: 'from-orange-50 to-red-50',
+    accentColor: 'orange',
+    category: 'Automotive',
+    price: 'SRD 3.500',
     priceNote: 'per maand',
-    isNew: true,
     heroImage: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=1200&q=80',
+    highlights: ['Voertuigbeheer', 'Multi-valuta', 'Verkoop', 'Klanten Portal'],
     sections: [
       {
-        title: 'Voertuigenbeheer',
-        description: 'Complete inventaris van al uw voertuigen.',
+        title: 'Voertuigbeheer',
+        description: 'Complete voorraadadministratie voor uw voertuigen.',
         icon: Car,
-        features: [
-          'Alle voertuiggegevens registreren',
-          'Foto\'s uploaden per voertuig',
-          'Inkoop- en verkoopprijzen',
-          'Status tracking (in stock, verkocht, gereserveerd)',
-          'Kilometerstand en conditie'
-        ],
-        image: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=800&q=80'
+        features: ['Voertuigen met alle specificaties', 'Foto\'s en documenten', 'Inkoop- en verkoopprijzen', 'Status tracking', 'VIN/chassisnummer registratie'],
+        image: 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&q=80'
       },
       {
-        title: 'Multi-Valuta',
+        title: 'Multi-Valuta Ondersteuning',
         description: 'Werk met SRD, EUR en USD tegelijkertijd.',
         icon: DollarSign,
-        features: [
-          'Prijzen in SRD, EUR of USD',
-          'Automatische valuta weergave',
-          'Omzet per valuta rapportage',
-          'Flexibele betalingsopties',
-          'Valuta selector in dashboard'
-        ],
+        features: ['Prijzen in meerdere valuta', 'Automatische wisselkoersen', 'Facturen in gewenste valuta', 'Import/export administratie', 'Valuta conversie rapporten'],
         image: 'https://images.unsplash.com/photo-1580519542036-c47de6196ba5?w=800&q=80'
       },
       {
-        title: 'Klantenbeheer',
-        description: 'Houd uw klantrelaties professioneel bij.',
+        title: 'Verkoop & Inkoop',
+        description: 'Beheer het volledige verkoopproces.',
+        icon: Receipt,
+        features: ['Verkoopregistratie', 'Inkoopregistratie', 'Winstmarge berekening', 'Betalingsregelingen', 'Automatische facturatie'],
+        image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80'
+      },
+      {
+        title: 'Klanten Portal',
+        description: 'Selfservice portal voor uw klanten.',
         icon: Users,
-        features: [
-          'Particuliere en zakelijke klanten',
-          'Contactgegevens en voorkeuren',
-          'Aankoophistorie per klant',
-          'Notities en communicatielog',
-          'Klant self-service portaal'
-        ],
+        features: ['Klanten kunnen inloggen', 'Eigen aankopen bekijken', 'Betalingsoverzicht', 'Documenten downloaden', 'Contact met dealer'],
         image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80'
-      },
-      {
-        title: 'Verkoopbeheer',
-        description: 'Registreer en track al uw verkopen.',
-        icon: BarChart3,
-        features: [
-          'Verkoop registratie met alle details',
-          'Betalingsstatus tracking',
-          'Aanbetaling en financiering opties',
-          'Verkoopstatistieken dashboard',
-          'Maandelijkse omzetrapportage'
-        ],
-        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'
-      },
-      {
-        title: 'Klant Portaal',
-        description: 'Klanten kunnen hun aankopen online bekijken.',
-        icon: Globe,
-        features: [
-          'Klanten registreren zichzelf',
-          'Aankoophistorie bekijken',
-          'Voertuigdetails inzien',
-          'Ondersteuningsverzoeken indienen',
-          'Documenten downloaden'
-        ],
-        image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80'
       }
     ]
   },
   'ai-chatbot': {
-    id: 'ai-chatbot',
+    id: 'chatbot',
     name: 'AI Chatbot',
-    title: 'Intelligente AI Assistent',
-    subtitle: 'Powered by GPT-4 technologie',
-    description: 'Een slimme chatbot die uw klanten en medewerkers helpt met veelgestelde vragen. Geïntegreerd met alle modules voor relevante antwoorden.',
+    title: 'GPT-4 Powered Chatbot',
+    subtitle: 'Intelligente klantenservice die 24/7 beschikbaar is',
+    description: 'Geef uw klanten directe antwoorden met onze AI-chatbot. Aangedreven door GPT-4, meertalig en volledig aanpasbaar aan uw bedrijf.',
     icon: MessageSquare,
-    color: 'from-purple-500 to-purple-600',
-    bgColor: 'bg-purple-500',
-    category: 'AI',
+    gradient: 'from-purple-500 to-pink-600',
+    lightGradient: 'from-purple-50 to-pink-50',
+    accentColor: 'purple',
+    category: 'AI & Automatisering',
     price: 'SRD 1.500',
     priceNote: 'per maand',
     heroImage: 'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80',
+    highlights: ['GPT-4', 'Meertalig', '24/7 Online', 'Aanpasbaar'],
     sections: [
       {
-        title: 'AI-Powered Antwoorden',
-        description: 'Slimme antwoorden op basis van uw bedrijfsgegevens.',
+        title: 'GPT-4 Integratie',
+        description: 'Meest geavanceerde AI-technologie.',
         icon: Bot,
-        features: [
-          'GPT-4 technologie',
-          'Contextbewuste antwoorden',
-          'Leert van uw data',
-          'Natuurlijke gesprekken',
-          'Meerdere talen ondersteuning'
-        ],
-        image: 'https://images.unsplash.com/photo-1676299081847-824916de030a?w=800&q=80'
-      },
-      {
-        title: 'Module Integratie',
-        description: 'Direct toegang tot informatie uit alle modules.',
-        icon: Zap,
-        features: [
-          'Huurdersgegevens opvragen',
-          'Saldi en betalingen bekijken',
-          'Voertuig informatie zoeken',
-          'Personeelsgegevens raadplegen',
-          'Realtime data'
-        ],
-        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'
+        features: ['Natuurlijke gesprekken', 'Context-bewuste antwoorden', 'Leert van uw bedrijfsinfo', 'Complexe vragen beantwoorden', 'Continue verbeteringen'],
+        image: 'https://images.unsplash.com/photo-1676299081847-5f5a7f0e3d11?w=800&q=80'
       },
       {
         title: 'Meertalig',
-        description: 'Communiceer in meerdere talen.',
+        description: 'Communiceer in de taal van uw klant.',
         icon: Languages,
-        features: [
-          'Nederlands volledig ondersteund',
-          'Engels beschikbaar',
-          'Sranang Tongo (basis)',
-          'Automatische taaldetectie',
-          'Consistente antwoorden'
-        ],
-        image: 'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=800&q=80'
+        features: ['Nederlands', 'Engels', 'Sranantongo', 'Automatische taaldetectie', 'Naadloze vertaling'],
+        image: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80'
       },
       {
-        title: 'Website Widget',
-        description: 'Plaats de chatbot op uw publieke website.',
-        icon: Globe,
-        features: [
-          'Eenvoudig te integreren',
-          'Aanpasbaar design',
-          'Bezoekers helpen 24/7',
-          'Lead generation',
-          'Gesprek overdragen naar medewerker'
-        ],
-        image: 'https://images.unsplash.com/photo-1531746790731-6c087fecd65a?w=800&q=80'
+        title: '24/7 Beschikbaarheid',
+        description: 'Altijd online, geen wachttijden.',
+        icon: Clock,
+        features: ['Dag en nacht bereikbaar', 'Geen wachttijden', 'Onbeperkt gesprekken', 'Instant antwoorden', 'Escalatie naar mens mogelijk'],
+        image: 'https://images.unsplash.com/photo-1563986768609-322da13575f3?w=800&q=80'
+      },
+      {
+        title: 'Aanpasbaarheid',
+        description: 'Stem de chatbot af op uw bedrijf.',
+        icon: Settings,
+        features: ['Eigen welkomstbericht', 'FAQ importeren', 'Bedrijfsinfo trainen', 'Antwoordstijl aanpassen', 'Branding personaliseren'],
+        image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&q=80'
       }
     ]
   },
   'website-cms': {
     id: 'cms',
     name: 'Website CMS',
-    title: 'Content Management Systeem',
-    subtitle: 'Bouw en beheer uw website zonder programmeerkennis',
-    description: 'Een intuïtief CMS waarmee u uw bedrijfswebsite kunt bouwen en beheren. Inclusief templates, SEO tools en responsive design.',
+    title: 'Website Content Management',
+    subtitle: 'Beheer uw website zonder technische kennis',
+    description: 'Maak en beheer professionele webpagina\'s met onze intuïtieve CMS. Drag & drop interface, SEO tools en volledige controle over uw online aanwezigheid.',
     icon: Globe,
-    color: 'from-cyan-500 to-cyan-600',
-    bgColor: 'bg-cyan-500',
-    category: 'Marketing',
-    price: 'SRD 1.000',
+    gradient: 'from-cyan-500 to-blue-600',
+    lightGradient: 'from-cyan-50 to-blue-50',
+    accentColor: 'cyan',
+    category: 'Website',
+    price: 'SRD 2.000',
     priceNote: 'per maand',
     heroImage: 'https://images.unsplash.com/photo-1467232004584-a241de8bcf5d?w=1200&q=80',
+    highlights: ['Drag & Drop', 'SEO Tools', 'Templates', 'Media'],
     sections: [
       {
         title: 'Pagina Builder',
-        description: 'Maak pagina\'s met drag & drop.',
+        description: 'Bouw pagina\'s met drag & drop.',
         icon: Layout,
-        features: [
-          'Visuele editor',
-          'Voorgedefinieerde secties',
-          'Tekst, afbeeldingen, video\'s',
-          'Responsive preview',
-          'One-click publiceren'
-        ],
+        features: ['Visuele editor', 'Voorgedefinieerde secties', 'Responsive preview', 'One-click publiceren', 'Versiegeschiedenis'],
         image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80'
       },
       {
-        title: 'Media Beheer',
-        description: 'Upload en beheer al uw afbeeldingen.',
+        title: 'Media Bibliotheek',
+        description: 'Beheer al uw afbeeldingen en bestanden.',
         icon: Image,
-        features: [
-          'Afbeeldingen uploaden',
-          'Automatische optimalisatie',
-          'Mediabibliotheek',
-          'Alt-teksten voor SEO',
-          'Meerdere formaten'
-        ],
+        features: ['Onbeperkt uploaden', 'Automatische optimalisatie', 'Mappen structuur', 'Zoeken en filteren', 'Alt-tekst voor SEO'],
         image: 'https://images.unsplash.com/photo-1611162617474-5b21e879e113?w=800&q=80'
       },
       {
-        title: 'SEO Tools',
-        description: 'Optimaliseer voor zoekmachines.',
+        title: 'SEO Optimalisatie',
+        description: 'Word beter gevonden in Google.',
         icon: Search,
-        features: [
-          'Meta titels en beschrijvingen',
-          'URL structuur aanpassen',
-          'Sitemap generatie',
-          'Social media previews',
-          'Analytics integratie'
-        ],
+        features: ['Meta titels en beschrijvingen', 'URL structuur aanpassen', 'Sitemap generatie', 'Social media previews', 'Analytics integratie'],
         image: 'https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?w=800&q=80'
       },
       {
         title: 'Thema & Design',
         description: 'Pas het uiterlijk aan uw merk aan.',
         icon: Palette,
-        features: [
-          'Kleuren aanpassen',
-          'Logo uploaden',
-          'Lettertypen kiezen',
-          'Header en footer beheer',
-          'Eigen CSS mogelijk'
-        ],
+        features: ['Kleuren aanpassen', 'Logo uploaden', 'Lettertypen kiezen', 'Header en footer beheer', 'Eigen CSS mogelijk'],
         image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80'
+      }
+    ]
+  },
+  'rapportage': {
+    id: 'rapportage',
+    name: 'Rapportage',
+    title: 'Business Intelligence & Rapportage',
+    subtitle: 'Inzichten die uw bedrijf vooruit helpen',
+    description: 'Krijg diepgaande inzichten in uw bedrijfsprestaties met real-time dashboards, automatische rapporten en data visualisaties.',
+    icon: BarChart3,
+    gradient: 'from-teal-500 to-emerald-600',
+    lightGradient: 'from-teal-50 to-emerald-50',
+    accentColor: 'teal',
+    category: 'Analytics',
+    price: 'SRD 1.500',
+    priceNote: 'per maand',
+    heroImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80',
+    highlights: ['Dashboards', 'PDF Export', 'Grafieken', 'Automatisch'],
+    sections: [
+      {
+        title: 'Real-time Dashboards',
+        description: 'Bekijk uw KPI\'s in één oogopslag.',
+        icon: BarChart3,
+        features: ['Aanpasbare widgets', 'Real-time data', 'Meerdere dashboards', 'Drag & drop layout', 'Delen met team'],
+        image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80'
+      },
+      {
+        title: 'Automatische Rapporten',
+        description: 'Ontvang rapporten op vaste momenten.',
+        icon: RefreshCw,
+        features: ['Dagelijkse, wekelijkse, maandelijkse rapporten', 'Email notificaties', 'PDF bijlagen', 'Custom rapportages', 'Historische vergelijkingen'],
+        image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&q=80'
+      },
+      {
+        title: 'Data Export',
+        description: 'Exporteer data in elk formaat.',
+        icon: FileText,
+        features: ['Export naar PDF', 'Export naar Excel', 'CSV downloads', 'API toegang', 'Scheduled exports'],
+        image: 'https://images.unsplash.com/photo-1543286386-713bdd548da4?w=800&q=80'
+      },
+      {
+        title: 'Visualisaties',
+        description: 'Begrijp data met mooie grafieken.',
+        icon: Sparkles,
+        features: ['Lijn- en staafgrafieken', 'Taartdiagrammen', 'Trend analyses', 'Vergelijkingen', 'Interactieve grafieken'],
+        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'
       }
     ]
   },
@@ -429,77 +328,42 @@ const MODULES_DETAIL = {
     subtitle: 'Volledige controle over uw bedrijfsomgeving',
     description: 'Krijg uw eigen afgeschermde workspace met custom branding, eigen domein en gebruikersbeheer. Perfect voor bedrijven die hun eigen identiteit willen behouden.',
     icon: Shield,
-    color: 'from-slate-500 to-slate-600',
-    bgColor: 'bg-slate-500',
+    gradient: 'from-slate-600 to-slate-800',
+    lightGradient: 'from-slate-50 to-gray-50',
+    accentColor: 'slate',
     category: 'Platform',
     price: 'Inclusief',
     priceNote: 'bij abonnement',
     heroImage: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&q=80',
+    highlights: ['Custom Domain', 'Branding', 'Gebruikers', 'Beveiliging'],
     sections: [
       {
         title: 'Eigen Domein',
         description: 'Uw bedrijf, uw domein.',
         icon: Globe,
-        features: [
-          'Gratis subdomain (bedrijf.facturatie.sr)',
-          'Custom domain ondersteuning',
-          'SSL certificaat inclusief',
-          'DNS configuratie hulp',
-          'Automatische SSL vernieuwing'
-        ],
+        features: ['Gratis subdomain', 'Custom domain ondersteuning', 'SSL certificaat inclusief', 'DNS configuratie hulp', 'Automatische SSL vernieuwing'],
         image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&q=80'
       },
       {
         title: 'Custom Branding',
         description: 'Pas het platform aan uw huisstijl aan.',
         icon: Palette,
-        features: [
-          'Eigen logo uploaden',
-          'Primaire kleuren aanpassen',
-          'Favicon personaliseren',
-          'Portaal naam wijzigen',
-          'Email templates aanpassen'
-        ],
+        features: ['Eigen logo uploaden', 'Primaire kleuren aanpassen', 'Favicon personaliseren', 'Portaal naam wijzigen', 'Email templates aanpassen'],
         image: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?w=800&q=80'
       },
       {
         title: 'Gebruikersbeheer',
         description: 'Beheer wie toegang heeft tot wat.',
         icon: Users,
-        features: [
-          'Onbeperkt gebruikers toevoegen',
-          'Rollen en rechten toewijzen',
-          'Uitnodigingen per email',
-          'Activiteitenlog',
-          'Tweefactorauthenticatie'
-        ],
+        features: ['Onbeperkt gebruikers toevoegen', 'Rollen en rechten toewijzen', 'Uitnodigingen per email', 'Activiteitenlog', 'Tweefactorauthenticatie'],
         image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80'
       },
       {
         title: 'Data Beveiliging',
         description: 'Uw data is veilig en afgeschermd.',
         icon: Lock,
-        features: [
-          'Volledige data isolatie',
-          'Encryptie in transit en rust',
-          'Dagelijkse automatische backups',
-          'GDPR compliant',
-          'Audit logging'
-        ],
+        features: ['Volledige data isolatie', 'Encryptie in transit en rust', 'Dagelijkse automatische backups', 'GDPR compliant', 'Audit logging'],
         image: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80'
-      },
-      {
-        title: 'Backup & Restore',
-        description: 'Altijd een veilige kopie van uw data.',
-        icon: Database,
-        features: [
-          'Handmatige backups maken',
-          'Automatische dagelijkse backups',
-          'One-click restore',
-          'Backup downloaden als JSON',
-          '30 dagen historie'
-        ],
-        image: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=800&q=80'
       }
     ]
   }
@@ -515,7 +379,6 @@ export default function ModuleDetailPage() {
 
   useEffect(() => {
     loadData();
-    // Scroll to top when page loads
     window.scrollTo(0, 0);
   }, [slug]);
 
@@ -532,18 +395,18 @@ export default function ModuleDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
       </div>
     );
   }
 
   if (!module) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Module niet gevonden</h1>
-          <Button onClick={() => navigate('/modules-overzicht')}>
+          <h1 className="text-2xl font-bold mb-4 text-slate-900">Module niet gevonden</h1>
+          <Button onClick={() => navigate('/modules-overzicht')} className="bg-emerald-600 hover:bg-emerald-700">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Terug naar Modules
           </Button>
@@ -555,71 +418,90 @@ export default function ModuleDetailPage() {
   const IconComponent = module.icon;
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navigation */}
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
       <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
 
       {/* Hero Section */}
-      <section className="relative pt-16 overflow-hidden">
-        {/* Background Image */}
-        <div className="absolute inset-0 z-0">
-          <img 
-            src={module.heroImage} 
-            alt={module.name}
-            className="w-full h-full object-cover"
-          />
-          <div className={`absolute inset-0 bg-gradient-to-r ${module.color} opacity-90`} />
+      <section className="pt-24 pb-20 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_20%,rgba(16,185,129,0.3),transparent_50%)]"></div>
+          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_70%_80%,rgba(20,184,166,0.3),transparent_50%)]"></div>
         </div>
+        
+        {/* Floating shapes */}
+        <div className="absolute top-20 left-10 w-20 h-20 bg-emerald-500/20 rounded-full blur-xl"></div>
+        <div className="absolute bottom-20 right-20 w-32 h-32 bg-teal-500/20 rounded-full blur-xl"></div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+          {/* Back Button */}
           <Button 
             variant="ghost" 
-            className="text-white/80 hover:text-white hover:bg-white/10 mb-6"
+            className="text-white/70 hover:text-white hover:bg-white/10 mb-8"
             onClick={() => navigate('/modules-overzicht')}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Alle Modules
           </Button>
 
-          <div className="flex items-center gap-3 mb-4">
-            <Badge className="bg-white/20 text-white border-0">
-              {module.category}
-            </Badge>
-            {module.isNew && (
-              <Badge className="bg-amber-400 text-amber-900 border-0">
-                <Sparkles className="w-3 h-3 mr-1" />
-                Nieuw
-              </Badge>
-            )}
-          </div>
-
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-              <IconComponent className="w-8 h-8 text-white" />
-            </div>
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white">{module.title}</h1>
-              <p className="text-xl text-white/80 mt-2">{module.subtitle}</p>
-            </div>
-          </div>
+              <div className="flex items-center gap-3 mb-6">
+                <Badge className="bg-white/10 text-emerald-300 border-emerald-400/30 px-3 py-1">
+                  {module.category}
+                </Badge>
+              </div>
 
-          <p className="text-lg text-white/90 max-w-2xl mb-8">
-            {module.description}
-          </p>
+              <div className="flex items-center gap-4 mb-6">
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${module.gradient} flex items-center justify-center shadow-xl`}>
+                  <IconComponent className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white">{module.title}</h1>
+                </div>
+              </div>
 
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
-            <div>
-              <span className="text-4xl font-bold text-white">{module.price}</span>
-              <span className="text-white/70 ml-2">{module.priceNote}</span>
+              <p className="text-xl text-slate-300 mb-6">{module.subtitle}</p>
+              <p className="text-slate-400 mb-8 max-w-xl">{module.description}</p>
+
+              {/* Highlights */}
+              <div className="flex flex-wrap gap-2 mb-8">
+                {module.highlights.map((highlight, i) => (
+                  <span key={i} className="px-3 py-1.5 bg-white/10 text-white text-sm rounded-full border border-white/20">
+                    {highlight}
+                  </span>
+                ))}
+              </div>
+
+              {/* Price and CTA */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl px-6 py-4 border border-white/20">
+                  <span className="text-3xl font-bold text-white">{module.price}</span>
+                  <span className="text-white/70 ml-2">{module.priceNote}</span>
+                </div>
+                <Button 
+                  size="lg" 
+                  onClick={() => navigate('/prijzen')}
+                  className="h-14 px-8 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-full shadow-xl shadow-emerald-500/25"
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  Start Gratis
+                </Button>
+              </div>
             </div>
-            <Button 
-              size="lg" 
-              onClick={() => navigate('/register')}
-              className="bg-white text-slate-900 hover:bg-white/90"
-            >
-              Start Gratis Proefperiode
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
+
+            {/* Right - Hero Image */}
+            <div className="relative hidden lg:block">
+              <div className={`absolute -inset-4 bg-gradient-to-r ${module.gradient} rounded-3xl blur-2xl opacity-30`}></div>
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/20">
+                <img 
+                  src={module.heroImage} 
+                  alt={module.name}
+                  className="w-full h-80 object-cover"
+                />
+                <div className={`absolute inset-0 bg-gradient-to-t ${module.gradient} opacity-20`}></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -632,25 +514,24 @@ export default function ModuleDetailPage() {
         return (
           <section 
             key={index} 
-            className={`py-20 px-4 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50'}`}
-            data-testid={`section-${index}`}
+            className={`py-20 ${index % 2 === 0 ? 'bg-white' : `bg-gradient-to-br ${module.lightGradient}`}`}
           >
-            <div className="max-w-7xl mx-auto">
-              <div className={`grid md:grid-cols-2 gap-12 items-center ${isReversed ? 'md:flex-row-reverse' : ''}`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className={`grid lg:grid-cols-2 gap-12 items-center ${isReversed ? '' : ''}`}>
                 {/* Content */}
-                <div className={isReversed ? 'md:order-2' : ''}>
-                  <div className={`w-14 h-14 rounded-2xl ${module.bgColor}/10 flex items-center justify-center mb-6`}>
-                    <SectionIcon className={`w-7 h-7 ${module.bgColor.replace('bg-', 'text-')}`} />
+                <div className={isReversed ? 'lg:order-2' : ''}>
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${module.gradient} flex items-center justify-center mb-6 shadow-lg`}>
+                    <SectionIcon className="w-7 h-7 text-white" />
                   </div>
                   
                   <h2 className="text-3xl font-bold text-slate-900 mb-4">{section.title}</h2>
-                  <p className="text-lg text-slate-600 mb-6">{section.description}</p>
+                  <p className="text-lg text-slate-600 mb-8">{section.description}</p>
                   
-                  <ul className="space-y-3">
+                  <ul className="space-y-4">
                     {section.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-start gap-3">
-                        <div className={`w-5 h-5 rounded-full ${module.bgColor}/20 flex items-center justify-center mt-0.5 flex-shrink-0`}>
-                          <Check className={`w-3 h-3 ${module.bgColor.replace('bg-', 'text-')}`} />
+                      <li key={featureIndex} className="flex items-start gap-3 group">
+                        <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${module.gradient} flex items-center justify-center flex-shrink-0 mt-0.5 shadow-md`}>
+                          <Check className="w-3.5 h-3.5 text-white" />
                         </div>
                         <span className="text-slate-700">{feature}</span>
                       </li>
@@ -659,14 +540,17 @@ export default function ModuleDetailPage() {
                 </div>
 
                 {/* Image */}
-                <div className={isReversed ? 'md:order-1' : ''}>
-                  <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                    <img 
-                      src={section.image} 
-                      alt={section.title}
-                      className="w-full h-80 object-cover"
-                    />
-                    <div className={`absolute inset-0 bg-gradient-to-t ${module.color} opacity-10`} />
+                <div className={isReversed ? 'lg:order-1' : ''}>
+                  <div className="relative group">
+                    <div className={`absolute -inset-4 bg-gradient-to-r ${module.gradient} rounded-3xl blur-2xl opacity-0 group-hover:opacity-20 transition-all duration-500`}></div>
+                    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-slate-200">
+                      <img 
+                        src={section.image} 
+                        alt={section.title}
+                        className="w-full h-72 object-cover transform group-hover:scale-105 transition-transform duration-700"
+                      />
+                      <div className={`absolute inset-0 bg-gradient-to-t ${module.gradient} opacity-10`}></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -676,35 +560,41 @@ export default function ModuleDetailPage() {
       })}
 
       {/* CTA Section */}
-      <section className={`py-20 px-4 bg-gradient-to-br ${module.color} text-white`}>
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <section className="py-20 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className={`w-20 h-20 mx-auto mb-8 bg-gradient-to-br ${module.gradient} rounded-2xl flex items-center justify-center shadow-xl`}>
+            <IconComponent className="w-10 h-10 text-white" />
+          </div>
+          
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Klaar om {module.name} te gebruiken?
           </h2>
-          <p className="text-lg text-white/80 mb-8">
+          <p className="text-lg text-slate-300 mb-10 max-w-xl mx-auto">
             Start vandaag nog met een gratis proefperiode van 3 dagen. Geen creditcard nodig.
           </p>
+          
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => navigate('/register')}
-              className="bg-white text-slate-900 hover:bg-white/90"
+              onClick={() => navigate('/prijzen')}
+              className="h-14 px-10 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-full shadow-xl shadow-emerald-500/25"
             >
+              <Star className="w-5 h-5 mr-2" />
               Start Gratis Proefperiode
             </Button>
             <Button 
               size="lg" 
               variant="outline" 
               onClick={() => navigate('/modules-overzicht')}
-              className="border-white text-white hover:bg-white/10"
+              className="h-14 px-10 border-white/20 text-white hover:bg-white/10 rounded-full"
             >
               Bekijk Andere Modules
+              <ChevronRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
       <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
     </div>
   );
