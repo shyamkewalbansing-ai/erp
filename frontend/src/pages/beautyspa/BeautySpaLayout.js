@@ -31,16 +31,16 @@ import {
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
 const menuItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/beautyspa' },
-  { id: 'clients', label: 'Klanten', icon: Users, path: '/beautyspa/clients' },
-  { id: 'appointments', label: 'Afspraken', icon: Calendar, path: '/beautyspa/appointments' },
-  { id: 'treatments', label: 'Behandelingen', icon: Scissors, path: '/beautyspa/treatments' },
-  { id: 'products', label: 'Producten', icon: Package, path: '/beautyspa/products' },
-  { id: 'pos', label: 'Kassa (POS)', icon: ShoppingCart, path: '/beautyspa/pos' },
-  { id: 'staff', label: 'Personeel', icon: UserCog, path: '/beautyspa/staff' },
-  { id: 'reports', label: 'Rapportages', icon: BarChart3, path: '/beautyspa/reports' },
-  { id: 'queue', label: 'Wachtrij', icon: Clock, path: '/beautyspa/queue' },
-  { id: 'vouchers', label: 'Vouchers', icon: Sparkles, path: '/beautyspa/vouchers' },
+  { id: 'dashboard', label: 'Dashboard', icon: Home, path: '/app/beautyspa' },
+  { id: 'clients', label: 'Klanten', icon: Users, path: '/app/beautyspa/clients' },
+  { id: 'appointments', label: 'Afspraken', icon: Calendar, path: '/app/beautyspa/appointments' },
+  { id: 'treatments', label: 'Behandelingen', icon: Scissors, path: '/app/beautyspa/treatments' },
+  { id: 'products', label: 'Producten', icon: Package, path: '/app/beautyspa/products' },
+  { id: 'pos', label: 'Kassa (POS)', icon: ShoppingCart, path: '/app/beautyspa/pos' },
+  { id: 'staff', label: 'Personeel', icon: UserCog, path: '/app/beautyspa/staff' },
+  { id: 'reports', label: 'Rapportages', icon: BarChart3, path: '/app/beautyspa/reports' },
+  { id: 'queue', label: 'Wachtrij', icon: Clock, path: '/app/beautyspa/queue' },
+  { id: 'vouchers', label: 'Vouchers', icon: Sparkles, path: '/app/beautyspa/vouchers' },
 ];
 
 export default function BeautySpaLayout() {
