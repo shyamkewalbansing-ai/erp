@@ -6,12 +6,40 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 ## Architecture & Tech Stack
 - **Backend**: FastAPI (Python) met JWT authenticatie
 - **Frontend**: React met Shadcn UI, lazy loading
-- **Database**: MongoDB
+- **Database**: MongoDB (test_database)
 - **AI**: OpenAI GPT-4o via Emergent LLM Key
 - **Styling**: Tailwind CSS met glassmorphism effecten
 - **Fonts**: Outfit (headings), Plus Jakarta Sans (body)
 - **Primary Color**: #0caf60 (groen)
 - **Multi-tenant**: Workspace-based isolatie per klant
+
+## What's Been Implemented (1 Feb 2026)
+
+### DEMO ACCOUNT SYSTEEM ✅ (NIEUW - 1 Feb 2026)
+Complete demo omgeving voor potentiële klanten:
+
+**Features:**
+- [x] Demo gebruiker met onbeperkt abonnement (demo@facturatie.sr / demo2024)
+- [x] Alle 3 modules geactiveerd (Vastgoed Beheer, HRM, Auto Dealer)
+- [x] Automatische data cleanup (elk uur)
+- [x] Handmatige cleanup trigger via admin endpoint
+- [x] Demo pagina met kopieerbare credentials
+- [x] Demo login redirect naar dashboard met alle modules
+
+**API Endpoints:**
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/admin/cleanup-demo-data | POST | Handmatige demo data cleanup (admin only) |
+
+**Demo Credentials:**
+- Email: demo@facturatie.sr
+- Wachtwoord: demo2024
+- Toegang: Alle modules (Vastgoed, HRM, Auto Dealer)
+
+**Frontend Pagina's:**
+- `/demo` - Demo pagina met credentials en module overzicht
+
+---
 
 ## What's Been Implemented (31 Jan 2026)
 
