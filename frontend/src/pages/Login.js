@@ -498,120 +498,21 @@ export default function Login() {
           </div>
         </div>
       </div>
-          </>
-        )}
-        
-        {/* Content */}
-        <div className="relative z-10 flex flex-col justify-between p-12 w-full">
-          {/* Logo */}
-          <div>
-            <Link to={isWorkspace ? "/" : "/"}>
-              {brandingLogo ? (
-                <img 
-                  src={brandingLogo} 
-                  alt={brandingName} 
-                  className="h-12 w-auto object-contain"
-                />
-              ) : (
-                <img 
-                  src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-                  alt="Facturatie N.V." 
-                  className="h-10 w-auto brightness-0 invert"
-                />
-              )}
-            </Link>
-          </div>
-
-          {/* Custom Login Image or Features */}
-          {brandingLoginImage ? (
-            <div className="flex-1 flex items-center justify-center py-8">
-              <img 
-                src={brandingLoginImage} 
-                alt="Login" 
-                className="max-w-full max-h-[400px] object-contain rounded-2xl shadow-2xl"
-              />
-            </div>
-          ) : (
-            <div className="space-y-8">
-              <div>
-                <h2 className="text-4xl font-bold text-white mb-4">
-                  {brandingWelcomeText.split(' ').slice(0, 2).join(' ')}<br />
-                  <span style={{ color: brandingPrimaryColor }} className="brightness-150">
-                    {brandingWelcomeText.split(' ').slice(2).join(' ') || brandingName}
-                  </span>
-                </h2>
-                <p className="text-lg text-slate-200 max-w-md">
-                  {brandingTagline}
-                </p>
-              </div>
-
-              {!isWorkspace && (
-                <div className="space-y-4">
-                  {[
-                    { icon: Building2, text: 'Vastgoed, HRM & Auto Dealer modules' },
-                    { icon: Shield, text: 'Veilig en betrouwbaar platform' },
-                    { icon: Zap, text: 'Snel en modern ontwerp' },
-                    { icon: Users, text: '500+ tevreden klanten' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
-                        <item.icon className="w-5 h-5 text-white" />
-                      </div>
-                      <span className="text-white/90">{item.text}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Bottom stats - only show on main site */}
-          {!isWorkspace && (
-            <div className="flex gap-8">
-              {[
-                { value: '99.9%', label: 'Uptime' },
-                { value: '24/7', label: 'Support' },
-                { value: '6+', label: 'Modules' },
-              ].map((stat, i) => (
-                <div key={i}>
-                  <div className="text-2xl font-bold text-white">{stat.value}</div>
-                  <div className="text-sm text-slate-300">{stat.label}</div>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Workspace branding footer */}
-          {isWorkspace && (
-            <div className="text-center">
-              <p className="text-white/60 text-sm">
-                Powered by <span className="text-white/80 font-medium">Facturatie N.V.</span>
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Right side - Login Form */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-8 bg-gradient-to-br from-slate-50 to-emerald-50/30">
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden mb-8">
-            <Link to="/">
-              {brandingLogo ? (
-                <img 
-                  src={brandingLogo} 
-                  alt={brandingName} 
-                  className="h-10 w-auto object-contain"
-                />
-              ) : (
-                <img 
-                  src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-                  alt="Facturatie N.V." 
-                  className="h-10 w-auto"
-                />
-              )}
-            </Link>
+            {brandingLogo ? (
+              <img 
+                src={brandingLogo} 
+                alt={brandingName} 
+                className="h-10 w-auto object-contain"
+              />
+            ) : (
+              <h2 className="text-xl font-bold" style={{ color: brandingPrimaryColor }}>{brandingName}</h2>
+            )}
           </div>
 
           {/* Header */}
@@ -628,7 +529,7 @@ export default function Login() {
             </div>
             <h1 className="text-3xl font-bold text-slate-900 mb-2">Inloggen</h1>
             <p className="text-slate-600">
-              {isWorkspace ? `Log in bij ${brandingName}` : 'Log in om uw bedrijf te beheren'}
+              Log in bij {brandingName}
             </p>
           </div>
 
@@ -645,6 +546,7 @@ export default function Login() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-12 h-12 bg-white border-slate-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl"
+                  style={{ '--tw-ring-color': `${brandingPrimaryColor}40` }}
                   required
                   data-testid="login-email"
                 />
