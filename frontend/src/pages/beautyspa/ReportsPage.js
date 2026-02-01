@@ -129,7 +129,7 @@ export default function ReportsPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Scissors className="w-5 h-5 text-pink-600" /> Top Behandelingen
+                  <Scissors className="w-5 h-5 text-emerald-600" /> Top Behandelingen
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -140,7 +140,7 @@ export default function ReportsPage() {
                     {treatmentsData.slice(0, 5).map((t, i) => (
                       <div key={t.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 font-bold">
+                          <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 font-bold">
                             {i + 1}
                           </div>
                           <div>
@@ -160,7 +160,7 @@ export default function ReportsPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Package className="w-5 h-5 text-purple-600" /> Top Producten
+                  <Package className="w-5 h-5 text-teal-600" /> Top Producten
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -171,7 +171,7 @@ export default function ReportsPage() {
                     {productsData.slice(0, 5).map((p, i) => (
                       <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold">
+                          <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 font-bold">
                             {i + 1}
                           </div>
                           <div>
@@ -202,7 +202,7 @@ export default function ReportsPage() {
                     {staffData.slice(0, 5).map((s, i) => (
                       <div key={s.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
+                          <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold">
                             {s.name?.charAt(0)}
                           </div>
                           <div>

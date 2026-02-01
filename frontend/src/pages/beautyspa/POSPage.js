@@ -196,7 +196,7 @@ export default function POSPage() {
                 <Button
                   variant={activeTab === 'treatments' ? 'default' : 'outline'}
                   onClick={() => setActiveTab('treatments')}
-                  className={activeTab === 'treatments' ? 'bg-gradient-to-r from-pink-500 to-purple-600' : ''}
+                  className={activeTab === 'treatments' ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : ''}
                 >
                   <Scissors className="w-4 h-4 mr-2" />
                   Behandelingen
@@ -204,7 +204,7 @@ export default function POSPage() {
                 <Button
                   variant={activeTab === 'products' ? 'default' : 'outline'}
                   onClick={() => setActiveTab('products')}
-                  className={activeTab === 'products' ? 'bg-gradient-to-r from-pink-500 to-purple-600' : ''}
+                  className={activeTab === 'products' ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : ''}
                 >
                   <Package className="w-4 h-4 mr-2" />
                   Producten
@@ -234,7 +234,7 @@ export default function POSPage() {
                     <CardContent className="p-4">
                       <h3 className="font-semibold text-slate-900 mb-1 line-clamp-1">{treatment.name}</h3>
                       <p className="text-sm text-slate-500 mb-2">{treatment.duration_minutes} min</p>
-                      <p className="font-bold text-pink-600">SRD {treatment.price_srd?.toLocaleString()}</p>
+                      <p className="font-bold text-emerald-600">SRD {treatment.price_srd?.toLocaleString()}</p>
                     </CardContent>
                   </Card>
                 ))
@@ -290,17 +290,17 @@ export default function POSPage() {
                 </SelectContent>
               </Select>
               {selectedClient && (
-                <div className="mt-3 p-3 bg-pink-50 rounded-lg">
+                <div className="mt-3 p-3 bg-emerald-50 rounded-lg">
                   <p className="font-medium text-pink-800">{selectedClient.name}</p>
-                  <p className="text-sm text-pink-600">Punten: {selectedClient.loyalty_points || 0}</p>
+                  <p className="text-sm text-emerald-600">Punten: {selectedClient.loyalty_points || 0}</p>
                 </div>
               )}
             </CardContent>
           </Card>
 
           {/* Cart */}
-          <Card className="border-2 border-pink-200">
-            <CardHeader className="bg-gradient-to-r from-pink-500 to-purple-600 text-white rounded-t-lg">
+          <Card className="border-2 border-emerald-200">
+            <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-t-lg">
               <CardTitle className="flex items-center gap-2">
                 <ShoppingCart className="w-5 h-5" />
                 Winkelwagen ({cart.length})
@@ -382,7 +382,7 @@ export default function POSPage() {
                   <span className="font-medium">SRD {calculateSubtotal().toLocaleString()}</span>
                 </div>
                 {discount > 0 && (
-                  <div className="flex justify-between text-sm text-pink-600">
+                  <div className="flex justify-between text-sm text-emerald-600">
                     <span>Korting ({discount}%)</span>
                     <span>-SRD {(calculateSubtotal() * discount / 100).toLocaleString()}</span>
                   </div>
@@ -403,7 +403,7 @@ export default function POSPage() {
                       variant={paymentMethod === method.value ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => setPaymentMethod(method.value)}
-                      className={paymentMethod === method.value ? 'bg-gradient-to-r from-pink-500 to-purple-600' : ''}
+                      className={paymentMethod === method.value ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : ''}
                     >
                       <method.icon className="w-3 h-3 mr-1" />
                       <span className="text-xs">{method.label}</span>

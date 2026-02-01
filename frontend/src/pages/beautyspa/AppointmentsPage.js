@@ -39,7 +39,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 const statusColors = {
   scheduled: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Gepland' },
   confirmed: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Bevestigd' },
-  in_progress: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Bezig' },
+  in_progress: { bg: 'bg-teal-100', text: 'text-teal-700', label: 'Bezig' },
   completed: { bg: 'bg-green-100', text: 'text-green-700', label: 'Afgerond' },
   cancelled: { bg: 'bg-red-100', text: 'text-red-700', label: 'Geannuleerd' },
   no_show: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'No-show' },
@@ -193,7 +193,7 @@ export default function AppointmentsPage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">
+            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-pink-600 hover:to-purple-700">
               <Plus className="w-4 h-4 mr-2" />
               Nieuwe Afspraak
             </Button>
@@ -301,7 +301,7 @@ export default function AppointmentsPage() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Annuleren
                 </Button>
-                <Button type="submit" className="bg-gradient-to-r from-pink-500 to-purple-600">
+                <Button type="submit" className="bg-gradient-to-r from-emerald-500 to-teal-600">
                   Afspraak Maken
                 </Button>
               </div>
@@ -366,7 +366,7 @@ export default function AppointmentsPage() {
             <Calendar className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-700 mb-2">Geen afspraken</h3>
             <p className="text-slate-500 mb-4">Er zijn geen afspraken voor deze dag</p>
-            <Button onClick={() => { resetForm(); setForm(f => ({...f, appointment_date: selectedDate})); setIsDialogOpen(true); }} className="bg-gradient-to-r from-pink-500 to-purple-600">
+            <Button onClick={() => { resetForm(); setForm(f => ({...f, appointment_date: selectedDate})); setIsDialogOpen(true); }} className="bg-gradient-to-r from-emerald-500 to-teal-600">
               <Plus className="w-4 h-4 mr-2" />
               Nieuwe Afspraak
             </Button>
@@ -381,7 +381,7 @@ export default function AppointmentsPage() {
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex flex-col items-center justify-center text-white">
+                      <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex flex-col items-center justify-center text-white">
                         <span className="text-lg font-bold">{apt.appointment_time}</span>
                         <span className="text-xs opacity-80">{apt.treatment_duration}min</span>
                       </div>
@@ -392,7 +392,7 @@ export default function AppointmentsPage() {
                             {status.label}
                           </Badge>
                         </div>
-                        <p className="text-pink-600 font-medium">{apt.treatment_name}</p>
+                        <p className="text-emerald-600 font-medium">{apt.treatment_name}</p>
                         <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
                           <span className="flex items-center gap-1">
                             <User className="w-3 h-3" />

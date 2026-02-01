@@ -170,7 +170,7 @@ export default function TreatmentsPage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">
+            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-pink-600 hover:to-purple-700">
               <Plus className="w-4 h-4 mr-2" />
               Nieuwe Behandeling
             </Button>
@@ -276,7 +276,7 @@ export default function TreatmentsPage() {
                     className="rounded"
                   />
                   <Label htmlFor="package" className="cursor-pointer flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-purple-600" />
+                    <Sparkles className="w-4 h-4 text-teal-600" />
                     Dit is een pakket/combinatie
                   </Label>
                 </div>
@@ -286,7 +286,7 @@ export default function TreatmentsPage() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Annuleren
                 </Button>
-                <Button type="submit" className="bg-gradient-to-r from-pink-500 to-purple-600">
+                <Button type="submit" className="bg-gradient-to-r from-emerald-500 to-teal-600">
                   {selectedTreatment ? 'Bijwerken' : 'Toevoegen'}
                 </Button>
               </div>
@@ -303,7 +303,7 @@ export default function TreatmentsPage() {
               variant={categoryFilter === '' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setCategoryFilter('')}
-              className={categoryFilter === '' ? 'bg-gradient-to-r from-pink-500 to-purple-600' : ''}
+              className={categoryFilter === '' ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : ''}
             >
               Alles
             </Button>
@@ -313,7 +313,7 @@ export default function TreatmentsPage() {
                 variant={categoryFilter === cat.value ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setCategoryFilter(cat.value)}
-                className={categoryFilter === cat.value ? 'bg-gradient-to-r from-pink-500 to-purple-600' : ''}
+                className={categoryFilter === cat.value ? 'bg-gradient-to-r from-emerald-500 to-teal-600' : ''}
               >
                 {cat.icon} {cat.label}
               </Button>
@@ -339,7 +339,7 @@ export default function TreatmentsPage() {
             <Scissors className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-700 mb-2">Geen behandelingen gevonden</h3>
             <p className="text-slate-500 mb-4">Voeg uw eerste behandeling toe</p>
-            <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-to-r from-pink-500 to-purple-600">
+            <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-to-r from-emerald-500 to-teal-600">
               <Plus className="w-4 h-4 mr-2" />
               Nieuwe Behandeling
             </Button>
@@ -372,7 +372,7 @@ export default function TreatmentsPage() {
                               )}
                             </div>
                             {treatment.is_package && (
-                              <Badge className="bg-purple-100 text-purple-700 mb-2">
+                              <Badge className="bg-teal-100 text-teal-700 mb-2">
                                 <Sparkles className="w-3 h-3 mr-1" />
                                 Pakket
                               </Badge>

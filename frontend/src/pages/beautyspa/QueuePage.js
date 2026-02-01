@@ -103,7 +103,7 @@ export default function QueuePage() {
           <Button variant="outline" onClick={fetchData}><RefreshCw className="w-4 h-4 mr-2" /> Vernieuwen</Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-gradient-to-r from-pink-500 to-purple-600">
+              <Button className="bg-gradient-to-r from-emerald-500 to-teal-600">
                 <Plus className="w-4 h-4 mr-2" /> Walk-in Toevoegen
               </Button>
             </DialogTrigger>
@@ -127,7 +127,7 @@ export default function QueuePage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" className="w-full bg-gradient-to-r from-pink-500 to-purple-600">
+                <Button type="submit" className="w-full bg-gradient-to-r from-emerald-500 to-teal-600">
                   Toevoegen aan Wachtrij
                 </Button>
               </form>
@@ -181,7 +181,7 @@ export default function QueuePage() {
 
         {/* In Service */}
         <Card>
-          <CardHeader className="bg-purple-50 border-b">
+          <CardHeader className="bg-teal-50 border-b">
             <CardTitle className="flex items-center gap-2 text-purple-800">
               <Play className="w-5 h-5" /> In Behandeling ({inServiceQueue.length})
             </CardTitle>
@@ -193,10 +193,10 @@ export default function QueuePage() {
               <p className="text-center text-slate-500 py-8">Niemand in behandeling</p>
             ) : (
               inServiceQueue.map((item) => (
-                <div key={item.id} className="p-4 bg-purple-50 rounded-xl border border-purple-200">
+                <div key={item.id} className="p-4 bg-teal-50 rounded-xl border border-teal-200">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center text-white font-bold">
+                      <div className="w-10 h-10 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold">
                         #{item.queue_number}
                       </div>
                       <div>

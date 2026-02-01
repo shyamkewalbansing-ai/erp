@@ -92,7 +92,7 @@ export default function VouchersPage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-pink-500 to-purple-600">
+            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600">
               <Plus className="w-4 h-4 mr-2" /> Nieuwe Voucher
             </Button>
           </DialogTrigger>
@@ -136,7 +136,7 @@ export default function VouchersPage() {
                 <Label>Max. Gebruik</Label>
                 <Input type="number" value={form.max_uses} onChange={(e) => setForm({...form, max_uses: parseInt(e.target.value) || 1})} min="1" />
               </div>
-              <Button type="submit" className="w-full bg-gradient-to-r from-pink-500 to-purple-600">
+              <Button type="submit" className="w-full bg-gradient-to-r from-emerald-500 to-teal-600">
                 Voucher Aanmaken
               </Button>
             </form>
@@ -152,7 +152,7 @@ export default function VouchersPage() {
         <Card><CardContent className="p-12 text-center">
           <Ticket className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-slate-700 mb-2">Geen vouchers</h3>
-          <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-to-r from-pink-500 to-purple-600">
+          <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-to-r from-emerald-500 to-teal-600">
             <Plus className="w-4 h-4 mr-2" /> Nieuwe Voucher
           </Button>
         </CardContent></Card>
@@ -178,7 +178,7 @@ export default function VouchersPage() {
                 </div>
 
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center text-white">
+                  <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white">
                     {v.discount_type === 'percentage' ? (
                       <><span className="text-2xl font-bold">{v.discount_value}</span><Percent className="w-4 h-4" /></>
                     ) : (

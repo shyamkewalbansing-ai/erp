@@ -163,7 +163,7 @@ export default function ProductsPage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-pink-500 to-purple-600">
+            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600">
               <Plus className="w-4 h-4 mr-2" /> Nieuw Product
             </Button>
           </DialogTrigger>
@@ -229,7 +229,7 @@ export default function ProductsPage() {
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Annuleren</Button>
-                <Button type="submit" className="bg-gradient-to-r from-pink-500 to-purple-600">
+                <Button type="submit" className="bg-gradient-to-r from-emerald-500 to-teal-600">
                   {selectedProduct ? 'Bijwerken' : 'Toevoegen'}
                 </Button>
               </div>
@@ -263,7 +263,7 @@ export default function ProductsPage() {
         <Card><CardContent className="p-12 text-center">
           <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-slate-700 mb-2">Geen producten</h3>
-          <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-to-r from-pink-500 to-purple-600">
+          <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-to-r from-emerald-500 to-teal-600">
             <Plus className="w-4 h-4 mr-2" /> Nieuw Product
           </Button>
         </CardContent></Card>
@@ -329,7 +329,7 @@ export default function ProductsPage() {
               </Button>
             </div>
             <Input placeholder="Reden (optioneel)" value={stockAdjustment.reason} onChange={(e) => setStockAdjustment(s => ({...s, reason: e.target.value}))} />
-            <Button className="w-full bg-gradient-to-r from-pink-500 to-purple-600" onClick={handleStockAdjust} disabled={stockAdjustment.quantity === 0}>
+            <Button className="w-full bg-gradient-to-r from-emerald-500 to-teal-600" onClick={handleStockAdjust} disabled={stockAdjustment.quantity === 0}>
               Voorraad Aanpassen
             </Button>
           </div>

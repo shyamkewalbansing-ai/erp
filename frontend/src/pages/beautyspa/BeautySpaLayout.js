@@ -100,7 +100,7 @@ export default function BeautySpaLayout() {
       `}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b bg-gradient-to-r from-pink-500 to-purple-600">
+          <div className="p-6 border-b bg-gradient-to-r from-emerald-500 to-teal-600">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
                 <Sparkles className="w-6 h-6 text-white" />
@@ -122,8 +122,8 @@ export default function BeautySpaLayout() {
                 className={`
                   flex items-center gap-3 px-4 py-3 rounded-xl transition-all
                   ${isActive(item.path)
-                    ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white shadow-lg'
-                    : 'text-slate-600 hover:bg-pink-50 hover:text-pink-600'
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg'
+                    : 'text-slate-600 hover:bg-emerald-50 hover:text-emerald-600'
                   }
                 `}
               >
@@ -234,8 +234,8 @@ export default function BeautySpaLayout() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                   <Card>
                     <CardContent className="p-6 flex items-center gap-4">
-                      <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center">
-                        <Scissors className="w-6 h-6 text-pink-600" />
+                      <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+                        <Scissors className="w-6 h-6 text-emerald-600" />
                       </div>
                       <div>
                         <p className="text-sm text-slate-500">Behandelingen</p>
@@ -246,8 +246,8 @@ export default function BeautySpaLayout() {
 
                   <Card>
                     <CardContent className="p-6 flex items-center gap-4">
-                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                        <UserCog className="w-6 h-6 text-purple-600" />
+                      <div className="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center">
+                        <UserCog className="w-6 h-6 text-teal-600" />
                       </div>
                       <div>
                         <p className="text-sm text-slate-500">Medewerkers</p>
@@ -297,7 +297,7 @@ export default function BeautySpaLayout() {
                 <Card className="mb-8">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Calendar className="w-5 h-5 text-pink-600" />
+                      <Calendar className="w-5 h-5 text-emerald-600" />
                       Komende Afspraken
                     </CardTitle>
                   </CardHeader>
@@ -307,7 +307,7 @@ export default function BeautySpaLayout() {
                         {stats.upcoming_appointments.map((apt, i) => (
                           <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
                             <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold">
+                              <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center text-white font-bold">
                                 {apt.appointment_time}
                               </div>
                               <div>
@@ -315,7 +315,7 @@ export default function BeautySpaLayout() {
                                 <p className="text-sm text-slate-500">{apt.treatment_name}</p>
                               </div>
                             </div>
-                            <Badge variant="outline" className="bg-pink-50 text-pink-700 border-pink-200">
+                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
                               {apt.appointment_date}
                             </Badge>
                           </div>
@@ -328,7 +328,7 @@ export default function BeautySpaLayout() {
                     )}
                     <div className="mt-4 text-center">
                       <Link to="/beautyspa/appointments">
-                        <Button variant="outline" className="border-pink-200 text-pink-700 hover:bg-pink-50">
+                        <Button variant="outline" className="border-emerald-200 text-emerald-700 hover:bg-emerald-50">
                           Alle Afspraken Bekijken
                           <ChevronRight className="w-4 h-4 ml-2" />
                         </Button>

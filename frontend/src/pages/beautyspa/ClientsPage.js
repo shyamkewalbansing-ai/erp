@@ -201,7 +201,7 @@ export default function ClientsPage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700">
+            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-pink-600 hover:to-purple-700">
               <Plus className="w-4 h-4 mr-2" />
               Nieuwe Klant
             </Button>
@@ -313,7 +313,7 @@ export default function ClientsPage() {
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Annuleren
                 </Button>
-                <Button type="submit" className="bg-gradient-to-r from-pink-500 to-purple-600">
+                <Button type="submit" className="bg-gradient-to-r from-emerald-500 to-teal-600">
                   {selectedClient ? 'Bijwerken' : 'Toevoegen'}
                 </Button>
               </div>
@@ -367,7 +367,7 @@ export default function ClientsPage() {
             <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-700 mb-2">Geen klanten gevonden</h3>
             <p className="text-slate-500 mb-4">Voeg uw eerste klant toe om te beginnen</p>
-            <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-to-r from-pink-500 to-purple-600">
+            <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-to-r from-emerald-500 to-teal-600">
               <Plus className="w-4 h-4 mr-2" />
               Nieuwe Klant
             </Button>
@@ -380,7 +380,7 @@ export default function ClientsPage() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
                       {client.name?.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -419,14 +419,14 @@ export default function ClientsPage() {
                     </div>
                     <div className="text-right hidden md:block">
                       <p className="text-sm text-slate-500">Punten</p>
-                      <p className="font-bold text-purple-600">{client.loyalty_points || 0}</p>
+                      <p className="font-bold text-teal-600">{client.loyalty_points || 0}</p>
                     </div>
                     <div className="flex gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => fetchClientDetails(client.id)}
-                        className="text-slate-500 hover:text-pink-600"
+                        className="text-slate-500 hover:text-emerald-600"
                       >
                         <Eye className="w-4 h-4" />
                       </Button>
@@ -434,7 +434,7 @@ export default function ClientsPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleEdit(client)}
-                        className="text-slate-500 hover:text-purple-600"
+                        className="text-slate-500 hover:text-teal-600"
                       >
                         <Edit className="w-4 h-4" />
                       </Button>
@@ -485,10 +485,10 @@ export default function ClientsPage() {
 
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4">
-                <Card className="bg-pink-50">
+                <Card className="bg-emerald-50">
                   <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-pink-600">{viewClient.total_visits || 0}</p>
-                    <p className="text-sm text-pink-700">Bezoeken</p>
+                    <p className="text-2xl font-bold text-emerald-600">{viewClient.total_visits || 0}</p>
+                    <p className="text-sm text-emerald-700">Bezoeken</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-emerald-50">
@@ -497,10 +497,10 @@ export default function ClientsPage() {
                     <p className="text-sm text-emerald-700">Besteed</p>
                   </CardContent>
                 </Card>
-                <Card className="bg-purple-50">
+                <Card className="bg-teal-50">
                   <CardContent className="p-4 text-center">
-                    <p className="text-2xl font-bold text-purple-600">{viewClient.loyalty_points || 0}</p>
-                    <p className="text-sm text-purple-700">Punten</p>
+                    <p className="text-2xl font-bold text-teal-600">{viewClient.loyalty_points || 0}</p>
+                    <p className="text-sm text-teal-700">Punten</p>
                   </CardContent>
                 </Card>
               </div>

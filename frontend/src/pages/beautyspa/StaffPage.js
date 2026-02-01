@@ -101,7 +101,7 @@ export default function StaffPage() {
         </div>
         <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) resetForm(); }}>
           <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-pink-500 to-purple-600">
+            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600">
               <Plus className="w-4 h-4 mr-2" /> Nieuwe Medewerker
             </Button>
           </DialogTrigger>
@@ -138,7 +138,7 @@ export default function StaffPage() {
                 <div className="flex flex-wrap gap-2">
                   {specializations.map(spec => (
                     <Badge key={spec} variant={form.specializations.includes(spec) ? 'default' : 'outline'}
-                      className={`cursor-pointer ${form.specializations.includes(spec) ? 'bg-pink-500' : ''}`}
+                      className={`cursor-pointer ${form.specializations.includes(spec) ? 'bg-emerald-500' : ''}`}
                       onClick={() => toggleSpecialization(spec)}>
                       {spec}
                     </Badge>
@@ -157,7 +157,7 @@ export default function StaffPage() {
               </div>
               <div className="flex justify-end gap-3 pt-4">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Annuleren</Button>
-                <Button type="submit" className="bg-gradient-to-r from-pink-500 to-purple-600">
+                <Button type="submit" className="bg-gradient-to-r from-emerald-500 to-teal-600">
                   {selectedStaff ? 'Bijwerken' : 'Toevoegen'}
                 </Button>
               </div>
@@ -174,7 +174,7 @@ export default function StaffPage() {
         <Card><CardContent className="p-12 text-center">
           <UserCog className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-slate-700 mb-2">Geen medewerkers</h3>
-          <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-to-r from-pink-500 to-purple-600">
+          <Button onClick={() => setIsDialogOpen(true)} className="bg-gradient-to-r from-emerald-500 to-teal-600">
             <Plus className="w-4 h-4 mr-2" /> Nieuwe Medewerker
           </Button>
         </CardContent></Card>
@@ -185,7 +185,7 @@ export default function StaffPage() {
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-14 h-14 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                    <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
                       {s.name?.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -204,7 +204,7 @@ export default function StaffPage() {
                 {s.specializations?.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-1">
                     {s.specializations.map(spec => (
-                      <Badge key={spec} variant="outline" className="text-xs bg-pink-50 text-pink-700">{spec}</Badge>
+                      <Badge key={spec} variant="outline" className="text-xs bg-emerald-50 text-emerald-700">{spec}</Badge>
                     ))}
                   </div>
                 )}
@@ -212,11 +212,11 @@ export default function StaffPage() {
                 <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-2 text-center">
                   <div>
                     <p className="text-xs text-slate-500">Behandelingen</p>
-                    <p className="font-bold text-pink-600">{s.total_treatments || 0}</p>
+                    <p className="font-bold text-emerald-600">{s.total_treatments || 0}</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Commissie</p>
-                    <p className="font-bold text-purple-600">{s.commission_percentage || 0}%</p>
+                    <p className="font-bold text-teal-600">{s.commission_percentage || 0}%</p>
                   </div>
                   <div>
                     <p className="text-xs text-slate-500">Verdiend</p>
