@@ -434,6 +434,21 @@ function MainAppRoutes() {
           <Route path="autodealer/verkopen" element={
             <SubscriptionRoute requiredAddon="autodealer"><AutoDealerVerkopen /></SubscriptionRoute>
           } />
+          
+          {/* Beauty Spa Module */}
+          <Route path="beautyspa" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaLayout /></SubscriptionRoute>
+          }>
+            <Route path="clients" element={<BeautySpaClients />} />
+            <Route path="appointments" element={<BeautySpaAppointments />} />
+            <Route path="treatments" element={<BeautySpaTreatments />} />
+            <Route path="products" element={<BeautySpaProducts />} />
+            <Route path="pos" element={<BeautySpaPOS />} />
+            <Route path="staff" element={<BeautySpaStaff />} />
+            <Route path="queue" element={<BeautySpaQueue />} />
+            <Route path="reports" element={<BeautySpaReports />} />
+            <Route path="vouchers" element={<BeautySpaVouchers />} />
+          </Route>
         </Route>
         
         {/* Redirect old routes to new app routes */}
