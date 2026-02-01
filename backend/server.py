@@ -9282,15 +9282,11 @@ async def update_deployment_settings(
 
 @api_router.post("/admin/deployment/update")
 async def trigger_system_update(current_user: dict = Depends(get_superadmin)):
-    """Trigger system update via webhook - superadmin only"""
-    import httpx
+    """Trigger direct system update - superadmin only"""
+    import subprocess
+    import asyncio
     
-    settings = await db.deployment_settings.find_one({}, {"_id": 0})
-    if not settings or not settings.get("webhook_url"):
-        raise HTTPException(status_code=400, detail="Webhook URL niet geconfigureerd")
-    
-    webhook_url = settings["webhook_url"]
-    webhook_secret = settings.get("webhook_secret", "")
+    settings = await db.deployment_settings.find_one({}, {"_id": 0}) or {}
     
     # Create deployment log entry
     log_id = str(uuid.uuid4())
@@ -9299,100 +9295,183 @@ async def trigger_system_update(current_user: dict = Depends(get_superadmin)):
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "status": "running",
         "message": "Update gestart...",
-        "details": None
+        "details": []
     }
     await db.deployment_logs.insert_one(log_entry)
     
     try:
-        # Prepare payload
-        payload = {
-            "action": "update",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "settings": {
-                "restart_backend": settings.get("auto_restart_backend", True),
-                "rebuild_frontend": settings.get("auto_rebuild_frontend", True),
-                "run_migrations": settings.get("run_migrations", True)
-            }
+        details = []
+        base_path = os.environ.get("APP_BASE_PATH", "/home/clp/htdocs/facturatie.sr")
+        
+        # Step 1: Git pull
+        details.append("📥 Git pull uitvoeren...")
+        result = subprocess.run(
+            ["git", "pull", "origin", "main"],
+            cwd=base_path,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        details.append(f"Git: {result.stdout or result.stderr}")
+        
+        # Step 2: Rebuild frontend if enabled
+        if settings.get("auto_rebuild_frontend", True):
+            details.append("🏗️ Frontend herbouwen...")
+            # Install dependencies
+            subprocess.run(
+                ["yarn", "install"],
+                cwd=f"{base_path}/frontend",
+                capture_output=True,
+                text=True,
+                timeout=120
+            )
+            # Build
+            result = subprocess.run(
+                ["yarn", "build"],
+                cwd=f"{base_path}/frontend",
+                capture_output=True,
+                text=True,
+                timeout=180
+            )
+            if result.returncode == 0:
+                details.append("✅ Frontend build succesvol")
+            else:
+                details.append(f"⚠️ Frontend build: {result.stderr[:200]}")
+        
+        # Step 3: Sync modules to database
+        details.append("📦 Modules synchroniseren...")
+        await sync_modules_to_database()
+        details.append("✅ Modules gesynchroniseerd")
+        
+        # Step 4: Restart frontend serve
+        details.append("🔄 Frontend herstarten...")
+        subprocess.run(["pkill", "-f", "serve -s build"], capture_output=True)
+        subprocess.Popen(
+            ["npx", "serve", "-s", "build", "-l", "3000"],
+            cwd=f"{base_path}/frontend",
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        details.append("✅ Frontend herstart")
+        
+        # Update log and settings
+        await db.deployment_logs.update_one(
+            {"id": log_id},
+            {"$set": {
+                "status": "success",
+                "message": "Update succesvol afgerond",
+                "details": details
+            }}
+        )
+        await db.deployment_settings.update_one(
+            {},
+            {"$set": {
+                "last_update": datetime.now(timezone.utc).isoformat(),
+                "last_update_status": "success"
+            }},
+            upsert=True
+        )
+        
+        return {
+            "success": True,
+            "message": "Update succesvol afgerond",
+            "log_id": log_id,
+            "details": details
         }
         
-        # Prepare headers
-        headers = {"Content-Type": "application/json"}
-        if webhook_secret:
-            # Create HMAC signature
-            import hmac
-            import hashlib
-            import json
-            signature = hmac.new(
-                webhook_secret.encode(),
-                json.dumps(payload).encode(),
-                hashlib.sha256
-            ).hexdigest()
-            headers["X-Webhook-Signature"] = signature
-        
-        # Call webhook
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(webhook_url, json=payload, headers=headers)
-            
-            if response.status_code == 200:
-                # Update log and settings
-                await db.deployment_logs.update_one(
-                    {"id": log_id},
-                    {"$set": {
-                        "status": "success",
-                        "message": "Update succesvol gestart",
-                        "details": response.text[:500] if response.text else None
-                    }}
-                )
-                await db.deployment_settings.update_one(
-                    {},
-                    {"$set": {
-                        "last_update": datetime.now(timezone.utc).isoformat(),
-                        "last_update_status": "success"
-                    }}
-                )
-                return {
-                    "success": True,
-                    "message": "Update succesvol gestart op de productie server",
-                    "log_id": log_id
-                }
-            else:
-                await db.deployment_logs.update_one(
-                    {"id": log_id},
-                    {"$set": {
-                        "status": "failed",
-                        "message": f"Webhook fout: {response.status_code}",
-                        "details": response.text[:500] if response.text else None
-                    }}
-                )
-                await db.deployment_settings.update_one(
-                    {},
-                    {"$set": {
-                        "last_update": datetime.now(timezone.utc).isoformat(),
-                        "last_update_status": "failed"
-                    }}
-                )
-                raise HTTPException(status_code=500, detail=f"Webhook returned {response.status_code}")
-                
-    except httpx.TimeoutException:
+    except subprocess.TimeoutExpired:
         await db.deployment_logs.update_one(
             {"id": log_id},
             {"$set": {
                 "status": "failed",
-                "message": "Timeout bij verbinden met server",
-                "details": None
+                "message": "Timeout tijdens update",
+                "details": details if 'details' in dir() else []
             }}
         )
-        raise HTTPException(status_code=504, detail="Timeout bij verbinden met productie server")
-    except httpx.RequestError as e:
+        raise HTTPException(status_code=504, detail="Update timeout - probeer opnieuw")
+    except Exception as e:
         await db.deployment_logs.update_one(
             {"id": log_id},
             {"$set": {
-                "status": "failed",
-                "message": f"Verbindingsfout: {str(e)}",
-                "details": None
+                "status": "failed", 
+                "message": f"Fout: {str(e)}",
+                "details": details if 'details' in dir() else []
             }}
         )
-        raise HTTPException(status_code=500, detail=f"Kan niet verbinden met server: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Update fout: {str(e)}")
+
+
+async def sync_modules_to_database():
+    """Sync predefined modules to the database"""
+    predefined_modules = [
+        {
+            "slug": "hrm",
+            "name": "HRM",
+            "description": "Human Resource Management - Personeelsbeheer, verlof, salarissen",
+            "icon": "users",
+            "price": 49.99,
+            "features": ["Personeelsbeheer", "Verlofregistratie", "Salarisadministratie", "Aanwezigheid"],
+            "is_active": True
+        },
+        {
+            "slug": "vastgoed_beheer",
+            "name": "Vastgoed Beheer",
+            "description": "Beheer huurwoningen, huurders en onderhoud",
+            "icon": "building",
+            "price": 59.99,
+            "features": ["Huurdersbeheer", "Facturatie", "Onderhoud", "Meterstanden"],
+            "is_active": True
+        },
+        {
+            "slug": "autodealer",
+            "name": "Auto Dealer",
+            "description": "Voertuigbeheer, verkoop en klanten portal",
+            "icon": "car",
+            "price": 69.99,
+            "features": ["Voertuigbeheer", "Multi-valuta", "Verkoop", "Klanten Portal"],
+            "is_active": True
+        },
+        {
+            "slug": "beauty",
+            "name": "Beauty Spa",
+            "description": "Complete oplossing voor schoonheidssalons en spa's",
+            "icon": "scissors",
+            "price": 59.99,
+            "features": ["CRM", "Afspraken", "POS", "Voorraad", "Online Booking"],
+            "is_active": True
+        },
+        {
+            "slug": "pompstation",
+            "name": "Pompstation",
+            "description": "Compleet tankstation beheer: tanks, pompen, POS, winkel, personeel en veiligheid",
+            "icon": "fuel",
+            "price": 79.99,
+            "features": ["Tankbeheer", "POS/Kassa", "Winkel", "Personeel", "Veiligheid", "Rapportages"],
+            "is_active": True
+        }
+    ]
+    
+    for module in predefined_modules:
+        existing = await db.addons.find_one({"slug": module["slug"]})
+        if not existing:
+            module["id"] = str(uuid.uuid4())
+            module["created_at"] = datetime.now(timezone.utc).isoformat()
+            await db.addons.insert_one(module)
+            logger.info(f"Created addon: {module['slug']}")
+        else:
+            # Update existing addon with new info (but keep id and created_at)
+            await db.addons.update_one(
+                {"slug": module["slug"]},
+                {"$set": {
+                    "name": module["name"],
+                    "description": module["description"],
+                    "icon": module["icon"],
+                    "price": module["price"],
+                    "features": module["features"],
+                    "is_active": module["is_active"]
+                }}
+            )
 
 @api_router.get("/admin/deployment/logs")
 async def get_deployment_logs(current_user: dict = Depends(get_superadmin)):
