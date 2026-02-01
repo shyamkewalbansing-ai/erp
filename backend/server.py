@@ -125,7 +125,7 @@ logger = logging.getLogger(__name__)
 import asyncio
 
 async def cleanup_demo_data():
-    """Clean up demo account data older than 1 hour"""
+    """Clean up ALL demo account data older than 1 hour - complete wipe"""
     try:
         demo_user = await db.users.find_one({"email": DEMO_ACCOUNT_EMAIL})
         if not demo_user:
@@ -134,10 +134,11 @@ async def cleanup_demo_data():
         demo_user_id = str(demo_user['_id'])
         demo_workspace_id = demo_user.get('workspace_id')
         one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
+        one_hour_ago_str = one_hour_ago.isoformat()
         
         logger.info(f"Running demo data cleanup for user {DEMO_ACCOUNT_EMAIL}")
         
-        # Collections to clean up with their user/workspace field names
+        # ALL collections to clean up with their user/workspace field names
         collections_to_clean = [
             # HRM data
             ("hrm_employees", "workspace_id"),
@@ -153,11 +154,13 @@ async def cleanup_demo_data():
             ("deposits", "workspace_id"),
             ("maintenance", "workspace_id"),
             ("loans", "workspace_id"),
+            ("meter_readings", "workspace_id"),
             
             # Auto dealer data
             ("autodealer_vehicles", "workspace_id"),
             ("autodealer_customers", "workspace_id"),
             ("autodealer_sales", "workspace_id"),
+            ("autodealer_payments", "workspace_id"),
             
             # Beauty Spa data
             ("spa_clients", "workspace_id"),
@@ -173,9 +176,25 @@ async def cleanup_demo_data():
             ("spa_intake_forms", "workspace_id"),
             ("spa_stock_movements", "workspace_id"),
             
+            # Pompstation data
+            ("pompstation_tanks", "workspace_id"),
+            ("pompstation_leveringen", "workspace_id"),
+            ("pompstation_pompen", "workspace_id"),
+            ("pompstation_verkopen", "workspace_id"),
+            ("pompstation_winkel_producten", "workspace_id"),
+            ("pompstation_winkel_verkopen", "workspace_id"),
+            ("pompstation_diensten", "workspace_id"),
+            ("pompstation_personeel", "workspace_id"),
+            ("pompstation_veiligheid", "workspace_id"),
+            ("pompstation_incidenten", "workspace_id"),
+            ("pompstation_rapportages", "workspace_id"),
+            
             # General data
             ("ai_chat_history", "user_id"),
             ("public_chats", "user_id"),
+            ("notifications", "user_id"),
+            ("invoices", "workspace_id"),
+            ("documents", "workspace_id"),
         ]
         
         total_deleted = 0
@@ -184,16 +203,25 @@ async def cleanup_demo_data():
             try:
                 collection = db[collection_name]
                 
-                # Build filter based on field type
+                # Build filter based on field type - delete records older than 1 hour
                 if filter_field == "workspace_id" and demo_workspace_id:
+                    # Try both datetime and string format for created_at
                     filter_query = {
                         filter_field: demo_workspace_id,
-                        "created_at": {"$lt": one_hour_ago}
+                        "$or": [
+                            {"created_at": {"$lt": one_hour_ago}},
+                            {"created_at": {"$lt": one_hour_ago_str}},
+                            {"created_at": {"$exists": False}}  # Also delete records without timestamp
+                        ]
                     }
                 elif filter_field == "user_id":
                     filter_query = {
                         filter_field: demo_user_id,
-                        "created_at": {"$lt": one_hour_ago}
+                        "$or": [
+                            {"created_at": {"$lt": one_hour_ago}},
+                            {"created_at": {"$lt": one_hour_ago_str}},
+                            {"created_at": {"$exists": False}}
+                        ]
                     }
                 else:
                     continue
