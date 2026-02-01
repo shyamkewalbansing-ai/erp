@@ -4,11 +4,12 @@ from fastapi.responses import StreamingResponse, Response, JSONResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
+from bson import ObjectId
 import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, EmailStr
-from typing import List, Optional
+from typing import List, Optional, Any
 from enum import Enum
 import uuid
 from datetime import datetime, timezone, timedelta
@@ -29,6 +30,27 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from PIL import Image as PILImage
 import json
+
+# Custom JSON encoder for MongoDB ObjectId
+class MongoJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, ObjectId):
+            return str(obj)
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
+
+def jsonable_encoder_fix(obj: Any) -> Any:
+    """Recursively convert MongoDB ObjectIds to strings"""
+    if isinstance(obj, ObjectId):
+        return str(obj)
+    if isinstance(obj, dict):
+        return {k: jsonable_encoder_fix(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [jsonable_encoder_fix(item) for item in obj]
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    return obj
 
 # AI Chat imports
 from emergentintegrations.llm.chat import LlmChat, UserMessage
