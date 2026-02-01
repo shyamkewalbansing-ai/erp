@@ -11584,46 +11584,125 @@ async def ai_get_kasgeld(user_id: str):
 
 # Main AI processing function
 async def process_ai_command(user_id: str, message: str, session_id: str):
-    """Process user message with AI and execute commands"""
+    """Process user message with AI and execute commands for ALL modules"""
     
-    # Get current data context
-    stats = await ai_get_dashboard_stats(user_id)
-    tenants = await ai_list_tenants(user_id)
-    apartments = await ai_list_apartments(user_id)
+    # Get user's active modules
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    active_modules = user.get("modules", []) if user else []
     
-    tenant_list = ", ".join([t["name"] for t in tenants[:10]]) if tenants else "Geen huurders"
-    apartment_list = ", ".join([f"{a['name']} (SRD {a['rent_amount']})" for a in apartments[:10]]) if apartments else "Geen appartementen"
+    # Build context based on active modules
+    context_parts = []
+    available_actions = []
     
-    system_prompt = f"""Je bent de AI assistent van Facturatie N.V., een verhuurbeheersysteem in Suriname.
-Je helpt de gebruiker met het beheren van hun verhuuradministratie.
-
-HUIDIGE SYSTEEM DATA:
+    # VASTGOED BEHEER MODULE
+    if "vastgoed_beheer" in active_modules:
+        stats = await ai_get_dashboard_stats(user_id)
+        tenants = await ai_list_tenants(user_id)
+        apartments = await ai_list_apartments(user_id)
+        
+        tenant_list = ", ".join([t["name"] for t in tenants[:10]]) if tenants else "Geen huurders"
+        apartment_list = ", ".join([f"{a['name']} (SRD {a['rent_amount']})" for a in apartments[:10]]) if apartments else "Geen appartementen"
+        
+        context_parts.append(f"""
+📦 VASTGOED BEHEER MODULE:
 - Totaal huurders: {stats['total_tenants']}
 - Totaal appartementen: {stats['total_apartments']}
 - Maandinkomen: SRD {stats['monthly_income']:,.2f}
 - Huurders: {tenant_list}
-- Appartementen: {apartment_list}
+- Appartementen: {apartment_list}""")
+        
+        available_actions.extend([
+            "HUURDER_TOEVOEGEN: Nieuwe huurder aanmaken (params: name, phone, email, address)",
+            "APPARTEMENT_TOEVOEGEN: Nieuw appartement (params: name, address, rent_amount)",
+            "BETALING_REGISTREREN: Betaling registreren (params: tenant_name, amount)",
+            "SALDO_OPVRAGEN: Saldo bekijken (params: tenant_name)",
+            "LENING_AANMAKEN: Lening aanmaken (params: tenant_name, amount)",
+            "VASTGOED_OVERZICHT: Overzicht van verhuur data"
+        ])
+    
+    # HRM MODULE
+    if "hrm" in active_modules:
+        employees = await db.hrm_employees.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+        departments = await db.hrm_departments.find({"user_id": user_id}, {"_id": 0}).to_list(10)
+        leave_requests = await db.hrm_leave_requests.find({"user_id": user_id, "status": "pending"}, {"_id": 0}).to_list(10)
+        
+        emp_count = len(employees)
+        dept_count = len(departments)
+        pending_leave = len(leave_requests)
+        emp_names = ", ".join([e.get("name", "Onbekend") for e in employees[:5]]) if employees else "Geen werknemers"
+        
+        context_parts.append(f"""
+📦 HRM MODULE:
+- Totaal werknemers: {emp_count}
+- Afdelingen: {dept_count}
+- Openstaande verlofaanvragen: {pending_leave}
+- Werknemers: {emp_names}""")
+        
+        available_actions.extend([
+            "WERKNEMER_TOEVOEGEN: Nieuwe werknemer (params: name, email, department, position, salary)",
+            "VERLOF_GOEDKEUREN: Verlofaanvraag goedkeuren (params: employee_name)",
+            "VERLOF_AFWIJZEN: Verlofaanvraag afwijzen (params: employee_name, reason)",
+            "HRM_OVERZICHT: Overzicht van personeel en verlof"
+        ])
+    
+    # AUTO DEALER MODULE
+    if "autodealer" in active_modules:
+        vehicles = await db.autodealer_vehicles.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+        customers = await db.autodealer_customers.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+        sales = await db.autodealer_sales.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+        
+        available_count = len([v for v in vehicles if v.get("status") == "beschikbaar"])
+        total_vehicles = len(vehicles)
+        customer_count = len(customers)
+        sales_count = len(sales)
+        
+        vehicle_list = ", ".join([f"{v.get('brand', '')} {v.get('model', '')}" for v in vehicles[:5]]) if vehicles else "Geen voertuigen"
+        
+        context_parts.append(f"""
+📦 AUTO DEALER MODULE:
+- Totaal voertuigen: {total_vehicles} ({available_count} beschikbaar)
+- Klanten: {customer_count}
+- Verkopen: {sales_count}
+- Voertuigen: {vehicle_list}""")
+        
+        available_actions.extend([
+            "VOERTUIG_TOEVOEGEN: Nieuw voertuig (params: brand, model, year, price_srd, license_plate)",
+            "KLANT_TOEVOEGEN: Nieuwe klant (params: name, phone, email, type)",
+            "VERKOOP_REGISTREREN: Verkoop registreren (params: vehicle, customer_name, price)",
+            "AUTODEALER_OVERZICHT: Overzicht van voertuigen en verkopen"
+        ])
+    
+    # If no modules active
+    if not active_modules:
+        return {
+            "response": "⚠️ U heeft nog geen modules geactiveerd. Ga naar **Instellingen > Abonnement** om modules te activeren zoals Vastgoed Beheer, HRM, of Auto Dealer.",
+            "action_executed": False,
+            "action_result": None
+        }
+    
+    # Build system prompt
+    context_text = "\n".join(context_parts) if context_parts else "Geen module data beschikbaar"
+    actions_text = "\n".join([f"- {a}" for a in available_actions]) if available_actions else "Geen acties beschikbaar"
+    
+    system_prompt = f"""Je bent de AI assistent van Facturatie N.V., een compleet ERP systeem in Suriname.
+Je helpt de gebruiker met het beheren van hun bedrijf via de actieve modules.
 
-JE KUNT DE VOLGENDE ACTIES UITVOEREN:
-1. HUURDER_TOEVOEGEN: Nieuwe huurder aanmaken
-2. APPARTEMENT_TOEVOEGEN: Nieuw appartement aanmaken
-3. BETALING_REGISTREREN: Betaling registreren voor een huurder
-4. SALDO_OPVRAGEN: Saldo van een huurder bekijken
-5. LENING_AANMAKEN: Lening aanmaken voor een huurder
-6. OVERZICHT_GEVEN: Overzicht geven van huurders, appartementen, betalingen, etc.
+ACTIEVE MODULES EN DATA:
+{context_text}
 
-WANNEER DE GEBRUIKER EEN ACTIE WIL UITVOEREN, GEEF DAN EEN JSON RESPONSE IN DIT FORMAAT:
+BESCHIKBARE ACTIES:
+{actions_text}
+
+WANNEER DE GEBRUIKER EEN ACTIE WIL UITVOEREN, GEEF DAN EEN JSON RESPONSE:
 {{"action": "ACTIE_NAAM", "params": {{"param1": "waarde1", "param2": "waarde2"}}}}
 
 VOORBEELDEN:
-- "Voeg Jan Pietersen toe met telefoon 8234567" -> {{"action": "HUURDER_TOEVOEGEN", "params": {{"name": "Jan Pietersen", "phone": "8234567"}}}}
-- "Registreer betaling van 5000 voor Jan" -> {{"action": "BETALING_REGISTREREN", "params": {{"tenant_name": "Jan", "amount": 5000}}}}
-- "Wat is het saldo van Maria?" -> {{"action": "SALDO_OPVRAGEN", "params": {{"tenant_name": "Maria"}}}}
-- "Maak een lening van 2000 voor Piet" -> {{"action": "LENING_AANMAKEN", "params": {{"tenant_name": "Piet", "amount": 2000}}}}
+- "Voeg werknemer Jan toe" -> {{"action": "WERKNEMER_TOEVOEGEN", "params": {{"name": "Jan", "department": "Algemeen"}}}}
+- "Voeg auto BMW X5 toe" -> {{"action": "VOERTUIG_TOEVOEGEN", "params": {{"brand": "BMW", "model": "X5"}}}}
+- "Registreer betaling 5000 voor Maria" -> {{"action": "BETALING_REGISTREREN", "params": {{"tenant_name": "Maria", "amount": 5000}}}}
 
-Als de gebruiker alleen informatie vraagt of een gesprek voert, antwoord dan normaal in het Nederlands ZONDER JSON.
-Wees vriendelijk, professioneel en behulpzaam. Gebruik de valuta SRD (Surinaamse Dollar).
-Als je een actie uitvoert, bevestig dit duidelijk aan de gebruiker."""
+Als de gebruiker alleen informatie vraagt, antwoord normaal ZONDER JSON.
+Wees vriendelijk en professioneel. Gebruik SRD als valuta."""
 
     # Initialize AI chat
     llm_key = os.environ.get("EMERGENT_LLM_KEY")
@@ -11644,7 +11723,6 @@ Als je een actie uitvoert, bevestig dit duidelijk aan de gebruiker."""
     try:
         # Try to parse JSON action from response
         if "{" in ai_response and "}" in ai_response:
-            # Find JSON in response
             start = ai_response.find("{")
             end = ai_response.rfind("}") + 1
             json_str = ai_response[start:end]
@@ -11654,104 +11732,144 @@ Als je een actie uitvoert, bevestig dit duidelijk aan de gebruiker."""
                 action = action_data["action"]
                 params = action_data.get("params", {})
                 
-                # Execute action
+                # VASTGOED BEHEER ACTIONS
                 if action == "HUURDER_TOEVOEGEN":
-                    result = await ai_create_tenant(
-                        user_id, 
-                        params.get("name"), 
-                        params.get("phone"),
-                        params.get("email"),
-                        params.get("address"),
-                        params.get("id_number")
-                    )
+                    result = await ai_create_tenant(user_id, params.get("name"), params.get("phone"), params.get("email"), params.get("address"), params.get("id_number"))
                     if "error" in result:
                         final_response = f"❌ {result['error']}"
-                        action_result = None
                     else:
                         action_result = result
                         final_response = f"✅ Huurder '{params.get('name')}' is succesvol toegevoegd!"
-                    
+                        
                 elif action == "APPARTEMENT_TOEVOEGEN":
-                    try:
-                        rent = float(params.get("rent_amount", 0)) if params.get("rent_amount") else 0
-                    except Exception:
-                        rent = 0
-                    result = await ai_create_apartment(
-                        user_id,
-                        params.get("name"),
-                        params.get("address", ""),
-                        rent,
-                        params.get("description")
-                    )
+                    rent = float(params.get("rent_amount", 0)) if params.get("rent_amount") else 0
+                    result = await ai_create_apartment(user_id, params.get("name"), params.get("address", ""), rent, params.get("description"))
                     if "error" in result:
                         final_response = f"❌ {result['error']}"
-                        action_result = None
                     else:
                         action_result = result
                         final_response = f"✅ Appartement '{params.get('name')}' is succesvol toegevoegd!"
-                    
+                        
                 elif action == "BETALING_REGISTREREN":
-                    try:
-                        amount = float(params.get("amount", 0)) if params.get("amount") else 0
-                    except Exception:
-                        amount = 0
-                    result = await ai_register_payment(
-                        user_id,
-                        params.get("tenant_name"),
-                        amount,
-                        params.get("payment_type", "rent"),
-                        params.get("description")
-                    )
+                    amount = float(params.get("amount", 0)) if params.get("amount") else 0
+                    result = await ai_register_payment(user_id, params.get("tenant_name"), amount, params.get("payment_type", "rent"), params.get("description"))
                     if "error" in result:
                         final_response = f"❌ {result['error']}"
-                        action_result = None
                     else:
                         action_result = result
                         final_response = f"✅ Betaling van SRD {amount:,.2f} voor {params.get('tenant_name')} is geregistreerd!"
-                    
+                        
                 elif action == "SALDO_OPVRAGEN":
                     result = await ai_get_tenant_balance(user_id, params.get("tenant_name"))
                     if "error" in result:
                         final_response = f"❌ {result['error']}"
-                        action_result = None
                     else:
                         action_result = result
                         if "message" in result:
                             final_response = f"📊 **{result['tenant']}**: {result['message']}"
                         else:
                             final_response = f"📊 **Saldo {result['tenant']}**\n- Appartement: {result['apartment']}\n- Huur: SRD {result['rent_amount']:,.2f}\n- Totaal betaald: SRD {result['total_paid']:,.2f}"
-                    
+                            
                 elif action == "LENING_AANMAKEN":
-                    try:
-                        amount = float(params.get("amount", 0)) if params.get("amount") else 0
-                    except Exception:
-                        amount = 0
-                    result = await ai_create_loan(
-                        user_id,
-                        params.get("tenant_name"),
-                        amount,
-                        params.get("description")
-                    )
+                    amount = float(params.get("amount", 0)) if params.get("amount") else 0
+                    result = await ai_create_loan(user_id, params.get("tenant_name"), amount, params.get("description"))
                     if "error" in result:
                         final_response = f"❌ {result['error']}"
-                        action_result = None
                     else:
                         action_result = result
                         final_response = f"✅ Lening van SRD {amount:,.2f} voor {params.get('tenant_name')} is aangemaakt!"
+                
+                elif action == "VASTGOED_OVERZICHT":
+                    stats = await ai_get_dashboard_stats(user_id)
+                    tenants = await ai_list_tenants(user_id)
+                    tenant_list = ", ".join([t["name"] for t in tenants[:10]]) if tenants else "Geen"
+                    final_response = f"""📊 **Vastgoed Overzicht**
+👥 Huurders: {stats['total_tenants']}
+🏠 Appartementen: {stats['total_apartments']}
+💰 Maandinkomen: SRD {stats['monthly_income']:,.2f}
+📋 Huurders: {tenant_list}"""
+                    action_result = {"overview": True}
+                
+                # HRM ACTIONS
+                elif action == "WERKNEMER_TOEVOEGEN":
+                    now = datetime.now(timezone.utc)
+                    employee = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": user_id,
+                        "name": params.get("name", "Nieuwe Werknemer"),
+                        "email": params.get("email", ""),
+                        "department": params.get("department", "Algemeen"),
+                        "position": params.get("position", "Medewerker"),
+                        "salary": float(params.get("salary", 0)) if params.get("salary") else 0,
+                        "status": "active",
+                        "hire_date": now.strftime("%Y-%m-%d"),
+                        "created_at": now.isoformat()
+                    }
+                    await db.hrm_employees.insert_one(employee)
+                    action_result = {"employee_id": employee["id"]}
+                    final_response = f"✅ Werknemer '{params.get('name')}' is toegevoegd aan afdeling {params.get('department', 'Algemeen')}!"
                     
-                elif action == "OVERZICHT_GEVEN":
-                    # Already have stats, just format nicely
-                    final_response = f"""📊 **Overzicht Facturatie N.V.**
-
-👥 **Huurders:** {stats['total_tenants']}
-🏠 **Appartementen:** {stats['total_apartments']}
-💰 **Maandinkomen:** SRD {stats['monthly_income']:,.2f}
-
-**Huurders:** {tenant_list}
-**Appartementen:** {apartment_list}"""
+                elif action == "VERLOF_GOEDKEUREN":
+                    emp_name = params.get("employee_name", "")
+                    leave = await db.hrm_leave_requests.find_one({"user_id": user_id, "employee_name": {"$regex": emp_name, "$options": "i"}, "status": "pending"})
+                    if leave:
+                        await db.hrm_leave_requests.update_one({"id": leave["id"]}, {"$set": {"status": "approved"}})
+                        action_result = {"approved": True}
+                        final_response = f"✅ Verlofaanvraag van {emp_name} is goedgekeurd!"
+                    else:
+                        final_response = f"❌ Geen openstaande verlofaanvraag gevonden voor {emp_name}"
+                        
+                elif action == "HRM_OVERZICHT":
+                    employees = await db.hrm_employees.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+                    leave_pending = await db.hrm_leave_requests.count_documents({"user_id": user_id, "status": "pending"})
+                    final_response = f"""📊 **HRM Overzicht**
+👥 Werknemers: {len(employees)}
+📝 Openstaande verlofaanvragen: {leave_pending}"""
+                    action_result = {"overview": True}
+                
+                # AUTO DEALER ACTIONS
+                elif action == "VOERTUIG_TOEVOEGEN":
+                    now = datetime.now(timezone.utc)
+                    vehicle = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": user_id,
+                        "brand": params.get("brand", ""),
+                        "model": params.get("model", ""),
+                        "year": int(params.get("year", 2024)) if params.get("year") else 2024,
+                        "price_srd": float(params.get("price_srd", 0)) if params.get("price_srd") else 0,
+                        "license_plate": params.get("license_plate", ""),
+                        "status": "beschikbaar",
+                        "created_at": now.isoformat()
+                    }
+                    await db.autodealer_vehicles.insert_one(vehicle)
+                    action_result = {"vehicle_id": vehicle["id"]}
+                    final_response = f"✅ Voertuig {params.get('brand')} {params.get('model')} is toegevoegd!"
+                    
+                elif action == "KLANT_TOEVOEGEN":
+                    now = datetime.now(timezone.utc)
+                    customer = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": user_id,
+                        "name": params.get("name", ""),
+                        "phone": params.get("phone", ""),
+                        "email": params.get("email", ""),
+                        "customer_type": params.get("type", "particulier"),
+                        "created_at": now.isoformat()
+                    }
+                    await db.autodealer_customers.insert_one(customer)
+                    action_result = {"customer_id": customer["id"]}
+                    final_response = f"✅ Klant '{params.get('name')}' is toegevoegd!"
+                    
+                elif action == "AUTODEALER_OVERZICHT":
+                    vehicles = await db.autodealer_vehicles.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+                    available = len([v for v in vehicles if v.get("status") == "beschikbaar"])
+                    sales = await db.autodealer_sales.count_documents({"user_id": user_id})
+                    final_response = f"""📊 **Auto Dealer Overzicht**
+🚗 Voertuigen: {len(vehicles)} ({available} beschikbaar)
+💰 Verkopen: {sales}"""
+                    action_result = {"overview": True}
                     
     except json.JSONDecodeError:
-        # Not a JSON response, just return the AI's natural response
         pass
     except Exception as e:
         logger.error(f"AI action error: {e}")
