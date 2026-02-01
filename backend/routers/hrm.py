@@ -471,6 +471,7 @@ async def create_hrm_document(document: HRMDocument, current_user: dict = Depend
     doc_dict["user_id"] = str(current_user["_id"])
     doc_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.hrm_documents.insert_one(doc_dict)
+    doc_dict.pop("_id", None)
     doc_dict["id"] = str(result.inserted_id)
     return doc_dict
 
@@ -525,6 +526,7 @@ async def create_hrm_attendance(attendance: HRMAttendance, current_user: dict = 
     att_dict["user_id"] = str(current_user["_id"])
     att_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.hrm_attendance.insert_one(att_dict)
+    att_dict.pop("_id", None)
     att_dict["id"] = str(result.inserted_id)
     return att_dict
 
