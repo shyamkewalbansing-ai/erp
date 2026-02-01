@@ -1704,6 +1704,40 @@ async def get_workspace_settings(current_user: dict = Depends(get_current_user))
         "is_owner": workspace.get("owner_id") == current_user["id"]
     }
 
+@api_router.get("/workspace/branding-public/{slug_or_domain}")
+async def get_workspace_branding_public(slug_or_domain: str):
+    """Get workspace branding by slug or custom domain (public, no auth required)"""
+    # Try to find by slug first
+    workspace = await db.workspaces.find_one({"slug": slug_or_domain}, {"_id": 0})
+    
+    # If not found, try by custom domain
+    if not workspace:
+        workspace = await db.workspaces.find_one(
+            {"domain.custom_domain": slug_or_domain}, 
+            {"_id": 0}
+        )
+    
+    if not workspace:
+        raise HTTPException(status_code=404, detail="Workspace niet gevonden")
+    
+    branding = workspace.get("branding", {})
+    
+    return {
+        "workspace_id": workspace["id"],
+        "workspace_name": workspace["name"],
+        "slug": workspace["slug"],
+        "logo_url": branding.get("logo_url"),
+        "favicon_url": branding.get("favicon_url"),
+        "primary_color": branding.get("primary_color", "#0caf60"),
+        "secondary_color": branding.get("secondary_color", "#059669"),
+        "portal_name": branding.get("portal_name") or workspace["name"],
+        "login_background_url": branding.get("login_background_url"),
+        "login_image_url": branding.get("login_image_url"),
+        "register_image_url": branding.get("register_image_url"),
+        "welcome_text": branding.get("welcome_text"),
+        "tagline": branding.get("tagline")
+    }
+
 @api_router.put("/workspace/settings")
 async def update_workspace_settings(
     settings: WorkspaceSettingsUpdate,
