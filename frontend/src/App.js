@@ -551,6 +551,38 @@ function MainAppRoutes() {
           <Route path="beautyspa/vouchers" element={
             <SubscriptionRoute requiredAddon="beauty"><BeautySpaVouchers /></SubscriptionRoute>
           } />
+          
+          {/* Pompstation (Gas Station) Module Routes */}
+          <Route path="pompstation" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationDashboard /></SubscriptionRoute>
+          } />
+          <Route path="pompstation/tanks" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationTanks /></SubscriptionRoute>
+          } />
+          <Route path="pompstation/leveringen" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationLeveringen /></SubscriptionRoute>
+          } />
+          <Route path="pompstation/pompen" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationPompen /></SubscriptionRoute>
+          } />
+          <Route path="pompstation/kassa" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationPOS /></SubscriptionRoute>
+          } />
+          <Route path="pompstation/winkel" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationWinkel /></SubscriptionRoute>
+          } />
+          <Route path="pompstation/diensten" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationDiensten /></SubscriptionRoute>
+          } />
+          <Route path="pompstation/personeel" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationPersoneel /></SubscriptionRoute>
+          } />
+          <Route path="pompstation/veiligheid" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationVeiligheid /></SubscriptionRoute>
+          } />
+          <Route path="pompstation/rapportages" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationRapportages /></SubscriptionRoute>
+          } />
         </Route>
         
         {/* Redirect old routes to new app routes */}
