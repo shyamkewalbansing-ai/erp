@@ -135,6 +135,7 @@ const getModuleUI = (slug) => {
 
 export default function ModulesOverviewPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [settings, setSettings] = useState(null);
   const [addons, setAddons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -156,6 +157,13 @@ export default function ModulesOverviewPage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Auto-open order dialog if ?order=true is in URL
+  useEffect(() => {
+    if (searchParams.get('order') === 'true' && addons.length > 0 && !loading) {
+      setOrderDialogOpen(true);
+    }
+  }, [searchParams, addons, loading]);
 
   const loadData = async () => {
     try {
