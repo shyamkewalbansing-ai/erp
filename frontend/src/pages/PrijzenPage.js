@@ -32,7 +32,9 @@ import {
   Zap,
   Shield,
   Clock,
-  TrendingUp
+  TrendingUp,
+  CheckCircle,
+  Puzzle
 } from 'lucide-react';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
