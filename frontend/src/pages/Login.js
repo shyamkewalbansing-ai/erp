@@ -202,7 +202,6 @@ export default function Login() {
 
               <div className="space-y-4">
                 {[
-                  { icon: Building2, text: 'Vastgoed, HRM & Auto Dealer modules' },
                   { icon: Shield, text: 'Veilig en betrouwbaar platform' },
                   { icon: Zap, text: 'Snel en modern ontwerp' },
                   { icon: Users, text: '500+ tevreden klanten' },
