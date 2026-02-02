@@ -634,17 +634,26 @@ export default function ModuleDetailPage() {
   }, [slug]);
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      const [settingsRes, addonsRes] = await Promise.all([
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 15000)
+      );
+      
+      const dataPromise = Promise.all([
         api.get('/public/landing/settings').catch(() => ({ data: {} })),
         api.get('/public/addons').catch(() => ({ data: [] }))
       ]);
-      setSettings(settingsRes.data || {});
-      setAddons(addonsRes.data || []);
+      
+      const [settingsRes, addonsRes] = await Promise.race([dataPromise, timeoutPromise]);
+      
+      setSettings(settingsRes?.data || {});
+      setAddons(addonsRes?.data || []);
       
       // If no hardcoded module, try to load from API
       // Also check with alternate slug format (underscore vs hyphen)
-      const altSlug = slug.includes('-') ? slug.replace(/-/g, '_') : slug.replace(/_/g, '-');
+      const altSlug = slug?.includes('-') ? slug.replace(/-/g, '_') : slug?.replace(/_/g, '-');
       if (!MODULES_DETAIL[slug] && !MODULES_DETAIL[altSlug]) {
         try {
           const addonRes = await api.get(`/addons/${slug}`);
@@ -676,6 +685,8 @@ export default function ModuleDetailPage() {
       }
     } catch (error) {
       console.error('Error loading data:', error);
+      setSettings({});
+      setAddons([]);
     } finally {
       setLoading(false);
     }
