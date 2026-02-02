@@ -379,16 +379,26 @@ export default function Admin() {
     
     setActivating(true);
     try {
+      // Parse highlights from comma-separated string to array
+      const highlightsArray = newAddon.highlights 
+        ? newAddon.highlights.split(',').map(h => h.trim()).filter(Boolean)
+        : [];
+      
       await createAddon({
         name: newAddon.name,
         slug: newAddon.slug,
         description: newAddon.description,
         price: parseFloat(newAddon.price) || 0,
-        is_active: true
+        is_active: true,
+        category: newAddon.category || null,
+        icon_name: newAddon.icon_name || null,
+        hero_image_url: newAddon.hero_image_url || null,
+        highlights: highlightsArray,
+        features: newAddon.features || []
       });
       toast.success('Add-on aangemaakt');
       setCreateAddonDialogOpen(false);
-      setNewAddon({ name: '', slug: '', description: '', price: 3500 });
+      setNewAddon({ name: '', slug: '', description: '', price: 3500, category: '', icon_name: '', hero_image_url: '', highlights: '', features: [] });
       loadData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
@@ -402,10 +412,22 @@ export default function Admin() {
     
     setActivating(true);
     try {
+      // Parse highlights from comma-separated string to array
+      const highlightsArray = editAddonForm.highlights 
+        ? (typeof editAddonForm.highlights === 'string' 
+            ? editAddonForm.highlights.split(',').map(h => h.trim()).filter(Boolean)
+            : editAddonForm.highlights)
+        : [];
+      
       await updateAddon(selectedAddon.id, {
         name: editAddonForm.name,
         description: editAddonForm.description,
-        price: parseFloat(editAddonForm.price) || 0
+        price: parseFloat(editAddonForm.price) || 0,
+        category: editAddonForm.category || null,
+        icon_name: editAddonForm.icon_name || null,
+        hero_image_url: editAddonForm.hero_image_url || null,
+        highlights: highlightsArray,
+        features: editAddonForm.features || []
       });
       toast.success('Add-on bijgewerkt');
       setEditAddonDialogOpen(false);
