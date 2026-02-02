@@ -12445,9 +12445,9 @@ Als gevraagd wordt over andere modules, leg uit dat deze eerst geactiveerd moete
                 
                 elif action == "VERLOF_OVERZICHT":
                     leave_requests = await db.hrm_leave_requests.find({"user_id": user_id}, {"_id": 0}).to_list(20)
-                    pending = [l for l in leave_requests if l.get("status") == "pending"]
+                    pending = [lr for lr in leave_requests if lr.get("status") == "pending"]
                     if pending:
-                        leave_list = "\n".join([f"• {l.get('employee_name', '')}: {l.get('start_date', '')} - {l.get('end_date', '')} ({l.get('leave_type', '')})" for l in pending[:10]])
+                        leave_list = "\n".join([f"• {lr.get('employee_name', '')}: {lr.get('start_date', '')} - {lr.get('end_date', '')} ({lr.get('leave_type', '')})" for lr in pending[:10]])
                         final_response = f"📝 **Openstaande Verlofaanvragen ({len(pending)})**\n\n{leave_list}"
                     else:
                         final_response = "Geen openstaande verlofaanvragen."
