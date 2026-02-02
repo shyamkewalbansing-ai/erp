@@ -630,7 +630,7 @@ export default function Layout() {
         </nav>
 
         {/* Super Admin badge at bottom */}
-        {isSuperAdmin() && (
+        {isSuperAdmin() && !sidebarCollapsed && (
           <div className="p-4 border-t border-border mt-auto flex-shrink-0">
             <Badge className="w-full justify-center bg-primary/10 text-primary border-primary/20">
               <Crown className="w-3 h-3 mr-1" />
@@ -641,9 +641,9 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className="main-content">
+      <main className={`main-content ${sidebarCollapsed ? 'main-content-expanded' : ''}`}>
         {/* Desktop header with notifications */}
-        <header className="desktop-header hidden lg:flex header-glass px-8 py-3 items-center justify-between border-b border-border/50">
+        <header className={`desktop-header hidden lg:flex header-glass px-8 py-3 items-center justify-between border-b border-border/50 ${sidebarCollapsed ? 'desktop-header-expanded' : ''}`}>
           {/* Left side - User info & Workspace/Portal buttons */}
           <div className="flex items-center gap-4">
             {/* User info */}
