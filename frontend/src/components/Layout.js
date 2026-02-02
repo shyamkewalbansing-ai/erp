@@ -347,7 +347,7 @@ export default function Layout() {
         </div>
 
         {/* Subscription Status Banner */}
-        {!isSuperAdmin() && (showTrialBadge || showExpiredBadge) && !sidebarCollapsed && (
+        {!isSuperAdmin() && (showTrialBadge || showExpiredBadge) && !isCollapsed && (
           <div className={`mx-4 mt-4 p-3 rounded-lg ${showExpiredBadge ? 'bg-red-500/10 border border-red-500/20' : 'bg-blue-500/10 border border-blue-500/20'}`}>
             <div className="flex items-center gap-2">
               <Package className={`w-4 h-4 ${showExpiredBadge ? 'text-red-500' : 'text-blue-500'}`} />
