@@ -540,7 +540,7 @@ export default function Layout() {
           )}
 
           {/* No add-ons message for customers */}
-          {!isSuperAdmin() && addonsLoaded && getVisibleNavItems().length === 0 && (
+          {!isSuperAdmin() && addonsLoaded && getVisibleNavItems().length === 0 && !sidebarCollapsed && (
             <div className="px-3 py-4 text-center">
               <Package className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">Geen actieve modules</p>
@@ -559,12 +559,13 @@ export default function Layout() {
             <NavLink
               to="/app/mijn-modules"
               onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
               data-testid="nav-mijn-modules"
+              title="Mijn Modules"
             >
-              <Boxes className="w-5 h-5" />
-              <span>Mijn Modules</span>
-              <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />
+              <Boxes className="w-5 h-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span>Mijn Modules</span>}
+              {!sidebarCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
             </NavLink>
           )}
 
@@ -573,54 +574,57 @@ export default function Layout() {
             <div className="mt-2">
               <button
                 onClick={() => setSettingsOpen(!settingsOpen)}
-                className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''}`}
+                className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
                 data-testid="nav-instellingen-dropdown"
+                title="Instellingen"
               >
-                <div className="flex items-center gap-3">
-                  <Settings className="w-5 h-5" />
-                  <span>Instellingen</span>
+                <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+                  <Settings className="w-5 h-5 flex-shrink-0" />
+                  {!sidebarCollapsed && <span>Instellingen</span>}
                 </div>
-                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />
+                {!sidebarCollapsed && <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />}
               </button>
               
               {/* Dropdown items */}
-              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="pl-4 mt-1 space-y-1">
-                  {/* Workspace Settings - for customers only */}
-                  {!isSuperAdmin() && (
+              {!sidebarCollapsed && (
+                <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div className="pl-4 mt-1 space-y-1">
+                    {/* Workspace Settings - for customers only */}
+                    {!isSuperAdmin() && (
+                      <NavLink
+                        to="/app/workspace"
+                        onClick={() => setSidebarOpen(false)}
+                        className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                        data-testid="nav-workspace"
+                      >
+                        <Users className="w-4 h-4" />
+                        <span>Workspace & Team</span>
+                      </NavLink>
+                    )}
                     <NavLink
-                      to="/app/workspace"
+                      to="/app/betaalmethodes"
                       onClick={() => setSidebarOpen(false)}
                       className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
-                      data-testid="nav-workspace"
+                      data-testid="nav-betaalmethodes"
                     >
-                      <Users className="w-4 h-4" />
-                      <span>Workspace & Team</span>
+                      <CreditCard className="w-4 h-4" />
+                      <span>Betaalmethodes</span>
                     </NavLink>
-                  )}
-                  <NavLink
-                    to="/app/betaalmethodes"
-                    onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
-                    data-testid="nav-betaalmethodes"
-                  >
-                    <CreditCard className="w-4 h-4" />
-                    <span>Betaalmethodes</span>
-                  </NavLink>
-                  <NavLink
-                    to="/app/abonnement"
-                    onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
-                    data-testid="nav-abonnement"
-                  >
-                    <Package className="w-4 h-4" />
-                    <span>Abonnement</span>
-                    {showExpiredBadge && (
-                      <Badge className="ml-auto text-[10px] bg-red-500/10 text-red-500 border-red-500/20">!</Badge>
-                    )}
-                  </NavLink>
+                    <NavLink
+                      to="/app/abonnement"
+                      onClick={() => setSidebarOpen(false)}
+                      className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                      data-testid="nav-abonnement"
+                    >
+                      <Package className="w-4 h-4" />
+                      <span>Abonnement</span>
+                      {showExpiredBadge && (
+                        <Badge className="ml-auto text-[10px] bg-red-500/10 text-red-500 border-red-500/20">!</Badge>
+                      )}
+                    </NavLink>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </nav>
