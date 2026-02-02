@@ -140,9 +140,17 @@ h1, h2, h3, h4, h5, h6 {
 @media (max-width: 1024px) {
     .sidebar {
         transform: translateX(-100%);
+        width: 280px !important; /* Override collapsed width on mobile */
     }
     .sidebar.sidebar-open {
         transform: translateX(0);
+    }
+    .sidebar.sidebar-collapsed {
+        width: 280px !important; /* Ensure full width on mobile */
+    }
+    .main-content,
+    .main-content.main-content-expanded {
+        margin-left: 0;
     }
 }
 
