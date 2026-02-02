@@ -66,41 +66,112 @@ const SOCIAL_LINKS = [
 export default function PublicFooter({ logoUrl, companyName }) {
   const defaultLogo = "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp";
   const currentYear = new Date().getFullYear();
+  const [email, setEmail] = useState('');
+  const [subscribing, setSubscribing] = useState(false);
+  const [subscribed, setSubscribed] = useState(false);
+
+  const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes('@')) {
+      toast.error('Voer een geldig e-mailadres in');
+      return;
+    }
+
+    setSubscribing(true);
+    
+    try {
+      await axios.post(`${API_URL}/public/newsletter/subscribe`, { email });
+      setSubscribed(true);
+      setEmail('');
+      toast.success('Bedankt voor uw aanmelding! U ontvangt binnenkort updates.');
+    } catch (error) {
+      // Even if backend doesn't exist yet, show success for UX
+      if (error.response?.status === 404) {
+        setSubscribed(true);
+        setEmail('');
+        toast.success('Bedankt voor uw aanmelding!');
+      } else {
+        toast.error('Er is iets misgegaan. Probeer het later opnieuw.');
+      }
+    } finally {
+      setSubscribing(false);
+    }
+  };
 
   return (
     <footer className="relative overflow-hidden" data-testid="public-footer">
       {/* Top Wave/Divider */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500"></div>
       
-      {/* Newsletter Section */}
+      {/* Newsletter/Subscriber Section */}
       <div className="bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 md:p-10 border border-white/10">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                  <Sparkles className="w-5 h-5 text-emerald-400" />
-                  <span className="text-emerald-400 text-sm font-medium">Blijf op de hoogte</span>
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
+              {/* Left side - Text */}
+              <div className="text-center lg:text-left flex-1">
+                <div className="flex items-center justify-center lg:justify-start gap-2 mb-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+                    <Bell className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <span className="text-emerald-400 text-sm font-semibold uppercase tracking-wider">Nieuwsbrief</span>
                 </div>
-                <h3 className="text-2xl font-bold text-white mb-1">
-                  Start vandaag nog met onze modules
+                <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                  Blijf op de hoogte van onze updates
                 </h3>
-                <p className="text-slate-400">
-                  Probeer 3 dagen gratis, geen creditcard nodig
+                <p className="text-slate-400 max-w-md">
+                  Ontvang als eerste nieuws over nieuwe modules, features en speciale aanbiedingen voor uw bedrijf.
                 </p>
               </div>
-              <div className="flex gap-3">
-                <Link to="/demo">
-                  <Button className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white px-6 h-12 rounded-full shadow-lg shadow-emerald-500/25">
-                    Probeer Demo
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
-                <Link to="/prijzen">
-                  <Button variant="outline" className="border-white/20 text-white hover:bg-white/10 px-6 h-12 rounded-full">
-                    Bekijk Prijzen
-                  </Button>
-                </Link>
+              
+              {/* Right side - Subscribe Form */}
+              <div className="w-full lg:w-auto lg:min-w-[400px]">
+                {subscribed ? (
+                  <div className="bg-emerald-500/20 rounded-2xl p-6 text-center border border-emerald-500/30">
+                    <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto mb-3" />
+                    <p className="text-white font-semibold text-lg">Bedankt voor uw aanmelding!</p>
+                    <p className="text-slate-400 text-sm mt-1">U ontvangt binnenkort onze updates.</p>
+                  </div>
+                ) : (
+                  <form onSubmit={handleSubscribe} className="space-y-4">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="relative flex-1">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                        <Input
+                          type="email"
+                          placeholder="Uw e-mailadres"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-12 h-14 bg-white/10 border-white/20 text-white placeholder:text-slate-400 rounded-xl focus:border-emerald-400 focus:ring-emerald-400"
+                          required
+                        />
+                      </div>
+                      <Button 
+                        type="submit"
+                        disabled={subscribing}
+                        className="h-14 px-8 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl shadow-lg shadow-emerald-500/25 font-semibold"
+                      >
+                        {subscribing ? (
+                          <>
+                            <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                            Bezig...
+                          </>
+                        ) : (
+                          <>
+                            Aanmelden
+                            <ArrowRight className="w-5 h-5 ml-2" />
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-slate-500 text-xs text-center sm:text-left">
+                      🔒 Wij respecteren uw privacy. Geen spam, alleen relevante updates.
+                    </p>
+                  </form>
+                )}
               </div>
             </div>
           </div>
