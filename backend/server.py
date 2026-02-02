@@ -6823,6 +6823,18 @@ async def get_all_addons():
     ).to_list(100)
     return [AddonResponse(**addon) for addon in addons]
 
+@api_router.get("/addons/{slug_or_id}")
+async def get_addon_by_slug_or_id(slug_or_id: str):
+    """Get a single addon by slug or id (public endpoint for module detail page)"""
+    # Try finding by slug first
+    addon = await db.addons.find_one({"slug": slug_or_id, "is_active": True}, {"_id": 0})
+    if not addon:
+        # Try by id
+        addon = await db.addons.find_one({"id": slug_or_id, "is_active": True}, {"_id": 0})
+    if not addon:
+        raise HTTPException(status_code=404, detail="Add-on niet gevonden")
+    return AddonResponse(**addon)
+
 @api_router.post("/admin/addons", response_model=AddonResponse)
 async def create_addon(addon_data: AddonCreate, current_user: dict = Depends(get_superadmin)):
     """Create a new add-on - superadmin only"""
