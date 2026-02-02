@@ -12032,28 +12032,10 @@ async def ai_get_kasgeld(user_id: str):
 async def process_ai_command(user_id: str, message: str, session_id: str):
     """Process user message with AI and execute commands for ALL modules"""
     
-    # Get user's active addons from user_addons collection
-    user_addons = await db.user_addons.find(
-        {"user_id": user_id, "status": "active"},
-        {"_id": 0}
-    ).to_list(50)
+    # Use the existing function to get active addon slugs
+    active_modules = await get_user_active_addons(user_id)
     
-    # Get addon slugs by looking up each addon
-    active_modules = []
-    for ua in user_addons:
-        addon_id = ua.get("addon_id")
-        addon_slug = ua.get("addon_slug")
-        
-        if addon_slug:
-            active_modules.append(addon_slug)
-        elif addon_id:
-            # Look up the addon to get its slug
-            addon = await db.addons.find_one(
-                {"$or": [{"id": addon_id}, {"slug": addon_id}]},
-                {"_id": 0, "slug": 1}
-            )
-            if addon and addon.get("slug"):
-                active_modules.append(addon["slug"])
+    logger.info(f"AI Assistant - User {user_id} has active modules: {active_modules}")
     
     # Build context based on active modules
     context_parts = []
