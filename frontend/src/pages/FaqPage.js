@@ -54,7 +54,16 @@ import {
   Trash2,
   Plus,
   Filter,
-  ListFilter
+  ListFilter,
+  Scissors,
+  Heart,
+  Gift,
+  ShoppingCart,
+  Fuel,
+  Gauge,
+  Truck,
+  AlertTriangle,
+  Package
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
