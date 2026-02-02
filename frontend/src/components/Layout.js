@@ -573,21 +573,6 @@ export default function Layout() {
             </div>
           )}
 
-          {/* Mijn Modules link - always visible for customers */}
-          {!isSuperAdmin() && (
-            <NavLink
-              to="/app/mijn-modules"
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
-              data-testid="nav-mijn-modules"
-              title="Mijn Modules"
-            >
-              <Boxes className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>Mijn Modules</span>}
-              {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
-            </NavLink>
-          )}
-
           {/* Settings dropdown - for customers only */}
           {!isSuperAdmin() && (
             <div className="mt-2">
