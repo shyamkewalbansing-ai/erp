@@ -152,15 +152,18 @@ backend:
 
   - task: "Addon module detail extra fields"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Extra velden toegevoegd aan addon model: category, icon_name, hero_image_url, highlights, features. Create en update endpoints aangepast. GET /api/addons/{slug_or_id} endpoint toegevoegd voor module detail pagina."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - All addon module detail functionality working correctly. Tested: 1) GET /api/addons/vastgoed_beheer (existing slug) - returned correct addon data with category 'vastgoed', 2) GET /api/addons/hrm (existing slug) - returned correct addon data with category 'hr', 3) GET /api/addons/non-existent-slug (404 test) - correctly returned 404, 4) POST /api/admin/addons with extra fields (category, icon_name, hero_image_url, highlights) - all fields saved correctly, 5) PUT /api/admin/addons/{id} with updated extra fields - all updates applied correctly, 6) GET /api/addons/test-module - retrieved updated addon with correct data, 7) DELETE /api/admin/addons/{id} - cleanup successful. All extra fields (category, icon_name, hero_image_url, highlights) are properly stored and retrieved."
 
 frontend:
   - task: "Admin Add-ons tab"
