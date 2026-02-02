@@ -129,7 +129,6 @@ export default function Register() {
             {/* Features */}
             <div className="space-y-4">
               {[
-                { icon: Building2, text: 'Vastgoed, HRM & Auto Dealer modules' },
                 { icon: Shield, text: 'SSL-encryptie & privacy gegarandeerd' },
                 { icon: Zap, text: 'Snel en modern platform' },
               ].map((item, i) => (
