@@ -882,12 +882,23 @@ class AddonCreate(BaseModel):
     description: Optional[str] = None
     price: float
     is_active: bool = True
+    # Extra module detail fields
+    category: Optional[str] = None  # e.g., 'Personeel', 'Vastgoed', 'Analytics'
+    icon_name: Optional[str] = None  # Lucide icon name e.g., 'Users', 'Building2'
+    hero_image_url: Optional[str] = None
+    highlights: Optional[List[str]] = None  # Short feature highlights
+    features: Optional[List[dict]] = None  # List of feature sections with title, description, features list
 
 class AddonUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     price: Optional[float] = None
     is_active: Optional[bool] = None
+    category: Optional[str] = None
+    icon_name: Optional[str] = None
+    hero_image_url: Optional[str] = None
+    highlights: Optional[List[str]] = None
+    features: Optional[List[dict]] = None
 
 class AddonResponse(BaseModel):
     id: str
@@ -897,6 +908,11 @@ class AddonResponse(BaseModel):
     price: float
     is_active: bool
     created_at: str
+    category: Optional[str] = None
+    icon_name: Optional[str] = None
+    hero_image_url: Optional[str] = None
+    highlights: Optional[List[str]] = None
+    features: Optional[List[dict]] = None
 
 class UserAddonCreate(BaseModel):
     user_id: str
