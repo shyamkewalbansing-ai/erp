@@ -246,20 +246,51 @@ async def demo_cleanup_scheduler():
         await asyncio.sleep(3600)  # Wait 1 hour
 
 async def ensure_demo_has_all_modules():
-    """Ensure demo account has ALL modules activated"""
+    """Ensure demo account has ALL modules activated in user_addons collection"""
     try:
+        # Get demo user
+        demo_user = await db.users.find_one({"email": DEMO_ACCOUNT_EMAIL}, {"_id": 0})
+        if not demo_user:
+            logger.warning("Demo account not found")
+            return
+            
+        user_id = demo_user.get("id")
+        
         # Get all active addons
         all_addons = await db.addons.find({"is_active": True}).to_list(100)
-        addon_ids = [a.get('id') or str(a.get('_id')) for a in all_addons]
         
-        # Update demo user with all addon IDs
-        result = await db.users.update_one(
-            {"email": DEMO_ACCOUNT_EMAIL},
-            {"$set": {"active_addons": addon_ids}}
-        )
+        now = datetime.now(timezone.utc)
+        end_date = (now + timedelta(days=365)).isoformat()  # 1 year validity
         
-        if result.modified_count > 0:
-            logger.info(f"Demo account updated with {len(addon_ids)} modules")
+        for addon in all_addons:
+            addon_id = addon.get('id') or str(addon.get('_id'))
+            addon_slug = addon.get('slug', '')
+            
+            # Check if already exists in user_addons
+            existing = await db.user_addons.find_one({
+                "user_id": user_id,
+                "addon_id": addon_id,
+                "status": "active"
+            })
+            
+            if not existing:
+                # Create user_addon record
+                user_addon_doc = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": user_id,
+                    "addon_id": addon_id,
+                    "addon_slug": addon_slug,
+                    "status": "active",
+                    "start_date": now.isoformat(),
+                    "end_date": end_date,
+                    "payment_method": "demo",
+                    "payment_reference": "DEMO-AUTO",
+                    "created_at": now.isoformat()
+                }
+                await db.user_addons.insert_one(user_addon_doc)
+                logger.info(f"Added {addon_slug} module to demo account")
+        
+        logger.info(f"Demo account modules synced - {len(all_addons)} addons available")
         
     except Exception as e:
         logger.error(f"Error updating demo modules: {e}")
