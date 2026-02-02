@@ -135,6 +135,12 @@ export default function Layout() {
     }
     return false;
   });
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth >= 1024;
+    }
+    return true;
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeAddons, setActiveAddons] = useState([]);
   const [addonsLoaded, setAddonsLoaded] = useState(false);
@@ -152,6 +158,15 @@ export default function Layout() {
     return false;
   });
 
+  // Track screen size for responsive sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Persist sidebar collapsed state
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
@@ -160,6 +175,9 @@ export default function Layout() {
   const toggleSidebarCollapse = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
+
+  // Only apply collapsed state on desktop
+  const isCollapsed = sidebarCollapsed && isDesktop;
 
   // Load user's active add-ons
   useEffect(() => {
