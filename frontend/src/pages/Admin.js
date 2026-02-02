@@ -3111,7 +3111,7 @@ server {
 
       {/* Edit Add-on Dialog */}
       <Dialog open={editAddonDialogOpen} onOpenChange={setEditAddonDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add-on Bewerken</DialogTitle>
             <DialogDescription>
@@ -3133,13 +3133,51 @@ server {
                 onChange={(e) => setEditAddonForm({...editAddonForm, description: e.target.value})}
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Prijs per maand (SRD)</Label>
+                <Input
+                  type="number"
+                  value={editAddonForm.price}
+                  onChange={(e) => setEditAddonForm({...editAddonForm, price: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Categorie</Label>
+                <Input
+                  placeholder="bijv. Personeel, Vastgoed, Analytics"
+                  value={editAddonForm.category}
+                  onChange={(e) => setEditAddonForm({...editAddonForm, category: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Icoon naam (Lucide)</Label>
+                <Input
+                  placeholder="bijv. Users, Building2, BarChart3"
+                  value={editAddonForm.icon_name}
+                  onChange={(e) => setEditAddonForm({...editAddonForm, icon_name: e.target.value})}
+                />
+                <p className="text-xs text-muted-foreground">Zie lucide.dev/icons voor opties</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Hero Afbeelding URL</Label>
+                <Input
+                  placeholder="https://..."
+                  value={editAddonForm.hero_image_url}
+                  onChange={(e) => setEditAddonForm({...editAddonForm, hero_image_url: e.target.value})}
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label>Prijs per maand (SRD)</Label>
+              <Label>Highlights (gescheiden door komma's)</Label>
               <Input
-                type="number"
-                value={editAddonForm.price}
-                onChange={(e) => setEditAddonForm({...editAddonForm, price: e.target.value})}
+                placeholder="bijv. Dashboard, Rapporten, Facturatie, Beheer"
+                value={editAddonForm.highlights}
+                onChange={(e) => setEditAddonForm({...editAddonForm, highlights: e.target.value})}
               />
+              <p className="text-xs text-muted-foreground">Korte kenmerken die op de module pagina worden getoond</p>
             </div>
           </div>
           <DialogFooter>
