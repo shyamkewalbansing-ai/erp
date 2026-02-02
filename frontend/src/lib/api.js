@@ -204,11 +204,16 @@ export const getAddonRequests = () => api.get('/admin/addon-requests');
 export const approveAddonRequest = (requestId, months = 1) => api.put(`/admin/addon-requests/${requestId}/approve?months=${months}`);
 export const rejectAddonRequest = (requestId) => api.put(`/admin/addon-requests/${requestId}/reject`);
 
-// Landing Page (Public)
-export const getLandingSections = () => axios.get(`${API_URL}/public/landing/sections`);
-export const getLandingSettings = () => axios.get(`${API_URL}/public/landing/settings`);
-export const getPublicAddons = () => axios.get(`${API_URL}/public/addons`);
-export const createPublicOrder = (data) => axios.post(`${API_URL}/public/orders`, data);
+// Landing Page (Public) - Use axios directly but with timeout
+const publicAxios = axios.create({
+  baseURL: API_URL,
+  timeout: 15000, // 15 second timeout
+});
+
+export const getLandingSections = () => publicAxios.get('/public/landing/sections');
+export const getLandingSettings = () => publicAxios.get('/public/landing/settings');
+export const getPublicAddons = () => publicAxios.get('/public/addons');
+export const createPublicOrder = (data) => publicAxios.post('/public/orders', data);
 
 // Landing Page (Admin)
 export const getAdminLandingSections = () => api.get('/admin/landing/sections');
