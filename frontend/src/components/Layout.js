@@ -44,7 +44,8 @@ import {
   BarChart3,
   Gift,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  BookOpen
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
