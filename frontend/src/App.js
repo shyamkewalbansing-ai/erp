@@ -467,6 +467,9 @@ function MainAppRoutes() {
           <Route path="werknemers" element={
             <SubscriptionRoute><Werknemers /></SubscriptionRoute>
           } />
+          <Route path="vastgoed/handleiding" element={
+            <SubscriptionRoute><VastgoedHandleiding /></SubscriptionRoute>
+          } />
           <Route path="abonnement" element={<Abonnement />} />
           <Route path="instellingen" element={<Instellingen />} />
           <Route path="betaalmethodes" element={<BetaalmethodesPage />} />
