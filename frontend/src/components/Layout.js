@@ -72,6 +72,7 @@ const vastgoedNavItems = [
   { to: '/app/meterstanden', icon: Zap, label: 'Meterstanden', addon: 'vastgoed_beheer' },
   { to: '/app/werknemers', icon: Users2, label: 'Werknemers', addon: 'vastgoed_beheer' },
   { to: '/app/instellingen', icon: Settings, label: 'Huurinstellingen', addon: 'vastgoed_beheer' },
+  { to: '/app/vastgoed/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'vastgoed_beheer' },
 ];
 
 // Navigation items for HRM add-on
@@ -85,6 +86,7 @@ const hrmNavItems = [
   { to: '/app/hrm/aanwezigheid', icon: Clock, label: 'Aanwezigheid', addon: 'hrm' },
   { to: '/app/hrm/loonlijst', icon: Banknote, label: 'Loonlijst', addon: 'hrm' },
   { to: '/app/hrm/instellingen', icon: Settings, label: 'HRM Instellingen', addon: 'hrm' },
+  { to: '/app/hrm/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'hrm' },
 ];
 
 // Navigation items for Auto Dealer add-on
@@ -94,6 +96,7 @@ const autoDealerNavItems = [
   { to: '/app/autodealer/klanten', icon: Users, label: 'Klanten', addon: 'autodealer' },
   { to: '/app/autodealer/verkopen', icon: ShoppingCart, label: 'Verkopen', addon: 'autodealer' },
   { to: '/klant-portaal', icon: Globe, label: 'Klant Portaal', addon: 'autodealer', external: true },
+  { to: '/app/autodealer/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'autodealer' },
 ];
 
 // Beauty Spa Module
@@ -108,6 +111,7 @@ const beautySpaItems = [
   { to: '/app/beautyspa/reports', icon: BarChart3, label: 'Rapportages', addon: 'beauty' },
   { to: '/app/beautyspa/queue', icon: Clock, label: 'Wachtrij', addon: 'beauty' },
   { to: '/app/beautyspa/vouchers', icon: Gift, label: 'Vouchers', addon: 'beauty' },
+  { to: '/app/beautyspa/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'beauty' },
 ];
 
 // Pompstation (Gas Station) Module
@@ -122,6 +126,7 @@ const pompstationNavItems = [
   { to: '/app/pompstation/personeel', icon: Users, label: 'Personeel', addon: 'pompstation' },
   { to: '/app/pompstation/veiligheid', icon: Target, label: 'Veiligheid', addon: 'pompstation' },
   { to: '/app/pompstation/rapportages', icon: BarChart3, label: 'Rapportages', addon: 'pompstation' },
+  { to: '/app/pompstation/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'pompstation' },
 ];
 
 export default function Layout() {
