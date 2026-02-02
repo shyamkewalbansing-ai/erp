@@ -102,6 +102,13 @@ const PompstationPersoneel = lazy(() => import("./pages/pompstation/PersoneelPag
 const PompstationVeiligheid = lazy(() => import("./pages/pompstation/VeiligheidPage"));
 const PompstationRapportages = lazy(() => import("./pages/pompstation/RapportagesPage"));
 
+// Handleiding Pages
+const VastgoedHandleiding = lazy(() => import("./pages/handleiding/VastgoedHandleidingPage"));
+const HRMHandleiding = lazy(() => import("./pages/handleiding/HRMHandleidingPage"));
+const AutoDealerHandleiding = lazy(() => import("./pages/handleiding/AutoDealerHandleidingPage"));
+const BeautySpaHandleiding = lazy(() => import("./pages/handleiding/BeautySpaHandleidingPage"));
+const PompstationHandleiding = lazy(() => import("./pages/handleiding/PompstationHandleidingPage"));
+
 
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
