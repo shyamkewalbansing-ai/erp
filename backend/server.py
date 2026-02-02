@@ -6841,7 +6841,13 @@ async def create_addon(addon_data: AddonCreate, current_user: dict = Depends(get
         "description": addon_data.description,
         "price": addon_data.price,
         "is_active": addon_data.is_active,
-        "created_at": now
+        "created_at": now,
+        # Extra module detail fields
+        "category": addon_data.category,
+        "icon_name": addon_data.icon_name,
+        "hero_image_url": addon_data.hero_image_url,
+        "highlights": addon_data.highlights or [],
+        "features": addon_data.features or []
     }
     
     await db.addons.insert_one(addon_doc)
