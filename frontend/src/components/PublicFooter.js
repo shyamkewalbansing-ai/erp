@@ -1,4 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { toast } from 'sonner';
+import axios from 'axios';
 import { 
   Mail, 
   Phone, 
@@ -15,9 +18,13 @@ import {
   MessageSquare,
   Globe,
   BarChart3,
-  ChevronRight
+  ChevronRight,
+  Bell,
+  Loader2,
+  CheckCircle
 } from 'lucide-react';
 import { Button } from './ui/button';
+import { Input } from './ui/input';
 
 const FOOTER_LINKS = {
   modules: [
