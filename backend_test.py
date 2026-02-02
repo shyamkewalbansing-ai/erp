@@ -1447,6 +1447,7 @@ def main():
         
         # ADD-ONS TESTING SEQUENCE
         ("=== ADD-ONS SYSTEM TESTING ===", lambda: True),
+        ("Create Superadmin User", tester.test_create_superadmin_user),
         ("Superadmin Login", tester.test_superadmin_login),
         ("Create Customer User", tester.test_create_customer_user),
         ("Get Public Add-ons", tester.test_get_public_addons),
