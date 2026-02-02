@@ -597,7 +597,7 @@ export default function Layout() {
                 data-testid="nav-instellingen-dropdown"
                 title="Instellingen"
               >
-                <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+                <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
                   <Settings className="w-5 h-5 flex-shrink-0" />
                   {!isCollapsed && <span>Instellingen</span>}
                 </div>
