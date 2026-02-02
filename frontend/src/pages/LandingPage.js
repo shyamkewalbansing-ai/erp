@@ -412,7 +412,7 @@ export default function LandingPage() {
             <Button 
               size="lg"
               className="h-14 px-8 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-full shadow-xl shadow-emerald-500/25"
-              onClick={() => navigate('/modules-overzicht')}
+              onClick={handleModulesClick}
             >
               Bekijk Alle Modules
               <ArrowRight className="w-5 h-5 ml-2" />
