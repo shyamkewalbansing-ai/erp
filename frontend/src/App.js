@@ -358,6 +358,12 @@ function isSubdomain() {
     return false;
   }
   
+  // Preview environment - use path-based routing, not subdomain
+  if (hostname.includes('.preview.emergentagent.com')) {
+    // Only treat /app/* paths as subdomain behavior
+    return window.location.pathname.startsWith('/app');
+  }
+  
   // Check if it's a subdomain of facturatie.sr
   if (hostname.endsWith('.facturatie.sr')) {
     return true;
