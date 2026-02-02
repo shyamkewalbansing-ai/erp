@@ -207,8 +207,28 @@ export default function ModulesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-muted-foreground">Modules laden...</p>
+      </div>
+    );
+  }
+
+  // Show error state if no addons loaded
+  if (!loading && addons.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
+        <div className="flex flex-col items-center justify-center py-32 gap-4">
+          <Puzzle className="w-16 h-16 text-muted-foreground" />
+          <h2 className="text-xl font-semibold">Geen modules beschikbaar</h2>
+          <p className="text-muted-foreground">Er konden geen modules worden geladen.</p>
+          <Button onClick={retryLoad} variant="outline" className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Opnieuw proberen
+          </Button>
+        </div>
+        <PublicFooter companyName={settings?.company_name} />
       </div>
     );
   }
