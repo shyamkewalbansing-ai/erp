@@ -53,6 +53,33 @@ const getAppUrl = (path = '') => {
   return path;
 };
 
+// Optimized image component with lazy loading
+const LazyImage = memo(({ src, alt, className, style }) => {
+  const [loaded, setLoaded] = useState(false);
+  const optimizedSrc = useMemo(() => {
+    if (src?.includes('unsplash.com')) {
+      return src.replace(/w=\d+/, 'w=600').replace(/q=\d+/, 'q=60');
+    }
+    return src;
+  }, [src]);
+  
+  return (
+    <div className={`relative ${className || ''}`} style={style}>
+      {!loaded && (
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300 animate-pulse" />
+      )}
+      <img 
+        src={optimizedSrc} 
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        onLoad={() => setLoaded(true)}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+      />
+    </div>
+  );
+});
+
 // Modules data
 const MODULES = [
   {
