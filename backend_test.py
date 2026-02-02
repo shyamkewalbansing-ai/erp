@@ -1408,6 +1408,69 @@ class SuriRentalsAPITester:
             return True
         return False
 
+    def test_demo_account_login(self):
+        """Test login with demo account"""
+        login_data = {
+            "email": "demo@facturatie.sr",
+            "password": "Demo123!"
+        }
+        
+        success, response = self.run_test(
+            "Demo Account Login",
+            "POST", 
+            "auth/login",
+            200,
+            data=login_data
+        )
+        
+        if success and 'access_token' in response:
+            self.token = response['access_token']
+            print(f"   Demo account logged in successfully")
+            print(f"   User role: {response.get('user', {}).get('role', 'N/A')}")
+            print(f"   Subscription status: {response.get('user', {}).get('subscription_status', 'N/A')}")
+            return True
+        return False
+
+    def test_ai_chat_endpoint_with_demo_account(self):
+        """Test AI chat endpoint with demo account to check if modules are correctly retrieved"""
+        chat_data = {
+            "message": "Hallo, wat kan ik doen?"
+        }
+        
+        success, response = self.run_test(
+            "AI Chat with Demo Account",
+            "POST",
+            "ai/chat",
+            200,
+            data=chat_data
+        )
+        
+        if success:
+            ai_response = response.get('response', '')
+            print(f"   AI Response length: {len(ai_response)} characters")
+            print(f"   AI Response preview: {ai_response[:200]}...")
+            
+            # Check if response contains error about no modules
+            no_modules_error = "U heeft nog geen modules geactiveerd" in ai_response
+            if no_modules_error:
+                print("   ❌ AI response contains 'no modules activated' error")
+                print(f"   Full response: {ai_response}")
+                return False
+            else:
+                print("   ✅ AI response does not contain 'no modules activated' error")
+                
+                # Check if response mentions modules or features
+                module_keywords = ['module', 'vastgoed', 'hrm', 'personeel', 'beheer', 'systeem', 'functie']
+                mentions_modules = any(keyword.lower() in ai_response.lower() for keyword in module_keywords)
+                
+                if mentions_modules:
+                    print("   ✅ AI response mentions modules/features")
+                else:
+                    print("   ⚠️  AI response doesn't explicitly mention modules, but no error detected")
+                
+                return True
+        return False
+
 def main():
     print("🏠 SuriRentals API Testing Suite")
     print("=" * 50)
