@@ -479,7 +479,7 @@ export default function LandingPage() {
                 <Button 
                   size="lg"
                   className="h-14 px-10 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-full shadow-xl shadow-emerald-200 hover:shadow-2xl hover:shadow-emerald-300 transition-all text-base font-semibold"
-                  onClick={() => navigate('/demo')}
+                  onClick={handleDemoClick}
                 >
                   <Play className="w-5 h-5 mr-2" />
                   Start Gratis Demo
@@ -488,7 +488,7 @@ export default function LandingPage() {
                   size="lg"
                   variant="outline"
                   className="h-14 px-10 rounded-full border-slate-300 hover:border-emerald-300 hover:bg-emerald-50 text-base font-semibold"
-                  onClick={() => navigate('/contact')}
+                  onClick={handleContactClick}
                 >
                   Contact Opnemen
                   <ArrowRight className="w-5 h-5 ml-2" />
