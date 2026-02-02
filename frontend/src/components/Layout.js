@@ -128,6 +128,13 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebarCollapsed');
+      if (saved !== null) return JSON.parse(saved);
+    }
+    return false;
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeAddons, setActiveAddons] = useState([]);
   const [addonsLoaded, setAddonsLoaded] = useState(false);
@@ -144,6 +151,15 @@ export default function Layout() {
     }
     return false;
   });
+
+  // Persist sidebar collapsed state
+  useEffect(() => {
+    localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed(!sidebarCollapsed);
+  };
 
   // Load user's active add-ons
   useEffect(() => {
