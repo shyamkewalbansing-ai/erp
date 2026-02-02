@@ -458,7 +458,7 @@ export default function PrijzenPage() {
                     {/* Features List */}
                     <div className="px-8 pt-4 pb-6">
                       <ul className="space-y-3 mb-8">
-                        {(addon.features || ['Volledige toegang', 'Updates inbegrepen', 'Support', 'Data export']).slice(0, 4).map((feature, i) => (
+                        {['Volledige toegang', 'Updates inbegrepen', 'Support', 'Data export'].map((feature, i) => (
                           <li key={i} className="flex items-center gap-3 text-sm text-slate-600">
                             <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
                               isSelected 
