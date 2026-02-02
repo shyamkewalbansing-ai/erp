@@ -64,13 +64,72 @@ import {
   Gauge,
   Truck,
   AlertTriangle,
-  ClipboardList
+  ClipboardList,
+  Puzzle
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+
+// Icon mapping for dynamic icons from database
+const ICON_MAP = {
+  'Users': Users,
+  'Building2': Building2,
+  'Car': Car,
+  'MessageSquare': MessageSquare,
+  'Globe': Globe,
+  'Shield': Shield,
+  'Sparkles': Sparkles,
+  'Clock': Clock,
+  'UserCheck': UserCheck,
+  'FileText': FileText,
+  'Calendar': Calendar,
+  'DollarSign': DollarSign,
+  'Home': Home,
+  'Wrench': Wrench,
+  'Receipt': Receipt,
+  'BarChart3': BarChart3,
+  'Settings': Settings,
+  'Zap': Zap,
+  'Bot': Bot,
+  'Languages': Languages,
+  'Layout': Layout,
+  'Image': Image,
+  'Search': Search,
+  'Palette': Palette,
+  'Lock': Lock,
+  'Database': Database,
+  'RefreshCw': RefreshCw,
+  'Play': Play,
+  'Star': Star,
+  'CheckCircle': CheckCircle,
+  'ShoppingCart': ShoppingCart,
+  'User': User,
+  'Mail': Mail,
+  'Phone': Phone,
+  'Building': Building,
+  'Gift': Gift,
+  'CreditCard': CreditCard,
+  'Scissors': Scissors,
+  'Heart': Heart,
+  'Smile': Smile,
+  'Package': Package,
+  'Ticket': Ticket,
+  'Fuel': Fuel,
+  'Gauge': Gauge,
+  'Truck': Truck,
+  'AlertTriangle': AlertTriangle,
+  'ClipboardList': ClipboardList,
+  'Puzzle': Puzzle
+};
+
+// Helper to get icon component by name
+const getIconComponent = (iconName) => {
+  if (typeof iconName === 'function') return iconName; // Already a component
+  return ICON_MAP[iconName] || Puzzle; // Default to Puzzle if not found
+};
 
 // Detailed module information with feature sections
 const MODULES_DETAIL = {
