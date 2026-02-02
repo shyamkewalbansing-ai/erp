@@ -440,7 +440,7 @@ export default function Layout() {
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">HRM Module</p>
                     </div>
                   )}
-                  {sidebarCollapsed && <div className="mt-4 border-t border-border pt-4" />}
+                  {isCollapsed && <div className="mt-4 border-t border-border pt-4" />}
                   {hrmNavItems.filter(item => hasAddon(item.addon)).map((item) => (
                     <NavLink
                       key={item.to}
@@ -466,7 +466,7 @@ export default function Layout() {
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Auto Dealer</p>
                     </div>
                   )}
-                  {sidebarCollapsed && <div className="mt-4 border-t border-border pt-4" />}
+                  {isCollapsed && <div className="mt-4 border-t border-border pt-4" />}
                   {autoDealerNavItems.filter(item => hasAddon(item.addon)).map((item) => (
                     item.external ? (
                       <a
@@ -509,7 +509,7 @@ export default function Layout() {
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Beauty Spa</p>
                     </div>
                   )}
-                  {sidebarCollapsed && <div className="mt-4 border-t border-border pt-4" />}
+                  {isCollapsed && <div className="mt-4 border-t border-border pt-4" />}
                   {beautySpaItems.filter(item => hasAddon(item.addon)).map((item) => (
                     <NavLink
                       key={item.to}
@@ -538,7 +538,7 @@ export default function Layout() {
                       </p>
                     </div>
                   )}
-                  {sidebarCollapsed && <div className="mt-4 border-t border-border pt-4" />}
+                  {isCollapsed && <div className="mt-4 border-t border-border pt-4" />}
                   {pompstationNavItems.filter(item => hasAddon(item.addon)).map((item) => (
                     <NavLink
                       key={item.to}
