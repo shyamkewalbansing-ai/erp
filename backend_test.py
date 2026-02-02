@@ -1426,6 +1426,18 @@ def main():
         ("Superadmin Login", tester.test_superadmin_login),
         ("Create Customer User", tester.test_create_customer_user),
         ("Get Public Add-ons", tester.test_get_public_addons),
+        
+        # NEW ADDON MODULE DETAIL TESTS
+        ("=== ADDON MODULE DETAIL TESTS ===", lambda: True),
+        ("Get Addon by Slug - vastgoed_beheer", tester.test_get_addon_by_slug_vastgoed_beheer),
+        ("Get Addon by Slug - hrm", tester.test_get_addon_by_slug_hrm),
+        ("Get Addon by Non-existent Slug (404)", tester.test_get_addon_by_nonexistent_slug),
+        ("Create Addon with Extra Fields", tester.test_create_addon_with_extra_fields),
+        ("Update Addon with Extra Fields", tester.test_update_addon_with_extra_fields),
+        ("Get Updated Addon by Slug", tester.test_get_updated_addon_by_slug),
+        ("Delete Test Addon (Cleanup)", tester.test_delete_addon_as_superadmin),
+        
+        # EXISTING ADDON TESTS
         ("Create Add-on (Superadmin)", tester.test_create_addon_as_superadmin),
         ("Get Admin Add-ons", tester.test_get_admin_addons),
         ("Update Add-on Price", tester.test_update_addon_price),
@@ -1439,7 +1451,6 @@ def main():
         ("Deactivate User Add-on", tester.test_deactivate_user_addon),
         ("Reject Add-on Request", tester.test_reject_addon_request),
         ("Unauthorized Add-on Access", tester.test_unauthorized_addon_access),
-        ("Delete Add-on (Superadmin)", tester.test_delete_addon_as_superadmin),
         
         # CLEANUP TESTS
         ("Delete Salary Payment", tester.test_delete_salary_payment),
