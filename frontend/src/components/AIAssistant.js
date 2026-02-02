@@ -23,48 +23,103 @@ const moduleCapabilities = {
   vastgoed_beheer: {
     name: 'Vastgoed Beheer',
     capabilities: [
-      '• Huurders toevoegen of opzoeken',
+      '• Huurders toevoegen, zoeken en beheren',
       '• Appartementen beheren',
-      '• Betalingen registreren',
-      '• Saldo\'s bekijken',
-      '• Leningen aanmaken',
+      '• Betalingen registreren en bekijken',
+      '• Saldo\'s en openstaande betalingen',
+      '• Leningen aanmaken en beheren',
       '• Contracten beheren',
-      '• Onderhoud registreren'
+      '• Onderhoud registreren',
+      '• Overzichten en rapportages'
     ],
     quickActions: [
-      { label: 'Overzicht', message: 'Geef me een overzicht van mijn verhuur' },
-      { label: 'Huurders', message: 'Toon alle huurders' },
-      { label: 'Betalingen', message: 'Wat zijn de recente betalingen?' },
+      { label: '📊 Overzicht', message: 'Geef me een overzicht van mijn verhuur' },
+      { label: '👥 Huurders', message: 'Toon alle huurders' },
+      { label: '💰 Betalingen', message: 'Wat zijn de openstaande betalingen?' },
+      { label: '🏠 Appartementen', message: 'Toon alle appartementen' },
     ]
   },
   hrm: {
     name: 'HRM Module',
     capabilities: [
-      '• Werknemers toevoegen en beheren',
+      '• Werknemers toevoegen, zoeken en beheren',
       '• Verlofaanvragen goedkeuren/afwijzen',
       '• Afdelingen beheren',
-      '• Salarissen bekijken',
-      '• Personeel overzicht'
+      '• Salarissen en loonlijst bekijken',
+      '• Aanwezigheid registreren',
+      '• Contracten beheren',
+      '• Documenten opslaan',
+      '• Overzichten en rapportages'
     ],
     quickActions: [
-      { label: 'Personeel', message: 'Toon overzicht van alle werknemers' },
-      { label: 'Verlof', message: 'Zijn er openstaande verlofaanvragen?' },
-      { label: 'Toevoegen', message: 'Voeg een nieuwe werknemer toe' },
+      { label: '👥 Personeel', message: 'Toon overzicht van alle werknemers' },
+      { label: '📝 Verlof', message: 'Zijn er openstaande verlofaanvragen?' },
+      { label: '💰 Salarissen', message: 'Toon salaris overzicht' },
+      { label: '➕ Toevoegen', message: 'Voeg een nieuwe werknemer toe' },
     ]
   },
   autodealer: {
     name: 'Auto Dealer',
     capabilities: [
-      '• Voertuigen toevoegen en beheren',
-      '• Klanten registreren',
+      '• Voertuigen toevoegen, zoeken en beheren',
+      '• Klanten registreren en beheren',
       '• Verkopen vastleggen',
       '• Voorraad overzicht',
-      '• Multi-valuta ondersteuning'
+      '• Multi-valuta ondersteuning (SRD, EUR, USD)',
+      '• Prijshistorie bijhouden',
+      '• Rapportages en statistieken'
     ],
     quickActions: [
-      { label: 'Voorraad', message: 'Toon beschikbare voertuigen' },
-      { label: 'Verkopen', message: 'Wat zijn de recente verkopen?' },
-      { label: 'Toevoegen', message: 'Voeg een nieuw voertuig toe' },
+      { label: '🚗 Voorraad', message: 'Toon beschikbare voertuigen' },
+      { label: '💰 Verkopen', message: 'Wat zijn de recente verkopen?' },
+      { label: '➕ Auto toevoegen', message: 'Voeg een nieuw voertuig toe' },
+      { label: '👥 Klanten', message: 'Toon alle klanten' },
+    ]
+  },
+  beauty: {
+    name: 'Beauty & Spa',
+    capabilities: [
+      '• Afspraken maken en beheren',
+      '• Behandelingen/diensten beheren',
+      '• Klanten registreren',
+      '• Agenda overzicht',
+      '• Online booking portal',
+      '• Omzet rapportages'
+    ],
+    quickActions: [
+      { label: '📅 Vandaag', message: 'Toon afspraken van vandaag' },
+      { label: '✂️ Diensten', message: 'Welke behandelingen bied ik aan?' },
+      { label: '➕ Afspraak', message: 'Maak een nieuwe afspraak' },
+    ]
+  },
+  beautyspa: {
+    name: 'Beauty & Spa',
+    capabilities: [
+      '• Afspraken maken en beheren',
+      '• Behandelingen/diensten beheren',
+      '• Klanten registreren',
+      '• Agenda overzicht',
+      '• Online booking portal',
+      '• Omzet rapportages'
+    ],
+    quickActions: [
+      { label: '📅 Vandaag', message: 'Toon afspraken van vandaag' },
+      { label: '✂️ Diensten', message: 'Welke behandelingen bied ik aan?' },
+      { label: '➕ Afspraak', message: 'Maak een nieuwe afspraak' },
+    ]
+  },
+  pompstation: {
+    name: 'Pompstation',
+    capabilities: [
+      '• Brandstofverkopen registreren',
+      '• Voorraad beheren',
+      '• Dagelijkse omzet bekijken',
+      '• Rapportages en statistieken'
+    ],
+    quickActions: [
+      { label: '⛽ Overzicht', message: 'Toon pompstation overzicht' },
+      { label: '📊 Vandaag', message: 'Hoeveel verkocht vandaag?' },
+      { label: '➕ Verkoop', message: 'Registreer een brandstofverkoop' },
     ]
   }
 };
