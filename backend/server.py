@@ -523,10 +523,55 @@ async def ensure_demo_has_all_modules():
     except Exception as e:
         logger.error(f"Error updating demo modules: {e}")
 
+async def ensure_demo_account_exists():
+    """Create demo account if it doesn't exist, or update password if it does"""
+    try:
+        demo_user = await db.users.find_one({"email": DEMO_ACCOUNT_EMAIL})
+        
+        if not demo_user:
+            # Create demo account
+            demo_user_id = str(uuid.uuid4())
+            workspace_id = str(uuid.uuid4())
+            now = datetime.now(timezone.utc).isoformat()
+            
+            demo_user_doc = {
+                "id": demo_user_id,
+                "email": DEMO_ACCOUNT_EMAIL,
+                "password": hash_password(DEMO_ACCOUNT_PASSWORD),
+                "name": "Demo Gebruiker",
+                "company_name": "Demo Bedrijf N.V.",
+                "phone": "8000000",
+                "role": "admin",
+                "workspace_id": workspace_id,
+                "is_active": True,
+                "is_demo": True,
+                "created_at": now,
+                "updated_at": now
+            }
+            
+            await db.users.insert_one(demo_user_doc)
+            logger.info(f"Demo account created: {DEMO_ACCOUNT_EMAIL}")
+        else:
+            # Update password to ensure it's correct
+            await db.users.update_one(
+                {"email": DEMO_ACCOUNT_EMAIL},
+                {"$set": {
+                    "password": hash_password(DEMO_ACCOUNT_PASSWORD),
+                    "is_demo": True,
+                    "is_active": True
+                }}
+            )
+            logger.info(f"Demo account password updated: {DEMO_ACCOUNT_EMAIL}")
+            
+    except Exception as e:
+        logger.error(f"Error ensuring demo account: {e}")
+
 @app.on_event("startup")
 async def start_demo_cleanup():
     """Start the demo cleanup background task and ensure demo has all modules"""
-    # Ensure demo account has all modules
+    # First ensure demo account exists with correct password
+    await ensure_demo_account_exists()
+    # Then ensure demo account has all modules
     await ensure_demo_has_all_modules()
     # Start cleanup scheduler
     asyncio.create_task(demo_cleanup_scheduler())
