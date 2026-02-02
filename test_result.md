@@ -150,6 +150,18 @@ backend:
         agent: "testing"
         comment: "✅ PASSED - Add-on request management fully functional. Tested: GET /api/admin/addon-requests (pending requests), PUT /api/admin/addon-requests/{id}/approve (approval), PUT /api/admin/addon-requests/{id}/reject (rejection). Both approval and rejection workflows tested successfully."
 
+  - task: "Addon module detail extra fields"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Extra velden toegevoegd aan addon model: category, icon_name, hero_image_url, highlights, features. Create en update endpoints aangepast. GET /api/addons/{slug_or_id} endpoint toegevoegd voor module detail pagina."
+
 frontend:
   - task: "Admin Add-ons tab"
     implemented: true
@@ -162,6 +174,9 @@ frontend:
       - working: "NA"
         agent: "main"
         comment: "Add-ons tab toegevoegd aan admin pagina met CRUD, klant add-on activatie, en verzoeken beheer"
+      - working: "NA"
+        agent: "main"
+        comment: "Create/edit dialogen uitgebreid met extra velden: category, icon_name, hero_image_url, highlights"
 
   - task: "Abonnement pagina add-ons sectie"
     implemented: true
@@ -175,14 +190,27 @@ frontend:
         agent: "main"
         comment: "Add-ons sectie toegevoegd waar klanten add-ons kunnen zien en activering aanvragen"
 
+  - task: "ModuleDetailPage dynamic loading"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/ModuleDetailPage.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "ModuleDetailPage aangepast om dynamisch addons uit database te laden als geen hardcoded data beschikbaar is. Icon mapping toegevoegd voor dynamische iconen."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 2
+  test_sequence: 3
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Addon module detail extra fields"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -192,3 +220,5 @@ agent_communication:
     message: "Add-ons systeem geïmplementeerd. Backend endpoints en frontend UI zijn klaar. Test de add-on CRUD operations, user add-on management, en request flow."
   - agent: "testing"
     message: "✅ ADD-ONS SYSTEM FULLY TESTED AND WORKING! Fixed critical bug in get_superadmin function (was incomplete). All 3 main add-on tasks are now working correctly: 1) Add-on CRUD (create/read/update/delete), 2) User add-on management (activation/deactivation), 3) Request management (approve/reject). Tested complete flow: superadmin login → create add-on → customer request → admin approval → activation → deactivation. Security properly implemented - customers cannot access admin endpoints. Default 'Vastgoed Beheer' add-on exists and working. Ready for production use."
+  - agent: "main"
+    message: "Extra velden toegevoegd aan addon systeem zodat superadmin bij het maken van een addon ook category, icon, highlights en hero image kan specificeren. Deze data wordt gebruikt door de ModuleDetailPage om automatisch een mooie module detail pagina te genereren voor nieuwe addons. Test het nieuwe /api/addons/{slug_or_id} endpoint en de create/update endpoints met de nieuwe velden."
