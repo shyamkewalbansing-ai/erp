@@ -1679,7 +1679,12 @@ server {
                                     setEditAddonForm({
                                       name: addon.name,
                                       description: addon.description || '',
-                                      price: addon.price
+                                      price: addon.price,
+                                      category: addon.category || '',
+                                      icon_name: addon.icon_name || '',
+                                      hero_image_url: addon.hero_image_url || '',
+                                      highlights: Array.isArray(addon.highlights) ? addon.highlights.join(', ') : '',
+                                      features: addon.features || []
                                     });
                                     setEditAddonDialogOpen(true);
                                   }}
