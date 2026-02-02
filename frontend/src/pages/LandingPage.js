@@ -499,9 +499,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
+      <Suspense fallback={<FooterFallback />}>
+        <PublicFooter logoUrl={settings?.logo_url} companyName={settings?.company_name} />
+      </Suspense>
 
-      {/* Chat Widget */}
+      {/* Chat Widget - load only when idle */}
       <Suspense fallback={null}>
         <ChatWidget />
       </Suspense>
