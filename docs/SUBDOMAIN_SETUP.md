@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://addon-module-sync.preview.emergentagent.com/           → Landing page
-https://addon-module-sync.preview.emergentagent.com/login      → Login
-https://addon-module-sync.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://addon-module-sync.preview.emergentagent.com/booking/   → Publieke booking portals
+https://quickapp-62.preview.emergentagent.com/           → Landing page
+https://quickapp-62.preview.emergentagent.com/login      → Login
+https://quickapp-62.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://quickapp-62.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)

@@ -11,7 +11,7 @@ import os
 import uuid
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://addon-module-sync.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://quickapp-62.preview.emergentagent.com')
 
 # Test credentials
 TEST_EMAIL = "uitest2@test.com"
