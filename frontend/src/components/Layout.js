@@ -287,36 +287,36 @@ export default function Layout() {
       )}
 
       {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${sidebarCollapsed && window.innerWidth >= 1024 ? 'sidebar-collapsed' : ''}`}>
         {/* Logo and Toggle Button */}
-        <div className={`border-b border-border ${sidebarCollapsed ? 'p-4' : 'p-6'}`}>
-          <div className={`flex items-center ${sidebarCollapsed ? 'flex-col gap-3' : 'justify-between'}`}>
+        <div className={`border-b border-border ${sidebarCollapsed ? 'lg:p-4 p-6' : 'p-6'}`}>
+          <div className={`flex items-center ${sidebarCollapsed ? 'lg:flex-col lg:gap-3' : ''} justify-between lg:justify-between`}>
             {/* Logo */}
-            <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : ''}`}>
+            <div className={`flex items-center ${sidebarCollapsed ? 'lg:justify-center' : ''}`}>
               {branding?.logo_url ? (
                 <img 
                   src={branding.logo_url} 
                   alt={branding.portal_name || 'Logo'} 
-                  className={`${sidebarCollapsed ? 'h-8 w-8 object-contain' : 'h-8 w-auto max-w-[140px] object-contain'}`}
+                  className={`${sidebarCollapsed ? 'lg:h-8 lg:w-8 h-8 w-auto max-w-[140px]' : 'h-8 w-auto max-w-[140px]'} object-contain`}
                 />
               ) : user?.logo && !isSuperAdmin() ? (
                 <img 
                   src={user.logo} 
                   alt="Bedrijfslogo" 
-                  className={`${sidebarCollapsed ? 'h-8 w-8 object-contain' : 'h-8 w-auto max-w-[140px] object-contain'}`}
+                  className={`${sidebarCollapsed ? 'lg:h-8 lg:w-8 h-8 w-auto max-w-[140px]' : 'h-8 w-auto max-w-[140px]'} object-contain`}
                 />
               ) : (
                 <img 
                   src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
                   alt="Facturatie N.V." 
-                  className={`${sidebarCollapsed ? 'hidden' : 'h-5 w-auto'}`}
+                  className="h-5 w-auto"
                 />
               )}
             </div>
-            {/* Toggle Button - Only visible on desktop, always at top */}
+            {/* Toggle Button - ONLY visible on desktop (lg and up) */}
             <button
               onClick={toggleSidebarCollapse}
-              className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted transition-colors"
+              className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted transition-colors flex-shrink-0"
               title={sidebarCollapsed ? 'Sidebar uitklappen' : 'Sidebar inklappen'}
             >
               {sidebarCollapsed ? (
