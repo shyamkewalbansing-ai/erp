@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect, lazy, Suspense, memo, useMemo, useCallback, startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Button } from '../components/ui/button';
@@ -24,11 +24,19 @@ import {
   ChevronRight,
   Rocket
 } from 'lucide-react';
-import PublicNav from '../components/PublicNav';
-import PublicFooter from '../components/PublicFooter';
 
+// Lazy load non-critical components
+const PublicNav = lazy(() => import('../components/PublicNav'));
+const PublicFooter = lazy(() => import('../components/PublicFooter'));
 const ChatWidget = lazy(() => import('../components/ChatWidget'));
+
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+
+// Minimal fallback components for critical path
+const NavFallback = memo(() => (
+  <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-100 h-16" />
+));
+const FooterFallback = memo(() => <div className="h-64 bg-slate-900" />);
 
 // Helper function to get app URL (for login/register)
 const getAppUrl = (path = '') => {
