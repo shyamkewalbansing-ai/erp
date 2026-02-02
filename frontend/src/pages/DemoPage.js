@@ -36,7 +36,7 @@ import PublicFooter from '../components/PublicFooter';
 
 // Demo credentials
 const DEMO_EMAIL = 'demo@facturatie.sr';
-const DEMO_PASSWORD = 'Demo123!';
+const DEMO_PASSWORD = 'demo2024';
 
 // Modules available in demo
 const DEMO_MODULES = [
