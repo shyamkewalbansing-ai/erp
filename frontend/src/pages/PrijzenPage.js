@@ -20,7 +20,6 @@ import {
   Loader2,
   Phone,
   Package,
-  Star,
   Sparkles,
   CreditCard,
   Building2,
