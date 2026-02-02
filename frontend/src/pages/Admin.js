@@ -3014,30 +3014,32 @@ server {
 
       {/* Create Add-on Dialog */}
       <Dialog open={createAddonDialogOpen} onOpenChange={setCreateAddonDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nieuwe Add-on Aanmaken</DialogTitle>
             <DialogDescription>
-              Maak een nieuwe add-on aan die klanten kunnen activeren
+              Maak een nieuwe add-on aan die klanten kunnen activeren. De module detail pagina wordt automatisch gegenereerd.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Naam *</Label>
-              <Input
-                placeholder="bijv. Vastgoed Beheer"
-                value={newAddon.name}
-                onChange={(e) => setNewAddon({...newAddon, name: e.target.value})}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Slug (unieke identificatie) *</Label>
-              <Input
-                placeholder="bijv. vastgoed_beheer"
-                value={newAddon.slug}
-                onChange={(e) => setNewAddon({...newAddon, slug: e.target.value.toLowerCase().replace(/\s+/g, '_')})}
-              />
-              <p className="text-xs text-muted-foreground">Gebruik alleen kleine letters, cijfers en underscores</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Naam *</Label>
+                <Input
+                  placeholder="bijv. Vastgoed Beheer"
+                  value={newAddon.name}
+                  onChange={(e) => setNewAddon({...newAddon, name: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Slug (unieke identificatie) *</Label>
+                <Input
+                  placeholder="bijv. vastgoed_beheer"
+                  value={newAddon.slug}
+                  onChange={(e) => setNewAddon({...newAddon, slug: e.target.value.toLowerCase().replace(/\s+/g, '-')})}
+                />
+                <p className="text-xs text-muted-foreground">Gebruik alleen kleine letters, cijfers en streepjes</p>
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Beschrijving</Label>
@@ -3047,14 +3049,52 @@ server {
                 onChange={(e) => setNewAddon({...newAddon, description: e.target.value})}
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Prijs per maand (SRD)</Label>
+                <Input
+                  type="number"
+                  placeholder="3500"
+                  value={newAddon.price}
+                  onChange={(e) => setNewAddon({...newAddon, price: e.target.value})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Categorie</Label>
+                <Input
+                  placeholder="bijv. Personeel, Vastgoed, Analytics"
+                  value={newAddon.category}
+                  onChange={(e) => setNewAddon({...newAddon, category: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Icoon naam (Lucide)</Label>
+                <Input
+                  placeholder="bijv. Users, Building2, BarChart3"
+                  value={newAddon.icon_name}
+                  onChange={(e) => setNewAddon({...newAddon, icon_name: e.target.value})}
+                />
+                <p className="text-xs text-muted-foreground">Zie lucide.dev/icons voor opties</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Hero Afbeelding URL</Label>
+                <Input
+                  placeholder="https://..."
+                  value={newAddon.hero_image_url}
+                  onChange={(e) => setNewAddon({...newAddon, hero_image_url: e.target.value})}
+                />
+              </div>
+            </div>
             <div className="space-y-2">
-              <Label>Prijs per maand (SRD)</Label>
+              <Label>Highlights (gescheiden door komma's)</Label>
               <Input
-                type="number"
-                placeholder="3500"
-                value={newAddon.price}
-                onChange={(e) => setNewAddon({...newAddon, price: e.target.value})}
+                placeholder="bijv. Dashboard, Rapporten, Facturatie, Beheer"
+                value={newAddon.highlights}
+                onChange={(e) => setNewAddon({...newAddon, highlights: e.target.value})}
               />
+              <p className="text-xs text-muted-foreground">Korte kenmerken die op de module pagina worden getoond</p>
             </div>
           </div>
           <DialogFooter>
