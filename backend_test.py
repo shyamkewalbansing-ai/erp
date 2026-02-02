@@ -1540,6 +1540,11 @@ def main():
         ("Reject Add-on Request", tester.test_reject_addon_request),
         ("Unauthorized Add-on Access", tester.test_unauthorized_addon_access),
         
+        # AI CHAT TESTING WITH DEMO ACCOUNT
+        ("=== AI CHAT DEMO ACCOUNT TEST ===", lambda: True),
+        ("Demo Account Login", tester.test_demo_account_login),
+        ("AI Chat with Demo Account", tester.test_ai_chat_endpoint_with_demo_account),
+        
         # CLEANUP TESTS
         ("Delete Salary Payment", tester.test_delete_salary_payment),
         ("Delete Employee", tester.test_delete_employee),
