@@ -125,106 +125,90 @@ logger = logging.getLogger(__name__)
 import asyncio
 
 async def cleanup_demo_data():
-    """Clean up ALL demo account data older than 1 hour - complete wipe"""
+    """Clean up ALL demo account data and reset with fixed demo data"""
     try:
         demo_user = await db.users.find_one({"email": DEMO_ACCOUNT_EMAIL})
         if not demo_user:
             return
         
-        demo_user_id = str(demo_user['_id'])
+        demo_user_id = demo_user.get('id') or str(demo_user['_id'])
         demo_workspace_id = demo_user.get('workspace_id')
-        one_hour_ago = datetime.now(timezone.utc) - timedelta(hours=1)
-        one_hour_ago_str = one_hour_ago.isoformat()
         
         logger.info(f"Running demo data cleanup for user {DEMO_ACCOUNT_EMAIL}")
         
-        # ALL collections to clean up with their user/workspace field names
+        # ALL collections to clean up completely (delete ALL data, not just old data)
         collections_to_clean = [
             # HRM data
-            ("hrm_employees", "workspace_id"),
-            ("hrm_departments", "workspace_id"),
-            ("hrm_leave_requests", "workspace_id"),
-            ("hrm_attendance", "workspace_id"),
-            ("hrm_payroll", "workspace_id"),
+            ("hrm_employees", "user_id"),
+            ("hrm_departments", "user_id"),
+            ("hrm_leave_requests", "user_id"),
+            ("hrm_attendance", "user_id"),
+            ("hrm_payroll", "user_id"),
+            ("hrm_contracts", "user_id"),
+            ("hrm_documents", "user_id"),
             
             # Vastgoed data
-            ("apartments", "workspace_id"),
-            ("tenants", "workspace_id"),
-            ("payments", "workspace_id"),
-            ("deposits", "workspace_id"),
-            ("maintenance", "workspace_id"),
-            ("loans", "workspace_id"),
-            ("meter_readings", "workspace_id"),
+            ("apartments", "user_id"),
+            ("tenants", "user_id"),
+            ("payments", "user_id"),
+            ("deposits", "user_id"),
+            ("maintenance", "user_id"),
+            ("loans", "user_id"),
+            ("meter_readings", "user_id"),
+            ("contracts", "user_id"),
             
             # Auto dealer data
-            ("autodealer_vehicles", "workspace_id"),
-            ("autodealer_customers", "workspace_id"),
-            ("autodealer_sales", "workspace_id"),
-            ("autodealer_payments", "workspace_id"),
+            ("autodealer_vehicles", "user_id"),
+            ("autodealer_customers", "user_id"),
+            ("autodealer_sales", "user_id"),
+            ("autodealer_payments", "user_id"),
             
             # Beauty Spa data
-            ("spa_clients", "workspace_id"),
-            ("spa_treatments", "workspace_id"),
-            ("spa_staff", "workspace_id"),
-            ("spa_appointments", "workspace_id"),
-            ("spa_products", "workspace_id"),
-            ("spa_sales", "workspace_id"),
-            ("spa_vouchers", "workspace_id"),
-            ("spa_queue", "workspace_id"),
-            ("spa_schedules", "workspace_id"),
-            ("spa_branches", "workspace_id"),
-            ("spa_intake_forms", "workspace_id"),
-            ("spa_stock_movements", "workspace_id"),
+            ("spa_clients", "user_id"),
+            ("spa_services", "user_id"),
+            ("spa_customers", "user_id"),
+            ("spa_treatments", "user_id"),
+            ("spa_staff", "user_id"),
+            ("spa_appointments", "user_id"),
+            ("spa_products", "user_id"),
+            ("spa_sales", "user_id"),
+            ("spa_vouchers", "user_id"),
+            ("spa_queue", "user_id"),
+            ("spa_schedules", "user_id"),
+            ("spa_branches", "user_id"),
+            ("spa_intake_forms", "user_id"),
+            ("spa_stock_movements", "user_id"),
             
             # Pompstation data
-            ("pompstation_tanks", "workspace_id"),
-            ("pompstation_leveringen", "workspace_id"),
-            ("pompstation_pompen", "workspace_id"),
-            ("pompstation_verkopen", "workspace_id"),
-            ("pompstation_winkel_producten", "workspace_id"),
-            ("pompstation_winkel_verkopen", "workspace_id"),
-            ("pompstation_diensten", "workspace_id"),
-            ("pompstation_personeel", "workspace_id"),
-            ("pompstation_veiligheid", "workspace_id"),
-            ("pompstation_incidenten", "workspace_id"),
-            ("pompstation_rapportages", "workspace_id"),
+            ("pompstation_tanks", "user_id"),
+            ("pompstation_leveringen", "user_id"),
+            ("pompstation_pompen", "user_id"),
+            ("pompstation_verkopen", "user_id"),
+            ("pompstation_winkel_producten", "user_id"),
+            ("pompstation_winkel_verkopen", "user_id"),
+            ("pompstation_diensten", "user_id"),
+            ("pompstation_personeel", "user_id"),
+            ("pompstation_veiligheid", "user_id"),
+            ("pompstation_incidenten", "user_id"),
+            ("pompstation_rapportages", "user_id"),
+            ("fuel_sales", "user_id"),
+            ("fuel_inventory", "user_id"),
             
             # General data
             ("ai_chat_history", "user_id"),
             ("public_chats", "user_id"),
             ("notifications", "user_id"),
-            ("invoices", "workspace_id"),
-            ("documents", "workspace_id"),
+            ("invoices", "user_id"),
+            ("documents", "user_id"),
         ]
         
         total_deleted = 0
         
+        # Delete ALL data for demo user (not just old data)
         for collection_name, filter_field in collections_to_clean:
             try:
                 collection = db[collection_name]
-                
-                # Build filter based on field type - delete records older than 1 hour
-                if filter_field == "workspace_id" and demo_workspace_id:
-                    # Try both datetime and string format for created_at
-                    filter_query = {
-                        filter_field: demo_workspace_id,
-                        "$or": [
-                            {"created_at": {"$lt": one_hour_ago}},
-                            {"created_at": {"$lt": one_hour_ago_str}},
-                            {"created_at": {"$exists": False}}  # Also delete records without timestamp
-                        ]
-                    }
-                elif filter_field == "user_id":
-                    filter_query = {
-                        filter_field: demo_user_id,
-                        "$or": [
-                            {"created_at": {"$lt": one_hour_ago}},
-                            {"created_at": {"$lt": one_hour_ago_str}},
-                            {"created_at": {"$exists": False}}
-                        ]
-                    }
-                else:
-                    continue
+                filter_query = {filter_field: demo_user_id}
                 
                 result = await collection.delete_many(filter_query)
                 if result.deleted_count > 0:
@@ -236,8 +220,94 @@ async def cleanup_demo_data():
         if total_deleted > 0:
             logger.info(f"Demo cleanup completed: {total_deleted} total records deleted")
         
+        # Now insert fixed demo data
+        await insert_fixed_demo_data(demo_user_id)
+        
     except Exception as e:
         logger.error(f"Demo cleanup error: {e}")
+
+async def insert_fixed_demo_data(user_id: str):
+    """Insert fixed demo data that resets every hour"""
+    try:
+        now = datetime.now(timezone.utc).isoformat()
+        
+        # ============== VASTGOED BEHEER DEMO DATA ==============
+        # Demo Appartementen
+        demo_apartments = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Appartement A1", "address": "Kerkstraat 10", "rent_amount": 2500, "status": "verhuurd", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Appartement B2", "address": "Wilhelminastraat 25", "rent_amount": 3500, "status": "beschikbaar", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Studio C3", "address": "Gravenstraat 8", "rent_amount": 1800, "status": "verhuurd", "created_at": now},
+        ]
+        
+        # Demo Huurders
+        demo_tenants = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Jan Jansen", "email": "jan@demo.sr", "phone": "8123456", "address": "Kerkstraat 10", "balance": 0, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Maria Pengel", "email": "maria@demo.sr", "phone": "8234567", "address": "Gravenstraat 8", "balance": -500, "created_at": now},
+        ]
+        
+        await db.apartments.insert_many(demo_apartments)
+        await db.tenants.insert_many(demo_tenants)
+        
+        # ============== HRM DEMO DATA ==============
+        demo_departments = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Administratie", "description": "Financiële administratie", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Verkoop", "description": "Sales team", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "IT", "description": "Technische ondersteuning", "created_at": now},
+        ]
+        
+        demo_employees = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Peter Bakker", "email": "peter@demo.sr", "phone": "8345678", "department": "Administratie", "position": "Boekhouder", "salary": 4500, "status": "active", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Sandra Lie", "email": "sandra@demo.sr", "phone": "8456789", "department": "Verkoop", "position": "Sales Manager", "salary": 5500, "status": "active", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Kevin Moensi", "email": "kevin@demo.sr", "phone": "8567890", "department": "IT", "position": "Developer", "salary": 6000, "status": "active", "created_at": now},
+        ]
+        
+        await db.hrm_departments.insert_many(demo_departments)
+        await db.hrm_employees.insert_many(demo_employees)
+        
+        # ============== AUTO DEALER DEMO DATA ==============
+        demo_vehicles = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "brand": "Toyota", "model": "Corolla", "year": 2022, "license_plate": "AB-1234", "price_srd": 85000, "price_eur": 2500, "price_usd": 2700, "status": "beschikbaar", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "brand": "Honda", "model": "Civic", "year": 2021, "license_plate": "CD-5678", "price_srd": 75000, "price_eur": 2200, "price_usd": 2400, "status": "beschikbaar", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "brand": "Nissan", "model": "Qashqai", "year": 2023, "license_plate": "EF-9012", "price_srd": 120000, "price_eur": 3500, "price_usd": 3800, "status": "verkocht", "created_at": now},
+        ]
+        
+        demo_ad_customers = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Robert Chin", "email": "robert@demo.sr", "phone": "8678901", "type": "particulier", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Garage Paramaribo", "email": "garage@demo.sr", "phone": "8789012", "type": "bedrijf", "created_at": now},
+        ]
+        
+        await db.autodealer_vehicles.insert_many(demo_vehicles)
+        await db.autodealer_customers.insert_many(demo_ad_customers)
+        
+        # ============== BEAUTY & SPA DEMO DATA ==============
+        demo_spa_services = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Gezichtsverzorging", "price": 150, "duration": 60, "description": "Complete gezichtsbehandeling", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Manicure", "price": 75, "duration": 45, "description": "Nagelverzorging handen", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Pedicure", "price": 85, "duration": 45, "description": "Nagelverzorging voeten", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Massage", "price": 200, "duration": 90, "description": "Ontspannende lichaamsmassage", "created_at": now},
+        ]
+        
+        demo_spa_customers = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Lisa Djokarto", "email": "lisa@demo.sr", "phone": "8890123", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Reshma Doerga", "email": "reshma@demo.sr", "phone": "8901234", "created_at": now},
+        ]
+        
+        await db.spa_services.insert_many(demo_spa_services)
+        await db.spa_customers.insert_many(demo_spa_customers)
+        
+        # ============== POMPSTATION DEMO DATA ==============
+        demo_fuel_inventory = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Benzine 95", "current_liters": 5000, "price_per_liter": 12.50, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Diesel", "current_liters": 8000, "price_per_liter": 10.80, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Benzine 98", "current_liters": 3000, "price_per_liter": 14.20, "created_at": now},
+        ]
+        
+        await db.fuel_inventory.insert_many(demo_fuel_inventory)
+        
+        logger.info(f"Fixed demo data inserted for user {user_id}")
+        
+    except Exception as e:
+        logger.error(f"Error inserting demo data: {e}")
 
 async def demo_cleanup_scheduler():
     """Run demo cleanup every hour"""
