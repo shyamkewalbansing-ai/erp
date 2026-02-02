@@ -767,6 +767,28 @@ class SuriRentalsAPITester:
 
     # ==================== ADD-ONS TESTING ====================
     
+    def test_create_superadmin_user(self):
+        """Create superadmin user if it doesn't exist"""
+        superadmin_data = {
+            "name": "Super Admin",
+            "email": "admin@facturatie.sr",
+            "password": "admin123"
+        }
+        
+        success, response = self.run_test(
+            "Create Superadmin User",
+            "POST",
+            "auth/register",
+            200,
+            data=superadmin_data
+        )
+        
+        if success and 'access_token' in response:
+            self.superadmin_token = response['access_token']
+            print(f"   Superadmin created and token obtained: {self.superadmin_token[:20]}...")
+            return True
+        return False
+
     def test_superadmin_login(self):
         """Test superadmin login"""
         login_data = {
