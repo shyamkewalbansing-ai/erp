@@ -512,6 +512,9 @@ function MainAppRoutes() {
           <Route path="hrm/instellingen" element={
             <SubscriptionRoute requiredAddon="hrm"><HRMInstellingen /></SubscriptionRoute>
           } />
+          <Route path="hrm/handleiding" element={
+            <SubscriptionRoute requiredAddon="hrm"><HRMHandleiding /></SubscriptionRoute>
+          } />
           
           {/* Auto Dealer Module Routes */}
           <Route path="autodealer" element={
@@ -525,6 +528,9 @@ function MainAppRoutes() {
           } />
           <Route path="autodealer/verkopen" element={
             <SubscriptionRoute requiredAddon="autodealer"><AutoDealerVerkopen /></SubscriptionRoute>
+          } />
+          <Route path="autodealer/handleiding" element={
+            <SubscriptionRoute requiredAddon="autodealer"><AutoDealerHandleiding /></SubscriptionRoute>
           } />
           
           {/* Beauty Spa Module Routes */}
