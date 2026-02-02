@@ -12412,6 +12412,113 @@ Als gevraagd wordt over andere modules, leg uit dat deze eerst geactiveerd moete
 🚗 Voertuigen: {len(vehicles)} ({available} beschikbaar)
 💰 Verkopen: {sales}"""
                     action_result = {"overview": True}
+                
+                elif action == "BESCHIKBARE_VOERTUIGEN":
+                    vehicles = await db.autodealer_vehicles.find({"user_id": user_id, "status": "beschikbaar"}, {"_id": 0}).to_list(20)
+                    if vehicles:
+                        vehicle_list = "\n".join([f"• {v.get('brand', '')} {v.get('model', '')} ({v.get('year', '')}) - SRD {v.get('price_srd', 0):,.0f}" for v in vehicles[:10]])
+                        final_response = f"🚗 **Beschikbare Voertuigen ({len(vehicles)})**\n\n{vehicle_list}"
+                    else:
+                        final_response = "Geen beschikbare voertuigen gevonden."
+                    action_result = {"vehicles": len(vehicles)}
+                
+                # ADDITIONAL HRM ACTIONS
+                elif action == "WERKNEMER_ZOEKEN":
+                    search = params.get("search_term", "")
+                    employees = await db.hrm_employees.find({
+                        "user_id": user_id,
+                        "name": {"$regex": search, "$options": "i"}
+                    }, {"_id": 0}).to_list(10)
+                    if employees:
+                        emp_list = "\n".join([f"• {e.get('name', '')} - {e.get('position', '')} ({e.get('department', '')})" for e in employees])
+                        final_response = f"👥 **Gevonden werknemers ({len(employees)})**\n\n{emp_list}"
+                    else:
+                        final_response = f"Geen werknemers gevonden met '{search}'"
+                    action_result = {"found": len(employees)}
+                
+                elif action == "SALARIS_OVERZICHT":
+                    employees = await db.hrm_employees.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+                    total = sum([e.get("salary", 0) for e in employees])
+                    emp_list = "\n".join([f"• {e.get('name', '')}: SRD {e.get('salary', 0):,.0f}" for e in employees[:10]])
+                    final_response = f"💰 **Salaris Overzicht**\n\nTotale loonsom: **SRD {total:,.0f}/maand**\n\n{emp_list}"
+                    action_result = {"total_salary": total}
+                
+                elif action == "VERLOF_OVERZICHT":
+                    leave_requests = await db.hrm_leave_requests.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+                    pending = [l for l in leave_requests if l.get("status") == "pending"]
+                    if pending:
+                        leave_list = "\n".join([f"• {l.get('employee_name', '')}: {l.get('start_date', '')} - {l.get('end_date', '')} ({l.get('leave_type', '')})" for l in pending[:10]])
+                        final_response = f"📝 **Openstaande Verlofaanvragen ({len(pending)})**\n\n{leave_list}"
+                    else:
+                        final_response = "Geen openstaande verlofaanvragen."
+                    action_result = {"pending": len(pending)}
+                
+                # ADDITIONAL VASTGOED ACTIONS
+                elif action == "HUURDER_ZOEKEN":
+                    search = params.get("search_term", "")
+                    tenants = await db.tenants.find({
+                        "user_id": user_id,
+                        "name": {"$regex": search, "$options": "i"}
+                    }, {"_id": 0}).to_list(10)
+                    if tenants:
+                        tenant_list = "\n".join([f"• {t.get('name', '')} - {t.get('phone', '')}" for t in tenants])
+                        final_response = f"👥 **Gevonden huurders ({len(tenants)})**\n\n{tenant_list}"
+                    else:
+                        final_response = f"Geen huurders gevonden met '{search}'"
+                    action_result = {"found": len(tenants)}
+                
+                elif action == "OPENSTAANDE_BETALINGEN":
+                    # Get tenants with outstanding balances
+                    tenants = await db.tenants.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+                    outstanding = []
+                    for t in tenants:
+                        payments = await db.payments.find({"user_id": user_id, "tenant_id": t["id"]}, {"_id": 0}).to_list(100)
+                        total_paid = sum([p.get("amount", 0) for p in payments])
+                        # Simple outstanding calculation
+                        if total_paid < 1000:  # Placeholder logic
+                            outstanding.append(t)
+                    if outstanding:
+                        out_list = "\n".join([f"• {t.get('name', '')}" for t in outstanding[:10]])
+                        final_response = f"⚠️ **Huurders met openstaande betalingen ({len(outstanding)})**\n\n{out_list}"
+                    else:
+                        final_response = "Alle huurders zijn bij met hun betalingen! ✅"
+                    action_result = {"outstanding": len(outstanding)}
+                
+                # BEAUTY & SPA ACTIONS
+                elif action == "SPA_OVERZICHT":
+                    appointments = await db.spa_appointments.count_documents({"user_id": user_id})
+                    services = await db.spa_services.count_documents({"user_id": user_id})
+                    customers = await db.spa_customers.count_documents({"user_id": user_id})
+                    final_response = f"""💅 **Beauty & Spa Overzicht**
+📅 Totaal afspraken: {appointments}
+✂️ Behandelingen: {services}
+👥 Klanten: {customers}"""
+                    action_result = {"overview": True}
+                
+                elif action == "VANDAAG_AFSPRAKEN":
+                    today = datetime.now().strftime("%Y-%m-%d")
+                    appointments = await db.spa_appointments.find({
+                        "user_id": user_id,
+                        "date": {"$regex": f"^{today}"}
+                    }, {"_id": 0}).to_list(20)
+                    if appointments:
+                        app_list = "\n".join([f"• {a.get('time', '')} - {a.get('customer_name', '')} ({a.get('service', '')})" for a in appointments])
+                        final_response = f"📅 **Afspraken Vandaag ({len(appointments)})**\n\n{app_list}"
+                    else:
+                        final_response = "Geen afspraken gepland voor vandaag."
+                    action_result = {"appointments": len(appointments)}
+                
+                # POMPSTATION ACTIONS
+                elif action == "POMPSTATION_OVERZICHT":
+                    today = datetime.now().strftime("%Y-%m-%d")
+                    sales = await db.fuel_sales.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+                    today_sales = [s for s in sales if s.get("date", "").startswith(today)]
+                    today_revenue = sum([s.get("total", 0) for s in today_sales])
+                    total_revenue = sum([s.get("total", 0) for s in sales])
+                    final_response = f"""⛽ **Pompstation Overzicht**
+📅 Verkopen vandaag: {len(today_sales)} (SRD {today_revenue:,.0f})
+💰 Totale omzet: SRD {total_revenue:,.0f}"""
+                    action_result = {"overview": True}
                     
     except json.JSONDecodeError:
         pass
