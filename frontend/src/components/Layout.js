@@ -416,20 +416,24 @@ export default function Layout() {
               {/* HRM Section */}
               {hasAddon('hrm') && (
                 <div className="mb-2">
-                  <div className="px-3 py-2 mt-4 border-t border-border pt-4">
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">HRM Module</p>
-                  </div>
+                  {!sidebarCollapsed && (
+                    <div className="px-3 py-2 mt-4 border-t border-border pt-4">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">HRM Module</p>
+                    </div>
+                  )}
+                  {sidebarCollapsed && <div className="mt-4 border-t border-border pt-4" />}
                   {hrmNavItems.filter(item => hasAddon(item.addon)).map((item) => (
                     <NavLink
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''}`}
+                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
                       data-testid={`nav-${item.label.toLowerCase()}`}
+                      title={item.label}
                     >
-                      <item.icon className="w-5 h-5" />
-                      <span>{item.label}</span>
-                      <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />
+                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                      {!sidebarCollapsed && <span>{item.label}</span>}
+                      {!sidebarCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
                     </NavLink>
                   ))}
                 </div>
