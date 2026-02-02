@@ -15,14 +15,24 @@ import "@/App.css";
 
 // Initialize performance monitoring and preload critical data
 initPerformanceMonitoring();
+
+// Preload critical data immediately
 preloadCriticalData();
 
-// Prefetch commonly used pages when browser is idle
+// Prefetch commonly used pages when browser is completely idle (after first paint)
 if (typeof window !== 'undefined') {
-  setTimeout(() => {
+  // Use requestIdleCallback for better performance timing
+  const prefetchPages = () => {
     prefetch(() => import("./pages/Dashboard"));
     prefetch(() => import("./pages/ModulesPage"));
-  }, 3000);
+    prefetch(() => import("./pages/Login"));
+  };
+  
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(prefetchPages, { timeout: 5000 });
+  } else {
+    setTimeout(prefetchPages, 3000);
+  }
 }
 
 // Tenant Portal pages
