@@ -7591,7 +7591,7 @@ async def test_mope_payment(amount: float = 10.0, description: str = "Test betal
                 json={
                     "amount": amount,
                     "description": description,
-                    "redirect_url": "https://erp-builder-17.preview.emergentagent.com/betaling-voltooid"
+                    "redirect_url": "https://admin-update-3.preview.emergentagent.com/betaling-voltooid"
                 },
                 timeout=30.0
             )
