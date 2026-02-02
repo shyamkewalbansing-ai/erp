@@ -354,97 +354,141 @@ export default function PrijzenPage() {
         </div>
       )}
 
-      {/* Pricing Cards */}
-      <section className="py-16">
+      {/* Pricing Cards - Modern Design */}
+      <section className="py-20 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-emerald-100/50 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-teal-100/50 rounded-full blur-3xl"></div>
+        </div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <Badge className="mb-4 bg-emerald-100 text-emerald-700 border-emerald-200">
+              <Sparkles className="w-4 h-4 mr-2" />
+              Kies uw modules
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Flexibele Modules voor uw Bedrijf
+            </h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+              Selecteer de modules die u nodig heeft en betaal alleen voor wat u gebruikt
+            </p>
+          </div>
+
+          {/* Cards Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {addons.map((addon, index) => {
               const isSelected = selectedAddons.includes(addon.id);
               const isPopular = index === 0;
-              const gradient = cardGradients[index % cardGradients.length];
               const IconComponent = MODULE_ICONS[addon.slug] || Package;
               
               return (
                 <div
                   key={addon.id}
                   data-testid={`addon-card-${addon.id}`}
-                  className={`group relative cursor-pointer transition-all duration-300 hover:-translate-y-1 ${
+                  className={`group relative cursor-pointer transition-all duration-500 hover:-translate-y-2 ${
                     isSelected ? 'scale-[1.02]' : ''
                   }`}
                   onClick={() => toggleAddonSelection(addon.id)}
                 >
-                  {/* Card */}
-                  <div className={`relative bg-white rounded-2xl overflow-hidden border shadow-lg hover:shadow-xl ${
-                    isSelected ? 'border-emerald-400 ring-2 ring-emerald-100' : 'border-slate-100'
+                  {/* Glow effect for popular */}
+                  {isPopular && (
+                    <div className="absolute -inset-[2px] bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 rounded-3xl opacity-75 blur-sm group-hover:opacity-100 transition-opacity"></div>
+                  )}
+                  
+                  {/* Card Container */}
+                  <div className={`relative h-full bg-white/80 backdrop-blur-xl rounded-3xl overflow-hidden transition-all duration-300 ${
+                    isSelected 
+                      ? 'ring-2 ring-emerald-500 shadow-2xl shadow-emerald-500/20' 
+                      : isPopular 
+                        ? 'shadow-xl' 
+                        : 'border border-slate-200/80 hover:border-emerald-200 hover:shadow-xl hover:shadow-slate-200/50'
                   }`}>
-                    {/* Header with gradient */}
-                    <div className={`relative h-32 bg-gradient-to-br ${gradient} p-5`}>
-                      <div className="absolute inset-0 opacity-20">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                      </div>
-                      
-                      {/* Icon */}
-                      <div className="relative w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30">
-                        <IconComponent className="w-7 h-7 text-white" />
-                      </div>
-                      
-                      {/* Popular Badge */}
-                      {isPopular && (
-                        <Badge className="absolute top-4 right-4 bg-white/20 backdrop-blur-sm text-white border-white/30">
-                          <Star className="w-3 h-3 mr-1 fill-current" />
-                          Populair
-                        </Badge>
-                      )}
-                      
-                      {/* Selected Indicator */}
-                      {isSelected && (
-                        <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-white flex items-center justify-center shadow-lg">
-                          <Check className="w-5 h-5 text-emerald-600" />
-                        </div>
-                      )}
-                    </div>
                     
-                    {/* Content */}
-                    <div className="p-5">
-                      <h3 className="text-xl font-bold text-slate-900 mb-2">
+                    {/* Popular Ribbon */}
+                    {isPopular && (
+                      <div className="absolute top-0 right-0 z-10">
+                        <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-xs font-bold px-8 py-1.5 transform rotate-45 translate-x-6 translate-y-3 shadow-lg">
+                          POPULAIR
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Selected Checkmark */}
+                    {isSelected && (
+                      <div className="absolute top-4 left-4 z-10 w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30 animate-pulse">
+                        <Check className="w-5 h-5 text-white" strokeWidth={3} />
+                      </div>
+                    )}
+
+                    {/* Card Header */}
+                    <div className="relative p-8 pb-4">
+                      {/* Icon Container */}
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300 ${
+                        isSelected 
+                          ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30' 
+                          : 'bg-gradient-to-br from-slate-100 to-slate-50 group-hover:from-emerald-100 group-hover:to-teal-100'
+                      }`}>
+                        <IconComponent className={`w-8 h-8 transition-colors duration-300 ${
+                          isSelected ? 'text-white' : 'text-slate-600 group-hover:text-emerald-600'
+                        }`} />
+                      </div>
+                      
+                      {/* Title & Description */}
+                      <h3 className="text-2xl font-bold text-slate-900 mb-2 group-hover:text-emerald-700 transition-colors">
                         {addon.name}
                       </h3>
                       
                       {addon.description && (
-                        <p className="text-slate-500 text-sm mb-4 line-clamp-2 min-h-[40px]">
+                        <p className="text-slate-500 text-sm leading-relaxed min-h-[48px]">
                           {addon.description}
                         </p>
                       )}
-                      
-                      {/* Price */}
-                      <div className="bg-gradient-to-r from-slate-50 to-emerald-50 rounded-xl p-4 mb-4 border border-slate-100">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-3xl font-bold text-slate-900">{formatCurrency(getPrice(addon))}</span>
-                          <span className="text-slate-500 text-sm">/{isYearly ? 'jaar' : 'maand'}</span>
-                        </div>
+                    </div>
+
+                    {/* Price Section */}
+                    <div className="px-8 py-6 bg-gradient-to-br from-slate-50 to-emerald-50/30">
+                      <div className="flex items-end gap-2 mb-1">
+                        <span className="text-5xl font-extrabold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                          {formatCurrency(getPrice(addon)).replace('SRD ', '')}
+                        </span>
+                        <span className="text-slate-400 font-medium mb-2">SRD</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500 text-sm">per {isYearly ? 'jaar' : 'maand'}</span>
                         {isYearly && (
-                          <p className="text-xs text-emerald-600 mt-1 font-medium">Bespaar 2 maanden!</p>
+                          <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs font-semibold">
+                            2 maanden gratis!
+                          </Badge>
                         )}
                       </div>
-                      
-                      {/* Features */}
-                      <ul className="space-y-2 mb-5">
+                    </div>
+
+                    {/* Features List */}
+                    <div className="px-8 pt-4 pb-6">
+                      <ul className="space-y-3 mb-8">
                         {(addon.features || ['Volledige toegang', 'Updates inbegrepen', 'Support', 'Data export']).slice(0, 4).map((feature, i) => (
-                          <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
-                            <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                              <Check className="w-3 h-3 text-emerald-600" />
+                          <li key={i} className="flex items-center gap-3 text-sm text-slate-600">
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                              isSelected 
+                                ? 'bg-gradient-to-br from-emerald-500 to-teal-600' 
+                                : 'bg-emerald-100 group-hover:bg-emerald-200'
+                            } transition-colors`}>
+                              <Check className={`w-3 h-3 ${isSelected ? 'text-white' : 'text-emerald-600'}`} />
                             </div>
-                            <span>{feature}</span>
+                            <span className="group-hover:text-slate-700 transition-colors">{feature}</span>
                           </li>
                         ))}
                       </ul>
                       
-                      {/* Button */}
+                      {/* CTA Button */}
                       <Button 
-                        className={`w-full h-11 font-semibold ${
+                        className={`w-full h-14 text-base font-bold rounded-2xl transition-all duration-300 ${
                           isSelected 
-                            ? 'bg-emerald-600 hover:bg-emerald-700 text-white' 
-                            : `bg-gradient-to-r ${gradient} text-white hover:opacity-90`
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/30' 
+                            : 'bg-slate-900 hover:bg-emerald-600 text-white group-hover:shadow-lg'
                         }`}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -455,19 +499,47 @@ export default function PrijzenPage() {
                       >
                         {isSelected ? (
                           <>
-                            <Check className="w-4 h-4 mr-2" />
-                            Gekozen
+                            <CheckCircle className="w-5 h-5 mr-2" />
+                            Geselecteerd
                           </>
                         ) : (
-                          'Selecteren'
+                          <>
+                            Selecteer Module
+                            <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                          </>
                         )}
                       </Button>
                     </div>
+
+                    {/* Decorative bottom gradient line */}
+                    <div className={`h-1 w-full transition-all duration-300 ${
+                      isSelected 
+                        ? 'bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500' 
+                        : 'bg-gradient-to-r from-transparent via-slate-200 to-transparent group-hover:from-emerald-200 group-hover:via-teal-300 group-hover:to-cyan-200'
+                    }`}></div>
                   </div>
                 </div>
               );
             })}
           </div>
+
+          {/* Bottom CTA for selected items */}
+          {selectedAddons.length > 0 && (
+            <div className="mt-12 text-center">
+              <p className="text-slate-500 mb-4">
+                U heeft <span className="font-bold text-emerald-600">{selectedAddons.length} module{selectedAddons.length > 1 ? 's' : ''}</span> geselecteerd
+              </p>
+              <Button 
+                size="lg"
+                onClick={handleOrder}
+                className="h-14 px-10 text-lg font-bold rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-xl shadow-emerald-500/30 transition-all duration-300 hover:scale-105"
+              >
+                <Sparkles className="w-5 h-5 mr-2" />
+                Doorgaan naar Bestellen
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
