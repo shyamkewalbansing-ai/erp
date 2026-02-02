@@ -287,29 +287,43 @@ export default function Layout() {
       )}
 
       {/* Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
-        {/* Logo - Use workspace branding */}
+      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+        {/* Logo and Toggle Button */}
         <div className="p-6 border-b border-border">
-          <div className="flex items-center">
-            {branding?.logo_url ? (
-              <img 
-                src={branding.logo_url} 
-                alt={branding.portal_name || 'Logo'} 
-                className="h-8 w-auto max-w-[140px] object-contain"
-              />
-            ) : user?.logo && !isSuperAdmin() ? (
-              <img 
-                src={user.logo} 
-                alt="Bedrijfslogo" 
-                className="h-8 w-auto max-w-[140px] object-contain"
-              />
-            ) : (
-              <img 
-                src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-                alt="Facturatie N.V." 
-                className="h-5 w-auto"
-              />
-            )}
+          <div className="flex items-center justify-between">
+            <div className={`flex items-center ${sidebarCollapsed ? 'w-full justify-center' : ''}`}>
+              {branding?.logo_url ? (
+                <img 
+                  src={branding.logo_url} 
+                  alt={branding.portal_name || 'Logo'} 
+                  className={`${sidebarCollapsed ? 'h-6 w-6 object-contain' : 'h-8 w-auto max-w-[140px] object-contain'}`}
+                />
+              ) : user?.logo && !isSuperAdmin() ? (
+                <img 
+                  src={user.logo} 
+                  alt="Bedrijfslogo" 
+                  className={`${sidebarCollapsed ? 'h-6 w-6 object-contain' : 'h-8 w-auto max-w-[140px] object-contain'}`}
+                />
+              ) : (
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+                  alt="Facturatie N.V." 
+                  className={`${sidebarCollapsed ? 'hidden' : 'h-5 w-auto'}`}
+                />
+              )}
+            </div>
+            {/* Toggle Button - Only visible on desktop */}
+            <button
+              onClick={toggleSidebarCollapse}
+              className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted transition-colors ${sidebarCollapsed ? 'absolute left-1/2 -translate-x-1/2 bottom-6' : ''}`}
+              title={sidebarCollapsed ? 'Sidebar uitklappen' : 'Sidebar inklappen'}
+            >
+              {sidebarCollapsed ? (
+                <PanelLeftOpen className="w-5 h-5 text-muted-foreground" />
+              ) : (
+                <PanelLeftClose className="w-5 h-5 text-muted-foreground" />
+              )}
+            </button>
           </div>
         </div>
 
