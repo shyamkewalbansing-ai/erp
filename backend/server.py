@@ -7308,6 +7308,36 @@ async def get_public_addons():
     ).to_list(100)
     return addons
 
+# Newsletter subscriber model
+class NewsletterSubscribe(BaseModel):
+    email: str
+
+@api_router.post("/public/newsletter/subscribe")
+async def subscribe_newsletter(data: NewsletterSubscribe):
+    """Subscribe to newsletter for updates"""
+    email = data.email.lower().strip()
+    
+    # Basic email validation
+    if not email or '@' not in email or '.' not in email:
+        raise HTTPException(status_code=400, detail="Voer een geldig e-mailadres in")
+    
+    # Check if already subscribed
+    existing = await db.newsletter_subscribers.find_one({"email": email})
+    if existing:
+        return {"message": "U bent al aangemeld voor onze nieuwsbrief"}
+    
+    # Create subscriber
+    subscriber = {
+        "id": str(uuid.uuid4()),
+        "email": email,
+        "subscribed_at": datetime.utcnow().isoformat(),
+        "is_active": True
+    }
+    
+    await db.newsletter_subscribers.insert_one(subscriber)
+    
+    return {"message": "Bedankt voor uw aanmelding!", "success": True}
+
 @api_router.post("/public/orders")
 async def create_public_order(order_data: PublicOrderCreate):
     """Create a new order from landing page with account creation and auto-login"""
