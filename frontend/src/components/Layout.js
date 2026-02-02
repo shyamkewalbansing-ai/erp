@@ -354,30 +354,33 @@ export default function Layout() {
               <NavLink
                 to="/app/admin"
                 onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
                 data-testid="nav-admin"
+                title="Beheerder"
               >
-                <Crown className="w-5 h-5" />
-                <span>Beheerder</span>
-                <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>
+                <Crown className="w-5 h-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span>Beheerder</span>}
+                {!sidebarCollapsed && <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>}
               </NavLink>
               <NavLink
                 to="/app/admin/domeinen"
                 onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
                 data-testid="nav-admin-domeinen"
+                title="Domeinen"
               >
-                <Globe className="w-5 h-5" />
-                <span>Domeinen</span>
+                <Globe className="w-5 h-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span>Domeinen</span>}
               </NavLink>
               <NavLink
                 to="/app/betaalmethodes"
                 onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
                 data-testid="nav-admin-betaalmethodes"
+                title="Betaalmethodes"
               >
-                <CreditCard className="w-5 h-5" />
-                <span>Betaalmethodes</span>
+                <CreditCard className="w-5 h-5 flex-shrink-0" />
+                {!sidebarCollapsed && <span>Betaalmethodes</span>}
               </NavLink>
             </>
           )}
