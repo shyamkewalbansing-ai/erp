@@ -373,7 +373,7 @@ export default function Layout() {
               <NavLink
                 to="/app/admin"
                 onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                 data-testid="nav-admin"
                 title="Beheerder"
               >
@@ -384,7 +384,7 @@ export default function Layout() {
               <NavLink
                 to="/app/admin/domeinen"
                 onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                 data-testid="nav-admin-domeinen"
                 title="Domeinen"
               >
@@ -394,7 +394,7 @@ export default function Layout() {
               <NavLink
                 to="/app/betaalmethodes"
                 onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                 data-testid="nav-admin-betaalmethodes"
                 title="Betaalmethodes"
               >
@@ -420,7 +420,7 @@ export default function Layout() {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                       data-testid={`nav-${item.label.toLowerCase()}`}
                       title={item.label}
                     >
@@ -446,7 +446,7 @@ export default function Layout() {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                       data-testid={`nav-${item.label.toLowerCase()}`}
                       title={item.label}
                     >
@@ -475,7 +475,7 @@ export default function Layout() {
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={() => setSidebarOpen(false)}
-                        className={`nav-item ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+                        className={`nav-item ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                         data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
                         title={item.label}
                       >
@@ -488,7 +488,7 @@ export default function Layout() {
                         key={item.to}
                         to={item.to}
                         onClick={() => setSidebarOpen(false)}
-                        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+                        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                         data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
                         title={item.label}
                       >
@@ -515,7 +515,7 @@ export default function Layout() {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                       data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
                       title={item.label}
                     >
@@ -544,7 +544,7 @@ export default function Layout() {
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                       data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
                       title={item.label}
                     >
@@ -578,7 +578,7 @@ export default function Layout() {
             <NavLink
               to="/app/mijn-modules"
               onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
               data-testid="nav-mijn-modules"
               title="Mijn Modules"
             >
@@ -593,7 +593,7 @@ export default function Layout() {
             <div className="mt-2">
               <button
                 onClick={() => setSettingsOpen(!settingsOpen)}
-                className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${sidebarCollapsed ? 'justify-center px-3' : ''}`}
+                className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                 data-testid="nav-instellingen-dropdown"
                 title="Instellingen"
               >
