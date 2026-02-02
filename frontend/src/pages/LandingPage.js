@@ -223,7 +223,7 @@ export default function LandingPage() {
                 <Button 
                   size="lg" 
                   className="h-14 px-8 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 rounded-full shadow-xl shadow-emerald-500/25 text-base font-semibold"
-                  onClick={() => navigate('/demo')}
+                  onClick={handleDemoClick}
                 >
                   <Play className="w-5 h-5 mr-2" />
                   Probeer Demo
