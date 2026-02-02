@@ -21,7 +21,10 @@ import {
   ChevronRight,
   Bell,
   Loader2,
-  CheckCircle
+  CheckCircle,
+  CreditCard,
+  Landmark,
+  Wallet
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
