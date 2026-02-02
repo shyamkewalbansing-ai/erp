@@ -378,8 +378,8 @@ export default function Layout() {
                 title="Beheerder"
               >
                 <Crown className="w-5 h-5 flex-shrink-0" />
-                {!sidebarCollapsed && <span>Beheerder</span>}
-                {!sidebarCollapsed && <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>}
+                {!isCollapsed && <span>Beheerder</span>}
+                {!isCollapsed && <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>}
               </NavLink>
               <NavLink
                 to="/app/admin/domeinen"
@@ -389,7 +389,7 @@ export default function Layout() {
                 title="Domeinen"
               >
                 <Globe className="w-5 h-5 flex-shrink-0" />
-                {!sidebarCollapsed && <span>Domeinen</span>}
+                {!isCollapsed && <span>Domeinen</span>}
               </NavLink>
               <NavLink
                 to="/app/betaalmethodes"
@@ -399,7 +399,7 @@ export default function Layout() {
                 title="Betaalmethodes"
               >
                 <CreditCard className="w-5 h-5 flex-shrink-0" />
-                {!sidebarCollapsed && <span>Betaalmethodes</span>}
+                {!isCollapsed && <span>Betaalmethodes</span>}
               </NavLink>
             </>
           )}
@@ -410,7 +410,7 @@ export default function Layout() {
               {/* Vastgoed Beheer Section */}
               {hasAddon('vastgoed_beheer') && (
                 <div className="mb-2">
-                  {!sidebarCollapsed && (
+                  {!isCollapsed && (
                     <div className="px-3 py-2">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Vastgoed Beheer</p>
                     </div>
@@ -425,8 +425,8 @@ export default function Layout() {
                       title={item.label}
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!sidebarCollapsed && <span>{item.label}</span>}
-                      {!sidebarCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
+                      {!isCollapsed && <span>{item.label}</span>}
+                      {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
                     </NavLink>
                   ))}
                 </div>
@@ -435,7 +435,7 @@ export default function Layout() {
               {/* HRM Section */}
               {hasAddon('hrm') && (
                 <div className="mb-2">
-                  {!sidebarCollapsed && (
+                  {!isCollapsed && (
                     <div className="px-3 py-2 mt-4 border-t border-border pt-4">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">HRM Module</p>
                     </div>
@@ -451,8 +451,8 @@ export default function Layout() {
                       title={item.label}
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!sidebarCollapsed && <span>{item.label}</span>}
-                      {!sidebarCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
+                      {!isCollapsed && <span>{item.label}</span>}
+                      {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
                     </NavLink>
                   ))}
                 </div>
@@ -461,7 +461,7 @@ export default function Layout() {
               {/* Auto Dealer Section */}
               {hasAddon('autodealer') && (
                 <div className="mb-2">
-                  {!sidebarCollapsed && (
+                  {!isCollapsed && (
                     <div className="px-3 py-2 mt-4 border-t border-border pt-4">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Auto Dealer</p>
                     </div>
@@ -480,8 +480,8 @@ export default function Layout() {
                         title={item.label}
                       >
                         <item.icon className="w-5 h-5 flex-shrink-0" />
-                        {!sidebarCollapsed && <span>{item.label}</span>}
-                        {!sidebarCollapsed && <ExternalLink className="w-4 h-4 ml-auto" />}
+                        {!isCollapsed && <span>{item.label}</span>}
+                        {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto" />}
                       </a>
                     ) : (
                       <NavLink
@@ -493,8 +493,8 @@ export default function Layout() {
                         title={item.label}
                       >
                         <item.icon className="w-5 h-5 flex-shrink-0" />
-                        {!sidebarCollapsed && <span>{item.label}</span>}
-                        {!sidebarCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
+                        {!isCollapsed && <span>{item.label}</span>}
+                        {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
                       </NavLink>
                     )
                   ))}
@@ -504,7 +504,7 @@ export default function Layout() {
               {/* Beauty Spa Section */}
               {hasAddon('beauty') && (
                 <div className="mb-2">
-                  {!sidebarCollapsed && (
+                  {!isCollapsed && (
                     <div className="px-3 py-2 mt-4 border-t border-border pt-4">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Beauty Spa</p>
                     </div>
@@ -520,8 +520,8 @@ export default function Layout() {
                       title={item.label}
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!sidebarCollapsed && <span>{item.label}</span>}
-                      {!sidebarCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
+                      {!isCollapsed && <span>{item.label}</span>}
+                      {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
                     </NavLink>
                   ))}
                 </div>
@@ -530,7 +530,7 @@ export default function Layout() {
               {/* Pompstation (Gas Station) Section */}
               {hasAddon('pompstation') && (
                 <div className="mb-2">
-                  {!sidebarCollapsed && (
+                  {!isCollapsed && (
                     <div className="px-3 py-2 mt-4 border-t border-border pt-4">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
                         <Zap className="w-4 h-4 text-orange-500" />
@@ -549,8 +549,8 @@ export default function Layout() {
                       title={item.label}
                     >
                       <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!sidebarCollapsed && <span>{item.label}</span>}
-                      {!sidebarCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
+                      {!isCollapsed && <span>{item.label}</span>}
+                      {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
                     </NavLink>
                   ))}
                 </div>
@@ -559,7 +559,7 @@ export default function Layout() {
           )}
 
           {/* No add-ons message for customers */}
-          {!isSuperAdmin() && addonsLoaded && getVisibleNavItems().length === 0 && !sidebarCollapsed && (
+          {!isSuperAdmin() && addonsLoaded && getVisibleNavItems().length === 0 && !isCollapsed && (
             <div className="px-3 py-4 text-center">
               <Package className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">Geen actieve modules</p>
@@ -583,8 +583,8 @@ export default function Layout() {
               title="Mijn Modules"
             >
               <Boxes className="w-5 h-5 flex-shrink-0" />
-              {!sidebarCollapsed && <span>Mijn Modules</span>}
-              {!sidebarCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
+              {!isCollapsed && <span>Mijn Modules</span>}
+              {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
             </NavLink>
           )}
 
@@ -599,13 +599,13 @@ export default function Layout() {
               >
                 <div className={`flex items-center gap-3 ${sidebarCollapsed ? 'justify-center' : ''}`}>
                   <Settings className="w-5 h-5 flex-shrink-0" />
-                  {!sidebarCollapsed && <span>Instellingen</span>}
+                  {!isCollapsed && <span>Instellingen</span>}
                 </div>
-                {!sidebarCollapsed && <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />}
+                {!isCollapsed && <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />}
               </button>
               
               {/* Dropdown items */}
-              {!sidebarCollapsed && (
+              {!isCollapsed && (
                 <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
                   <div className="pl-4 mt-1 space-y-1">
                     {/* Workspace Settings - for customers only */}
@@ -649,7 +649,7 @@ export default function Layout() {
         </nav>
 
         {/* Super Admin badge at bottom */}
-        {isSuperAdmin() && !sidebarCollapsed && (
+        {isSuperAdmin() && !isCollapsed && (
           <div className="p-4 border-t border-border mt-auto flex-shrink-0">
             <Badge className="w-full justify-center bg-primary/10 text-primary border-primary/20">
               <Crown className="w-3 h-3 mr-1" />
