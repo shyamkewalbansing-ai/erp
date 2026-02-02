@@ -624,7 +624,9 @@ export default function ModuleDetailPage() {
   });
 
   // Check if we have hardcoded module detail, otherwise load from API
-  const hardcodedModule = MODULES_DETAIL[slug];
+  // Try both slug formats (hyphen and underscore)
+  const altSlug = slug?.includes('-') ? slug.replace(/-/g, '_') : slug?.replace(/_/g, '-');
+  const hardcodedModule = MODULES_DETAIL[slug] || MODULES_DETAIL[altSlug];
 
   useEffect(() => {
     loadData();
