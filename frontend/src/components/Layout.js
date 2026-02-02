@@ -289,20 +289,21 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Logo and Toggle Button */}
-        <div className="p-6 border-b border-border">
-          <div className="flex items-center justify-between">
-            <div className={`flex items-center ${sidebarCollapsed ? 'w-full justify-center' : ''}`}>
+        <div className={`border-b border-border ${sidebarCollapsed ? 'p-4' : 'p-6'}`}>
+          <div className={`flex items-center ${sidebarCollapsed ? 'flex-col gap-3' : 'justify-between'}`}>
+            {/* Logo */}
+            <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : ''}`}>
               {branding?.logo_url ? (
                 <img 
                   src={branding.logo_url} 
                   alt={branding.portal_name || 'Logo'} 
-                  className={`${sidebarCollapsed ? 'h-6 w-6 object-contain' : 'h-8 w-auto max-w-[140px] object-contain'}`}
+                  className={`${sidebarCollapsed ? 'h-8 w-8 object-contain' : 'h-8 w-auto max-w-[140px] object-contain'}`}
                 />
               ) : user?.logo && !isSuperAdmin() ? (
                 <img 
                   src={user.logo} 
                   alt="Bedrijfslogo" 
-                  className={`${sidebarCollapsed ? 'h-6 w-6 object-contain' : 'h-8 w-auto max-w-[140px] object-contain'}`}
+                  className={`${sidebarCollapsed ? 'h-8 w-8 object-contain' : 'h-8 w-auto max-w-[140px] object-contain'}`}
                 />
               ) : (
                 <img 
@@ -312,10 +313,10 @@ export default function Layout() {
                 />
               )}
             </div>
-            {/* Toggle Button - Only visible on desktop */}
+            {/* Toggle Button - Only visible on desktop, always at top */}
             <button
               onClick={toggleSidebarCollapse}
-              className={`hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted transition-colors ${sidebarCollapsed ? 'absolute left-1/2 -translate-x-1/2 bottom-6' : ''}`}
+              className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted transition-colors"
               title={sidebarCollapsed ? 'Sidebar uitklappen' : 'Sidebar inklappen'}
             >
               {sidebarCollapsed ? (
