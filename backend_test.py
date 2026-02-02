@@ -1151,8 +1151,200 @@ class SuriRentalsAPITester:
             return True
         return False
 
+    def test_get_addon_by_slug_vastgoed_beheer(self):
+        """Test GET /api/addons/{slug_or_id} with existing slug 'vastgoed_beheer'"""
+        # No auth required for this public endpoint
+        temp_token = self.token
+        self.token = None
+        
+        success, response = self.run_test(
+            "Get Addon by Slug - vastgoed_beheer",
+            "GET",
+            "addons/vastgoed_beheer",
+            200
+        )
+        
+        # Restore token
+        self.token = temp_token
+        
+        if success:
+            print(f"   Found addon: {response.get('name')} (slug: {response.get('slug')})")
+            print(f"   Price: SRD {response.get('price')}")
+            print(f"   Category: {response.get('category', 'N/A')}")
+            print(f"   Icon: {response.get('icon_name', 'N/A')}")
+            print(f"   Highlights: {len(response.get('highlights', []))} items")
+            return True
+        return False
+
+    def test_get_addon_by_slug_hrm(self):
+        """Test GET /api/addons/{slug_or_id} with existing slug 'hrm'"""
+        # No auth required for this public endpoint
+        temp_token = self.token
+        self.token = None
+        
+        success, response = self.run_test(
+            "Get Addon by Slug - hrm",
+            "GET",
+            "addons/hrm",
+            200
+        )
+        
+        # Restore token
+        self.token = temp_token
+        
+        if success:
+            print(f"   Found addon: {response.get('name')} (slug: {response.get('slug')})")
+            print(f"   Price: SRD {response.get('price')}")
+            print(f"   Category: {response.get('category', 'N/A')}")
+            print(f"   Icon: {response.get('icon_name', 'N/A')}")
+            print(f"   Highlights: {len(response.get('highlights', []))} items")
+            return True
+        return False
+
+    def test_get_addon_by_nonexistent_slug(self):
+        """Test GET /api/addons/{slug_or_id} with non-existing slug (expect 404)"""
+        # No auth required for this public endpoint
+        temp_token = self.token
+        self.token = None
+        
+        success, response = self.run_test(
+            "Get Addon by Non-existent Slug",
+            "GET",
+            "addons/non-existent-addon-slug",
+            404  # Expect 404
+        )
+        
+        # Restore token
+        self.token = temp_token
+        
+        if success:
+            print("   ✅ Correctly returned 404 for non-existent addon")
+            return True
+        return False
+
+    def test_create_addon_with_extra_fields(self):
+        """Test creating addon with all extra fields as superadmin"""
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        timestamp = datetime.now().strftime('%H%M%S')
+        addon_data = {
+            "name": "Test Module",
+            "slug": "test-module",
+            "description": "Test module beschrijving",
+            "price": 1500,
+            "category": "Analytics",
+            "icon_name": "BarChart3",
+            "hero_image_url": "https://example.com/image.jpg",
+            "highlights": ["Dashboard", "Rapporten", "Export"]
+        }
+        
+        success, response = self.run_test(
+            "Create Addon with Extra Fields",
+            "POST",
+            "admin/addons",
+            200,
+            data=addon_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources['addons'].append(response['id'])
+            print(f"   Created addon ID: {response['id']}")
+            print(f"   Name: {response.get('name')}")
+            print(f"   Category: {response.get('category')}")
+            print(f"   Icon: {response.get('icon_name')}")
+            print(f"   Hero Image: {response.get('hero_image_url')}")
+            print(f"   Highlights: {response.get('highlights')}")
+            
+            # Verify all fields were saved correctly
+            if (response.get('category') == addon_data['category'] and
+                response.get('icon_name') == addon_data['icon_name'] and
+                response.get('hero_image_url') == addon_data['hero_image_url'] and
+                response.get('highlights') == addon_data['highlights']):
+                print("   ✅ All extra fields saved correctly")
+                return True
+            else:
+                print("   ❌ Some extra fields not saved correctly")
+                return False
+        return False
+
+    def test_update_addon_with_extra_fields(self):
+        """Test updating addon with extra fields"""
+        if not self.created_resources['addons']:
+            print("⚠️  Skipping addon update - no addon created")
+            return True
+            
+        # Switch to superadmin token
+        self.token = self.superadmin_token
+        
+        addon_id = self.created_resources['addons'][0]
+        update_data = {
+            "category": "Updated Analytics",
+            "icon_name": "TrendingUp",
+            "highlights": ["Updated Dashboard", "Advanced Rapporten", "Real-time Export", "New Feature"]
+        }
+        
+        success, response = self.run_test(
+            "Update Addon with Extra Fields",
+            "PUT",
+            f"admin/addons/{addon_id}",
+            200,
+            data=update_data
+        )
+        
+        if success:
+            print(f"   Updated addon: {response.get('name')}")
+            print(f"   New category: {response.get('category')}")
+            print(f"   New icon: {response.get('icon_name')}")
+            print(f"   New highlights: {response.get('highlights')}")
+            
+            # Verify updates were applied correctly
+            if (response.get('category') == update_data['category'] and
+                response.get('icon_name') == update_data['icon_name'] and
+                response.get('highlights') == update_data['highlights']):
+                print("   ✅ All updates applied correctly")
+                return True
+            else:
+                print("   ❌ Some updates not applied correctly")
+                return False
+        return False
+
+    def test_get_updated_addon_by_slug(self):
+        """Test getting the updated addon by slug to verify changes"""
+        # No auth required for this public endpoint
+        temp_token = self.token
+        self.token = None
+        
+        success, response = self.run_test(
+            "Get Updated Addon by Slug",
+            "GET",
+            "addons/test-module",
+            200
+        )
+        
+        # Restore token
+        self.token = temp_token
+        
+        if success:
+            print(f"   Retrieved addon: {response.get('name')}")
+            print(f"   Category: {response.get('category')}")
+            print(f"   Icon: {response.get('icon_name')}")
+            print(f"   Highlights count: {len(response.get('highlights', []))}")
+            print(f"   Hero image: {response.get('hero_image_url', 'N/A')}")
+            
+            # Verify the updated fields are present
+            if (response.get('category') == "Updated Analytics" and
+                response.get('icon_name') == "TrendingUp" and
+                len(response.get('highlights', [])) == 4):
+                print("   ✅ Updated addon retrieved successfully with correct data")
+                return True
+            else:
+                print("   ❌ Retrieved addon doesn't have expected updated data")
+                return False
+        return False
+
     def test_delete_addon_as_superadmin(self):
-        """Test deleting add-on as superadmin"""
+        """Test deleting add-on as superadmin (cleanup)"""
         if not self.created_resources['addons']:
             print("⚠️  Skipping add-on deletion - no add-on created")
             return True
@@ -1163,14 +1355,14 @@ class SuriRentalsAPITester:
         addon_id = self.created_resources['addons'][0]
         
         success, response = self.run_test(
-            "Delete Add-on (Superadmin)",
+            "Delete Test Addon (Cleanup)",
             "DELETE",
             f"admin/addons/{addon_id}",
             200
         )
         
         if success:
-            print(f"   Deleted add-on: {addon_id}")
+            print(f"   Deleted test addon: {addon_id}")
             return True
         return False
 
