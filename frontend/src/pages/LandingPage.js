@@ -371,12 +371,13 @@ export default function LandingPage() {
                   
                   {/* Card */}
                   <div className="relative bg-white/5 backdrop-blur-sm rounded-2xl overflow-hidden border border-white/10 hover:border-white/20 transition-all duration-300">
-                    {/* Image */}
+                    {/* Image with lazy loading */}
                     <div className="relative h-40 overflow-hidden">
-                      <img 
+                      <LazyImage 
                         src={module.image} 
                         alt={module.name}
-                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                        className="w-full h-full"
+                        style={{ transform: 'scale(1)', transition: 'transform 0.7s' }}
                       />
                       <div className={`absolute inset-0 bg-gradient-to-t ${module.gradient} opacity-80`}></div>
                       
