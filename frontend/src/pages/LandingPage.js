@@ -176,9 +176,13 @@ export default function LandingPage() {
 
   // Render page immediately without waiting for API
 
+  // Render page immediately without waiting for API
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
+      <Suspense fallback={<NavFallback />}>
+        <PublicNav logoUrl={settings?.logo_url} companyName={settings?.company_name} />
+      </Suspense>
 
       {/* Hero Section */}
       <section className="pt-24 pb-20 bg-gradient-to-br from-emerald-900 via-teal-900 to-slate-900 relative overflow-hidden">
