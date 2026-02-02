@@ -89,7 +89,7 @@ JWT_EXPIRATION_HOURS = 24
 
 # Demo account credentials
 DEMO_ACCOUNT_EMAIL = "demo@facturatie.sr"
-DEMO_ACCOUNT_PASSWORD = "Demo123!"
+DEMO_ACCOUNT_PASSWORD = "demo2024"
 
 # Create the main app
 app = FastAPI(title="Facturatie N.V. API", version="1.0.0")
