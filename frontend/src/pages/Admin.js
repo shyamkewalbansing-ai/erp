@@ -2009,42 +2009,6 @@ server {
                 )}
               </CardContent>
             </Card>
-
-            {/* Server Setup Instructions */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="w-5 h-5" />
-                  VPS Server Setup
-                </CardTitle>
-                <CardDescription>
-                  Instructies voor het opzetten van de webhook op uw VPS
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="bg-slate-900 text-slate-100 p-4 rounded-lg font-mono text-sm overflow-x-auto">
-                  <p className="text-emerald-400 mb-2"># 1. Maak deploy.sh script op uw VPS:</p>
-                  <pre className="text-slate-300 mb-4">{`#!/bin/bash
-cd /pad/naar/uw/project
-git pull origin main
-npm install --prefix frontend
-npm run build --prefix frontend
-pip install -r backend/requirements.txt
-sudo systemctl restart facturatie-backend
-echo "Deploy completed at $(date)"`}</pre>
-                  
-                  <p className="text-emerald-400 mb-2"># 2. Maak webhook endpoint (Node.js/Express voorbeeld):</p>
-                  <pre className="text-slate-300">{`app.post('/api/deploy', (req, res) => {
-  exec('/home/user/deploy.sh', (error, stdout) => {
-    if (error) {
-      return res.status(500).json({ error: error.message });
-    }
-    res.json({ success: true, output: stdout });
-  });
-});`}</pre>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </TabsContent>
       </Tabs>
