@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
 import { lazy, Suspense, memo, useEffect } from "react";
 import { preloadCriticalData } from "./lib/api";
+import { initPerformanceMonitoring, prefetch } from "./lib/performance";
 
 // Critical pages - load immediately
 import Login from "./pages/Login";
@@ -12,8 +13,17 @@ import LandingPage from "./pages/LandingPage";
 import Layout from "./components/Layout";
 import "@/App.css";
 
-// Preload critical data on app start
+// Initialize performance monitoring and preload critical data
+initPerformanceMonitoring();
 preloadCriticalData();
+
+// Prefetch commonly used pages when browser is idle
+if (typeof window !== 'undefined') {
+  setTimeout(() => {
+    prefetch(() => import("./pages/Dashboard"));
+    prefetch(() => import("./pages/ModulesPage"));
+  }, 3000);
+}
 
 // Tenant Portal pages
 const TenantLogin = lazy(() => import("./pages/TenantLogin"));
