@@ -227,87 +227,244 @@ async def cleanup_demo_data():
         logger.error(f"Demo cleanup error: {e}")
 
 async def insert_fixed_demo_data(user_id: str):
-    """Insert fixed demo data that resets every hour"""
+    """Insert comprehensive fixed demo data for ALL modules"""
     try:
         now = datetime.now(timezone.utc).isoformat()
+        today = datetime.now().strftime("%Y-%m-%d")
         
         # ============== VASTGOED BEHEER DEMO DATA ==============
-        # Demo Appartementen
+        apt1_id = str(uuid.uuid4())
+        apt2_id = str(uuid.uuid4())
+        apt3_id = str(uuid.uuid4())
+        apt4_id = str(uuid.uuid4())
+        
         demo_apartments = [
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Appartement A1", "address": "Kerkstraat 10", "rent_amount": 2500, "status": "verhuurd", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Appartement B2", "address": "Wilhelminastraat 25", "rent_amount": 3500, "status": "beschikbaar", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Studio C3", "address": "Gravenstraat 8", "rent_amount": 1800, "status": "verhuurd", "created_at": now},
+            {"id": apt1_id, "user_id": user_id, "name": "Appartement A1 - Centrum", "address": "Kerkstraat 10, Paramaribo", "rent_amount": 2500, "status": "verhuurd", "bedrooms": 2, "bathrooms": 1, "size_sqm": 75, "created_at": now},
+            {"id": apt2_id, "user_id": user_id, "name": "Appartement B2 - Noord", "address": "Wilhelminastraat 25, Paramaribo", "rent_amount": 3500, "status": "beschikbaar", "bedrooms": 3, "bathrooms": 2, "size_sqm": 110, "created_at": now},
+            {"id": apt3_id, "user_id": user_id, "name": "Studio C3 - Zuid", "address": "Gravenstraat 8, Paramaribo", "rent_amount": 1800, "status": "verhuurd", "bedrooms": 1, "bathrooms": 1, "size_sqm": 45, "created_at": now},
+            {"id": apt4_id, "user_id": user_id, "name": "Penthouse D4 - Centrum", "address": "Waterkant 50, Paramaribo", "rent_amount": 5500, "status": "beschikbaar", "bedrooms": 4, "bathrooms": 3, "size_sqm": 180, "created_at": now},
         ]
         
-        # Demo Huurders
+        tenant1_id = str(uuid.uuid4())
+        tenant2_id = str(uuid.uuid4())
+        tenant3_id = str(uuid.uuid4())
+        
         demo_tenants = [
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Jan Jansen", "email": "jan@demo.sr", "phone": "8123456", "address": "Kerkstraat 10", "balance": 0, "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Maria Pengel", "email": "maria@demo.sr", "phone": "8234567", "address": "Gravenstraat 8", "balance": -500, "created_at": now},
+            {"id": tenant1_id, "user_id": user_id, "name": "Jan Jansen", "email": "jan.jansen@demo.sr", "phone": "8123456", "address": "Kerkstraat 10", "apartment_id": apt1_id, "balance": 0, "status": "active", "created_at": now},
+            {"id": tenant2_id, "user_id": user_id, "name": "Maria Pengel", "email": "maria.pengel@demo.sr", "phone": "8234567", "address": "Gravenstraat 8", "apartment_id": apt3_id, "balance": -500, "status": "active", "created_at": now},
+            {"id": tenant3_id, "user_id": user_id, "name": "Robert Tjin", "email": "robert.tjin@demo.sr", "phone": "8345678", "address": "Zwartenhovenbrugstraat 15", "apartment_id": None, "balance": 2500, "status": "inactive", "created_at": now},
+        ]
+        
+        # Demo betalingen
+        demo_payments = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "tenant_id": tenant1_id, "tenant_name": "Jan Jansen", "amount": 2500, "payment_date": today, "payment_method": "bank", "description": "Huur januari", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "tenant_id": tenant1_id, "tenant_name": "Jan Jansen", "amount": 2500, "payment_date": "2025-12-01", "payment_method": "bank", "description": "Huur december", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "tenant_id": tenant2_id, "tenant_name": "Maria Pengel", "amount": 1300, "payment_date": today, "payment_method": "cash", "description": "Gedeeltelijke betaling", "created_at": now},
+        ]
+        
+        # Demo contracten
+        demo_contracts = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "tenant_id": tenant1_id, "apartment_id": apt1_id, "start_date": "2024-01-01", "end_date": "2025-12-31", "rent_amount": 2500, "deposit": 5000, "status": "active", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "tenant_id": tenant2_id, "apartment_id": apt3_id, "start_date": "2024-06-01", "end_date": "2025-05-31", "rent_amount": 1800, "deposit": 3600, "status": "active", "created_at": now},
+        ]
+        
+        # Demo onderhoud
+        demo_maintenance = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "apartment_id": apt1_id, "apartment_name": "Appartement A1", "description": "Lekkende kraan badkamer", "status": "pending", "priority": "medium", "cost": 150, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "apartment_id": apt3_id, "apartment_name": "Studio C3", "description": "Airco service", "status": "completed", "priority": "low", "cost": 250, "created_at": now},
         ]
         
         await db.apartments.insert_many(demo_apartments)
         await db.tenants.insert_many(demo_tenants)
+        await db.payments.insert_many(demo_payments)
+        await db.contracts.insert_many(demo_contracts)
+        await db.maintenance.insert_many(demo_maintenance)
         
-        # ============== HRM DEMO DATA ==============
+        # ============== HRM MODULE DEMO DATA ==============
+        dept1_id = str(uuid.uuid4())
+        dept2_id = str(uuid.uuid4())
+        dept3_id = str(uuid.uuid4())
+        dept4_id = str(uuid.uuid4())
+        
         demo_departments = [
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Administratie", "description": "Financiële administratie", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Verkoop", "description": "Sales team", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "IT", "description": "Technische ondersteuning", "created_at": now},
+            {"id": dept1_id, "user_id": user_id, "name": "Administratie", "description": "Financiële administratie en boekhouding", "manager": "Peter Bakker", "budget": 50000, "created_at": now},
+            {"id": dept2_id, "user_id": user_id, "name": "Verkoop", "description": "Sales en klantrelaties", "manager": "Sandra Lie", "budget": 75000, "created_at": now},
+            {"id": dept3_id, "user_id": user_id, "name": "IT", "description": "Technische ondersteuning en development", "manager": "Kevin Moensi", "budget": 80000, "created_at": now},
+            {"id": dept4_id, "user_id": user_id, "name": "HR", "description": "Human Resources", "manager": "Diana Soekhoe", "budget": 45000, "created_at": now},
         ]
         
+        emp1_id = str(uuid.uuid4())
+        emp2_id = str(uuid.uuid4())
+        emp3_id = str(uuid.uuid4())
+        emp4_id = str(uuid.uuid4())
+        emp5_id = str(uuid.uuid4())
+        emp6_id = str(uuid.uuid4())
+        
         demo_employees = [
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Peter Bakker", "email": "peter@demo.sr", "phone": "8345678", "department": "Administratie", "position": "Boekhouder", "salary": 4500, "status": "active", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Sandra Lie", "email": "sandra@demo.sr", "phone": "8456789", "department": "Verkoop", "position": "Sales Manager", "salary": 5500, "status": "active", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Kevin Moensi", "email": "kevin@demo.sr", "phone": "8567890", "department": "IT", "position": "Developer", "salary": 6000, "status": "active", "created_at": now},
+            {"id": emp1_id, "user_id": user_id, "name": "Peter Bakker", "email": "peter.bakker@demo.sr", "phone": "8456789", "department": "Administratie", "department_id": dept1_id, "position": "Hoofd Financiën", "salary": 6500, "hire_date": "2020-03-15", "status": "active", "created_at": now},
+            {"id": emp2_id, "user_id": user_id, "name": "Sandra Lie", "email": "sandra.lie@demo.sr", "phone": "8567890", "department": "Verkoop", "department_id": dept2_id, "position": "Sales Manager", "salary": 5500, "hire_date": "2021-06-01", "status": "active", "created_at": now},
+            {"id": emp3_id, "user_id": user_id, "name": "Kevin Moensi", "email": "kevin.moensi@demo.sr", "phone": "8678901", "department": "IT", "department_id": dept3_id, "position": "Lead Developer", "salary": 7000, "hire_date": "2019-01-10", "status": "active", "created_at": now},
+            {"id": emp4_id, "user_id": user_id, "name": "Diana Soekhoe", "email": "diana.soekhoe@demo.sr", "phone": "8789012", "department": "HR", "department_id": dept4_id, "position": "HR Manager", "salary": 5000, "hire_date": "2022-02-01", "status": "active", "created_at": now},
+            {"id": emp5_id, "user_id": user_id, "name": "Marco Venetiaan", "email": "marco.v@demo.sr", "phone": "8890123", "department": "Verkoop", "department_id": dept2_id, "position": "Sales Representative", "salary": 3500, "hire_date": "2023-04-15", "status": "active", "created_at": now},
+            {"id": emp6_id, "user_id": user_id, "name": "Reshma Doerga", "email": "reshma.d@demo.sr", "phone": "8901234", "department": "IT", "department_id": dept3_id, "position": "Junior Developer", "salary": 4000, "hire_date": "2024-01-08", "status": "active", "created_at": now},
+        ]
+        
+        # Demo verlofaanvragen
+        demo_leave_requests = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "employee_id": emp2_id, "employee_name": "Sandra Lie", "leave_type": "vakantie", "start_date": "2025-03-01", "end_date": "2025-03-10", "days": 8, "reason": "Familie bezoek Nederland", "status": "pending", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "employee_id": emp5_id, "employee_name": "Marco Venetiaan", "leave_type": "ziek", "start_date": today, "end_date": today, "days": 1, "reason": "Griep", "status": "approved", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "employee_id": emp3_id, "employee_name": "Kevin Moensi", "leave_type": "vakantie", "start_date": "2025-04-15", "end_date": "2025-04-25", "days": 9, "reason": "Huwelijksreis", "status": "pending", "created_at": now},
+        ]
+        
+        # Demo aanwezigheid
+        demo_attendance = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "employee_id": emp1_id, "employee_name": "Peter Bakker", "date": today, "check_in": "08:00", "check_out": "17:00", "status": "present", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "employee_id": emp2_id, "employee_name": "Sandra Lie", "date": today, "check_in": "08:30", "check_out": "17:30", "status": "present", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "employee_id": emp3_id, "employee_name": "Kevin Moensi", "date": today, "check_in": "09:00", "check_out": None, "status": "present", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "employee_id": emp4_id, "employee_name": "Diana Soekhoe", "date": today, "check_in": "08:15", "check_out": "16:45", "status": "present", "created_at": now},
         ]
         
         await db.hrm_departments.insert_many(demo_departments)
         await db.hrm_employees.insert_many(demo_employees)
+        await db.hrm_leave_requests.insert_many(demo_leave_requests)
+        await db.hrm_attendance.insert_many(demo_attendance)
         
-        # ============== AUTO DEALER DEMO DATA ==============
+        # ============== AUTO DEALER MODULE DEMO DATA ==============
+        veh1_id = str(uuid.uuid4())
+        veh2_id = str(uuid.uuid4())
+        veh3_id = str(uuid.uuid4())
+        veh4_id = str(uuid.uuid4())
+        veh5_id = str(uuid.uuid4())
+        veh6_id = str(uuid.uuid4())
+        
         demo_vehicles = [
-            {"id": str(uuid.uuid4()), "user_id": user_id, "brand": "Toyota", "model": "Corolla", "year": 2022, "license_plate": "AB-1234", "price_srd": 85000, "price_eur": 2500, "price_usd": 2700, "status": "beschikbaar", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "brand": "Honda", "model": "Civic", "year": 2021, "license_plate": "CD-5678", "price_srd": 75000, "price_eur": 2200, "price_usd": 2400, "status": "beschikbaar", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "brand": "Nissan", "model": "Qashqai", "year": 2023, "license_plate": "EF-9012", "price_srd": 120000, "price_eur": 3500, "price_usd": 3800, "status": "verkocht", "created_at": now},
+            {"id": veh1_id, "user_id": user_id, "brand": "Toyota", "model": "Corolla", "year": 2022, "license_plate": "AB-1234", "color": "Wit", "mileage": 25000, "price_srd": 85000, "price_eur": 2500, "price_usd": 2700, "status": "beschikbaar", "fuel_type": "Benzine", "transmission": "Automaat", "created_at": now},
+            {"id": veh2_id, "user_id": user_id, "brand": "Honda", "model": "Civic", "year": 2021, "license_plate": "CD-5678", "color": "Zwart", "mileage": 35000, "price_srd": 75000, "price_eur": 2200, "price_usd": 2400, "status": "beschikbaar", "fuel_type": "Benzine", "transmission": "Handgeschakeld", "created_at": now},
+            {"id": veh3_id, "user_id": user_id, "brand": "Nissan", "model": "Qashqai", "year": 2023, "license_plate": "EF-9012", "color": "Grijs", "mileage": 8000, "price_srd": 120000, "price_eur": 3500, "price_usd": 3800, "status": "verkocht", "fuel_type": "Benzine", "transmission": "Automaat", "created_at": now},
+            {"id": veh4_id, "user_id": user_id, "brand": "Hyundai", "model": "Tucson", "year": 2022, "license_plate": "GH-3456", "color": "Blauw", "mileage": 18000, "price_srd": 95000, "price_eur": 2800, "price_usd": 3000, "status": "beschikbaar", "fuel_type": "Benzine", "transmission": "Automaat", "created_at": now},
+            {"id": veh5_id, "user_id": user_id, "brand": "Suzuki", "model": "Swift", "year": 2020, "license_plate": "IJ-7890", "color": "Rood", "mileage": 45000, "price_srd": 45000, "price_eur": 1300, "price_usd": 1400, "status": "beschikbaar", "fuel_type": "Benzine", "transmission": "Handgeschakeld", "created_at": now},
+            {"id": veh6_id, "user_id": user_id, "brand": "Toyota", "model": "Hilux", "year": 2021, "license_plate": "KL-1122", "color": "Zilver", "mileage": 55000, "price_srd": 150000, "price_eur": 4400, "price_usd": 4800, "status": "gereserveerd", "fuel_type": "Diesel", "transmission": "Handgeschakeld", "created_at": now},
         ]
         
+        cust1_id = str(uuid.uuid4())
+        cust2_id = str(uuid.uuid4())
+        cust3_id = str(uuid.uuid4())
+        
         demo_ad_customers = [
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Robert Chin", "email": "robert@demo.sr", "phone": "8678901", "type": "particulier", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Garage Paramaribo", "email": "garage@demo.sr", "phone": "8789012", "type": "bedrijf", "created_at": now},
+            {"id": cust1_id, "user_id": user_id, "name": "Robert Chin", "email": "robert.chin@demo.sr", "phone": "8012345", "address": "Maagdenstraat 22", "type": "particulier", "notes": "Zoekt gezinsauto", "created_at": now},
+            {"id": cust2_id, "user_id": user_id, "name": "Garage Paramaribo N.V.", "email": "info@garagepbo.sr", "phone": "8123456", "address": "Industrieweg 100", "type": "bedrijf", "notes": "Grote klant - fleet aankopen", "created_at": now},
+            {"id": cust3_id, "user_id": user_id, "name": "Lisa Sital", "email": "lisa.sital@demo.sr", "phone": "8234567", "address": "Ringweg Zuid 45", "type": "particulier", "notes": "Eerste auto", "created_at": now},
+        ]
+        
+        # Demo verkopen
+        demo_ad_sales = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "vehicle_id": veh3_id, "customer_id": cust1_id, "customer_name": "Robert Chin", "vehicle_name": "Nissan Qashqai 2023", "sale_date": "2025-01-15", "price": 120000, "currency": "SRD", "payment_status": "paid", "created_at": now},
         ]
         
         await db.autodealer_vehicles.insert_many(demo_vehicles)
         await db.autodealer_customers.insert_many(demo_ad_customers)
+        await db.autodealer_sales.insert_many(demo_ad_sales)
         
-        # ============== BEAUTY & SPA DEMO DATA ==============
+        # ============== BEAUTY & SPA MODULE DEMO DATA ==============
+        serv1_id = str(uuid.uuid4())
+        serv2_id = str(uuid.uuid4())
+        serv3_id = str(uuid.uuid4())
+        serv4_id = str(uuid.uuid4())
+        serv5_id = str(uuid.uuid4())
+        serv6_id = str(uuid.uuid4())
+        
         demo_spa_services = [
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Gezichtsverzorging", "price": 150, "duration": 60, "description": "Complete gezichtsbehandeling", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Manicure", "price": 75, "duration": 45, "description": "Nagelverzorging handen", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Pedicure", "price": 85, "duration": 45, "description": "Nagelverzorging voeten", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Massage", "price": 200, "duration": 90, "description": "Ontspannende lichaamsmassage", "created_at": now},
+            {"id": serv1_id, "user_id": user_id, "name": "Luxe Gezichtsbehandeling", "price": 175, "duration": 75, "description": "Complete gezichtsverzorging met masker", "category": "Gezicht", "is_active": True, "created_at": now},
+            {"id": serv2_id, "user_id": user_id, "name": "Klassieke Manicure", "price": 65, "duration": 45, "description": "Nagelverzorging met lakken", "category": "Nagels", "is_active": True, "created_at": now},
+            {"id": serv3_id, "user_id": user_id, "name": "Spa Pedicure", "price": 95, "duration": 60, "description": "Voetenverzorging met massage", "category": "Nagels", "is_active": True, "created_at": now},
+            {"id": serv4_id, "user_id": user_id, "name": "Zweedse Massage", "price": 200, "duration": 90, "description": "Ontspannende lichaamsmassage", "category": "Massage", "is_active": True, "created_at": now},
+            {"id": serv5_id, "user_id": user_id, "name": "Hot Stone Massage", "price": 250, "duration": 90, "description": "Massage met warme stenen", "category": "Massage", "is_active": True, "created_at": now},
+            {"id": serv6_id, "user_id": user_id, "name": "Gel Nagels Full Set", "price": 120, "duration": 90, "description": "Complete gel nagelset", "category": "Nagels", "is_active": True, "created_at": now},
         ]
         
+        spa_cust1_id = str(uuid.uuid4())
+        spa_cust2_id = str(uuid.uuid4())
+        spa_cust3_id = str(uuid.uuid4())
+        spa_cust4_id = str(uuid.uuid4())
+        
         demo_spa_customers = [
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Lisa Djokarto", "email": "lisa@demo.sr", "phone": "8890123", "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Reshma Doerga", "email": "reshma@demo.sr", "phone": "8901234", "created_at": now},
+            {"id": spa_cust1_id, "user_id": user_id, "name": "Lisa Djokarto", "email": "lisa.d@demo.sr", "phone": "8345678", "birthday": "1990-05-15", "notes": "Allergisch voor noten", "visits": 12, "total_spent": 1850, "created_at": now},
+            {"id": spa_cust2_id, "user_id": user_id, "name": "Reshma Doerga", "email": "reshma.d@demo.sr", "phone": "8456789", "birthday": "1988-11-22", "notes": "VIP klant", "visits": 25, "total_spent": 4500, "created_at": now},
+            {"id": spa_cust3_id, "user_id": user_id, "name": "Anita Ramdin", "email": "anita.r@demo.sr", "phone": "8567890", "birthday": "1995-03-08", "notes": "", "visits": 5, "total_spent": 650, "created_at": now},
+            {"id": spa_cust4_id, "user_id": user_id, "name": "Carmen Soekhoe", "email": "carmen.s@demo.sr", "phone": "8678901", "birthday": "1992-08-30", "notes": "Voorkeur voor ochtendafspraken", "visits": 8, "total_spent": 1200, "created_at": now},
+        ]
+        
+        # Demo afspraken
+        demo_spa_appointments = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "customer_id": spa_cust1_id, "customer_name": "Lisa Djokarto", "service_id": serv1_id, "service": "Luxe Gezichtsbehandeling", "date": today, "time": "10:00", "duration": 75, "price": 175, "status": "confirmed", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "customer_id": spa_cust2_id, "customer_name": "Reshma Doerga", "service_id": serv4_id, "service": "Zweedse Massage", "date": today, "time": "14:00", "duration": 90, "price": 200, "status": "confirmed", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "customer_id": spa_cust3_id, "customer_name": "Anita Ramdin", "service_id": serv2_id, "service": "Klassieke Manicure", "date": today, "time": "11:30", "duration": 45, "price": 65, "status": "pending", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "customer_id": spa_cust4_id, "customer_name": "Carmen Soekhoe", "service_id": serv6_id, "service": "Gel Nagels Full Set", "date": today, "time": "16:00", "duration": 90, "price": 120, "status": "confirmed", "created_at": now},
+        ]
+        
+        # Demo spa staff
+        demo_spa_staff = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Michelle Ramdas", "email": "michelle@demo.sr", "phone": "8789012", "role": "Schoonheidsspecialist", "specialties": ["Gezicht", "Massage"], "status": "active", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Priya Narain", "email": "priya@demo.sr", "phone": "8890123", "role": "Nagelstyliste", "specialties": ["Nagels"], "status": "active", "created_at": now},
         ]
         
         await db.spa_services.insert_many(demo_spa_services)
         await db.spa_customers.insert_many(demo_spa_customers)
+        await db.spa_appointments.insert_many(demo_spa_appointments)
+        await db.spa_staff.insert_many(demo_spa_staff)
         
-        # ============== POMPSTATION DEMO DATA ==============
+        # ============== POMPSTATION MODULE DEMO DATA ==============
         demo_fuel_inventory = [
-            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Benzine 95", "current_liters": 5000, "price_per_liter": 12.50, "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Diesel", "current_liters": 8000, "price_per_liter": 10.80, "created_at": now},
-            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Benzine 98", "current_liters": 3000, "price_per_liter": 14.20, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Benzine 95", "current_liters": 15000, "capacity": 25000, "price_per_liter": 12.50, "last_delivery": "2025-01-28", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Diesel", "current_liters": 22000, "capacity": 30000, "price_per_liter": 10.80, "last_delivery": "2025-01-25", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Benzine 98 Premium", "current_liters": 8000, "capacity": 15000, "price_per_liter": 14.20, "last_delivery": "2025-01-20", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "LPG", "current_liters": 5000, "capacity": 10000, "price_per_liter": 8.50, "last_delivery": "2025-01-22", "created_at": now},
+        ]
+        
+        # Demo brandstof verkopen
+        demo_fuel_sales = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Benzine 95", "liters": 45, "price_per_liter": 12.50, "total": 562.50, "pump_number": 1, "payment_method": "cash", "date": now, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Diesel", "liters": 80, "price_per_liter": 10.80, "total": 864.00, "pump_number": 3, "payment_method": "card", "date": now, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Benzine 95", "liters": 30, "price_per_liter": 12.50, "total": 375.00, "pump_number": 2, "payment_method": "cash", "date": now, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "fuel_type": "Benzine 98 Premium", "liters": 55, "price_per_liter": 14.20, "total": 781.00, "pump_number": 4, "payment_method": "mope", "date": now, "created_at": now},
+        ]
+        
+        # Demo pompstation tanks
+        demo_tanks = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Tank 1 - Benzine 95", "fuel_type": "Benzine 95", "capacity": 25000, "current_level": 15000, "status": "active", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Tank 2 - Diesel", "fuel_type": "Diesel", "capacity": 30000, "current_level": 22000, "status": "active", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Tank 3 - Premium", "fuel_type": "Benzine 98", "capacity": 15000, "current_level": 8000, "status": "active", "created_at": now},
+        ]
+        
+        # Demo pompen
+        demo_pumps = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "pump_number": 1, "fuel_types": ["Benzine 95", "Diesel"], "status": "active", "last_maintenance": "2025-01-15", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "pump_number": 2, "fuel_types": ["Benzine 95", "Benzine 98"], "status": "active", "last_maintenance": "2025-01-15", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "pump_number": 3, "fuel_types": ["Diesel"], "status": "active", "last_maintenance": "2025-01-10", "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "pump_number": 4, "fuel_types": ["Benzine 95", "Benzine 98", "Diesel"], "status": "maintenance", "last_maintenance": "2025-01-05", "created_at": now},
+        ]
+        
+        # Demo winkel producten
+        demo_shop_products = [
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Motorolie 5W-30", "category": "Auto", "price": 85.00, "stock": 24, "min_stock": 10, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Ruitenwisservloeistof", "category": "Auto", "price": 15.00, "stock": 50, "min_stock": 20, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Coca Cola 500ml", "category": "Dranken", "price": 8.50, "stock": 120, "min_stock": 50, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Water 500ml", "category": "Dranken", "price": 5.00, "stock": 200, "min_stock": 80, "created_at": now},
+            {"id": str(uuid.uuid4()), "user_id": user_id, "name": "Chips Lays", "category": "Snacks", "price": 12.00, "stock": 60, "min_stock": 30, "created_at": now},
         ]
         
         await db.fuel_inventory.insert_many(demo_fuel_inventory)
+        await db.fuel_sales.insert_many(demo_fuel_sales)
+        await db.pompstation_tanks.insert_many(demo_tanks)
+        await db.pompstation_pompen.insert_many(demo_pumps)
+        await db.pompstation_winkel_producten.insert_many(demo_shop_products)
         
-        logger.info(f"Fixed demo data inserted for user {user_id}")
+        logger.info(f"Comprehensive demo data inserted for user {user_id} - All modules populated")
         
     except Exception as e:
         logger.error(f"Error inserting demo data: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
 
 async def demo_cleanup_scheduler():
     """Run demo cleanup every hour"""
