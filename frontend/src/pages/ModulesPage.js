@@ -63,19 +63,38 @@ export default function ModulesPage() {
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
-      const [addonsRes, settingsRes] = await Promise.all([
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout')), 15000)
+      );
+      
+      const dataPromise = Promise.all([
         getPublicAddons(),
         api.get('/public/landing/settings').catch(() => ({ data: {} }))
       ]);
       
-      setAddons(addonsRes.data || []);
-      setSettings(settingsRes.data || {});
+      const [addonsRes, settingsRes] = await Promise.race([dataPromise, timeoutPromise]);
+      
+      setAddons(addonsRes?.data || []);
+      setSettings(settingsRes?.data || {});
     } catch (error) {
       console.error('Error loading modules:', error);
+      // Set empty arrays on error so page still renders
+      setAddons([]);
+      setSettings({});
+      if (error.message === 'Timeout') {
+        toast.error('Laden duurde te lang. Probeer de pagina te vernieuwen.');
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  // Retry function for user
+  const retryLoad = () => {
+    loadData();
   };
 
   const toggleAddon = (addonId) => {
