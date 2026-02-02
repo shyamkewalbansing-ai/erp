@@ -549,6 +549,7 @@ export default function ModuleDetailPage() {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [addons, setAddons] = useState([]);
+  const [dynamicModule, setDynamicModule] = useState(null);
   
   // Order dialog state
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
@@ -563,7 +564,8 @@ export default function ModuleDetailPage() {
     password_confirm: ''
   });
 
-  const module = MODULES_DETAIL[slug];
+  // Check if we have hardcoded module detail, otherwise load from API
+  const hardcodedModule = MODULES_DETAIL[slug];
 
   useEffect(() => {
     loadData();
@@ -578,12 +580,46 @@ export default function ModuleDetailPage() {
       ]);
       setSettings(settingsRes.data || {});
       setAddons(addonsRes.data || []);
+      
+      // If no hardcoded module, try to load from API
+      if (!MODULES_DETAIL[slug]) {
+        try {
+          const addonRes = await api.get(`/addons/${slug}`);
+          if (addonRes.data) {
+            // Convert API addon to module format
+            const addon = addonRes.data;
+            setDynamicModule({
+              id: addon.slug,
+              name: addon.name,
+              title: addon.name,
+              subtitle: addon.description || `Professionele ${addon.name} module`,
+              description: addon.description || `De ${addon.name} module biedt een complete oplossing voor uw bedrijfsvoering.`,
+              icon: addon.icon_name || 'Puzzle',
+              gradient: 'from-emerald-500 to-teal-600',
+              lightGradient: 'from-emerald-50 to-teal-50',
+              accentColor: 'emerald',
+              category: addon.category || 'Module',
+              price: `SRD ${addon.price?.toLocaleString('nl-NL') || '0'}`,
+              priceAmount: addon.price || 0,
+              priceNote: 'per maand',
+              heroImage: addon.hero_image_url || 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&q=80',
+              highlights: addon.highlights || ['Professioneel', 'Gebruiksvriendelijk', 'Snel', 'Betrouwbaar'],
+              sections: addon.features || []
+            });
+          }
+        } catch (addonErr) {
+          console.error('Error loading addon:', addonErr);
+        }
+      }
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  // Use hardcoded module if available, otherwise use dynamic module from API
+  const module = hardcodedModule || dynamicModule;
 
   const handleOrderSubmit = async (e) => {
     e.preventDefault();
