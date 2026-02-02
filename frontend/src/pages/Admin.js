@@ -167,12 +167,22 @@ export default function Admin() {
     name: '',
     slug: '',
     description: '',
-    price: 3500
+    price: 3500,
+    category: '',
+    icon_name: '',
+    hero_image_url: '',
+    highlights: '',
+    features: []
   });
   const [editAddonForm, setEditAddonForm] = useState({
     name: '',
     description: '',
-    price: 0
+    price: 0,
+    category: '',
+    icon_name: '',
+    hero_image_url: '',
+    highlights: '',
+    features: []
   });
   const [addonMonths, setAddonMonths] = useState('1');
   
