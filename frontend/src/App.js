@@ -2,7 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
-import { lazy, Suspense, memo } from "react";
+import { lazy, Suspense, memo, useEffect } from "react";
+import { preloadCriticalData } from "./lib/api";
 
 // Critical pages - load immediately
 import Login from "./pages/Login";
@@ -10,6 +11,9 @@ import Register from "./pages/Register";
 import LandingPage from "./pages/LandingPage";
 import Layout from "./components/Layout";
 import "@/App.css";
+
+// Preload critical data on app start
+preloadCriticalData();
 
 // Tenant Portal pages
 const TenantLogin = lazy(() => import("./pages/TenantLogin"));
