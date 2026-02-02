@@ -13116,6 +13116,10 @@ api_router.include_router(pompstation_router)
 # Include the router in the main app
 app.include_router(api_router)
 
+# Add GZip compression middleware for faster responses
+from starlette.middleware.gzip import GZipMiddleware
+app.add_middleware(GZipMiddleware, minimum_size=500)
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
@@ -13123,6 +13127,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Cache headers middleware for static responses
+@app.middleware("http")
+async def add_cache_headers(request, call_next):
+    response = await call_next(request)
+    
+    # Add cache headers for public endpoints
+    if "/api/public/" in str(request.url):
+        response.headers["Cache-Control"] = "public, max-age=300"  # 5 minutes
+    elif "/api/addons" in str(request.url) and request.method == "GET":
+        response.headers["Cache-Control"] = "public, max-age=300"
+    
+    return response
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
