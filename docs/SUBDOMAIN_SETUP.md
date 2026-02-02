@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://quickapp-62.preview.emergentagent.com/           → Landing page
-https://quickapp-62.preview.emergentagent.com/login      → Login
-https://quickapp-62.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://quickapp-62.preview.emergentagent.com/booking/   → Publieke booking portals
+https://plan-design-update.preview.emergentagent.com/           → Landing page
+https://plan-design-update.preview.emergentagent.com/login      → Login
+https://plan-design-update.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://plan-design-update.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
