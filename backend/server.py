@@ -6826,11 +6826,18 @@ async def get_all_addons():
 @api_router.get("/addons/{slug_or_id}")
 async def get_addon_by_slug_or_id(slug_or_id: str):
     """Get a single addon by slug or id (public endpoint for module detail page)"""
-    # Try finding by slug first
+    # Try finding by slug first (exact match)
     addon = await db.addons.find_one({"slug": slug_or_id, "is_active": True}, {"_id": 0})
+    
+    if not addon:
+        # Try with underscore replaced by hyphen and vice versa
+        alt_slug = slug_or_id.replace('-', '_') if '-' in slug_or_id else slug_or_id.replace('_', '-')
+        addon = await db.addons.find_one({"slug": alt_slug, "is_active": True}, {"_id": 0})
+    
     if not addon:
         # Try by id
         addon = await db.addons.find_one({"id": slug_or_id, "is_active": True}, {"_id": 0})
+    
     if not addon:
         raise HTTPException(status_code=404, detail="Add-on niet gevonden")
     return AddonResponse(**addon)
