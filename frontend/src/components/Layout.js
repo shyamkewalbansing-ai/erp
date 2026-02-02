@@ -660,9 +660,9 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className={`main-content ${sidebarCollapsed ? 'main-content-expanded' : ''}`}>
+      <main className={`main-content ${isCollapsed ? 'main-content-expanded' : ''}`}>
         {/* Desktop header with notifications */}
-        <header className={`desktop-header hidden lg:flex header-glass px-8 py-3 items-center justify-between border-b border-border/50 ${sidebarCollapsed ? 'desktop-header-expanded' : ''}`}>
+        <header className={`desktop-header hidden lg:flex header-glass px-8 py-3 items-center justify-between border-b border-border/50 ${isCollapsed ? 'desktop-header-expanded' : ''}`}>
           {/* Left side - User info & Workspace/Portal buttons */}
           <div className="flex items-center gap-4">
             {/* User info */}
