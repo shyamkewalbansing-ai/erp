@@ -2,9 +2,13 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
-// Simple in-memory cache for GET requests
+// Enhanced in-memory cache for GET requests
 const cache = new Map();
-const CACHE_TTL = 30000; // 30 seconds
+const CACHE_TTL = 60000; // 60 seconds for regular data
+const PUBLIC_CACHE_TTL = 300000; // 5 minutes for public/landing data
+
+// Pending requests map to prevent duplicate calls
+const pendingRequests = new Map();
 
 // Create axios instance with optimized config
 const api = axios.create({
@@ -31,7 +35,8 @@ api.interceptors.response.use(
       const cacheKey = response.config.url;
       cache.set(cacheKey, {
         data: response,
-        timestamp: Date.now()
+        timestamp: Date.now(),
+        ttl: PUBLIC_CACHE_TTL
       });
     }
     return response;
@@ -45,20 +50,80 @@ api.interceptors.response.use(
   }
 );
 
-// Cached GET for public endpoints
-export const cachedGet = async (url) => {
-  const cacheKey = url;
-  const cached = cache.get(cacheKey);
+// Deduplicated GET - prevents multiple identical requests
+export const deduplicatedGet = async (url, options = {}) => {
+  // Check cache first
+  const cached = cache.get(url);
+  const ttl = cached?.ttl || CACHE_TTL;
   
-  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+  if (cached && Date.now() - cached.timestamp < ttl) {
     return cached.data;
   }
   
-  return api.get(url);
+  // Check if request is already pending
+  if (pendingRequests.has(url)) {
+    return pendingRequests.get(url);
+  }
+  
+  // Make new request
+  const requestPromise = api.get(url, options)
+    .then(response => {
+      pendingRequests.delete(url);
+      return response;
+    })
+    .catch(error => {
+      pendingRequests.delete(url);
+      throw error;
+    });
+  
+  pendingRequests.set(url, requestPromise);
+  return requestPromise;
+};
+
+// Cached GET for public endpoints (longer TTL)
+export const cachedGet = async (url) => {
+  const cacheKey = url;
+  const cached = cache.get(cacheKey);
+  const ttl = url.includes('/public/') ? PUBLIC_CACHE_TTL : CACHE_TTL;
+  
+  if (cached && Date.now() - cached.timestamp < ttl) {
+    return cached.data;
+  }
+  
+  const response = await api.get(url);
+  cache.set(cacheKey, {
+    data: response,
+    timestamp: Date.now(),
+    ttl: ttl
+  });
+  return response;
+};
+
+// Preload critical data in background
+export const preloadCriticalData = () => {
+  // Preload public data that's commonly needed
+  const preloadUrls = [
+    '/public/landing/settings',
+    '/public/addons'
+  ];
+  
+  preloadUrls.forEach(url => {
+    deduplicatedGet(url).catch(() => {});
+  });
 };
 
 // Clear cache (useful after mutations)
-export const clearCache = () => cache.clear();
+export const clearCache = (pattern = null) => {
+  if (pattern) {
+    for (const key of cache.keys()) {
+      if (key.includes(pattern)) {
+        cache.delete(key);
+      }
+    }
+  } else {
+    cache.clear();
+  }
+};
 
 // Format currency
 export const formatCurrency = (amount) => {
