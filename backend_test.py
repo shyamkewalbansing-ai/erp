@@ -1172,7 +1172,8 @@ class SuriRentalsAPITester:
             print(f"   Price: SRD {response.get('price')}")
             print(f"   Category: {response.get('category', 'N/A')}")
             print(f"   Icon: {response.get('icon_name', 'N/A')}")
-            print(f"   Highlights: {len(response.get('highlights', []))} items")
+            highlights = response.get('highlights', [])
+            print(f"   Highlights: {len(highlights) if highlights else 0} items")
             return True
         return False
 
@@ -1197,7 +1198,8 @@ class SuriRentalsAPITester:
             print(f"   Price: SRD {response.get('price')}")
             print(f"   Category: {response.get('category', 'N/A')}")
             print(f"   Icon: {response.get('icon_name', 'N/A')}")
-            print(f"   Highlights: {len(response.get('highlights', []))} items")
+            highlights = response.get('highlights', [])
+            print(f"   Highlights: {len(highlights) if highlights else 0} items")
             return True
         return False
 
