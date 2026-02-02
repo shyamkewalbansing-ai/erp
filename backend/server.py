@@ -12032,9 +12032,13 @@ async def ai_get_kasgeld(user_id: str):
 async def process_ai_command(user_id: str, message: str, session_id: str):
     """Process user message with AI and execute commands for ALL modules"""
     
-    # Get user's active modules
-    user = await db.users.find_one({"id": user_id}, {"_id": 0})
-    active_modules = user.get("modules", []) if user else []
+    # Get user's active modules from user_addons collection (not from user.modules)
+    user_addons = await db.user_addons.find(
+        {"user_id": user_id, "status": "active"},
+        {"_id": 0, "addon_slug": 1}
+    ).to_list(50)
+    
+    active_modules = [ua.get("addon_slug") for ua in user_addons if ua.get("addon_slug")]
     
     # Build context based on active modules
     context_parts = []
@@ -12063,44 +12067,60 @@ async def process_ai_command(user_id: str, message: str, session_id: str):
             "BETALING_REGISTREREN: Betaling registreren (params: tenant_name, amount)",
             "SALDO_OPVRAGEN: Saldo bekijken (params: tenant_name)",
             "LENING_AANMAKEN: Lening aanmaken (params: tenant_name, amount)",
-            "VASTGOED_OVERZICHT: Overzicht van verhuur data"
+            "VASTGOED_OVERZICHT: Overzicht van verhuur data",
+            "HUURDER_ZOEKEN: Zoek een huurder (params: search_term)",
+            "OPENSTAANDE_BETALINGEN: Toon openstaande betalingen",
+            "CONTRACTEN_OVERZICHT: Toon alle contracten"
         ])
     
     # HRM MODULE
     if "hrm" in active_modules:
-        employees = await db.hrm_employees.find({"user_id": user_id}, {"_id": 0}).to_list(20)
-        departments = await db.hrm_departments.find({"user_id": user_id}, {"_id": 0}).to_list(10)
-        leave_requests = await db.hrm_leave_requests.find({"user_id": user_id, "status": "pending"}, {"_id": 0}).to_list(10)
+        employees = await db.hrm_employees.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+        departments = await db.hrm_departments.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+        leave_requests = await db.hrm_leave_requests.find({"user_id": user_id, "status": "pending"}, {"_id": 0}).to_list(20)
         
         emp_count = len(employees)
         dept_count = len(departments)
         pending_leave = len(leave_requests)
-        emp_names = ", ".join([e.get("name", "Onbekend") for e in employees[:5]]) if employees else "Geen werknemers"
+        emp_names = ", ".join([e.get("name", "Onbekend") for e in employees[:8]]) if employees else "Geen werknemers"
+        dept_names = ", ".join([d.get("name", "") for d in departments[:5]]) if departments else "Geen afdelingen"
+        
+        # Calculate total salary
+        total_salary = sum([e.get("salary", 0) for e in employees])
         
         context_parts.append(f"""
 📦 HRM MODULE:
 - Totaal werknemers: {emp_count}
-- Afdelingen: {dept_count}
+- Afdelingen: {dept_count} ({dept_names})
 - Openstaande verlofaanvragen: {pending_leave}
+- Totale loonsom: SRD {total_salary:,.2f}/maand
 - Werknemers: {emp_names}""")
         
         available_actions.extend([
             "WERKNEMER_TOEVOEGEN: Nieuwe werknemer (params: name, email, department, position, salary)",
+            "WERKNEMER_ZOEKEN: Zoek werknemer (params: search_term)",
             "VERLOF_GOEDKEUREN: Verlofaanvraag goedkeuren (params: employee_name)",
             "VERLOF_AFWIJZEN: Verlofaanvraag afwijzen (params: employee_name, reason)",
-            "HRM_OVERZICHT: Overzicht van personeel en verlof"
+            "HRM_OVERZICHT: Overzicht van personeel en verlof",
+            "AFDELING_TOEVOEGEN: Nieuwe afdeling (params: name, description)",
+            "AANWEZIGHEID_OVERZICHT: Toon aanwezigheid van vandaag",
+            "SALARIS_OVERZICHT: Toon salaris overzicht",
+            "VERLOF_OVERZICHT: Toon alle verlofaanvragen"
         ])
     
     # AUTO DEALER MODULE
     if "autodealer" in active_modules:
-        vehicles = await db.autodealer_vehicles.find({"user_id": user_id}, {"_id": 0}).to_list(20)
-        customers = await db.autodealer_customers.find({"user_id": user_id}, {"_id": 0}).to_list(20)
-        sales = await db.autodealer_sales.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+        vehicles = await db.autodealer_vehicles.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+        customers = await db.autodealer_customers.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+        sales = await db.autodealer_sales.find({"user_id": user_id}, {"_id": 0}).to_list(50)
         
         available_count = len([v for v in vehicles if v.get("status") == "beschikbaar"])
         total_vehicles = len(vehicles)
         customer_count = len(customers)
         sales_count = len(sales)
+        
+        # Calculate total sales value
+        total_sales_value = sum([s.get("price", 0) for s in sales])
         
         vehicle_list = ", ".join([f"{v.get('brand', '')} {v.get('model', '')}" for v in vehicles[:5]]) if vehicles else "Geen voertuigen"
         
@@ -12108,20 +12128,68 @@ async def process_ai_command(user_id: str, message: str, session_id: str):
 📦 AUTO DEALER MODULE:
 - Totaal voertuigen: {total_vehicles} ({available_count} beschikbaar)
 - Klanten: {customer_count}
-- Verkopen: {sales_count}
+- Verkopen: {sales_count} (totaal SRD {total_sales_value:,.2f})
 - Voertuigen: {vehicle_list}""")
         
         available_actions.extend([
             "VOERTUIG_TOEVOEGEN: Nieuw voertuig (params: brand, model, year, price_srd, license_plate)",
+            "VOERTUIG_ZOEKEN: Zoek voertuig (params: search_term)",
             "KLANT_TOEVOEGEN: Nieuwe klant (params: name, phone, email, type)",
             "VERKOOP_REGISTREREN: Verkoop registreren (params: vehicle, customer_name, price)",
-            "AUTODEALER_OVERZICHT: Overzicht van voertuigen en verkopen"
+            "AUTODEALER_OVERZICHT: Overzicht van voertuigen en verkopen",
+            "BESCHIKBARE_VOERTUIGEN: Toon beschikbare voertuigen",
+            "VERKOPEN_OVERZICHT: Toon recente verkopen"
+        ])
+    
+    # BEAUTY & SPA MODULE
+    if "beauty" in active_modules or "beautyspa" in active_modules:
+        appointments = await db.spa_appointments.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+        services = await db.spa_services.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+        spa_customers = await db.spa_customers.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        today_appointments = len([a for a in appointments if a.get("date", "").startswith(today)])
+        pending_appointments = len([a for a in appointments if a.get("status") == "pending"])
+        
+        context_parts.append(f"""
+📦 BEAUTY & SPA MODULE:
+- Totaal afspraken: {len(appointments)} ({today_appointments} vandaag)
+- Behandelingen: {len(services)}
+- Klanten: {len(spa_customers)}
+- Openstaande afspraken: {pending_appointments}""")
+        
+        available_actions.extend([
+            "SPA_AFSPRAAK_MAKEN: Nieuwe afspraak (params: customer_name, service, date, time)",
+            "SPA_DIENST_TOEVOEGEN: Nieuwe behandeling (params: name, price, duration)",
+            "SPA_KLANT_TOEVOEGEN: Nieuwe klant (params: name, phone, email)",
+            "SPA_OVERZICHT: Overzicht van afspraken en diensten",
+            "VANDAAG_AFSPRAKEN: Toon afspraken van vandaag"
+        ])
+    
+    # POMPSTATION MODULE
+    if "pompstation" in active_modules:
+        fuel_sales = await db.fuel_sales.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+        fuel_inventory = await db.fuel_inventory.find({"user_id": user_id}, {"_id": 0}).to_list(10)
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        today_sales = [s for s in fuel_sales if s.get("date", "").startswith(today)]
+        today_revenue = sum([s.get("total", 0) for s in today_sales])
+        
+        context_parts.append(f"""
+📦 POMPSTATION MODULE:
+- Verkopen vandaag: {len(today_sales)} (SRD {today_revenue:,.2f})
+- Brandstof types in voorraad: {len(fuel_inventory)}""")
+        
+        available_actions.extend([
+            "BRANDSTOF_VERKOOP: Registreer verkoop (params: fuel_type, liters, price_per_liter)",
+            "POMPSTATION_OVERZICHT: Overzicht van verkopen",
+            "VOORRAAD_OVERZICHT: Toon brandstof voorraad"
         ])
     
     # If no modules active
     if not active_modules:
         return {
-            "response": "⚠️ U heeft nog geen modules geactiveerd. Ga naar **Instellingen > Abonnement** om modules te activeren zoals Vastgoed Beheer, HRM, of Auto Dealer.",
+            "response": "⚠️ U heeft nog geen modules geactiveerd. Ga naar **Instellingen > Abonnement** om modules te activeren zoals Vastgoed Beheer, HRM, Auto Dealer, Beauty & Spa, of Pompstation.",
             "action_executed": False,
             "action_result": None
         }
