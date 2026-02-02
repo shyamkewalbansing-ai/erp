@@ -564,6 +564,9 @@ function MainAppRoutes() {
           <Route path="beautyspa/vouchers" element={
             <SubscriptionRoute requiredAddon="beauty"><BeautySpaVouchers /></SubscriptionRoute>
           } />
+          <Route path="beautyspa/handleiding" element={
+            <SubscriptionRoute requiredAddon="beauty"><BeautySpaHandleiding /></SubscriptionRoute>
+          } />
           
           {/* Pompstation (Gas Station) Module Routes */}
           <Route path="pompstation" element={
@@ -595,6 +598,9 @@ function MainAppRoutes() {
           } />
           <Route path="pompstation/rapportages" element={
             <SubscriptionRoute requiredAddon="pompstation"><PompstationRapportages /></SubscriptionRoute>
+          } />
+          <Route path="pompstation/handleiding" element={
+            <SubscriptionRoute requiredAddon="pompstation"><PompstationHandleiding /></SubscriptionRoute>
           } />
         </Route>
         
