@@ -785,7 +785,7 @@ export default function ModuleDetailPage() {
     );
   }
 
-  const IconComponent = module.icon;
+  const IconComponent = getIconComponent(module.icon);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
