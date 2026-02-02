@@ -149,30 +149,32 @@ const STATS = [
 export default function LandingPage() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Remove blocking loading state - render immediately
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   useEffect(() => {
+    // Non-blocking data load - page renders immediately
+    const loadData = async () => {
+      try {
+        const settingsRes = await axios.get(`${API_URL}/public/landing/settings`).catch(() => ({ data: null }));
+        startTransition(() => {
+          setSettings(settingsRes.data);
+          setSettingsLoaded(true);
+        });
+      } catch (error) {
+        console.error('Error loading landing page:', error);
+        setSettingsLoaded(true);
+      }
+    };
     loadData();
   }, []);
 
-  const loadData = async () => {
-    try {
-      const settingsRes = await axios.get(`${API_URL}/public/landing/settings`).catch(() => ({ data: null }));
-      setSettings(settingsRes.data);
-    } catch (error) {
-      console.error('Error loading landing page:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Memoized navigate handlers for better performance
+  const handleDemoClick = useCallback(() => navigate('/demo'), [navigate]);
+  const handleModulesClick = useCallback(() => navigate('/modules-overzicht'), [navigate]);
+  const handleContactClick = useCallback(() => navigate('/contact'), [navigate]);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-      </div>
-    );
-  }
+  // Render page immediately without waiting for API
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
