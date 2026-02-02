@@ -42,7 +42,9 @@ import {
   Sparkles,
   Scissors,
   BarChart3,
-  Gift
+  Gift,
+  PanelLeftClose,
+  PanelLeftOpen
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
