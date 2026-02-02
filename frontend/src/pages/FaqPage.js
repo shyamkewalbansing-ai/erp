@@ -502,6 +502,150 @@ const MODULE_FAQ_DATA = {
         answer: 'In de rapportage interface kunt u een datumbereik selecteren en vergelijken met een vorige periode. Het systeem toont automatisch de verandering in percentages.'
       }
     ]
+  },
+  beautyspa: {
+    name: 'Beauty Spa',
+    icon: Sparkles,
+    color: 'pink',
+    gradient: 'from-pink-500 to-rose-600',
+    description: 'Compleet spa- en salonbeheer voor de schoonheidsindustrie',
+    image: 'https://images.unsplash.com/photo-1560750588-73207b1ef5b8?w=800&q=80',
+    features: [
+      {
+        title: 'Afsprakenbeheer',
+        icon: Calendar,
+        description: 'Plan en beheer afspraken eenvoudig.',
+        details: [
+          'Online boekingssysteem voor klanten',
+          'Automatische herinneringen per SMS/e-mail',
+          'Kalenderweergave per medewerker',
+          'Wachtrijbeheer voor walk-ins'
+        ]
+      },
+      {
+        title: 'Klantenbeheer',
+        icon: Users,
+        description: 'Houd klantgegevens en voorkeuren bij.',
+        details: [
+          'Klantprofielen met voorkeuren',
+          'Behandelhistorie',
+          'Allergieën en huidtype registratie',
+          'Loyaliteitsprogramma met punten'
+        ]
+      },
+      {
+        title: 'Kassa (POS)',
+        icon: ShoppingCart,
+        description: 'Snel en eenvoudig afrekenen.',
+        details: [
+          'Behandelingen en producten verkopen',
+          'Meerdere betaalmethodes (contant, PIN, QR)',
+          'Vouchers en kortingen toepassen',
+          'Dagelijkse afsluiting en rapporten'
+        ]
+      },
+      {
+        title: 'Voorraadbeheer',
+        icon: Package,
+        description: 'Beheer producten en voorraad.',
+        details: [
+          'Producten registreren met prijzen',
+          'Voorraadwaarschuwingen',
+          'Vervaldatum tracking',
+          'Bestelhistorie'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Hoe boeken klanten online een afspraak?',
+        answer: 'Activeer het online boekingsportaal in de instellingen. Deel de link met klanten of integreer deze op uw website. Klanten kiezen een behandeling, medewerker, datum en tijd.'
+      },
+      {
+        question: 'Hoe werkt het loyaliteitsprogramma?',
+        answer: 'Klanten verdienen automatisch punten bij elke betaling. U bepaalt hoeveel punten per SRD uitgegeven. Punten kunnen worden ingewisseld voor kortingen of gratis behandelingen.'
+      },
+      {
+        question: 'Kan ik vouchers en cadeaubonnen verkopen?',
+        answer: 'Ja, ga naar Vouchers om cadeaubonnen aan te maken. Kies een waarde of behandeling, genereer een unieke code en verkoop of verstuur deze per e-mail.'
+      },
+      {
+        question: 'Hoe beheer ik walk-in klanten?',
+        answer: 'Gebruik de Wachtrij functie. Voeg klanten toe aan de wachtrij, zie de geschatte wachttijd en roep ze op wanneer een medewerker beschikbaar is.'
+      }
+    ]
+  },
+  pompstation: {
+    name: 'Pompstation',
+    icon: Fuel,
+    color: 'amber',
+    gradient: 'from-amber-500 to-orange-600',
+    description: 'Tankstation beheer met brandstof- en winkelbeheer',
+    image: 'https://images.unsplash.com/photo-1565620731358-e8c038abc8c4?w=800&q=80',
+    features: [
+      {
+        title: 'Tankbeheer',
+        icon: Gauge,
+        description: 'Monitor brandstoftanks in real-time.',
+        details: [
+          'Tankniveaus per brandstoftype',
+          'Automatische waarschuwingen bij lage voorraad',
+          'Leveringsregistratie',
+          'Verbruiksanalyse'
+        ]
+      },
+      {
+        title: 'Pompbeheer',
+        icon: Fuel,
+        description: 'Beheer pompen en prijzen.',
+        details: [
+          'Pompen koppelen aan tanks',
+          'Prijzen per liter instellen',
+          'Verkoop per pomp registreren',
+          'Onderhoudsstatus bijhouden'
+        ]
+      },
+      {
+        title: 'Winkel & Kassa',
+        icon: ShoppingCart,
+        description: 'Verkoop shop-producten.',
+        details: [
+          'Productvoorraad beheren',
+          'Snelle kassafuncties',
+          'Barcode scanner ondersteuning',
+          'Dagelijkse rapporten'
+        ]
+      },
+      {
+        title: 'Veiligheid',
+        icon: AlertTriangle,
+        description: 'Veiligheidsbeheer en compliance.',
+        details: [
+          'Inspectie checklists',
+          'Incident registratie',
+          'Certificaat beheer met verloopdatums',
+          'Veiligheidsprotocollen'
+        ]
+      }
+    ],
+    faqs: [
+      {
+        question: 'Hoe registreer ik een brandstoflevering?',
+        answer: 'Ga naar Leveringen en klik op Nieuwe Levering. Selecteer de tank, voer het volume en de inkoopprijs in, upload de leveringsbon en bevestig. De tankvoorraad wordt automatisch bijgewerkt.'
+      },
+      {
+        question: 'Hoe pas ik brandstofprijzen aan?',
+        answer: 'Ga naar Pompen, selecteer de pomp en klik op Bewerken. Voer de nieuwe literprijs in. De wijziging is direct actief bij nieuwe verkopen.'
+      },
+      {
+        question: 'Hoe plan ik personeelsdiensten?',
+        answer: 'Ga naar Diensten om het weekrooster te bekijken. Klik op een dag om diensten toe te voegen. Wijs medewerkers toe aan ochtend-, middag- of avonddiensten.'
+      },
+      {
+        question: 'Hoe voer ik een veiligheidsinspectie uit?',
+        answer: 'Ga naar Veiligheid > Inspecties. Start een nieuwe inspectie en loop de checklist door. Markeer elk punt als goedgekeurd of actie vereist. Het systeem houdt een historie bij.'
+      }
+    ]
   }
 };
 
