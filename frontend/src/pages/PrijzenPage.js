@@ -237,16 +237,6 @@ export default function PrijzenPage() {
     }
   };
 
-  // Gradient colors for cards
-  const cardGradients = [
-    'from-emerald-500 to-teal-600',
-    'from-teal-500 to-emerald-600',
-    'from-emerald-600 to-green-500',
-    'from-green-500 to-teal-600',
-    'from-teal-600 to-cyan-500',
-    'from-cyan-500 to-emerald-600',
-  ];
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
