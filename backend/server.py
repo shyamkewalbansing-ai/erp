@@ -87,8 +87,9 @@ JWT_SECRET = os.environ.get('JWT_SECRET') or os.environ.get('SECRET_KEY') or 'su
 JWT_ALGORITHM = 'HS256'
 JWT_EXPIRATION_HOURS = 24
 
-# Demo account email for cleanup
+# Demo account credentials
 DEMO_ACCOUNT_EMAIL = "demo@facturatie.sr"
+DEMO_ACCOUNT_PASSWORD = "Demo123!"
 
 # Create the main app
 app = FastAPI(title="Facturatie N.V. API", version="1.0.0")
