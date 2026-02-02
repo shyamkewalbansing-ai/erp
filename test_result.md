@@ -165,6 +165,21 @@ backend:
         agent: "testing"
         comment: "✅ PASSED - All addon module detail functionality working correctly. Tested: 1) GET /api/addons/vastgoed_beheer (existing slug) - returned correct addon data with category 'vastgoed', 2) GET /api/addons/hrm (existing slug) - returned correct addon data with category 'hr', 3) GET /api/addons/non-existent-slug (404 test) - correctly returned 404, 4) POST /api/admin/addons with extra fields (category, icon_name, hero_image_url, highlights) - all fields saved correctly, 5) PUT /api/admin/addons/{id} with updated extra fields - all updates applied correctly, 6) GET /api/addons/test-module - retrieved updated addon with correct data, 7) DELETE /api/admin/addons/{id} - cleanup successful. All extra fields (category, icon_name, hero_image_url, highlights) are properly stored and retrieved."
 
+  - task: "AI chat endpoint module detection"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "user"
+        comment: "Test de AI chat endpoint om te zien of modules correct worden opgehaald. Test scenario: 1. Login met demo account (demo@facturatie.sr / Demo123!), 2. Call AI chat endpoint: POST /api/ai/chat met message 'Hallo, wat kan ik doen?', 3. Controleer of AI response informatie toont over actieve modules (niet de error 'U heeft nog geen modules geactiveerd')"
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - AI chat endpoint correctly detects and responds with active modules for demo account. Fixed issue: demo account was missing, created demo account with all active addons (vastgoed_beheer, hrm, autodealer). Tested: 1) Demo account login (demo@facturatie.sr / Demo123!) - ✅ successful, 2) POST /api/ai/chat with message 'Hallo, wat kan ik doen?' - ✅ returned detailed response about available actions in Vastgoed Beheer, HRM, and Auto Dealer modules, 3) Verified no 'U heeft nog geen modules geactiveerd' error message. AI response includes specific module features and available actions. Module detection working correctly via get_user_active_addons function."
+
 frontend:
   - task: "Admin Add-ons tab"
     implemented: true
