@@ -172,7 +172,7 @@ export default function EmailSettingsAdmin() {
   return (
     <div className="space-y-6">
       <Tabs defaultValue="settings">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="settings">
             <Server className="w-4 h-4 mr-2" />
             SMTP Instellingen
@@ -180,6 +180,10 @@ export default function EmailSettingsAdmin() {
           <TabsTrigger value="templates">
             <FileText className="w-4 h-4 mr-2" />
             Email Templates
+          </TabsTrigger>
+          <TabsTrigger value="scheduler">
+            <Clock className="w-4 h-4 mr-2" />
+            Automatisering
           </TabsTrigger>
           <TabsTrigger value="logs" onClick={loadLogs}>
             <Clock className="w-4 h-4 mr-2" />
