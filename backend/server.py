@@ -7938,6 +7938,166 @@ async def update_user_sidebar_order(
     )
     return {"success": True, "message": "Sidebar volgorde opgeslagen"}
 
+# ==================== MODULE SETTINGS SYSTEM ====================
+
+class ModuleSettingsBase(BaseModel):
+    """Base model for all module settings"""
+    pass
+
+class VastgoedSettings(ModuleSettingsBase):
+    rent_due_day: int = 1
+    payment_frequency: str = "monthly"
+    grace_period_days: int = 5
+    payment_deadline_day: int = 0
+    payment_deadline_month_offset: int = 0
+    late_fee_percentage: float = 0
+    late_fee_fixed: float = 0
+    auto_generate_invoices: bool = True
+    invoice_prefix: str = "HF"
+    default_currency: str = "SRD"
+    send_payment_reminders: bool = True
+    reminder_days_before: int = 3
+
+class HRMSettings(ModuleSettingsBase):
+    work_hours_per_day: float = 8.0
+    work_days_per_week: int = 5
+    overtime_multiplier: float = 1.5
+    weekend_multiplier: float = 2.0
+    annual_leave_days: int = 20
+    sick_leave_days: int = 10
+    maternity_leave_days: int = 90
+    paternity_leave_days: int = 5
+    probation_period_months: int = 3
+    notice_period_days: int = 30
+    salary_payment_day: int = 25
+    default_currency: str = "SRD"
+    track_attendance: bool = True
+    require_leave_approval: bool = True
+
+class AutoDealerSettings(ModuleSettingsBase):
+    commission_percentage: float = 5.0
+    default_warranty_months: int = 12
+    auto_generate_contracts: bool = True
+    contract_prefix: str = "VC"
+    invoice_prefix: str = "VF"
+    default_currency: str = "SRD"
+    track_test_drives: bool = True
+    require_deposit: bool = True
+    deposit_percentage: float = 10.0
+    show_prices_on_portal: bool = True
+    allow_online_inquiries: bool = True
+
+class BeautySpaSettings(ModuleSettingsBase):
+    opening_time: str = "09:00"
+    closing_time: str = "18:00"
+    slot_duration_minutes: int = 30
+    buffer_between_appointments: int = 15
+    max_advance_booking_days: int = 30
+    cancellation_notice_hours: int = 24
+    no_show_fee_percentage: float = 50.0
+    default_currency: str = "SRD"
+    send_appointment_reminders: bool = True
+    reminder_hours_before: int = 24
+    allow_online_booking: bool = True
+    require_deposit: bool = False
+    deposit_percentage: float = 25.0
+
+class PompstationSettings(ModuleSettingsBase):
+    fuel_price_gasoline: float = 0.0
+    fuel_price_diesel: float = 0.0
+    fuel_price_lpg: float = 0.0
+    tank_warning_level_percentage: int = 20
+    tank_critical_level_percentage: int = 10
+    shift_duration_hours: int = 8
+    track_meter_readings: bool = True
+    require_shift_handover: bool = True
+    default_currency: str = "SRD"
+    auto_update_inventory: bool = True
+    pos_receipt_header: str = ""
+    pos_receipt_footer: str = ""
+
+class BoekhoudingSettings(ModuleSettingsBase):
+    default_currency: str = "SRD"
+    fiscal_year_start_month: int = 1
+    btw_tarief_hoog: float = 25.0
+    btw_tarief_laag: float = 10.0
+    btw_aangifte_periode: str = "quarterly"
+    auto_btw_calculation: bool = True
+    invoice_prefix: str = "VF"
+    invoice_number_length: int = 5
+    default_payment_terms_days: int = 30
+    show_btw_on_invoices: bool = True
+    enable_multi_currency: bool = True
+    exchange_rate_source: str = "manual"
+
+# Generic endpoint to get module settings
+@api_router.get("/module-settings/{module_slug}")
+async def get_module_settings(
+    module_slug: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Get settings for a specific module"""
+    settings = await db.module_settings.find_one(
+        {"user_id": current_user["id"], "module_slug": module_slug},
+        {"_id": 0}
+    )
+    
+    # Return default settings if none exist
+    if not settings:
+        defaults = get_default_module_settings(module_slug)
+        return {"module_slug": module_slug, "settings": defaults, "is_default": True}
+    
+    return {"module_slug": module_slug, "settings": settings.get("settings", {}), "is_default": False}
+
+# Generic endpoint to update module settings
+@api_router.put("/module-settings/{module_slug}")
+async def update_module_settings(
+    module_slug: str,
+    settings: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update settings for a specific module"""
+    await db.module_settings.update_one(
+        {"user_id": current_user["id"], "module_slug": module_slug},
+        {"$set": {
+            "user_id": current_user["id"],
+            "module_slug": module_slug,
+            "settings": settings,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"success": True, "message": f"{module_slug} instellingen opgeslagen"}
+
+def get_default_module_settings(module_slug: str) -> dict:
+    """Get default settings for a module"""
+    defaults = {
+        "vastgoed_beheer": VastgoedSettings().model_dump(),
+        "hrm": HRMSettings().model_dump(),
+        "autodealer": AutoDealerSettings().model_dump(),
+        "beauty": BeautySpaSettings().model_dump(),
+        "pompstation": PompstationSettings().model_dump(),
+        "boekhouding": BoekhoudingSettings().model_dump(),
+    }
+    return defaults.get(module_slug, {})
+
+# Endpoint to get all module settings at once
+@api_router.get("/module-settings")
+async def get_all_module_settings(current_user: dict = Depends(get_current_user)):
+    """Get all module settings for current user"""
+    settings_cursor = db.module_settings.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    settings_list = await settings_cursor.to_list(100)
+    
+    # Create a dict with module_slug as key
+    result = {}
+    for s in settings_list:
+        result[s["module_slug"]] = s.get("settings", {})
+    
+    return result
+
 # ==================== ADMIN BULK MODULE ACTIVATION ====================
 
 class BulkModuleActivation(BaseModel):
