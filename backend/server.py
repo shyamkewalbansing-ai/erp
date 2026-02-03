@@ -599,8 +599,55 @@ SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', '')
 SMTP_FROM = os.environ.get('SMTP_FROM', 'info@facturatie.sr')
 APP_URL = os.environ.get('APP_URL', 'https://facturatie.sr')
 
-def send_email(to_email: str, subject: str, html_content: str):
-    """Send email via SMTP"""
+async def send_email_async(to_email: str, subject: str, html_content: str):
+    """Send email via configured SMTP - uses global email settings"""
+    try:
+        # Try to use the email service with global settings
+        email_service = get_email_service(db)
+        settings = await email_service.get_settings("global")
+        
+        if settings and settings.get("enabled"):
+            import aiosmtplib
+            
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = f"{settings.get('from_name', 'Facturatie.sr')} <{settings.get('from_email')}>"
+            msg['To'] = to_email
+            
+            html_part = MIMEText(html_content, 'html')
+            msg.attach(html_part)
+            
+            await aiosmtplib.send(
+                msg,
+                hostname=settings["smtp_host"],
+                port=settings.get("smtp_port", 587),
+                username=settings["smtp_user"],
+                password=settings["smtp_password"],
+                use_tls=settings.get("use_tls", True),
+                start_tls=settings.get("start_tls", True)
+            )
+            
+            # Log successful send
+            await db.email_logs.insert_one({
+                "to_email": to_email,
+                "template": "custom",
+                "subject": subject,
+                "status": "sent",
+                "workspace_id": "global",
+                "sent_at": datetime.now(timezone.utc).isoformat()
+            })
+            
+            logger.info(f"Email sent successfully to {to_email} via email service")
+            return True
+        else:
+            # Fallback to old SMTP config
+            return send_email_sync(to_email, subject, html_content)
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
+        return False
+
+def send_email_sync(to_email: str, subject: str, html_content: str):
+    """Synchronous email send - fallback"""
     try:
         msg = MIMEMultipart('alternative')
         msg['Subject'] = subject
@@ -619,6 +666,10 @@ def send_email(to_email: str, subject: str, html_content: str):
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {e}")
         return False
+
+def send_email(to_email: str, subject: str, html_content: str):
+    """Send email via SMTP - wrapper for backward compatibility"""
+    return send_email_sync(to_email, subject, html_content)
 
 def send_welcome_email(name: str, email: str, password: str, plan_type: str):
     """Send welcome email to new customer"""
