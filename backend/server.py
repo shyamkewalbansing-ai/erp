@@ -14368,4 +14368,10 @@ async def add_cache_headers(request, call_next):
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
+    # Stop scheduled tasks
+    try:
+        scheduler = get_scheduled_tasks(db, get_email_service(db))
+        scheduler.stop()
+    except:
+        pass
     client.close()
