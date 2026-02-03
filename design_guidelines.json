@@ -1,161 +1,167 @@
 {
-  "identity": {
-    "name": "E1 - The Anti-AI Designer",
-    "mission": "Create a unique, emotionally resonant design for Facturatie N.V. that breaks the generic SaaS mold.",
-    "principles": [
-      "Fusion over Imitation",
-      "Emotion First",
-      "Content is King",
-      "Zoom In",
-      "Negative Space",
-      "Contrast"
-    ]
-  },
-  "typography": {
-    "headings": {
-      "font_family": "Outfit, sans-serif",
-      "weights": ["500", "700"],
-      "tracking": "tracking-tight",
-      "usage": "Use for all H1-H6. H1 should be text-5xl or larger on desktop."
+  "design_system": {
+    "identity": {
+      "name": "Beheerder Pro",
+      "aesthetic": "Dutch Fintech Clean",
+      "archetype": "The Performance Pro",
+      "principles": [
+        "Density with Clarity: High information density without visual clutter",
+        "Swiss Precision: Grids, alignment, and typography over decoration",
+        "Functional Color: Color is used only for status and action, not decoration",
+        "Directness: Dutch business culture is direct; the UI should be too"
+      ]
     },
-    "body": {
-      "font_family": "Plus Jakarta Sans, sans-serif",
-      "weights": ["400", "500", "600"],
-      "leading": "leading-relaxed",
-      "usage": "Use for all paragraphs, labels, and inputs."
+    "typography": {
+      "font_family": {
+        "heading": "Manrope, sans-serif",
+        "body": "Plus Jakarta Sans, sans-serif",
+        "mono": "JetBrains Mono, monospace"
+      },
+      "scale": {
+        "h1": "text-3xl font-bold tracking-tight",
+        "h2": "text-2xl font-semibold tracking-tight",
+        "h3": "text-xl font-semibold",
+        "body": "text-sm leading-relaxed",
+        "small": "text-xs font-medium text-muted-foreground"
+      },
+      "rules": [
+        "Use Manrope for all headings (h1-h3)",
+        "Use Plus Jakarta Sans for all body text, inputs, and table data",
+        "Use JetBrains Mono for API keys, IDs, and code snippets",
+        "Headings must have tight tracking (-0.02em)",
+        "Labels must be uppercase, text-xs, and tracking-wide"
+      ]
     },
-    "mono": {
-      "font_family": "JetBrains Mono, monospace",
-      "usage": "Use for code snippets, API keys, or technical data."
-    }
-  },
-  "colors": {
-    "palette": {
-      "primary": {
-        "default": "#0caf60",
-        "hover": "#099954",
-        "foreground": "#ffffff"
+    "colors": {
+      "palette": {
+        "primary": {
+          "name": "Dutch Navy",
+          "hex": "#0f172a",
+          "tailwind": "slate-900",
+          "usage": "Sidebar, Primary Buttons, Headings"
+        },
+        "accent": {
+          "name": "Growth Emerald",
+          "hex": "#10b981",
+          "tailwind": "emerald-500",
+          "usage": "Success states, Money, Active Indicators"
+        },
+        "background": {
+          "light": "#f8fafc",
+          "dark": "#020617"
+        },
+        "surface": {
+          "light": "#ffffff",
+          "dark": "#0f172a"
+        },
+        "border": {
+          "light": "#e2e8f0",
+          "dark": "#1e293b"
+        }
       },
-      "secondary": {
-        "default": "#052e16",
-        "foreground": "#ffffff"
-      },
-      "background": {
-        "light": "#f8faf9",
-        "dark": "#050a07"
-      },
-      "surface": {
-        "light": "#ffffff",
-        "dark": "#0f1c15"
-      },
-      "accent": {
-        "default": "#e6f7ed",
-        "foreground": "#0caf60"
-      },
-      "muted": {
-        "default": "#f1f5f9",
-        "foreground": "#64748b"
+      "status": {
+        "success": "text-emerald-600 bg-emerald-50 border-emerald-200",
+        "warning": "text-amber-600 bg-amber-50 border-amber-200",
+        "error": "text-rose-600 bg-rose-50 border-rose-200",
+        "info": "text-blue-600 bg-blue-50 border-blue-200"
       }
     },
-    "gradients": {
-      "hero": "bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950 dark:to-black",
-      "primary_btn": "bg-gradient-to-r from-[#0caf60] to-[#099954]",
-      "glass": "bg-white/70 backdrop-blur-xl border-white/20"
+    "layout": {
+      "grid_system": "Bento Grid Mode B (High Density)",
+      "spacing": "Comfortable but dense (p-6 for containers, p-4 for cards)",
+      "radius": "rounded-lg (0.5rem) - Avoid fully rounded corners for admin",
+      "sidebar": {
+        "width": "w-64",
+        "style": "Fixed, Dark (slate-900) in both modes for contrast",
+        "collapsed_width": "w-16"
+      },
+      "container": "max-w-[1600px] mx-auto p-6"
+    },
+    "components": {
+      "cards": {
+        "style": "Flat, 1px border, no shadow (or very subtle)",
+        "classes": "bg-card border border-border rounded-lg shadow-sm hover:border-primary/20 transition-colors"
+      },
+      "tables": {
+        "style": "Clean, horizontal lines only, hover rows",
+        "header": "bg-muted/50 text-xs uppercase tracking-wider font-medium text-muted-foreground",
+        "row": "hover:bg-muted/50 transition-colors border-b border-border"
+      },
+      "buttons": {
+        "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+        "secondary": "bg-white border border-input hover:bg-accent hover:text-accent-foreground",
+        "ghost": "hover:bg-accent hover:text-accent-foreground"
+      },
+      "tabs": {
+        "style": "Underline with motion",
+        "wrapper": "border-b border-border w-full",
+        "list": "flex gap-6",
+        "trigger": "pb-3 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary transition-all"
+      }
+    },
+    "visual_enhancers": {
+      "glassmorphism": "Use sparingly. Only for sticky headers or modal overlays. Blur-xl, opacity-80.",
+      "gradients": "None for backgrounds. Subtle gradients allowed on 'Premium' badges or 'Upgrade' buttons only.",
+      "shadows": "shadow-sm for cards, shadow-md for dropdowns/modals. Avoid large diffuse shadows.",
+      "motion": "Micro-interactions on hover. Smooth transitions for tab switching. No heavy parallax."
+    },
+    "assets": {
+      "icons": "Lucide React (Stroke width 1.5px for elegance)",
+      "images": {
+        "avatars": [
+          "https://images.unsplash.com/photo-1689600944138-da3b150d9cb8?crop=entropy&cs=srgb&fm=jpg&q=85",
+          "https://images.unsplash.com/photo-1576558656222-ba66febe3dec?crop=entropy&cs=srgb&fm=jpg&q=85",
+          "https://images.unsplash.com/photo-1558531304-a4773b7e3a9c?crop=entropy&cs=srgb&fm=jpg&q=85"
+        ],
+        "placeholders": {
+          "logo": "Use a simple geometric shape (e.g., Hexagon) in Primary Color"
+        }
+      }
     }
   },
-  "visual_enhancers": {
-    "texture": {
-      "grain": "grain-overlay",
-      "usage": "Apply 'grain-overlay' class to the main wrapper of marketing pages to kill digital flatness."
-    },
-    "shadows": {
-      "glass": "shadow-[0_8px_32px_rgba(0,0,0,0.08)]",
-      "hover": "shadow-[0_12px_40px_-12px_rgba(12,175,96,0.2)]"
-    },
-    "borders": {
-      "glass": "border border-white/20",
-      "subtle": "border border-emerald-100 dark:border-emerald-900/30"
-    }
+  "implementation_plan": {
+    "phases": [
+      {
+        "name": "Setup & Layout",
+        "tasks": [
+          "Install Lucide React: `yarn add lucide-react`",
+          "Configure Tailwind colors in `tailwind.config.js`",
+          "Create the Main Layout (Sidebar + Header + Content Area)",
+          "Implement the Tab System (11 Tabs)"
+        ]
+      },
+      {
+        "name": "Core Components",
+        "tasks": [
+          "Build the `StatCard` component (Label, Value, Trend, Icon)",
+          "Build the `DataTable` component (Search, Filter, Pagination, Status Badge)",
+          "Build the `ActionHeader` (Title, Breadcrumbs, Primary Action)"
+        ]
+      },
+      {
+        "name": "Tab Implementation",
+        "details": {
+          "Klanten": "Table view with status badges (Active, Inactive). Actions: Edit, Delete, Login as User.",
+          "Betalingen": "List of transactions. Currency formatting (€). Status: Paid, Pending, Failed.",
+          "Modules": "Grid of cards showing available add-ons. Toggle switches for enabling/disabling.",
+          "Module Verzoeken": "List of requests needing approval. Approve/Deny buttons.",
+          "Workspaces": "Table of tenant workspaces. Usage metrics (Storage, Users).",
+          "Domain Provisioning": "Form for DNS settings. Status checks.",
+          "Domeinen": "List of registered domains. Expiry dates.",
+          "Betaalmethodes": "Settings form for Stripe/Mollie. API Key inputs.",
+          "Email": "SMTP Configuration form. Template editor (simple textarea or rich text).",
+          "Website": "Website Builder Interface. Full width. Drag & drop placeholder.",
+          "Update": "Version history log. 'Check for Updates' button."
+        }
+      }
+    ]
   },
-  "layout_strategies": {
-    "marketing": {
-      "grid_system": "Bento Grid (Tetris Mode)",
-      "container": "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
-      "spacing": "Generous. Use py-20 or py-32 for section spacing.",
-      "alignment": "Asymmetrical. Avoid centering everything. Use offsets."
-    },
-    "dashboard": {
-      "grid_system": "High Density Grid",
-      "container": "w-full px-4 py-4",
-      "spacing": "Compact. gap-4 or gap-6.",
-      "alignment": "Strict grid alignment. Fill height."
-    }
-  },
-  "components": {
-    "buttons": {
-      "primary": "rounded-full px-8 py-3 font-semibold shadow-lg hover:shadow-xl transition-all active:scale-95",
-      "secondary": "rounded-full px-8 py-3 font-medium border border-emerald-200 hover:bg-emerald-50 text-emerald-900 transition-all"
-    },
-    "cards": {
-      "feature": "glass-card p-8 hover:-translate-y-1 transition-transform duration-300",
-      "pricing": "relative overflow-hidden border border-emerald-100 rounded-2xl p-8 hover:shadow-2xl transition-all"
-    },
-    "inputs": {
-      "style": "rounded-lg border-emerald-100 bg-white/50 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all"
-    }
-  },
-  "image_urls": {
-    "hero_background": {
-      "url": "https://images.unsplash.com/photo-1765046255479-669cf07a0230?crop=entropy&cs=srgb&fm=jpg&q=85",
-      "description": "Abstract white wavy lines. Use as a subtle background layer with low opacity (10-20%) in Hero or Feature sections.",
-      "category": "background"
-    },
-    "team_collaboration": {
-      "url": "https://images.unsplash.com/photo-1758518729685-f88df7890776?crop=entropy&cs=srgb&fm=jpg&q=85",
-      "description": "Top view of business team. Use in 'About Us' or 'Careers' section.",
-      "category": "content"
-    },
-    "trust_handshake": {
-      "url": "https://images.unsplash.com/photo-1758518730384-be3d205838e8?crop=entropy&cs=srgb&fm=jpg&q=85",
-      "description": "Professional handshake. Use in 'Contact' or 'Partners' section.",
-      "category": "content"
-    },
-    "abstract_tech": {
-      "url": "https://images.unsplash.com/photo-1762279388952-85187155e48d?crop=entropy&cs=srgb&fm=jpg&q=85",
-      "description": "Neon lines digital landscape. Use for 'AI Features' or 'Tech Specs' section (maybe with a filter to match brand green).",
-      "category": "content"
-    }
-  },
-  "motion": {
-    "library": "framer-motion",
-    "entrance": {
-      "initial": { "opacity": 0, "y": 20 },
-      "animate": { "opacity": 1, "y": 0 },
-      "transition": { "duration": 0.5, "ease": "easeOut" }
-    },
-    "hover": {
-      "scale": 1.02,
-      "transition": { "duration": 0.2 }
-    }
-  },
-  "instructions_to_main_agent": [
-    "1. IMPLEMENT THE THEME: Ensure 'Outfit' and 'Plus Jakarta Sans' are correctly loaded and applied.",
-    "2. USE THE IMAGES: Place the mapped images in their respective sections. Do not use placeholders.",
-    "3. BUILD THE LANDING PAGE: Use the 'Tetris' Bento grid for the features section. Don't just stack cards.",
-    "4. PRICING PAGE: Implement a 'Monthly/Yearly' toggle and highlight the 'Pro' plan with a 'Tracing Beam' or 'Glow' effect.",
-    "5. GLASSMORPHISM: Use the provided '.glass-card' and '.glass-header' classes from App.css.",
-    "6. DATA-TESTID: Add 'data-testid' to all interactive elements (buttons, inputs, links).",
-    "7. NO LOREM IPSUM: Use realistic copy relevant to a Surinamese ERP (e.g., 'Beheer uw administratie', 'SRD Facturatie').",
-    "8. MOBILE FIRST: Ensure all grids collapse to 1 column on mobile.",
-    "9. NAVIGATION: The sidebar is for the App, but the Landing Page needs a top horizontal Navbar.",
-    "10. FOOTER: Create a large, multi-column footer with a 'Let's Talk' CTA."
-  ],
   "universal_guidelines": [
-    "Avoid 'AI Slop': No generic centered layouts, no default blue/purple gradients.",
-    "Dark colors must be solid or subtle gradients, not harsh.",
-    "Use 2-3x more spacing than you think is necessary.",
-    "Micro-animations on everything (hover, focus, active).",
-    "Never use 'Inter' for headings.",
-    "Use 'sonner' for toasts."
+    "Do not use 'Inter' for headings. Use 'Manrope'.",
+    "Ensure all text has sufficient contrast (APCA standards).",
+    "Use 'data-testid' on all interactive elements.",
+    "Keep the interface in Dutch (Klanten, Betalingen, etc.).",
+    "Dark mode must be fully supported and tested.",
+    "Use 'sonner' for toast notifications."
   ]
 }
