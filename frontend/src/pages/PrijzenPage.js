@@ -196,6 +196,7 @@ export default function PrijzenPage() {
   };
 
   const formatCurrency = (amount) => {
+    if (amount === undefined || amount === null) return 'Prijs op aanvraag';
     if (amount === 0) return 'Gratis';
     return `SRD ${amount.toLocaleString('nl-NL')}`;
   };
