@@ -671,6 +671,25 @@ def send_email(to_email: str, subject: str, html_content: str):
     """Send email via SMTP - wrapper for backward compatibility"""
     return send_email_sync(to_email, subject, html_content)
 
+async def send_welcome_email_async(name: str, email: str, password: str, company_name: str = None):
+    """Send welcome email using the new email service"""
+    try:
+        email_service = get_email_service(db)
+        settings = await email_service.get_settings("global")
+        
+        if settings and settings.get("enabled"):
+            result = await email_service.send_welcome_email(
+                to_email=email,
+                customer_name=name,
+                password=password,
+                company_name=company_name or "N/A",
+                login_url=f"{APP_URL}/login"
+            )
+            return result.get("success", False)
+    except Exception as e:
+        logger.error(f"Error sending welcome email via email service: {e}")
+    return False
+
 def send_welcome_email(name: str, email: str, password: str, plan_type: str):
     """Send welcome email to new customer"""
     
