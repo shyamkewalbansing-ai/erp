@@ -46,6 +46,15 @@ Complete automatisering voor het configureren van custom domeinen voor nieuwe kl
 
 ---
 
+### SERVER UPDATE KNOP VERBETERD ✅ (3 Feb 2026)
+Duidelijke "server-update.sh" knop in admin panel met:
+- **"Uitvoeren: server-update.sh"** knop met raket icoon
+- Exacte commando zichtbaar: `sudo /home/clp/htdocs/facturatie.sr/server-update.sh`
+- Lijst met wat het script doet (backup, git pull, dependencies, frontend build, services herstart)
+- Waarschuwing om eerst naar GitHub te pushen
+
+---
+
 ## What's Been Implemented (1 Feb 2026)
 
 ### POMPSTATION (GAS STATION) MODULE ✅ (NIEUW - 1 Feb 2026)
