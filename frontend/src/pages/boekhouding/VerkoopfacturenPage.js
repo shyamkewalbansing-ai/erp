@@ -7,9 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
-import { Loader2, Plus, FileText, Trash2, Search, Send, DollarSign } from 'lucide-react';
+import { Loader2, Plus, FileText, Trash2, Search, Send, DollarSign, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
+import SendInvoiceEmailDialog from '../../components/SendInvoiceEmailDialog';
 
 const formatCurrency = (amount, currency = 'SRD') => `${currency} ${amount?.toLocaleString('nl-NL', { minimumFractionDigits: 2 }) || '0,00'}`;
 const statusColors = { concept: 'bg-gray-100 text-gray-800', verstuurd: 'bg-blue-100 text-blue-800', betaald: 'bg-green-100 text-green-800', gedeeltelijk_betaald: 'bg-yellow-100 text-yellow-800', vervallen: 'bg-red-100 text-red-800' };
