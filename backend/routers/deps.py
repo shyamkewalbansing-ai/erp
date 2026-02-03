@@ -94,6 +94,10 @@ async def get_current_active_user(current_user: dict = Depends(get_current_user)
     if current_user.get("role") == "superadmin":
         return current_user
     
+    # Demo accounts should always have access
+    if current_user.get("is_demo"):
+        return current_user
+    
     status = current_user.get("subscription_status")
     if status not in ["active", "trial"]:
         raise HTTPException(status_code=403, detail="Abonnement niet actief")
