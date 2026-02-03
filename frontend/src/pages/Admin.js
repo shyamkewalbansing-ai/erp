@@ -3392,7 +3392,7 @@ server {
                   value={newAddon.icon_name}
                   onChange={(e) => setNewAddon({...newAddon, icon_name: e.target.value})}
                 />
-                <p className="text-xs text-muted-foreground">Zie <a href="https://lucide.dev/icons" target="_blank" rel="noopener" className="text-blue-600 hover:underline">lucide.dev/icons</a></p>
+                <p className="text-xs text-muted-foreground">Zie <a href="https://lucide.dev/icons" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">lucide.dev/icons</a></p>
               </div>
               <div className="space-y-2">
                 <Label>Hero Afbeelding URL</Label>
