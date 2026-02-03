@@ -109,6 +109,8 @@ export default function Instellingen() {
   const [activeAddons, setActiveAddons] = useState([]);
   const fileInputRef = useRef(null);
   
+  const isSuperAdmin = user?.role === 'superadmin';
+  
   // Profile form
   const [profile, setProfile] = useState({
     name: '',
@@ -127,9 +129,7 @@ export default function Instellingen() {
   useEffect(() => {
     loadProfile();
     loadActiveAddons();
-  }, []);
-
-  const isSuperAdmin = user?.role === 'superadmin';
+  }, [user]);
 
   const loadActiveAddons = async () => {
     try {
