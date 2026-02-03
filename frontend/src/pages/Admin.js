@@ -2583,9 +2583,9 @@ server {
       <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Abonnement Activeren</DialogTitle>
+            <DialogTitle>Modules Activeren/Verlengen</DialogTitle>
             <DialogDescription>
-              Activeer of verleng het abonnement voor {selectedCustomer?.name}
+              Activeer of verleng de modules voor {selectedCustomer?.name}
             </DialogDescription>
           </DialogHeader>
           
@@ -2655,9 +2655,9 @@ server {
       <Dialog open={deactivateDialogOpen} onOpenChange={setDeactivateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Abonnement Stoppen</DialogTitle>
+            <DialogTitle>Modules Deactiveren</DialogTitle>
             <DialogDescription>
-              Weet u zeker dat u het abonnement van {selectedCustomer?.name} wilt stoppen?
+              Weet u zeker dat u de modules van {selectedCustomer?.name} wilt deactiveren?
               De klant verliest direct toegang tot de applicatie.
             </DialogDescription>
           </DialogHeader>
