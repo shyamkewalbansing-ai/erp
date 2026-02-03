@@ -1256,7 +1256,7 @@ server {
                                 setActivateDialogOpen(true);
                               }}
                               data-testid={`activate-btn-${customer.id}`}
-                              title="Abonnement Activeren"
+                              title="Modules Activeren"
                             >
                               <Plus className="w-3 h-3" />
                             </Button>
@@ -1269,7 +1269,7 @@ server {
                                   setSelectedCustomer(customer);
                                   setDeactivateDialogOpen(true);
                                 }}
-                                title="Abonnement Stoppen"
+                                title="Modules Deactiveren"
                               >
                                 <XCircle className="w-3 h-3" />
                               </Button>
