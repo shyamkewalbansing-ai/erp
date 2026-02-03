@@ -11,7 +11,7 @@ from enum import Enum
 import uuid
 from .deps import db, get_current_active_user, get_current_user
 
-router = APIRouter(prefix="/api/boekhouding", tags=["Boekhouding"])
+router = APIRouter(prefix="/boekhouding", tags=["Boekhouding"])
 
 # ==================== ENUMS ====================
 
