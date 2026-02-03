@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://accmod-suriname.preview.emergentagent.com/           → Landing page
-https://accmod-suriname.preview.emergentagent.com/login      → Login
-https://accmod-suriname.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://accmod-suriname.preview.emergentagent.com/booking/   → Publieke booking portals
+https://suri-accounts.preview.emergentagent.com/           → Landing page
+https://suri-accounts.preview.emergentagent.com/login      → Login
+https://suri-accounts.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://suri-accounts.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
