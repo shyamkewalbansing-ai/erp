@@ -176,29 +176,10 @@ export default function Instellingen() {
         company_name: response.data.company_name || '',
         logo: response.data.logo || null
       });
-      setRentSettings({
-        rent_due_day: response.data.rent_due_day || 1,
-        payment_frequency: response.data.payment_frequency || 'monthly',
-        grace_period_days: response.data.grace_period_days || 5,
-        payment_deadline_day: response.data.payment_deadline_day || 0,
-        payment_deadline_month_offset: response.data.payment_deadline_month_offset || 0
-      });
     } catch (error) {
       toast.error('Fout bij het laden van profiel');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleSaveRentSettings = async () => {
-    setSavingRent(true);
-    try {
-      await updateRentSettings(rentSettings);
-      toast.success('Vastgoed instellingen opgeslagen');
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij opslaan');
-    } finally {
-      setSavingRent(false);
     }
   };
 
