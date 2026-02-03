@@ -265,6 +265,12 @@ export const getAllUserAddons = () => api.get('/admin/user-addons');
 export const getUserAddons = (userId) => api.get(`/admin/users/${userId}/addons`);
 export const activateUserAddon = (userId, data) => api.post(`/admin/users/${userId}/addons`, data);
 export const deactivateUserAddon = (userId, addonId) => api.delete(`/admin/users/${userId}/addons/${addonId}`);
+export const bulkActivateModules = (userId, data) => api.post(`/admin/users/${userId}/activate-modules`, data);
+
+// Module Payments (Admin)
+export const getModulePayments = () => api.get('/admin/module-payments');
+export const getModulePaymentRequests = () => api.get('/admin/module-payment-requests');
+export const confirmModulePayment = (requestId, months = 1) => api.post(`/admin/module-payment-requests/${requestId}/confirm?months=${months}`);
 
 // Add-on Requests (Admin)
 export const getAddonRequests = () => api.get('/admin/addon-requests');
