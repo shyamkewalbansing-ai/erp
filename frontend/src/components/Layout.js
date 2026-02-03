@@ -386,29 +386,17 @@ export default function Layout() {
         <nav className="flex-1 p-4 space-y-1">
           {/* Admin link - only for superadmin */}
           {isSuperAdmin() && (
-            <>
-              <NavLink
-                to="/app/admin"
-                onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
-                data-testid="nav-admin"
-                title="Beheerder"
-              >
-                <Crown className="w-5 h-5 flex-shrink-0" />
-                {!isCollapsed && <span>Beheerder</span>}
-                {!isCollapsed && <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>}
-              </NavLink>
-              <NavLink
-                to="/app/betaalmethodes"
-                onClick={() => setSidebarOpen(false)}
-                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
-                data-testid="nav-admin-betaalmethodes"
-                title="Betaalmethodes"
-              >
-                <CreditCard className="w-5 h-5 flex-shrink-0" />
-                {!isCollapsed && <span>Betaalmethodes</span>}
-              </NavLink>
-            </>
+            <NavLink
+              to="/app/admin"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+              data-testid="nav-admin"
+              title="Beheerder"
+            >
+              <Crown className="w-5 h-5 flex-shrink-0" />
+              {!isCollapsed && <span>Beheerder</span>}
+              {!isCollapsed && <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>}
+            </NavLink>
           )}
 
           {/* Customer navigation - only for non-superadmin users with active add-ons */}
