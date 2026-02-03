@@ -39,6 +39,12 @@ export default function SidebarOrderSettings() {
           addon_name: 'Boekhouding (Gratis)',
           status: 'active'
         });
+      } else {
+        // Update name to include (Gratis)
+        const boekhoudingModule = activeModules.find(m => m.addon_slug === 'boekhouding');
+        if (boekhoudingModule && !boekhoudingModule.addon_name.includes('Gratis')) {
+          boekhoudingModule.addon_name = 'Boekhouding (Gratis)';
+        }
       }
 
       // Get saved order
