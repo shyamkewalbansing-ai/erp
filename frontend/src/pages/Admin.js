@@ -2588,17 +2588,78 @@ server {
         </DialogContent>
       </Dialog>
 
-      {/* Activate Dialog */}
-      <Dialog open={activateDialogOpen} onOpenChange={setActivateDialogOpen}>
-        <DialogContent>
+      {/* Activate Dialog - Module Selection */}
+      <Dialog open={activateDialogOpen} onOpenChange={(open) => {
+        setActivateDialogOpen(open);
+        if (!open) setSelectedModules([]);
+      }}>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Modules Activeren/Verlengen</DialogTitle>
             <DialogDescription>
-              Activeer of verleng de modules voor {selectedCustomer?.name}
+              Selecteer modules voor {selectedCustomer?.name} en activeer met één klik
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
+          <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+            {/* Module Selection */}
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Selecteer Modules</Label>
+              <div className="grid gap-2">
+                {addons.filter(a => a.is_active).map(addon => {
+                  const isSelected = selectedModules.includes(addon.id);
+                  const isFree = addon.is_free || addon.price === 0;
+                  return (
+                    <div
+                      key={addon.id}
+                      onClick={() => {
+                        setSelectedModules(prev => 
+                          prev.includes(addon.id)
+                            ? prev.filter(id => id !== addon.id)
+                            : [...prev, addon.id]
+                        );
+                      }}
+                      className={`flex items-center justify-between p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        isSelected 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                          isSelected ? 'bg-primary border-primary' : 'border-muted-foreground'
+                        }`}>
+                          {isSelected && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">{addon.name}</p>
+                          <p className="text-xs text-muted-foreground">{addon.slug}</p>
+                        </div>
+                      </div>
+                      <Badge variant={isFree ? "secondary" : "outline"}>
+                        {isFree ? 'GRATIS' : formatCurrency(addon.price) + '/mnd'}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Summary */}
+            {selectedModules.length > 0 && (
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm font-medium mb-1">{selectedModules.length} module(s) geselecteerd</p>
+                <p className="text-xs text-muted-foreground">
+                  Totaal: {formatCurrency(
+                    addons
+                      .filter(a => selectedModules.includes(a.id))
+                      .reduce((sum, a) => sum + (a.price || 0), 0)
+                  )}/maand
+                </p>
+              </div>
+            )}
+
+            {/* Duration */}
             <div className="space-y-2">
               <Label>Aantal maanden</Label>
               <Select value={months} onValueChange={setMonths}>
@@ -2606,18 +2667,19 @@ server {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">1 maand - {formatCurrency(3500)}</SelectItem>
-                  <SelectItem value="3">3 maanden - {formatCurrency(10500)}</SelectItem>
-                  <SelectItem value="6">6 maanden - {formatCurrency(21000)}</SelectItem>
-                  <SelectItem value="12">12 maanden - {formatCurrency(42000)}</SelectItem>
+                  <SelectItem value="1">1 maand</SelectItem>
+                  <SelectItem value="3">3 maanden</SelectItem>
+                  <SelectItem value="6">6 maanden</SelectItem>
+                  <SelectItem value="12">12 maanden (jaar)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
+            {/* Payment */}
             <div className="space-y-2">
               <Label>Betaalmethode</Label>
               <Select value={paymentMethod} onValueChange={setPaymentMethod}>
-                <SelectTrigger data-testid="payment-method-select">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -2634,7 +2696,6 @@ server {
                 placeholder="Bijv. transactienummer"
                 value={paymentReference}
                 onChange={(e) => setPaymentReference(e.target.value)}
-                data-testid="payment-reference-input"
               />
             </div>
           </div>
@@ -2643,7 +2704,34 @@ server {
             <Button variant="outline" onClick={() => setActivateDialogOpen(false)}>
               Annuleren
             </Button>
-            <Button onClick={handleActivateSubscription} disabled={activating}>
+            <Button 
+              onClick={async () => {
+                if (selectedModules.length === 0) {
+                  toast.error('Selecteer minimaal één module');
+                  return;
+                }
+                setActivating(true);
+                try {
+                  await bulkActivateModules(selectedCustomer.id, {
+                    user_id: selectedCustomer.id,
+                    addon_ids: selectedModules,
+                    months: parseInt(months),
+                    payment_method: paymentMethod,
+                    payment_reference: paymentReference || undefined
+                  });
+                  toast.success(`${selectedModules.length} module(s) geactiveerd voor ${selectedCustomer.name}`);
+                  setActivateDialogOpen(false);
+                  setSelectedModules([]);
+                  setSelectedCustomer(null);
+                  loadData();
+                } catch (error) {
+                  toast.error(error.response?.data?.detail || 'Fout bij activeren');
+                } finally {
+                  setActivating(false);
+                }
+              }} 
+              disabled={activating || selectedModules.length === 0}
+            >
               {activating ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -2652,7 +2740,7 @@ server {
               ) : (
                 <>
                   <CheckCircle className="w-4 h-4 mr-2" />
-                  Activeren
+                  {selectedModules.length} Module(s) Activeren
                 </>
               )}
             </Button>
