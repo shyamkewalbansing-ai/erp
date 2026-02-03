@@ -31,6 +31,16 @@ export default function SidebarOrderSettings() {
         a.status === 'active' || a.status === 'trial'
       );
 
+      // Always add boekhouding as it's free for everyone
+      const hasBoekhouding = activeModules.some(m => m.addon_slug === 'boekhouding');
+      if (!hasBoekhouding) {
+        activeModules.push({
+          addon_slug: 'boekhouding',
+          addon_name: 'Boekhouding (Gratis)',
+          status: 'active'
+        });
+      }
+
       // Get saved order
       const orderRes = await getSidebarOrder();
       const savedOrder = orderRes.data.module_order || [];
