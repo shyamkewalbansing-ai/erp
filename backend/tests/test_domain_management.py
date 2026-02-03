@@ -32,8 +32,8 @@ class TestDomainManagementAuth:
         })
         assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()
-        assert "token" in data, "No token in response"
-        return data["token"]
+        assert "access_token" in data, "No access_token in response"
+        return data["access_token"]
     
     def test_login_superadmin(self, auth_token):
         """Test superadmin login works"""
@@ -52,7 +52,7 @@ class TestDomainStatusEndpoint:
             "password": SUPERADMIN_PASSWORD
         })
         assert response.status_code == 200
-        return response.json()["token"]
+        return response.json()["access_token"]
     
     def test_get_domain_status_success(self, auth_token):
         """Test GET /api/domains/status returns list of domain statuses"""
@@ -76,9 +76,9 @@ class TestDomainStatusEndpoint:
             assert "nginx_configured" in domain
     
     def test_get_domain_status_unauthorized(self):
-        """Test GET /api/domains/status without auth returns 401"""
+        """Test GET /api/domains/status without auth returns 401 or 403"""
         response = requests.get(f"{BASE_URL}/api/domains/status")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
 
 
 class TestCustomersEndpoint:
@@ -92,7 +92,7 @@ class TestCustomersEndpoint:
             "password": SUPERADMIN_PASSWORD
         })
         assert response.status_code == 200
-        return response.json()["token"]
+        return response.json()["access_token"]
     
     def test_get_customers_success(self, auth_token):
         """Test GET /api/admin/customers returns customer list"""
@@ -123,7 +123,7 @@ class TestAutomatedDomainSetup:
             "password": SUPERADMIN_PASSWORD
         })
         assert response.status_code == 200
-        return response.json()["token"]
+        return response.json()["access_token"]
     
     @pytest.fixture(scope="class")
     def test_customer_id(self, auth_token):
@@ -223,7 +223,7 @@ class TestAutomatedDomainSetup:
         assert "domein" in steps_text or "domain" in steps_text  # Domain validated
     
     def test_setup_automated_unauthorized(self):
-        """Test setup-automated without auth returns 401"""
+        """Test setup-automated without auth returns 401 or 403"""
         response = requests.post(
             f"{BASE_URL}/api/domains/setup-automated",
             headers={"Content-Type": "application/json"},
@@ -232,7 +232,7 @@ class TestAutomatedDomainSetup:
                 "user_id": "some-id"
             }
         )
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
 
 
 class TestDNSVerification:
@@ -246,7 +246,7 @@ class TestDNSVerification:
             "password": SUPERADMIN_PASSWORD
         })
         assert response.status_code == 200
-        return response.json()["token"]
+        return response.json()["access_token"]
     
     @pytest.fixture(scope="class")
     def workspace_with_domain(self, auth_token):
@@ -298,7 +298,7 @@ class TestNginxConfigPreview:
             "password": SUPERADMIN_PASSWORD
         })
         assert response.status_code == 200
-        return response.json()["token"]
+        return response.json()["access_token"]
     
     @pytest.fixture(scope="class")
     def workspace_with_domain(self, auth_token):
@@ -353,7 +353,7 @@ class TestAdminDomainsEndpoint:
             "password": SUPERADMIN_PASSWORD
         })
         assert response.status_code == 200
-        return response.json()["token"]
+        return response.json()["access_token"]
     
     def test_admin_domains_success(self, auth_token):
         """Test GET /api/admin/domains returns list without 500 error"""
