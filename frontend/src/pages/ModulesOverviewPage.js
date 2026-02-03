@@ -22,7 +22,8 @@ import {
   Headphones,
   CheckCircle,
   Scissors,
-  Fuel
+  Fuel,
+  Gift
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
