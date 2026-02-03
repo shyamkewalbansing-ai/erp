@@ -1975,6 +1975,11 @@ server {
           </Suspense>
         </TabsContent>
 
+        {/* Email Settings Tab */}
+        <TabsContent value="email">
+          <EmailSettingsAdmin />
+        </TabsContent>
+
         {/* Update/Deployment Tab */}
         <TabsContent value="update">
           <div className="grid gap-6">
