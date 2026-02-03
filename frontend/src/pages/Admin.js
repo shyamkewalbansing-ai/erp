@@ -1780,6 +1780,32 @@ server {
           </div>
         </TabsContent>
 
+        {/* Betaalmethodes Tab */}
+        <TabsContent value="betaalmethodes">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-emerald-600" />
+                Betaalmethodes
+              </CardTitle>
+              <CardDescription>
+                Configureer de betaalmethodes voor facturen en betalingen
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">
+                  Ga naar de volledige betaalmethodes configuratie pagina voor alle opties.
+                </p>
+                <Button onClick={() => window.location.href = '/app/betaalmethodes'}>
+                  <Settings className="w-4 h-4 mr-2" />
+                  Betaalmethodes Beheren
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Website Tab - CMS Beheer */}
         <TabsContent value="website">
           <Suspense fallback={
