@@ -165,13 +165,31 @@ async def update_payment_settings(
     settings_dict = settings.model_dump()
     settings_dict["workspace_id"] = workspace_id
     settings_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
-    settings_dict["updated_by"] = str(current_user["_id"])
+    settings_dict["updated_by"] = current_user.get("id") or str(current_user.get("_id", ""))
     
     await db.workspace_payment_settings.update_one(
         {"workspace_id": workspace_id},
         {"$set": settings_dict},
         upsert=True
     )
+    
+    # Also update the global payment_settings collection for customer-facing pages
+    if workspace_id == "global":
+        bank_method = next((m for m in settings.payment_methods if m.method_id == "bank_transfer"), None)
+        if bank_method and bank_method.bank_settings:
+            global_payment_info = {
+                "bank_name": bank_method.bank_settings.bank_name,
+                "account_holder": bank_method.bank_settings.account_holder,
+                "account_number": bank_method.bank_settings.account_number,
+                "iban": bank_method.bank_settings.iban,
+                "instructions": bank_method.instructions,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.payment_settings.update_one(
+                {"type": "global"},
+                {"$set": {"bank_transfer": global_payment_info, "type": "global"}},
+                upsert=True
+            )
     
     return {"message": "Betaalinstellingen bijgewerkt"}
 
