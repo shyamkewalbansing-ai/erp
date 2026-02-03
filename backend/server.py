@@ -7608,6 +7608,163 @@ async def create_user_module_order(
         "message": f"Modules geactiveerd voor 3 dagen proefperiode"
     }
 
+# ==================== EMAIL SETTINGS & NOTIFICATIONS ====================
+
+class EmailSettings(BaseModel):
+    enabled: bool = False
+    smtp_host: str
+    smtp_port: int = 587
+    smtp_user: str
+    smtp_password: str
+    from_email: str
+    from_name: str = "Facturatie.sr"
+    use_tls: bool = True
+    start_tls: bool = True
+    # Admin notification settings
+    admin_email: Optional[str] = None
+    notify_new_customer: bool = True
+    notify_payment_request: bool = True
+    notify_module_expiring: bool = True
+
+class CustomerEmailSettings(BaseModel):
+    enabled: bool = False
+    smtp_host: Optional[str] = None
+    smtp_port: int = 587
+    smtp_user: Optional[str] = None
+    smtp_password: Optional[str] = None
+    from_email: Optional[str] = None
+    from_name: Optional[str] = None
+    use_tls: bool = True
+
+@api_router.get("/admin/email-settings")
+async def get_admin_email_settings(current_user: dict = Depends(get_superadmin)):
+    """Get global email settings - superadmin only"""
+    email_service = get_email_service(db)
+    settings = await email_service.get_settings("global")
+    if settings:
+        # Hide password in response
+        settings["smtp_password"] = "********" if settings.get("smtp_password") else ""
+    return settings or {}
+
+@api_router.put("/admin/email-settings")
+async def update_admin_email_settings(
+    settings: EmailSettings,
+    current_user: dict = Depends(get_superadmin)
+):
+    """Update global email settings - superadmin only"""
+    email_service = get_email_service(db)
+    
+    # Get existing settings to preserve password if not changed
+    existing = await email_service.get_settings("global")
+    settings_dict = settings.dict()
+    
+    if settings_dict.get("smtp_password") == "********" and existing:
+        settings_dict["smtp_password"] = existing.get("smtp_password", "")
+    
+    await email_service.save_settings("global", settings_dict)
+    return {"success": True, "message": "Email instellingen opgeslagen"}
+
+@api_router.post("/admin/email-settings/test")
+async def test_admin_email(
+    to_email: str = None,
+    current_user: dict = Depends(get_superadmin)
+):
+    """Send a test email - superadmin only"""
+    email_service = get_email_service(db)
+    target_email = to_email or current_user.get("email")
+    
+    result = await email_service.send_test_email(target_email, "global")
+    return result
+
+@api_router.get("/admin/email-templates")
+async def get_email_templates(current_user: dict = Depends(get_superadmin)):
+    """Get available email templates - superadmin only"""
+    templates = []
+    for name, template in EMAIL_TEMPLATES.items():
+        templates.append({
+            "name": name,
+            "subject": template["subject"],
+            "description": get_template_description(name)
+        })
+    return templates
+
+def get_template_description(name: str) -> str:
+    descriptions = {
+        "welcome": "Welkom email voor nieuwe klanten met inloggegevens",
+        "password_reset": "Wachtwoord reset email met code",
+        "module_expiring_soon": "Herinnering dat module(s) bijna verlopen",
+        "module_expired": "Notificatie dat module(s) zijn verlopen",
+        "payment_confirmed": "Bevestiging van betaling en module activatie",
+        "admin_new_payment_request": "Admin notificatie bij nieuw betaalverzoek"
+    }
+    return descriptions.get(name, "")
+
+@api_router.get("/admin/email-logs")
+async def get_email_logs(
+    limit: int = 50,
+    current_user: dict = Depends(get_superadmin)
+):
+    """Get email send logs - superadmin only"""
+    logs = await db.email_logs.find(
+        {},
+        {"_id": 0}
+    ).sort("sent_at", -1).limit(limit).to_list(limit)
+    return logs
+
+# Customer email settings
+@api_router.get("/user/email-settings")
+async def get_user_email_settings(current_user: dict = Depends(get_current_user)):
+    """Get customer email settings"""
+    settings = await db.customer_email_settings.find_one(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    if settings:
+        settings["smtp_password"] = "********" if settings.get("smtp_password") else ""
+    return settings or {"enabled": False}
+
+@api_router.put("/user/email-settings")
+async def update_user_email_settings(
+    settings: CustomerEmailSettings,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update customer email settings"""
+    # Get existing settings to preserve password if not changed
+    existing = await db.customer_email_settings.find_one({"user_id": current_user["id"]})
+    settings_dict = settings.dict()
+    settings_dict["user_id"] = current_user["id"]
+    settings_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    if settings_dict.get("smtp_password") == "********" and existing:
+        settings_dict["smtp_password"] = existing.get("smtp_password", "")
+    
+    await db.customer_email_settings.update_one(
+        {"user_id": current_user["id"]},
+        {"$set": settings_dict},
+        upsert=True
+    )
+    return {"success": True, "message": "Email instellingen opgeslagen"}
+
+@api_router.post("/user/email-settings/test")
+async def test_user_email(current_user: dict = Depends(get_current_user)):
+    """Send a test email using customer's own SMTP settings"""
+    settings = await db.customer_email_settings.find_one(
+        {"user_id": current_user["id"]}
+    )
+    
+    if not settings or not settings.get("enabled"):
+        raise HTTPException(status_code=400, detail="Email niet geconfigureerd")
+    
+    # Create a temporary email service with customer settings
+    email_service = get_email_service(db)
+    
+    # Save customer settings temporarily as their workspace
+    workspace_id = f"customer_{current_user['id']}"
+    await email_service.save_settings(workspace_id, settings)
+    
+    result = await email_service.send_test_email(current_user["email"], workspace_id)
+    return result
+
 # ==================== ADMIN BULK MODULE ACTIVATION ====================
 
 class BulkModuleActivation(BaseModel):
