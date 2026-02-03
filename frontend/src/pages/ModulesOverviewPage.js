@@ -142,6 +142,21 @@ const MODULE_UI_DATA = {
       'Veiligheid & compliance tracking'
     ]
   },
+  'boekhouding': {
+    icon: BarChart3,
+    gradient: 'from-emerald-500 to-green-600',
+    lightBg: 'from-emerald-50 to-green-50',
+    shadowColor: 'shadow-emerald-200',
+    detailSlug: 'boekhouding',
+    image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80',
+    isFree: true,
+    features: [
+      'Multi-valuta: SRD, USD, EUR',
+      'BTW-tarieven: 0%, 10%, 25%',
+      'Debiteuren & Crediteuren',
+      'Balans & Resultatenrekening'
+    ]
+  },
   'multi-tenant': {
     icon: Shield,
     gradient: 'from-slate-500 to-slate-700',
