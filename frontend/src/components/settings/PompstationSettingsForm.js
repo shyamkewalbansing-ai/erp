@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from '../ui/textarea';
 import { toast } from 'sonner';
 import { Loader2, Save, Fuel, DollarSign, AlertTriangle, Clock, Receipt } from 'lucide-react';
-import { getModuleSettings, updateModuleSettings } from '../lib/api';
+import { getModuleSettings, updateModuleSettings } from '../../lib/api';
 
 const defaultSettings = {
   fuel_price_gasoline: 0.0,
