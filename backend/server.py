@@ -9155,7 +9155,13 @@ async def startup_event():
         await seed_default_addons()
         await seed_default_landing_page()
         await seed_default_cms_pages()
-        logger.info("Startup tasks completed")
+        
+        # Start scheduled tasks for email reminders
+        email_service = get_email_service(db)
+        scheduler = get_scheduled_tasks(db, email_service)
+        await scheduler.start()
+        
+        logger.info("Startup tasks completed (including scheduler)")
     except Exception as e:
         logger.error(f"Startup error: {e}")
 
