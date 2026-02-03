@@ -746,13 +746,23 @@ export default function Dashboard() {
                 className="h-20 w-auto object-contain bg-white/10 backdrop-blur-sm rounded-2xl p-3"
               />
             )}
-            <Button 
-              onClick={() => navigate('/app/appartementen')}
-              className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nieuw Appartement
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setShowQuickStart(true)}
+                variant="outline"
+                className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20"
+              >
+                <Rocket className="w-4 h-4 mr-2" />
+                Quick Start
+              </Button>
+              <Button 
+                onClick={() => navigate('/app/boekhouding')}
+                className="bg-emerald-500 hover:bg-emerald-600 text-white"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Boekhouding
+              </Button>
+            </div>
           </div>
         </div>
       </div>
