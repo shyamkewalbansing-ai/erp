@@ -164,6 +164,7 @@ export default function Layout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeAddons, setActiveAddons] = useState([]);
   const [addonsLoaded, setAddonsLoaded] = useState(false);
+  const [moduleOrder, setModuleOrder] = useState([]);
   const [workspaceDialogOpen, setWorkspaceDialogOpen] = useState(false);
   const [workspaceData, setWorkspaceData] = useState(null);
   const [workspaceForm, setWorkspaceForm] = useState({ name: '', slug: '' });
