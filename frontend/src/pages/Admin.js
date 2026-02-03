@@ -296,6 +296,14 @@ export default function Admin() {
       setDeploymentLogs(deployLogsRes.data || []);
       setWorkspaces(workspacesRes.data || []);
       setWorkspaceStats(workspaceStatsRes.data || { total: 0, active: 0, pending: 0 });
+      
+      // Load module payment requests separately
+      try {
+        const paymentRequestsRes = await getModulePaymentRequests();
+        setPaymentRequests(paymentRequestsRes.data || []);
+      } catch (e) {
+        console.error('Error loading payment requests:', e);
+      }
     } catch (error) {
       toast.error('Fout bij het laden van gegevens');
     } finally {
