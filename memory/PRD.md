@@ -661,6 +661,46 @@ Complete admin functionaliteit voor het bevestigen van module betalingen:
 
 **Note:** Vereist `superadmin` rol (niet `admin`) om toegang te krijgen tot admin panel.
 
+---
+
+### ADMIN DASHBOARD TABS FIX ✅ (NIEUW - 3 Feb 2026)
+De admin dashboard tabs zijn gefixed zodat alle tabs netjes op één horizontale lijn staan.
+
+**Wijzigingen:**
+- [x] TabsList met `inline-flex` en `min-w-max` voor horizontale layout
+- [x] `overflow-x-auto` voor scrolling op kleinere schermen
+- [x] `whitespace-nowrap` om text wrapping te voorkomen
+- [x] Kortere labels (bijv. "Betaalmethodes" → "Betalen", "Domain Provisioning" → "Domains")
+- [x] Compactere padding (`px-3 py-2` i.p.v. `px-4 py-2.5`)
+
+---
+
+### SIDEBAR MODULE VOLGORDE ✅ (NIEUW - 3 Feb 2026)
+Klanten kunnen nu zelf de volgorde van modules in de sidebar aanpassen.
+
+**Features:**
+- [x] Nieuwe "Sidebar Volgorde" optie in Instellingen menu
+- [x] Module lijst met positie nummers (1, 2, 3, etc.)
+- [x] Pijltje omhoog/omlaag knoppen om modules te verplaatsen
+- [x] Opslaan knop met success toast
+- [x] Boekhouding module altijd getoond met "(Gratis)" label
+- [x] Dynamische sidebar rendering op basis van opgeslagen volgorde
+
+**Backend API's:**
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/user/sidebar-order | GET | Opgeslagen module volgorde ophalen |
+| /api/user/sidebar-order | PUT | Module volgorde opslaan |
+
+**Frontend Componenten:**
+- `/app/frontend/src/components/SidebarOrderSettings.js` - Module volgorde component
+- `/app/frontend/src/components/Layout.js` - Dynamische sidebar rendering met `getOrderedModules()`
+
+**Database:**
+- `user_sidebar_settings` collectie met `user_id` en `module_order` array
+
+**Test Rapport:** `/app/test_reports/iteration_31.json` - 100% geslaagd
+
 ## Architecture Notes
 - Huurders hebben aparte `tenant_accounts` collectie (losgekoppeld van `users`)
 - Tenant portaal routes starten met `/huurder`
