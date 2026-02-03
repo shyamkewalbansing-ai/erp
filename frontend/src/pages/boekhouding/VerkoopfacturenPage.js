@@ -22,7 +22,9 @@ export default function VerkoopfacturenPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [payDialogOpen, setPayDialogOpen] = useState(false);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
   const [selectedFactuur, setSelectedFactuur] = useState(null);
+  const [selectedDebiteur, setSelectedDebiteur] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({ debiteur_id: '', factuurdatum: new Date().toISOString().split('T')[0], valuta: 'SRD', regels: [{ omschrijving: '', aantal: 1, prijs_per_stuk: 0, btw_tarief: '25' }], opmerkingen: '' });
   const [payForm, setPayForm] = useState({ bedrag: 0, betaaldatum: new Date().toISOString().split('T')[0], betaalmethode: 'bank' });
