@@ -28,6 +28,10 @@ import {
   deactivateUserAddon,
   getAddonRequests,
   approveAddonRequest,
+  bulkActivateModules,
+  getModulePayments,
+  getModulePaymentRequests,
+  confirmModulePayment,
   rejectAddonRequest,
   // Deployment
   getDeploymentSettings,
