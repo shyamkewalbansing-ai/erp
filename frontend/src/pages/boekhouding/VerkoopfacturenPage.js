@@ -137,8 +137,9 @@ export default function VerkoopfacturenPage() {
                   <TableCell><Badge className={statusColors[f.status]}>{statusLabels[f.status]}</Badge></TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      {f.status === 'concept' && <Button size="sm" variant="ghost" onClick={() => updateStatus(f.id, 'verstuurd')}><Send className="w-4 h-4" /></Button>}
-                      {['verstuurd', 'gedeeltelijk_betaald'].includes(f.status) && <Button size="sm" variant="ghost" onClick={() => openPayDialog(f)}><DollarSign className="w-4 h-4" /></Button>}
+                      {f.status === 'concept' && <Button size="sm" variant="ghost" onClick={() => updateStatus(f.id, 'verstuurd')} title="Markeer als verstuurd"><Send className="w-4 h-4" /></Button>}
+                      {f.status !== 'concept' && <Button size="sm" variant="ghost" onClick={() => openEmailDialog(f)} title="Verstuur per email"><Mail className="w-4 h-4 text-blue-500" /></Button>}
+                      {['verstuurd', 'gedeeltelijk_betaald'].includes(f.status) && <Button size="sm" variant="ghost" onClick={() => openPayDialog(f)} title="Betaling registreren"><DollarSign className="w-4 h-4" /></Button>}
                     </div>
                   </TableCell>
                 </TableRow>
