@@ -247,6 +247,37 @@ export default function Layout() {
     return activeAddons.includes(addonSlug);
   };
 
+  // Module configurations for dynamic sidebar rendering
+  const moduleConfigs = {
+    vastgoed_beheer: { name: 'Vastgoed Beheer', items: vastgoedNavItems, icon: Building2 },
+    hrm: { name: 'HRM Module', items: hrmNavItems, icon: Users },
+    autodealer: { name: 'Auto Dealer', items: autoDealerNavItems, icon: Car },
+    beauty: { name: 'Beauty Spa', items: beautySpaItems, icon: Sparkles },
+    pompstation: { name: 'Pompstation', items: pompstationNavItems, icon: Zap },
+    boekhouding: { name: 'Boekhouding', items: boekhoudingNavItems, icon: FileText, alwaysShow: true },
+  };
+
+  // Get modules in the correct order based on user preference
+  const getOrderedModules = () => {
+    const defaultOrder = ['vastgoed_beheer', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding'];
+    
+    if (moduleOrder.length === 0) {
+      return defaultOrder;
+    }
+    
+    // Start with user's saved order
+    const ordered = [...moduleOrder];
+    
+    // Add any modules not in the saved order (new modules)
+    defaultOrder.forEach(slug => {
+      if (!ordered.includes(slug)) {
+        ordered.push(slug);
+      }
+    });
+    
+    return ordered;
+  };
+
   // Get visible nav items based on active add-ons
   const getVisibleNavItems = () => {
     const vastgoedItems = vastgoedNavItems.filter(item => hasAddon(item.addon));
