@@ -7,7 +7,7 @@ import { Switch } from '../ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { toast } from 'sonner';
 import { Loader2, Save, Calculator, DollarSign, FileText, Calendar, Percent } from 'lucide-react';
-import { getModuleSettings, updateModuleSettings } from '../lib/api';
+import { getModuleSettings, updateModuleSettings } from '../../lib/api';
 
 const defaultSettings = {
   default_currency: 'SRD',
