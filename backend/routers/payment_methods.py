@@ -154,10 +154,11 @@ async def update_payment_settings(
     """Update payment settings for current workspace"""
     db = await get_db()
     workspace_id = current_user.get("workspace_id")
+    is_superadmin = current_user.get("role") == "superadmin" or current_user.get("is_admin")
     
     # For superadmin without workspace, use "global" as workspace_id
     if not workspace_id:
-        if current_user.get("role") == "superadmin" or current_user.get("is_admin"):
+        if is_superadmin:
             workspace_id = "global"
         else:
             raise HTTPException(status_code=400, detail="Geen workspace gevonden")
@@ -173,8 +174,8 @@ async def update_payment_settings(
         upsert=True
     )
     
-    # Also update the global payment_settings collection for customer-facing pages
-    if workspace_id == "global":
+    # Superadmin always updates global payment_settings for customer-facing pages
+    if is_superadmin:
         payment_methods = settings_dict.get("payment_methods", [])
         bank_method = next((m for m in payment_methods if m.get("method_id") == "bank_transfer"), None)
         if bank_method:
