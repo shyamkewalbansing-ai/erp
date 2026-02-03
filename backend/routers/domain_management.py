@@ -971,7 +971,11 @@ async def automated_domain_setup(
             "user_id": request.user_id,
             "workspace_id": workspace_id,
             "verified": dns_result["verified"],
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "status": "pending" if not dns_result["verified"] else "active",
+            "dns_record_type": "A",
+            "dns_record_value": SERVER_IP,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "verified_at": datetime.now(timezone.utc).isoformat() if dns_result["verified"] else None
         })
         steps_completed.append("Domein geregistreerd in database")
     
