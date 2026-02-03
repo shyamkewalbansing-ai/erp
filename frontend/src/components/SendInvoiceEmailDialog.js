@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { 
   Mail, 
@@ -33,10 +33,20 @@ export default function SendInvoiceEmailDialog({
 }) {
   const [sending, setSending] = useState(false);
   const [emailData, setEmailData] = useState({
-    to_email: debiteur?.email || '',
+    to_email: '',
     subject: '',
     message: ''
   });
+
+  // Update email data when debiteur changes
+  useEffect(() => {
+    if (debiteur?.email) {
+      setEmailData(prev => ({
+        ...prev,
+        to_email: debiteur.email
+      }));
+    }
+  }, [debiteur]);
 
   const handleSend = async () => {
     if (!emailData.to_email) {
