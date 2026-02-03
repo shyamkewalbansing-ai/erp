@@ -115,7 +115,7 @@ export default function GrootboekPage() {
           </CardContent>
         </Card>
       ))}
-      {rekeningen.length === 0 && <Card><CardContent className="py-12 text-center text-muted-foreground"><Calculator className="w-12 h-12 mx-auto mb-4 opacity-50" /><p>Geen rekeningen gevonden.</p><p className="text-sm mt-2">Klik op "Standaard Schema" om het Surinaams rekeningschema aan te maken.</p></CardContent></Card>}
+      {rekeningen.length === 0 && <Card><CardContent className="py-12 text-center text-muted-foreground"><Calculator className="w-12 h-12 mx-auto mb-4 opacity-50" /><p>Geen rekeningen gevonden.</p><p className="text-sm mt-2">Klik op &quot;Standaard Schema&quot; om het Surinaams rekeningschema aan te maken.</p></CardContent></Card>}
     </div>
   );
 }
