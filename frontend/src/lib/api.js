@@ -276,6 +276,11 @@ export const confirmModulePayment = (requestId, months = 1) => api.post(`/admin/
 export const getSidebarOrder = () => api.get('/user/sidebar-order');
 export const updateSidebarOrder = (moduleOrder) => api.put('/user/sidebar-order', { module_order: moduleOrder });
 
+// Module Settings (User)
+export const getModuleSettings = (moduleSlug) => api.get(`/module-settings/${moduleSlug}`);
+export const updateModuleSettings = (moduleSlug, settings) => api.put(`/module-settings/${moduleSlug}`, settings);
+export const getAllModuleSettings = () => api.get('/module-settings');
+
 // Add-on Requests (Admin)
 export const getAddonRequests = () => api.get('/admin/addon-requests');
 export const approveAddonRequest = (requestId, months = 1) => api.put(`/admin/addon-requests/${requestId}/approve?months=${months}`);
