@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://free-ledger-su.preview.emergentagent.com/           → Landing page
-https://free-ledger-su.preview.emergentagent.com/login      → Login
-https://free-ledger-su.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://free-ledger-su.preview.emergentagent.com/booking/   → Publieke booking portals
+https://accmod-suriname.preview.emergentagent.com/           → Landing page
+https://accmod-suriname.preview.emergentagent.com/login      → Login
+https://accmod-suriname.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://accmod-suriname.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)

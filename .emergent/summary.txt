@@ -1,162 +1,152 @@
 <analysis>**original_problem_statement:**
-The user wants to add a new, free accounting module (boekhouding) for Surinamese businesses.
+The user wants to add a new, free accounting module (boekhouding) for Surinamese businesses. The sales model should be per-module with a 3-day free trial, not a platform subscription. The user also requested a modern UI for the pricing page (), a consolidated tabbed interface for the superadmin dashboard (), and a redesigned modern customer dashboard. Subsequently, the user requested a comprehensive email notification system and automated tasks.
 
 **PRODUCT REQUIREMENTS:**
--   **Core Functionality:** General ledger, accounts receivable, accounts payable, VAT (BTW), bank/cash management, and reporting.
--   **Multi-Currency:** Must fully support SRD, USD, and EUR for all transactions, including invoicing. It's not just for reporting conversion.
--   **Reporting:** All reports must be available in SRD, with automatic currency conversions from USD/EUR transactions.
--   **Accessibility:** The module must be **free** and **automatically activated** for all new customers, whether they self-register or are created by a superadmin.
--   **UI/UX:**
-    -   The subscription pricing page () needs a modern redesign with attractive plan cards.
-    -   A detail page must be correctly generated for all modules, including those created by a superadmin.
+*   **Accounting Module:** A free, auto-activated module for all customers with features for General ledger, A/R, A/P, VAT, Bank/Cash, and Reporting. Must support SRD, USD, and EUR.
+*   **Module Sales Model:** Customers select modules, which activate for a 3-day free trial. After the trial, a payment popup appears on the dashboard. An admin must confirm payment to reactivate the modules.
+*   **UI/UX:**
+    *    page with a modern design for module selection and ordering.
+    *    superadmin dashboard redesigned with a modern look and a consolidated tab structure.
+    *   A modern, intuitive customer-facing dashboard.
+*   **Email & Automation System:**
+    *   Admin and customers can configure their own SMTP settings.
+    *   Automated emails for new user welcome, password reset, and module expiration warnings.
+    *   Ability for customers to email invoices from the accounting module.
+    *   Admin notifications for new payment requests.
 
 **User's preferred language**: Dutch
 
 **what currently exists?**
-A multi-tenant FastAPI/React SaaS application with an existing addon/module system. The backend APIs and basic frontend placeholder pages for the new accounting module have been created. The logic to make the module free and auto-activated upon user registration is also in place. A redesigned pricing page has been coded but not visually verified.
+A multi-tenant FastAPI/React SaaS application. The subscription model has been replaced by a per-module sales system with a 3-day trial. The admin page () has been fully redesigned into a modern, consolidated tabbed interface. The customer dashboard is also modernized and includes a Quick Start wizard. A comprehensive email system with SMTP configuration for both admin and customers is in place, supported by a backend service (). An -based cron job system has been implemented to handle automated tasks, such as sending email reminders for expiring modules. The free Boekhouding module is fully functional and accessible to all users.
 
 **Last working item**:
--   **Last item agent was working:** The agent was trying to resolve a critical issue where all frontend pages return a Page not found error when accessed via the public URL. This was diagnosed as a Kubernetes Ingress / platform-level proxy configuration problem that prevents React Router from working correctly. The application code itself works locally.
--   **Status:** BLOCKED
--   **Agent Testing Done:** N (Visual frontend testing failed due to the URL issue).
--   **Which testing method agent to use?** The infrastructure issue must be resolved first. Once fixed, use the  tool to verify the frontend pages, starting with  and .
+-   **Last item agent was working:** The agent was in the middle of implementing three key email-related functionalities:
+    1.  Enabling customers to send sales invoices via email from the accounting module.
+    2.  Integrating the new email service into the 'Forgot Password' flow.
+    3.  Integrating the new email service into the welcome email for new customer registrations.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** Frontend and Backend testing. Backend  calls to test the email endpoints and frontend screenshots to verify the new UI components and dialogs.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1 (P0): Public frontend URL is not working and returns Page not found.**
--   **Issue 2 (P1): Module detail page appears blank for newly created admin addons.**
-
-**Issues Detail:**
--   **Issue 1: Public frontend URL is not working**
-    -   **Attempted fixes:** The agent correctly identified this is not a code error but a proxy/routing issue. An attempt to fix it with a custom Nginx configuration was made, but the issue persists as it seems to be at a higher level (Kubernetes Ingress). The  confirmed this diagnosis.
-    -   **Next debug checklist:**
-        1.  Re-examine the Nginx configuration. A standard Single-Page Application (SPA) configuration is needed. Create/edit  or a similar config file to include a  block with . This ensures all non-API routes are handled by React Router.
-        2.  Reload Nginx using .
-        3.  If the issue persists, it confirms the problem is with the upstream proxy (e.g., Google Cloud Run Ingress), which is beyond the agent's direct control. In this case, proceed with development assuming local functionality is correct and flag this for final deployment review.
-    -   **Why fix this issue and what will be achieved with the fix?** This is a critical blocker. Fixing it will allow for visual verification of all frontend work and enable user testing.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Frontend
-    -   **Blocked on other issue:** None. This is the primary blocker.
-
--   **Issue 2: Module detail page appears blank for newly created admin addons.**
-    -   **Attempted fixes:** The agent found that the page relies on  and  data, which are often empty for admin-created addons. The agent improved  to render a better fallback UI and added a helper description to the admin form in .
-    -   **Next debug checklist:** Once Issue 1 is resolved, test this by:
-        1.  Logging in as a superadmin.
-        2.  Creating a new test addon with minimal data (name and slug only).
-        3.  Navigating to the new module's detail page () and verifying that it displays a structured page with placeholder content instead of being blank.
-    -   **Why fix this issue and what will be achieved with the fix?** It ensures a consistent and user-friendly experience for admins managing the platform's modules.
-    -   **Status:** USER VERIFICATION PENDING
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Frontend
-    -   **Blocked on other issue:** Issue 1
+There are no outstanding blocking issues.
 
 **In progress Task List**:
--   **Task 1: Verify the redesign of the subscription pricing page.**
-    -   **Where to resume:** A new design has been implemented in .
-    -   **What will be achieved with this?** This will fulfill the user's request for a modern and attractive pricing page for subscription plans.
-    -   **Status:** TESTING PENDING
-    -   **Should Test frontend/backend/both after fix?** Frontend
-    -   **Blocked on something:** Issue 1.
+-   **Task 1: Complete Email Functionality Integrations (P0)**
+    -   **Where to resume:** The backend endpoint () and the frontend dialog () for sending invoices have been created. The next step is to add a Versturen (Send) button to the  to open this dialog and trigger the API call.
+    -   **What will be achieved with this?** This will complete the three core email tasks: customers can email invoices, the forgot password flow will use the new email service, and new users will receive a welcome email.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** Both.
+    -   **Blocked on something:** None.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks (P1):**
-    -   **Implement UI for Accounting Module:** The foundational backend is done, but the frontend pages are just placeholders. The next step is to build the UI and connect it to the APIs.
-        -   **Grootboek (Ledger):** Build forms/tables in .
-        -   **Debiteuren (A/R):** Build UI in .
-        -   **Crediteuren (A/P):** Build UI in .
-        -   **Bank/Kas:** Build UI in .
-        -   **Rapportages (Reports):** Build UI in .
-
--   **Future Tasks (P2):**
-    -   Implement frontend logic for multi-currency transactions (SRD, USD, EUR).
-    -   Implement the logic for VAT (BTW) calculations and reporting.
-    -   Implement automatic currency conversion for generating reports in SRD.
+-   **Upcoming Tasks:**
+    -   **(P1) Implement Admin Module Payment Confirmation:** The Module Verzoeken tab exists in the admin panel. The next step is to build the frontend logic for an admin to click approve on a payment request, which should call the backend API to activate the customer's modules permanently.
+-   **Future Tasks:**
+    -   **(P2) Implement Multi-Currency Logic:** Build the frontend components to handle SRD, USD, and EUR in transactions within the accounting module.
+    -   **(P2) Implement VAT (BTW) Logic:** Add frontend forms and backend calculations for VAT.
+    -   **(P3) Add WhatsApp/SMS Notifications:** The user expressed interest in this as a potential alternative or addition to email notifications.
 
 **Completed work in this session**
--   **Backend Accounting Module:**
-    -   Created all necessary API endpoints and data models in .
-    -   Configured the Boekhouding module as a free addon in  in .
-    -   Modified registration () and admin customer creation () to automatically activate free addons for new users.
--   **Frontend Scaffolding & UI Improvements:**
-    -   Created placeholder pages for the entire accounting module under .
-    -   Added routes in  and sidebar navigation in .
-    -   Added a GRATIS (FREE) badge for free modules across , , and .
-    -   Redesigned the subscription pricing page ().
-    -   Improved the dynamic  to handle addons with minimal data.
+-   **Admin UI Overhaul:**
+    -   Redesigned the entire admin dashboard () with a modern look, including a new header, statistics cards, and pill-style tabs.
+    -   Added a Domain Provisioning tab, integrating the existing management page.
+    -   Added a Module Verzoeken tab for admins to view payment requests.
+    -   Added a comprehensive Email tab with sections for SMTP Settings and an Automatisering sub-tab to manage and monitor scheduled jobs.
+    -   Reordered all admin tabs according to the user's specified priority.
+-   **Customer Experience Enhancements:**
+    -   Fixed a critical bug preventing the free Boekhouding module from loading. It is now always accessible and visible in the sidebar for all users.
+    -   Fixed routing to ensure users without modules land on the dashboard (to see an order popup) instead of being redirected away.
+    -   Implemented a Quick Start Wizard () on the customer dashboard for new user onboarding.
+    -   Added an Email settings section to the customer Instellingen page for configuring personal SMTP servers.
+-   **Core Backend Architecture:**
+    -   Implemented a full SMTP email system using a dedicated service ().
+    -   Created API endpoints for saving and testing SMTP settings for both admin and users.
+    -   Implemented a background task scheduler using  ().
+    -   Created automated cron jobs to check for expiring modules and send email reminders.
 
 **Earlier issues found/mentioned but not fixed**
 None.
 
 **Known issue recurrence from previous fork**
-N/A
+-   The monolithic nature of  was a known risk. While it was successfully redesigned in this session, it remains a large and complex file that requires careful handling during future modifications.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, MongoDB
--   **Frontend:** React, React Router, TailwindCSS
--   **Architecture:** Multi-tenant SaaS with a modular addon system.
+-   **Backend:** FastAPI, MongoDB,  for cron jobs,  for async email.
+-   **Frontend:** React, TailwindCSS, Shadcn UI, .
+-   **Core Logic:** Integrated SMTP email system, scheduled background tasks for automation, and a module-based sales model.
 
 **key DB schema**
--   : Stores module definitions like .
--   : Links users to activated modules .
--   New collections for accounting are implied by the backend router: , , , etc.
+-   : New collection storing admin and customer-specific SMTP configurations.
 
 **changes in tech stack**
-None.
+-   **Added backend libraries:** , , .
 
 **All files of reference**
--   : Contains all APIs for the new accounting module.
--   : Modified to integrate the accounting module and its automatic activation.
--   : Completely rewritten to display modern subscription plan cards.
--   : Updated to better handle dynamically generated modules.
--   : Updated to add accounting module navigation to the sidebar.
+-   : Core logic for sending all application emails.
+-   : Implementation of automated cron jobs.
+-   : Location of API endpoints for email, cron management, and updated auth flows.
+-   : The redesigned, modern admin dashboard.
+-   : The redesigned customer dashboard with the Quick Start wizard.
+-   : The page where the Send Invoice button needs to be added.
+-   : The new dialog component for sending invoices via email.
 
 **Areas that need refactoring**:
-The  still contains a large, hardcoded object for module details. This could be refactored by moving all module content into the  collection in the database and making the page fully dynamic.
+-   , despite its new design, is still a monolithic file (~2000+ lines). Breaking it down into separate components for each tab would improve maintainability.
 
 **key api endpoints**
--   : A new set of endpoints for all accounting functions.
--   : Modified to activate free addons.
--   : Modified to activate free addons.
--   : Used to fetch module details dynamically.
+-   **New:**
+    -   , : For admin to manage global SMTP.
+    -   , : For customers to manage their own SMTP.
+    -   : To test SMTP configurations.
+    -   : For existing users to order new modules.
+    -   : To send a sales invoice via email.
+    -   , : For admin to monitor and manage cron jobs.
+-   **Modified:**
+    -   : Updated to use the new centralized .
+    -   : The welcome email logic was updated to use the .
 
 **Critical Info for New Agent**
--   **Your first priority is to fix the frontend routing issue (Issue 1).** The application code is likely correct, but the platform's proxy/ingress is not configured for a React Single-Page Application. You must configure Nginx (or a similar proxy) to redirect all non-API traffic to .
--   Do not get sidetracked by other tasks until the frontend is viewable at its public URL. All frontend work is currently blocked.
--   Once the URL is fixed, verify the redesigned  page and the fix for the dynamic module detail page.
--   The accounting module's foundation is built, but the user interface is just placeholders. The next major task is to build out the UI for each accounting feature and connect it to the existing backend APIs.
+-   Your first priority is to complete the in-progress email integration task. This involves adding the Send Invoice button to  and connecting it to the  component and its corresponding backend API.
+-   After implementation, thoroughly test all three email flows: sending an invoice, requesting a password reset, and creating a new user to verify the welcome email.
+-   The backend now runs scheduled tasks via  on startup. The management UI for this is under the Email -> Automatisering tab in the admin panel.
+-   The  file is very large. Apply any new changes with caution.
 
 **documents and test reports created in this job**
--   
+-    (Continuously updated)
 -   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Requests a modern design for the subscription plan cards and asks why the  doesn't work for admin-created addons. (PENDING VERIFICATION)
-2.  **User:** Clarifies the request is for the **subscription plan cards** on the pricing page. (WORK STARTED)
-3.  **User:** Reports the boekhouding module detail page is missing. (RESOLVED, PENDING VERIFICATION)
-4.  **User:** Asks agent to continue.
-5.  **User:** Confirms accounting requirements and clarifies that all 3 currencies (SRD, USD, EUR) must be usable for transactions. (REQUIREMENT NOTED)
-6.  **Agent:** Presents plan for accounting module.
-7.  **User:** Initial request for the free, auto-activated accounting module. (WORK STARTED)
+1.  **User:** Asks for the admin dashboard to be modernized and for an explanation of the customer email settings.
+2.  **Agent:** Provides the new design and an explanation.
+3.  **User:** Confirms they want to proceed with integrating email functionality into the bookkeeping module (sending invoices).
+4.  **Agent:** Proposes a plan to build three email features: sending invoices, password reset emails, and welcome emails.
+5.  **User:** ja (Yes).
+6.  **User:** Asks for a cron job for automatic email reminders.
+7.  **Agent:** Implements the cron job system.
+8.  **User:** Requests a specific reordering of the admin dashboard tabs.
+9.  **Agent:** Reorders the tabs successfully.
+10. **User:** Asks again for the admin dashboard to be modernized and for an explanation of the email settings (clarification/reiteration).
 
 **Project Health Check:**
--   **Broken:** The public frontend URL is inaccessible due to a platform-level routing/proxy misconfiguration.
--   **Mocked:** N/A.
+-   **Broken:** None.
+-   **Mocked:** The UI for sending emails from the accounting module is partially complete. The admin's Module Verzoeken UI is present, but the approval action is not yet connected to the backend API.
 
 **3rd Party Integrations**
--    is present for AI chat but was not used in this session. No new integrations were added.
+-   None.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (for backend APIs).
--   **Troubleshoot agent used after agent stuck in loop:** YES (for the frontend URL issue).
+-   **Testing agent used after significant changes:** NO
+-   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** None.
--   **Known regressions:** The entire frontend is currently inaccessible via its public URL.
+-   **Known regressions:** None.
 
 **Credentials to test flow:**
-The application uses a demo user account that is automatically seeded. This should be sufficient for testing.
+-   Admin and demo user logins are functional. Use the demo user for customer-facing features and the admin user for the  panel.
 
 **What agent forgot to execute**
--   The agent started work on all user requests but was blocked by the infrastructure issue before it could fully test and verify any of the frontend changes (new pricing page, improved module detail page). Verification of these completed code changes is the most immediate pending action after the infrastructure is fixed.</analysis>
+-   The agent started the three email integration tasks but did not fully complete and test them. The frontend implementation for sending an invoice from  is the most prominent pending piece. Testing of the refactored Forgot Password and Welcome Email flows is also required.</analysis>

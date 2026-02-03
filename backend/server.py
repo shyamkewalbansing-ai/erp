@@ -8698,7 +8698,7 @@ async def test_mope_payment(amount: float = 10.0, description: str = "Test betal
                 json={
                     "amount": amount,
                     "description": description,
-                    "redirect_url": "https://free-ledger-su.preview.emergentagent.com/betaling-voltooid"
+                    "redirect_url": "https://accmod-suriname.preview.emergentagent.com/betaling-voltooid"
                 },
                 timeout=30.0
             )
