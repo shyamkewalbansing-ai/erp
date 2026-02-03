@@ -790,92 +790,113 @@ server {
   }
 
   return (
-    <div className="space-y-6" data-testid="admin-page">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Beheerder Dashboard</h1>
-          <p className="text-muted-foreground">Beheer klanten en abonnementen</p>
+    <div className="space-y-8" data-testid="admin-page">
+      {/* Modern Header */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:24px_24px]"></div>
         </div>
-        <Button onClick={() => setCreateCustomerDialogOpen(true)} data-testid="create-customer-btn">
-          <UserPlus className="w-4 h-4 mr-2" />
-          Klant Aanmaken
-        </Button>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-[100px]"></div>
+        
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium mb-3">
+              <Shield className="w-3.5 h-3.5" />
+              SUPERADMIN
+            </div>
+            <h1 className="text-3xl font-bold text-white tracking-tight">Beheerder Dashboard</h1>
+            <p className="text-slate-400 mt-1">Beheer klanten, modules en instellingen</p>
+          </div>
+          <Button 
+            onClick={() => setCreateCustomerDialogOpen(true)} 
+            data-testid="create-customer-btn"
+            className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Klant Aanmaken
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Bento Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Totaal Klanten</CardTitle>
-            <Users className="w-4 h-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_customers || 0}</div>
-          </CardContent>
-        </Card>
+        <div className="group relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Totaal</span>
+          </div>
+          <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats?.total_customers || 0}</p>
+          <p className="text-sm text-slate-500 mt-1">Klanten</p>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Actieve Abonnementen</CardTitle>
-            <CheckCircle className="w-4 h-4 text-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">{stats?.active_subscriptions || 0}</div>
-          </CardContent>
-        </Card>
+        <div className="group relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 hover:border-emerald-300 dark:hover:border-emerald-800 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+              <CheckCircle className="w-6 h-6 text-white" />
+            </div>
+            <span className="px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-medium">Actief</span>
+          </div>
+          <p className="text-3xl font-bold text-emerald-600">{stats?.active_subscriptions || 0}</p>
+          <p className="text-sm text-slate-500 mt-1">Actieve Abonnementen</p>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Verlopen Abonnementen</CardTitle>
-            <XCircle className="w-4 h-4 text-red-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-500">{stats?.expired_subscriptions || 0}</div>
-          </CardContent>
-        </Card>
+        <div className="group relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 hover:border-rose-300 dark:hover:border-rose-800 transition-all">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/25">
+              <XCircle className="w-6 h-6 text-white" />
+            </div>
+            <span className="px-2 py-1 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-xs font-medium">Verlopen</span>
+          </div>
+          <p className="text-3xl font-bold text-rose-600">{stats?.expired_subscriptions || 0}</p>
+          <p className="text-sm text-slate-500 mt-1">Verlopen Abonnementen</p>
+        </div>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Totale Omzet</CardTitle>
-            <TrendingUp className="w-4 h-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">{formatCurrency(stats?.total_revenue || 0)}</div>
-            <p className="text-xs text-muted-foreground mt-1">
+        <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-6">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-[60px]"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-emerald-400" />
+              </div>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Omzet</span>
+            </div>
+            <p className="text-3xl font-bold text-white">{formatCurrency(stats?.total_revenue || 0)}</p>
+            <p className="text-sm text-emerald-400 mt-1 flex items-center gap-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
               Deze maand: {formatCurrency(stats?.revenue_this_month || 0)}
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      {/* Pending Requests */}
+      {/* Pending Requests - Modern Alert */}
       {requests.length > 0 && (
-        <Card className="border-yellow-500/20 bg-yellow-500/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-yellow-600">
-              <Clock className="w-5 h-5" />
-              Openstaande Verzoeken ({requests.length})
-            </CardTitle>
-            <CardDescription>Klanten die wachten op activatie</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {requests.map((request) => (
-                <div 
-                  key={request.id}
-                  className="flex items-center justify-between p-3 bg-background rounded-lg border"
-                >
-                  <div>
-                    <p className="font-medium">{request.user_name}</p>
-                    <p className="text-sm text-muted-foreground">{request.user_email}</p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(request.created_at).toLocaleDateString('nl-NL')}
-                    </span>
+        <div className="relative overflow-hidden rounded-xl border-2 border-amber-200 dark:border-amber-900/50 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/25 flex-shrink-0">
+              <Clock className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200">
+                Openstaande Verzoeken ({requests.length})
+              </h3>
+              <p className="text-amber-700 dark:text-amber-300 text-sm mb-4">Klanten die wachten op activatie</p>
+              <div className="space-y-2">
+                {requests.slice(0, 3).map((request) => (
+                  <div 
+                    key={request.id}
+                    className="flex items-center justify-between p-3 bg-white/80 dark:bg-slate-900/50 rounded-lg border border-amber-200 dark:border-amber-900/30"
+                  >
+                    <div>
+                      <p className="font-medium text-slate-900 dark:text-white">{request.user_name}</p>
+                      <p className="text-sm text-slate-500">{request.user_email}</p>
+                    </div>
                     <Button
                       size="sm"
+                      className="bg-amber-500 hover:bg-amber-600 text-white"
                       onClick={() => {
                         const customer = customers.find(c => c.id === request.user_id);
                         if (customer) {
@@ -887,11 +908,11 @@ server {
                       Activeren
                     </Button>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Tabs for Customers, Payments, and Add-ons */}
