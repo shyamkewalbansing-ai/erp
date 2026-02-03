@@ -2006,29 +2006,32 @@ server {
         {/* Update/Deployment Tab */}
         <TabsContent value="update">
           <div className="grid gap-6">
-            {/* Status Card */}
-            <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50">
+            {/* Server Update Script Card - NEW */}
+            <Card className="border-2 border-emerald-500 bg-gradient-to-r from-emerald-50 to-teal-50">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-3 bg-emerald-500 rounded-xl">
-                      <Server className="w-6 h-6 text-white" />
+                      <Rocket className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <CardTitle>Systeem Update</CardTitle>
+                      <CardTitle className="flex items-center gap-2">
+                        Server Update Script
+                        <Badge className="bg-emerald-500 text-white">Aanbevolen</Badge>
+                      </CardTitle>
                       <CardDescription>
-                        Update uw productie server via GitHub
+                        Voer het veilige update script uit op uw productie server
                       </CardDescription>
                     </div>
                   </div>
                   <Button 
                     size="lg"
-                    className="bg-emerald-500 hover:bg-emerald-600"
+                    className="bg-emerald-600 hover:bg-emerald-700 shadow-lg"
                     onClick={async () => {
                       setUpdating(true);
                       try {
                         const response = await triggerSystemUpdate();
-                        toast.success(response.data.message || 'Update gestart!');
+                        toast.success(response.data.message || 'Update script gestart!');
                         // Refresh logs
                         const logsRes = await getDeploymentLogs();
                         setDeploymentLogs(logsRes.data);
@@ -2042,25 +2045,56 @@ server {
                       }
                     }}
                     disabled={updating}
-                    data-testid="trigger-update-btn"
+                    data-testid="run-update-script-btn"
                   >
                     {updating ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Updating...
+                        Script draait...
                       </>
                     ) : (
                       <>
-                        <RefreshCw className="w-5 h-5 mr-2" />
-                        Update Systeem
+                        <Play className="w-5 h-5 mr-2" />
+                        Uitvoeren: server-update.sh
                       </>
                     )}
                   </Button>
                 </div>
               </CardHeader>
-              {deploymentSettings.last_update && (
-                <CardContent className="pt-0">
-                  <div className="flex items-center gap-2 text-sm">
+              <CardContent className="pt-0">
+                <div className="bg-white/70 rounded-lg p-4 border border-emerald-200">
+                  <h4 className="font-medium text-emerald-900 mb-2 flex items-center gap-2">
+                    <Terminal className="w-4 h-4" />
+                    Dit script voert uit:
+                  </h4>
+                  <code className="block text-sm bg-slate-900 text-emerald-400 p-3 rounded-lg mb-3 font-mono">
+                    sudo /home/clp/htdocs/facturatie.sr/server-update.sh
+                  </code>
+                  <ul className="text-sm text-emerald-800 space-y-1">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      Maakt automatisch een backup
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      Haalt laatste code op via git pull
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      Installeert dependencies (pip/yarn)
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      Bouwt frontend opnieuw
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      Herstart backend en frontend services
+                    </li>
+                  </ul>
+                </div>
+                {deploymentSettings.last_update && (
+                  <div className="flex items-center gap-2 text-sm mt-3">
                     <History className="w-4 h-4 text-gray-500" />
                     <span className="text-gray-600">
                       Laatste update: {new Date(deploymentSettings.last_update).toLocaleString('nl-NL')}
@@ -2071,9 +2105,23 @@ server {
                       <Badge className="bg-red-100 text-red-700">Mislukt</Badge>
                     ) : null}
                   </div>
-                </CardContent>
-              )}
+                )}
+              </CardContent>
             </Card>
+
+            {/* Warning Alert */}
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="font-semibold text-amber-900">Belangrijke eerste stap</h4>
+                  <p className="text-amber-800 text-sm mt-1">
+                    Voordat u op de knop klikt, zorg dat u de laatste code naar GitHub hebt gepushed via 
+                    <strong> "Save to Github"</strong> in Emergent. Anders wordt er niets nieuws opgehaald.
+                  </p>
+                </div>
+              </div>
+            </div>
 
             {/* Configuration Card */}
             <Card>
@@ -2115,17 +2163,9 @@ server {
                   </label>
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-                  <h4 className="font-medium text-blue-900 mb-2">ℹ️ Hoe werkt het?</h4>
-                  <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                    <li>Sla code op naar GitHub in Emergent ("Save to Github")</li>
-                    <li>Klik op "Update Systeem" knop hierboven</li>
-                    <li>Het systeem doet automatisch: git pull, frontend build, modules sync</li>
-                  </ol>
-                </div>
-
                 <Button 
                   className="w-full mt-4"
+                  variant="outline"
                   onClick={async () => {
                     setSavingDeploySettings(true);
                     try {
