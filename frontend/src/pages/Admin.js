@@ -1377,6 +1377,129 @@ server {
           </Card>
         </TabsContent>
 
+        {/* Module Payment Requests Tab */}
+        <TabsContent value="module-requests">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bell className="w-5 h-5 text-orange-500" />
+                    Module Betaalverzoeken
+                  </CardTitle>
+                  <CardDescription>Bevestig betalingen en activeer modules voor klanten</CardDescription>
+                </div>
+                <Button variant="outline" onClick={loadData}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Vernieuwen
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {paymentRequests.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle className="w-8 h-8 text-emerald-500" />
+                  </div>
+                  <p className="text-lg font-medium">Geen openstaande verzoeken</p>
+                  <p className="text-muted-foreground">Alle module betaalverzoeken zijn verwerkt</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {paymentRequests.map((request) => (
+                    <div 
+                      key={request.id}
+                      className={`p-4 rounded-xl border-2 ${
+                        request.status === 'pending' 
+                          ? 'border-orange-200 bg-orange-50 dark:bg-orange-950/20' 
+                          : request.status === 'confirmed'
+                          ? 'border-emerald-200 bg-emerald-50 dark:bg-emerald-950/20'
+                          : 'border-slate-200 bg-slate-50 dark:bg-slate-800/50'
+                      }`}
+                    >
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Users className="w-5 h-5 text-primary" />
+                            </div>
+                            <div>
+                              <h4 className="font-semibold">{request.user_name || 'Onbekend'}</h4>
+                              <p className="text-sm text-muted-foreground">{request.user_email}</p>
+                            </div>
+                            <Badge className={
+                              request.status === 'pending' ? 'bg-orange-500' :
+                              request.status === 'confirmed' ? 'bg-emerald-500' : 'bg-slate-500'
+                            }>
+                              {request.status === 'pending' ? 'Wachtend' :
+                               request.status === 'confirmed' ? 'Bevestigd' : request.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="ml-13 space-y-1">
+                            <p className="text-sm font-medium">Modules:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {request.modules?.map((module, idx) => (
+                                <Badge key={idx} variant="outline" className="text-xs">
+                                  {module.addon_name} - SRD {module.price?.toLocaleString('nl-NL')}
+                                </Badge>
+                              ))}
+                            </div>
+                            <p className="text-sm text-muted-foreground mt-2">
+                              Totaal: <span className="font-bold text-primary">SRD {request.total_amount?.toLocaleString('nl-NL')}</span> /maand
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Aangevraagd: {new Date(request.created_at).toLocaleString('nl-NL')}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        {request.status === 'pending' && (
+                          <div className="flex items-center gap-2">
+                            <Select
+                              defaultValue="1"
+                              onValueChange={(value) => {
+                                // Store selected months for this request
+                                request.selectedMonths = parseInt(value);
+                              }}
+                            >
+                              <SelectTrigger className="w-32">
+                                <SelectValue placeholder="Maanden" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="1">1 maand</SelectItem>
+                                <SelectItem value="3">3 maanden</SelectItem>
+                                <SelectItem value="6">6 maanden</SelectItem>
+                                <SelectItem value="12">12 maanden</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            <Button
+                              onClick={async () => {
+                                try {
+                                  const months = request.selectedMonths || 1;
+                                  await confirmModulePayment(request.id, months);
+                                  toast.success(`Modules geactiveerd voor ${months} maand(en)`);
+                                  loadData();
+                                } catch (error) {
+                                  toast.error('Fout bij bevestigen betaling');
+                                }
+                              }}
+                              className="bg-emerald-600 hover:bg-emerald-700"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-2" />
+                              Bevestigen
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Domains Tab */}
         <TabsContent value="domains">
           <Card>
