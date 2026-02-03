@@ -28,14 +28,17 @@ import {
   KeyRound,
   Bell,
   Palette,
-  Send
+  Send,
+  LayoutList
 } from 'lucide-react';
 import EmailSettingsCustomer from '../components/EmailSettingsCustomer';
+import SidebarOrderSettings from '../components/SidebarOrderSettings';
 
 // Settings navigation items
 const settingsNav = [
   { id: 'profile', icon: User, label: 'Profiel', description: 'Naam, e-mail en bedrijfsgegevens' },
   { id: 'logo', icon: ImageIcon, label: 'Logo', description: 'Bedrijfslogo uploaden' },
+  { id: 'sidebar', icon: LayoutList, label: 'Sidebar Volgorde', description: 'Module volgorde aanpassen' },
   { id: 'rent', icon: Calendar, label: 'Huurinstellingen', description: 'Betaaldagen en termijnen' },
   { id: 'email', icon: Send, label: 'Email', description: 'SMTP instellingen voor facturen' },
   { id: 'security', icon: Shield, label: 'Beveiliging', description: 'Wachtwoord wijzigen' },
