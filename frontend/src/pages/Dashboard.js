@@ -59,6 +59,9 @@ export default function Dashboard() {
   const [addonsChecked, setAddonsChecked] = useState(false);
   const [activeAddons, setActiveAddons] = useState([]);
   
+  // Quick Start wizard state
+  const [showQuickStart, setShowQuickStart] = useState(false);
+  
   // Payment popup state (for expired modules)
   const [paymentPopupOpen, setPaymentPopupOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
