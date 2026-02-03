@@ -7490,6 +7490,123 @@ async def submit_payment_request(current_user: dict = Depends(get_current_user))
     
     return {"success": True, "request_id": request_id, "message": "Betaalverzoek ingediend"}
 
+# ==================== USER MODULE ORDER (for existing users) ====================
+
+class UserModuleOrder(BaseModel):
+    modules: List[str]  # List of addon IDs
+    customer: Optional[dict] = None
+
+@api_router.post("/user/modules/order")
+async def create_user_module_order(
+    data: UserModuleOrder,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a module order for existing user - activates 3-day trial"""
+    if not data.modules:
+        raise HTTPException(status_code=400, detail="Selecteer minimaal één module")
+    
+    now = datetime.now(timezone.utc)
+    trial_end = now + timedelta(days=3)
+    
+    activated_modules = []
+    total_amount = 0
+    
+    for addon_id in data.modules:
+        # Get addon details
+        addon = await db.addons.find_one(
+            {"$or": [{"id": addon_id}, {"_id": addon_id}]},
+            {"_id": 0}
+        )
+        if not addon:
+            continue
+        
+        # Check if user already has this addon
+        existing = await db.user_addons.find_one({
+            "user_id": current_user["id"],
+            "$or": [{"addon_id": addon_id}, {"addon_slug": addon.get("slug")}]
+        })
+        
+        if existing:
+            # Reactivate with trial
+            await db.user_addons.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {
+                    "status": "trial",
+                    "end_date": trial_end.isoformat(),
+                    "trial_ends_at": trial_end.isoformat(),
+                    "reactivated_at": now.isoformat()
+                }}
+            )
+        else:
+            # Create new subscription with trial
+            user_addon = {
+                "id": str(uuid.uuid4()),
+                "user_id": current_user["id"],
+                "addon_id": addon.get("id"),
+                "addon_slug": addon.get("slug"),
+                "addon_name": addon.get("name"),
+                "status": "trial",
+                "start_date": now.isoformat(),
+                "end_date": trial_end.isoformat(),
+                "trial_ends_at": trial_end.isoformat(),
+                "created_at": now.isoformat()
+            }
+            await db.user_addons.insert_one(user_addon)
+        
+        activated_modules.append({
+            "addon_id": addon.get("id"),
+            "addon_name": addon.get("name"),
+            "price": addon.get("price", 0)
+        })
+        total_amount += addon.get("price", 0)
+    
+    # Get payment settings for the response
+    payment_settings = await db.workspace_payment_settings.find_one(
+        {"workspace_id": "global"},
+        {"_id": 0}
+    )
+    
+    payment_info = {
+        "bank_name": "Hakrinbank",
+        "account_number": "1234567890",
+        "account_holder": "Facturatie N.V.",
+        "instructions": "Vermeld uw naam en e-mailadres bij de betaling"
+    }
+    
+    if payment_settings and payment_settings.get("payment_methods"):
+        bank_method = next((m for m in payment_settings["payment_methods"] if m.get("method_id") == "bank_transfer"), None)
+        if bank_method and bank_method.get("bank_settings"):
+            payment_info = {
+                "bank_name": bank_method["bank_settings"].get("bank_name", payment_info["bank_name"]),
+                "account_number": bank_method["bank_settings"].get("account_number", payment_info["account_number"]),
+                "account_holder": bank_method["bank_settings"].get("account_holder", payment_info["account_holder"]),
+                "instructions": bank_method.get("instructions", payment_info["instructions"])
+            }
+    
+    # Create order record
+    order_id = str(uuid.uuid4())
+    order = {
+        "id": order_id,
+        "user_id": current_user["id"],
+        "user_email": current_user.get("email"),
+        "modules": activated_modules,
+        "total_amount": total_amount,
+        "status": "trial_activated",
+        "trial_ends_at": trial_end.isoformat(),
+        "created_at": now.isoformat()
+    }
+    await db.module_orders.insert_one(order)
+    
+    return {
+        "success": True,
+        "order_id": order_id,
+        "activated_modules": activated_modules,
+        "trial_ends_at": trial_end.isoformat(),
+        "total_monthly_amount": total_amount,
+        "payment_info": payment_info,
+        "message": f"Modules geactiveerd voor 3 dagen proefperiode"
+    }
+
 # ==================== ADMIN BULK MODULE ACTIVATION ====================
 
 class BulkModuleActivation(BaseModel):
