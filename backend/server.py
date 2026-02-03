@@ -8893,6 +8893,9 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
     if not email_sent:
         logger.warning(f"Welcome email could not be sent to {customer_data.email}")
     
+    # Automatisch gratis addons activeren voor nieuwe klant
+    await activate_free_addons_for_user(user_id)
+    
     return CustomerResponse(
         id=user_id,
         email=customer_data.email,
