@@ -917,58 +917,58 @@ server {
 
       {/* Modern Tabs Navigation */}
       <Tabs defaultValue="customers" className="space-y-6">
-        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-1.5">
-          <TabsList className="flex flex-wrap gap-1 bg-transparent w-full">
-            <TabsTrigger value="customers" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <Users className="w-4 h-4 mr-2" />
+        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-1.5 overflow-x-auto">
+          <TabsList className="inline-flex gap-1 bg-transparent min-w-max">
+            <TabsTrigger value="customers" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <Users className="w-4 h-4 mr-1.5" />
               Klanten
             </TabsTrigger>
-            <TabsTrigger value="payments" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <CreditCard className="w-4 h-4 mr-2" />
+            <TabsTrigger value="payments" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <CreditCard className="w-4 h-4 mr-1.5" />
               Betalingen
             </TabsTrigger>
-            <TabsTrigger value="addons" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <Puzzle className="w-4 h-4 mr-2" />
+            <TabsTrigger value="addons" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <Puzzle className="w-4 h-4 mr-1.5" />
               Add-ons
               {addonRequests.length > 0 && (
-                <Badge className="ml-2 bg-orange-500 text-white text-xs">{addonRequests.length}</Badge>
+                <Badge className="ml-1.5 bg-orange-500 text-white text-xs">{addonRequests.length}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="module-requests" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <Bell className="w-4 h-4 mr-2" />
-              Module Verzoeken
+            <TabsTrigger value="module-requests" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <Bell className="w-4 h-4 mr-1.5" />
+              Verzoeken
               {paymentRequests.filter(r => r.status === 'pending').length > 0 && (
-                <Badge className="ml-2 bg-white text-orange-600 text-xs">
+                <Badge className="ml-1.5 bg-white text-orange-600 text-xs">
                   {paymentRequests.filter(r => r.status === 'pending').length}
                 </Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="workspaces" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <Layers className="w-4 h-4 mr-2" />
+            <TabsTrigger value="workspaces" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <Layers className="w-4 h-4 mr-1.5" />
               Workspaces
             </TabsTrigger>
-            <TabsTrigger value="domain-provisioning" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <Server className="w-4 h-4 mr-2" />
-              Domain Provisioning
+            <TabsTrigger value="domain-provisioning" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <Server className="w-4 h-4 mr-1.5" />
+              Domains
             </TabsTrigger>
-            <TabsTrigger value="domains" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <Globe className="w-4 h-4 mr-2" />
+            <TabsTrigger value="domains" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <Globe className="w-4 h-4 mr-1.5" />
               Domeinen
             </TabsTrigger>
-            <TabsTrigger value="betaalmethodes" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <CreditCard className="w-4 h-4 mr-2" />
-              Betaalmethodes
+            <TabsTrigger value="betaalmethodes" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <CreditCard className="w-4 h-4 mr-1.5" />
+              Betalen
             </TabsTrigger>
-            <TabsTrigger value="email" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <Mail className="w-4 h-4 mr-2" />
+            <TabsTrigger value="email" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <Mail className="w-4 h-4 mr-1.5" />
               Email
             </TabsTrigger>
-            <TabsTrigger value="website" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <Globe className="w-4 h-4 mr-2" />
+            <TabsTrigger value="website" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <Globe className="w-4 h-4 mr-1.5" />
               Website
             </TabsTrigger>
-            <TabsTrigger value="update" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white rounded-lg px-4 py-2.5 text-sm font-medium transition-all">
-              <RefreshCw className="w-4 h-4 mr-2" />
+            <TabsTrigger value="update" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white rounded-lg px-3 py-2 text-sm font-medium transition-all whitespace-nowrap">
+              <RefreshCw className="w-4 h-4 mr-1.5" />
               Update
             </TabsTrigger>
           </TabsList>
