@@ -1412,7 +1412,7 @@ class SuriRentalsAPITester:
         """Test login with demo account"""
         login_data = {
             "email": "demo@facturatie.sr",
-            "password": "Demo123!"
+            "password": "DemoPassword123!"
         }
         
         success, response = self.run_test(
