@@ -7712,6 +7712,63 @@ async def get_email_logs(
     ).sort("sent_at", -1).limit(limit).to_list(limit)
     return logs
 
+# ==================== SCHEDULED TASKS / CRON JOBS ====================
+
+@api_router.get("/admin/scheduled-jobs/status")
+async def get_scheduled_jobs_status(current_user: dict = Depends(get_superadmin)):
+    """Get status of scheduled jobs"""
+    email_service = get_email_service(db)
+    scheduler = get_scheduled_tasks(db, email_service)
+    
+    jobs = []
+    for job in scheduler.scheduler.get_jobs():
+        jobs.append({
+            "id": job.id,
+            "next_run": job.next_run_time.isoformat() if job.next_run_time else None,
+            "trigger": str(job.trigger)
+        })
+    
+    # Get recent job logs
+    recent_logs = await db.scheduled_job_logs.find(
+        {},
+        {"_id": 0}
+    ).sort("run_at", -1).limit(10).to_list(10)
+    
+    return {
+        "scheduler_running": scheduler.scheduler.running,
+        "jobs": jobs,
+        "recent_logs": recent_logs
+    }
+
+@api_router.post("/admin/scheduled-jobs/run")
+async def run_scheduled_job_manually(
+    job_type: str = "all",
+    current_user: dict = Depends(get_superadmin)
+):
+    """Manually run scheduled jobs - superadmin only"""
+    email_service = get_email_service(db)
+    scheduler = get_scheduled_tasks(db, email_service)
+    
+    results = await scheduler.run_manual_check(job_type)
+    
+    return {
+        "success": True,
+        "message": f"Job(s) uitgevoerd: {job_type}",
+        "results": results
+    }
+
+@api_router.get("/admin/scheduled-jobs/logs")
+async def get_scheduled_job_logs(
+    limit: int = 50,
+    current_user: dict = Depends(get_superadmin)
+):
+    """Get scheduled job execution logs"""
+    logs = await db.scheduled_job_logs.find(
+        {},
+        {"_id": 0}
+    ).sort("run_at", -1).limit(limit).to_list(limit)
+    return logs
+
 # Customer email settings
 @api_router.get("/user/email-settings")
 async def get_user_email_settings(current_user: dict = Depends(get_current_user)):
