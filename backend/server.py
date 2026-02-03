@@ -7470,6 +7470,158 @@ async def submit_payment_request(current_user: dict = Depends(get_current_user))
     
     return {"success": True, "request_id": request_id, "message": "Betaalverzoek ingediend"}
 
+# ==================== ADMIN BULK MODULE ACTIVATION ====================
+
+class BulkModuleActivation(BaseModel):
+    user_id: str
+    addon_ids: List[str]
+    months: int = 1
+    payment_method: str = "bank_transfer"
+    payment_reference: Optional[str] = None
+
+@api_router.post("/admin/users/{user_id}/activate-modules")
+async def admin_activate_user_modules(
+    user_id: str,
+    data: BulkModuleActivation,
+    current_user: dict = Depends(get_superadmin)
+):
+    """Activate multiple modules for a user at once - superadmin only"""
+    # Verify user exists
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Gebruiker niet gevonden")
+    
+    now = datetime.now(timezone.utc)
+    end_date = (now + timedelta(days=30 * data.months)).isoformat()
+    now_str = now.isoformat()
+    
+    activated_modules = []
+    total_amount = 0
+    
+    for addon_id in data.addon_ids:
+        # Get addon details
+        addon = await db.addons.find_one({"id": addon_id}, {"_id": 0})
+        if not addon:
+            continue
+        
+        # Check if user already has this addon
+        existing = await db.user_addons.find_one({
+            "user_id": user_id,
+            "addon_id": addon_id
+        })
+        
+        if existing:
+            # Update existing addon
+            await db.user_addons.update_one(
+                {"user_id": user_id, "addon_id": addon_id},
+                {"$set": {
+                    "status": "active",
+                    "end_date": end_date,
+                    "is_trial": False,
+                    "updated_at": now_str
+                }}
+            )
+        else:
+            # Create new user addon
+            user_addon = {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "addon_id": addon_id,
+                "addon_slug": addon.get("slug"),
+                "status": "active",
+                "start_date": now_str,
+                "end_date": end_date if addon.get("price", 0) > 0 else None,
+                "is_trial": False,
+                "created_at": now_str
+            }
+            await db.user_addons.insert_one(user_addon)
+        
+        activated_modules.append(addon.get("name"))
+        total_amount += addon.get("price", 0) * data.months
+    
+    # Update user subscription status
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "subscription_status": "active",
+            "subscription_end_date": end_date,
+            "updated_at": now_str
+        }}
+    )
+    
+    # Record payment
+    if total_amount > 0:
+        payment_record = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "user_name": user.get("name"),
+            "user_email": user.get("email"),
+            "amount": total_amount,
+            "months": data.months,
+            "modules": activated_modules,
+            "payment_method": data.payment_method,
+            "payment_reference": data.payment_reference,
+            "type": "module_activation",
+            "created_at": now_str
+        }
+        await db.module_payments.insert_one(payment_record)
+    
+    return {
+        "success": True,
+        "activated_modules": activated_modules,
+        "total_amount": total_amount,
+        "end_date": end_date,
+        "message": f"{len(activated_modules)} module(s) geactiveerd voor {data.months} maand(en)"
+    }
+
+@api_router.get("/admin/module-payments")
+async def get_module_payments(current_user: dict = Depends(get_superadmin)):
+    """Get all module payment records - superadmin only"""
+    payments = await db.module_payments.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return payments
+
+@api_router.get("/admin/module-payment-requests")
+async def get_module_payment_requests(current_user: dict = Depends(get_superadmin)):
+    """Get all pending module payment requests - superadmin only"""
+    requests = await db.module_payment_requests.find(
+        {"status": "pending"},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    return requests
+
+@api_router.post("/admin/module-payment-requests/{request_id}/confirm")
+async def confirm_module_payment(
+    request_id: str,
+    months: int = 1,
+    current_user: dict = Depends(get_superadmin)
+):
+    """Confirm a module payment request and activate modules - superadmin only"""
+    request = await db.module_payment_requests.find_one({"id": request_id}, {"_id": 0})
+    if not request:
+        raise HTTPException(status_code=404, detail="Betaalverzoek niet gevonden")
+    
+    # Activate the modules
+    activation_data = BulkModuleActivation(
+        user_id=request["user_id"],
+        addon_ids=[m["addon_id"] for m in request.get("modules", [])],
+        months=months,
+        payment_method="bank_transfer"
+    )
+    
+    result = await admin_activate_user_modules(request["user_id"], activation_data, current_user)
+    
+    # Update request status
+    await db.module_payment_requests.update_one(
+        {"id": request_id},
+        {"$set": {
+            "status": "confirmed",
+            "confirmed_at": datetime.now(timezone.utc).isoformat(),
+            "confirmed_by": current_user["id"]
+        }}
+    )
+    
+    return result
+
 # ==================== ADMIN USER ADD-ONS MANAGEMENT ====================
 
 @api_router.get("/admin/user-addons", response_model=List[UserAddonResponse])
