@@ -102,7 +102,6 @@ export default function Instellingen() {
   const { user, refreshUser } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [savingRent, setSavingRent] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -116,15 +115,6 @@ export default function Instellingen() {
     email: '',
     company_name: '',
     logo: null
-  });
-  
-  // Rent settings form (Vastgoed module)
-  const [rentSettings, setRentSettings] = useState({
-    rent_due_day: 1,
-    payment_frequency: 'monthly',
-    grace_period_days: 5,
-    payment_deadline_day: 0,
-    payment_deadline_month_offset: 0
   });
   
   // Password form
