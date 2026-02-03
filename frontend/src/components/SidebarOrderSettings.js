@@ -26,7 +26,7 @@ export default function SidebarOrderSettings() {
   const loadData = async () => {
     try {
       // Get user's active modules
-      const addonsRes = await getUserAddons();
+      const addonsRes = await getMyAddons();
       const activeModules = addonsRes.data.filter(a => 
         a.status === 'active' || a.status === 'trial'
       );
