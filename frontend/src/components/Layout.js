@@ -152,6 +152,9 @@ export default function Layout() {
     }
     return false;
   });
+  
+  // Auto-collapse sidebar for superadmin on first load
+  const [superadminInitialized, setSuperadminInitialized] = useState(false);
   const [isDesktop, setIsDesktop] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth >= 1024;
@@ -188,6 +191,19 @@ export default function Layout() {
   useEffect(() => {
     localStorage.setItem('sidebarCollapsed', JSON.stringify(sidebarCollapsed));
   }, [sidebarCollapsed]);
+
+  // Auto-collapse sidebar for superadmin on first visit
+  useEffect(() => {
+    if (user?.role === 'superadmin' && !superadminInitialized) {
+      const superadminKey = 'superadminSidebarInitialized';
+      const initialized = localStorage.getItem(superadminKey);
+      if (!initialized) {
+        setSidebarCollapsed(true);
+        localStorage.setItem(superadminKey, 'true');
+      }
+      setSuperadminInitialized(true);
+    }
+  }, [user, superadminInitialized]);
 
   const toggleSidebarCollapse = () => {
     setSidebarCollapsed(!sidebarCollapsed);
