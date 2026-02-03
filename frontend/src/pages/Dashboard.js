@@ -49,6 +49,7 @@ import {
   DialogFooter,
 } from '../components/ui/dialog';
 import QuickStartWizard from '../components/QuickStartWizard';
+import ModuleExpiringBanner from '../components/ModuleExpiringBanner';
 
 export default function Dashboard() {
   const { user } = useAuth();
