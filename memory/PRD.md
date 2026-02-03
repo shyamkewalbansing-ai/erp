@@ -458,6 +458,9 @@ Complete self-service portaal voor huurders:
 - [x] **Domain Provisioning tab** - Toegevoegd aan Admin dashboard (3 Feb 2026)
 - [x] **Superadmin sidebar standaard ingeklapt** - Automatisch dicht bij eerste bezoek (3 Feb 2026)
 - [x] **Modern Dashboard redesign** - Nieuwe gradient hero, stat cards met animaties, verbeterde UX (3 Feb 2026)
+- [x] **Boekhouding Module volledig werkend** - Gratis module voor alle klanten, sidebar altijd zichtbaar (3 Feb 2026)
+- [x] **Module bestelling popup** - Klanten zonder modules krijgen popup om modules te bestellen en betalen (3 Feb 2026)
+- [x] **Routing fix** - Gebruikers worden naar dashboard gestuurd i.p.v. /app/abonnement (3 Feb 2026)
 
 ### P1 (High Priority)
 - [x] **server.py refactoring** (>12000 lines) - Split into modular routers (IN PROGRESS)
