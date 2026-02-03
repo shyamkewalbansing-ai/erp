@@ -1894,6 +1894,22 @@ def main():
         ("Demo Account Login", tester.test_demo_account_login),
         ("AI Chat with Demo Account", tester.test_ai_chat_endpoint_with_demo_account),
         
+        # BOEKHOUDING MODULE TESTING
+        ("=== BOEKHOUDING MODULE TESTING ===", lambda: True),
+        ("Boekhouding Dashboard", tester.test_boekhouding_dashboard),
+        ("Initialize Standard Chart of Accounts", tester.test_init_standaard_rekeningen),
+        ("Get Chart of Accounts", tester.test_get_rekeningen),
+        ("Create Debiteur", tester.test_create_debiteur),
+        ("Get Debiteuren", tester.test_get_debiteuren),
+        ("Create Verkoopfactuur", tester.test_create_verkoopfactuur),
+        ("Get Verkoopfacturen", tester.test_get_verkoopfacturen),
+        ("Get Bankrekeningen", tester.test_get_bankrekeningen),
+        ("Create Bankrekening", tester.test_create_bankrekening),
+        ("BTW Aangifte Report", tester.test_btw_aangifte),
+        ("Multi-Currency Support", tester.test_multi_currency_support),
+        ("BTW Calculation Test", tester.test_btw_calculation),
+        ("Auto Factuurnummer Generation", tester.test_automatic_factuurnummer_generation),
+        
         # CLEANUP TESTS
         ("Delete Salary Payment", tester.test_delete_salary_payment),
         ("Delete Employee", tester.test_delete_employee),
