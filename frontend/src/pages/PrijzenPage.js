@@ -48,67 +48,67 @@ import PublicFooter from '../components/PublicFooter';
 const ChatWidget = lazy(() => import('../components/ChatWidget'));
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 
-// Module icons and styling mapping
+// Module icons and styling mapping - Consistent emerald/teal theme
 const MODULE_CONFIG = {
   'hrm': { 
     icon: Users, 
-    gradient: 'from-blue-500 to-indigo-600', 
-    lightBg: 'bg-blue-50',
-    shadow: 'shadow-blue-500/20',
+    gradient: 'from-emerald-600 to-teal-700', 
+    lightBg: 'bg-emerald-50',
+    shadow: 'shadow-emerald-500/20',
     category: 'HR & Personeel'
   },
   'vastgoed_beheer': { 
     icon: Building2, 
-    gradient: 'from-purple-500 to-violet-600', 
-    lightBg: 'bg-purple-50',
-    shadow: 'shadow-purple-500/20',
+    gradient: 'from-teal-600 to-emerald-700', 
+    lightBg: 'bg-teal-50',
+    shadow: 'shadow-teal-500/20',
     category: 'Vastgoed'
   },
   'autodealer': { 
     icon: Car, 
-    gradient: 'from-orange-500 to-red-600', 
-    lightBg: 'bg-orange-50',
-    shadow: 'shadow-orange-500/20',
+    gradient: 'from-emerald-500 to-green-600', 
+    lightBg: 'bg-emerald-50',
+    shadow: 'shadow-emerald-500/20',
     category: 'Handel'
   },
   'boekhouding': { 
     icon: Calculator, 
-    gradient: 'from-emerald-500 to-green-600', 
+    gradient: 'from-emerald-500 to-teal-600', 
     lightBg: 'bg-emerald-50',
     shadow: 'shadow-emerald-500/20',
     category: 'Financieel'
   },
   'pompstation': { 
     icon: Fuel, 
-    gradient: 'from-amber-500 to-orange-600', 
-    lightBg: 'bg-amber-50',
-    shadow: 'shadow-amber-500/20',
+    gradient: 'from-teal-500 to-cyan-600', 
+    lightBg: 'bg-teal-50',
+    shadow: 'shadow-teal-500/20',
     category: 'Tankstation'
   },
   'beautyspa': { 
     icon: Scissors, 
-    gradient: 'from-pink-500 to-rose-600', 
-    lightBg: 'bg-pink-50',
-    shadow: 'shadow-pink-500/20',
+    gradient: 'from-green-500 to-emerald-600', 
+    lightBg: 'bg-green-50',
+    shadow: 'shadow-green-500/20',
     category: 'Beauty & Wellness'
   },
   'ai-chatbot': { 
     icon: MessageSquare, 
-    gradient: 'from-cyan-500 to-teal-600', 
+    gradient: 'from-cyan-600 to-teal-700', 
     lightBg: 'bg-cyan-50',
     shadow: 'shadow-cyan-500/20',
     category: 'AI & Automatisering'
   },
   'chatbot': { 
     icon: MessageSquare, 
-    gradient: 'from-cyan-500 to-teal-600', 
+    gradient: 'from-cyan-600 to-teal-700', 
     lightBg: 'bg-cyan-50',
     shadow: 'shadow-cyan-500/20',
     category: 'AI & Automatisering'
   },
   'default': { 
     icon: Package, 
-    gradient: 'from-slate-500 to-gray-600', 
+    gradient: 'from-slate-600 to-slate-700', 
     lightBg: 'bg-slate-50',
     shadow: 'shadow-slate-500/20',
     category: 'Overig'
