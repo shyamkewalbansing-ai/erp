@@ -291,10 +291,23 @@ export default function DomainManagementPage() {
           <h1 className="text-2xl font-bold">Domain Management</h1>
           <p className="text-muted-foreground">Beheer custom domeinen, Nginx en SSL certificaten</p>
         </div>
-        <Button onClick={fetchDomains} variant="outline" data-testid="refresh-domains-btn">
-          <RefreshCw className="w-4 h-4 mr-2" />
-          Vernieuwen
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => {
+              setSetupForm({ domain: '', user_id: '' });
+              setSetupResult(null);
+              setSetupDialogOpen(true);
+            }} 
+            data-testid="new-domain-setup-btn"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nieuw Domein Setup
+          </Button>
+          <Button onClick={fetchDomains} variant="outline" data-testid="refresh-domains-btn">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Vernieuwen
+          </Button>
+        </div>
       </div>
 
       {/* Info Alert */}
