@@ -96,13 +96,18 @@ export default function MijnModules() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {activeAddons.map((addon) => (
-              <Card key={addon.id} className="border-green-200 dark:border-green-800">
+              <Card key={addon.id} className={`${addon.is_free ? 'border-emerald-300 bg-emerald-50/50 dark:bg-emerald-950/20' : 'border-green-200'} dark:border-green-800`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="font-semibold text-lg">{addon.addon_name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg">{addon.addon_name}</h3>
+                        {addon.is_free && (
+                          <Badge className="bg-emerald-500 text-white text-xs">GRATIS</Badge>
+                        )}
+                      </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        Actief tot: {addon.end_date ? new Date(addon.end_date).toLocaleDateString('nl-NL') : 'Onbeperkt'}
+                        {addon.is_free ? 'Altijd beschikbaar' : `Actief tot: ${addon.end_date ? new Date(addon.end_date).toLocaleDateString('nl-NL') : 'Onbeperkt'}`}
                       </p>
                     </div>
                     {getStatusBadge('active')}
