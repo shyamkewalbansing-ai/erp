@@ -272,6 +272,10 @@ export const getModulePayments = () => api.get('/admin/module-payments');
 export const getModulePaymentRequests = () => api.get('/admin/module-payment-requests');
 export const confirmModulePayment = (requestId, months = 1) => api.post(`/admin/module-payment-requests/${requestId}/confirm?months=${months}`);
 
+// Sidebar Module Order (User)
+export const getSidebarOrder = () => api.get('/user/sidebar-order');
+export const updateSidebarOrder = (moduleOrder) => api.put('/user/sidebar-order', { module_order: moduleOrder });
+
 // Add-on Requests (Admin)
 export const getAddonRequests = () => api.get('/admin/addon-requests');
 export const approveAddonRequest = (requestId, months = 1) => api.put(`/admin/addon-requests/${requestId}/approve?months=${months}`);
