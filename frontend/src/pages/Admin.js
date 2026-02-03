@@ -54,6 +54,7 @@ import { Badge } from '../components/ui/badge';
 
 // Lazy load WebsiteEditor for better performance
 const WebsiteEditor = lazy(() => import('../components/WebsiteEditor'));
+import DomainManagementPage from './DomainManagementPage';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
@@ -906,6 +907,10 @@ server {
           <TabsTrigger value="domains">
             <Globe className="w-4 h-4 mr-1" />
             Domeinen
+          </TabsTrigger>
+          <TabsTrigger value="domain-provisioning" className="text-blue-600">
+            <Server className="w-4 h-4 mr-1" />
+            Domain Provisioning
           </TabsTrigger>
           <TabsTrigger value="betaalmethodes">
             <CreditCard className="w-4 h-4 mr-1" />
