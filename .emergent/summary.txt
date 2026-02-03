@@ -1,5 +1,5 @@
 <analysis>**original_problem_statement:**
-The user wants to add a new, free accounting module (boekhouding) for Surinamese businesses. The sales model should be per-module with a 3-day free trial, not a platform subscription. The user also requested a modern UI for the pricing page (), a consolidated tabbed interface for the superadmin dashboard (), and a redesigned modern customer dashboard. Subsequently, the user requested a comprehensive email notification system and automated tasks. A key requirement is that customers should be able to reorder modules in their sidebar. Most recently, the user attempted to deploy the application to their own server, which resulted in a broken environment that needs recovery.
+The user wants to add a new, free accounting module (boekhouding) for Surinamese businesses. The sales model should be per-module with a 3-day free trial. The user requested modern UI for the pricing page (), a consolidated tabbed interface for the superadmin dashboard (), and a redesigned modern customer dashboard. Subsequently, the user requested a comprehensive email notification system and automated tasks. A key requirement is that customers should be able to reorder modules in their sidebar. Most recently, the user attempted to deploy the application to their own server, which resulted in a broken environment that needed recovery. The user has also requested that the process for adding a new customer with a custom domain be automated and that the Update button in the admin panel be made safe and comprehensive.
 
 **PRODUCT REQUIREMENTS:**
 *   **Accounting Module:** A free, auto-activated module with features for General ledger, A/R, A/P, VAT, Bank/Cash, and Reporting.
@@ -11,140 +11,156 @@ The user wants to add a new, free accounting module (boekhouding) for Surinamese
     *   Admin/customer configurable SMTP settings.
     *   Automated emails (welcome, password reset, expiration warnings).
     *   Customers can email invoices.
-*   **Module-Specific Settings:** Each module must have its own dedicated settings page, which should only be visible if the module is active for the user. This system should be scalable for future modules.
+*   **Module-Specific Settings:** Each module must have its own dedicated settings page, visible only if the module is active.
 *   **Deployment:** The user requires scripts and guidance to deploy and update the application on their own Ubuntu/Nginx server.
+*   **Automated Domain Setup:** A new requirement to create a script and an admin interface to automatically configure Nginx, SSL, and CORS for new customer custom domains.
+*   **Safe Update Mechanism:** A robust update process, triggered from the admin panel, that pulls the latest code, installs dependencies, rebuilds the frontend, and restarts services without wiping data.
 
 **User's preferred language**: Dutch
 
 **what currently exists?**
-A multi-tenant FastAPI/React SaaS application with a per-module sales model. The admin and customer dashboards have been modernized. A full email and cron job system is in place. The key email functionalities (sending invoices, password reset, welcome email) are complete and tested.
+The application is a multi-tenant FastAPI/React SaaS platform. After a lengthy and complex debugging session on the user's self-hosted server, the application is now functional on the main domains (, ) and existing custom domains (, etc.).
 
-A major refactor of the settings page is complete, separating system settings from dynamically-loaded, module-specific settings. This includes a full-fledged backend and frontend system to manage configurations for each module (HRM, Boekhouding, etc.). A feature allowing users to re-order sidebar modules has also been fully implemented and tested.
+The agent has successfully:
+*   Fixed all Python dependency issues (, , ).
+*   Repaired the Nginx configuration to correctly proxy requests to the backend and frontend.
+*   Resolved numerous database integrity issues (re-created users, fixed data types, corrected data structures for addons and contracts).
+*   Fixed multiple backend API bugs that were causing 500 errors.
+*   Corrected all identified CORS issues.
 
-The agent has also created deployment scripts (, ) and documentation () to assist the user with self-hosting.
+A new, safer update mechanism has been partially implemented. A script () has been created on the user's server, and the backend code in  has been modified to call it. However, this code change has not yet been deployed to the user's server.
 
 **Last working item**:
--   **Last item agent was working:** Assisting the user with a critical recovery of their self-hosted production server. The user's attempt to deploy the application failed, leaving the site non-functional. The agent provided a detailed recovery script () and guided the user through reinstalling SSL certificates with Certbot.
--   **Status:** USER VERIFICATION PENDING
--   **Agent Testing Done:** N/A
--   **Which testing method agent to use?** N/A. The next step depends on the user running the provided script on their server and reporting the outcome.
+-   **Last item agent was working:** The agent was in the process of building a feature to automate the setup of new customer custom domains. It created a bash script  on the user's server and was about to implement the backend endpoint in  to trigger this script.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** backend testing agent
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: User's Production Server is Down (P0)**
-    -   **Description:** After attempting a manual deployment, the user's entire website ( and ) is broken. This is the highest priority blocker.
-    -   **Attempted fixes:** The agent diagnosed the issue (likely related to missing dependencies like  on a non-platform server and incorrect /Nginx configuration). A comprehensive recovery script () was created to fix dependencies, set up  files, configure Nginx for the dual-domain setup, and restart services. The agent also guided the user through the Certbot SSL process.
-    -   **Next debug checklist:** The user needs to execute  on their server. The agent must then analyze the output of the script to confirm success or debug any further errors.
-    -   **Why fix this issue?** The user's live application is inaccessible. Restoring it is critical.
+-   **Issue 1: Incomplete & Risky Update Mechanism (P0)**
+    -   **Description:** The user-facing Update button in the admin panel triggers a backend endpoint. The agent modified this endpoint ( in ) to call a new, safe update script (). However, this modified  file only exists in the agent's environment. The user's server is running the old code, which uses a destructive HEAD is now at 3c2d9ee auto-commit for eadf7bff-5c4d-4ac2-9b4b-81be2d165056 command. If the user clicks the button, it will likely break the application again.
+    -   **Next debug checklist:**
+        1.  Instruct the user to push the agent's latest code changes (specifically ) to their GitHub repository ().
+        2.  Guide the user to manually run the *new*  script one time on their server. This will pull the latest code, making the Update button functional and safe for future use.
+    -   **Why fix this issue?** To prevent the user from repeatedly breaking their own server and to complete the implementation of the safe update feature. This is critical for server stability.
     -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** The user must test the entire application on their live domains after the recovery is complete.
-    -   **Blocked on other issue:** None.
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on other issue:** None
 
 **In progress Task List**:
-There are no active code development tasks. All efforts are focused on resolving the user's server deployment issue.
+-   **Task 1: Automate Custom Domain Setup (P1)**
+    -   **Where to resume:** The agent has already created the shell script () and given the  user sudo permissions to run it. The next step is to implement the backend endpoint in  that accepts a domain and workspace ID, and then executes this script. After that, build the frontend component in the admin panel for the user to input the domain and trigger the process.
+    -   **What will be achieved with this?** A streamlined, automated way for the superadmin to provision new customer workspaces on their own custom domains.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on something:** Blocked on **Issue 1**, as the backend code needs to be deployed safely before adding more features.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Verify Admin Module Payment Confirmation:** The UI and backend for an admin to approve a module payment request seem to be implemented, but a final end-to-end verification should be done once the server is stable.
+    -   **(P2) Create Comprehensive Demo Data:** The user requested that the demo account be populated with data for all modules. The agent fixed data for some modules (, ) but did not create demo data for , , and . A script should be created and run to populate this missing data.
+    -   **(P2) Verify Admin Module Payment Confirmation:** End-to-end verification of the module payment approval flow.
 -   **Future Tasks:**
-    -   **(P2) Implement Multi-Currency Logic in Transactions:** While settings exist, the functionality to perform transactions in SRD, USD, and EUR within the accounting module is not yet built.
-    -   **(P2) Implement VAT (BTW) Logic in Transactions:** The settings for VAT rates are in place, but the logic to apply these rates to invoices and other transactions needs to be implemented.
-    -   **(P3) Add WhatsApp/SMS Notifications:** A user-requested feature for future consideration.
+    -   **(P2) Implement Multi-Currency Logic in Transactions:** Build the logic to handle SRD, USD, and EUR.
+    -   **(P2) Implement VAT (BTW) Logic in Transactions:** Apply VAT rates to invoices.
+    -   **(P3) Add WhatsApp/SMS Notifications.**
+    -   **(P3) Refactor :** Break down the monolithic component into smaller, more manageable pieces.
 
 **Completed work in this session**
--   **Email Functionality Completed:** Finished and tested the ability for users to email sales invoices, and integrated the new email service into the password reset and new user welcome flows.
--   **Sidebar Module Ordering:** Implemented a feature allowing users to customize the order of modules in the sidebar via the settings page. The changes are saved per-user and dynamically update the  component.
--   **Scalable Module Settings:** Overhauled the  page, creating a robust system with individual, dynamically-loaded components for each module's settings (e.g., , ).
--   **Superadmin Bug Fixes:** Resolved issues where  users could not see or configure modules on the Sidebar Order and Module Settings pages.
--   **UI Fixes:** Corrected the tab layout on the  page to ensure all tabs are visible and scroll horizontally on smaller screens.
--   **Deployment Assistance:** Created comprehensive deployment scripts (, ) and a recovery script () to help the user manage their self-hosted server environment, including Nginx and SSL configuration.
+-   **Full Server Recovery:** Successfully recovered the user's crashed self-hosted production server after a catastrophic deployment failure. This involved an extensive, multi-step debugging process.
+    -   Fixed all Python dependency errors on the user's server.
+    -   Repaired the Nginx configuration for the main app domains and multiple custom domains, resolving 502 and 404 errors.
+    *   Resolved all critical CORS (Cross-Origin Resource Sharing) errors that blocked communication between the frontend and backend.
+    -   Corrected multiple critical database schema and data integrity issues, including recreating users, fixing mismatched field names ( vs ), converting data types ( to string), and restructuring addon features data.
+    -   Fixed several backend API bugs that were causing 500 Internal Server Errors on key endpoints like  and .
+-   **Created a Safer Update Mechanism:** Designed and partially implemented a robust update system to prevent data loss.
+    -   Created a new  script on the user's server.
+    -   Modified the backend endpoint () to call this safe script.
 
 **Earlier issues found/mentioned but not fixed**
 None.
 
 **Known issue recurrence from previous fork**
--   The  file remains a large, monolithic component, which could pose future maintenance challenges.
+-   The user's self-hosted environment is extremely fragile. Changes made via HEAD is now at 3c2d9ee auto-commit for eadf7bff-5c4d-4ac2-9b4b-81be2d165056 (the old update method) wipe out critical configuration and data, causing the entire system to fail. This has been the primary cause of all issues in this session.
+-   The  file remains a large, monolithic component.
 
 **Code Architecture**
+The core application architecture remains the same. The significant additions in this session are shell scripts on the user's production server:
 
+Nginx configurations are now critical and located in  and  on the user's server.
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, MongoDB. Added new endpoints for managing user-specific module settings and sidebar order.
--   **Frontend:** React, TailwindCSS. Implemented dynamic component loading for settings, state management for custom module ordering, and abstracted API calls.
--   **DevOps:** Heavy use of Bash scripting for deployment and server recovery (, ). Direct assistance with user's server environment, including Nginx reverse proxy configuration and Certbot for SSL.
+-   **Live Server Debugging:** The entire session was focused on debugging a live, user-managed Ubuntu server.
+-   **DevOps & Server Administration:** Extensive work with Nginx (reverse proxy, location blocks, proxy_pass), Supervisor (service management), system users (), and  permissions.
+-   **Bash Scripting:** Created  and  to automate server management tasks.
+-   **Database Repair:** Manually inspected and corrected data in a live MongoDB database using Python scripts executed over SSH.
+-   **CORS:** Deeply debugged and configured Cross-Origin Resource Sharing policies to allow multiple domains (, , and custom domains) to communicate with the same backend API.
 
 **key DB schema**
--   : Stores the ordered list of module slugs for each user.
--   : Stores key-value settings for each module, linked to a user.
+No schema changes were made, but significant data correction was performed on the following collections:
+-   : Renamed  to , converted  objects to ISO strings.
+-   : Converted  from a list of strings to a list of dictionaries .
+-   : Re-created contract data to include missing required fields like  and .
 
 **changes in tech stack**
-No changes to the core application stack. The user's environment now explicitly involves Nginx and Certbot.
+No changes.
 
 **All files of reference**
--   : **(On user's server)** The most critical file for the next step. A recovery script to fix the user's broken deployment.
--   : The completely refactored settings page.
--   : Directory containing all new module-specific settings forms.
--   : Main layout file updated for dynamic sidebar rendering.
--   : Contains new API endpoints for settings and sidebar order.
--   : Deployment instructions for the user.
+-    (The local version has the updated, safer deployment endpoint).
+-    (On user's server).
+-    (On user's server).
+-    (On user's server).
+-    (On user's server, contains custom domain configs).
+-    (On user's server).
+-    (On user's server).
 
 **Areas that need refactoring**:
--    is still a monolithic file and could be broken down into smaller components per tab for better maintainability.
+-    is monolithic.
 
 **key api endpoints**
--   **New:**
-    -   : Get the user's custom module order.
-    -   : Save the user's custom module order.
-    -   : Get settings for a specific module.
-    -   : Save settings for a specific module.
+-   **Modified:**
+    -   : Logic was changed to execute .
+-   **To be created:**
+    -   : A new endpoint to trigger the  script.
 
 **Critical Info for New Agent**
--   **IMMEDIATE PRIORITY:** The user's live server is down. Your first and only task is to help them get it back online. Do not start any new feature development.
--   **User's Next Action:** The user needs to run  on their server. You are waiting for them to provide the output of that command.
--   **Server Context:** The setup is a landing page on  and the app on a subdomain . The recovery script and Nginx configs are tailored for this.
--   **Platform vs. Self-Hosted:** The  package caused the initial deployment failure. It is platform-specific and must be removed from  on the user's server. The recovery script automates this.
--   **User Roles:** Logic has been added to differentiate between  (sees all modules in settings) and regular users (see only their active modules). Keep this in mind if debugging settings-related issues.
+-   **Highest Priority:** The user's server is currently stable, but the Update button in the admin UI is a time bomb. It points to an endpoint that, on the user's server, still runs a destructive  command. You must guide the user to push your latest backend changes to their Git repo and then run the new, safe  script manually *once* to sync everything.
+-   **Environment:** You are working directly on the user's live server (). Be extremely careful. The project root is .
+-   **Next Task:** Once the update mechanism is secured, continue building the automated custom domain setup feature. Start with the backend endpoint that calls the  script.
+-   **User Communication:** The user is Dutch and has been through a very stressful server outage. Be clear, concise, and guide them through steps one by one.
 
 **documents and test reports created in this job**
--   
--   
--   
-╔══════════════════════════════════════════════════════════════════╗
-║           FACTURATIE N.V. - Automatische Deployment              ║
-╚══════════════════════════════════════════════════════════════════╝
-
-[0;32m[2026-02-03 18:44:30][0m 🚀 Deployment gestart
-[0;32m[2026-02-03 18:44:30][0m 📦 Backup maken van huidige installatie...
-[1;33m[WAARSCHUWING][0m Geen bestaande installatie gevonden om te backuppen
-[0;32m[2026-02-03 18:44:30][0m 🛑 Stoppen van services...
-facturatie-nv-backend: ERROR (no such process)
-facturatie-nv-frontend: ERROR (no such process)
-[0;32m[2026-02-03 18:44:33][0m ✅ Services gestopt
-[0;32m[2026-02-03 18:44:33][0m 📥 Code ophalen van GitHub...
--   
--   
--    (Updated)
+None. All work was live debugging and script creation on the user's server.
 
 **Last 10 User Messages and any pending HUMAN messages**
-- The user is in a state of panic because their self-hosted server is completely broken after they attempted to follow a deployment script. They confirmed their primary domain () and app subdomain (). The agent has provided a recovery script and is guiding the user through the process of running it and setting up SSL certificates. The very last message is the user executing a  command and being prompted for input, for which the agent has provided the correct choice (). The user's next action is to run the main recovery script.
+1.  **User:** Asks if the custom domain setup can be automated.
+2.  **Agent:** Agrees and outlines the plan to build the automation.
+3.  **User:** Asks how to execute the script.
+4.  **Agent:** Creates the  script on the user's server and explains the next step is to build the backend endpoint.
+5.  **User:** ga verder (continue/go on). (This is the last pending message).
+6.  **Agent:** Was about to continue building the backend endpoint for domain automation.
+7.  **User:** Asks how to execute the script. (This is a bit of a loop, the user seems anxious to proceed).
+8.  **Agent:** Creates the script on the server.
+9.  **User:** Asks for the script to be integrated into the Update button.
+10. **Agent:** Explains the plan to create the script, push the code, and then the user can pull it.
 
 **Project Health Check:**
--   **Broken:** The user's external, self-hosted production server is down. The application code within the development environment is stable.
--   **Mocked:** None.
+-   **Broken:** The Update feature is in a dangerous, partially-deployed state. The backend code on the user's server is out of sync with the agent's improved version.
+-   **Mocked:** The  package is mocked on the user's server to prevent crashes.
 
 **3rd Party Integrations**
 -   None.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES
--   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None.
--   **Known regressions:** None in the application code.
+-   **Testing agent used after significant changes:** NO
+-   **Troubleshoot agent used after agent stuck in loop:** YES (The entire session was troubleshooting)
+-   **Test files created:** None
+-   **Known regressions:** The user-facing update process wiped the database and broke services. This is the critical issue to be resolved.
 
 **Credentials to test flow:**
--   **Superadmin:**  (password is  in )
+-   **Superadmin:**  / 
 -   **Demo user:**  / 
 
 **What agent forgot to execute**
-- The agent correctly prioritized the critical server-down issue over all other tasks. No feature work was forgotten; it was intentionally postponed.</analysis>
+-   The agent did not complete the user's request to populate demo data for *all* modules. It fixed the broken ones but did not create new data for , , and . This should be addressed after the critical update mechanism is fixed.</analysis>

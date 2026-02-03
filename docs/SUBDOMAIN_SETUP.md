@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://suri-accounts.preview.emergentagent.com/           → Landing page
-https://suri-accounts.preview.emergentagent.com/login      → Login
-https://suri-accounts.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://suri-accounts.preview.emergentagent.com/booking/   → Publieke booking portals
+https://bizbooks-suriname.preview.emergentagent.com/           → Landing page
+https://bizbooks-suriname.preview.emergentagent.com/login      → Login
+https://bizbooks-suriname.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://bizbooks-suriname.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
