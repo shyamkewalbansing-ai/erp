@@ -3495,7 +3495,7 @@ server {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Highlights (gescheiden door komma's)</Label>
+              <Label>Highlights (gescheiden door komma&apos;s)</Label>
               <Input
                 placeholder="bijv. Dashboard, Rapporten, Facturatie, Beheer"
                 value={editAddonForm.highlights}
