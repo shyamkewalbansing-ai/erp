@@ -701,6 +701,55 @@ Klanten kunnen nu zelf de volgorde van modules in de sidebar aanpassen.
 
 **Test Rapport:** `/app/test_reports/iteration_31.json` - 100% geslaagd
 
+---
+
+### MODULE INSTELLINGEN SYSTEEM ✅ (NIEUW - 3 Feb 2026)
+Complete uitgebreide instellingen voor alle modules met schaalbare architectuur.
+
+**Systeem Overzicht:**
+- Elke module heeft eigen settings component in `/app/frontend/src/components/settings/`
+- Settings worden dynamisch geladen gebaseerd op actieve modules
+- Schaalbaar: nieuwe modules krijgen automatisch settings sectie
+
+**Module Settings Geïmplementeerd:**
+
+| Module | Component | Features |
+|--------|-----------|----------|
+| Vastgoed Beheer | VastgoedSettingsForm.js | Betalingsinstellingen, termijnen, boetes, factuur instellingen, herinneringen |
+| HRM | HRMSettingsForm.js | Werktijden, verlof regels, contract & salaris, automatisering |
+| Auto Dealer | AutoDealerSettingsForm.js | Verkoop, commissies, garanties, documenten, klant portaal |
+| Beauty Spa | BeautySpaSettingsForm.js | Openingstijden, reserveringen, betalingen, herinneringen |
+| Pompstation | PompstationSettingsForm.js | Brandstofprijzen, tank waarschuwingen, diensten, kassabon |
+| Boekhouding | BoekhoudingSettingsForm.js | Valuta, BTW-tarieven, facturen, boekjaar |
+
+**Backend API's:**
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/module-settings/{module_slug} | GET | Module instellingen ophalen |
+| /api/module-settings/{module_slug} | PUT | Module instellingen opslaan |
+| /api/module-settings | GET | Alle module instellingen ophalen |
+
+**Database:**
+- `module_settings` collectie met `user_id`, `module_slug`, en `settings` object
+
+**Frontend Structuur:**
+```
+/app/frontend/src/components/settings/
+├── index.js                    # Export bundel
+├── VastgoedSettingsForm.js     # Vastgoed module settings
+├── HRMSettingsForm.js          # HRM module settings
+├── AutoDealerSettingsForm.js   # Auto Dealer module settings
+├── BeautySpaSettingsForm.js    # Beauty Spa module settings
+├── PompstationSettingsForm.js  # Pompstation module settings
+└── BoekhoudingSettingsForm.js  # Boekhouding module settings
+```
+
+**Nieuwe Module Toevoegen:**
+1. Maak `{ModuleName}SettingsForm.js` in `/components/settings/`
+2. Voeg export toe aan `index.js`
+3. Voeg config toe aan `moduleSettingsConfig` in `Instellingen.js`
+4. Voeg Pydantic model toe in `server.py` voor default settings
+
 ## Architecture Notes
 - Huurders hebben aparte `tenant_accounts` collectie (losgekoppeld van `users`)
 - Tenant portaal routes starten met `/huurder`
