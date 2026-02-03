@@ -7803,7 +7803,7 @@ async def subscribe_newsletter(data: NewsletterSubscribe):
 
 @api_router.post("/public/orders")
 async def create_public_order(order_data: PublicOrderCreate):
-    """Create a new order from landing page with account creation and auto-login"""
+    """Create a new order from landing page with account creation, auto-login, and 3-day trial"""
     # Validate at least one addon selected
     if not order_data.addon_ids or len(order_data.addon_ids) == 0:
         raise HTTPException(status_code=400, detail="Selecteer minimaal één module")
@@ -7831,7 +7831,11 @@ async def create_public_order(order_data: PublicOrderCreate):
     
     order_id = str(uuid.uuid4())
     user_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
+    now_str = now.isoformat()
+    
+    # Calculate 3-day trial end date
+    trial_end = (now + timedelta(days=3)).isoformat()
     
     # Create user account (active - can login immediately)
     user_doc = {
@@ -7842,31 +7846,29 @@ async def create_public_order(order_data: PublicOrderCreate):
         "company_name": order_data.company_name,
         "phone": order_data.phone,
         "role": "customer",
-        "subscription_status": "pending",  # Modules pending approval
-        "subscription_end": None,
-        "created_at": now,
+        "subscription_status": "trial",  # 3-day trial period
+        "trial_end_date": trial_end,
+        "created_at": now_str,
         "order_id": order_id
     }
     
     await db.users.insert_one(user_doc)
     
-    # Create addon requests for each module (pending approval by superadmin)
+    # Directly activate modules with 3-day trial (no approval needed)
     for addon in addon_details:
-        addon_request = {
+        user_addon = {
             "id": str(uuid.uuid4()),
             "user_id": user_id,
-            "user_name": order_data.name,
-            "user_email": order_data.email.lower(),
-            "company_name": order_data.company_name,
             "addon_id": addon["id"],
-            "addon_name": addon["name"],
             "addon_slug": addon.get("slug"),
-            "addon_price": addon.get("price", 0),
-            "status": "pending",
+            "status": "trial" if addon.get("price", 0) > 0 else "active",  # Free modules are always active
+            "start_date": now_str,
+            "end_date": trial_end if addon.get("price", 0) > 0 else None,  # Free modules don't expire
+            "is_trial": addon.get("price", 0) > 0,
             "order_id": order_id,
-            "created_at": now
+            "created_at": now_str
         }
-        await db.addon_requests.insert_one(addon_request)
+        await db.user_addons.insert_one(user_addon)
     
     # Create order record
     order_doc = {
@@ -7880,10 +7882,11 @@ async def create_public_order(order_data: PublicOrderCreate):
         "addon_names": addon_names,
         "total_price": total_price,
         "message": order_data.message,
-        "status": "pending",
+        "status": "trial",  # Order is in trial
+        "trial_end_date": trial_end,
         "payment_id": None,
         "payment_url": None,
-        "created_at": now
+        "created_at": now_str
     }
     
     await db.public_orders.insert_one(order_doc)
