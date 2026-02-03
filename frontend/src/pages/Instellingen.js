@@ -40,6 +40,14 @@ import {
 } from 'lucide-react';
 import EmailSettingsCustomer from '../components/EmailSettingsCustomer';
 import SidebarOrderSettings from '../components/SidebarOrderSettings';
+import {
+  VastgoedSettingsForm,
+  HRMSettingsForm,
+  AutoDealerSettingsForm,
+  BeautySpaSettingsForm,
+  PompstationSettingsForm,
+  BoekhoudingSettingsForm
+} from '../components/settings';
 
 // System settings - always visible
 const systemSettingsNav = [
