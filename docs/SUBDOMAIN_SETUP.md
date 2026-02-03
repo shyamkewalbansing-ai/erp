@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://plan-design-update.preview.emergentagent.com/           → Landing page
-https://plan-design-update.preview.emergentagent.com/login      → Login
-https://plan-design-update.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://plan-design-update.preview.emergentagent.com/booking/   → Publieke booking portals
+https://multi-currency-books-1.preview.emergentagent.com/           → Landing page
+https://multi-currency-books-1.preview.emergentagent.com/login      → Login
+https://multi-currency-books-1.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://multi-currency-books-1.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
