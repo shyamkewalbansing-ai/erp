@@ -905,6 +905,15 @@ server {
             <CreditCard className="w-4 h-4 mr-1" />
             Betalingen
           </TabsTrigger>
+          <TabsTrigger value="module-requests" className="text-orange-600">
+            <Bell className="w-4 h-4 mr-1" />
+            Module Verzoeken
+            {paymentRequests.filter(r => r.status === 'pending').length > 0 && (
+              <Badge className="ml-2 bg-orange-500 text-white text-xs">
+                {paymentRequests.filter(r => r.status === 'pending').length}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="addons">
             <Puzzle className="w-4 h-4 mr-1" />
             Add-ons
