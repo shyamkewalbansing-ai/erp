@@ -876,7 +876,7 @@ server {
         </TabsList>
 
         {/* Customers Tab */}
-        <TabsContent value="workspaces">
+        <TabsContent value="customers">
           <div className="space-y-6">
             {/* Workspace Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
