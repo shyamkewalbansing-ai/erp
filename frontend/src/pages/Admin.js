@@ -1520,6 +1520,11 @@ server {
           </Card>
         </TabsContent>
 
+        {/* Domain Provisioning Tab */}
+        <TabsContent value="domain-provisioning">
+          <DomainManagementPage />
+        </TabsContent>
+
         {/* Add-ons Tab */}
         <TabsContent value="addons">
           <div className="space-y-6">
