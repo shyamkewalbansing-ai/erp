@@ -13,6 +13,39 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - **Primary Color**: #0caf60 (groen)
 - **Multi-tenant**: Workspace-based isolatie per klant
 
+## What's Been Implemented (3 Feb 2026)
+
+### GEAUTOMATISEERDE DOMAIN SETUP ✅ (NIEUW - 3 Feb 2026)
+Complete automatisering voor het configureren van custom domeinen voor nieuwe klanten:
+
+**Features:**
+- [x] "Nieuw Domein Setup" knop in admin dashboard (Domains tab)
+- [x] Setup dialoog met klant selectie en domein input
+- [x] Automatische workspace aanmaak of update
+- [x] DNS A-record verificatie
+- [x] Domein registratie in database
+- [x] Stap-voor-stap voortgangsindicatie
+- [x] Integratie met server-side setup script (setup-domain.sh)
+
+**Backend API's:** `/app/backend/routers/domain_management.py`
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/domains/status | GET | Overzicht alle custom domeinen |
+| /api/domains/setup-automated | POST | **NIEUW** Geautomatiseerde domain setup |
+| /api/domains/verify-dns/{workspace_id} | POST | DNS verificatie |
+| /api/domains/provision/nginx/{workspace_id} | POST | Nginx configuratie |
+| /api/domains/provision/ssl/{workspace_id} | POST | SSL installatie |
+| /api/domains/provision/full/{workspace_id} | POST | Volledige setup |
+
+**Frontend:** `/app/frontend/src/pages/DomainManagementPage.js`
+- Setup dialoog met klant dropdown en domein input
+- Real-time stappen feedback
+- Integratie met admin panel
+
+**Test Rapport:** `/app/test_reports/iteration_32.json` - 100% geslaagd (14/14 backend, alle UI flows)
+
+---
+
 ## What's Been Implemented (1 Feb 2026)
 
 ### POMPSTATION (GAS STATION) MODULE ✅ (NIEUW - 1 Feb 2026)
