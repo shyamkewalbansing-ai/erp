@@ -116,7 +116,9 @@ import {
   AlertCircle,
   Layers,
   Eye,
-  Check
+  Check,
+  Bell,
+  Banknote
 } from 'lucide-react';
 
 export default function Admin() {
