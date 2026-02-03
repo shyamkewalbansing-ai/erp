@@ -855,18 +855,17 @@ server {
         </Card>
       )}
 
-      {/* Tabs for Customers and Payments */}
-      <Tabs defaultValue="workspaces" className="space-y-4">
+      {/* Tabs for Customers, Payments, and Add-ons */}
+      <Tabs defaultValue="customers" className="space-y-4">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="workspaces" className="text-emerald-600">
-            <Layers className="w-4 h-4 mr-1" />
-            Workspaces
-            {workspaceStats.pending > 0 && (
-              <Badge className="ml-2 bg-orange-500 text-white text-xs">{workspaceStats.pending}</Badge>
-            )}
+          <TabsTrigger value="customers">
+            <Users className="w-4 h-4 mr-1" />
+            Klanten
           </TabsTrigger>
-          <TabsTrigger value="customers">Klanten</TabsTrigger>
-          <TabsTrigger value="payments">Betalingen</TabsTrigger>
+          <TabsTrigger value="payments">
+            <CreditCard className="w-4 h-4 mr-1" />
+            Betalingen
+          </TabsTrigger>
           <TabsTrigger value="addons">
             <Puzzle className="w-4 h-4 mr-1" />
             Add-ons
@@ -874,18 +873,9 @@ server {
               <Badge className="ml-2 bg-orange-500 text-white text-xs">{addonRequests.length}</Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="domains">Domeinen</TabsTrigger>
-          <TabsTrigger value="website">
-            <Globe className="w-4 h-4 mr-1" />
-            Website
-          </TabsTrigger>
-          <TabsTrigger value="update" className="text-emerald-600">
-            <RefreshCw className="w-4 h-4 mr-1" />
-            Update
-          </TabsTrigger>
         </TabsList>
 
-        {/* Workspaces Tab - FIRST AND PROMINENT */}
+        {/* Customers Tab */}
         <TabsContent value="workspaces">
           <div className="space-y-6">
             {/* Workspace Stats */}
