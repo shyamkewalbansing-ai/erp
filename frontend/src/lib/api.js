@@ -251,6 +251,8 @@ export const getAddons = () => api.get('/addons');
 // Add-ons (User)
 export const getMyAddons = () => api.get('/user/addons');
 export const requestAddonActivation = (data) => api.post('/user/addons/request', data);
+export const getModulePaymentStatus = () => api.get('/user/modules/payment-status');
+export const submitModulePaymentRequest = () => api.post('/user/modules/payment-request');
 
 // Add-ons (Admin)
 export const getAdminAddons = () => api.get('/admin/addons');
