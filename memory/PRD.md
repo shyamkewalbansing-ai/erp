@@ -468,6 +468,11 @@ Complete self-service portaal voor huurders:
   - Klant Email Settings in Instellingen pagina
   - Email templates voor welkom, wachtwoord reset, module verloop
   - Module Expiring Banner op dashboard
+- [x] **Cron Job Automatisering** - Automatische email herinneringen (3 Feb 2026)
+  - Dagelijkse check voor bijna verlopen modules (7, 3, 1 dagen)
+  - Dagelijkse check voor verlopen modules + status update
+  - Wekelijkse log cleanup
+  - Admin UI voor monitoring en handmatige uitvoering
 
 ### P1 (High Priority)
 - [x] **server.py refactoring** (>12000 lines) - Split into modular routers (IN PROGRESS)
