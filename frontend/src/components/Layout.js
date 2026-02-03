@@ -213,7 +213,7 @@ export default function Layout() {
   // Only apply collapsed state on desktop
   const isCollapsed = sidebarCollapsed && isDesktop;
 
-  // Load user's active add-ons
+  // Load user's active add-ons and sidebar order
   useEffect(() => {
     const loadAddons = async () => {
       const isAdmin = user?.role === 'superadmin';
@@ -224,6 +224,14 @@ export default function Layout() {
             .filter(a => a.status === 'active')
             .map(a => a.addon_slug);
           setActiveAddons(activeSlugs);
+          
+          // Also load sidebar order
+          try {
+            const orderRes = await getSidebarOrder();
+            setModuleOrder(orderRes.data.module_order || []);
+          } catch {
+            setModuleOrder([]);
+          }
         } catch {
           setActiveAddons([]);
         }
