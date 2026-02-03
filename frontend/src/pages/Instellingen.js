@@ -638,6 +638,11 @@ export default function Instellingen() {
             </Card>
           )}
 
+          {/* Email Section */}
+          {activeSection === 'email' && (
+            <EmailSettingsCustomer />
+          )}
+
           {/* Security Section */}
           {activeSection === 'security' && (
             <Card className="border-border/50 overflow-hidden">
