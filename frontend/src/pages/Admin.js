@@ -907,6 +907,10 @@ server {
             <Globe className="w-4 h-4 mr-1" />
             Domeinen
           </TabsTrigger>
+          <TabsTrigger value="betaalmethodes">
+            <CreditCard className="w-4 h-4 mr-1" />
+            Betaalmethodes
+          </TabsTrigger>
           <TabsTrigger value="website">
             <Globe className="w-4 h-4 mr-1" />
             Website
