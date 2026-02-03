@@ -187,7 +187,8 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // Subscription Protected Route - requires active subscription (customers only)
-const SubscriptionRoute = ({ children }) => {
+// Now allows access to dashboard even without modules - popup will show there
+const SubscriptionRoute = ({ children, requiredAddon }) => {
   const { user, loading, hasActiveSubscription, isSuperAdmin } = useAuth();
   
   if (loading) {
@@ -207,9 +208,10 @@ const SubscriptionRoute = ({ children }) => {
     return <Navigate to="/app/admin" replace />;
   }
   
-  // If subscription is not active, redirect to subscription page
-  if (!hasActiveSubscription()) {
-    return <Navigate to="/app/abonnement" replace />;
+  // Allow access - dashboard will show popup if no modules are active
+  // Individual module pages will redirect if specific addon is not active
+  if (requiredAddon && !hasActiveSubscription()) {
+    return <Navigate to="/app/dashboard" replace />;
   }
   
   return children;
