@@ -215,6 +215,11 @@ export default function Admin() {
   const [nginxConfigDialogOpen, setNginxConfigDialogOpen] = useState(false);
   const [nginxConfig, setNginxConfig] = useState('');
   const [verifyingDns, setVerifyingDns] = useState(false);
+  const [workspaceSearch, setWorkspaceSearch] = useState('');
+  const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
+  const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
+  const [editWorkspaceOpen, setEditWorkspaceOpen] = useState(false);
+  const [filteredWorkspaces, setFilteredWorkspaces] = useState([]);
   const [newWorkspace, setNewWorkspace] = useState({
     name: '',
     slug: '',
