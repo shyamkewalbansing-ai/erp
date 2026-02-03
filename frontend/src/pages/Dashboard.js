@@ -23,8 +23,12 @@ import {
   Bell,
   ChevronRight,
   Activity,
-  PieChart,
-  BarChart3
+  BarChart3,
+  Zap,
+  ArrowUp,
+  ArrowDown,
+  Eye,
+  Plus
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -130,10 +134,12 @@ export default function Dashboard() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <div className="relative">
-            <div className="w-16 h-16 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto"></div>
-            <Sparkles className="w-6 h-6 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+            <div className="w-20 h-20 rounded-full border-4 border-primary/20 border-t-primary animate-spin mx-auto"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+            </div>
           </div>
-          <p className="mt-4 text-muted-foreground">Dashboard laden...</p>
+          <p className="mt-6 text-muted-foreground font-medium">Dashboard laden...</p>
         </div>
       </div>
     );
@@ -144,28 +150,32 @@ export default function Dashboard() {
     return (
       <div className="min-h-[70vh] flex items-center justify-center" data-testid="welcome-screen">
         <div className="text-center max-w-lg mx-auto px-4">
-          <div className="w-24 h-24 rounded-3xl bg-gradient-to-br from-primary to-emerald-600 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/25">
-            <Package className="w-12 h-12 text-white" />
+          <div className="relative">
+            <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-primary via-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-primary/30 rotate-3 hover:rotate-0 transition-transform duration-500">
+              <Package className="w-14 h-14 text-white" />
+            </div>
+            <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-bounce"></div>
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-3">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent mb-4">
             Welkom bij Facturatie.sr
           </h1>
-          <p className="text-muted-foreground text-lg mb-8">
-            Ontdek onze modules en activeer de functionaliteit die past bij uw bedrijf.
+          <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
+            Ontdek onze krachtige modules en activeer de functionaliteit die perfect past bij uw bedrijf.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               onClick={() => navigate('/app/modules')}
               size="lg"
-              className="bg-primary hover:bg-primary/90"
+              className="bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-600/90 shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
             >
-              <Sparkles className="w-4 h-4 mr-2" />
+              <Sparkles className="w-5 h-5 mr-2" />
               Bekijk Modules
             </Button>
             <Button 
               onClick={() => navigate('/prijzen')}
               variant="outline"
               size="lg"
+              className="border-2 hover:bg-slate-50 dark:hover:bg-slate-800"
             >
               Prijzen Bekijken
             </Button>
@@ -182,284 +192,384 @@ export default function Dashboard() {
     day: 'numeric' 
   });
 
+  const occupancyRate = stats?.total_apartments > 0 
+    ? Math.round((stats?.occupied_apartments / stats?.total_apartments) * 100) 
+    : 0;
+
   return (
-    <div className="space-y-6" data-testid="dashboard">
-      {/* Modern Header with Gradient */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-6 lg:p-8">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-3xl"></div>
+    <div className="space-y-8" data-testid="dashboard">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-8 lg:p-10">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+        </div>
         
-        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        {/* Decorative Blurs */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/30 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-[80px]"></div>
+        
+        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div>
-            <div className="flex items-center gap-2 text-emerald-400 text-sm mb-2">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-emerald-300 text-sm mb-4">
               <Calendar className="w-4 h-4" />
               {currentDate}
             </div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-white">
-              Welkom terug, {user?.name?.split(' ')[0] || 'Gebruiker'}
+            <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
+              Welkom terug, <span className="text-emerald-400">{user?.name?.split(' ')[0] || 'Gebruiker'}</span>
             </h1>
-            <p className="text-slate-400 mt-1">
+            <p className="text-slate-400 text-lg">
               Hier is een overzicht van uw verhuurportfolio
             </p>
           </div>
           
-          {user?.logo && (
-            <img 
-              src={user.logo} 
-              alt="Logo" 
-              className="h-16 w-auto object-contain bg-white/10 rounded-xl p-2"
-            />
-          )}
+          <div className="flex items-center gap-4">
+            {user?.logo && (
+              <img 
+                src={user.logo} 
+                alt="Logo" 
+                className="h-20 w-auto object-contain bg-white/10 backdrop-blur-sm rounded-2xl p-3"
+              />
+            )}
+            <Button 
+              onClick={() => navigate('/app/appartementen')}
+              className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuw Appartement
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Stats Grid - Modern Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Primary Stats */}
-        <div className="group relative bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl p-6 text-white overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Occupancy Rate - Featured Card */}
+        <div className="lg:col-span-2 group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-6 text-white shadow-xl shadow-emerald-500/20">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+          
           <div className="relative">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                <Building2 className="w-6 h-6" />
+            <div className="flex items-start justify-between mb-6">
+              <div>
+                <p className="text-emerald-100 text-sm font-medium mb-1">Bezettingsgraad</p>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-bold">{occupancyRate}%</span>
+                  <span className="text-emerald-200 text-sm">bezet</span>
+                </div>
               </div>
-              <Badge className="bg-white/20 text-white border-0">
-                <Activity className="w-3 h-3 mr-1" />
+              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Activity className="w-7 h-7" />
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden mb-4">
+              <div 
+                className="h-full bg-white rounded-full transition-all duration-1000 ease-out"
+                style={{ width: `${occupancyRate}%` }}
+              ></div>
+            </div>
+            
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full">
+                  <Building2 className="w-4 h-4" />
+                  {stats?.total_apartments || 0} totaal
+                </span>
+                <span className="flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  {stats?.occupied_apartments || 0} bezet
+                </span>
+              </div>
+              <Badge className="bg-white/20 text-white border-0 hover:bg-white/30">
+                <Zap className="w-3 h-3 mr-1" />
                 Live
               </Badge>
-            </div>
-            <p className="text-emerald-100 text-sm">Totaal Appartementen</p>
-            <p className="text-4xl font-bold mt-1">{stats?.total_apartments || 0}</p>
-            <div className="flex items-center gap-2 mt-3 text-emerald-100 text-sm">
-              <span className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-full">
-                <Users className="w-3 h-3" />
-                {stats?.occupied_apartments || 0} bezet
-              </span>
-              <span>{stats?.available_apartments || 0} beschikbaar</span>
             </div>
           </div>
         </div>
 
         {/* Income Card */}
-        <div className="group bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 hover:shadow-lg hover:shadow-emerald-500/5 transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+        <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          
+          <div className="flex items-start justify-between mb-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <TrendingUp className="w-6 h-6 text-white" />
             </div>
-            <div className="flex items-center gap-1 text-emerald-600 text-sm font-medium">
-              <ArrowUpRight className="w-4 h-4" />
-              Deze maand
+            <div className="flex items-center gap-1 text-emerald-600 text-sm font-medium bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
+              <ArrowUp className="w-3 h-3" />
+              +12%
             </div>
           </div>
-          <p className="text-muted-foreground text-sm">Inkomsten</p>
+          
+          <p className="text-muted-foreground text-sm font-medium">Inkomsten deze maand</p>
           <p className="text-3xl font-bold text-foreground mt-1">
             {formatCurrency(stats?.total_income_this_month || 0)}
           </p>
+          
+          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground hover:text-foreground" onClick={() => navigate('/app/betalingen')}>
+              Bekijk details
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Outstanding Card */}
-        <div className={`group rounded-2xl p-6 border transition-all hover:shadow-lg ${
+        <div className={`group relative overflow-hidden rounded-2xl p-6 border transition-all duration-300 hover:shadow-xl ${
           (stats?.total_outstanding || 0) > 0 
-            ? 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900 hover:shadow-orange-500/10' 
+            ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-orange-200 dark:border-orange-900 hover:shadow-orange-500/10' 
             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:shadow-emerald-500/5'
         }`}>
-          <div className="flex items-center justify-between mb-4">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+          <div className="flex items-start justify-between mb-4">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${
               (stats?.total_outstanding || 0) > 0 
-                ? 'bg-orange-100 dark:bg-orange-900/30' 
-                : 'bg-slate-100 dark:bg-slate-800'
+                ? 'bg-gradient-to-br from-orange-500 to-amber-500 shadow-orange-500/30' 
+                : 'bg-gradient-to-br from-slate-400 to-slate-500 shadow-slate-400/30'
             }`}>
-              <CreditCard className={`w-6 h-6 ${
-                (stats?.total_outstanding || 0) > 0 
-                  ? 'text-orange-600 dark:text-orange-400' 
-                  : 'text-slate-600 dark:text-slate-400'
-              }`} />
+              <CreditCard className="w-6 h-6 text-white" />
             </div>
             {(stats?.total_outstanding || 0) > 0 && (
-              <Badge variant="destructive" className="bg-orange-500">
+              <Badge className="bg-orange-500 text-white border-0 animate-pulse">
                 <AlertTriangle className="w-3 h-3 mr-1" />
-                Actie vereist
+                Actie
               </Badge>
             )}
           </div>
-          <p className="text-muted-foreground text-sm">Openstaand</p>
+          
+          <p className="text-muted-foreground text-sm font-medium">Openstaand</p>
           <p className={`text-3xl font-bold mt-1 ${
             (stats?.total_outstanding || 0) > 0 ? 'text-orange-600' : 'text-foreground'
           }`}>
             {formatCurrency((stats?.total_outstanding || 0) + (stats?.total_outstanding_loans || 0))}
           </p>
+          
           {stats?.total_outstanding_loans > 0 && (
-            <p className="text-xs text-muted-foreground mt-2">
+            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+              <Banknote className="w-3 h-3" />
               Incl. leningen: {formatCurrency(stats.total_outstanding_loans)}
             </p>
           )}
         </div>
+      </div>
 
-        {/* Cash Balance Card */}
-        <div className={`group rounded-2xl p-6 border transition-all hover:shadow-lg ${
-          (stats?.total_kasgeld || 0) >= 0 
-            ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:shadow-emerald-500/5' 
-            : 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900 hover:shadow-red-500/10'
-        }`}>
-          <div className="flex items-center justify-between mb-4">
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-              (stats?.total_kasgeld || 0) >= 0 
-                ? 'bg-green-100 dark:bg-green-900/30' 
-                : 'bg-red-100 dark:bg-red-900/30'
-            }`}>
-              <Banknote className={`w-6 h-6 ${
+      {/* Secondary Stats Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Cash Balance */}
+        <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm font-medium mb-1">Kasgeld Saldo</p>
+                <p className={`text-3xl font-bold ${
+                  (stats?.total_kasgeld || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
+                }`}>
+                  {formatCurrency(stats?.total_kasgeld || 0)}
+                </p>
+              </div>
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
                 (stats?.total_kasgeld || 0) >= 0 
-                  ? 'text-green-600 dark:text-green-400' 
-                  : 'text-red-600 dark:text-red-400'
-              }`} />
+                  ? 'bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50' 
+                  : 'bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/50 dark:to-rose-900/50'
+              }`}>
+                <Banknote className={`w-7 h-7 ${
+                  (stats?.total_kasgeld || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
+                }`} />
+              </div>
             </div>
-          </div>
-          <p className="text-muted-foreground text-sm">Kasgeld Saldo</p>
-          <p className={`text-3xl font-bold mt-1 ${
-            (stats?.total_kasgeld || 0) >= 0 ? 'text-green-600' : 'text-red-600'
-          }`}>
-            {formatCurrency(stats?.total_kasgeld || 0)}
-          </p>
-        </div>
+            <div className="mt-4 pt-4 border-t">
+              <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground" onClick={() => navigate('/app/kasgeld')}>
+                Beheren
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Deposits Card */}
-        <div className="group bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 hover:shadow-lg hover:shadow-emerald-500/5 transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+        {/* Deposits */}
+        <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-hidden">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-sm font-medium mb-1">Borg in Beheer</p>
+                <p className="text-3xl font-bold text-foreground">
+                  {formatCurrency(stats?.total_deposits_held || 0)}
+                </p>
+              </div>
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/50 dark:to-cyan-900/50 flex items-center justify-center">
+                <Wallet className="w-7 h-7 text-teal-600" />
+              </div>
             </div>
-          </div>
-          <p className="text-muted-foreground text-sm">Borg in Beheer</p>
-          <p className="text-3xl font-bold text-foreground mt-1">
-            {formatCurrency(stats?.total_deposits_held || 0)}
-          </p>
-        </div>
+            <div className="mt-4 pt-4 border-t">
+              <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground" onClick={() => navigate('/app/borg')}>
+                Bekijken
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
-        {/* Quick Actions Card */}
-        <div className="group bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-700">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <BarChart3 className="w-6 h-6 text-primary" />
+        {/* Quick Actions */}
+        <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-hidden bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-muted-foreground text-sm font-medium">Snelle Acties</p>
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <BarChart3 className="w-5 h-5 text-primary" />
+              </div>
             </div>
-          </div>
-          <p className="text-muted-foreground text-sm">Snelle Acties</p>
-          <div className="flex flex-wrap gap-2 mt-3">
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => navigate('/app/huurders')}
-              className="text-xs"
-            >
-              Huurders
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={() => navigate('/app/appartementen')}
-              className="text-xs"
-            >
-              Appartementen
-            </Button>
-          </div>
-        </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => navigate('/app/huurders')}
+                className="justify-start"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Huurders
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => navigate('/app/appartementen')}
+                className="justify-start"
+              >
+                <Building2 className="w-4 h-4 mr-2" />
+                Panden
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => navigate('/app/facturen')}
+                className="justify-start"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Facturen
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => navigate('/app/meterstanden')}
+                className="justify-start"
+              >
+                <Zap className="w-4 h-4 mr-2" />
+                Meters
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Bottom Section - Reminders & Recent */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Reminders Card */}
-        <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none">
-          <CardHeader className="pb-3">
+        <Card className="border-0 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+          <CardHeader className="pb-2 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-b">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Bell className="w-5 h-5 text-orange-500" />
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                  <Bell className="w-5 h-5 text-white" />
+                </div>
                 Herinneringen
               </CardTitle>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="bg-white dark:bg-slate-800 font-semibold">
                 {(stats?.reminders?.length || 0)} items
               </Badge>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4">
             {stats?.reminders && stats.reminders.length > 0 ? (
               <div className="space-y-3">
                 {stats.reminders.slice(0, 5).map((reminder, index) => (
                   <div 
                     key={index}
-                    className="flex items-start gap-3 p-3 rounded-xl bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/50"
+                    className="group flex items-start gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-orange-50 dark:hover:bg-orange-950/20 border border-transparent hover:border-orange-200 dark:hover:border-orange-900 transition-all cursor-pointer"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
-                      <AlertTriangle className="w-4 h-4 text-orange-600 dark:text-orange-400" />
+                    <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-200 transition-colors">
+                      <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
+                      <p className="text-sm font-semibold text-foreground truncate">
                         {reminder.title || reminder.message}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-1">
                         {reminder.date || 'Vandaag'}
                       </p>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-orange-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
-                  <CheckCircle className="w-6 h-6 text-emerald-500" />
+              <div className="text-center py-12">
+                <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-8 h-8 text-emerald-500" />
                 </div>
-                <p className="text-muted-foreground text-sm">Geen openstaande herinneringen</p>
+                <p className="text-foreground font-medium">Alles in orde!</p>
+                <p className="text-muted-foreground text-sm mt-1">Geen openstaande herinneringen</p>
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* Recent Activity Card */}
-        <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none">
-          <CardHeader className="pb-3">
+        <Card className="border-0 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+          <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Clock className="w-5 h-5 text-blue-500" />
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
                 Recente Betalingen
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/app/betalingen')}>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/app/betalingen')} className="text-blue-600 hover:text-blue-700 hover:bg-blue-100">
                 Alles bekijken
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4">
             {stats?.recent_payments && stats.recent_payments.length > 0 ? (
               <div className="space-y-3">
                 {stats.recent_payments.slice(0, 5).map((payment, index) => (
                   <div 
                     key={index}
-                    className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="group flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-900 transition-all"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                        <Banknote className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                        <Banknote className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-foreground">
+                        <p className="text-sm font-semibold text-foreground">
                           {payment.tenant_name || 'Onbekend'}
                         </p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-xs text-muted-foreground mt-0.5">
                           {payment.date || 'Recent'}
                         </p>
                       </div>
                     </div>
-                    <p className="text-sm font-semibold text-emerald-600">
-                      +{formatCurrency(payment.amount || 0)}
-                    </p>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-emerald-600">
+                        +{formatCurrency(payment.amount || 0)}
+                      </p>
+                      <p className="text-xs text-muted-foreground flex items-center justify-end gap-1 mt-0.5">
+                        <ArrowUp className="w-3 h-3 text-emerald-500" />
+                        Ontvangen
+                      </p>
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3">
-                  <CreditCard className="w-6 h-6 text-slate-400" />
+              <div className="text-center py-12">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+                  <CreditCard className="w-8 h-8 text-slate-400" />
                 </div>
-                <p className="text-muted-foreground text-sm">Geen recente betalingen</p>
+                <p className="text-foreground font-medium">Geen betalingen</p>
+                <p className="text-muted-foreground text-sm mt-1">Nog geen recente betalingen</p>
               </div>
             )}
           </CardContent>
