@@ -7360,6 +7360,116 @@ async def request_addon_activation(request_data: AddonRequestCreate, current_use
         created_at=now
     )
 
+# ==================== MODULE PAYMENT STATUS ====================
+
+class ModulePaymentStatus(BaseModel):
+    has_expired_modules: bool
+    expired_modules: List[dict]
+    total_monthly_amount: float
+    trial_ends_at: Optional[str] = None
+    payment_info: dict
+
+@api_router.get("/user/modules/payment-status")
+async def get_module_payment_status(current_user: dict = Depends(get_current_user)):
+    """Check if user has expired modules that need payment"""
+    # Superadmin doesn't need to pay
+    if current_user.get("role") == "superadmin":
+        return {
+            "has_expired_modules": False,
+            "expired_modules": [],
+            "total_monthly_amount": 0,
+            "payment_info": {}
+        }
+    
+    user_addons = await db.user_addons.find(
+        {"user_id": current_user["id"]}
+    ).to_list(100)
+    
+    now = datetime.now(timezone.utc)
+    expired_modules = []
+    total_amount = 0
+    trial_ends_at = None
+    
+    for ua in user_addons:
+        addon = await db.addons.find_one(
+            {"$or": [{"id": ua.get("addon_id")}, {"slug": ua.get("addon_slug")}]},
+            {"_id": 0}
+        )
+        
+        # Skip free modules
+        if addon and (addon.get("is_free") or addon.get("price", 0) == 0):
+            continue
+        
+        end_date = ua.get("end_date") or ua.get("expires_at")
+        status = ua.get("status", "active")
+        
+        if end_date:
+            try:
+                end_dt = datetime.fromisoformat(end_date.replace("Z", "+00:00"))
+                if end_dt < now or status == "expired" or status == "trial_expired":
+                    expired_modules.append({
+                        "id": str(ua.get("_id", "")),
+                        "addon_id": ua.get("addon_id"),
+                        "addon_name": addon.get("name") if addon else "Onbekend",
+                        "addon_slug": ua.get("addon_slug") or (addon.get("slug") if addon else None),
+                        "price": addon.get("price", 0) if addon else 0,
+                        "expired_at": end_date
+                    })
+                    total_amount += addon.get("price", 0) if addon else 0
+                elif not trial_ends_at or end_dt.isoformat() < trial_ends_at:
+                    trial_ends_at = end_dt.isoformat()
+            except Exception:
+                pass
+    
+    # Get payment settings
+    payment_settings = await db.payment_settings.find_one(
+        {"user_id": current_user.get("workspace_id") or current_user["id"]},
+        {"_id": 0}
+    )
+    
+    # Default payment info if no settings found
+    default_payment_info = {
+        "bank_name": "Hakrinbank N.V.",
+        "account_holder": "Facturatie N.V.",
+        "account_number": "1234567890",
+        "instructions": "Vermeld uw bedrijfsnaam en e-mailadres bij de betaling."
+    }
+    
+    return {
+        "has_expired_modules": len(expired_modules) > 0,
+        "expired_modules": expired_modules,
+        "total_monthly_amount": total_amount,
+        "trial_ends_at": trial_ends_at,
+        "payment_info": payment_settings.get("bank_transfer", default_payment_info) if payment_settings else default_payment_info
+    }
+
+@api_router.post("/user/modules/payment-request")
+async def submit_payment_request(current_user: dict = Depends(get_current_user)):
+    """Submit a payment request for expired modules"""
+    # Get expired modules
+    status = await get_module_payment_status(current_user)
+    
+    if not status["has_expired_modules"]:
+        raise HTTPException(status_code=400, detail="Geen verlopen modules gevonden")
+    
+    request_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    payment_request = {
+        "id": request_id,
+        "user_id": current_user["id"],
+        "user_name": current_user.get("name"),
+        "user_email": current_user.get("email"),
+        "modules": status["expired_modules"],
+        "total_amount": status["total_monthly_amount"],
+        "status": "pending",
+        "created_at": now
+    }
+    
+    await db.module_payment_requests.insert_one(payment_request)
+    
+    return {"success": True, "request_id": request_id, "message": "Betaalverzoek ingediend"}
+
 # ==================== ADMIN USER ADD-ONS MANAGEMENT ====================
 
 @api_router.get("/admin/user-addons", response_model=List[UserAddonResponse])
