@@ -91,8 +91,13 @@ export default function SidebarOrderSettings() {
     try {
       const moduleOrder = modules.map(m => m.addon_slug);
       await updateSidebarOrder(moduleOrder);
-      toast.success('Module volgorde opgeslagen! Herlaad de pagina om de wijzigingen te zien.');
+      toast.success('Module volgorde opgeslagen! Pagina wordt herladen...');
       setHasChanges(false);
+      
+      // Auto-reload pagina na korte delay zodat toast zichtbaar is
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     } catch (error) {
       toast.error('Fout bij opslaan van volgorde');
     } finally {
