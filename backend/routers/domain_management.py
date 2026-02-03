@@ -734,6 +734,255 @@ async def remove_domain_config(workspace_id: str, current_user: dict = Depends(g
     return results
 
 
+# ==================== AUTOMATED DOMAIN SETUP ====================
+
+class AutomatedDomainSetupRequest(BaseModel):
+    """Request model for automated domain setup"""
+    domain: str
+    user_id: str
+    force: bool = False  # Force reinstall even if already configured
+
+class AutomatedDomainSetupResponse(BaseModel):
+    """Response model for automated domain setup"""
+    success: bool
+    message: str
+    workspace_id: Optional[str] = None
+    domain: Optional[str] = None
+    steps_completed: List[str] = []
+    error_details: Optional[str] = None
+
+# Path to the setup script on the server
+DOMAIN_SETUP_SCRIPT = os.environ.get(
+    "DOMAIN_SETUP_SCRIPT", 
+    "/home/clp/htdocs/facturatie.sr/setup-domain.sh"
+)
+
+@router.post("/setup-automated", response_model=AutomatedDomainSetupResponse)
+async def automated_domain_setup(
+    request: AutomatedDomainSetupRequest,
+    current_user: dict = Depends(get_superadmin)
+):
+    """
+    Fully automated domain setup for a new customer.
+    This endpoint:
+    1. Creates or finds the workspace for the user
+    2. Configures the custom domain
+    3. Runs the setup-domain.sh script to configure Nginx and SSL
+    4. Updates the workspace status
+    """
+    steps_completed = []
+    
+    # Step 1: Validate the user exists
+    user = await db.users.find_one({"id": request.user_id}, {"_id": 0})
+    if not user:
+        return AutomatedDomainSetupResponse(
+            success=False,
+            message="Gebruiker niet gevonden",
+            error_details=f"Geen gebruiker met ID: {request.user_id}"
+        )
+    steps_completed.append("Gebruiker geverifieerd")
+    
+    # Step 2: Clean the domain name
+    domain = request.domain.lower().strip()
+    if domain.startswith("http://"):
+        domain = domain[7:]
+    if domain.startswith("https://"):
+        domain = domain[8:]
+    if domain.startswith("www."):
+        domain = domain[4:]
+    domain = domain.rstrip("/")
+    
+    # Basic domain validation
+    if not domain or "." not in domain:
+        return AutomatedDomainSetupResponse(
+            success=False,
+            message="Ongeldig domein",
+            error_details="Voer een geldig domein in (bijv. portal.voorbeeld.nl)"
+        )
+    steps_completed.append(f"Domein gevalideerd: {domain}")
+    
+    # Step 3: Check if domain is already in use
+    existing_workspace = await db.workspaces.find_one(
+        {"domain.custom_domain": domain},
+        {"_id": 0}
+    )
+    if existing_workspace and existing_workspace.get("owner_id") != request.user_id:
+        return AutomatedDomainSetupResponse(
+            success=False,
+            message="Domein al in gebruik",
+            error_details=f"Dit domein is al gekoppeld aan een andere klant"
+        )
+    
+    # Step 4: Get or create workspace
+    workspace = await db.workspaces.find_one({"owner_id": request.user_id}, {"_id": 0})
+    
+    if not workspace:
+        # Create new workspace
+        import re
+        workspace_id = str(uuid.uuid4())
+        base_slug = re.sub(r'[^a-z0-9]', '', user.get("company_name", user.get("name", "klant")).lower())[:20]
+        slug = base_slug or f"klant-{str(uuid.uuid4())[:8]}"
+        
+        # Ensure unique slug
+        existing_slug = await db.workspaces.find_one({"slug": slug})
+        if existing_slug:
+            slug = f"{base_slug}-{str(uuid.uuid4())[:8]}"
+        
+        now = datetime.now(timezone.utc).isoformat()
+        workspace = {
+            "id": workspace_id,
+            "name": user.get("company_name") or f"{user.get('name')}'s Workspace",
+            "slug": slug,
+            "owner_id": request.user_id,
+            "status": "pending",
+            "domain": {
+                "type": "custom",
+                "subdomain": slug,
+                "custom_domain": domain,
+                "dns_verified": False,
+                "ssl_active": False,
+                "nginx_configured": False,
+                "dns_record_type": "A",
+                "dns_record_value": SERVER_IP
+            },
+            "branding": {
+                "logo_url": None,
+                "favicon_url": None,
+                "primary_color": "#0caf60",
+                "secondary_color": "#059669",
+                "portal_name": user.get("company_name") or f"{user.get('name')}'s Portaal"
+            },
+            "created_at": now,
+            "updated_at": now
+        }
+        await db.workspaces.insert_one(workspace)
+        
+        # Link workspace to user
+        await db.users.update_one(
+            {"id": request.user_id},
+            {"$set": {"workspace_id": workspace_id}}
+        )
+        steps_completed.append(f"Nieuwe workspace aangemaakt: {slug}")
+    else:
+        workspace_id = workspace["id"]
+        # Update existing workspace with new domain
+        await db.workspaces.update_one(
+            {"id": workspace_id},
+            {"$set": {
+                "domain.type": "custom",
+                "domain.custom_domain": domain,
+                "domain.dns_verified": False,
+                "domain.ssl_active": False,
+                "domain.nginx_configured": False,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        steps_completed.append(f"Workspace bijgewerkt: {workspace.get('slug')}")
+    
+    # Step 5: Check DNS (optional - don't fail if DNS not ready)
+    dns_result = verify_dns(domain, SERVER_IP)
+    if dns_result["verified"]:
+        steps_completed.append("DNS geverifieerd - wijst naar server")
+        await db.workspaces.update_one(
+            {"id": workspace_id},
+            {"$set": {"domain.dns_verified": True}}
+        )
+    else:
+        steps_completed.append(f"DNS nog niet geconfigureerd: {dns_result['message']}")
+    
+    # Step 6: Run the setup script (if it exists)
+    if os.path.exists(DOMAIN_SETUP_SCRIPT):
+        try:
+            # The script takes domain as argument
+            # It configures Nginx and optionally SSL
+            cmd = ["sudo", DOMAIN_SETUP_SCRIPT, domain]
+            result = subprocess.run(
+                cmd, 
+                capture_output=True, 
+                text=True, 
+                timeout=180  # 3 minute timeout for SSL provisioning
+            )
+            
+            if result.returncode == 0:
+                steps_completed.append("Server setup script succesvol uitgevoerd")
+                steps_completed.append("Nginx geconfigureerd")
+                
+                # Check if SSL was installed
+                ssl_cert_path = f"/etc/letsencrypt/live/{domain}/fullchain.pem"
+                ssl_active = os.path.exists(ssl_cert_path)
+                
+                if ssl_active:
+                    steps_completed.append("SSL certificaat geïnstalleerd")
+                else:
+                    steps_completed.append("SSL nog niet actief - DNS moet eerst correct zijn")
+                
+                # Update workspace
+                await db.workspaces.update_one(
+                    {"id": workspace_id},
+                    {"$set": {
+                        "status": "active",
+                        "domain.nginx_configured": True,
+                        "domain.ssl_active": ssl_active,
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+            else:
+                steps_completed.append(f"Setup script fout: {result.stderr[:200] if result.stderr else 'Onbekende fout'}")
+                await db.workspaces.update_one(
+                    {"id": workspace_id},
+                    {"$set": {
+                        "status": "error",
+                        "error_message": result.stderr[:500] if result.stderr else "Script mislukt"
+                    }}
+                )
+                
+        except subprocess.TimeoutExpired:
+            steps_completed.append("Setup script timeout - proces duurt langer dan verwacht")
+        except FileNotFoundError:
+            steps_completed.append("Setup script niet gevonden op server")
+        except Exception as e:
+            steps_completed.append(f"Setup script fout: {str(e)[:100]}")
+    else:
+        # Script doesn't exist - just generate config preview
+        steps_completed.append("Setup script niet aanwezig - alleen workspace aangemaakt")
+        steps_completed.append(f"Nginx config handmatig configureren voor: {domain}")
+        
+        # Generate config preview
+        workspace_slug = workspace.get("slug") if workspace else slug
+        nginx_config = generate_nginx_config(domain, workspace_slug, ssl_enabled=False)
+        
+        # Store config in workspace for manual setup
+        await db.workspaces.update_one(
+            {"id": workspace_id},
+            {"$set": {
+                "status": "pending",
+                "nginx_config_preview": nginx_config,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    
+    # Step 7: Add to custom_domains collection for tracking
+    domain_record = await db.custom_domains.find_one({"domain": domain})
+    if not domain_record:
+        await db.custom_domains.insert_one({
+            "id": str(uuid.uuid4()),
+            "domain": domain,
+            "user_id": request.user_id,
+            "workspace_id": workspace_id,
+            "verified": dns_result["verified"],
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        steps_completed.append("Domein geregistreerd in database")
+    
+    return AutomatedDomainSetupResponse(
+        success=True,
+        message=f"Domein setup gestart voor {domain}",
+        workspace_id=workspace_id,
+        domain=domain,
+        steps_completed=steps_completed
+    )
+
+
 @router.post("/verify-dns/{workspace_id}")
 async def verify_workspace_dns(workspace_id: str, current_user: dict = Depends(get_current_user)):
     """Verify DNS configuration for a workspace (available to workspace owner)"""
