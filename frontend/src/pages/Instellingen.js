@@ -27,14 +27,17 @@ import {
   Camera,
   KeyRound,
   Bell,
-  Palette
+  Palette,
+  Send
 } from 'lucide-react';
+import EmailSettingsCustomer from '../components/EmailSettingsCustomer';
 
 // Settings navigation items
 const settingsNav = [
   { id: 'profile', icon: User, label: 'Profiel', description: 'Naam, e-mail en bedrijfsgegevens' },
   { id: 'logo', icon: ImageIcon, label: 'Logo', description: 'Bedrijfslogo uploaden' },
   { id: 'rent', icon: Calendar, label: 'Huurinstellingen', description: 'Betaaldagen en termijnen' },
+  { id: 'email', icon: Send, label: 'Email', description: 'SMTP instellingen voor facturen' },
   { id: 'security', icon: Shield, label: 'Beveiliging', description: 'Wachtwoord wijzigen' },
 ];
 
