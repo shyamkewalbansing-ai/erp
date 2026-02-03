@@ -101,7 +101,7 @@ export default function RapportagesPage() {
                   <div><h3 className="font-semibold mb-2 text-red-600">KOSTEN</h3><Table><TableBody>{resultaat.kosten.map(k => <TableRow key={k.code}><TableCell>{k.code} - {k.naam}</TableCell><TableCell className="text-right font-mono">{formatCurrency(k.bedrag, valuta)}</TableCell></TableRow>)}<TableRow className="font-bold bg-red-50"><TableCell>Totaal Kosten</TableCell><TableCell className="text-right">{formatCurrency(resultaat.totaal_kosten, valuta)}</TableCell></TableRow></TableBody></Table></div>
                   <Card className={resultaat.resultaat >= 0 ? 'bg-green-50' : 'bg-red-50'}><CardContent className="py-4"><div className="flex justify-between items-center"><span className="text-lg font-semibold">{resultaat.resultaat_type === 'winst' ? 'WINST' : 'VERLIES'}</span><span className="text-2xl font-bold">{formatCurrency(Math.abs(resultaat.resultaat), valuta)}</span></div></CardContent></Card>
                 </div>
-              ) : <p className="text-center py-8 text-muted-foreground">Klik op "Genereren" om de resultatenrekening te laden</p>}
+              ) : <p className="text-center py-8 text-muted-foreground">Klik op Genereren om de resultatenrekening te laden</p>}
             </CardContent>
           </Card>
         </TabsContent>
@@ -124,7 +124,7 @@ export default function RapportagesPage() {
                     </TableBody>
                   </Table>
                 </div>
-              ) : <p className="text-center py-8 text-muted-foreground">Klik op "Genereren" om het BTW overzicht te laden</p>}
+              ) : <p className="text-center py-8 text-muted-foreground">Klik op Genereren om het BTW overzicht te laden</p>}
             </CardContent>
           </Card>
         </TabsContent>
@@ -149,7 +149,7 @@ export default function RapportagesPage() {
                     </TableBody>
                   </Table>
                 </div>
-              ) : <p className="text-center py-8 text-muted-foreground">Klik op "Genereren" om het debiteurenoverzicht te laden</p>}
+              ) : <p className="text-center py-8 text-muted-foreground">Klik op Genereren om het debiteurenoverzicht te laden</p>}
             </CardContent>
           </Card>
         </TabsContent>
