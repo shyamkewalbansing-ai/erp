@@ -611,6 +611,56 @@ Complete betaalmethodes beheer voor alle modules:
 - [ ] Grafiek met verbruikshistorie
 - [ ] Overige ERP modules (Inventory, CRM, Accounting)
 
+## Recent Updates (3 Feb 2026)
+
+### EMAIL INTEGRATIE VOOR FACTUREN ✅ (NIEUW - 3 Feb 2026)
+Complete email functionaliteit voor het versturen van facturen naar klanten:
+
+**Features:**
+- [x] "Versturen" knop op verkoopfacturen pagina (Mail icoon voor verstuurd facturen)
+- [x] SendInvoiceEmailDialog component met factuur en debiteur informatie
+- [x] Email formulier met to_email, onderwerp, en bericht velden
+- [x] Automatisch voorvullen van debiteur email adres
+- [x] Status update van concept naar verstuurd met paper plane icoon
+- [x] Welcome email voor nieuwe klanten via async email service
+- [x] Password reset email via centralized email service
+
+**Backend API's:**
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/boekhouding/verkoopfacturen/{id}/send-email | POST | Factuur per email versturen |
+| /api/email/settings | GET/POST | Admin SMTP instellingen |
+| /api/email/settings/user | GET/POST | Klant SMTP instellingen |
+| /api/email/test | POST | SMTP verbinding testen |
+
+**Frontend Componenten:**
+- `/app/frontend/src/components/SendInvoiceEmailDialog.js` - Email dialog
+- `/app/frontend/src/pages/boekhouding/VerkoopfacturenPage.js` - Mail icoon integratie
+
+**Test Rapport:** `/app/test_reports/iteration_30.json` - 100% geslaagd
+
+---
+
+### ADMIN MODULE BETALINGSBEVESTIGING ✅ (NIEUW - 3 Feb 2026)
+Complete admin functionaliteit voor het bevestigen van module betalingen:
+
+**Features:**
+- [x] Module Verzoeken tab in Admin dashboard
+- [x] Lijst van pending betalingsverzoeken met klant info
+- [x] Maanden selectie (1, 3, 6, 12 maanden)
+- [x] Bevestigen knop om modules te activeren
+- [x] Status tracking (pending, confirmed)
+
+**Backend API's:**
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/admin/module-payment-requests | GET | Alle betalingsverzoeken ophalen |
+| /api/admin/module-payment-requests/{id}/confirm | POST | Betaling bevestigen en modules activeren |
+
+**Frontend:** `/app/frontend/src/pages/Admin.js` - Module Verzoeken tab (line 937-945, 1410-1530)
+
+**Note:** Vereist `superadmin` rol (niet `admin`) om toegang te krijgen tot admin panel.
+
 ## Architecture Notes
 - Huurders hebben aparte `tenant_accounts` collectie (losgekoppeld van `users`)
 - Tenant portaal routes starten met `/huurder`
