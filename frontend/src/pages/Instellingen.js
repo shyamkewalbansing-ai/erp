@@ -129,8 +129,16 @@ export default function Instellingen() {
     loadActiveAddons();
   }, []);
 
+  const isSuperAdmin = user?.role === 'superadmin';
+
   const loadActiveAddons = async () => {
     try {
+      // Superadmin has access to all modules
+      if (isSuperAdmin) {
+        setActiveAddons(['vastgoed_beheer', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding']);
+        return;
+      }
+      
       const res = await getMyAddons();
       const activeSlugs = res.data
         .filter(a => a.status === 'active' || a.status === 'trial')
