@@ -728,23 +728,56 @@ export default function ModuleDetailPage() {
           if (addonRes.data) {
             // Convert API addon to module format
             const addon = addonRes.data;
+            
+            // Dynamic gradient based on category
+            const gradientMap = {
+              'financieel': { gradient: 'from-emerald-500 to-green-600', light: 'from-emerald-50 to-green-50', accent: 'emerald' },
+              'hrm': { gradient: 'from-blue-500 to-indigo-600', light: 'from-blue-50 to-indigo-50', accent: 'blue' },
+              'vastgoed': { gradient: 'from-purple-500 to-violet-600', light: 'from-purple-50 to-violet-50', accent: 'purple' },
+              'automotive': { gradient: 'from-orange-500 to-red-600', light: 'from-orange-50 to-red-50', accent: 'orange' },
+              'beauty': { gradient: 'from-pink-500 to-rose-600', light: 'from-pink-50 to-rose-50', accent: 'pink' },
+              'default': { gradient: 'from-slate-500 to-gray-600', light: 'from-slate-50 to-gray-50', accent: 'slate' }
+            };
+            
+            const style = gradientMap[addon.category?.toLowerCase()] || gradientMap['default'];
+            
+            // Build sections from features if available
+            let sections = [];
+            if (addon.features && addon.features.length > 0) {
+              sections = addon.features.map((f, idx) => ({
+                title: f.title || `Feature ${idx + 1}`,
+                description: f.description || '',
+                icon: f.icon || 'Check',
+                features: f.features || [],
+                image: f.image || `https://images.unsplash.com/photo-155143467${idx}8-e076c223a692?w=800&q=80`
+              }));
+            }
+            
             setDynamicModule({
               id: addon.slug,
               name: addon.name,
               title: addon.name,
-              subtitle: addon.description || `Professionele ${addon.name} module`,
+              subtitle: addon.description || `Professionele ${addon.name} module voor uw bedrijf`,
               description: addon.description || `De ${addon.name} module biedt een complete oplossing voor uw bedrijfsvoering.`,
               icon: addon.icon_name || 'Puzzle',
-              gradient: 'from-emerald-500 to-teal-600',
-              lightGradient: 'from-emerald-50 to-teal-50',
-              accentColor: 'emerald',
+              gradient: style.gradient,
+              lightGradient: style.light,
+              accentColor: style.accent,
               category: addon.category || 'Module',
-              price: `SRD ${addon.price?.toLocaleString('nl-NL') || '0'}`,
+              price: addon.price === 0 ? 'GRATIS' : `SRD ${addon.price?.toLocaleString('nl-NL') || '0'}`,
               priceAmount: addon.price || 0,
-              priceNote: 'per maand',
+              priceNote: addon.price === 0 ? 'voor alle klanten' : 'per maand',
               heroImage: addon.hero_image_url || 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=1200&q=80',
-              highlights: addon.highlights || ['Professioneel', 'Gebruiksvriendelijk', 'Snel', 'Betrouwbaar'],
-              sections: addon.features || []
+              highlights: addon.highlights || ['Professioneel', 'Gebruiksvriendelijk', 'Multi-valuta', 'Snel'],
+              sections: sections.length > 0 ? sections : [
+                {
+                  title: 'Overzicht',
+                  description: addon.description || 'Complete oplossing voor uw bedrijf',
+                  icon: 'LayoutDashboard',
+                  features: addon.highlights || ['Professioneel', 'Gebruiksvriendelijk'],
+                  image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&q=80'
+                }
+              ]
             });
           }
         } catch (addonErr) {
