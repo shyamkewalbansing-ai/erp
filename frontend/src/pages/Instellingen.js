@@ -624,238 +624,32 @@ export default function Instellingen() {
 
           {/* Vastgoed Beheer Settings */}
           {activeSection === 'vastgoed' && hasAddon('vastgoed_beheer') && (
-            <Card className="border-border/50 overflow-hidden">
-              <div className="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent p-6 border-b border-border/50">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Home className="w-5 h-5 text-emerald-500" />
-                  Vastgoed Instellingen
-                </h2>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Configureer betaaldagen en betalingstermijnen voor huurders
-                </p>
-              </div>
-              <CardContent className="p-6 space-y-6">
-                {/* Basic Settings */}
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Huur verschuldigd op</Label>
-                    <Select 
-                      value={String(rentSettings.rent_due_day)} 
-                      onValueChange={(v) => setRentSettings({...rentSettings, rent_due_day: parseInt(v)})}
-                    >
-                      <SelectTrigger className="border-border/50">
-                        <SelectValue placeholder="Dag selecteren" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1,5,10,15,20,25,28].map(day => (
-                          <SelectItem key={day} value={String(day)}>Dag {day}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">De dag waarop huur verschuldigd is</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Betalingsfrequentie</Label>
-                    <Select 
-                      value={rentSettings.payment_frequency} 
-                      onValueChange={(v) => setRentSettings({...rentSettings, payment_frequency: v})}
-                    >
-                      <SelectTrigger className="border-border/50">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="weekly">Wekelijks</SelectItem>
-                        <SelectItem value="biweekly">Tweewekelijks</SelectItem>
-                        <SelectItem value="monthly">Maandelijks</SelectItem>
-                        <SelectItem value="quarterly">Per kwartaal</SelectItem>
-                        <SelectItem value="yearly">Jaarlijks</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">Hoe vaak wordt huur berekend</p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Gratieperiode (dagen)</Label>
-                    <Select 
-                      value={String(rentSettings.grace_period_days)} 
-                      onValueChange={(v) => setRentSettings({...rentSettings, grace_period_days: parseInt(v)})}
-                    >
-                      <SelectTrigger className="border-border/50">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[0,3,5,7,10,14].map(days => (
-                          <SelectItem key={days} value={String(days)}>{days} dagen</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-muted-foreground">Dagen na verschuldigingsdatum</p>
-                  </div>
-                </div>
-
-                {/* Deadline Settings */}
-                <div className="border-t border-border/50 pt-6">
-                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-primary" />
-                    Betalingsdeadline
-                  </h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Deadline dag</Label>
-                      <Select 
-                        value={String(rentSettings.payment_deadline_day)} 
-                        onValueChange={(v) => setRentSettings({...rentSettings, payment_deadline_day: parseInt(v)})}
-                      >
-                        <SelectTrigger className="border-border/50">
-                          <SelectValue placeholder="Dag selecteren" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">Geen vaste dag</SelectItem>
-                          {[1,5,10,15,20,25,28].map(day => (
-                            <SelectItem key={day} value={String(day)}>Dag {day}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Maand offset</Label>
-                      <Select 
-                        value={String(rentSettings.payment_deadline_month_offset)} 
-                        onValueChange={(v) => setRentSettings({...rentSettings, payment_deadline_month_offset: parseInt(v)})}
-                      >
-                        <SelectTrigger className="border-border/50">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">Dezelfde maand</SelectItem>
-                          <SelectItem value="1">Volgende maand</SelectItem>
-                          <SelectItem value="2">Over 2 maanden</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-4 border-t border-border/50">
-                  <Button onClick={handleSaveRentSettings} disabled={savingRent} className="bg-emerald-600 hover:bg-emerald-700">
-                    {savingRent ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    Opslaan
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <VastgoedSettingsForm />
           )}
 
           {/* HRM Settings */}
           {activeSection === 'hrm' && hasAddon('hrm') && (
-            <Card className="border-border/50 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-6 border-b border-border/50">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Users className="w-5 h-5 text-blue-500" />
-                  HRM Instellingen
-                </h2>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Configureer personeelsinstellingen en verlofregels
-                </p>
-              </div>
-              <CardContent className="p-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>HRM instellingen komen binnenkort beschikbaar</p>
-                  <p className="text-sm mt-2">Hier kunt u straks verlofregels, werktijden en salarisschalen configureren.</p>
-                </div>
-              </CardContent>
-            </Card>
+            <HRMSettingsForm />
           )}
 
           {/* Auto Dealer Settings */}
           {activeSection === 'autodealer' && hasAddon('autodealer') && (
-            <Card className="border-border/50 overflow-hidden">
-              <div className="bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-transparent p-6 border-b border-border/50">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Car className="w-5 h-5 text-orange-500" />
-                  Auto Dealer Instellingen
-                </h2>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Configureer voertuigbeheer en verkoopinstellingen
-                </p>
-              </div>
-              <CardContent className="p-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Auto Dealer instellingen komen binnenkort beschikbaar</p>
-                  <p className="text-sm mt-2">Hier kunt u straks commissie percentages en voertuigcategorieën configureren.</p>
-                </div>
-              </CardContent>
-            </Card>
+            <AutoDealerSettingsForm />
           )}
 
           {/* Beauty Spa Settings */}
           {activeSection === 'beauty' && hasAddon('beauty') && (
-            <Card className="border-border/50 overflow-hidden">
-              <div className="bg-gradient-to-r from-pink-500/10 via-pink-500/5 to-transparent p-6 border-b border-border/50">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-pink-500" />
-                  Beauty Spa Instellingen
-                </h2>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Configureer behandelingen en reserveringsinstellingen
-                </p>
-              </div>
-              <CardContent className="p-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Beauty Spa instellingen komen binnenkort beschikbaar</p>
-                  <p className="text-sm mt-2">Hier kunt u straks openingstijden, pauzetijden en reserveringsregels configureren.</p>
-                </div>
-              </CardContent>
-            </Card>
+            <BeautySpaSettingsForm />
           )}
 
           {/* Pompstation Settings */}
           {activeSection === 'pompstation' && hasAddon('pompstation') && (
-            <Card className="border-border/50 overflow-hidden">
-              <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-6 border-b border-border/50">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Fuel className="w-5 h-5 text-amber-500" />
-                  Pompstation Instellingen
-                </h2>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Configureer brandstofprijzen en tankinstellingen
-                </p>
-              </div>
-              <CardContent className="p-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  <Fuel className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Pompstation instellingen komen binnenkort beschikbaar</p>
-                  <p className="text-sm mt-2">Hier kunt u straks brandstofprijzen, tanklimieten en dienstroosters configureren.</p>
-                </div>
-              </CardContent>
-            </Card>
+            <PompstationSettingsForm />
           )}
 
           {/* Boekhouding Settings */}
           {activeSection === 'boekhouding' && (
-            <Card className="border-border/50 overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent p-6 border-b border-border/50">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Calculator className="w-5 h-5 text-purple-500" />
-                  Boekhouding Instellingen
-                </h2>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Configureer BTW-tarieven en valuta-instellingen
-                </p>
-              </div>
-              <CardContent className="p-6">
-                <div className="text-center py-8 text-muted-foreground">
-                  <Calculator className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Boekhouding instellingen komen binnenkort beschikbaar</p>
-                  <p className="text-sm mt-2">Hier kunt u straks BTW-tarieven, standaard valuta en boekjaar configureren.</p>
-                </div>
-              </CardContent>
-            </Card>
+            <BoekhoudingSettingsForm />
           )}
         </div>
       </div>
