@@ -646,6 +646,11 @@ export default function Instellingen() {
             <EmailSettingsCustomer />
           )}
 
+          {/* Sidebar Order Section */}
+          {activeSection === 'sidebar' && (
+            <SidebarOrderSettings />
+          )}
+
           {/* Security Section */}
           {activeSection === 'security' && (
             <Card className="border-border/50 overflow-hidden">
