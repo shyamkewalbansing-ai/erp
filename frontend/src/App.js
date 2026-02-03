@@ -56,6 +56,8 @@ const Werknemers = lazy(() => import("./pages/Werknemers"));
 const Abonnement = lazy(() => import("./pages/Abonnement"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Instellingen = lazy(() => import("./pages/Instellingen"));
+const WorkspacesPage = lazy(() => import("./pages/WorkspacesPage"));
+const DomeinenPage = lazy(() => import("./pages/DomeinenPage"));
 const HRM = lazy(() => import("./pages/HRM"));
 const HRMDashboard = lazy(() => import("./pages/HRMDashboard"));
 const HRMPersoneel = lazy(() => import("./pages/HRMPersoneel"));
