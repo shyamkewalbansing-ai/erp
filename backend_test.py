@@ -1820,6 +1820,50 @@ class SuriRentalsAPITester:
         
         return True
 
+    def test_balans_rapport(self):
+        """Test balance sheet report"""
+        success, response = self.run_test(
+            "Balans Report",
+            "GET",
+            "boekhouding/rapportages/balans?valuta=SRD",
+            200
+        )
+        
+        if success:
+            print(f"   Report date: {response.get('datum')}")
+            print(f"   Currency: {response.get('valuta')}")
+            print(f"   Total activa: {response.get('totaal_activa', 0)} SRD")
+            print(f"   Total passiva: {response.get('totaal_passiva', 0)} SRD")
+            print(f"   Total eigen vermogen: {response.get('totaal_eigen_vermogen', 0)} SRD")
+            print(f"   In balance: {response.get('in_balans', False)}")
+            return True
+        return False
+
+    def test_add_wisselkoers(self):
+        """Test adding exchange rate"""
+        wisselkoers_data = {
+            "van_valuta": "USD",
+            "naar_valuta": "SRD",
+            "koers": 35.50,
+            "datum": "2025-02-03"
+        }
+        
+        success, response = self.run_test(
+            "Add Wisselkoers",
+            "POST",
+            "boekhouding/wisselkoersen",
+            200,
+            data=wisselkoers_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('wisselkoersen', []).append(response['id'])
+            print(f"   Created wisselkoers ID: {response['id']}")
+            print(f"   Rate: {response.get('van_valuta')} to {response.get('naar_valuta')} = {response.get('koers')}")
+            print(f"   Date: {response.get('datum')}")
+            return True
+        return False
+
 def main():
     print("🏠 SuriRentals API Testing Suite")
     print("=" * 50)
