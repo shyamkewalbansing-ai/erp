@@ -399,6 +399,16 @@ export default function Layout() {
                 {!isCollapsed && <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>}
               </NavLink>
               <NavLink
+                to="/app/admin/workspaces"
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+                data-testid="nav-admin-workspaces"
+                title="Workspaces"
+              >
+                <Layers className="w-5 h-5 flex-shrink-0" />
+                {!isCollapsed && <span>Workspaces</span>}
+              </NavLink>
+              <NavLink
                 to="/app/admin/domeinen"
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
@@ -407,6 +417,16 @@ export default function Layout() {
               >
                 <Globe className="w-5 h-5 flex-shrink-0" />
                 {!isCollapsed && <span>Domeinen</span>}
+              </NavLink>
+              <NavLink
+                to="/app/website-beheer"
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+                data-testid="nav-admin-website"
+                title="Website"
+              >
+                <Globe className="w-5 h-5 flex-shrink-0" />
+                {!isCollapsed && <span>Website</span>}
               </NavLink>
               <NavLink
                 to="/app/betaalmethodes"
