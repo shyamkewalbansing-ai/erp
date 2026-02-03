@@ -811,7 +811,7 @@ async def automated_domain_setup(
         return AutomatedDomainSetupResponse(
             success=False,
             message="Domein al in gebruik",
-            error_details=f"Dit domein is al gekoppeld aan een andere klant"
+            error_details="Dit domein is al gekoppeld aan een andere klant"
         )
     
     # Step 4: Get or create workspace
