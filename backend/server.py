@@ -1843,6 +1843,51 @@ def workspace_filter(user: dict, extra_filter: dict = None) -> dict:
     # No workspace = no data (shouldn't happen)
     return {**base_filter, "workspace_id": "none"}
 
+async def activate_free_addons_for_user(user_id: str):
+    """Automatisch alle gratis/auto-activate addons activeren voor een nieuwe gebruiker"""
+    try:
+        # Zoek alle addons die gratis of auto-activate zijn
+        free_addons = await db.addons.find({
+            "$or": [
+                {"is_free": True},
+                {"auto_activate": True},
+                {"price": 0}
+            ],
+            "is_active": True
+        }).to_list(100)
+        
+        now = datetime.now(timezone.utc)
+        # Gratis addons krijgen een lange geldigheidsduur (10 jaar)
+        end_date = (now + timedelta(days=3650)).isoformat()
+        
+        for addon in free_addons:
+            addon_id = addon.get('id') or str(addon.get('_id'))
+            addon_slug = addon.get('slug', '')
+            
+            # Check of al bestaat
+            existing = await db.user_addons.find_one({
+                "user_id": user_id,
+                "addon_id": addon_id
+            })
+            
+            if not existing:
+                user_addon_doc = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": user_id,
+                    "addon_id": addon_id,
+                    "addon_slug": addon_slug,
+                    "status": "active",
+                    "start_date": now.isoformat(),
+                    "end_date": end_date,
+                    "activated_at": now.isoformat(),
+                    "created_at": now.isoformat(),
+                    "is_free": True
+                }
+                await db.user_addons.insert_one(user_addon_doc)
+                logger.info(f"Gratis addon '{addon_slug}' geactiveerd voor user {user_id}")
+    except Exception as e:
+        logger.error(f"Fout bij activeren gratis addons: {e}")
+
 # ==================== AUTH ROUTES ====================
 
 @api_router.post("/auth/register", response_model=TokenResponse)
