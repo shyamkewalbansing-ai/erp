@@ -31,7 +31,8 @@ import {
   ShoppingCart,
   Check,
   X,
-  Loader2
+  Loader2,
+  Rocket
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -47,6 +48,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '../components/ui/dialog';
+import QuickStartWizard from '../components/QuickStartWizard';
 
 export default function Dashboard() {
   const { user } = useAuth();
