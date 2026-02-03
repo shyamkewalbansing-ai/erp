@@ -7421,18 +7421,38 @@ async def get_module_payment_status(current_user: dict = Depends(get_current_use
             except Exception:
                 pass
     
-    # Get payment settings
+    # Get payment settings - first try global settings from admin
     payment_settings = await db.payment_settings.find_one(
-        {"user_id": current_user.get("workspace_id") or current_user["id"]},
+        {"type": "global"},
         {"_id": 0}
     )
     
+    # If no global settings, try workspace settings
+    if not payment_settings:
+        payment_settings = await db.workspace_payment_settings.find_one(
+            {"workspace_id": "global"},
+            {"_id": 0}
+        )
+        # Extract bank transfer settings if found
+        if payment_settings and payment_settings.get("payment_methods"):
+            bank_method = next((m for m in payment_settings["payment_methods"] if m.get("method_id") == "bank_transfer"), None)
+            if bank_method and bank_method.get("bank_settings"):
+                payment_settings = {
+                    "bank_transfer": {
+                        "bank_name": bank_method["bank_settings"].get("bank_name", ""),
+                        "account_holder": bank_method["bank_settings"].get("account_holder", ""),
+                        "account_number": bank_method["bank_settings"].get("account_number", ""),
+                        "iban": bank_method["bank_settings"].get("iban", ""),
+                        "instructions": bank_method.get("instructions", "")
+                    }
+                }
+    
     # Default payment info if no settings found
     default_payment_info = {
-        "bank_name": "Hakrinbank N.V.",
-        "account_holder": "Facturatie N.V.",
-        "account_number": "1234567890",
-        "instructions": "Vermeld uw bedrijfsnaam en e-mailadres bij de betaling."
+        "bank_name": "",
+        "account_holder": "",
+        "account_number": "",
+        "instructions": "Neem contact op met de beheerder voor betaalinformatie."
     }
     
     return {
