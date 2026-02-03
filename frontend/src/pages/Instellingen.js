@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getProfile, updateProfile, changePassword, uploadLogo, deleteLogo, updateRentSettings, getMyAddons } from '../lib/api';
+import { getProfile, updateProfile, changePassword, uploadLogo, deleteLogo, getMyAddons } from '../lib/api';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { toast } from 'sonner';
 import { 
   User, 
@@ -20,14 +19,10 @@ import {
   ImageIcon,
   Upload,
   Trash2,
-  Calendar,
-  Clock,
   Settings,
   ChevronRight,
   Camera,
   KeyRound,
-  Bell,
-  Palette,
   Send,
   LayoutList,
   Home,
@@ -35,8 +30,7 @@ import {
   Car,
   Sparkles,
   Fuel,
-  Calculator,
-  Briefcase
+  Calculator
 } from 'lucide-react';
 import EmailSettingsCustomer from '../components/EmailSettingsCustomer';
 import SidebarOrderSettings from '../components/SidebarOrderSettings';
