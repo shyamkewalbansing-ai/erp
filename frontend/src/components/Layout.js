@@ -458,182 +458,64 @@ export default function Layout() {
           {/* Customer navigation - only for non-superadmin users with active add-ons */}
           {!isSuperAdmin() && addonsLoaded && (
             <>
-              {/* Vastgoed Beheer Section */}
-              {hasAddon('vastgoed_beheer') && (
-                <div className="mb-2">
-                  {!isCollapsed && (
-                    <div className="px-3 py-2">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Vastgoed Beheer</p>
-                    </div>
-                  )}
-                  {vastgoedNavItems.filter(item => hasAddon(item.addon)).map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
-                      data-testid={`nav-${item.label.toLowerCase()}`}
-                      title={item.label}
-                    >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.label}</span>}
-                      {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
-                    </NavLink>
-                  ))}
-                </div>
-              )}
-
-              {/* HRM Section */}
-              {hasAddon('hrm') && (
-                <div className="mb-2">
-                  {!isCollapsed && (
-                    <div className="px-3 py-2 mt-4 border-t border-border pt-4">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">HRM Module</p>
-                    </div>
-                  )}
-                  {isCollapsed && <div className="mt-4 border-t border-border pt-4" />}
-                  {hrmNavItems.filter(item => hasAddon(item.addon)).map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
-                      data-testid={`nav-${item.label.toLowerCase()}`}
-                      title={item.label}
-                    >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.label}</span>}
-                      {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
-                    </NavLink>
-                  ))}
-                </div>
-              )}
-
-              {/* Auto Dealer Section */}
-              {hasAddon('autodealer') && (
-                <div className="mb-2">
-                  {!isCollapsed && (
-                    <div className="px-3 py-2 mt-4 border-t border-border pt-4">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Auto Dealer</p>
-                    </div>
-                  )}
-                  {isCollapsed && <div className="mt-4 border-t border-border pt-4" />}
-                  {autoDealerNavItems.filter(item => hasAddon(item.addon)).map((item) => (
-                    item.external ? (
-                      <a
-                        key={item.to}
-                        href={item.to}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setSidebarOpen(false)}
-                        className={`nav-item ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
-                        data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                        title={item.label}
-                      >
-                        <item.icon className="w-5 h-5 flex-shrink-0" />
-                        {!isCollapsed && <span>{item.label}</span>}
-                        {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto" />}
-                      </a>
-                    ) : (
-                      <NavLink
-                        key={item.to}
-                        to={item.to}
-                        onClick={() => setSidebarOpen(false)}
-                        className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
-                        data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                        title={item.label}
-                      >
-                        <item.icon className="w-5 h-5 flex-shrink-0" />
-                        {!isCollapsed && <span>{item.label}</span>}
-                        {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
-                      </NavLink>
-                    )
-                  ))}
-                </div>
-              )}
-
-              {/* Beauty Spa Section */}
-              {hasAddon('beauty') && (
-                <div className="mb-2">
-                  {!isCollapsed && (
-                    <div className="px-3 py-2 mt-4 border-t border-border pt-4">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Beauty Spa</p>
-                    </div>
-                  )}
-                  {isCollapsed && <div className="mt-4 border-t border-border pt-4" />}
-                  {beautySpaItems.filter(item => hasAddon(item.addon)).map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
-                      data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                      title={item.label}
-                    >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.label}</span>}
-                      {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
-                    </NavLink>
-                  ))}
-                </div>
-              )}
-
-              {/* Pompstation (Gas Station) Section */}
-              {hasAddon('pompstation') && (
-                <div className="mb-2">
-                  {!isCollapsed && (
-                    <div className="px-3 py-2 mt-4 border-t border-border pt-4">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-orange-500" />
-                        Pompstation
-                      </p>
-                    </div>
-                  )}
-                  {isCollapsed && <div className="mt-4 border-t border-border pt-4" />}
-                  {pompstationNavItems.filter(item => hasAddon(item.addon)).map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
-                      data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                      title={item.label}
-                    >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.label}</span>}
-                      {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
-                    </NavLink>
-                  ))}
-                </div>
-              )}
-
-              {/* Boekhouding Module - GRATIS voor alle klanten */}
-              {!isSuperAdmin() && (
-                <div className={`space-y-1 mt-4 ${isCollapsed ? 'items-center' : ''}`}>
-                  {!isCollapsed && (
-                    <div className="flex items-center gap-2 px-3 py-2">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                        📊 Boekhouding (Gratis)
-                      </p>
-                    </div>
-                  )}
-                  {isCollapsed && <div className="mt-4 border-t border-border pt-4" />}
-                  {boekhoudingNavItems.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
-                      data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
-                      title={item.label}
-                    >
-                      <item.icon className="w-5 h-5 flex-shrink-0" />
-                      {!isCollapsed && <span>{item.label}</span>}
-                      {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
-                    </NavLink>
-                  ))}
-                </div>
-              )}
+              {/* Dynamic Module Sections - rendered in user's preferred order */}
+              {getOrderedModules().map((moduleSlug, index) => {
+                const config = moduleConfigs[moduleSlug];
+                if (!config) return null;
+                
+                // Check if module should be shown
+                const shouldShow = config.alwaysShow || hasAddon(moduleSlug);
+                if (!shouldShow) return null;
+                
+                const ModuleIcon = config.icon;
+                const isFirst = index === 0;
+                
+                return (
+                  <div key={moduleSlug} className="mb-2">
+                    {!isCollapsed && (
+                      <div className={`px-3 py-2 ${!isFirst ? 'mt-4 border-t border-border pt-4' : ''}`}>
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                          {moduleSlug === 'boekhouding' ? '📊' : <ModuleIcon className="w-4 h-4" />}
+                          {config.name}
+                          {moduleSlug === 'boekhouding' && <span className="text-emerald-500">(Gratis)</span>}
+                        </p>
+                      </div>
+                    )}
+                    {isCollapsed && !isFirst && <div className="mt-4 border-t border-border pt-4" />}
+                    {config.items.filter(item => config.alwaysShow || hasAddon(item.addon)).map((item) => (
+                      item.external ? (
+                        <a
+                          key={item.to}
+                          href={item.to}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={() => setSidebarOpen(false)}
+                          className={`nav-item ${!isSubscriptionActive && !isSuperAdmin() && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+                          data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
+                          title={item.label}
+                        >
+                          <item.icon className="w-5 h-5 flex-shrink-0" />
+                          {!isCollapsed && <span>{item.label}</span>}
+                          {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto" />}
+                        </a>
+                      ) : (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          onClick={() => setSidebarOpen(false)}
+                          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+                          data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
+                          title={item.label}
+                        >
+                          <item.icon className="w-5 h-5 flex-shrink-0" />
+                          {!isCollapsed && <span>{item.label}</span>}
+                          {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
+                        </NavLink>
+                      )
+                    ))}
+                  </div>
+                );
+              })}
             </>
           )}
 
