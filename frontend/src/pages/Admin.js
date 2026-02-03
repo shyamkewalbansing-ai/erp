@@ -241,6 +241,11 @@ export default function Admin() {
     payment_method: 'bank_transfer',
     payment_reference: ''
   });
+  
+  // Module activation state
+  const [selectedModules, setSelectedModules] = useState([]);
+  const [modulePayments, setModulePayments] = useState([]);
+  const [paymentRequests, setPaymentRequests] = useState([]);
 
   useEffect(() => {
     loadData();
