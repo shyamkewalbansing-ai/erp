@@ -456,6 +456,8 @@ Complete self-service portaal voor huurders:
 - [x] **Boekhouding module backend** - Gratis module voor alle klanten (3 Feb 2026)
 - [x] **Frontend routing fix** - formatCurrency bug opgelost (3 Feb 2026)
 - [x] **Domain Provisioning tab** - Toegevoegd aan Admin dashboard (3 Feb 2026)
+- [x] **Superadmin sidebar standaard ingeklapt** - Automatisch dicht bij eerste bezoek (3 Feb 2026)
+- [x] **Modern Dashboard redesign** - Nieuwe gradient hero, stat cards met animaties, verbeterde UX (3 Feb 2026)
 
 ### P1 (High Priority)
 - [x] **server.py refactoring** (>12000 lines) - Split into modular routers (IN PROGRESS)
