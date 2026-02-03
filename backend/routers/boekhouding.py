@@ -3,21 +3,15 @@ Boekhouding Module - Complete Accounting Solution for Surinamese Businesses
 Supports multi-currency: SRD, USD, EUR
 """
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from pydantic import BaseModel
 from typing import List, Optional, Any
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 import uuid
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
+from .deps import db, get_current_active_user, get_current_user
 
 router = APIRouter(prefix="/api/boekhouding", tags=["Boekhouding"])
-
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ.get('DB_NAME', 'surirentals')]
 
 # ==================== ENUMS ====================
 
