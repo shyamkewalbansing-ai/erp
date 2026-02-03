@@ -5,6 +5,9 @@ import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '../components/ui/alert';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { toast } from 'sonner';
 import { 
   Globe, 
@@ -19,7 +22,9 @@ import {
   Trash2,
   Play,
   Eye,
-  Clock
+  Clock,
+  Plus,
+  Rocket
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
