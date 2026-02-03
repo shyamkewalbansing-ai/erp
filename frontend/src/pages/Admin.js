@@ -544,6 +544,17 @@ export default function Admin() {
     }
   };
 
+  // Workspace handlers
+  const handleDeleteWorkspace = async (workspaceId) => {
+    try {
+      await deleteWorkspace(workspaceId);
+      toast.success('Workspace verwijderd');
+      loadData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen workspace');
+    }
+  };
+
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
     toast.success('Gekopieerd naar klembord');
