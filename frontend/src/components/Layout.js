@@ -666,7 +666,7 @@ export default function Layout() {
                       data-testid="nav-abonnement"
                     >
                       <Package className="w-4 h-4" />
-                      <span>Abonnement</span>
+                      <span>Mijn Modules</span>
                       {showExpiredBadge && (
                         <Badge className="ml-auto text-[10px] bg-red-500/10 text-red-500 border-red-500/20">!</Badge>
                       )}
