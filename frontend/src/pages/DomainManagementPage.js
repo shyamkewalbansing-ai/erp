@@ -32,10 +32,17 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 export default function DomainManagementPage() {
   const { token } = useAuth();
   const [domains, setDomains] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [provisioning, setProvisioning] = useState(null);
   const [previewDialog, setPreviewDialog] = useState({ open: false, config: '', domain: '' });
   const [confirmDialog, setConfirmDialog] = useState({ open: false, action: null, domain: null });
+  
+  // New domain setup state
+  const [setupDialogOpen, setSetupDialogOpen] = useState(false);
+  const [setupLoading, setSetupLoading] = useState(false);
+  const [setupForm, setSetupForm] = useState({ domain: '', user_id: '' });
+  const [setupResult, setSetupResult] = useState(null);
 
   const fetchDomains = async () => {
     try {
@@ -54,9 +61,69 @@ export default function DomainManagementPage() {
     }
   };
 
+  const fetchCustomers = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/customers`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers(data);
+      }
+    } catch (error) {
+      console.error('Error fetching customers:', error);
+    }
+  };
+
   useEffect(() => {
     fetchDomains();
+    fetchCustomers();
   }, [token]);
+
+  // Automated domain setup
+  const handleAutomatedSetup = async () => {
+    if (!setupForm.domain || !setupForm.user_id) {
+      toast.error('Vul alle velden in');
+      return;
+    }
+    
+    setSetupLoading(true);
+    setSetupResult(null);
+    
+    try {
+      const res = await fetch(`${API_URL}/api/domains/setup-automated`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          domain: setupForm.domain,
+          user_id: setupForm.user_id
+        })
+      });
+      
+      const data = await res.json();
+      setSetupResult(data);
+      
+      if (data.success) {
+        toast.success('Domein setup gestart!');
+        fetchDomains();
+      } else {
+        toast.error(data.message || 'Setup mislukt');
+      }
+    } catch (error) {
+      console.error('Setup error:', error);
+      toast.error('Fout bij domain setup');
+      setSetupResult({
+        success: false,
+        message: 'Netwerkfout - probeer opnieuw',
+        steps_completed: []
+      });
+    } finally {
+      setSetupLoading(false);
+    }
+  };
 
   const verifyDNS = async (workspaceId) => {
     setProvisioning(workspaceId + '-dns');
