@@ -10807,7 +10807,7 @@ async def update_deployment_settings(
 
 @api_router.post("/admin/deployment/update")
 async def trigger_system_update(current_user: dict = Depends(get_superadmin)):
-    """Trigger direct system update - superadmin only"""
+    """Trigger direct system update - superadmin only (self-hosted server)"""
     import subprocess
     import asyncio
     
@@ -10827,58 +10827,83 @@ async def trigger_system_update(current_user: dict = Depends(get_superadmin)):
     try:
         details = []
         base_path = os.environ.get("APP_BASE_PATH", "/home/clp/htdocs/facturatie.sr")
+        update_script = f"{base_path}/server-update.sh"
         
-        # Step 1: Git pull
-        details.append("📥 Git pull uitvoeren...")
-        result = subprocess.run(
-            ["git", "pull", "origin", "main"],
-            cwd=base_path,
-            capture_output=True,
-            text=True,
-            timeout=60
-        )
-        details.append(f"Git: {result.stdout or result.stderr}")
-        
-        # Step 2: Rebuild frontend if enabled
-        if settings.get("auto_rebuild_frontend", True):
-            details.append("🏗️ Frontend herbouwen...")
-            # Install dependencies
-            subprocess.run(
-                ["yarn", "install"],
-                cwd=f"{base_path}/frontend",
-                capture_output=True,
-                text=True,
-                timeout=120
-            )
-            # Build
+        # Check if update script exists
+        if os.path.exists(update_script):
+            # Use the dedicated update script for self-hosted servers
+            details.append("🚀 Server update script uitvoeren...")
             result = subprocess.run(
-                ["yarn", "build"],
-                cwd=f"{base_path}/frontend",
+                ["sudo", update_script],
                 capture_output=True,
                 text=True,
-                timeout=180
+                timeout=600  # 10 minutes timeout for full update
             )
+            
             if result.returncode == 0:
-                details.append("✅ Frontend build succesvol")
+                details.append("✅ Update script succesvol uitgevoerd")
+                details.append(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
             else:
-                details.append(f"⚠️ Frontend build: {result.stderr[:200]}")
+                details.append(f"⚠️ Script output: {result.stderr[-300:] if result.stderr else 'Geen errors'}")
+                details.append(result.stdout[-300:] if result.stdout else "")
+        else:
+            # Fallback: manual update steps
+            details.append("📥 Git pull uitvoeren...")
+            result = subprocess.run(
+                ["git", "pull", "origin", "main"],
+                cwd=base_path,
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            details.append(f"Git: {result.stdout or result.stderr}")
+            
+            # Step 2: Rebuild frontend if enabled
+            if settings.get("auto_rebuild_frontend", True):
+                details.append("🏗️ Frontend herbouwen...")
+                subprocess.run(
+                    ["yarn", "install"],
+                    cwd=f"{base_path}/frontend",
+                    capture_output=True,
+                    text=True,
+                    timeout=120
+                )
+                result = subprocess.run(
+                    ["yarn", "build"],
+                    cwd=f"{base_path}/frontend",
+                    capture_output=True,
+                    text=True,
+                    timeout=180
+                )
+                if result.returncode == 0:
+                    details.append("✅ Frontend build succesvol")
+                else:
+                    details.append(f"⚠️ Frontend build: {result.stderr[:200] if result.stderr else 'error'}")
+            
+            # Step 3: Restart services via supervisor
+            details.append("🔄 Services herstarten via supervisor...")
+            subprocess.run(["sudo", "supervisorctl", "restart", "facturatie-backend"], capture_output=True)
+            subprocess.run(["sudo", "supervisorctl", "restart", "facturatie-frontend"], capture_output=True)
+            details.append("✅ Services herstart")
         
-        # Step 3: Sync modules to database
+        # Step 4: Sync modules to database
         details.append("📦 Modules synchroniseren...")
         await sync_modules_to_database()
         details.append("✅ Modules gesynchroniseerd")
         
-        # Step 4: Restart frontend serve
-        details.append("🔄 Frontend herstarten...")
-        subprocess.run(["pkill", "-f", "serve -s build"], capture_output=True)
-        subprocess.Popen(
-            ["npx", "serve", "-s", "build", "-l", "3000"],
-            cwd=f"{base_path}/frontend",
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            start_new_session=True
-        )
-        details.append("✅ Frontend herstart")
+        # Health check
+        details.append("🏥 Health check uitvoeren...")
+        await asyncio.sleep(3)
+        try:
+            import httpx
+            async with httpx.AsyncClient() as client:
+                resp = await client.get("http://localhost:8001/health", timeout=5)
+                if resp.status_code == 200:
+                    details.append("✅ Backend is gezond")
+                else:
+                    details.append("⚠️ Backend health check gefaald")
+        except Exception:
+            details.append("⚠️ Health check overgeslagen")
         
         # Update log and settings
         await db.deployment_logs.update_one(
@@ -10910,7 +10935,7 @@ async def trigger_system_update(current_user: dict = Depends(get_superadmin)):
             {"id": log_id},
             {"$set": {
                 "status": "failed",
-                "message": "Timeout tijdens update",
+                "message": "Timeout tijdens update (max 10 min)",
                 "details": details if 'details' in dir() else []
             }}
         )
