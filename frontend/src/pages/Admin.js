@@ -862,6 +862,10 @@ server {
             <Users className="w-4 h-4 mr-1" />
             Klanten
           </TabsTrigger>
+          <TabsTrigger value="workspaces">
+            <Building2 className="w-4 h-4 mr-1" />
+            Workspaces
+          </TabsTrigger>
           <TabsTrigger value="payments">
             <CreditCard className="w-4 h-4 mr-1" />
             Betalingen
