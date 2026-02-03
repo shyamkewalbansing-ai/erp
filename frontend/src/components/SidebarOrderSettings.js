@@ -11,7 +11,7 @@ import {
   LayoutList,
   Check
 } from 'lucide-react';
-import { getSidebarOrder, updateSidebarOrder, getUserAddons } from '../lib/api';
+import { getSidebarOrder, updateSidebarOrder, getMyAddons } from '../lib/api';
 
 export default function SidebarOrderSettings() {
   const [modules, setModules] = useState([]);
