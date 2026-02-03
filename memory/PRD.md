@@ -452,6 +452,9 @@ Complete self-service portaal voor huurders:
 - [x] Dashboard met appartement, betalingen, saldo
 - [x] UI/UX redesign met moderne glassmorphism styling
 - [x] **Auto Dealer Module** met multi-valuta (SRD, EUR, USD)
+- [x] **Prijzen pagina redesign** - Moderne pricing cards met Starter/Professional/Enterprise (3 Feb 2026)
+- [x] **Boekhouding module backend** - Gratis module voor alle klanten (3 Feb 2026)
+- [x] **Frontend routing fix** - formatCurrency bug opgelost (3 Feb 2026)
 
 ### P1 (High Priority)
 - [x] **server.py refactoring** (>12000 lines) - Split into modular routers (IN PROGRESS)
