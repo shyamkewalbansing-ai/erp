@@ -12,12 +12,25 @@ import {
   Check
 } from 'lucide-react';
 import { getSidebarOrder, updateSidebarOrder, getMyAddons } from '../lib/api';
+import { useAuth } from '../context/AuthContext';
+
+// All available modules for superadmin
+const ALL_MODULES = [
+  { addon_slug: 'vastgoed_beheer', addon_name: 'Vastgoed Beheer', status: 'active' },
+  { addon_slug: 'hrm', addon_name: 'HRM', status: 'active' },
+  { addon_slug: 'autodealer', addon_name: 'Auto Dealer', status: 'active' },
+  { addon_slug: 'beauty', addon_name: 'Beauty Spa', status: 'active' },
+  { addon_slug: 'pompstation', addon_name: 'Pompstation', status: 'active' },
+  { addon_slug: 'boekhouding', addon_name: 'Boekhouding (Gratis)', status: 'active' },
+];
 
 export default function SidebarOrderSettings() {
+  const { user } = useAuth();
   const [modules, setModules] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const isSuperAdmin = user?.role === 'superadmin';
 
   useEffect(() => {
     loadData();
@@ -25,25 +38,32 @@ export default function SidebarOrderSettings() {
 
   const loadData = async () => {
     try {
-      // Get user's active modules
-      const addonsRes = await getMyAddons();
-      const activeModules = addonsRes.data.filter(a => 
-        a.status === 'active' || a.status === 'trial'
-      );
-
-      // Always add boekhouding as it's free for everyone
-      const hasBoekhouding = activeModules.some(m => m.addon_slug === 'boekhouding');
-      if (!hasBoekhouding) {
-        activeModules.push({
-          addon_slug: 'boekhouding',
-          addon_name: 'Boekhouding (Gratis)',
-          status: 'active'
-        });
+      let activeModules = [];
+      
+      // For superadmin, show all modules
+      if (isSuperAdmin) {
+        activeModules = [...ALL_MODULES];
       } else {
-        // Update name to include (Gratis)
-        const boekhoudingModule = activeModules.find(m => m.addon_slug === 'boekhouding');
-        if (boekhoudingModule && !boekhoudingModule.addon_name.includes('Gratis')) {
-          boekhoudingModule.addon_name = 'Boekhouding (Gratis)';
+        // Get user's active modules
+        const addonsRes = await getMyAddons();
+        activeModules = addonsRes.data.filter(a => 
+          a.status === 'active' || a.status === 'trial'
+        );
+
+        // Always add boekhouding as it's free for everyone
+        const hasBoekhouding = activeModules.some(m => m.addon_slug === 'boekhouding');
+        if (!hasBoekhouding) {
+          activeModules.push({
+            addon_slug: 'boekhouding',
+            addon_name: 'Boekhouding (Gratis)',
+            status: 'active'
+          });
+        } else {
+          // Update name to include (Gratis)
+          const boekhoudingModule = activeModules.find(m => m.addon_slug === 'boekhouding');
+          if (boekhoudingModule && !boekhoudingModule.addon_name.includes('Gratis')) {
+            boekhoudingModule.addon_name = 'Boekhouding (Gratis)';
+          }
         }
       }
 
