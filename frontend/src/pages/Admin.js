@@ -257,6 +257,16 @@ export default function Admin() {
     loadData();
   }, []);
 
+  // Filter workspaces based on search
+  useEffect(() => {
+    const filtered = workspaces.filter(workspace => 
+      workspace.name.toLowerCase().includes(workspaceSearch.toLowerCase()) ||
+      workspace.slug.toLowerCase().includes(workspaceSearch.toLowerCase()) ||
+      (workspace.owner_email && workspace.owner_email.toLowerCase().includes(workspaceSearch.toLowerCase()))
+    );
+    setFilteredWorkspaces(filtered);
+  }, [workspaces, workspaceSearch]);
+
   const loadData = async () => {
     try {
       const [dashboardRes, customersRes, requestsRes, subscriptionsRes, domainsRes, addonsRes, addonRequestsRes, deploySettingsRes, deployLogsRes, workspacesRes, workspaceStatsRes] = await Promise.all([
