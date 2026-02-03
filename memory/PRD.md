@@ -463,6 +463,11 @@ Complete self-service portaal voor huurders:
 - [x] **Routing fix** - Gebruikers worden naar dashboard gestuurd i.p.v. /app/abonnement (3 Feb 2026)
 - [x] **Admin Module Verzoeken tab** - Betalingsbevestiging UI voor module activatie (3 Feb 2026)
 - [x] **Quick Start Wizard** - Interactieve wizard voor nieuwe gebruikers om snel aan de slag te gaan (3 Feb 2026)
+- [x] **Email Systeem Compleet** - SMTP configuratie voor admin en klanten (3 Feb 2026)
+  - Admin Email Settings tab met SMTP config, templates, verzendlog
+  - Klant Email Settings in Instellingen pagina
+  - Email templates voor welkom, wachtwoord reset, module verloop
+  - Module Expiring Banner op dashboard
 
 ### P1 (High Priority)
 - [x] **server.py refactoring** (>12000 lines) - Split into modular routers (IN PROGRESS)
