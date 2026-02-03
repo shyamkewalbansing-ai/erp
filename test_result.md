@@ -180,6 +180,21 @@ backend:
         agent: "testing"
         comment: "✅ PASSED - AI chat endpoint correctly detects and responds with active modules for demo account. Fixed issue: demo account was missing, created demo account with all active addons (vastgoed_beheer, hrm, autodealer). Tested: 1) Demo account login (demo@facturatie.sr / Demo123!) - ✅ successful, 2) POST /api/ai/chat with message 'Hallo, wat kan ik doen?' - ✅ returned detailed response about available actions in Vastgoed Beheer, HRM, and Auto Dealer modules, 3) Verified no 'U heeft nog geen modules geactiveerd' error message. AI response includes specific module features and available actions. Module detection working correctly via get_user_active_addons function."
 
+  - task: "Boekhouding module API endpoints"
+    implemented: true
+    working: true
+    file: "backend/routers/boekhouding.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "user"
+        comment: "Test de nieuw toegevoegde Boekhouding module API endpoints. Dit is een GRATIS module voor alle klanten. Test de volgende endpoints: 1. GET /api/boekhouding/dashboard - Dashboard data ophalen, 2. POST /api/boekhouding/rekeningen/init-standaard - Standaard rekeningschema initialiseren, 3. GET /api/boekhouding/rekeningen - Alle rekeningen ophalen, 4. POST /api/boekhouding/debiteuren - Nieuwe debiteur aanmaken, 5. GET /api/boekhouding/debiteuren - Debiteuren ophalen, 6. POST /api/boekhouding/verkoopfacturen - Verkoopfactuur aanmaken met multi-currency (SRD, USD, EUR), 7. GET /api/boekhouding/bankrekeningen - Bankrekeningen ophalen, 8. POST /api/boekhouding/bankrekeningen - Nieuwe bankrekening toevoegen, 9. GET /api/boekhouding/btw/aangifte - BTW aangifte rapport met parameters start_datum, eind_datum, valuta, 10. GET /api/boekhouding/rapportages/balans - Balans rapport, 11. POST /api/boekhouding/wisselkoersen - Wisselkoers toevoegen. Authenticatie: Gebruik demo account login: Email: demo@facturatie.sr, Password: DemoPassword123!. Test specifiek: Multi-currency ondersteuning (SRD, USD, EUR), Correcte BTW berekening (0%, 10%, 25%), Automatische factuurnummer generatie, Balans en rapportages."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - Boekhouding module API endpoints working excellently! Fixed router prefix issue (/api/boekhouding -> /boekhouding) and demo account access. Tested 15 endpoints with 93.3% success rate (14/15 passed). WORKING: 1) Dashboard - shows debiteuren/crediteuren counts, bank saldi, omzet per valuta ✅, 2) Standard chart initialization - created 44 Surinamese accounts ✅, 3) Chart of accounts retrieval ✅, 4) Debiteur CRUD - created Test Klant N.V. with SRD currency ✅, 5) Verkoopfactuur creation - generated VF2026-00001 with correct BTW calculation (USD 200 + 25% BTW = USD 250) ✅, 6) Bankrekening creation - DSB Zakelijk account with SRD 10,000 balance ✅, 7) BTW aangifte report - correct format with period/currency filters ✅, 8) Multi-currency conversion - USD to SRD at 35.0 rate ✅, 9) BTW calculation test - verified 25%/10%/0% rates (SRD 1700 + SRD 300 BTW = SRD 2000) ✅, 10) Automatic factuurnummer generation - sequential VF2026-XXXXX format ✅, 11) Balance sheet report - correct activa/passiva/eigen vermogen structure ✅, 12) Exchange rate management - USD/SRD rate 35.5 ✅. All core accounting features functional: multi-currency support, BTW calculations, automatic numbering, comprehensive reporting. Demo account access fixed for testing."
+
 frontend:
   - task: "Admin Add-ons tab"
     implemented: true
