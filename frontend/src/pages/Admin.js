@@ -55,6 +55,7 @@ import { Badge } from '../components/ui/badge';
 // Lazy load WebsiteEditor for better performance
 const WebsiteEditor = lazy(() => import('../components/WebsiteEditor'));
 import DomainManagementPage from './DomainManagementPage';
+import EmailSettingsAdmin from '../components/EmailSettingsAdmin';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Checkbox } from '../components/ui/checkbox';
