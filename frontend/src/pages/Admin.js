@@ -875,14 +875,19 @@ server {
           </TabsTrigger>
         </TabsList>
 
-        {/* Customers Tab */}
-        <TabsContent value="customers">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div>
-                  <CardTitle>Klanten</CardTitle>
-                  <CardDescription>Overzicht van alle geregistreerde klanten</CardDescription>
+        {/* Workspaces Tab */}
+        <TabsContent value="workspaces">
+          <div className="space-y-6">
+            {/* Workspace Stats */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-500 text-sm">Totaal</p>
+                      <p className="text-3xl font-bold text-blue-600">{workspaceStats.total}</p>
+                    </div>
+                    <Building2 className="w-10 h-10 text-blue-200" />
                   </div>
                 </CardContent>
               </Card>
@@ -908,211 +913,127 @@ server {
                   </div>
                 </CardContent>
               </Card>
-              <Card className="border-dashed border-2 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setCreateWorkspaceDialogOpen(true)}>
-                <CardContent className="p-6 flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <Plus className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-                    <p className="font-medium text-gray-600">Nieuwe Workspace</p>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
 
-            {/* Workspaces List */}
+            {/* Create Workspace Dialog */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="relative max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  placeholder="Zoek workspaces..."
+                  value={workspaceSearch}
+                  onChange={(e) => setWorkspaceSearch(e.target.value)}
+                  className="pl-10"
+                  data-testid="workspace-search"
+                />
+              </div>
+              <Button onClick={() => setCreateWorkspaceOpen(true)} data-testid="create-workspace-btn">
+                <Plus className="w-4 h-4 mr-2" />
+                Nieuwe Workspace
+              </Button>
+            </div>
+
+            {/* Workspaces Table */}
             <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Building2 className="w-5 h-5" />
-                      Klant Workspaces
-                    </CardTitle>
-                    <CardDescription>Beheer alle klant omgevingen en domeinen</CardDescription>
-                  </div>
-                  <Button onClick={() => setCreateWorkspaceDialogOpen(true)} className="bg-emerald-500 hover:bg-emerald-600">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nieuwe Workspace
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {workspaces.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Layers className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">Geen workspaces</h3>
-                    <p className="text-gray-500 mb-4">Maak uw eerste workspace aan om te beginnen</p>
-                    <Button onClick={() => setCreateWorkspaceDialogOpen(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Workspace Aanmaken
-                    </Button>
+              <CardContent className="p-0">
+                {loadingWorkspaces ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {workspaces.map((workspace) => (
-                      <div key={workspace.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start justify-between">
-                          <div className="flex items-start gap-4">
-                            {/* Logo/Icon */}
-                            <div 
-                              className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg"
-                              style={{ backgroundColor: workspace.branding?.primary_color || '#0caf60' }}
-                            >
-                              {workspace.branding?.logo_url ? (
-                                <img src={workspace.branding.logo_url} alt={workspace.name} className="w-full h-full object-contain rounded-lg" />
-                              ) : (
-                                workspace.name.charAt(0).toUpperCase()
-                              )}
-                            </div>
-                            
-                            {/* Info */}
-                            <div>
-                              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                                {workspace.name}
-                                {workspace.status === 'active' && (
-                                  <Badge className="bg-green-100 text-green-700">Actief</Badge>
-                                )}
-                                {workspace.status === 'pending' && (
-                                  <Badge className="bg-orange-100 text-orange-700">In Afwachting</Badge>
-                                )}
-                                {workspace.status === 'error' && (
-                                  <Badge className="bg-red-100 text-red-700">Fout</Badge>
-                                )}
-                              </h3>
-                              <p className="text-sm text-gray-500">
-                                Eigenaar: {workspace.owner_name || workspace.owner_email || 'Onbekend'}
-                              </p>
-                              
-                              {/* Domain Info */}
-                              <div className="mt-2 flex items-center gap-4 text-sm">
-                                <div className="flex items-center gap-1">
-                                  <Globe className="w-4 h-4 text-gray-400" />
-                                  {workspace.domain?.type === 'subdomain' ? (
-                                    <a href={`https://${workspace.domain.subdomain}.facturatie.sr`} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                      {workspace.domain.subdomain}.facturatie.sr
-                                    </a>
-                                  ) : (
-                                    <span className="text-gray-600">{workspace.domain?.custom_domain || 'Geen domein'}</span>
-                                  )}
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b bg-muted/50">
+                          <th className="text-left p-4 font-medium">Workspace</th>
+                          <th className="text-left p-4 font-medium">Eigenaar</th>
+                          <th className="text-left p-4 font-medium">Status</th>
+                          <th className="text-left p-4 font-medium">Domein</th>
+                          <th className="text-left p-4 font-medium">Aangemaakt</th>
+                          <th className="text-left p-4 font-medium">Acties</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredWorkspaces.map((ws) => (
+                          <tr key={ws.id} className="border-b hover:bg-accent/50">
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                                  <Building2 className="w-5 h-5 text-emerald-600" />
                                 </div>
-                                
-                                {workspace.domain?.dns_verified && (
-                                  <span className="flex items-center gap-1 text-green-600">
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    DNS OK
-                                  </span>
-                                )}
-                                
-                                {workspace.domain?.ssl_active && (
-                                  <span className="flex items-center gap-1 text-green-600">
-                                    <Shield className="w-4 h-4" />
-                                    SSL
-                                  </span>
-                                )}
-                                
-                                <span className="flex items-center gap-1 text-gray-500">
-                                  <Users className="w-4 h-4" />
-                                  {workspace.users_count} gebruikers
-                                </span>
+                                <div>
+                                  <p className="font-medium">{ws.name}</p>
+                                  <p className="text-sm text-muted-foreground">{ws.slug}</p>
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                          
-                          {/* Actions */}
-                          <div className="flex items-center gap-2">
-                            {workspace.domain?.type === 'custom' && !workspace.domain?.dns_verified && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={async () => {
-                                  setVerifyingDns(true);
-                                  try {
-                                    const res = await verifyWorkspaceDns(workspace.id);
-                                    if (res.data.success) {
-                                      toast.success(res.data.message);
-                                      loadData();
-                                    } else {
-                                      toast.error(res.data.message);
-                                    }
-                                  } catch (error) {
-                                    toast.error('DNS verificatie mislukt');
-                                  } finally {
-                                    setVerifyingDns(false);
-                                  }
-                                }}
-                                disabled={verifyingDns}
+                            </td>
+                            <td className="p-4 text-muted-foreground">
+                              {ws.owner_email || '-'}
+                            </td>
+                            <td className="p-4">
+                              <Badge 
+                                variant={ws.status === 'active' ? 'default' : ws.status === 'pending' ? 'secondary' : 'destructive'}
+                                className={ws.status === 'active' ? 'bg-green-100 text-green-700 hover:bg-green-100' : ''}
                               >
-                                {verifyingDns ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1" />}
-                                DNS Verifiëren
-                              </Button>
-                            )}
-                            
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={async () => {
-                                try {
-                                  const res = await getWorkspaceNginxConfig(workspace.id);
-                                  setNginxConfig(res.data.config);
-                                  setSelectedWorkspace(workspace);
-                                  setNginxConfigDialogOpen(true);
-                                } catch (error) {
-                                  toast.error('Kon configuratie niet laden');
-                                }
-                              }}
-                            >
-                              <Terminal className="w-4 h-4 mr-1" />
-                              Nginx
-                            </Button>
-                            
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedWorkspace(workspace);
-                                setNewWorkspace({
-                                  name: workspace.name,
-                                  slug: workspace.slug,
-                                  owner_id: workspace.owner_id,
-                                  domain_type: workspace.domain?.type || 'subdomain',
-                                  subdomain: workspace.domain?.subdomain || '',
-                                  custom_domain: workspace.domain?.custom_domain || '',
-                                  branding: workspace.branding || {
-                                    logo_url: '',
-                                    favicon_url: '',
-                                    primary_color: '#0caf60',
-                                    secondary_color: '#059669',
-                                    portal_name: ''
-                                  }
-                                });
-                                setEditWorkspaceDialogOpen(true);
-                              }}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-red-600 hover:bg-red-50"
-                              onClick={() => {
-                                setSelectedWorkspace(workspace);
-                                setDeleteWorkspaceDialogOpen(true);
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        {/* Error message if any */}
-                        {workspace.error_message && (
-                          <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-700">
-                            <AlertCircle className="w-4 h-4 inline mr-1" />
-                            {workspace.error_message}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                                {ws.status === 'active' ? 'Actief' : ws.status === 'pending' ? 'In Afwachting' : 'Fout'}
+                              </Badge>
+                            </td>
+                            <td className="p-4">
+                              {ws.domain?.subdomain ? (
+                                <a 
+                                  href={`https://${ws.domain.subdomain}.facturatie.sr`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline flex items-center gap-1"
+                                >
+                                  {ws.domain.subdomain}.facturatie.sr
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              ) : ws.domain?.custom_domain ? (
+                                <a 
+                                  href={`https://${ws.domain.custom_domain}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 hover:underline flex items-center gap-1"
+                                >
+                                  {ws.domain.custom_domain}
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </td>
+                            <td className="p-4 text-muted-foreground">
+                              {ws.created_at ? new Date(ws.created_at).toLocaleDateString('nl-NL') : '-'}
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedWorkspace(ws);
+                                    setEditWorkspaceOpen(true);
+                                  }}
+                                  data-testid={`edit-workspace-${ws.id}`}
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                  onClick={() => handleDeleteWorkspace(ws.id)}
+                                  data-testid={`delete-workspace-${ws.id}`}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 )}
               </CardContent>
