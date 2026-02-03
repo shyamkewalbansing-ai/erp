@@ -352,6 +352,99 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Payment Popup Dialog */}
+      <Dialog open={paymentPopupOpen} onOpenChange={setPaymentPopupOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <AlertCircle className="w-6 h-6 text-orange-500" />
+              Proefperiode Verlopen
+            </DialogTitle>
+            <DialogDescription>
+              Uw proefperiode is verlopen. Betaal om uw modules te blijven gebruiken.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {paymentStatus && (
+            <div className="space-y-4 mt-4">
+              {/* Expired Modules */}
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                <h4 className="font-semibold text-orange-800 mb-2">Verlopen Modules:</h4>
+                <div className="space-y-2">
+                  {paymentStatus.expired_modules.map((module, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-sm">
+                      <span className="text-orange-700">{module.addon_name}</span>
+                      <span className="font-medium text-orange-900">SRD {module.price?.toLocaleString('nl-NL')}/mnd</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-orange-200 mt-3 pt-3 flex justify-between">
+                  <span className="font-semibold text-orange-900">Totaal:</span>
+                  <span className="font-bold text-orange-900">SRD {paymentStatus.total_monthly_amount?.toLocaleString('nl-NL')}/mnd</span>
+                </div>
+              </div>
+
+              {/* Payment Info */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <h4 className="font-semibold text-emerald-800 mb-3">Betaalgegevens:</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-700 text-sm">Bank:</span>
+                    <span className="font-medium text-emerald-900">{paymentStatus.payment_info?.bank_name}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-700 text-sm">Rekening:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-emerald-900">{paymentStatus.payment_info?.account_number}</span>
+                      <button 
+                        onClick={() => copyToClipboard(paymentStatus.payment_info?.account_number)}
+                        className="p-1 hover:bg-emerald-200 rounded"
+                      >
+                        <Copy className="w-4 h-4 text-emerald-600" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-700 text-sm">T.n.v.:</span>
+                    <span className="font-medium text-emerald-900">{paymentStatus.payment_info?.account_holder}</span>
+                  </div>
+                </div>
+                {paymentStatus.payment_info?.instructions && (
+                  <p className="text-xs text-emerald-600 mt-3 pt-3 border-t border-emerald-200">
+                    {paymentStatus.payment_info.instructions}
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setPaymentPopupOpen(false)}
+                  className="flex-1"
+                >
+                  Later
+                </Button>
+                <Button
+                  onClick={handleSubmitPaymentRequest}
+                  disabled={submittingPayment}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                >
+                  {submittingPayment ? (
+                    <>Bezig...</>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Ik heb betaald
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
