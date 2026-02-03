@@ -38,6 +38,47 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [hasVastgoedAddon, setHasVastgoedAddon] = useState(false);
   const [addonsChecked, setAddonsChecked] = useState(false);
+  
+  // Payment popup state
+  const [paymentPopupOpen, setPaymentPopupOpen] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState(null);
+  const [submittingPayment, setSubmittingPayment] = useState(false);
+
+  useEffect(() => {
+    checkAddonsAndFetch();
+    checkPaymentStatus();
+  }, []);
+
+  // Check if user has expired modules
+  const checkPaymentStatus = async () => {
+    try {
+      const response = await getModulePaymentStatus();
+      setPaymentStatus(response.data);
+      if (response.data.has_expired_modules) {
+        setPaymentPopupOpen(true);
+      }
+    } catch (error) {
+      console.error('Error checking payment status:', error);
+    }
+  };
+
+  const handleSubmitPaymentRequest = async () => {
+    setSubmittingPayment(true);
+    try {
+      await submitModulePaymentRequest();
+      toast.success('Betaalverzoek ingediend! We nemen contact met u op.');
+      setPaymentPopupOpen(false);
+    } catch (error) {
+      toast.error('Fout bij indienen betaalverzoek');
+    } finally {
+      setSubmittingPayment(false);
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Gekopieerd naar klembord');
+  };
 
   useEffect(() => {
     checkAddonsAndFetch();
