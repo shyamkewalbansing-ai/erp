@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyAddons, getWorkspaceSettings, updateWorkspaceSettings, updateWorkspaceDomain } from '../lib/api';
+import { getMyAddons, getWorkspaceSettings, updateWorkspaceSettings, updateWorkspaceDomain, getSidebarOrder } from '../lib/api';
 import { 
   LayoutDashboard, 
   Users, 
