@@ -461,6 +461,8 @@ Complete self-service portaal voor huurders:
 - [x] **Boekhouding Module volledig werkend** - Gratis module voor alle klanten, sidebar altijd zichtbaar (3 Feb 2026)
 - [x] **Module bestelling popup** - Klanten zonder modules krijgen popup om modules te bestellen en betalen (3 Feb 2026)
 - [x] **Routing fix** - Gebruikers worden naar dashboard gestuurd i.p.v. /app/abonnement (3 Feb 2026)
+- [x] **Admin Module Verzoeken tab** - Betalingsbevestiging UI voor module activatie (3 Feb 2026)
+- [x] **Quick Start Wizard** - Interactieve wizard voor nieuwe gebruikers om snel aan de slag te gaan (3 Feb 2026)
 
 ### P1 (High Priority)
 - [x] **server.py refactoring** (>12000 lines) - Split into modular routers (IN PROGRESS)
