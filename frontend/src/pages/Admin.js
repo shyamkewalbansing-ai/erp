@@ -895,12 +895,8 @@ server {
       )}
 
       {/* Tabs for Customers, Payments, and Add-ons */}
-      <Tabs defaultValue="workspaces" className="space-y-4">
+      <Tabs defaultValue="customers" className="space-y-4">
         <TabsList className="flex-wrap">
-          <TabsTrigger value="workspaces" className="text-emerald-600">
-            <Layers className="w-4 h-4 mr-1" />
-            Workspaces
-          </TabsTrigger>
           <TabsTrigger value="customers">
             <Users className="w-4 h-4 mr-1" />
             Klanten
@@ -908,6 +904,13 @@ server {
           <TabsTrigger value="payments">
             <CreditCard className="w-4 h-4 mr-1" />
             Betalingen
+          </TabsTrigger>
+          <TabsTrigger value="addons">
+            <Puzzle className="w-4 h-4 mr-1" />
+            Add-ons
+            {addonRequests.length > 0 && (
+              <Badge className="ml-2 bg-orange-500 text-white text-xs">{addonRequests.length}</Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="module-requests" className="text-orange-600">
             <Bell className="w-4 h-4 mr-1" />
@@ -918,32 +921,29 @@ server {
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="addons">
-            <Puzzle className="w-4 h-4 mr-1" />
-            Add-ons
-            {addonRequests.length > 0 && (
-              <Badge className="ml-2 bg-orange-500 text-white text-xs">{addonRequests.length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="domains">
-            <Globe className="w-4 h-4 mr-1" />
-            Domeinen
+          <TabsTrigger value="workspaces" className="text-emerald-600">
+            <Layers className="w-4 h-4 mr-1" />
+            Workspaces
           </TabsTrigger>
           <TabsTrigger value="domain-provisioning" className="text-blue-600">
             <Server className="w-4 h-4 mr-1" />
             Domain Provisioning
           </TabsTrigger>
+          <TabsTrigger value="domains">
+            <Globe className="w-4 h-4 mr-1" />
+            Domeinen
+          </TabsTrigger>
           <TabsTrigger value="betaalmethodes">
             <CreditCard className="w-4 h-4 mr-1" />
             Betaalmethodes
           </TabsTrigger>
-          <TabsTrigger value="website">
-            <Globe className="w-4 h-4 mr-1" />
-            Website
-          </TabsTrigger>
           <TabsTrigger value="email" className="text-purple-600">
             <Mail className="w-4 h-4 mr-1" />
             Email
+          </TabsTrigger>
+          <TabsTrigger value="website">
+            <Globe className="w-4 h-4 mr-1" />
+            Website
           </TabsTrigger>
           <TabsTrigger value="update" className="text-emerald-600">
             <RefreshCw className="w-4 h-4 mr-1" />
