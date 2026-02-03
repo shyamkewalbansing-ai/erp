@@ -7,6 +7,7 @@ import subprocess
 import os
 import socket
 import logging
+import uuid
 
 from .deps import db, get_superadmin, get_current_user, SERVER_IP, MAIN_DOMAIN
 
