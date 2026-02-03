@@ -66,6 +66,7 @@ from routers.domain_management import router as domain_management_router
 from routers.beautyspa import router as beautyspa_router
 from routers.spa_booking import router as spa_booking_router
 from routers.pompstation import router as pompstation_router
+from routers.boekhouding import router as boekhouding_router
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
