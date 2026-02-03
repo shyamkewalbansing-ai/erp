@@ -882,7 +882,7 @@ server {
       )}
 
       {/* Tabs for Customers, Payments, and Add-ons */}
-      <Tabs defaultValue="customers" className="space-y-4">
+      <Tabs defaultValue="workspaces" className="space-y-4">
         <TabsList className="flex-wrap">
           <TabsTrigger value="workspaces" className="text-emerald-600">
             <Layers className="w-4 h-4 mr-1" />
