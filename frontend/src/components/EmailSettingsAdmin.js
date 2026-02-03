@@ -417,6 +417,10 @@ export default function EmailSettingsAdmin() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="scheduler">
+          <ScheduledJobsAdmin />
+        </TabsContent>
+
         <TabsContent value="logs">
           <Card>
             <CardHeader>
