@@ -118,7 +118,8 @@ import {
   Eye,
   Check,
   Bell,
-  Banknote
+  Banknote,
+  Mail
 } from 'lucide-react';
 
 export default function Admin() {
