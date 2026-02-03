@@ -9590,13 +9590,26 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
     if is_free:
         status = "active"
     
-    # Send welcome email with credentials
-    email_sent = send_welcome_email(
-        name=customer_data.name,
-        email=customer_data.email,
-        password=customer_data.password,
-        plan_type=customer_data.plan_type
-    )
+    # Try to send welcome email with the new email service first
+    email_sent = False
+    try:
+        email_sent = await send_welcome_email_async(
+            name=customer_data.name,
+            email=customer_data.email,
+            password=customer_data.password,
+            company_name=customer_data.company_name
+        )
+    except Exception as e:
+        logger.warning(f"Error with async welcome email: {e}")
+    
+    # Fallback to old method if new service is not configured
+    if not email_sent:
+        email_sent = send_welcome_email(
+            name=customer_data.name,
+            email=customer_data.email,
+            password=customer_data.password,
+            plan_type=customer_data.plan_type
+        )
     
     if not email_sent:
         logger.warning(f"Welcome email could not be sent to {customer_data.email}")
