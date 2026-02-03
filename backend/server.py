@@ -8906,6 +8906,22 @@ async def create_customer(customer_data: AdminCustomerCreate, current_user: dict
         last_payment_date=now.isoformat() if customer_data.plan_type == "active" else None
     )
 
+# Activeer gratis addons na het aanmaken van de klant
+async def post_create_customer_addons(user_id: str):
+    """Helper to activate free addons after customer creation"""
+    await activate_free_addons_for_user(user_id)
+
+# Hook om gratis addons te activeren bij klant aanmaak
+@api_router.post("/admin/customers/{user_id}/activate-free-addons")
+async def admin_activate_free_addons(user_id: str, current_user: dict = Depends(get_superadmin)):
+    """Activate all free addons for a customer - superadmin only"""
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Gebruiker niet gevonden")
+    
+    await activate_free_addons_for_user(user_id)
+    return {"message": "Gratis modules geactiveerd"}
+
 @api_router.delete("/admin/customers/{user_id}/permanent")
 async def delete_customer_permanent(user_id: str, current_user: dict = Depends(get_superadmin)):
     """Permanently delete a customer and all their data - superadmin only"""
