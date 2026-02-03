@@ -644,6 +644,32 @@ function MainAppRoutes() {
           <Route path="pompstation/handleiding" element={
             <SubscriptionRoute requiredAddon="pompstation"><PompstationHandleiding /></SubscriptionRoute>
           } />
+
+          {/* Boekhouding Module Routes - Gratis voor alle klanten */}
+          <Route path="boekhouding" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingDashboard /></SubscriptionRoute>
+          } />
+          <Route path="boekhouding/grootboek" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingGrootboek /></SubscriptionRoute>
+          } />
+          <Route path="boekhouding/debiteuren" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingDebiteuren /></SubscriptionRoute>
+          } />
+          <Route path="boekhouding/crediteuren" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingCrediteuren /></SubscriptionRoute>
+          } />
+          <Route path="boekhouding/verkoopfacturen" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingVerkoopfacturen /></SubscriptionRoute>
+          } />
+          <Route path="boekhouding/bankrekeningen" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingBankrekeningen /></SubscriptionRoute>
+          } />
+          <Route path="boekhouding/rapportages" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingRapportages /></SubscriptionRoute>
+          } />
+          <Route path="boekhouding/btw" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingRapportages /></SubscriptionRoute>
+          } />
         </Route>
         
         {/* Redirect old routes to new app routes */}
