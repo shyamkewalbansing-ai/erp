@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getDashboard, formatCurrency, getMyAddons, getModulePaymentStatus, submitModulePaymentRequest } from '../lib/api';
+import { getDashboard, formatCurrency, getMyAddons, getModulePaymentStatus, submitModulePaymentRequest, getPublicAddons } from '../lib/api';
 import { REFRESH_EVENTS } from '../lib/refreshEvents';
 import { toast } from 'sonner';
 import { 
@@ -27,18 +27,25 @@ import {
   Zap,
   ArrowUp,
   ArrowDown,
-  Eye,
-  Plus
+  Plus,
+  ShoppingCart,
+  Check,
+  X,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { Checkbox } from '../components/ui/checkbox';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from '../components/ui/dialog';
 
 export default function Dashboard() {
@@ -48,15 +55,29 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [hasVastgoedAddon, setHasVastgoedAddon] = useState(false);
   const [addonsChecked, setAddonsChecked] = useState(false);
+  const [activeAddons, setActiveAddons] = useState([]);
   
-  // Payment popup state
+  // Payment popup state (for expired modules)
   const [paymentPopupOpen, setPaymentPopupOpen] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState(null);
   const [submittingPayment, setSubmittingPayment] = useState(false);
+  
+  // Module order popup state (for users without modules)
+  const [orderPopupOpen, setOrderPopupOpen] = useState(false);
+  const [availableModules, setAvailableModules] = useState([]);
+  const [selectedModules, setSelectedModules] = useState([]);
+  const [orderStep, setOrderStep] = useState(1); // 1: select modules, 2: payment info
+  const [orderForm, setOrderForm] = useState({
+    name: '',
+    email: '',
+    company_name: '',
+    phone: ''
+  });
+  const [submittingOrder, setSubmittingOrder] = useState(false);
+  const [orderPaymentInfo, setOrderPaymentInfo] = useState(null);
 
   useEffect(() => {
     checkAddonsAndFetch();
-    checkPaymentStatus();
   }, []);
 
   const checkPaymentStatus = async () => {
@@ -89,10 +110,21 @@ export default function Dashboard() {
     toast.success('Gekopieerd naar klembord');
   };
 
+  const loadAvailableModules = async () => {
+    try {
+      const response = await getPublicAddons();
+      setAvailableModules(response.data || []);
+    } catch (error) {
+      console.error('Error loading modules:', error);
+    }
+  };
+
   const checkAddonsAndFetch = async () => {
     try {
       const addonsResponse = await getMyAddons();
       const addons = addonsResponse.data || [];
+      setActiveAddons(addons);
+      
       const hasVastgoed = addons.some(addon => 
         addon.addon_slug === 'vastgoed_beheer' && 
         (addon.status === 'active' || addon.status === 'trial')
@@ -100,10 +132,26 @@ export default function Dashboard() {
       setHasVastgoedAddon(hasVastgoed);
       setAddonsChecked(true);
       
-      if (hasVastgoed) {
-        await fetchDashboard();
-      } else {
+      // Check if user has ANY active modules
+      const hasAnyActiveModule = addons.some(addon => 
+        addon.status === 'active' || addon.status === 'trial'
+      );
+      
+      if (!hasAnyActiveModule) {
+        // Show order popup for users without active modules
+        await loadAvailableModules();
+        await checkPaymentStatus();
+        setOrderPopupOpen(true);
         setLoading(false);
+      } else {
+        // Check for expired modules
+        await checkPaymentStatus();
+        
+        if (hasVastgoed) {
+          await fetchDashboard();
+        } else {
+          setLoading(false);
+        }
       }
     } catch (error) {
       console.error('Error checking addons:', error);
@@ -129,6 +177,76 @@ export default function Dashboard() {
     return () => window.removeEventListener(REFRESH_EVENTS.DASHBOARD, handleRefresh);
   }, []);
 
+  // Module selection handlers
+  const toggleModuleSelection = (moduleId) => {
+    setSelectedModules(prev => 
+      prev.includes(moduleId) 
+        ? prev.filter(id => id !== moduleId)
+        : [...prev, moduleId]
+    );
+  };
+
+  const calculateTotal = () => {
+    return selectedModules.reduce((total, moduleId) => {
+      const module = availableModules.find(m => m.id === moduleId);
+      return total + (module?.price || 0);
+    }, 0);
+  };
+
+  const handleSubmitOrder = async () => {
+    if (selectedModules.length === 0) {
+      toast.error('Selecteer minimaal één module');
+      return;
+    }
+
+    if (orderStep === 1) {
+      // Prefill form with user data
+      setOrderForm({
+        name: user?.name || '',
+        email: user?.email || '',
+        company_name: user?.company_name || '',
+        phone: ''
+      });
+      setOrderStep(2);
+      return;
+    }
+
+    // Submit order
+    setSubmittingOrder(true);
+    try {
+      const orderData = {
+        modules: selectedModules,
+        customer: orderForm,
+        user_id: user?.id
+      };
+
+      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      const response = await fetch(`${API_URL}/api/user/modules/order`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(orderData)
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setOrderPaymentInfo(data.payment_info);
+        toast.success('Bestelling geplaatst! Bekijk de betaalinstructies.');
+        setOrderStep(3); // Show payment instructions
+      } else {
+        toast.error(data.detail || 'Fout bij plaatsen bestelling');
+      }
+    } catch (error) {
+      console.error('Order error:', error);
+      toast.error('Fout bij plaatsen bestelling');
+    } finally {
+      setSubmittingOrder(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -145,8 +263,8 @@ export default function Dashboard() {
     );
   }
 
-  // Welcome screen for users without vastgoed module
-  if (addonsChecked && !hasVastgoedAddon) {
+  // Welcome screen for users without vastgoed module (but with other modules)
+  if (addonsChecked && !hasVastgoedAddon && activeAddons.some(a => a.status === 'active' || a.status === 'trial')) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center" data-testid="welcome-screen">
         <div className="text-center max-w-lg mx-auto px-4">
@@ -154,33 +272,30 @@ export default function Dashboard() {
             <div className="w-28 h-28 rounded-3xl bg-gradient-to-br from-primary via-emerald-500 to-teal-500 flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-primary/30 rotate-3 hover:rotate-0 transition-transform duration-500">
               <Package className="w-14 h-14 text-white" />
             </div>
-            <div className="absolute -top-2 -right-2 w-6 h-6 bg-yellow-400 rounded-full animate-bounce"></div>
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900 dark:from-white dark:via-slate-200 dark:to-white bg-clip-text text-transparent mb-4">
             Welkom bij Facturatie.sr
           </h1>
           <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-            Ontdek onze krachtige modules en activeer de functionaliteit die perfect past bij uw bedrijf.
+            U heeft actieve modules. Gebruik het menu links om naar uw modules te navigeren.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
-              onClick={() => navigate('/app/modules')}
+              onClick={() => navigate('/app/abonnement')}
               size="lg"
-              className="bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-600/90 shadow-lg shadow-primary/25 transition-all hover:shadow-xl hover:shadow-primary/30"
+              className="bg-gradient-to-r from-primary to-emerald-600 hover:from-primary/90 hover:to-emerald-600/90 shadow-lg shadow-primary/25"
             >
-              <Sparkles className="w-5 h-5 mr-2" />
-              Bekijk Modules
-            </Button>
-            <Button 
-              onClick={() => navigate('/prijzen')}
-              variant="outline"
-              size="lg"
-              className="border-2 hover:bg-slate-50 dark:hover:bg-slate-800"
-            >
-              Prijzen Bekijken
+              <Package className="w-5 h-5 mr-2" />
+              Mijn Modules
             </Button>
           </div>
         </div>
+        
+        {/* Module Order Popup */}
+        {renderOrderPopup()}
+        
+        {/* Payment Popup for expired modules */}
+        {renderPaymentPopup()}
       </div>
     );
   }
@@ -195,6 +310,394 @@ export default function Dashboard() {
   const occupancyRate = stats?.total_apartments > 0 
     ? Math.round((stats?.occupied_apartments / stats?.total_apartments) * 100) 
     : 0;
+
+  // Render functions for popups
+  function renderOrderPopup() {
+    return (
+      <Dialog open={orderPopupOpen} onOpenChange={setOrderPopupOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              {orderStep === 1 && <><ShoppingCart className="w-6 h-6 text-emerald-500" /> Modules Bestellen</>}
+              {orderStep === 2 && <><Users className="w-6 h-6 text-blue-500" /> Uw Gegevens</>}
+              {orderStep === 3 && <><CheckCircle className="w-6 h-6 text-emerald-500" /> Bestelling Geplaatst</>}
+            </DialogTitle>
+            <DialogDescription>
+              {orderStep === 1 && 'Selecteer de modules die u wilt activeren. U krijgt 3 dagen gratis proefperiode.'}
+              {orderStep === 2 && 'Vul uw gegevens in om de bestelling te plaatsen.'}
+              {orderStep === 3 && 'Uw bestelling is geplaatst. Volg de betaalinstructies hieronder.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          {orderStep === 1 && (
+            <div className="space-y-4 py-4">
+              {/* Progress indicator */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">1</div>
+                <div className="w-16 h-1 bg-slate-200"></div>
+                <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-sm font-bold">2</div>
+                <div className="w-16 h-1 bg-slate-200"></div>
+                <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-sm font-bold">3</div>
+              </div>
+
+              {/* Module selection */}
+              <div className="grid gap-3">
+                {availableModules.filter(m => m.slug !== 'boekhouding').map((module) => (
+                  <div 
+                    key={module.id}
+                    onClick={() => toggleModuleSelection(module.id)}
+                    className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      selectedModules.includes(module.id)
+                        ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Checkbox 
+                          checked={selectedModules.includes(module.id)}
+                          className="data-[state=checked]:bg-emerald-500"
+                        />
+                        <div>
+                          <h4 className="font-semibold">{module.name}</h4>
+                          <p className="text-sm text-muted-foreground">{module.description}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-emerald-600">SRD {module.price?.toLocaleString('nl-NL')}</p>
+                        <p className="text-xs text-muted-foreground">per maand</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Boekhouding - Gratis */}
+                <div className="p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-emerald-500" />
+                      <div>
+                        <h4 className="font-semibold">Boekhouding</h4>
+                        <p className="text-sm text-muted-foreground">Automatisch inbegrepen</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-emerald-500 text-white">GRATIS</Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Total */}
+              {selectedModules.length > 0 && (
+                <div className="mt-6 p-4 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Totaal per maand:</span>
+                    <span className="text-2xl font-bold text-emerald-600">
+                      SRD {calculateTotal().toLocaleString('nl-NL')}
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    * 3 dagen gratis proefperiode inbegrepen
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {orderStep === 2 && (
+            <div className="space-y-4 py-4">
+              {/* Progress indicator */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">
+                  <Check className="w-4 h-4" />
+                </div>
+                <div className="w-16 h-1 bg-emerald-500"></div>
+                <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">2</div>
+                <div className="w-16 h-1 bg-slate-200"></div>
+                <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-sm font-bold">3</div>
+              </div>
+
+              <div className="grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Naam *</Label>
+                    <Input
+                      id="name"
+                      value={orderForm.name}
+                      onChange={(e) => setOrderForm({...orderForm, name: e.target.value})}
+                      placeholder="Uw volledige naam"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="company">Bedrijfsnaam</Label>
+                    <Input
+                      id="company"
+                      value={orderForm.company_name}
+                      onChange={(e) => setOrderForm({...orderForm, company_name: e.target.value})}
+                      placeholder="Bedrijfsnaam (optioneel)"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">E-mail *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={orderForm.email}
+                      onChange={(e) => setOrderForm({...orderForm, email: e.target.value})}
+                      placeholder="uw@email.com"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Telefoon</Label>
+                    <Input
+                      id="phone"
+                      value={orderForm.phone}
+                      onChange={(e) => setOrderForm({...orderForm, phone: e.target.value})}
+                      placeholder="+597 ..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Selected modules summary */}
+              <div className="mt-4 p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl">
+                <h4 className="font-semibold mb-2">Geselecteerde modules:</h4>
+                <div className="space-y-1">
+                  {selectedModules.map(moduleId => {
+                    const module = availableModules.find(m => m.id === moduleId);
+                    return (
+                      <div key={moduleId} className="flex justify-between text-sm">
+                        <span>{module?.name}</span>
+                        <span className="font-medium">SRD {module?.price?.toLocaleString('nl-NL')}/mnd</span>
+                      </div>
+                    );
+                  })}
+                  <div className="border-t border-emerald-200 pt-2 mt-2 flex justify-between font-bold">
+                    <span>Totaal:</span>
+                    <span>SRD {calculateTotal().toLocaleString('nl-NL')}/mnd</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {orderStep === 3 && orderPaymentInfo && (
+            <div className="space-y-4 py-4">
+              {/* Progress indicator */}
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">
+                  <Check className="w-4 h-4" />
+                </div>
+                <div className="w-16 h-1 bg-emerald-500"></div>
+                <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">
+                  <Check className="w-4 h-4" />
+                </div>
+                <div className="w-16 h-1 bg-emerald-500"></div>
+                <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center text-sm font-bold">
+                  <Check className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle className="w-8 h-8 text-emerald-500" />
+                </div>
+                <h3 className="text-xl font-bold text-emerald-600">Bestelling Succesvol!</h3>
+                <p className="text-muted-foreground">Uw modules zijn geactiveerd voor 3 dagen proefperiode.</p>
+              </div>
+
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 rounded-xl p-4">
+                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-3 flex items-center gap-2">
+                  <CreditCard className="w-5 h-5" />
+                  Betaalinstructies
+                </h4>
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700 dark:text-blue-300">Bank:</span>
+                    <span className="font-medium">{orderPaymentInfo.bank_name || 'Hakrinbank'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700 dark:text-blue-300">Rekening:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium font-mono">{orderPaymentInfo.account_number || '1234567890'}</span>
+                      <button 
+                        onClick={() => copyToClipboard(orderPaymentInfo.account_number)}
+                        className="p-1 hover:bg-blue-200 rounded"
+                      >
+                        <Copy className="w-4 h-4 text-blue-600" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700 dark:text-blue-300">T.n.v.:</span>
+                    <span className="font-medium">{orderPaymentInfo.account_holder || 'Facturatie N.V.'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700 dark:text-blue-300">Bedrag:</span>
+                    <span className="font-bold text-lg text-blue-800">SRD {calculateTotal().toLocaleString('nl-NL')}</span>
+                  </div>
+                </div>
+                {orderPaymentInfo.instructions && (
+                  <p className="text-xs text-blue-600 mt-3 pt-3 border-t border-blue-200">
+                    {orderPaymentInfo.instructions}
+                  </p>
+                )}
+              </div>
+
+              <p className="text-center text-sm text-muted-foreground">
+                Na ontvangst van uw betaling wordt uw abonnement verlengd. 
+                U ontvangt een bevestiging per e-mail.
+              </p>
+            </div>
+          )}
+
+          <DialogFooter className="flex gap-2">
+            {orderStep === 1 && (
+              <>
+                <Button variant="outline" onClick={() => setOrderPopupOpen(false)}>
+                  Later
+                </Button>
+                <Button 
+                  onClick={handleSubmitOrder}
+                  disabled={selectedModules.length === 0}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  Doorgaan
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </Button>
+              </>
+            )}
+            {orderStep === 2 && (
+              <>
+                <Button variant="outline" onClick={() => setOrderStep(1)}>
+                  Terug
+                </Button>
+                <Button 
+                  onClick={handleSubmitOrder}
+                  disabled={submittingOrder || !orderForm.name || !orderForm.email}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  {submittingOrder ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Bezig...</>
+                  ) : (
+                    <><ShoppingCart className="w-4 h-4 mr-2" /> Bestelling Plaatsen</>
+                  )}
+                </Button>
+              </>
+            )}
+            {orderStep === 3 && (
+              <Button 
+                onClick={() => {
+                  setOrderPopupOpen(false);
+                  window.location.reload();
+                }}
+                className="w-full bg-emerald-600 hover:bg-emerald-700"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Sluiten en Beginnen
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  function renderPaymentPopup() {
+    return (
+      <Dialog open={paymentPopupOpen} onOpenChange={setPaymentPopupOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <AlertCircle className="w-6 h-6 text-orange-500" />
+              Proefperiode Verlopen
+            </DialogTitle>
+            <DialogDescription>
+              Uw proefperiode is verlopen. Betaal om uw modules te blijven gebruiken.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {paymentStatus && (
+            <div className="space-y-4 mt-4">
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                <h4 className="font-semibold text-orange-800 mb-2">Verlopen Modules:</h4>
+                <div className="space-y-2">
+                  {paymentStatus.expired_modules?.map((module, idx) => (
+                    <div key={idx} className="flex justify-between items-center text-sm">
+                      <span className="text-orange-700">{module.addon_name}</span>
+                      <span className="font-medium text-orange-900">SRD {module.price?.toLocaleString('nl-NL')}/mnd</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="border-t border-orange-200 mt-3 pt-3 flex justify-between">
+                  <span className="font-semibold text-orange-900">Totaal:</span>
+                  <span className="font-bold text-orange-900">SRD {paymentStatus.total_monthly_amount?.toLocaleString('nl-NL')}/mnd</span>
+                </div>
+              </div>
+
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <h4 className="font-semibold text-emerald-800 mb-3">Betaalgegevens:</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-700 text-sm">Bank:</span>
+                    <span className="font-medium text-emerald-900">{paymentStatus.payment_info?.bank_name || '-'}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-700 text-sm">Rekening:</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-emerald-900">{paymentStatus.payment_info?.account_number || '-'}</span>
+                      {paymentStatus.payment_info?.account_number && (
+                        <button 
+                          onClick={() => copyToClipboard(paymentStatus.payment_info?.account_number)}
+                          className="p-1 hover:bg-emerald-200 rounded"
+                        >
+                          <Copy className="w-4 h-4 text-emerald-600" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-emerald-700 text-sm">T.n.v.:</span>
+                    <span className="font-medium text-emerald-900">{paymentStatus.payment_info?.account_holder || '-'}</span>
+                  </div>
+                </div>
+                {paymentStatus.payment_info?.instructions && (
+                  <p className="text-xs text-emerald-600 mt-3 pt-3 border-t border-emerald-200">
+                    {paymentStatus.payment_info.instructions}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setPaymentPopupOpen(false)}
+                  className="flex-1"
+                >
+                  Later
+                </Button>
+                <Button
+                  onClick={handleSubmitPaymentRequest}
+                  disabled={submittingPayment}
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                >
+                  {submittingPayment ? (
+                    <>Bezig...</>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Ik heb betaald
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <div className="space-y-8" data-testid="dashboard">
@@ -345,13 +848,6 @@ export default function Dashboard() {
           }`}>
             {formatCurrency((stats?.total_outstanding || 0) + (stats?.total_outstanding_loans || 0))}
           </p>
-          
-          {stats?.total_outstanding_loans > 0 && (
-            <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-              <Banknote className="w-3 h-3" />
-              Incl. leningen: {formatCurrency(stats.total_outstanding_loans)}
-            </p>
-          )}
         </div>
       </div>
 
@@ -379,12 +875,6 @@ export default function Dashboard() {
                 }`} />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t">
-              <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground" onClick={() => navigate('/app/kasgeld')}>
-                Beheren
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
@@ -402,12 +892,6 @@ export default function Dashboard() {
                 <Wallet className="w-7 h-7 text-teal-600" />
               </div>
             </div>
-            <div className="mt-4 pt-4 border-t">
-              <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground" onClick={() => navigate('/app/borg')}>
-                Bekijken
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
@@ -421,41 +905,13 @@ export default function Dashboard() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => navigate('/app/huurders')}
-                className="justify-start"
-              >
+              <Button size="sm" variant="outline" onClick={() => navigate('/app/huurders')} className="justify-start">
                 <Users className="w-4 h-4 mr-2" />
                 Huurders
               </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => navigate('/app/appartementen')}
-                className="justify-start"
-              >
+              <Button size="sm" variant="outline" onClick={() => navigate('/app/appartementen')} className="justify-start">
                 <Building2 className="w-4 h-4 mr-2" />
                 Panden
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => navigate('/app/facturen')}
-                className="justify-start"
-              >
-                <CreditCard className="w-4 h-4 mr-2" />
-                Facturen
-              </Button>
-              <Button 
-                size="sm" 
-                variant="outline"
-                onClick={() => navigate('/app/meterstanden')}
-                className="justify-start"
-              >
-                <Zap className="w-4 h-4 mr-2" />
-                Meters
               </Button>
             </div>
           </CardContent>
@@ -485,9 +941,9 @@ export default function Dashboard() {
                 {stats.reminders.slice(0, 5).map((reminder, index) => (
                   <div 
                     key={index}
-                    className="group flex items-start gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-orange-50 dark:hover:bg-orange-950/20 border border-transparent hover:border-orange-200 dark:hover:border-orange-900 transition-all cursor-pointer"
+                    className="group flex items-start gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-orange-50 dark:hover:bg-orange-950/20 transition-all cursor-pointer"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0 group-hover:bg-orange-200 transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
                       <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -498,7 +954,6 @@ export default function Dashboard() {
                         {reminder.date || 'Vandaag'}
                       </p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-orange-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
                   </div>
                 ))}
               </div>
@@ -524,8 +979,8 @@ export default function Dashboard() {
                 </div>
                 Recente Betalingen
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/app/betalingen')} className="text-blue-600 hover:text-blue-700 hover:bg-blue-100">
-                Alles bekijken
+              <Button variant="ghost" size="sm" onClick={() => navigate('/app/betalingen')} className="text-blue-600">
+                Alles
                 <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
@@ -536,10 +991,10 @@ export default function Dashboard() {
                 {stats.recent_payments.slice(0, 5).map((payment, index) => (
                   <div 
                     key={index}
-                    className="group flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-900 transition-all"
+                    className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center group-hover:bg-emerald-200 transition-colors">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
                         <Banknote className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                       </div>
                       <div>
@@ -551,15 +1006,9 @@ export default function Dashboard() {
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-emerald-600">
-                        +{formatCurrency(payment.amount || 0)}
-                      </p>
-                      <p className="text-xs text-muted-foreground flex items-center justify-end gap-1 mt-0.5">
-                        <ArrowUp className="w-3 h-3 text-emerald-500" />
-                        Ontvangen
-                      </p>
-                    </div>
+                    <p className="text-sm font-bold text-emerald-600">
+                      +{formatCurrency(payment.amount || 0)}
+                    </p>
                   </div>
                 ))}
               </div>
@@ -576,97 +1025,11 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Payment Popup Dialog */}
-      <Dialog open={paymentPopupOpen} onOpenChange={setPaymentPopupOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <AlertCircle className="w-6 h-6 text-orange-500" />
-              Proefperiode Verlopen
-            </DialogTitle>
-            <DialogDescription>
-              Uw proefperiode is verlopen. Betaal om uw modules te blijven gebruiken.
-            </DialogDescription>
-          </DialogHeader>
-          
-          {paymentStatus && (
-            <div className="space-y-4 mt-4">
-              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-                <h4 className="font-semibold text-orange-800 mb-2">Verlopen Modules:</h4>
-                <div className="space-y-2">
-                  {paymentStatus.expired_modules?.map((module, idx) => (
-                    <div key={idx} className="flex justify-between items-center text-sm">
-                      <span className="text-orange-700">{module.addon_name}</span>
-                      <span className="font-medium text-orange-900">SRD {module.price?.toLocaleString('nl-NL')}/mnd</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="border-t border-orange-200 mt-3 pt-3 flex justify-between">
-                  <span className="font-semibold text-orange-900">Totaal:</span>
-                  <span className="font-bold text-orange-900">SRD {paymentStatus.total_monthly_amount?.toLocaleString('nl-NL')}/mnd</span>
-                </div>
-              </div>
-
-              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                <h4 className="font-semibold text-emerald-800 mb-3">Betaalgegevens:</h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-emerald-700 text-sm">Bank:</span>
-                    <span className="font-medium text-emerald-900">{paymentStatus.payment_info?.bank_name || '-'}</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-emerald-700 text-sm">Rekening:</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-emerald-900">{paymentStatus.payment_info?.account_number || '-'}</span>
-                      {paymentStatus.payment_info?.account_number && (
-                        <button 
-                          onClick={() => copyToClipboard(paymentStatus.payment_info?.account_number)}
-                          className="p-1 hover:bg-emerald-200 rounded"
-                        >
-                          <Copy className="w-4 h-4 text-emerald-600" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-emerald-700 text-sm">T.n.v.:</span>
-                    <span className="font-medium text-emerald-900">{paymentStatus.payment_info?.account_holder || '-'}</span>
-                  </div>
-                </div>
-                {paymentStatus.payment_info?.instructions && (
-                  <p className="text-xs text-emerald-600 mt-3 pt-3 border-t border-emerald-200">
-                    {paymentStatus.payment_info.instructions}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setPaymentPopupOpen(false)}
-                  className="flex-1"
-                >
-                  Later
-                </Button>
-                <Button
-                  onClick={handleSubmitPaymentRequest}
-                  disabled={submittingPayment}
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
-                >
-                  {submittingPayment ? (
-                    <>Bezig...</>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Ik heb betaald
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Module Order Popup */}
+      {renderOrderPopup()}
+      
+      {/* Payment Popup for expired modules */}
+      {renderPaymentPopup()}
     </div>
   );
 }
