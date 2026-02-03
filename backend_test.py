@@ -1809,8 +1809,8 @@ class SuriRentalsAPITester:
                 factuurnummer = response.get('factuurnummer', '')
                 print(f"   Generated factuurnummer: {factuurnummer}")
                 
-                # Check format (should be VF2025-XXXXX)
-                if factuurnummer.startswith('VF2025-') and len(factuurnummer) == 11:
+                # Check format (should be VF2026-XXXXX)
+                if factuurnummer.startswith('VF2026-') and len(factuurnummer) == 11:
                     print(f"   ✅ Factuurnummer format correct")
                 else:
                     print(f"   ❌ Factuurnummer format incorrect: {factuurnummer}")
