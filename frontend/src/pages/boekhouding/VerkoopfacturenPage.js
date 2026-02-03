@@ -162,6 +162,15 @@ export default function VerkoopfacturenPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Email Versturen Dialog */}
+      <SendInvoiceEmailDialog
+        open={emailDialogOpen}
+        onOpenChange={setEmailDialogOpen}
+        factuur={selectedFactuur}
+        debiteur={selectedDebiteur}
+        onSuccess={() => loadData()}
+      />
     </div>
   );
 }
