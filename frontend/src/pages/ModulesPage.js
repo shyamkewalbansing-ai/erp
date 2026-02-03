@@ -311,6 +311,10 @@ export default function ModulesPage() {
                         {addon.category || 'STATISTIEKEN'}
                       </Badge>
                       
+                      {(addon.price === 0 || addon.is_free) && (
+                        <Badge className="mb-2 ml-2 bg-emerald-500 text-white text-xs">GRATIS</Badge>
+                      )}
+                      
                       <h3 className="font-bold text-lg mb-2">{addon.name}</h3>
                       
                       {addon.description && (
@@ -318,8 +322,14 @@ export default function ModulesPage() {
                       )}
                       
                       <p className="text-xl font-bold text-primary">
-                        {formatCurrency(addon.price)}
-                        <span className="text-sm font-normal text-gray-500">/Maand</span>
+                        {addon.price === 0 || addon.is_free ? (
+                          <span className="text-emerald-600">GRATIS</span>
+                        ) : (
+                          <>
+                            {formatCurrency(addon.price)}
+                            <span className="text-sm font-normal text-gray-500">/Maand</span>
+                          </>
+                        )}
                       </p>
                       
                       <Button 
