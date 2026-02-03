@@ -2119,7 +2119,7 @@ server {
                   <h4 className="font-semibold text-amber-900">Belangrijke eerste stap</h4>
                   <p className="text-amber-800 text-sm mt-1">
                     Voordat u op de knop klikt, zorg dat u de laatste code naar GitHub hebt gepushed via 
-                    <strong> "Save to Github"</strong> in Emergent. Anders wordt er niets nieuws opgehaald.
+                    <strong> &quot;Save to Github&quot;</strong> in Emergent. Anders wordt er niets nieuws opgehaald.
                   </p>
                 </div>
               </div>
