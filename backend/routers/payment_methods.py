@@ -175,14 +175,16 @@ async def update_payment_settings(
     
     # Also update the global payment_settings collection for customer-facing pages
     if workspace_id == "global":
-        bank_method = next((m for m in settings.payment_methods if m.method_id == "bank_transfer"), None)
-        if bank_method and bank_method.bank_settings:
+        payment_methods = settings_dict.get("payment_methods", [])
+        bank_method = next((m for m in payment_methods if m.get("method_id") == "bank_transfer"), None)
+        if bank_method:
+            bank_settings = bank_method.get("bank_settings", {}) or {}
             global_payment_info = {
-                "bank_name": bank_method.bank_settings.bank_name,
-                "account_holder": bank_method.bank_settings.account_holder,
-                "account_number": bank_method.bank_settings.account_number,
-                "iban": bank_method.bank_settings.iban,
-                "instructions": bank_method.instructions,
+                "bank_name": bank_settings.get("bank_name", ""),
+                "account_holder": bank_settings.get("account_holder", ""),
+                "account_number": bank_settings.get("account_number", ""),
+                "iban": bank_settings.get("iban", ""),
+                "instructions": bank_method.get("instructions", ""),
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }
             await db.payment_settings.update_one(
