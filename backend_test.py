@@ -1471,6 +1471,355 @@ class SuriRentalsAPITester:
                 return True
         return False
 
+    # ==================== BOEKHOUDING MODULE TESTING ====================
+    
+    def test_boekhouding_dashboard(self):
+        """Test boekhouding dashboard endpoint"""
+        success, response = self.run_test(
+            "Boekhouding Dashboard",
+            "GET",
+            "boekhouding/dashboard",
+            200
+        )
+        
+        if success:
+            print(f"   Debiteuren count: {response.get('debiteuren_count', 0)}")
+            print(f"   Crediteuren count: {response.get('crediteuren_count', 0)}")
+            print(f"   Bank saldi: {response.get('bank_saldi', {})}")
+            print(f"   Omzet maand: {response.get('omzet_maand', {})}")
+            return True
+        return False
+
+    def test_init_standaard_rekeningen(self):
+        """Test initializing standard Surinamese chart of accounts (only once)"""
+        success, response = self.run_test(
+            "Initialize Standard Chart of Accounts",
+            "POST",
+            "boekhouding/rekeningen/init-standaard",
+            200
+        )
+        
+        if success:
+            print(f"   {response.get('message', 'Standard accounts initialized')}")
+            return True
+        elif response.get('detail') == 'Rekeningschema bestaat al':
+            print("   ⚠️  Chart of accounts already exists - skipping initialization")
+            return True
+        return False
+
+    def test_get_rekeningen(self):
+        """Test getting all chart of accounts"""
+        success, response = self.run_test(
+            "Get Chart of Accounts",
+            "GET",
+            "boekhouding/rekeningen",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} accounts")
+            if response:
+                print(f"   Sample accounts: {response[0].get('code')} - {response[0].get('naam')}")
+            return True
+        return False
+
+    def test_create_debiteur(self):
+        """Test creating a debiteur (customer)"""
+        debiteur_data = {
+            "naam": "Test Klant N.V.",
+            "email": "test@test.sr",
+            "telefoon": "+597 123 4567",
+            "adres": "Paramaribo, Suriname",
+            "btw_nummer": "SR123456789",
+            "standaard_valuta": "SRD",
+            "betalingstermijn": 30,
+            "notities": "Test klant voor boekhouding module"
+        }
+        
+        success, response = self.run_test(
+            "Create Debiteur",
+            "POST",
+            "boekhouding/debiteuren",
+            200,
+            data=debiteur_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('debiteuren', []).append(response['id'])
+            print(f"   Created debiteur ID: {response['id']}")
+            print(f"   Name: {response.get('naam')}")
+            print(f"   Currency: {response.get('standaard_valuta')}")
+            print(f"   Payment term: {response.get('betalingstermijn')} days")
+            return True
+        return False
+
+    def test_get_debiteuren(self):
+        """Test getting all debiteuren"""
+        success, response = self.run_test(
+            "Get Debiteuren",
+            "GET",
+            "boekhouding/debiteuren",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} debiteuren")
+            for debiteur in response:
+                print(f"   - {debiteur.get('naam')} ({debiteur.get('standaard_valuta')})")
+            return True
+        return False
+
+    def test_create_verkoopfactuur(self):
+        """Test creating a sales invoice"""
+        if not self.created_resources.get('debiteuren'):
+            print("⚠️  Skipping sales invoice creation - no debiteur created")
+            return True
+            
+        debiteur_id = self.created_resources['debiteuren'][0]
+        
+        factuur_data = {
+            "debiteur_id": debiteur_id,
+            "factuurdatum": "2025-02-03",
+            "valuta": "USD",
+            "regels": [
+                {
+                    "omschrijving": "Dienst A",
+                    "aantal": 2,
+                    "prijs_per_stuk": 100,
+                    "btw_tarief": "25",
+                    "korting_percentage": 0
+                }
+            ],
+            "opmerkingen": "Test factuur voor boekhouding module"
+        }
+        
+        success, response = self.run_test(
+            "Create Verkoopfactuur",
+            "POST",
+            "boekhouding/verkoopfacturen",
+            200,
+            data=factuur_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('verkoopfacturen', []).append(response['id'])
+            print(f"   Created factuur ID: {response['id']}")
+            print(f"   Factuurnummer: {response.get('factuurnummer')}")
+            print(f"   Subtotaal: {response.get('subtotaal')} {response.get('valuta')}")
+            print(f"   BTW bedrag: {response.get('btw_bedrag')} {response.get('valuta')}")
+            print(f"   Totaal: {response.get('totaal')} {response.get('valuta')}")
+            print(f"   Status: {response.get('status')}")
+            return True
+        return False
+
+    def test_get_verkoopfacturen(self):
+        """Test getting all sales invoices"""
+        success, response = self.run_test(
+            "Get Verkoopfacturen",
+            "GET",
+            "boekhouding/verkoopfacturen",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} verkoopfacturen")
+            for factuur in response:
+                print(f"   - {factuur.get('factuurnummer')}: {factuur.get('totaal')} {factuur.get('valuta')} ({factuur.get('status')})")
+            return True
+        return False
+
+    def test_get_bankrekeningen(self):
+        """Test getting all bank accounts"""
+        success, response = self.run_test(
+            "Get Bankrekeningen",
+            "GET",
+            "boekhouding/bankrekeningen",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} bankrekeningen")
+            for bank in response:
+                print(f"   - {bank.get('naam')}: {bank.get('huidig_saldo')} {bank.get('valuta')}")
+            return True
+        return False
+
+    def test_create_bankrekening(self):
+        """Test creating a bank account"""
+        bank_data = {
+            "naam": "DSB Zakelijk",
+            "rekeningnummer": "123456789",
+            "bank_naam": "DSB Bank",
+            "valuta": "SRD",
+            "beginsaldo": 10000,
+            "is_actief": True
+        }
+        
+        success, response = self.run_test(
+            "Create Bankrekening",
+            "POST",
+            "boekhouding/bankrekeningen",
+            200,
+            data=bank_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('bankrekeningen', []).append(response['id'])
+            print(f"   Created bankrekening ID: {response['id']}")
+            print(f"   Name: {response.get('naam')}")
+            print(f"   Account number: {response.get('rekeningnummer')}")
+            print(f"   Bank: {response.get('bank_naam')}")
+            print(f"   Balance: {response.get('huidig_saldo')} {response.get('valuta')}")
+            return True
+        return False
+
+    def test_btw_aangifte(self):
+        """Test BTW (VAT) declaration report"""
+        success, response = self.run_test(
+            "BTW Aangifte Report",
+            "GET",
+            "boekhouding/btw/aangifte?start_datum=2025-01-01&eind_datum=2025-12-31&valuta=SRD",
+            200
+        )
+        
+        if success:
+            print(f"   Period: {response.get('periode')}")
+            print(f"   Currency: {response.get('valuta')}")
+            print(f"   High rate revenue: {response.get('omzet_hoog_tarief', 0)} SRD")
+            print(f"   High rate VAT: {response.get('btw_hoog_tarief', 0)} SRD")
+            print(f"   Low rate revenue: {response.get('omzet_laag_tarief', 0)} SRD")
+            print(f"   Low rate VAT: {response.get('btw_laag_tarief', 0)} SRD")
+            print(f"   Zero rate revenue: {response.get('omzet_nul_tarief', 0)} SRD")
+            print(f"   Total VAT due: {response.get('totaal_verschuldigde_btw', 0)} SRD")
+            print(f"   Input VAT: {response.get('voorbelasting', 0)} SRD")
+            print(f"   VAT to pay: {response.get('te_betalen_btw', 0)} SRD")
+            return True
+        return False
+
+    def test_multi_currency_support(self):
+        """Test multi-currency functionality"""
+        # Test currency conversion
+        success, response = self.run_test(
+            "Currency Conversion USD to SRD",
+            "GET",
+            "boekhouding/wisselkoersen/convert?bedrag=100&van=USD&naar=SRD",
+            200
+        )
+        
+        if success:
+            print(f"   Original: {response.get('origineel_bedrag')} {response.get('origineel_valuta')}")
+            print(f"   Converted: {response.get('bedrag')} {response.get('valuta')}")
+            print(f"   Exchange rate: {response.get('koers')}")
+            return True
+        return False
+
+    def test_btw_calculation(self):
+        """Test BTW calculation with different rates"""
+        if not self.created_resources.get('debiteuren'):
+            print("⚠️  Skipping BTW calculation test - no debiteur created")
+            return True
+            
+        debiteur_id = self.created_resources['debiteuren'][0]
+        
+        # Test invoice with different BTW rates
+        factuur_data = {
+            "debiteur_id": debiteur_id,
+            "factuurdatum": "2025-02-03",
+            "valuta": "SRD",
+            "regels": [
+                {
+                    "omschrijving": "Service 25% BTW",
+                    "aantal": 1,
+                    "prijs_per_stuk": 1000,
+                    "btw_tarief": "25"
+                },
+                {
+                    "omschrijving": "Service 10% BTW",
+                    "aantal": 1,
+                    "prijs_per_stuk": 500,
+                    "btw_tarief": "10"
+                },
+                {
+                    "omschrijving": "Service 0% BTW",
+                    "aantal": 1,
+                    "prijs_per_stuk": 200,
+                    "btw_tarief": "0"
+                }
+            ]
+        }
+        
+        success, response = self.run_test(
+            "BTW Calculation Test",
+            "POST",
+            "boekhouding/verkoopfacturen",
+            200,
+            data=factuur_data
+        )
+        
+        if success:
+            print(f"   Subtotaal: {response.get('subtotaal')} SRD")
+            print(f"   BTW bedrag: {response.get('btw_bedrag')} SRD")
+            print(f"   Totaal: {response.get('totaal')} SRD")
+            
+            # Verify BTW calculation
+            expected_btw = (1000 * 0.25) + (500 * 0.10) + (200 * 0.0)  # 250 + 50 + 0 = 300
+            actual_btw = response.get('btw_bedrag', 0)
+            
+            if abs(actual_btw - expected_btw) < 0.01:
+                print(f"   ✅ BTW calculation correct: {actual_btw} SRD")
+                return True
+            else:
+                print(f"   ❌ BTW calculation incorrect: expected {expected_btw}, got {actual_btw}")
+                return False
+        return False
+
+    def test_automatic_factuurnummer_generation(self):
+        """Test automatic invoice number generation"""
+        if not self.created_resources.get('debiteuren'):
+            print("⚠️  Skipping factuurnummer test - no debiteur created")
+            return True
+            
+        debiteur_id = self.created_resources['debiteuren'][0]
+        
+        # Create multiple invoices to test number generation
+        for i in range(2):
+            factuur_data = {
+                "debiteur_id": debiteur_id,
+                "factuurdatum": "2025-02-03",
+                "valuta": "SRD",
+                "regels": [
+                    {
+                        "omschrijving": f"Test service {i+1}",
+                        "aantal": 1,
+                        "prijs_per_stuk": 100,
+                        "btw_tarief": "25"
+                    }
+                ]
+            }
+            
+            success, response = self.run_test(
+                f"Auto Factuurnummer Test {i+1}",
+                "POST",
+                "boekhouding/verkoopfacturen",
+                200,
+                data=factuur_data
+            )
+            
+            if success:
+                factuurnummer = response.get('factuurnummer', '')
+                print(f"   Generated factuurnummer: {factuurnummer}")
+                
+                # Check format (should be VF2025-XXXXX)
+                if factuurnummer.startswith('VF2025-') and len(factuurnummer) == 11:
+                    print(f"   ✅ Factuurnummer format correct")
+                else:
+                    print(f"   ❌ Factuurnummer format incorrect: {factuurnummer}")
+                    return False
+            else:
+                return False
+        
+        return True
+
 def main():
     print("🏠 SuriRentals API Testing Suite")
     print("=" * 50)
