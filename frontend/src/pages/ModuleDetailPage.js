@@ -599,6 +599,74 @@ const MODULES_DETAIL = {
         image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'
       }
     ]
+  },
+  'boekhouding': {
+    id: 'boekhouding',
+    name: 'Boekhouding',
+    title: 'Complete Boekhoudoplossing',
+    subtitle: 'Gratis boekhouding module voor Surinaamse bedrijven',
+    description: 'Een complete boekhoudoplossing speciaal ontwikkeld voor Surinaamse bedrijven. Met ondersteuning voor SRD, USD en EUR, Surinaamse BTW-tarieven (0%, 10%, 25%), en een standaard Surinaams rekeningschema.',
+    icon: Receipt,
+    gradient: 'from-emerald-500 to-green-600',
+    lightGradient: 'from-emerald-50 to-green-50',
+    accentColor: 'emerald',
+    category: 'Financieel',
+    price: 'GRATIS',
+    priceAmount: 0,
+    priceNote: 'voor alle klanten',
+    heroImage: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1200&q=80',
+    highlights: ['Multi-valuta', 'BTW', 'Rapportages', 'Gratis'],
+    sections: [
+      {
+        title: 'Grootboek',
+        description: 'Volledig rekeningschema met journaalboekingen.',
+        icon: FileText,
+        features: ['Surinaams standaard rekeningschema (44 rekeningen)', 'Journaalposten met automatische balanscontrole', 'Activa, Passiva, Eigen Vermogen, Opbrengsten, Kosten', 'Automatische saldo-updates', 'Multi-valuta saldi (SRD, USD, EUR)'],
+        image: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&q=80'
+      },
+      {
+        title: 'Debiteuren & Crediteuren',
+        description: 'Beheer uw klanten en leveranciers.',
+        icon: Users,
+        features: ['Klanten beheer met betalingstermijnen', 'Leveranciers beheer', 'Openstaande posten per valuta', 'Automatische ouderdomsanalyse', 'BTW-nummer registratie'],
+        image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&q=80'
+      },
+      {
+        title: 'Facturatie',
+        description: 'Professionele facturen met automatische BTW-berekening.',
+        icon: Receipt,
+        features: ['Verkoopfacturen in SRD, USD of EUR', 'Automatische BTW-berekening (0%, 10%, 25%)', 'Automatische factuurnummering (VF2026-00001)', 'Inkoopfacturen registratie', 'Betalingen registreren', 'Korting per regel'],
+        image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80'
+      },
+      {
+        title: 'Bank & Kas',
+        description: 'Beheer uw bankrekeningen en kas.',
+        icon: CreditCard,
+        features: ['Meerdere bankrekeningen per valuta', 'Kas administratie', 'Transacties registreren (inkomst/uitgave)', 'Automatische saldo-updates', 'Koppelingen met facturen'],
+        image: 'https://images.unsplash.com/photo-1601597111158-2fceff292cdc?w=800&q=80'
+      },
+      {
+        title: 'BTW Beheer',
+        description: 'Surinaamse BTW-administratie en aangifte.',
+        icon: DollarSign,
+        features: ['BTW-tarieven: 0%, 10%, 25%', 'Automatische BTW per factuur', 'BTW-aangifte overzicht per periode', 'Voorbelasting berekening', 'Te betalen BTW automatisch'],
+        image: 'https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=800&q=80'
+      },
+      {
+        title: 'Rapportages',
+        description: 'Financiële overzichten en analyses.',
+        icon: BarChart3,
+        features: ['Balans (Activa vs Passiva + EV)', 'Winst & Verliesrekening', 'BTW-aangifte rapport', 'Openstaande debiteuren (ouderdomsanalyse)', 'Openstaande crediteuren', 'Multi-valuta rapportages'],
+        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80'
+      },
+      {
+        title: 'Multi-Currency',
+        description: 'Werken in SRD, USD en EUR.',
+        icon: Globe,
+        features: ['Vrije keuze van valuta overal', 'Wisselkoersen beheer', 'Automatische conversie voor rapportages', 'Saldi per valuta', 'Factureren in elke valuta'],
+        image: 'https://images.unsplash.com/photo-1580519542036-c47de6196ba5?w=800&q=80'
+      }
+    ]
   }
 };
 
