@@ -548,6 +548,122 @@ export default function DomainManagementPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Automated Domain Setup Dialog */}
+      <Dialog open={setupDialogOpen} onOpenChange={setSetupDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Rocket className="w-5 h-5 text-primary" />
+              Geautomatiseerde Domain Setup
+            </DialogTitle>
+            <DialogDescription>
+              Configureer automatisch een custom domein voor een klant. 
+              Dit maakt een workspace aan, configureert Nginx en installeert SSL.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Customer Selection */}
+            <div className="space-y-2">
+              <Label htmlFor="customer">Klant</Label>
+              <Select
+                value={setupForm.user_id}
+                onValueChange={(value) => setSetupForm(prev => ({ ...prev, user_id: value }))}
+              >
+                <SelectTrigger data-testid="customer-select">
+                  <SelectValue placeholder="Selecteer een klant" />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map((customer) => (
+                    <SelectItem key={customer.id} value={customer.id}>
+                      {customer.name} ({customer.email})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Domain Input */}
+            <div className="space-y-2">
+              <Label htmlFor="domain">Custom Domein</Label>
+              <Input
+                id="domain"
+                placeholder="portal.klantnaam.nl"
+                value={setupForm.domain}
+                onChange={(e) => setSetupForm(prev => ({ ...prev, domain: e.target.value }))}
+                data-testid="domain-input"
+              />
+              <p className="text-xs text-muted-foreground">
+                Zorg dat het DNS A-record van dit domein wijst naar de server IP
+              </p>
+            </div>
+            
+            {/* Setup Result */}
+            {setupResult && (
+              <div className={`p-4 rounded-lg border ${setupResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  {setupResult.success ? (
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-red-600" />
+                  )}
+                  <span className={`font-medium ${setupResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                    {setupResult.message}
+                  </span>
+                </div>
+                
+                {setupResult.steps_completed && setupResult.steps_completed.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    <p className="text-sm font-medium text-gray-700">Stappen:</p>
+                    <ul className="text-sm space-y-1">
+                      {setupResult.steps_completed.map((step, idx) => (
+                        <li key={idx} className="flex items-center gap-2 text-gray-600">
+                          <CheckCircle className="w-3 h-3 text-green-500 flex-shrink-0" />
+                          {step}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {setupResult.error_details && (
+                  <p className="mt-2 text-sm text-red-600">{setupResult.error_details}</p>
+                )}
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setSetupDialogOpen(false)}
+              disabled={setupLoading}
+            >
+              {setupResult?.success ? 'Sluiten' : 'Annuleren'}
+            </Button>
+            {!setupResult?.success && (
+              <Button 
+                onClick={handleAutomatedSetup}
+                disabled={setupLoading || !setupForm.domain || !setupForm.user_id}
+                data-testid="start-setup-btn"
+              >
+                {setupLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Bezig met setup...
+                  </>
+                ) : (
+                  <>
+                    <Rocket className="w-4 h-4 mr-2" />
+                    Start Setup
+                  </>
+                )}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
