@@ -939,6 +939,10 @@ server {
             <Globe className="w-4 h-4 mr-1" />
             Website
           </TabsTrigger>
+          <TabsTrigger value="email" className="text-purple-600">
+            <Mail className="w-4 h-4 mr-1" />
+            Email
+          </TabsTrigger>
           <TabsTrigger value="update" className="text-emerald-600">
             <RefreshCw className="w-4 h-4 mr-1" />
             Update
