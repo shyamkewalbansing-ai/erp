@@ -1909,6 +1909,8 @@ def main():
         ("Multi-Currency Support", tester.test_multi_currency_support),
         ("BTW Calculation Test", tester.test_btw_calculation),
         ("Auto Factuurnummer Generation", tester.test_automatic_factuurnummer_generation),
+        ("Balans Report", tester.test_balans_rapport),
+        ("Add Wisselkoers", tester.test_add_wisselkoers),
         
         # CLEANUP TESTS
         ("Delete Salary Payment", tester.test_delete_salary_payment),
