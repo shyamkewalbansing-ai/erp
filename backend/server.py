@@ -7907,6 +7907,37 @@ async def test_user_email(current_user: dict = Depends(get_current_user)):
     result = await email_service.send_test_email(current_user["email"], workspace_id)
     return result
 
+# ==================== SIDEBAR MODULE ORDER ====================
+
+class SidebarModuleOrder(BaseModel):
+    module_order: List[str]  # List of addon slugs in desired order
+
+@api_router.get("/user/sidebar-order")
+async def get_user_sidebar_order(current_user: dict = Depends(get_current_user)):
+    """Get user's sidebar module order preference"""
+    settings = await db.user_sidebar_settings.find_one(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    )
+    return settings or {"module_order": []}
+
+@api_router.put("/user/sidebar-order")
+async def update_user_sidebar_order(
+    data: SidebarModuleOrder,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's sidebar module order preference"""
+    await db.user_sidebar_settings.update_one(
+        {"user_id": current_user["id"]},
+        {"$set": {
+            "user_id": current_user["id"],
+            "module_order": data.module_order,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    return {"success": True, "message": "Sidebar volgorde opgeslagen"}
+
 # ==================== ADMIN BULK MODULE ACTIVATION ====================
 
 class BulkModuleActivation(BaseModel):
