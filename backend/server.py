@@ -2643,59 +2643,73 @@ async def forgot_password(request: ForgotPasswordRequest):
         }}
     )
     
-    # Send email with reset link
+    # Try to send email using email service first
     try:
-        smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
-        smtp_port = int(os.environ.get("SMTP_PORT", "465"))
-        smtp_user = os.environ.get("SMTP_USER", "info@facturatie.sr")
-        smtp_password = os.environ.get("SMTP_PASSWORD", "")
+        email_service = get_email_service(db)
+        settings = await email_service.get_settings("global")
         
-        if smtp_password:
-            # Build reset link - use frontend URL
-            frontend_url = os.environ.get("FRONTEND_URL", "https://facturatie.sr")
-            reset_link = f"{frontend_url}/reset-wachtwoord/{reset_token}"
+        frontend_url = os.environ.get("FRONTEND_URL", "https://facturatie.sr")
+        reset_link = f"{frontend_url}/reset-wachtwoord/{reset_token}"
+        
+        if settings and settings.get("enabled"):
+            # Use email service
+            result = await email_service.send_password_reset_email(
+                to_email=request.email,
+                customer_name=user.get('name', 'Klant'),
+                reset_code=reset_token[:8].upper(),
+                reset_url=reset_link
+            )
+            if result.get("success"):
+                logger.info(f"Password reset email sent to {request.email} via email service")
+        else:
+            # Fallback to old method
+            smtp_host = os.environ.get("SMTP_HOST", "smtp.hostinger.com")
+            smtp_port = int(os.environ.get("SMTP_PORT", "465"))
+            smtp_user = os.environ.get("SMTP_USER", "info@facturatie.sr")
+            smtp_password = os.environ.get("SMTP_PASSWORD", "")
             
-            msg = MIMEMultipart("alternative")
-            msg["Subject"] = "Wachtwoord Resetten - Facturatie N.V."
-            msg["From"] = smtp_user
-            msg["To"] = request.email
-            
-            html_content = f"""
-            <html>
-            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #0caf60;">Facturatie N.V.</h1>
-                </div>
-                <h2>Wachtwoord Resetten</h2>
-                <p>Beste {user.get('name', 'Klant')},</p>
-                <p>U heeft een verzoek ingediend om uw wachtwoord te resetten.</p>
-                <p>Klik op de onderstaande knop om een nieuw wachtwoord in te stellen:</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="{reset_link}" 
-                       style="background-color: #0caf60; color: white; padding: 12px 30px; 
-                              text-decoration: none; border-radius: 25px; font-weight: bold;">
-                        Wachtwoord Resetten
-                    </a>
-                </div>
-                <p style="color: #666; font-size: 14px;">
-                    Deze link is 1 uur geldig. Als u geen wachtwoord reset heeft aangevraagd, 
-                    kunt u deze e-mail negeren.
-                </p>
-                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-                <p style="color: #999; font-size: 12px;">
-                    Facturatie N.V. - Verhuurbeheersysteem
-                </p>
-            </body>
-            </html>
-            """
-            
-            msg.attach(MIMEText(html_content, "html"))
-            
-            with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
-                server.login(smtp_user, smtp_password)
-                server.sendmail(smtp_user, request.email, msg.as_string())
-            
-            logger.info(f"Password reset email sent to {request.email}")
+            if smtp_password:
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = "Wachtwoord Resetten - Facturatie N.V."
+                msg["From"] = smtp_user
+                msg["To"] = request.email
+                
+                html_content = f"""
+                <html>
+                <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <h1 style="color: #0caf60;">Facturatie N.V.</h1>
+                    </div>
+                    <h2>Wachtwoord Resetten</h2>
+                    <p>Beste {user.get('name', 'Klant')},</p>
+                    <p>U heeft een verzoek ingediend om uw wachtwoord te resetten.</p>
+                    <p>Klik op de onderstaande knop om een nieuw wachtwoord in te stellen:</p>
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{reset_link}" 
+                           style="background-color: #0caf60; color: white; padding: 12px 30px; 
+                                  text-decoration: none; border-radius: 25px; font-weight: bold;">
+                            Wachtwoord Resetten
+                        </a>
+                    </div>
+                    <p style="color: #666; font-size: 14px;">
+                        Deze link is 1 uur geldig. Als u geen wachtwoord reset heeft aangevraagd, 
+                        kunt u deze e-mail negeren.
+                    </p>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                    <p style="color: #999; font-size: 12px;">
+                        Facturatie N.V. - Verhuurbeheersysteem
+                    </p>
+                </body>
+                </html>
+                """
+                
+                msg.attach(MIMEText(html_content, "html"))
+                
+                with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
+                    server.login(smtp_user, smtp_password)
+                    server.sendmail(smtp_user, request.email, msg.as_string())
+                
+                logger.info(f"Password reset email sent to {request.email}")
     except Exception as e:
         logger.error(f"Failed to send password reset email: {e}")
         # Don't expose email sending errors to user
