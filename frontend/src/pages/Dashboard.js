@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getDashboard, formatCurrency, getMyAddons } from '../lib/api';
+import { getDashboard, formatCurrency, getMyAddons, getModulePaymentStatus, submitModulePaymentRequest } from '../lib/api';
 import { REFRESH_EVENTS } from '../lib/refreshEvents';
 import { toast } from 'sonner';
 import { 
@@ -15,10 +15,21 @@ import {
   Clock,
   Banknote,
   Package,
-  Sparkles
+  Sparkles,
+  X,
+  Copy,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
 
 export default function Dashboard() {
   const { user } = useAuth();
