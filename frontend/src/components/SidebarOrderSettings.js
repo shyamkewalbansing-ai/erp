@@ -193,7 +193,7 @@ export default function SidebarOrderSettings() {
             <p className="text-xs text-muted-foreground mt-4 pt-4 border-t">
               <Check className="w-3 h-3 inline mr-1" />
               Gebruik de pijltjes om modules omhoog of omlaag te verplaatsen. 
-              Na opslaan verschijnen de modules in deze volgorde in de zijbalk.
+              Na opslaan wordt de pagina automatisch herladen met de nieuwe volgorde.
             </p>
           </div>
         )}
