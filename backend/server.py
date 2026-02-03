@@ -1890,6 +1890,9 @@ async def register(user_data: UserCreate):
             user_data.company_name
         )
         user_doc["workspace_id"] = workspace["id"]
+        
+        # Automatisch gratis boekhouding module activeren
+        await activate_free_addons_for_user(user_id)
     
     token = create_token(user_id, user_data.email)
     
