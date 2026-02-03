@@ -120,7 +120,9 @@ import {
   Check,
   Bell,
   Banknote,
-  Mail
+  Mail,
+  Rocket,
+  Play
 } from 'lucide-react';
 
 export default function Admin() {
