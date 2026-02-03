@@ -998,6 +998,221 @@ async def delete_verkoopfactuur(factuur_id: str, current_user: dict = Depends(ge
     await db.boekhouding_verkoopfacturen.delete_one({"id": factuur_id})
     return {"message": "Factuur verwijderd"}
 
+# ==================== FACTUUR EMAIL VERSTUREN ====================
+
+class FactuurEmailRequest(BaseModel):
+    to_email: Optional[str] = None  # Override debiteur email
+    subject: Optional[str] = None
+    message: Optional[str] = None
+
+@router.post("/verkoopfacturen/{factuur_id}/send-email")
+async def send_factuur_email(
+    factuur_id: str, 
+    email_data: FactuurEmailRequest = None,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Send invoice via email to customer"""
+    user_id = current_user["id"]
+    
+    # Get factuur
+    factuur = await db.boekhouding_verkoopfacturen.find_one(
+        {"id": factuur_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Get debiteur
+    debiteur = await db.boekhouding_debiteuren.find_one(
+        {"id": factuur.get("debiteur_id"), "user_id": user_id},
+        {"_id": 0}
+    )
+    if not debiteur:
+        raise HTTPException(status_code=404, detail="Debiteur niet gevonden")
+    
+    # Get customer email settings
+    customer_settings = await db.customer_email_settings.find_one(
+        {"user_id": user_id}
+    )
+    
+    if not customer_settings or not customer_settings.get("enabled"):
+        raise HTTPException(
+            status_code=400, 
+            detail="Email niet geconfigureerd. Configureer uw SMTP instellingen in Instellingen → Email"
+        )
+    
+    # Determine recipient email
+    to_email = email_data.to_email if email_data and email_data.to_email else debiteur.get("email")
+    if not to_email:
+        raise HTTPException(status_code=400, detail="Geen email adres gevonden voor deze debiteur")
+    
+    # Get user info for sender name
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    from_name = customer_settings.get("from_name") or user.get("company_name") or user.get("name") or "Facturatie.sr"
+    
+    # Build email
+    subject = email_data.subject if email_data and email_data.subject else f"Factuur {factuur.get('factuurnummer')} - {from_name}"
+    custom_message = email_data.message if email_data and email_data.message else ""
+    
+    # Format factuur lines
+    factuur_regels_html = ""
+    for regel in factuur.get("regels", []):
+        factuur_regels_html += f"""
+        <tr>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">{regel.get('omschrijving', '')}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">{regel.get('aantal', 1)}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">{factuur.get('valuta', 'SRD')} {regel.get('prijs_per_stuk', 0):,.2f}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">{factuur.get('valuta', 'SRD')} {regel.get('totaal', 0):,.2f}</td>
+        </tr>
+        """
+    
+    email_html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #10b981, #059669); padding: 30px; text-align: center; }}
+            .header h1 {{ color: white; margin: 0; font-size: 24px; }}
+            .content {{ background: #ffffff; padding: 30px; }}
+            .factuur-info {{ background: #f9fafb; padding: 20px; border-radius: 8px; margin: 20px 0; }}
+            .factuur-table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+            .factuur-table th {{ background: #f3f4f6; padding: 12px; text-align: left; font-weight: 600; }}
+            .totaal-row {{ background: #f9fafb; font-weight: bold; }}
+            .button {{ display: inline-block; background: #10b981; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin-top: 20px; }}
+            .footer {{ text-align: center; padding: 20px; color: #6b7280; font-size: 12px; background: #f9fafb; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Factuur {factuur.get('factuurnummer')}</h1>
+            </div>
+            <div class="content">
+                <p>Geachte {debiteur.get('naam')},</p>
+                
+                {f'<p>{custom_message}</p>' if custom_message else '<p>Hierbij ontvangt u de factuur voor onze diensten/producten.</p>'}
+                
+                <div class="factuur-info">
+                    <table style="width: 100%;">
+                        <tr>
+                            <td><strong>Factuurnummer:</strong></td>
+                            <td>{factuur.get('factuurnummer')}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Factuurdatum:</strong></td>
+                            <td>{factuur.get('factuurdatum')}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Vervaldatum:</strong></td>
+                            <td>{factuur.get('vervaldatum', 'N/A')}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <table class="factuur-table">
+                    <thead>
+                        <tr>
+                            <th>Omschrijving</th>
+                            <th style="text-align: center;">Aantal</th>
+                            <th style="text-align: right;">Prijs</th>
+                            <th style="text-align: right;">Totaal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {factuur_regels_html}
+                        <tr class="totaal-row">
+                            <td colspan="3" style="padding: 12px; text-align: right;"><strong>Subtotaal:</strong></td>
+                            <td style="padding: 12px; text-align: right;">{factuur.get('valuta', 'SRD')} {factuur.get('subtotaal', 0):,.2f}</td>
+                        </tr>
+                        <tr class="totaal-row">
+                            <td colspan="3" style="padding: 12px; text-align: right;"><strong>BTW ({factuur.get('btw_percentage', 0)}%):</strong></td>
+                            <td style="padding: 12px; text-align: right;">{factuur.get('valuta', 'SRD')} {factuur.get('btw_bedrag', 0):,.2f}</td>
+                        </tr>
+                        <tr class="totaal-row" style="background: #10b981; color: white;">
+                            <td colspan="3" style="padding: 12px; text-align: right;"><strong>Totaal:</strong></td>
+                            <td style="padding: 12px; text-align: right;"><strong>{factuur.get('valuta', 'SRD')} {factuur.get('totaal', 0):,.2f}</strong></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <p>Wij verzoeken u vriendelijk het bovenstaande bedrag voor de vervaldatum over te maken.</p>
+                
+                <p>Met vriendelijke groet,<br><strong>{from_name}</strong></p>
+            </div>
+            <div class="footer">
+                <p>Deze factuur is automatisch gegenereerd en verzonden via Facturatie.sr</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Send email using customer's SMTP settings
+    import aiosmtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    
+    try:
+        message = MIMEMultipart("alternative")
+        message["From"] = f"{from_name} <{customer_settings.get('from_email', customer_settings.get('smtp_user'))}>"
+        message["To"] = to_email
+        message["Subject"] = subject
+        
+        html_part = MIMEText(email_html, "html")
+        message.attach(html_part)
+        
+        await aiosmtplib.send(
+            message,
+            hostname=customer_settings["smtp_host"],
+            port=customer_settings.get("smtp_port", 587),
+            username=customer_settings["smtp_user"],
+            password=customer_settings["smtp_password"],
+            use_tls=customer_settings.get("use_tls", True),
+            start_tls=True
+        )
+        
+        # Update factuur with email sent info
+        await db.boekhouding_verkoopfacturen.update_one(
+            {"id": factuur_id},
+            {"$set": {
+                "email_verzonden": True,
+                "email_verzonden_aan": to_email,
+                "email_verzonden_op": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Log the email
+        await db.email_logs.insert_one({
+            "to_email": to_email,
+            "template": "factuur",
+            "subject": subject,
+            "status": "sent",
+            "workspace_id": f"customer_{user_id}",
+            "factuur_id": factuur_id,
+            "sent_at": datetime.now(timezone.utc).isoformat()
+        })
+        
+        return {
+            "success": True, 
+            "message": f"Factuur verzonden naar {to_email}",
+            "email_verzonden_op": datetime.now(timezone.utc).isoformat()
+        }
+        
+    except Exception as e:
+        # Log failed email
+        await db.email_logs.insert_one({
+            "to_email": to_email,
+            "template": "factuur",
+            "status": "failed",
+            "error": str(e),
+            "workspace_id": f"customer_{user_id}",
+            "factuur_id": factuur_id,
+            "attempted_at": datetime.now(timezone.utc).isoformat()
+        })
+        raise HTTPException(status_code=500, detail=f"Email verzenden mislukt: {str(e)}")
+
 # ==================== INKOOPFACTUREN ====================
 
 @router.get("/inkoopfacturen", response_model=List[InkoopfactuurResponse])
