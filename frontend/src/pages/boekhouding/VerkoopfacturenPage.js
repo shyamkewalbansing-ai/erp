@@ -66,6 +66,13 @@ export default function VerkoopfacturenPage() {
 
   const openPayDialog = (f) => { setSelectedFactuur(f); setPayForm({ bedrag: f.totaal - f.betaald_bedrag, betaaldatum: new Date().toISOString().split('T')[0], betaalmethode: 'bank' }); setPayDialogOpen(true); };
 
+  const openEmailDialog = (f) => {
+    const debiteur = debiteuren.find(d => d.id === f.debiteur_id);
+    setSelectedFactuur(f);
+    setSelectedDebiteur(debiteur);
+    setEmailDialogOpen(true);
+  };
+
   const handlePay = async () => {
     try {
       await api.post(`/boekhouding/verkoopfacturen/${selectedFactuur.id}/betaling`, payForm);
