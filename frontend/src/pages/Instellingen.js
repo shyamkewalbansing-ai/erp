@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getProfile, updateProfile, changePassword, uploadLogo, deleteLogo, updateRentSettings } from '../lib/api';
+import { getProfile, updateProfile, changePassword, uploadLogo, deleteLogo, updateRentSettings, getMyAddons } from '../lib/api';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -29,20 +29,72 @@ import {
   Bell,
   Palette,
   Send,
-  LayoutList
+  LayoutList,
+  Home,
+  Users,
+  Car,
+  Sparkles,
+  Fuel,
+  Calculator,
+  Briefcase
 } from 'lucide-react';
 import EmailSettingsCustomer from '../components/EmailSettingsCustomer';
 import SidebarOrderSettings from '../components/SidebarOrderSettings';
 
-// Settings navigation items
-const settingsNav = [
-  { id: 'profile', icon: User, label: 'Profiel', description: 'Naam, e-mail en bedrijfsgegevens' },
-  { id: 'logo', icon: ImageIcon, label: 'Logo', description: 'Bedrijfslogo uploaden' },
-  { id: 'sidebar', icon: LayoutList, label: 'Sidebar Volgorde', description: 'Module volgorde aanpassen' },
-  { id: 'rent', icon: Calendar, label: 'Huurinstellingen', description: 'Betaaldagen en termijnen' },
-  { id: 'email', icon: Send, label: 'Email', description: 'SMTP instellingen voor facturen' },
-  { id: 'security', icon: Shield, label: 'Beveiliging', description: 'Wachtwoord wijzigen' },
+// System settings - always visible
+const systemSettingsNav = [
+  { id: 'profile', icon: User, label: 'Profiel', description: 'Naam, e-mail en bedrijfsgegevens', category: 'system' },
+  { id: 'logo', icon: ImageIcon, label: 'Logo', description: 'Bedrijfslogo uploaden', category: 'system' },
+  { id: 'sidebar', icon: LayoutList, label: 'Sidebar Volgorde', description: 'Module volgorde aanpassen', category: 'system' },
+  { id: 'email', icon: Send, label: 'Email', description: 'SMTP instellingen voor facturen', category: 'system' },
+  { id: 'security', icon: Shield, label: 'Beveiliging', description: 'Wachtwoord wijzigen', category: 'system' },
 ];
+
+// Module-specific settings - only visible when module is active
+const moduleSettingsConfig = {
+  vastgoed_beheer: {
+    id: 'vastgoed',
+    icon: Home,
+    label: 'Vastgoed Instellingen',
+    description: 'Huurinstellingen en betaaltermijnen',
+    addon_slug: 'vastgoed_beheer'
+  },
+  hrm: {
+    id: 'hrm',
+    icon: Users,
+    label: 'HRM Instellingen',
+    description: 'Personeelsinstellingen en verlofregels',
+    addon_slug: 'hrm'
+  },
+  autodealer: {
+    id: 'autodealer',
+    icon: Car,
+    label: 'Auto Dealer Instellingen',
+    description: 'Voertuigbeheer en verkoopinstellingen',
+    addon_slug: 'autodealer'
+  },
+  beauty: {
+    id: 'beauty',
+    icon: Sparkles,
+    label: 'Beauty Spa Instellingen',
+    description: 'Behandelingen en reserveringsinstellingen',
+    addon_slug: 'beauty'
+  },
+  pompstation: {
+    id: 'pompstation',
+    icon: Fuel,
+    label: 'Pompstation Instellingen',
+    description: 'Brandstofprijzen en tankinstellingen',
+    addon_slug: 'pompstation'
+  },
+  boekhouding: {
+    id: 'boekhouding',
+    icon: Calculator,
+    label: 'Boekhouding Instellingen',
+    description: 'BTW-tarieven en valuta-instellingen',
+    addon_slug: 'boekhouding'
+  }
+};
 
 export default function Instellingen() {
   const { user, refreshUser } = useAuth();
@@ -53,6 +105,7 @@ export default function Instellingen() {
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [activeSection, setActiveSection] = useState('profile');
+  const [activeAddons, setActiveAddons] = useState([]);
   const fileInputRef = useRef(null);
   
   // Profile form
@@ -63,7 +116,7 @@ export default function Instellingen() {
     logo: null
   });
   
-  // Rent settings form
+  // Rent settings form (Vastgoed module)
   const [rentSettings, setRentSettings] = useState({
     rent_due_day: 1,
     payment_frequency: 'monthly',
@@ -81,7 +134,46 @@ export default function Instellingen() {
 
   useEffect(() => {
     loadProfile();
+    loadActiveAddons();
   }, []);
+
+  const loadActiveAddons = async () => {
+    try {
+      const res = await getMyAddons();
+      const activeSlugs = res.data
+        .filter(a => a.status === 'active' || a.status === 'trial')
+        .map(a => a.addon_slug);
+      setActiveAddons(activeSlugs);
+    } catch {
+      setActiveAddons([]);
+    }
+  };
+
+  const hasAddon = (slug) => {
+    // Boekhouding is always active (free module)
+    if (slug === 'boekhouding') return true;
+    return activeAddons.includes(slug);
+  };
+
+  // Get dynamic navigation items based on active modules
+  const getSettingsNav = () => {
+    const nav = [...systemSettingsNav];
+    
+    // Add module-specific settings
+    Object.values(moduleSettingsConfig).forEach(config => {
+      if (hasAddon(config.addon_slug)) {
+        nav.push({
+          id: config.id,
+          icon: config.icon,
+          label: config.label,
+          description: config.description,
+          category: 'module'
+        });
+      }
+    });
+    
+    return nav;
+  };
 
   const loadProfile = async () => {
     try {
@@ -110,7 +202,7 @@ export default function Instellingen() {
     setSavingRent(true);
     try {
       await updateRentSettings(rentSettings);
-      toast.success('Huurinstellingen opgeslagen');
+      toast.success('Vastgoed instellingen opgeslagen');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij opslaan');
     } finally {
@@ -161,51 +253,52 @@ export default function Instellingen() {
     try {
       await deleteLogo();
       setProfile(prev => ({ ...prev, logo: null }));
-      toast.success('Logo succesvol verwijderd');
+      toast.success('Logo verwijderd');
       if (refreshUser) await refreshUser();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij het verwijderen');
+      toast.error(error.response?.data?.detail || 'Fout bij het verwijderen van logo');
     } finally {
       setUploadingLogo(false);
     }
   };
 
-  const handleUpdateProfile = async (e) => {
-    e.preventDefault();
+  const handleSaveProfile = async () => {
     setSaving(true);
-    
     try {
-      await updateProfile(profile);
-      toast.success('Profiel succesvol bijgewerkt');
+      await updateProfile({
+        name: profile.name,
+        company_name: profile.company_name
+      });
+      toast.success('Profiel opgeslagen');
       if (refreshUser) await refreshUser();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij het bijwerken');
+      toast.error(error.response?.data?.detail || 'Fout bij opslaan');
     } finally {
       setSaving(false);
     }
   };
 
-  const handleChangePassword = async (e) => {
-    e.preventDefault();
-    
+  const handleChangePassword = async () => {
     if (passwordForm.new_password !== passwordForm.confirm_password) {
-      toast.error('Nieuwe wachtwoorden komen niet overeen');
+      toast.error('Wachtwoorden komen niet overeen');
       return;
     }
-    
+
     if (passwordForm.new_password.length < 6) {
-      toast.error('Nieuw wachtwoord moet minimaal 6 tekens zijn');
+      toast.error('Wachtwoord moet minimaal 6 karakters zijn');
       return;
     }
-    
+
     setSaving(true);
-    
     try {
-      await changePassword(passwordForm.current_password, passwordForm.new_password);
-      toast.success('Wachtwoord succesvol gewijzigd');
+      await changePassword({
+        current_password: passwordForm.current_password,
+        new_password: passwordForm.new_password
+      });
+      toast.success('Wachtwoord gewijzigd');
       setPasswordForm({ current_password: '', new_password: '', confirm_password: '' });
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij het wijzigen van wachtwoord');
+      toast.error(error.response?.data?.detail || 'Fout bij wijzigen wachtwoord');
     } finally {
       setSaving(false);
     }
@@ -213,442 +306,224 @@ export default function Instellingen() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center h-64">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  const filteredNav = user?.role === 'superadmin' 
-    ? settingsNav.filter(item => item.id === 'profile' || item.id === 'security')
-    : settingsNav;
+  const settingsNav = getSettingsNav();
 
   return (
-    <div className="space-y-8 max-w-5xl mx-auto" data-testid="settings-page">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Settings className="w-5 h-5 text-primary" />
-            </div>
-            Instellingen
-          </h1>
-          <p className="text-muted-foreground mt-1">Beheer uw account en voorkeuren</p>
+      <div className="flex items-center gap-3">
+        <div className="p-3 bg-primary/10 rounded-xl">
+          <Settings className="w-6 h-6 text-primary" />
         </div>
-        
-        {/* Account Badge */}
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <span className="text-lg font-bold text-primary">
-              {profile.name?.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">{profile.name}</p>
-            <p className="text-sm text-muted-foreground">{profile.email}</p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Instellingen</h1>
+          <p className="text-muted-foreground text-sm">Beheer uw account en module instellingen</p>
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-4 gap-6">
+      <div className="grid lg:grid-cols-[280px_1fr] gap-6">
         {/* Settings Navigation */}
-        <div className="lg:col-span-1">
-          <Card className="sticky top-24 overflow-hidden border-border/50">
-            <CardContent className="p-2">
-              <nav className="space-y-1">
-                {filteredNav.map((item) => (
+        <Card className="h-fit border-border/50">
+          <CardContent className="p-2">
+            {/* System Settings */}
+            <div className="mb-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">
+                Systeem
+              </p>
+              {settingsNav.filter(item => item.category === 'system').map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveSection(item.id)}
+                  className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left ${
+                    activeSection === item.id
+                      ? 'bg-primary/10 text-primary'
+                      : 'hover:bg-muted/50 text-foreground'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5 flex-shrink-0" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{item.label}</p>
+                    <p className="text-xs text-muted-foreground truncate">{item.description}</p>
+                  </div>
+                  <ChevronRight className={`w-4 h-4 ml-auto flex-shrink-0 transition-transform ${activeSection === item.id ? 'text-primary rotate-90' : 'text-muted-foreground'}`} />
+                </button>
+              ))}
+            </div>
+
+            {/* Module Settings */}
+            {settingsNav.filter(item => item.category === 'module').length > 0 && (
+              <div className="border-t border-border/50 pt-2 mt-2">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-3 py-2">
+                  Module Instellingen
+                </p>
+                {settingsNav.filter(item => item.category === 'module').map((item) => (
                   <button
                     key={item.id}
                     onClick={() => setActiveSection(item.id)}
-                    className={`w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all ${
-                      activeSection === item.id 
-                        ? 'bg-primary/10 text-primary' 
-                        : 'hover:bg-muted text-muted-foreground hover:text-foreground'
+                    className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left ${
+                      activeSection === item.id
+                        ? 'bg-primary/10 text-primary'
+                        : 'hover:bg-muted/50 text-foreground'
                     }`}
-                    data-testid={`nav-${item.id}`}
                   >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                      activeSection === item.id ? 'bg-primary/20' : 'bg-muted'
-                    }`}>
-                      <item.icon className="w-4 h-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm">{item.label}</p>
+                    <item.icon className="w-5 h-5 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{item.label}</p>
                       <p className="text-xs text-muted-foreground truncate">{item.description}</p>
                     </div>
-                    <ChevronRight className={`w-4 h-4 transition-transform ${
-                      activeSection === item.id ? 'rotate-90' : ''
-                    }`} />
+                    <ChevronRight className={`w-4 h-4 ml-auto flex-shrink-0 transition-transform ${activeSection === item.id ? 'text-primary rotate-90' : 'text-muted-foreground'}`} />
                   </button>
                 ))}
-              </nav>
-            </CardContent>
-          </Card>
-        </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Settings Content */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="space-y-6">
           {/* Profile Section */}
           {activeSection === 'profile' && (
             <Card className="border-border/50 overflow-hidden">
               <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b border-border/50">
                 <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
                   <User className="w-5 h-5 text-primary" />
-                  Profiel Gegevens
+                  Profiel Instellingen
                 </h2>
                 <p className="text-muted-foreground text-sm mt-1">
-                  Wijzig uw persoonlijke informatie
-                </p>
-              </div>
-              <CardContent className="p-6">
-                <form onSubmit={handleUpdateProfile} className="space-y-6">
-                  <div className="grid md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="name" className="text-sm font-medium">Volledige naam</Label>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="name"
-                          value={profile.name}
-                          onChange={(e) => setProfile({...profile, name: e.target.value})}
-                          className="pl-10 h-11"
-                          placeholder="Uw naam"
-                          data-testid="settings-name"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email" className="text-sm font-medium">E-mailadres</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="email"
-                          type="email"
-                          value={profile.email}
-                          onChange={(e) => setProfile({...profile, email: e.target.value})}
-                          className="pl-10 h-11"
-                          placeholder="email@voorbeeld.com"
-                          data-testid="settings-email"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {user?.role !== 'superadmin' && (
-                    <div className="space-y-2">
-                      <Label htmlFor="company" className="text-sm font-medium">Bedrijfsnaam</Label>
-                      <div className="relative">
-                        <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="company"
-                          value={profile.company_name}
-                          onChange={(e) => setProfile({...profile, company_name: e.target.value})}
-                          className="pl-10 h-11"
-                          placeholder="Bedrijfsnaam (optioneel)"
-                          data-testid="settings-company"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-end pt-4 border-t border-border/50">
-                    <Button type="submit" disabled={saving} className="h-11 px-6" data-testid="save-profile-btn">
-                      {saving ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Opslaan...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4 mr-2" />
-                          Wijzigingen Opslaan
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Logo Section */}
-          {activeSection === 'logo' && user?.role !== 'superadmin' && (
-            <Card className="border-border/50 overflow-hidden">
-              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b border-border/50">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <ImageIcon className="w-5 h-5 text-primary" />
-                  Bedrijfslogo
-                </h2>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Upload uw logo voor de sidebar en PDF documenten
-                </p>
-              </div>
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row items-start gap-6">
-                  {/* Logo Preview */}
-                  <div className="relative group">
-                    <div className="w-32 h-32 rounded-2xl border-2 border-dashed border-border bg-muted/30 flex items-center justify-center overflow-hidden">
-                      {profile.logo ? (
-                        <img 
-                          src={profile.logo} 
-                          alt="Bedrijfslogo" 
-                          className="w-full h-full object-contain p-2"
-                        />
-                      ) : (
-                        <div className="text-center">
-                          <Camera className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-                          <p className="text-xs text-muted-foreground">Geen logo</p>
-                        </div>
-                      )}
-                    </div>
-                    {profile.logo && (
-                      <div className="absolute inset-0 bg-black/50 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={handleDeleteLogo}
-                          disabled={uploadingLogo}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Upload Section */}
-                  <div className="flex-1 space-y-4">
-                    <div className="p-4 rounded-xl bg-muted/30 border border-border/50">
-                      <h4 className="font-medium text-foreground mb-2">Upload nieuw logo</h4>
-                      <ul className="text-sm text-muted-foreground space-y-1 mb-4">
-                        <li>• Maximum bestandsgrootte: 2MB</li>
-                        <li>• Ondersteunde formaten: PNG, JPG, SVG</li>
-                        <li>• Aanbevolen: vierkant formaat (1:1)</li>
-                      </ul>
-                      
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handleLogoUpload}
-                        accept="image/*"
-                        className="hidden"
-                        data-testid="logo-input"
-                      />
-                      
-                      <Button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingLogo}
-                        className="w-full md:w-auto"
-                        data-testid="upload-logo-btn"
-                      >
-                        {uploadingLogo ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Uploaden...
-                          </>
-                        ) : (
-                          <>
-                            <Upload className="w-4 h-4 mr-2" />
-                            {profile.logo ? 'Logo Vervangen' : 'Logo Uploaden'}
-                          </>
-                        )}
-                      </Button>
-                    </div>
-
-                    {profile.logo && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleDeleteLogo}
-                        disabled={uploadingLogo}
-                        className="text-destructive hover:text-destructive"
-                        data-testid="delete-logo-btn"
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Logo Verwijderen
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Rent Settings Section */}
-          {activeSection === 'rent' && user?.role !== 'superadmin' && (
-            <Card className="border-border/50 overflow-hidden">
-              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b border-border/50">
-                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-primary" />
-                  Huurinstellingen
-                </h2>
-                <p className="text-muted-foreground text-sm mt-1">
-                  Configureer betaaldagen en betalingstermijnen
+                  Beheer uw persoonlijke en bedrijfsgegevens
                 </p>
               </div>
               <CardContent className="p-6 space-y-6">
-                {/* Basic Settings */}
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Huur verschuldigd op</Label>
-                    <Select 
-                      value={String(rentSettings.rent_due_day)} 
-                      onValueChange={(v) => setRentSettings({...rentSettings, rent_due_day: parseInt(v)})}
-                    >
-                      <SelectTrigger className="h-11" data-testid="rent-due-day">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[...Array(28)].map((_, i) => (
-                          <SelectItem key={i + 1} value={String(i + 1)}>
-                            {i + 1}e van de maand
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="name" className="text-sm font-medium flex items-center gap-2">
+                      <User className="w-4 h-4 text-muted-foreground" />
+                      Naam
+                    </Label>
+                    <Input
+                      id="name"
+                      value={profile.name}
+                      onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                      className="border-border/50"
+                    />
                   </div>
-
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium">Betalingsfrequentie</Label>
-                    <Select 
-                      value={rentSettings.payment_frequency} 
-                      onValueChange={(v) => setRentSettings({...rentSettings, payment_frequency: v})}
-                    >
-                      <SelectTrigger className="h-11" data-testid="payment-frequency">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="monthly">Maandelijks</SelectItem>
-                        <SelectItem value="weekly">Wekelijks</SelectItem>
-                        <SelectItem value="biweekly">Tweewekelijks</SelectItem>
-                        <SelectItem value="quarterly">Per kwartaal</SelectItem>
-                        <SelectItem value="yearly">Jaarlijks</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Betalingstermijn</Label>
-                    <Select 
-                      value={String(rentSettings.grace_period_days)} 
-                      onValueChange={(v) => setRentSettings({...rentSettings, grace_period_days: parseInt(v)})}
-                    >
-                      <SelectTrigger className="h-11" data-testid="grace-period">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="0">Direct te laat</SelectItem>
-                        <SelectItem value="3">3 dagen</SelectItem>
-                        <SelectItem value="5">5 dagen</SelectItem>
-                        <SelectItem value="7">7 dagen</SelectItem>
-                        <SelectItem value="10">10 dagen</SelectItem>
-                        <SelectItem value="14">14 dagen</SelectItem>
-                        <SelectItem value="30">30 dagen</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-muted-foreground" />
+                      E-mailadres
+                    </Label>
+                    <Input
+                      id="email"
+                      value={profile.email}
+                      disabled
+                      className="border-border/50 bg-muted/30"
+                    />
                   </div>
                 </div>
-
-                {/* Deadline Settings */}
-                <div className="p-5 rounded-xl bg-muted/30 border border-border/50 space-y-4">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold text-foreground">Betaaldeadline</h3>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Stel in wanneer de huur uiterlijk betaald moet zijn (bijv. &quot;Januari huur moet voor 6 februari betaald zijn&quot;)
-                  </p>
-                  
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Deadline maand</Label>
-                      <Select 
-                        value={String(rentSettings.payment_deadline_month_offset)} 
-                        onValueChange={(v) => setRentSettings({...rentSettings, payment_deadline_month_offset: parseInt(v)})}
-                      >
-                        <SelectTrigger className="h-11" data-testid="deadline-month-offset">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">Dezelfde maand</SelectItem>
-                          <SelectItem value="1">Volgende maand</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-sm font-medium">Deadline dag</Label>
-                      <Select 
-                        value={String(rentSettings.payment_deadline_day)} 
-                        onValueChange={(v) => setRentSettings({...rentSettings, payment_deadline_day: parseInt(v)})}
-                      >
-                        <SelectTrigger className="h-11" data-testid="deadline-day">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">Niet ingesteld</SelectItem>
-                          {[...Array(28)].map((_, i) => (
-                            <SelectItem key={i + 1} value={String(i + 1)}>
-                              {i + 1}e
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  {/* Preview */}
-                  {(rentSettings.payment_deadline_day > 0 || rentSettings.payment_deadline_month_offset > 0) && (
-                    <div className="p-4 bg-primary/5 rounded-lg border border-primary/20">
-                      <p className="text-sm">
-                        <span className="font-medium">Voorbeeld: </span>
-                        Huur van januari moet uiterlijk{' '}
-                        <span className="font-bold text-primary">
-                          {rentSettings.payment_deadline_day || rentSettings.rent_due_day}{' '}
-                          {rentSettings.payment_deadline_month_offset === 1 ? 'februari' : 'januari'}
-                        </span>
-                        {' '}betaald zijn.
-                      </p>
-                    </div>
-                  )}
+                <div className="space-y-2">
+                  <Label htmlFor="company" className="text-sm font-medium flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-muted-foreground" />
+                    Bedrijfsnaam
+                  </Label>
+                  <Input
+                    id="company"
+                    value={profile.company_name}
+                    onChange={(e) => setProfile({ ...profile, company_name: e.target.value })}
+                    className="border-border/50"
+                  />
                 </div>
-
                 <div className="flex justify-end pt-4 border-t border-border/50">
-                  <Button 
-                    type="button" 
-                    onClick={handleSaveRentSettings}
-                    disabled={savingRent}
-                    className="h-11 px-6"
-                    data-testid="save-rent-settings"
-                  >
-                    {savingRent ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Opslaan...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Instellingen Opslaan
-                      </>
-                    )}
+                  <Button onClick={handleSaveProfile} disabled={saving} className="bg-primary hover:bg-primary/90">
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    Opslaan
                   </Button>
                 </div>
               </CardContent>
             </Card>
           )}
 
-          {/* Email Section */}
-          {activeSection === 'email' && (
-            <EmailSettingsCustomer />
+          {/* Logo Section */}
+          {activeSection === 'logo' && (
+            <Card className="border-border/50 overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b border-border/50">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Camera className="w-5 h-5 text-primary" />
+                  Bedrijfslogo
+                </h2>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Upload uw bedrijfslogo voor facturen en documenten
+                </p>
+              </div>
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center gap-6">
+                  <div className="relative">
+                    {profile.logo ? (
+                      <div className="relative w-40 h-40 rounded-2xl overflow-hidden bg-muted/30 border-2 border-dashed border-border/50 p-2">
+                        <img 
+                          src={profile.logo} 
+                          alt="Logo" 
+                          className="w-full h-full object-contain rounded-xl"
+                        />
+                        <button
+                          onClick={handleDeleteLogo}
+                          disabled={uploadingLogo}
+                          className="absolute top-2 right-2 p-1.5 bg-red-500/90 hover:bg-red-600 text-white rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-40 h-40 rounded-2xl bg-muted/30 border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-2">
+                        <ImageIcon className="w-12 h-12 text-muted-foreground/50" />
+                        <span className="text-xs text-muted-foreground">Geen logo</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleLogoUpload}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  
+                  <Button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingLogo}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    {uploadingLogo ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    {profile.logo ? 'Logo Wijzigen' : 'Logo Uploaden'}
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground text-center max-w-xs">
+                    Aanbevolen: Vierkante afbeelding (PNG of JPG). Maximum 2MB.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           {/* Sidebar Order Section */}
           {activeSection === 'sidebar' && (
             <SidebarOrderSettings />
+          )}
+
+          {/* Email Section */}
+          {activeSection === 'email' && (
+            <EmailSettingsCustomer />
           )}
 
           {/* Security Section */}
@@ -663,104 +538,314 @@ export default function Instellingen() {
                   Wijzig uw wachtwoord voor extra beveiliging
                 </p>
               </div>
-              <CardContent className="p-6">
-                <form onSubmit={handleChangePassword} className="space-y-6">
-                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                    <div className="flex items-start gap-3">
-                      <KeyRound className="w-5 h-5 text-amber-500 mt-0.5" />
-                      <div>
-                        <h4 className="font-medium text-amber-600 dark:text-amber-400">Wachtwoord Tips</h4>
-                        <ul className="text-sm text-muted-foreground mt-1 space-y-1">
-                          <li>• Gebruik minimaal 6 tekens</li>
-                          <li>• Combineer letters, cijfers en symbolen</li>
-                          <li>• Gebruik niet uw naam of e-mailadres</li>
-                        </ul>
-                      </div>
+              <CardContent className="p-6 space-y-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <KeyRound className="w-4 h-4 text-muted-foreground" />
+                      Huidig wachtwoord
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type={showCurrentPassword ? 'text' : 'password'}
+                        value={passwordForm.current_password}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, current_password: e.target.value })}
+                        className="pr-10 border-border/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-muted-foreground" />
+                      Nieuw wachtwoord
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type={showNewPassword ? 'text' : 'password'}
+                        value={passwordForm.new_password}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                        className="pr-10 border-border/50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-muted-foreground" />
+                      Bevestig nieuw wachtwoord
+                    </Label>
+                    <Input
+                      type="password"
+                      value={passwordForm.confirm_password}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                      className="border-border/50"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end pt-4 border-t border-border/50">
+                  <Button 
+                    onClick={handleChangePassword} 
+                    disabled={saving || !passwordForm.current_password || !passwordForm.new_password}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Shield className="w-4 h-4 mr-2" />}
+                    Wachtwoord Wijzigen
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-                  <div className="space-y-4">
+          {/* ==================== MODULE SPECIFIC SETTINGS ==================== */}
+
+          {/* Vastgoed Beheer Settings */}
+          {activeSection === 'vastgoed' && hasAddon('vastgoed_beheer') && (
+            <Card className="border-border/50 overflow-hidden">
+              <div className="bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent p-6 border-b border-border/50">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Home className="w-5 h-5 text-emerald-500" />
+                  Vastgoed Instellingen
+                </h2>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Configureer betaaldagen en betalingstermijnen voor huurders
+                </p>
+              </div>
+              <CardContent className="p-6 space-y-6">
+                {/* Basic Settings */}
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Huur verschuldigd op</Label>
+                    <Select 
+                      value={String(rentSettings.rent_due_day)} 
+                      onValueChange={(v) => setRentSettings({...rentSettings, rent_due_day: parseInt(v)})}
+                    >
+                      <SelectTrigger className="border-border/50">
+                        <SelectValue placeholder="Dag selecteren" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1,5,10,15,20,25,28].map(day => (
+                          <SelectItem key={day} value={String(day)}>Dag {day}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">De dag waarop huur verschuldigd is</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Betalingsfrequentie</Label>
+                    <Select 
+                      value={rentSettings.payment_frequency} 
+                      onValueChange={(v) => setRentSettings({...rentSettings, payment_frequency: v})}
+                    >
+                      <SelectTrigger className="border-border/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">Wekelijks</SelectItem>
+                        <SelectItem value="biweekly">Tweewekelijks</SelectItem>
+                        <SelectItem value="monthly">Maandelijks</SelectItem>
+                        <SelectItem value="quarterly">Per kwartaal</SelectItem>
+                        <SelectItem value="yearly">Jaarlijks</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Hoe vaak wordt huur berekend</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Gratieperiode (dagen)</Label>
+                    <Select 
+                      value={String(rentSettings.grace_period_days)} 
+                      onValueChange={(v) => setRentSettings({...rentSettings, grace_period_days: parseInt(v)})}
+                    >
+                      <SelectTrigger className="border-border/50">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[0,3,5,7,10,14].map(days => (
+                          <SelectItem key={days} value={String(days)}>{days} dagen</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">Dagen na verschuldigingsdatum</p>
+                  </div>
+                </div>
+
+                {/* Deadline Settings */}
+                <div className="border-t border-border/50 pt-6">
+                  <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-primary" />
+                    Betalingsdeadline
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="current_password" className="text-sm font-medium">Huidig wachtwoord</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          id="current_password"
-                          type={showCurrentPassword ? "text" : "password"}
-                          value={passwordForm.current_password}
-                          onChange={(e) => setPasswordForm({...passwordForm, current_password: e.target.value})}
-                          className="pl-10 pr-10 h-11"
-                          placeholder="Uw huidige wachtwoord"
-                          data-testid="current-password"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
-                      </div>
+                      <Label className="text-sm font-medium">Deadline dag</Label>
+                      <Select 
+                        value={String(rentSettings.payment_deadline_day)} 
+                        onValueChange={(v) => setRentSettings({...rentSettings, payment_deadline_day: parseInt(v)})}
+                      >
+                        <SelectTrigger className="border-border/50">
+                          <SelectValue placeholder="Dag selecteren" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Geen vaste dag</SelectItem>
+                          {[1,5,10,15,20,25,28].map(day => (
+                            <SelectItem key={day} value={String(day)}>Dag {day}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="new_password" className="text-sm font-medium">Nieuw wachtwoord</Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            id="new_password"
-                            type={showNewPassword ? "text" : "password"}
-                            value={passwordForm.new_password}
-                            onChange={(e) => setPasswordForm({...passwordForm, new_password: e.target.value})}
-                            className="pl-10 pr-10 h-11"
-                            placeholder="Minimaal 6 tekens"
-                            data-testid="new-password"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="confirm_password" className="text-sm font-medium">Bevestig wachtwoord</Label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                          <Input
-                            id="confirm_password"
-                            type="password"
-                            value={passwordForm.confirm_password}
-                            onChange={(e) => setPasswordForm({...passwordForm, confirm_password: e.target.value})}
-                            className="pl-10 h-11"
-                            placeholder="Herhaal nieuw wachtwoord"
-                            data-testid="confirm-password"
-                          />
-                        </div>
-                      </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Maand offset</Label>
+                      <Select 
+                        value={String(rentSettings.payment_deadline_month_offset)} 
+                        onValueChange={(v) => setRentSettings({...rentSettings, payment_deadline_month_offset: parseInt(v)})}
+                      >
+                        <SelectTrigger className="border-border/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Dezelfde maand</SelectItem>
+                          <SelectItem value="1">Volgende maand</SelectItem>
+                          <SelectItem value="2">Over 2 maanden</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
+                </div>
 
-                  <div className="flex justify-end pt-4 border-t border-border/50">
-                    <Button type="submit" disabled={saving} className="h-11 px-6" data-testid="change-password-btn">
-                      {saving ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Wijzigen...
-                        </>
-                      ) : (
-                        <>
-                          <Shield className="w-4 h-4 mr-2" />
-                          Wachtwoord Wijzigen
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
+                <div className="flex justify-end pt-4 border-t border-border/50">
+                  <Button onClick={handleSaveRentSettings} disabled={savingRent} className="bg-emerald-600 hover:bg-emerald-700">
+                    {savingRent ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                    Opslaan
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* HRM Settings */}
+          {activeSection === 'hrm' && hasAddon('hrm') && (
+            <Card className="border-border/50 overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent p-6 border-b border-border/50">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-500" />
+                  HRM Instellingen
+                </h2>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Configureer personeelsinstellingen en verlofregels
+                </p>
+              </div>
+              <CardContent className="p-6">
+                <div className="text-center py-8 text-muted-foreground">
+                  <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>HRM instellingen komen binnenkort beschikbaar</p>
+                  <p className="text-sm mt-2">Hier kunt u straks verlofregels, werktijden en salarisschalen configureren.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Auto Dealer Settings */}
+          {activeSection === 'autodealer' && hasAddon('autodealer') && (
+            <Card className="border-border/50 overflow-hidden">
+              <div className="bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-transparent p-6 border-b border-border/50">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Car className="w-5 h-5 text-orange-500" />
+                  Auto Dealer Instellingen
+                </h2>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Configureer voertuigbeheer en verkoopinstellingen
+                </p>
+              </div>
+              <CardContent className="p-6">
+                <div className="text-center py-8 text-muted-foreground">
+                  <Car className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Auto Dealer instellingen komen binnenkort beschikbaar</p>
+                  <p className="text-sm mt-2">Hier kunt u straks commissie percentages en voertuigcategorieën configureren.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Beauty Spa Settings */}
+          {activeSection === 'beauty' && hasAddon('beauty') && (
+            <Card className="border-border/50 overflow-hidden">
+              <div className="bg-gradient-to-r from-pink-500/10 via-pink-500/5 to-transparent p-6 border-b border-border/50">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-pink-500" />
+                  Beauty Spa Instellingen
+                </h2>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Configureer behandelingen en reserveringsinstellingen
+                </p>
+              </div>
+              <CardContent className="p-6">
+                <div className="text-center py-8 text-muted-foreground">
+                  <Sparkles className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Beauty Spa instellingen komen binnenkort beschikbaar</p>
+                  <p className="text-sm mt-2">Hier kunt u straks openingstijden, pauzetijden en reserveringsregels configureren.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pompstation Settings */}
+          {activeSection === 'pompstation' && hasAddon('pompstation') && (
+            <Card className="border-border/50 overflow-hidden">
+              <div className="bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-6 border-b border-border/50">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Fuel className="w-5 h-5 text-amber-500" />
+                  Pompstation Instellingen
+                </h2>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Configureer brandstofprijzen en tankinstellingen
+                </p>
+              </div>
+              <CardContent className="p-6">
+                <div className="text-center py-8 text-muted-foreground">
+                  <Fuel className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Pompstation instellingen komen binnenkort beschikbaar</p>
+                  <p className="text-sm mt-2">Hier kunt u straks brandstofprijzen, tanklimieten en dienstroosters configureren.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Boekhouding Settings */}
+          {activeSection === 'boekhouding' && (
+            <Card className="border-border/50 overflow-hidden">
+              <div className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent p-6 border-b border-border/50">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <Calculator className="w-5 h-5 text-purple-500" />
+                  Boekhouding Instellingen
+                </h2>
+                <p className="text-muted-foreground text-sm mt-1">
+                  Configureer BTW-tarieven en valuta-instellingen
+                </p>
+              </div>
+              <CardContent className="p-6">
+                <div className="text-center py-8 text-muted-foreground">
+                  <Calculator className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Boekhouding instellingen komen binnenkort beschikbaar</p>
+                  <p className="text-sm mt-2">Hier kunt u straks BTW-tarieven, standaard valuta en boekjaar configureren.</p>
+                </div>
               </CardContent>
             </Card>
           )}
