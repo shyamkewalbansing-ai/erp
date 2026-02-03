@@ -714,6 +714,9 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8" data-testid="dashboard">
+      {/* Module Expiring Banner */}
+      <ModuleExpiringBanner />
+      
       {/* Hero Header */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-8 lg:p-10">
         {/* Background Pattern */}
