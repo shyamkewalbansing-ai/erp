@@ -133,6 +133,15 @@ const AutoDealerHandleiding = lazy(() => import("./pages/handleiding/AutoDealerH
 const BeautySpaHandleiding = lazy(() => import("./pages/handleiding/BeautySpaHandleidingPage"));
 const PompstationHandleiding = lazy(() => import("./pages/handleiding/PompstationHandleidingPage"));
 
+// Boekhouding Module
+const BoekhoudingDashboard = lazy(() => import("./pages/boekhouding/DashboardPage"));
+const BoekhoudingGrootboek = lazy(() => import("./pages/boekhouding/GrootboekPage"));
+const BoekhoudingDebiteuren = lazy(() => import("./pages/boekhouding/DebiterenPage"));
+const BoekhoudingCrediteuren = lazy(() => import("./pages/boekhouding/CrediterenPage"));
+const BoekhoudingVerkoopfacturen = lazy(() => import("./pages/boekhouding/VerkoopfacturenPage"));
+const BoekhoudingBankrekeningen = lazy(() => import("./pages/boekhouding/BankrekeningenPage"));
+const BoekhoudingRapportages = lazy(() => import("./pages/boekhouding/RapportagesPage"));
+
 
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
