@@ -877,17 +877,12 @@ server {
 
         {/* Customers Tab */}
         <TabsContent value="customers">
-          <div className="space-y-6">
-            {/* Workspace Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-emerald-100 text-sm">Totaal Workspaces</p>
-                      <p className="text-3xl font-bold">{workspaceStats.total}</p>
-                    </div>
-                    <Layers className="w-10 h-10 text-emerald-200" />
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div>
+                  <CardTitle>Klanten</CardTitle>
+                  <CardDescription>Overzicht van alle geregistreerde klanten</CardDescription>
                   </div>
                 </CardContent>
               </Card>
