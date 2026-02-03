@@ -567,8 +567,8 @@ export default function Layout() {
                 </div>
               )}
 
-              {/* Boekhouding Module - GRATIS */}
-              {hasAddon('boekhouding') && (
+              {/* Boekhouding Module - GRATIS voor alle klanten */}
+              {!isSuperAdmin() && (
                 <div className={`space-y-1 mt-4 ${isCollapsed ? 'items-center' : ''}`}>
                   {!isCollapsed && (
                     <div className="flex items-center gap-2 px-3 py-2">
@@ -578,12 +578,12 @@ export default function Layout() {
                     </div>
                   )}
                   {isCollapsed && <div className="mt-4 border-t border-border pt-4" />}
-                  {boekhoudingNavItems.filter(item => hasAddon(item.addon)).map((item) => (
+                  {boekhoudingNavItems.map((item) => (
                     <NavLink
                       key={item.to}
                       to={item.to}
                       onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+                      className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
                       data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
                       title={item.label}
                     >
