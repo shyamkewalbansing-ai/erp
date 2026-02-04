@@ -592,7 +592,7 @@ export default function Layout() {
       {/* Main content */}
       <main className={`main-content ${isCollapsed ? 'main-content-expanded' : ''}`}>
         {/* Desktop header with notifications */}
-        <header className={`desktop-header hidden lg:flex px-6 py-2.5 items-center justify-between ${isCollapsed ? 'desktop-header-expanded' : ''}`} style={{background: 'linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.92) 100%)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(12,175,96,0.08)'}}>
+        <header className={`desktop-header hidden lg:flex px-6 py-2.5 items-center justify-between ${isCollapsed ? 'desktop-header-expanded' : ''}`} style={{background: 'linear-gradient(180deg, #0caf600d, #0000)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(12,175,96,0.08)'}}>
           {/* Left side - User info & Workspace/Portal buttons */}
           <div className="flex items-center gap-3">
             {/* User info - Compact Modern Style */}
