@@ -225,49 +225,52 @@ export default function DebiterenPage() {
       <div className="content-card">
         <div className="content-card-header">
           <h3 className="content-card-title">
-            <Users className="w-5 h-5 text-blue-500" />
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
             Debiteurenlijst
           </h3>
-          <div className="flex items-center gap-2">
-            <div className="relative">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <div className="relative flex-1 sm:flex-none">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input 
                 placeholder="Zoeken..." 
                 value={searchTerm} 
                 onChange={(e) => setSearchTerm(e.target.value)} 
-                className="pl-9 w-64"
+                className="pl-9 w-full sm:w-64"
               />
             </div>
           </div>
         </div>
         <div className="content-card-body p-0">
-          <table className="modern-table">
-            <thead>
-              <tr>
-                <th>Naam</th>
-                <th>Contact</th>
-                <th>Valuta</th>
-                <th>Termijn</th>
-                <th>Openstaand</th>
-                <th className="text-right">Acties</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((d) => (
-                <tr key={d.id}>
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold">{d.naam?.charAt(0)?.toUpperCase()}</span>
+          <div className="table-scroll-wrapper">
+            <table className="modern-table">
+              <thead>
+                <tr>
+                  <th>Naam</th>
+                  <th className="hidden sm:table-cell">Contact</th>
+                  <th className="hidden md:table-cell">Valuta</th>
+                  <th className="hidden lg:table-cell">Termijn</th>
+                  <th>Openstaand</th>
+                  <th className="text-right">Acties</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((d) => (
+                  <tr key={d.id}>
+                    <td>
+                      <div className="flex items-center gap-2 sm:gap-3">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-blue-600 font-semibold text-sm sm:text-base">{d.naam?.charAt(0)?.toUpperCase()}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{d.naam}</p>
+                          {d.btw_nummer && <p className="text-xs text-muted-foreground hidden sm:block">BTW: {d.btw_nummer}</p>}
+                          {/* Mobile: show contact info */}
+                          <p className="text-xs text-muted-foreground sm:hidden truncate">{d.email || d.telefoon}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">{d.naam}</p>
-                        {d.btw_nummer && <p className="text-xs text-muted-foreground">BTW: {d.btw_nummer}</p>}
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div className="space-y-1">
+                    </td>
+                    <td className="hidden sm:table-cell">
+                      <div className="space-y-1">
                       {d.email && (
                         <div className="flex items-center gap-1.5 text-sm">
                           <Mail className="w-3.5 h-3.5 text-muted-foreground" />
