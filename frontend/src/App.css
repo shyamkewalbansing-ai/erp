@@ -499,7 +499,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ========================================
-   MOBILE HEADER
+   MOBILE HEADER - WHITE MATCHING SIDEBAR
    ======================================== */
 .mobile-header {
     position: fixed;
@@ -508,7 +508,8 @@ h1, h2, h3, h4, h5, h6 {
     right: 0;
     z-index: 40;
     height: 60px;
-    background: var(--sidebar-bg);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-color);
     padding: 0 16px;
     display: none;
     align-items: center;
@@ -534,9 +535,9 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--emerald-50);
     border: none;
-    color: white;
+    color: var(--emerald-500);
     cursor: pointer;
 }
 
@@ -544,21 +545,6 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     gap: 8px;
-}
-
-.mobile-header-actions .header-action-btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: none;
-    color: white;
-}
-
-.mobile-header-actions .header-action-btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-.mobile-header-actions .header-action-btn.danger:hover {
-    background: rgba(239, 68, 68, 0.3);
-    color: #fca5a5;
 }
 
 /* ========================================
