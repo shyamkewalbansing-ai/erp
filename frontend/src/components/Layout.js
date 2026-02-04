@@ -978,6 +978,161 @@ export default function Layout() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Profile Settings Dialog */}
+      <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-emerald-500" />
+              Profiel Instellingen
+            </DialogTitle>
+            <DialogDescription>
+              Beheer uw persoonlijke gegevens en wachtwoord
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6 py-4">
+            {/* Profile Photo */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative">
+                {profilePhoto || user?.profile_photo ? (
+                  <img 
+                    src={profilePhoto || user?.profile_photo} 
+                    alt="Profiel" 
+                    className="w-24 h-24 rounded-full object-cover border-4 border-emerald-100"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-3xl font-bold border-4 border-emerald-100">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg hover:bg-emerald-600 transition-colors"
+                  disabled={uploadingPhoto}
+                >
+                  {uploadingPhoto ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Camera className="w-4 h-4" />
+                  )}
+                </button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".jpg,.jpeg,.png,.webp"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">JPG, PNG of WebP (max 5MB)</p>
+            </div>
+
+            {/* Personal Info */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="profile-name" className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-slate-400" />
+                  Naam
+                </Label>
+                <Input
+                  id="profile-name"
+                  value={profileForm.name}
+                  onChange={(e) => setProfileForm({...profileForm, name: e.target.value})}
+                  placeholder="Uw volledige naam"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="profile-email" className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 text-slate-400" />
+                  E-mail
+                </Label>
+                <Input
+                  id="profile-email"
+                  type="email"
+                  value={profileForm.email}
+                  onChange={(e) => setProfileForm({...profileForm, email: e.target.value})}
+                  placeholder="uw@email.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="profile-phone" className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-slate-400" />
+                  Telefoon
+                </Label>
+                <Input
+                  id="profile-phone"
+                  value={profileForm.phone}
+                  onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
+                  placeholder="+597 123 4567"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="profile-address" className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-slate-400" />
+                  Adres
+                </Label>
+                <Input
+                  id="profile-address"
+                  value={profileForm.address}
+                  onChange={(e) => setProfileForm({...profileForm, address: e.target.value})}
+                  placeholder="Straat, Stad"
+                />
+              </div>
+            </div>
+
+            {/* Password Change Section */}
+            <div className="space-y-4 pt-4 border-t">
+              <h4 className="font-medium flex items-center gap-2 text-sm">
+                <Lock className="w-4 h-4 text-slate-400" />
+                Wachtwoord Wijzigen
+              </h4>
+              
+              <div className="space-y-3">
+                <Input
+                  type="password"
+                  value={profileForm.currentPassword}
+                  onChange={(e) => setProfileForm({...profileForm, currentPassword: e.target.value})}
+                  placeholder="Huidig wachtwoord"
+                />
+                <Input
+                  type="password"
+                  value={profileForm.newPassword}
+                  onChange={(e) => setProfileForm({...profileForm, newPassword: e.target.value})}
+                  placeholder="Nieuw wachtwoord"
+                />
+                <Input
+                  type="password"
+                  value={profileForm.confirmPassword}
+                  onChange={(e) => setProfileForm({...profileForm, confirmPassword: e.target.value})}
+                  placeholder="Bevestig nieuw wachtwoord"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Laat leeg als u uw wachtwoord niet wilt wijzigen
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setProfileDialogOpen(false)}>
+              Annuleren
+            </Button>
+            <Button onClick={handleSaveProfile} disabled={savingProfile}>
+              {savingProfile ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Opslaan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
