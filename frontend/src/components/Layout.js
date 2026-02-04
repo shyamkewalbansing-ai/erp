@@ -369,52 +369,60 @@ export default function Layout() {
   const showExpiredBadge = user?.subscription_status === 'expired';
 
   return (
-    <div className="app-container grain-overlay">
+    <div className="app-container">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Floating Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Logo and Toggle Button */}
-        <div className={`sidebar-logo ${isCollapsed ? 'p-4' : 'p-5'}`}>
-          <div className={`flex items-center ${isCollapsed ? 'flex-col gap-3' : 'justify-between'}`}>
+        <div className="sidebar-logo">
+          <div className={`sidebar-logo-inner ${isCollapsed ? 'flex-col' : ''}`}>
             {/* Logo */}
             <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
               {branding?.logo_url ? (
                 <img 
                   src={branding.logo_url} 
                   alt={branding.portal_name || 'Logo'} 
-                  className={`${isCollapsed ? 'h-8 w-8' : 'h-8 w-auto max-w-[140px]'} object-contain`}
+                  className={`${isCollapsed ? 'h-9 w-9' : 'h-7 w-auto max-w-[150px]'} object-contain`}
                 />
               ) : user?.logo && !isSuperAdmin() ? (
                 <img 
                   src={user.logo} 
                   alt="Bedrijfslogo" 
-                  className={`${isCollapsed ? 'h-8 w-8' : 'h-8 w-auto max-w-[140px]'} object-contain`}
+                  className={`${isCollapsed ? 'h-9 w-9' : 'h-7 w-auto max-w-[150px]'} object-contain`}
                 />
               ) : (
-                <img 
-                  src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-                  alt="Facturatie N.V." 
-                  className={`${isCollapsed ? 'hidden' : 'h-5 w-auto'}`}
-                />
+                <>
+                  {isCollapsed ? (
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">F</span>
+                    </div>
+                  ) : (
+                    <img 
+                      src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
+                      alt="Facturatie N.V." 
+                      className="h-6 w-auto"
+                    />
+                  )}
+                </>
               )}
             </div>
             {/* Toggle Button - ONLY visible on desktop (lg and up) */}
             <button
               onClick={toggleSidebarCollapse}
-              className="hidden lg:flex items-center justify-center w-8 h-8 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20 transition-all duration-200 flex-shrink-0"
+              className="sidebar-toggle-btn hidden lg:flex"
               title={isCollapsed ? 'Sidebar uitklappen' : 'Sidebar inklappen'}
             >
               {isCollapsed ? (
-                <PanelLeftOpen className="w-4 h-4 text-primary" />
+                <PanelLeftOpen className="w-4 h-4" />
               ) : (
-                <PanelLeftClose className="w-4 h-4 text-primary" />
+                <PanelLeftClose className="w-4 h-4" />
               )}
             </button>
           </div>
