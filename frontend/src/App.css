@@ -99,11 +99,20 @@ h1, h2, h3, h4, h5, h6 {
     height: 100vh;
     z-index: 40;
     transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* 90% zoom for sidebar content */
+    zoom: 0.9;
+    -moz-transform: scale(0.9);
+    -moz-transform-origin: top left;
+}
+
+/* Adjust sidebar width to compensate for zoom */
+.sidebar {
+    width: calc(280px / 0.9); /* ~311px to maintain 280px visual width after zoom */
 }
 
 /* Sidebar Collapsed State */
 .sidebar.sidebar-collapsed {
-    width: 72px;
+    width: calc(72px / 0.9); /* ~80px to maintain 72px visual width after zoom */
 }
 
 .sidebar.sidebar-collapsed .nav-item {
