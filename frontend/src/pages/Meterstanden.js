@@ -243,21 +243,37 @@ export default function Meterstanden() {
 
   return (
     <div className="space-y-6" data-testid="meterstanden-page">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Meterstanden</h1>
-          <p className="text-gray-500">EBS & SWM meterstanden beheren</p>
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-yellow-900 p-4 sm:p-6 lg:p-10">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear_gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setSettingsDialogOpen(true)}>
-            <Settings className="w-4 h-4 mr-2" />
-            Tarieven
-          </Button>
-          <Button onClick={() => setAddDialogOpen(true)} className="bg-emerald-500 hover:bg-emerald-600">
-            <Plus className="w-4 h-4 mr-2" />
-            Meterstand Toevoegen
-          </Button>
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-yellow-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-amber-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
+        
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-yellow-300 text-xs sm:text-sm mb-3 sm:mb-4">
+              <Zap className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>EBS & SWM Beheer</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+              Meterstanden
+            </h1>
+            <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
+              EBS & SWM meterstanden beheren
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            <Button variant="outline" onClick={() => setSettingsDialogOpen(true)} className="border-white/20 text-white hover:bg-white/10 text-xs sm:text-sm">
+              <Settings className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              Tarieven
+            </Button>
+            <Button onClick={() => setAddDialogOpen(true)} className="bg-yellow-500 hover:bg-yellow-600 text-white text-xs sm:text-sm">
+              <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              Meterstand Toevoegen
+            </Button>
+          </div>
         </div>
       </div>
 
