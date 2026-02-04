@@ -409,6 +409,7 @@ export default function Layout() {
                 <span className="text-white font-bold text-base">F</span>
               </div>
             )}
+          </div>
           {/* Toggle Button */}
           {!isCollapsed && (
             <button
