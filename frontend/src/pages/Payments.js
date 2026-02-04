@@ -22,7 +22,11 @@ import {
   Trash2,
   Calendar,
   FileText,
-  AlertTriangle
+  AlertTriangle,
+  Loader2,
+  TrendingUp,
+  Banknote,
+  CheckCircle2
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -281,145 +285,270 @@ export default function Payments() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
+  // Calculate stats
+  const totalPayments = payments.length;
+  const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
+  const rentPayments = payments.filter(p => p.payment_type === 'rent');
+  const totalRentAmount = rentPayments.reduce((sum, p) => sum + p.amount, 0);
+  const thisMonthPayments = payments.filter(p => {
+    const paymentDate = new Date(p.payment_date);
+    const now = new Date();
+    return paymentDate.getMonth() === now.getMonth() && paymentDate.getFullYear() === now.getFullYear();
+  });
+  const thisMonthAmount = thisMonthPayments.reduce((sum, p) => sum + p.amount, 0);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto mb-3" />
+          <p className="text-muted-foreground">Betalingen laden...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" data-testid="payments-page">
-      {/* Page Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Betalingen</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Registreer en beheer betalingen
-          </p>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="payments-page">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-10">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
-        <Button 
-          onClick={() => { resetForm(); setShowModal(true); }}
-          className="rounded-full bg-primary hover:bg-primary/90"
-          data-testid="add-payment-btn"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Betaling registreren
-        </Button>
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-emerald-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-teal-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
+        
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-emerald-300 text-xs sm:text-sm mb-3 sm:mb-4">
+              <CreditCard className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>{totalPayments} betalingen</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+              Betalingen Beheer
+            </h1>
+            <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
+              Registreer en beheer betalingen
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => { resetForm(); setShowModal(true); }}
+            size="sm"
+            className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm"
+            data-testid="add-payment-btn"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            Betaling Registreren
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Zoek op huurder of appartement..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-input border-transparent"
-            data-testid="search-payments"
-          />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        {/* Total Amount - Featured */}
+        <div className="col-span-2 lg:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-6 text-white shadow-xl shadow-emerald-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-40 h-24 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative flex items-center justify-between">
+            <div>
+              <p className="text-emerald-100 text-xs sm:text-sm font-medium mb-1">Totaal Ontvangen</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{formatCurrency(totalAmount)}</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
         </div>
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[180px]" data-testid="type-filter">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle</SelectItem>
-            {PAYMENT_TYPES.map(type => (
-              <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        {/* This Month */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Deze Maand</p>
+              <p className="text-xl sm:text-2xl font-bold text-emerald-600">{formatCurrency(thisMonthAmount)}</p>
+              <p className="text-xs text-muted-foreground mt-1">{thisMonthPayments.length} betalingen</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Rent Total */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Huurbetalingen</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{formatCurrency(totalRentAmount)}</p>
+              <p className="text-xs text-muted-foreground mt-1">{rentPayments.length} betalingen</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+              <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Total Count */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Totaal Aantal</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{totalPayments}</p>
+              <p className="text-xs text-muted-foreground mt-1">Alle betalingen</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Zoek op huurder of appartement..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-10 sm:h-11 bg-muted/30 border-transparent focus:border-primary text-sm"
+              data-testid="search-payments"
+            />
+          </div>
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-11" data-testid="type-filter">
+              <SelectValue placeholder="Type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle</SelectItem>
+              {PAYMENT_TYPES.map(type => (
+                <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Payments Table */}
       {filteredPayments.length > 0 ? (
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Datum</TableHead>
-                <TableHead>Huurder</TableHead>
-                <TableHead>Appartement</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Periode</TableHead>
-                <TableHead className="text-right">Bedrag</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredPayments.map((payment) => (
-                <TableRow key={payment.id} data-testid={`payment-row-${payment.id}`}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      {payment.payment_date}
-                    </div>
-                  </TableCell>
-                  <TableCell className="font-medium">{payment.tenant_name}</TableCell>
-                  <TableCell>{payment.apartment_name}</TableCell>
-                  <TableCell>
-                    <span className={`status-badge ${payment.payment_type === 'rent' ? 'status-paid' : 'bg-muted text-muted-foreground'}`}>
-                      {PAYMENT_TYPES.find(t => t.value === payment.payment_type)?.label}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {payment.period_month && payment.period_year 
-                      ? `${MONTHS.find(m => m.value === payment.period_month)?.label} ${payment.period_year}`
-                      : '-'}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold text-primary">
-                    {formatCurrency(payment.amount)}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleDownloadReceipt(payment)}>
-                          <Download className="w-4 h-4 mr-2" />
-                          Download kwitantie
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-destructive"
-                          onClick={() => { setSelectedPayment(payment); setShowDeleteDialog(true); }}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Verwijderen
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+          {/* Mobile Cards */}
+          <div className="block sm:hidden divide-y divide-border/50">
+            {filteredPayments.map((payment) => (
+              <div key={payment.id} className="p-4" data-testid={`payment-row-${payment.id}`}>
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-medium text-foreground">{payment.tenant_name}</p>
+                    <p className="text-xs text-muted-foreground">{payment.apartment_name}</p>
+                  </div>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${payment.payment_type === 'rent' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
+                    {PAYMENT_TYPES.find(t => t.value === payment.payment_type)?.label}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-muted-foreground">
+                    {payment.payment_date}
+                    {payment.period_month && payment.period_year && (
+                      <span> • {MONTHS.find(m => m.value === payment.period_month)?.label} {payment.period_year}</span>
+                    )}
+                  </div>
+                  <p className="font-semibold text-emerald-600">{formatCurrency(payment.amount)}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Desktop Table */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Datum</TableHead>
+                  <TableHead>Huurder</TableHead>
+                  <TableHead>Appartement</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Periode</TableHead>
+                  <TableHead className="text-right">Bedrag</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredPayments.map((payment) => (
+                  <TableRow key={payment.id} data-testid={`payment-row-${payment.id}`}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        {payment.payment_date}
+                      </div>
+                    </TableCell>
+                    <TableCell className="font-medium">{payment.tenant_name}</TableCell>
+                    <TableCell>{payment.apartment_name}</TableCell>
+                    <TableCell>
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${payment.payment_type === 'rent' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
+                        {PAYMENT_TYPES.find(t => t.value === payment.payment_type)?.label}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {payment.period_month && payment.period_year 
+                        ? `${MONTHS.find(m => m.value === payment.period_month)?.label} ${payment.period_year}`
+                        : '-'}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold text-emerald-600">
+                      {formatCurrency(payment.amount)}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleDownloadReceipt(payment)}>
+                            <Download className="w-4 h-4 mr-2" />
+                            Download kwitantie
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => { setSelectedPayment(payment); setShowDeleteDialog(true); }}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Verwijderen
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       ) : (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <CreditCard className="w-8 h-8" />
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 border-dashed">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-muted flex items-center justify-center mb-3 sm:mb-4">
+              <CreditCard className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-base sm:text-lg text-foreground mb-2 text-center">
+              {search || typeFilter !== 'all' ? 'Geen betalingen gevonden' : 'Nog geen betalingen'}
+            </h3>
+            <p className="text-muted-foreground text-center mb-4 sm:mb-6 max-w-sm text-xs sm:text-sm">
+              {search || typeFilter !== 'all' 
+                ? 'Probeer een andere zoekterm of pas uw filters aan' 
+                : 'Registreer uw eerste betaling om te beginnen'}
+            </p>
+            {!search && typeFilter === 'all' && (
+              <Button 
+                onClick={() => { resetForm(); setShowModal(true); }}
+                className="shadow-lg shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600 text-xs sm:text-sm"
+              >
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                Eerste Betaling Registreren
+              </Button>
+            )}
           </div>
-          <h3 className="font-semibold text-foreground mb-2">Geen betalingen gevonden</h3>
-          <p className="text-muted-foreground mb-4">
-            {search || typeFilter !== 'all' 
-              ? 'Probeer andere filters' 
-              : 'Registreer uw eerste betaling'}
-          </p>
-          {!search && typeFilter === 'all' && (
-            <Button 
-              onClick={() => { resetForm(); setShowModal(true); }}
-              className="rounded-full"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Betaling registreren
-            </Button>
-          )}
         </div>
       )}
 
