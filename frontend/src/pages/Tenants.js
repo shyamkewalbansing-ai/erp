@@ -244,110 +244,132 @@ export default function Tenants() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto mb-3" />
+          <p className="text-muted-foreground">Huurders laden...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" data-testid="tenants-page">
-      {/* Page Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-primary" />
-            </div>
-            Huurders
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Beheer uw huurders en bekijk hun saldo&apos;s
-          </p>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="tenants-page">
+      {/* Hero Header - Same style as Dashboard */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-10">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
-        <Button 
-          onClick={() => { resetForm(); setShowModal(true); }}
-          className="h-11 px-5 shadow-lg shadow-primary/20"
-          data-testid="add-tenant-btn"
-        >
-          <UserPlus className="w-4 h-4 mr-2" />
-          Nieuwe Huurder
-        </Button>
+        
+        {/* Decorative Blurs */}
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-emerald-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-blue-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
+        
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-emerald-300 text-xs sm:text-sm mb-3 sm:mb-4">
+              <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>{totalTenants} huurders</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+              Huurders Beheer
+            </h1>
+            <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
+              Beheer uw huurders en bekijk hun saldo's
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => { resetForm(); setShowModal(true); }}
+            size="sm"
+            className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm"
+            data-testid="add-tenant-btn"
+          >
+            <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            Nieuwe Huurder
+          </Button>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-border/50 bg-gradient-to-br from-primary/5 via-transparent to-transparent">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Users className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Totaal Huurders</p>
-                <p className="text-2xl font-bold text-foreground">{totalTenants}</p>
-              </div>
+      {/* Stats Cards - Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+        {/* Total Tenants - Featured Card */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-6 text-white shadow-xl shadow-emerald-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-40 h-24 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-20 sm:w-32 h-20 sm:h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+          
+          <div className="relative flex items-center justify-between">
+            <div>
+              <p className="text-emerald-100 text-xs sm:text-sm font-medium mb-1">Totaal Huurders</p>
+              <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">{totalTenants}</p>
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-border/50">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Actieve Huurders</p>
-                <p className="text-2xl font-bold text-foreground">{totalTenants}</p>
-              </div>
+            <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Users className="w-5 h-5 sm:w-7 sm:h-7" />
             </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="border-border/50">
-          <CardContent className="p-5">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-blue-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Deze Maand</p>
-                <p className="text-2xl font-bold text-foreground">+{tenants.length > 0 ? 1 : 0}</p>
-              </div>
+          </div>
+        </div>
+
+        {/* Active Tenants Card */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-green-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Actieve Huurders</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{totalTenants}</p>
+              <p className="text-xs text-muted-foreground mt-1">100% actief</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* This Month Card */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-xl hover:shadow-blue-500/5 transition-all duration-300 sm:col-span-2 lg:col-span-1">
+          <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-blue-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Deze Maand</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">+{tenants.length > 0 ? 1 : 0}</p>
+              <p className="text-xs text-muted-foreground mt-1">Nieuwe huurders</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Search and Filters */}
-      <Card className="border-border/50">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Zoek op naam of telefoon..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 h-11 bg-muted/30 border-transparent focus:border-primary"
-                data-testid="search-tenants"
-              />
-            </div>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant={viewMode === 'grid' ? 'default' : 'outline'} 
-                size="icon"
-                className="h-11 w-11"
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </Button>
-              <Button 
-                variant={viewMode === 'list' ? 'default' : 'outline'} 
-                size="icon"
-                className="h-11 w-11"
-                onClick={() => setViewMode('list')}
-              >
+      <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Zoek op naam of telefoon..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-10 sm:h-11 bg-muted/30 border-transparent focus:border-primary text-sm"
+              data-testid="search-tenants"
+            />
+          </div>
+          <div className="flex items-center gap-2 justify-end">
+            <Button 
+              variant={viewMode === 'grid' ? 'default' : 'outline'} 
+              size="icon"
+              className="h-10 w-10 sm:h-11 sm:w-11"
+              onClick={() => setViewMode('grid')}
+            >
+              <Grid3X3 className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant={viewMode === 'list' ? 'default' : 'outline'} 
+              size="icon"
+              className="h-10 w-10 sm:h-11 sm:w-11"
+              onClick={() => setViewMode('list')}
+            >
                 <List className="w-4 h-4" />
               </Button>
             </div>
