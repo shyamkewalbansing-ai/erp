@@ -372,28 +372,29 @@ export default function Meterstanden() {
             />
           </div>
         
-        <Select value={selectedApartment} onValueChange={setSelectedApartment}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Appartement" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle Appartementen</SelectItem>
-            {apartments.map(apt => (
-              <SelectItem key={apt.id} value={apt.id}>{apt.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        
-        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle Status</SelectItem>
-            <SelectItem value="pending">Openstaand</SelectItem>
-            <SelectItem value="paid">Betaald</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select value={selectedApartment} onValueChange={setSelectedApartment}>
+            <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-11">
+              <SelectValue placeholder="Appartement" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Appartementen</SelectItem>
+              {apartments.map(apt => (
+                <SelectItem key={apt.id} value={apt.id}>{apt.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+            <SelectTrigger className="w-full sm:w-[150px] h-10 sm:h-11">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Status</SelectItem>
+              <SelectItem value="pending">Openstaand</SelectItem>
+              <SelectItem value="paid">Betaald</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Readings Table */}
