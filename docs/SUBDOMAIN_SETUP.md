@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://business-admin-panel.preview.emergentagent.com/           → Landing page
-https://business-admin-panel.preview.emergentagent.com/login      → Login
-https://business-admin-panel.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://business-admin-panel.preview.emergentagent.com/booking/   → Publieke booking portals
+https://module-trial.preview.emergentagent.com/           → Landing page
+https://module-trial.preview.emergentagent.com/login      → Login
+https://module-trial.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://module-trial.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
