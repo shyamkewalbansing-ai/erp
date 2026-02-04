@@ -687,6 +687,9 @@ function MainAppRoutes() {
           <Route path="boekhouding/btw" element={
             <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingRapportages /></SubscriptionRoute>
           } />
+          <Route path="boekhouding/handleiding" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingHandleiding /></SubscriptionRoute>
+          } />
         </Route>
         
         {/* Redirect old routes to new app routes */}
