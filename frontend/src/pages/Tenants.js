@@ -275,7 +275,7 @@ export default function Tenants() {
               Huurders Beheer
             </h1>
             <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
-              Beheer uw huurders en bekijk hun saldo's
+              Beheer uw huurders en bekijk hun saldo&apos;s
             </p>
           </div>
           
