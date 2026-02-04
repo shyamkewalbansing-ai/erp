@@ -472,17 +472,15 @@ export default function Layout() {
                 const isFirst = index === 0;
                 
                 return (
-                  <div key={moduleSlug} className="mb-2">
+                  <div key={moduleSlug} className="mb-1">
                     {!isCollapsed && (
-                      <div className={`px-3 py-2 ${!isFirst ? 'mt-4 border-t border-border pt-4' : ''}`}>
-                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-                          {moduleSlug === 'boekhouding' ? '📊' : <ModuleIcon className="w-4 h-4" />}
-                          {config.name}
-                          {moduleSlug === 'boekhouding' && <span className="text-emerald-500">(Gratis)</span>}
-                        </p>
+                      <div className={`module-group-header ${isFirst ? 'mt-2' : ''}`}>
+                        <ModuleIcon className="w-3.5 h-3.5" />
+                        {config.name}
+                        {moduleSlug === 'boekhouding' && <span className="text-emerald-400 font-normal">(Gratis)</span>}
                       </div>
                     )}
-                    {isCollapsed && !isFirst && <div className="mt-4 border-t border-border pt-4" />}
+                    {isCollapsed && !isFirst && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
                     {config.items.filter(item => config.alwaysShow || hasAddon(item.addon)).map((item) => (
                       item.external ? (
                         <a
@@ -495,9 +493,9 @@ export default function Layout() {
                           data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
                           title={item.label}
                         >
-                          <item.icon className="w-5 h-5 flex-shrink-0" />
+                          <item.icon className="w-4 h-4 flex-shrink-0" />
                           {!isCollapsed && <span>{item.label}</span>}
-                          {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto" />}
+                          {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-50" />}
                         </a>
                       ) : (
                         <NavLink
