@@ -1202,17 +1202,93 @@ server {
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
+            <CardContent className="p-2 sm:p-6">
+              {/* Mobile: Card Layout */}
+              <div className="block lg:hidden space-y-3">
+                {filteredCustomers.map((customer) => {
+                  const customerDomains = domains.filter(d => d.user_id === customer.id);
+                  return (
+                    <div key={customer.id} className="bg-card border border-border rounded-lg p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm truncate">{customer.name}</p>
+                          <p className="text-xs text-muted-foreground truncate">{customer.email}</p>
+                          {customer.company_name && (
+                            <p className="text-xs text-muted-foreground truncate">{customer.company_name}</p>
+                          )}
+                        </div>
+                        {getStatusBadge(customer.subscription_status)}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <span className="text-muted-foreground">Geldig tot:</span>
+                          <p className="font-medium">
+                            {customer.subscription_end_date 
+                              ? new Date(customer.subscription_end_date).toLocaleDateString('nl-NL')
+                              : '-'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Betaald:</span>
+                          <p className="font-medium">{formatCurrency(customer.total_paid)}</p>
+                        </div>
+                      </div>
+                      
+                      {customerDomains.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {customerDomains.map((domain) => (
+                            <span key={domain.id} className="inline-flex items-center gap-1 text-xs bg-muted px-2 py-0.5 rounded">
+                              <Globe className="w-2.5 h-2.5" />
+                              <span className="truncate max-w-[120px]">{domain.domain}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center gap-1 pt-1 border-t">
+                        <Button size="sm" variant="outline" className="h-7 px-2 text-xs flex-1"
+                          onClick={() => {
+                            setSelectedCustomer(customer);
+                            setEditForm({ name: customer.name, email: customer.email, company_name: customer.company_name || '' });
+                            setEditCustomerDialogOpen(true);
+                          }}>
+                          <Edit className="w-3 h-3 mr-1" /> Bewerk
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 px-2"
+                          onClick={() => { setSelectedCustomer(customer); setNewPassword(''); setResetPasswordDialogOpen(true); }}>
+                          <Key className="w-3 h-3" />
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-7 px-2"
+                          onClick={() => { setSelectedCustomer(customer); setActivateDialogOpen(true); }}>
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                        <Button size="sm" variant="destructive" className="h-7 px-2"
+                          onClick={() => { setSelectedCustomer(customer); setDeleteCustomerDialogOpen(true); }}>
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredCustomers.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    Geen klanten gevonden
+                  </div>
+                )}
+              </div>
+              
+              {/* Desktop: Table Layout */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium">Klant</th>
-                      <th className="text-left py-3 px-4 font-medium">Status</th>
-                      <th className="text-left py-3 px-4 font-medium">Domein</th>
-                      <th className="text-left py-3 px-4 font-medium">Geldig tot</th>
-                      <th className="text-left py-3 px-4 font-medium">Totaal Betaald</th>
-                      <th className="text-left py-3 px-4 font-medium">Acties</th>
+                      <th className="text-left py-3 px-4 font-medium text-sm">Klant</th>
+                      <th className="text-left py-3 px-4 font-medium text-sm">Status</th>
+                      <th className="text-left py-3 px-4 font-medium text-sm">Domein</th>
+                      <th className="text-left py-3 px-4 font-medium text-sm">Geldig tot</th>
+                      <th className="text-left py-3 px-4 font-medium text-sm">Betaald</th>
+                      <th className="text-left py-3 px-4 font-medium text-sm">Acties</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1222,8 +1298,8 @@ server {
                         <tr key={customer.id} className="border-b hover:bg-accent/50">
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium">{customer.name}</p>
-                            <p className="text-sm text-muted-foreground">{customer.email}</p>
+                            <p className="font-medium text-sm">{customer.name}</p>
+                            <p className="text-xs text-muted-foreground">{customer.email}</p>
                             {customer.company_name && (
                               <p className="text-xs text-muted-foreground">{customer.company_name}</p>
                             )}
@@ -1238,7 +1314,7 @@ server {
                               {customerDomains.map((domain) => (
                                 <div key={domain.id} className="flex items-center gap-2">
                                   <Globe className="w-3 h-3 text-muted-foreground" />
-                                  <span className="text-sm font-medium">{domain.domain}</span>
+                                  <span className="text-xs font-medium">{domain.domain}</span>
                                   {domain.verified ? (
                                     <CheckCircle className="w-3 h-3 text-green-500" />
                                   ) : (
@@ -1248,98 +1324,42 @@ server {
                               ))}
                             </div>
                           ) : (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-muted-foreground h-7 px-2"
-                              onClick={() => {
-                                setNewDomain({ domain: '', user_id: customer.id });
-                                setAddDomainDialogOpen(true);
-                              }}
-                            >
-                              <Plus className="w-3 h-3 mr-1" />
-                              Domein
+                            <Button size="sm" variant="ghost" className="text-muted-foreground h-7 px-2 text-xs"
+                              onClick={() => { setNewDomain({ domain: '', user_id: customer.id }); setAddDomainDialogOpen(true); }}>
+                              <Plus className="w-3 h-3 mr-1" /> Domein
                             </Button>
                           )}
                         </td>
                         <td className="py-3 px-4">
-                          {customer.subscription_end_date ? (
-                            <span className="text-sm">
-                              {new Date(customer.subscription_end_date).toLocaleDateString('nl-NL')}
-                            </span>
-                          ) : (
-                            <span className="text-sm text-muted-foreground">-</span>
-                          )}
+                          <span className="text-xs">
+                            {customer.subscription_end_date 
+                              ? new Date(customer.subscription_end_date).toLocaleDateString('nl-NL')
+                              : '-'}
+                          </span>
                         </td>
                         <td className="py-3 px-4">
-                          <span className="font-medium">{formatCurrency(customer.total_paid)}</span>
+                          <span className="font-medium text-sm">{formatCurrency(customer.total_paid)}</span>
                         </td>
                         <td className="py-3 px-4">
-                          <div className="flex items-center gap-1 flex-wrap">
-                            <Button
-                              size="sm"
-                              variant="outline"
+                          <div className="flex items-center gap-1">
+                            <Button size="sm" variant="outline" className="h-7 px-2"
                               onClick={() => {
                                 setSelectedCustomer(customer);
-                                setEditForm({
-                                  name: customer.name,
-                                  email: customer.email,
-                                  company_name: customer.company_name || ''
-                                });
+                                setEditForm({ name: customer.name, email: customer.email, company_name: customer.company_name || '' });
                                 setEditCustomerDialogOpen(true);
-                              }}
-                              title="Bewerken"
-                            >
+                              }} title="Bewerken">
                               <Edit className="w-3 h-3" />
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedCustomer(customer);
-                                setNewPassword('');
-                                setResetPasswordDialogOpen(true);
-                              }}
-                              title="Wachtwoord Resetten"
-                            >
+                            <Button size="sm" variant="outline" className="h-7 px-2"
+                              onClick={() => { setSelectedCustomer(customer); setNewPassword(''); setResetPasswordDialogOpen(true); }} title="Wachtwoord">
                               <Key className="w-3 h-3" />
                             </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedCustomer(customer);
-                                setActivateDialogOpen(true);
-                              }}
-                              data-testid={`activate-btn-${customer.id}`}
-                              title="Modules Activeren"
-                            >
+                            <Button size="sm" variant="outline" className="h-7 px-2"
+                              onClick={() => { setSelectedCustomer(customer); setActivateDialogOpen(true); }} title="Activeren">
                               <Plus className="w-3 h-3" />
                             </Button>
-                            {(customer.subscription_status === 'active' || customer.subscription_status === 'trial') && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-orange-500 border-orange-500/20 hover:bg-orange-500/10"
-                                onClick={() => {
-                                  setSelectedCustomer(customer);
-                                  setDeactivateDialogOpen(true);
-                                }}
-                                title="Modules Deactiveren"
-                              >
-                                <XCircle className="w-3 h-3" />
-                              </Button>
-                            )}
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => {
-                                setSelectedCustomer(customer);
-                                setDeleteCustomerDialogOpen(true);
-                              }}
-                              data-testid={`delete-btn-${customer.id}`}
-                              title="Verwijderen"
-                            >
+                            <Button size="sm" variant="destructive" className="h-7 px-2"
+                              onClick={() => { setSelectedCustomer(customer); setDeleteCustomerDialogOpen(true); }} title="Verwijderen">
                               <Trash2 className="w-3 h-3" />
                             </Button>
                           </div>
