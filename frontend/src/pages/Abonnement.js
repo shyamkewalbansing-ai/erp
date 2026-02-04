@@ -64,12 +64,14 @@ export default function MijnModules() {
   const [allAddons, setAllAddons] = useState([]);
   const [myAddons, setMyAddons] = useState([]);
   const [paymentStatus, setPaymentStatus] = useState(null);
+  const [paymentMethods, setPaymentMethods] = useState([]);
   
-  // Request dialog state
+  // Order dialog state
   const [selectedAddon, setSelectedAddon] = useState(null);
-  const [addonRequestDialogOpen, setAddonRequestDialogOpen] = useState(false);
-  const [addonNotes, setAddonNotes] = useState('');
-  const [requestingAddon, setRequestingAddon] = useState(false);
+  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
+  const [orderStep, setOrderStep] = useState(1); // 1 = confirm, 2 = payment info
+  const [ordering, setOrdering] = useState(false);
+  const [orderResult, setOrderResult] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -77,14 +79,16 @@ export default function MijnModules() {
 
   const loadData = async () => {
     try {
-      const [addonsRes, myAddonsRes, paymentRes] = await Promise.all([
+      const [addonsRes, myAddonsRes, paymentRes, methodsRes] = await Promise.all([
         getAddons(),
         getMyAddons(),
-        getModulePaymentStatus()
+        getModulePaymentStatus(),
+        api.get('/user/modules/payment-methods').catch(() => ({ data: { payment_methods: [] } }))
       ]);
       setAllAddons(addonsRes.data || []);
       setMyAddons(myAddonsRes.data || []);
       setPaymentStatus(paymentRes.data);
+      setPaymentMethods(methodsRes.data?.payment_methods || []);
     } catch (error) {
       console.error('Error loading data:', error);
       toast.error('Fout bij het laden van gegevens');
@@ -93,25 +97,28 @@ export default function MijnModules() {
     }
   };
 
-  const handleRequestAddon = async () => {
+  const handleOrderAddon = async () => {
     if (!selectedAddon) return;
     
-    setRequestingAddon(true);
+    setOrdering(true);
     try {
-      await requestAddonActivation({
-        addon_id: selectedAddon.id,
-        notes: addonNotes || undefined
+      const response = await api.post('/user/modules/order', {
+        modules: [selectedAddon.id]
       });
-      toast.success('Module verzoek verzonden! De beheerder zal uw verzoek beoordelen.');
-      setAddonRequestDialogOpen(false);
-      setSelectedAddon(null);
-      setAddonNotes('');
+      setOrderResult(response.data);
+      setOrderStep(2);
+      toast.success('Module geactiveerd met 3 dagen proefperiode!');
       loadData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij het aanvragen');
+      toast.error(error.response?.data?.detail || 'Fout bij het bestellen');
     } finally {
-      setRequestingAddon(false);
+      setOrdering(false);
     }
+  };
+  
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Gekopieerd naar klembord');
   };
 
   const getModuleStatus = (addonId) => {
