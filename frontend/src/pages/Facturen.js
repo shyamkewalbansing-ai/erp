@@ -416,84 +416,76 @@ export default function Facturen() {
         </div>
       </div>
 
-      {/* Summary Stats - Responsive Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+      {/* Summary Stats - Responsive Grid - Better Layout */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* Totaal Verschuldigd - Featured */}
-        <div className="col-span-2 lg:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-5 text-white shadow-xl shadow-emerald-500/20">
-          <div className="absolute top-0 right-0 w-20 sm:w-32 h-20 sm:h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-emerald-100 text-xs sm:text-sm font-medium mb-1">Totaal Verschuldigd</p>
-              <p className="text-lg sm:text-xl lg:text-2xl font-bold whitespace-nowrap">{formatCurrency(summary.totalDue)}</p>
+        <div className="sm:col-span-2 lg:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-6 text-white shadow-xl shadow-emerald-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                <FileText className="w-5 h-5" />
+              </div>
+              <p className="text-emerald-100 text-sm font-medium">Totaal Verschuldigd</p>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 hidden sm:flex">
-              <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
+            <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(summary.totalDue)}</p>
           </div>
         </div>
 
         {/* Totaal Ontvangen */}
-        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-5 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Ontvangen</p>
-              <p className="text-base sm:text-lg lg:text-2xl font-bold text-emerald-600 whitespace-nowrap">{formatCurrency(summary.totalPaid)}</p>
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-emerald-500" />
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 hidden sm:flex">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
-            </div>
+            <p className="text-muted-foreground text-sm font-medium">Ontvangen</p>
           </div>
+          <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{formatCurrency(summary.totalPaid)}</p>
         </div>
 
         {/* Openstaand */}
-        <div className={`group relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-5 transition-all duration-300 ${
+        <div className={`group relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-300 ${
           summary.balance > 0 
             ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border border-orange-200 dark:border-orange-900' 
             : 'bg-card border border-border/50'
         }`}>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Openstaand</p>
-              <p className={`text-base sm:text-lg lg:text-2xl font-bold whitespace-nowrap ${summary.balance > 0 ? 'text-orange-600' : 'text-foreground'}`}>
-                {formatCurrency(summary.balance)}
-              </p>
-            </div>
-            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 hidden sm:flex ${
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               summary.balance > 0 ? 'bg-orange-500/10' : 'bg-muted'
             }`}>
-              <TrendingDown className={`w-5 h-5 sm:w-6 sm:h-6 ${summary.balance > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
+              <TrendingDown className={`w-5 h-5 ${summary.balance > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
             </div>
+            <p className="text-muted-foreground text-sm font-medium">Openstaand</p>
           </div>
+          <p className={`text-2xl sm:text-3xl font-bold ${summary.balance > 0 ? 'text-orange-600' : 'text-foreground'}`}>
+            {formatCurrency(summary.balance)}
+          </p>
         </div>
 
         {/* Betaald Count */}
-        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-5 hover:shadow-xl transition-all duration-300">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Betaald</p>
-              <p className="text-base sm:text-lg lg:text-2xl font-bold text-emerald-600">{summary.paidCount}</p>
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 hidden sm:flex">
-              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
-            </div>
+            <p className="text-muted-foreground text-sm font-medium">Betaald</p>
           </div>
+          <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{summary.paidCount}</p>
         </div>
 
         {/* Openstaand Count */}
-        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-5 hover:shadow-xl transition-all duration-300">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <div>
-              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Openstaand</p>
-              <p className={`text-base sm:text-lg lg:text-2xl font-bold ${summary.unpaidCount > 0 ? 'text-orange-600' : 'text-foreground'}`}>
-                {summary.unpaidCount + summary.partialCount}
-              </p>
-            </div>
-            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 hidden sm:flex ${
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center gap-3 mb-2">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               summary.unpaidCount > 0 ? 'bg-orange-500/10' : 'bg-muted'
             }`}>
-              <AlertCircle className={`w-5 h-5 sm:w-6 sm:h-6 ${summary.unpaidCount > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
+              <AlertCircle className={`w-5 h-5 ${summary.unpaidCount > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
             </div>
+            <p className="text-muted-foreground text-sm font-medium">Open Facturen</p>
           </div>
+          <p className={`text-2xl sm:text-3xl font-bold ${summary.unpaidCount > 0 ? 'text-orange-600' : 'text-foreground'}`}>
+            {summary.unpaidCount + summary.partialCount}
+          </p>
         </div>
       </div>
 
