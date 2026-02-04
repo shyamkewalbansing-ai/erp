@@ -376,67 +376,166 @@ export default function MijnModules() {
         </div>
       )}
 
-      {/* Request Dialog */}
-      <Dialog open={addonRequestDialogOpen} onOpenChange={setAddonRequestDialogOpen}>
-        <DialogContent>
+      {/* Order Dialog */}
+      <Dialog open={orderDialogOpen} onOpenChange={(open) => {
+        if (!open) {
+          setOrderDialogOpen(false);
+          setOrderStep(1);
+          setOrderResult(null);
+        }
+      }}>
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>Module Aanvragen</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {orderStep === 1 ? (
+                <><ShoppingCart className="w-5 h-5 text-emerald-600" /> Module Bestellen</>
+              ) : (
+                <><CheckCircle2 className="w-5 h-5 text-emerald-600" /> Bestelling Geplaatst</>
+              )}
+            </DialogTitle>
             <DialogDescription>
-              Vraag toegang aan tot {selectedAddon?.name}
+              {orderStep === 1 
+                ? 'Activeer deze module met 3 dagen gratis proefperiode'
+                : 'Uw module is geactiveerd. Hieronder vindt u de betaalinformatie.'
+              }
             </DialogDescription>
           </DialogHeader>
           
-          {selectedAddon && (
+          {orderStep === 1 && selectedAddon && (
             <div className="space-y-4">
+              {/* Module Info */}
               <div className="p-4 bg-muted rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
                     {(() => {
                       const IconComponent = getModuleIcon(selectedAddon.slug);
-                      return <IconComponent className="w-5 h-5 text-primary" />;
+                      return <IconComponent className="w-6 h-6 text-emerald-600" />;
                     })()}
                   </div>
-                  <div>
-                    <p className="font-medium">{selectedAddon.name}</p>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="flex-1">
+                    <p className="font-semibold text-lg">{selectedAddon.name}</p>
+                    <p className="text-muted-foreground text-sm">
                       {selectedAddon.is_free || selectedAddon.price === 0 
-                        ? 'Gratis' 
-                        : `SRD ${selectedAddon.price?.toLocaleString('nl-NL')}/maand`
+                        ? 'Gratis module' 
+                        : `SRD ${selectedAddon.price?.toLocaleString('nl-NL')} per maand`
                       }
                     </p>
                   </div>
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="notes">Opmerkingen (optioneel)</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Laat ons weten als u specifieke wensen heeft..."
-                  value={addonNotes}
-                  onChange={(e) => setAddonNotes(e.target.value)}
-                />
+              {/* Trial Info */}
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
+                  <div>
+                    <p className="font-medium text-blue-900">3 Dagen Gratis Proefperiode</p>
+                    <p className="text-sm text-blue-700">
+                      U kunt de module direct gebruiken. Betaal binnen 3 dagen om te blijven gebruiken.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
           
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setAddonRequestDialogOpen(false)}>
-              Annuleren
-            </Button>
-            <Button onClick={handleRequestAddon} disabled={requestingAddon}>
-              {requestingAddon ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Bezig...
-                </>
-              ) : (
-                <>
-                  <Check className="w-4 h-4 mr-2" />
-                  Aanvragen
-                </>
+          {orderStep === 2 && orderResult && (
+            <div className="space-y-4">
+              {/* Success Message */}
+              <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                  <div>
+                    <p className="font-medium text-emerald-900">Module Geactiveerd!</p>
+                    <p className="text-sm text-emerald-700">
+                      Proefperiode eindigt op {new Date(orderResult.trial_ends_at).toLocaleDateString('nl-NL')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Payment Info */}
+              {orderResult.total_monthly_amount > 0 && orderResult.payment_info && (
+                <div className="space-y-3">
+                  <Label className="text-base font-semibold flex items-center gap-2">
+                    <Banknote className="w-4 h-4" />
+                    Betaalinformatie
+                  </Label>
+                  
+                  <div className="p-4 bg-slate-50 border rounded-lg space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-muted-foreground">Te betalen:</span>
+                      <span className="font-bold text-lg text-emerald-600">
+                        SRD {orderResult.total_monthly_amount?.toLocaleString('nl-NL')}
+                      </span>
+                    </div>
+                    
+                    {orderResult.payment_info.bank_name && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Bank:</span>
+                        <span className="font-medium">{orderResult.payment_info.bank_name}</span>
+                      </div>
+                    )}
+                    
+                    {orderResult.payment_info.account_number && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">Rekening:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium font-mono">{orderResult.payment_info.account_number}</span>
+                          <button 
+                            onClick={() => copyToClipboard(orderResult.payment_info.account_number)}
+                            className="p-1 hover:bg-slate-200 rounded"
+                          >
+                            <Copy className="w-4 h-4 text-slate-500" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {orderResult.payment_info.account_holder && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">T.n.v.:</span>
+                        <span className="font-medium">{orderResult.payment_info.account_holder}</span>
+                      </div>
+                    )}
+                    
+                    {orderResult.payment_info.instructions && (
+                      <div className="pt-3 border-t">
+                        <p className="text-sm text-muted-foreground">
+                          {orderResult.payment_info.instructions}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    Vermeld uw e-mailadres ({user?.email}) bij de betaling zodat wij uw betaling kunnen verwerken.
+                  </p>
+                </div>
               )}
-            </Button>
+            </div>
+          )}
+          
+          <DialogFooter>
+            {orderStep === 1 ? (
+              <>
+                <Button variant="outline" onClick={() => setOrderDialogOpen(false)}>
+                  Annuleren
+                </Button>
+                <Button onClick={handleOrderAddon} disabled={ordering} className="bg-emerald-600 hover:bg-emerald-700">
+                  {ordering ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Bezig...</>
+                  ) : (
+                    <><Check className="w-4 h-4 mr-2" /> Bestellen & Activeren</>
+                  )}
+                </Button>
+              </>
+            ) : (
+              <Button onClick={() => setOrderDialogOpen(false)} className="w-full bg-emerald-600 hover:bg-emerald-700">
+                <Check className="w-4 h-4 mr-2" />
+                Sluiten & Beginnen
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
