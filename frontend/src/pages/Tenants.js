@@ -618,16 +618,16 @@ export default function Tenants() {
           </div>
         )
       ) : (
-        // Empty State
-        <Card className="border-border/50 border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <div className="w-20 h-20 rounded-2xl bg-muted flex items-center justify-center mb-4">
-              <Users className="w-10 h-10 text-muted-foreground" />
+        // Empty State - Responsive
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 border-dashed">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-muted flex items-center justify-center mb-3 sm:mb-4">
+              <Users className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
             </div>
-            <h3 className="font-semibold text-lg text-foreground mb-2">
+            <h3 className="font-semibold text-base sm:text-lg text-foreground mb-2 text-center">
               {search ? 'Geen huurders gevonden' : 'Nog geen huurders'}
             </h3>
-            <p className="text-muted-foreground text-center mb-6 max-w-sm">
+            <p className="text-muted-foreground text-center mb-4 sm:mb-6 max-w-sm text-xs sm:text-sm">
               {search 
                 ? 'Probeer een andere zoekterm of pas uw filters aan' 
                 : 'Voeg uw eerste huurder toe om te beginnen met het beheren van uw verhuuradministratie'}
@@ -635,14 +635,14 @@ export default function Tenants() {
             {!search && (
               <Button 
                 onClick={() => { resetForm(); setShowModal(true); }}
-                className="shadow-lg shadow-primary/20"
+                className="shadow-lg shadow-emerald-500/20 bg-emerald-500 hover:bg-emerald-600 text-xs sm:text-sm"
               >
-                <UserPlus className="w-4 h-4 mr-2" />
+                <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
                 Eerste Huurder Toevoegen
               </Button>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Add/Edit Modal */}
