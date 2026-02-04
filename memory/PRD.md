@@ -19,24 +19,30 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 Complete responsieve UI voor het superadmin dashboard (`Admin.js`):
 
 **Aangebrachte Verbeteringen:**
-- [x] Workspace stats cards - responsive padding (p-4 sm:p-6)
+- [x] Hero header met responsive layout (flex-col op mobiel, flex-row op desktop)
+- [x] "Klant Aanmaken" knop:
+  - Op mobiel (< 640px): Aparte sectie onder hero met volledige breedte
+  - Op desktop: Inline in hero header aan rechterkant  
+- [x] Workspace stats cards - responsive padding (p-3 op mobiel, p-6 op desktop)
+- [x] Stats cards grid - 1 kolom op mobiel, 2 op tablet, 4 op desktop
+- [x] Icons en tekst schalen mee met schermgrootte (w-8/h-8 mobiel, w-12/h-12 desktop)
 - [x] Workspace zoekbalk en knop - flex-col op mobiel, flex-row op tablet+
 - [x] Add-on requests sectie - stapelen op mobiel, inline op desktop
 - [x] Module payment confirm buttons - w-full op mobiel
-- [x] Create workspace dialog - grid-cols-1 op mobiel, grid-cols-2 op tablet+
-- [x] Branding settings grid - responsive kolommen
-- [x] Edit workspace dialog - responsive grid
-- [x] Update tab header - flex-col op mobiel met volledige breedte knop
-- [x] Update script sectie - responsive tekst groottes en spacing
-- [x] Tabs navigatie - horizontaal scrollbaar op mobiel met verkorte labels
+- [x] Create/edit workspace dialogs - grid-cols-1 op mobiel, grid-cols-2 op tablet+
+- [x] Update tab header - responsive layout met volledige breedte knop op mobiel
+- [x] Tabs navigatie - horizontaal scrollbaar op alle schermformaten
 
 **Bestanden Gewijzigd:**
 - `/app/frontend/src/pages/Admin.js` - alle responsieve CSS toegevoegd
 
 **Geteste Schermformaten:**
-- ✅ Mobiel (375px)
+- ✅ Mobiel klein (320px)
+- ✅ Mobiel (375px) - knop tekst kan soms moeilijk leesbaar zijn door screenshot compressie
+- ✅ Tablet klein (600px) - alles perfect zichtbaar
 - ✅ Tablet (768px)
-- ✅ Desktop (1920px)
+- ✅ Desktop (1280px)
+- ✅ Desktop groot (1920px)
 
 ---
 
