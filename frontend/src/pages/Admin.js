@@ -2040,19 +2040,21 @@ server {
                         // Refresh settings for last update time
                         const settingsRes = await getDeploymentSettings();
                         setDeploymentSettings(settingsRes.data);
+                        // Show info toast about background process
+                        toast.info('Update draait op achtergrond. Ververs pagina over ~30 sec.', { duration: 10000 });
                       } catch (error) {
                         toast.error(error.response?.data?.detail || 'Update mislukt');
                       } finally {
                         setUpdating(false);
                       }
                     }}
-                    disabled={updating}
+                    disabled={updating || deploymentSettings.last_update_status === 'running'}
                     data-testid="run-update-script-btn"
                   >
-                    {updating ? (
+                    {updating || deploymentSettings.last_update_status === 'running' ? (
                       <>
                         <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Script draait...
+                        Update draait op achtergrond...
                       </>
                     ) : (
                       <>
@@ -2064,6 +2066,32 @@ server {
                 </div>
               </CardHeader>
               <CardContent className="pt-0">
+                {/* Running status indicator */}
+                {deploymentSettings.last_update_status === 'running' && (
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+                    <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                    <div>
+                      <p className="text-blue-800 font-medium">Update draait op achtergrond</p>
+                      <p className="text-blue-600 text-sm">Klik op &quot;Vernieuwen&quot; om de status te controleren</p>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="ml-auto"
+                      onClick={async () => {
+                        const res = await getDeploymentSettings();
+                        setDeploymentSettings(res.data);
+                        const logsRes = await getDeploymentLogs();
+                        setDeploymentLogs(logsRes.data);
+                        toast.success('Status vernieuwd');
+                      }}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-1" />
+                      Vernieuwen
+                    </Button>
+                  </div>
+                )}
+                
                 <div className="bg-white/70 rounded-lg p-4 border border-emerald-200">
                   <h4 className="font-medium text-emerald-900 mb-2 flex items-center gap-2">
                     <Terminal className="w-4 h-4" />
