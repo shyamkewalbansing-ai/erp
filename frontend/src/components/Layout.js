@@ -696,7 +696,7 @@ export default function Layout() {
         </header>
 
         {/* Page content - with padding top for fixed header */}
-        <div className="dashboard-content-wrapper p-2 sm:p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden box-border pt-14 lg:pt-2">
+        <div className="p-2 sm:p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden box-border pt-14 lg:pt-2">
           <Outlet />
         </div>
       </main>
