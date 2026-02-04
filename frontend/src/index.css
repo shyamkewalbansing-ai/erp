@@ -176,36 +176,42 @@ code {
 
 /* Page Container */
 .page-container {
-    @apply space-y-6 animate-fade-in;
+    @apply space-y-4 sm:space-y-6 animate-fade-in px-2 sm:px-0;
 }
 
 /* Page Header */
 .page-header {
-    @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2;
+    @apply flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4 pb-2;
 }
 
 .page-title {
-    @apply text-2xl font-bold flex items-center gap-3;
+    @apply text-xl sm:text-2xl font-bold flex items-center gap-2 sm:gap-3;
 }
 
 .page-title-icon {
-    @apply w-8 h-8 p-1.5 rounded-xl;
+    @apply w-7 h-7 sm:w-8 sm:h-8 p-1 sm:p-1.5 rounded-lg sm:rounded-xl;
 }
 
 .page-subtitle {
-    @apply text-muted-foreground text-sm mt-1;
+    @apply text-muted-foreground text-xs sm:text-sm mt-1;
 }
 
 /* Modern Stats Cards */
 .stats-grid {
-    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4;
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4;
 }
 
 .stat-card {
     @apply relative overflow-hidden cursor-pointer transition-all duration-300;
     @apply hover:shadow-lg hover:-translate-y-1;
     @apply border border-border/50 bg-card;
-    border-radius: 16px;
+    border-radius: 12px;
+}
+
+@media (min-width: 640px) {
+    .stat-card {
+        border-radius: 16px;
+    }
 }
 
 .stat-card::before {
@@ -225,27 +231,27 @@ code {
 }
 
 .stat-card-content {
-    @apply p-5 flex items-center justify-between;
+    @apply p-4 sm:p-5 flex items-center justify-between;
 }
 
 .stat-card-info {
-    @apply space-y-1;
+    @apply space-y-0.5 sm:space-y-1 min-w-0 flex-1;
 }
 
 .stat-card-label {
-    @apply text-sm text-muted-foreground font-medium;
+    @apply text-xs sm:text-sm text-muted-foreground font-medium;
 }
 
 .stat-card-value {
-    @apply text-2xl font-bold tracking-tight;
+    @apply text-lg sm:text-2xl font-bold tracking-tight truncate;
 }
 
 .stat-card-icon {
-    @apply w-12 h-12 rounded-2xl flex items-center justify-center;
+    @apply w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ml-2;
 }
 
 .stat-card-icon svg {
-    @apply w-6 h-6;
+    @apply w-5 h-5 sm:w-6 sm:h-6;
 }
 
 /* Color Variants for Stats */
