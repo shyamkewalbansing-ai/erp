@@ -131,13 +131,14 @@ const pompstationNavItems = [
 
 // Boekhouding module navigation - GRATIS voor alle klanten
 const boekhoudingNavItems = [
-  { to: '/app/boekhouding', icon: LayoutDashboard, label: 'Boekhouding Dashboard', addon: 'boekhouding' },
+  { to: '/app/boekhouding', icon: LayoutDashboard, label: 'Dashboard', addon: 'boekhouding' },
   { to: '/app/boekhouding/grootboek', icon: FileText, label: 'Grootboek', addon: 'boekhouding' },
   { to: '/app/boekhouding/debiteuren', icon: Users, label: 'Debiteuren', addon: 'boekhouding' },
   { to: '/app/boekhouding/crediteuren', icon: Building2, label: 'Crediteuren', addon: 'boekhouding' },
   { to: '/app/boekhouding/verkoopfacturen', icon: FileText, label: 'Verkoopfacturen', addon: 'boekhouding' },
   { to: '/app/boekhouding/bankrekeningen', icon: CreditCard, label: 'Bank/Kas', addon: 'boekhouding' },
   { to: '/app/boekhouding/rapportages', icon: BarChart3, label: 'Rapportages', addon: 'boekhouding' },
+  { to: '/app/boekhouding/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'boekhouding' },
 ];
 
 export default function Layout() {
