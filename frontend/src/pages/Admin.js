@@ -831,20 +831,31 @@ server {
       </div>
       
       {/* Mobile action button - outside hero for better visibility */}
-      <div className="sm:hidden">
-        <Button 
+      <div className="sm:hidden px-1">
+        <button 
           onClick={() => setCreateCustomerDialogOpen(true)} 
           data-testid="create-customer-btn-mobile"
-          className="w-full font-semibold shadow-lg"
+          type="button"
           style={{ 
+            width: '100%',
             backgroundColor: '#10b981', 
             color: 'white',
-            border: 'none'
+            border: 'none',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            fontSize: '14px',
+            fontWeight: '600',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            cursor: 'pointer',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
           }}
         >
-          <UserPlus className="w-4 h-4 mr-2" style={{ color: 'white' }} />
-          <span style={{ color: 'white' }}>Klant Aanmaken</span>
-        </Button>
+          <UserPlus style={{ width: '16px', height: '16px', color: 'white' }} />
+          <span>Klant Aanmaken</span>
+        </button>
       </div>
 
       {/* Stats Cards - Responsive Grid */}
