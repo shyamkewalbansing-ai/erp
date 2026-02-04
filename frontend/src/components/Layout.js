@@ -525,20 +525,19 @@ export default function Layout() {
                   </NavLink>
                   <NavLink
                     to="/app/abonnement"
-                      onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
-                      data-testid="nav-abonnement"
-                    >
-                      <Package className="w-4 h-4" />
-                      <span>Mijn Modules</span>
-                      {showExpiredBadge && (
-                        <Badge className="ml-auto text-[10px] bg-red-500/10 text-red-500 border-red-500/20">!</Badge>
-                      )}
-                    </NavLink>
-                  </div>
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                    data-testid="nav-abonnement"
+                  >
+                    <Package className="w-4 h-4" />
+                    <span>Mijn Modules</span>
+                    {showExpiredBadge && (
+                      <Badge className="ml-auto text-[10px] bg-red-500/10 text-red-500 border-red-500/20">!</Badge>
+                    )}
+                  </NavLink>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </nav>
       </aside>
