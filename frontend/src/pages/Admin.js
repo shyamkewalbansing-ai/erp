@@ -792,9 +792,9 @@ server {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8" data-testid="admin-page">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-1" data-testid="admin-page">
       {/* Hero Header - Same style as Dashboard */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-10">
+      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-10">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
@@ -804,16 +804,16 @@ server {
         <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-emerald-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
         <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-teal-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
         
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+        <div className="relative flex flex-col gap-3 sm:gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-emerald-500/20 backdrop-blur-sm text-emerald-300 text-xs sm:text-sm mb-3 sm:mb-4">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1 sm:py-2 rounded-full bg-emerald-500/20 backdrop-blur-sm text-emerald-300 text-[10px] sm:text-sm mb-2 sm:mb-4">
               <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>SUPERADMIN</span>
             </div>
-            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+            <h1 className="text-lg sm:text-2xl lg:text-4xl font-bold text-white mb-1">
               Beheerder Dashboard
             </h1>
-            <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
+            <p className="text-slate-400 text-xs sm:text-base lg:text-lg">
               Beheer klanten, modules en instellingen
             </p>
           </div>
@@ -822,9 +822,9 @@ server {
             onClick={() => setCreateCustomerDialogOpen(true)} 
             data-testid="create-customer-btn"
             size="sm"
-            className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 text-xs sm:text-sm"
+            className="w-full sm:w-auto self-start bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 text-xs sm:text-sm h-9 sm:h-10"
           >
-            <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
             Klant Aanmaken
           </Button>
         </div>
