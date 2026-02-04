@@ -438,66 +438,6 @@ export default function Contracten() {
           </div>
         </div>
       )}
-            <div className="text-center py-12">
-              <FileSignature className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-              <h3 className="text-lg font-medium text-foreground mb-2">Geen contracten gevonden</h3>
-              <p className="text-muted-foreground">Maak een nieuw contract aan om te beginnen</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Huurder</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Appartement</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Huurperiode</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Huurprijs</th>
-                    <th className="text-left p-4 font-medium text-muted-foreground">Status</th>
-                    <th className="text-right p-4 font-medium text-muted-foreground">Acties</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {filteredContracts.map((contract) => (
-                    <tr key={contract.id} className="hover:bg-muted/30" data-testid={`contract-row-${contract.id}`}>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-medium">{contract.tenant_name}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Building2 className="w-4 h-4 text-muted-foreground" />
-                          <span>{contract.apartment_name}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <span>
-                            {contract.start_date}
-                            {contract.end_date ? ` - ${contract.end_date}` : ' - Onbepaald'}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-4 font-medium">{formatCurrency(contract.rent_amount)}</td>
-                      <td className="p-4">{getStatusBadge(contract.status)}</td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-end gap-2">
-                          {contract.status === 'pending_signature' && (
-                            <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleShowSigningLink(contract)}
-                              data-testid={`signing-link-btn-${contract.id}`}
-                            >
-                              <Link2 className="w-4 h-4 mr-1" />
-                              Link
-                            </Button>
-                          )}
-                          <Button 
-                            variant="outline" 
-                            size="sm"
                             onClick={() => handleDownloadPdf(contract)}
                             data-testid={`download-pdf-btn-${contract.id}`}
                           >
