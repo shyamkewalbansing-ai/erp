@@ -379,15 +379,14 @@ export default function Tenants() {
       {/* Tenants Display */}
       {filteredTenants.length > 0 ? (
         viewMode === 'grid' ? (
-          // Grid View
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          // Grid View - Responsive
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {filteredTenants.map((tenant) => (
-              <Card 
+              <div 
                 key={tenant.id} 
-                className="border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 group overflow-hidden"
+                className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 hover:border-emerald-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5"
                 data-testid={`tenant-card-${tenant.id}`}
               >
-                <CardContent className="p-0">
                   {/* Card Header with Avatar */}
                   <div className="p-5 pb-4">
                     <div className="flex items-start justify-between">
