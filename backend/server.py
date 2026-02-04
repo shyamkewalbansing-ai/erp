@@ -7549,6 +7549,86 @@ async def get_module_payment_status(current_user: dict = Depends(get_current_use
         "payment_info": payment_settings.get("bank_transfer", default_payment_info) if payment_settings else default_payment_info
     }
 
+@api_router.get("/user/modules/payment-methods")
+async def get_module_payment_methods(current_user: dict = Depends(get_current_user)):
+    """Get available payment methods for module orders"""
+    # Get global payment settings from admin
+    payment_settings = await db.payment_settings.find_one(
+        {"type": "global"},
+        {"_id": 0}
+    )
+    
+    # If no global settings, try workspace settings with workspace_id = "global"
+    if not payment_settings:
+        payment_settings = await db.workspace_payment_settings.find_one(
+            {"workspace_id": "global"},
+            {"_id": 0}
+        )
+    
+    # Build list of enabled payment methods
+    payment_methods = []
+    
+    if payment_settings and payment_settings.get("payment_methods"):
+        for m in payment_settings.get("payment_methods", []):
+            if m.get("is_enabled", False):
+                method_info = {
+                    "method_id": m.get("method_id"),
+                    "name": m.get("name"),
+                    "description": m.get("description"),
+                    "instructions": m.get("instructions"),
+                    "is_default": m.get("is_default", False)
+                }
+                
+                # Add bank details for bank transfer
+                if m.get("method_id") == "bank_transfer" and m.get("bank_settings"):
+                    method_info["bank_settings"] = {
+                        "bank_name": m["bank_settings"].get("bank_name", ""),
+                        "account_holder": m["bank_settings"].get("account_holder", ""),
+                        "account_number": m["bank_settings"].get("account_number", ""),
+                        "iban": m["bank_settings"].get("iban", ""),
+                        "description": m["bank_settings"].get("description", "")
+                    }
+                
+                payment_methods.append(method_info)
+    elif payment_settings and payment_settings.get("bank_transfer"):
+        # Old format - single bank transfer
+        bank_info = payment_settings.get("bank_transfer", {})
+        payment_methods.append({
+            "method_id": "bank_transfer",
+            "name": "Bankoverschrijving",
+            "description": "Betalen via bankoverschrijving",
+            "instructions": bank_info.get("instructions", "Maak het bedrag over naar onderstaande rekening."),
+            "is_default": True,
+            "bank_settings": {
+                "bank_name": bank_info.get("bank_name", ""),
+                "account_holder": bank_info.get("account_holder", ""),
+                "account_number": bank_info.get("account_number", ""),
+                "iban": bank_info.get("iban", ""),
+                "description": bank_info.get("description", "")
+            }
+        })
+    
+    # Default if no payment methods configured
+    if not payment_methods:
+        payment_methods = [{
+            "method_id": "bank_transfer",
+            "name": "Bankoverschrijving",
+            "description": "Betalen via bankoverschrijving",
+            "instructions": "Neem contact op met de beheerder voor betaalinformatie.",
+            "is_default": True,
+            "bank_settings": {
+                "bank_name": "",
+                "account_holder": "",
+                "account_number": "",
+                "description": ""
+            }
+        }]
+    
+    return {
+        "payment_methods": payment_methods,
+        "default_method": next((m["method_id"] for m in payment_methods if m.get("is_default")), "bank_transfer")
+    }
+
 @api_router.post("/user/modules/payment-request")
 async def submit_payment_request(current_user: dict = Depends(get_current_user)):
     """Submit a payment request for expired modules"""
