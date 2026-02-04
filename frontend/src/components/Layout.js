@@ -429,19 +429,19 @@ export default function Layout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
+        <nav className="flex-1 overflow-y-auto overflow-x-hidden">
           {/* Admin link - only for superadmin */}
           {isSuperAdmin() && (
             <NavLink
               to="/app/admin"
               onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center' : ''}`}
               data-testid="nav-admin"
               title="Beheerder"
             >
               <Crown className="w-5 h-5 flex-shrink-0" />
               {!isCollapsed && <span>Beheerder</span>}
-              {!isCollapsed && <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>}
+              {!isCollapsed && <Badge className="ml-auto text-[10px] bg-amber-100 text-amber-700 border-amber-200">Admin</Badge>}
             </NavLink>
           )}
 
