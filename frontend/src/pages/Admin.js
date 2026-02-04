@@ -792,9 +792,9 @@ server {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8 w-full max-w-full overflow-x-hidden" data-testid="admin-page">
+    <div className="space-y-3 sm:space-y-4 lg:space-y-6 w-full max-w-full" data-testid="admin-page">
       {/* Hero Header - Same style as Dashboard */}
-      <div className="relative overflow-hidden rounded-xl sm:rounded-2xl lg:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-3 sm:p-6 lg:p-10">
+      <div className="relative overflow-hidden rounded-lg sm:rounded-xl lg:rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-2.5 sm:p-4 lg:p-8">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
@@ -802,18 +802,17 @@ server {
         
         {/* Decorative Blurs - hidden on mobile for performance */}
         <div className="hidden lg:block absolute top-0 right-0 w-96 h-96 bg-emerald-500/30 rounded-full blur-[100px]"></div>
-        <div className="hidden lg:block absolute bottom-0 left-1/4 w-64 h-64 bg-teal-500/20 rounded-full blur-[80px]"></div>
         
-        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
           <div className="min-w-0 flex-1">
-            <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full bg-emerald-500/20 backdrop-blur-sm text-emerald-300 text-[10px] sm:text-xs mb-2">
-              <Shield className="w-3 h-3" />
+            <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/20 backdrop-blur-sm text-emerald-300 text-[8px] sm:text-[10px] mb-1.5">
+              <Shield className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               <span>SUPERADMIN</span>
             </div>
-            <h1 className="text-base sm:text-xl lg:text-3xl font-bold text-white mb-0.5 truncate">
+            <h1 className="text-sm sm:text-lg lg:text-2xl font-bold text-white">
               Beheerder Dashboard
             </h1>
-            <p className="text-slate-400 text-[11px] sm:text-sm lg:text-base truncate">
+            <p className="text-slate-400 text-[10px] sm:text-xs lg:text-sm truncate">
               Beheer klanten, modules en instellingen
             </p>
           </div>
@@ -823,9 +822,9 @@ server {
             onClick={() => setCreateCustomerDialogOpen(true)} 
             data-testid="create-customer-btn-desktop"
             size="sm"
-            className="hidden sm:inline-flex bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg flex-shrink-0"
+            className="hidden sm:inline-flex bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg flex-shrink-0 text-xs"
           >
-            <UserPlus className="w-4 h-4 mr-1.5" />
+            <UserPlus className="w-3.5 h-3.5 mr-1" />
             <span className="hidden md:inline">Klant Aanmaken</span>
             <span className="md:hidden">Nieuw</span>
           </Button>
@@ -837,64 +836,50 @@ server {
         <Button 
           onClick={() => setCreateCustomerDialogOpen(true)} 
           data-testid="create-customer-btn-mobile"
-          className="w-full"
+          className="w-full text-xs h-8"
           size="sm"
         >
-          <Plus className="w-4 h-4 mr-1.5" />
+          <Plus className="w-3.5 h-3.5 mr-1" />
           Klant Aanmaken
         </Button>
       </div>
 
       {/* Stats Cards - Responsive Grid - 2 kolommen op mobiel, 4 op desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2 lg:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2 lg:gap-3">
         {/* Total Customers - Featured */}
-        <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-2 sm:p-3 text-white shadow-lg">
-          <div className="absolute top-0 right-0 w-12 sm:w-20 h-12 sm:h-20 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div className="relative">
-            <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-white/20 flex items-center justify-center flex-shrink-0">
-                <Users className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-              </div>
-              <p className="text-emerald-100 text-[9px] sm:text-[10px] font-medium truncate">Klanten</p>
-            </div>
-            <p className="text-base sm:text-xl lg:text-2xl font-bold">{stats?.total_customers || 0}</p>
+        <div className="overflow-hidden rounded-md sm:rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 p-1.5 sm:p-2.5 text-white">
+          <div className="flex items-center gap-1 mb-0.5">
+            <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 opacity-80" />
+            <span className="text-[8px] sm:text-[10px] opacity-90">Klanten</span>
           </div>
+          <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats?.total_customers || 0}</p>
         </div>
 
         {/* Active Subscriptions */}
-        <div className="group relative overflow-hidden rounded-lg bg-card border border-border/50 p-2 sm:p-3">
-          <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-500" />
-            </div>
-            <p className="text-muted-foreground text-[9px] sm:text-[10px] font-medium truncate">Actief</p>
+        <div className="overflow-hidden rounded-md sm:rounded-lg bg-card border p-1.5 sm:p-2.5">
+          <div className="flex items-center gap-1 mb-0.5">
+            <CheckCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-500" />
+            <span className="text-[8px] sm:text-[10px] text-muted-foreground">Actief</span>
           </div>
-          <p className="text-base sm:text-xl font-bold text-emerald-600">{stats?.active_subscriptions || 0}</p>
+          <p className="text-lg sm:text-xl font-bold text-emerald-600">{stats?.active_subscriptions || 0}</p>
         </div>
 
         {/* Expired Subscriptions */}
-        <div className="group relative overflow-hidden rounded-lg bg-card border border-border/50 p-2 sm:p-3">
-          <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-rose-500/10 flex items-center justify-center flex-shrink-0">
-              <XCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-500" />
-            </div>
-            <p className="text-muted-foreground text-[9px] sm:text-[10px] font-medium truncate">Verlopen</p>
+        <div className="overflow-hidden rounded-md sm:rounded-lg bg-card border p-1.5 sm:p-2.5">
+          <div className="flex items-center gap-1 mb-0.5">
+            <XCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-rose-500" />
+            <span className="text-[8px] sm:text-[10px] text-muted-foreground">Verlopen</span>
           </div>
-          <p className="text-base sm:text-xl font-bold text-rose-600">{stats?.expired_subscriptions || 0}</p>
+          <p className="text-lg sm:text-xl font-bold text-rose-600">{stats?.expired_subscriptions || 0}</p>
         </div>
 
         {/* Revenue Card */}
-        <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 to-slate-800 p-2 sm:p-3">
-          <div className="absolute top-0 right-0 w-12 sm:w-20 h-12 sm:h-20 bg-emerald-500/20 rounded-full blur-[30px]"></div>
-          <div className="relative">
-            <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
-              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-white/10 flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-400" />
-              </div>
-              <p className="text-slate-400 text-[9px] sm:text-[10px] font-medium truncate">Omzet</p>
-            </div>
-            <p className="text-base sm:text-xl font-bold text-white truncate">{formatCurrency(stats?.total_revenue || 0)}</p>
+        <div className="overflow-hidden rounded-md sm:rounded-lg bg-slate-900 p-1.5 sm:p-2.5">
+          <div className="flex items-center gap-1 mb-0.5">
+            <TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
+            <span className="text-[8px] sm:text-[10px] text-slate-400">Omzet</span>
           </div>
+          <p className="text-lg sm:text-xl font-bold text-white truncate">{formatCurrency(stats?.total_revenue || 0)}</p>
         </div>
       </div>
 
