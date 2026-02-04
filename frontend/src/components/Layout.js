@@ -549,11 +549,20 @@ export default function Layout() {
                   className="h-7 w-auto max-w-[140px] object-contain"
                 />
               ) : (
-                <img 
-                  src="https://customer-assets.emergentagent.com/job_e0e6d0f3-5640-4b42-9035-36d9fba2aead/artifacts/sn638vwv_logo_dark.webp" 
-                  alt="FACTURATIE" 
-                  className="h-8 w-auto object-contain"
-                />
+                <>
+                  {/* Light mode logo (dark text) */}
+                  <img 
+                    src="https://customer-assets.emergentagent.com/job_e0e6d0f3-5640-4b42-9035-36d9fba2aead/artifacts/sn638vwv_logo_dark.webp" 
+                    alt="FACTURATIE" 
+                    className="h-8 w-auto object-contain dark:hidden"
+                  />
+                  {/* Dark mode logo (light text) */}
+                  <img 
+                    src="https://customer-assets.emergentagent.com/job_e0e6d0f3-5640-4b42-9035-36d9fba2aead/artifacts/4jn2bbd5_logo_light.webp" 
+                    alt="FACTURATIE" 
+                    className="h-8 w-auto object-contain hidden dark:block"
+                  />
+                </>
               )
             ) : (
               <div className="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center">
@@ -574,7 +583,7 @@ export default function Layout() {
           {isCollapsed && (
             <button
               onClick={toggleSidebarCollapse}
-              className="sidebar-toggle-btn hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 bg-white shadow-md border border-slate-200"
+              className="sidebar-toggle-btn hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-600"
               style={{ width: '24px', height: '24px', borderRadius: '50%' }}
               title="Sidebar uitklappen"
             >
