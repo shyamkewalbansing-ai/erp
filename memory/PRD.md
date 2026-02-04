@@ -15,6 +15,36 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (4 Feb 2026)
 
+### APARTMENTS PAGINA MODERNISERING ✅ (VOLTOOID - 4 Feb 2026)
+Complete UI modernisering van de Appartements pagina in lijn met de Tenants pagina.
+
+**Wat is geïmplementeerd:**
+- [x] **Hero Banner** - Moderne gradient header met aantal appartementen, titel en nieuwe appartement knop
+- [x] **4 Stats Cards** - Totaal, Bezet (met bezettingspercentage), Beschikbaar, Huurinkomsten
+- [x] **Moderne Zoek/Filter Bar** - Consistent met Tenants pagina styling
+- [x] **Verbeterde Kaart Layout** - Met status badges, iconen en hover effecten
+- [x] **Volledig Responsief** - Grid past zich aan: 1 kolom mobiel, 2 kolom tablet, 3 kolom desktop
+- [x] **Moderne Loading Spinner** - Met tekst "Appartementen laden..."
+- [x] **Verbeterde Empty State** - Met CTA knop
+
+**Gewijzigde Bestanden:**
+- `/app/frontend/src/pages/Apartments.js` - Complete UI update
+
+### SUPERADMIN SIDEBAR UITGESCHAKELD ✅ (VOLTOOID - 4 Feb 2026)
+De zijbalk is nu volledig verborgen voor superadmin gebruikers.
+
+**Wat is geïmplementeerd:**
+- [x] Sidebar wordt niet gerenderd voor superadmin role
+- [x] Main content krijgt `main-content-full-width` class
+- [x] Header neemt volledige breedte in
+- [x] Werkt op zowel desktop als mobiel
+
+**Gewijzigde Bestanden:**
+- `/app/frontend/src/components/Layout.js` - Conditie voor sidebar rendering
+- `/app/frontend/src/App.css` - Nieuwe `.main-content-full-width` class
+
+---
+
 ### SUPERADMIN DASHBOARD RESPONSIVENESS ✅ (VOLTOOID - 4 Feb 2026)
 Complete responsieve UI voor het superadmin dashboard zonder horizontaal scrollen.
 
