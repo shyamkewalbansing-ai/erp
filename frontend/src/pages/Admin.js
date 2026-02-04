@@ -846,59 +846,54 @@ server {
       </div>
 
       {/* Stats Cards - Responsive Grid - 2 kolommen op mobiel, 4 op desktop */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-1.5 sm:gap-2 lg:gap-4">
         {/* Total Customers - Featured */}
-        <div className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-2.5 sm:p-4 text-white shadow-lg">
-          <div className="absolute top-0 right-0 w-16 sm:w-24 h-16 sm:h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-2 sm:p-3 text-white shadow-lg">
+          <div className="absolute top-0 right-0 w-12 sm:w-20 h-12 sm:h-20 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative">
-            <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+            <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-white/20 flex items-center justify-center flex-shrink-0">
+                <Users className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
               </div>
-              <p className="text-emerald-100 text-[10px] sm:text-xs font-medium truncate">Klanten</p>
+              <p className="text-emerald-100 text-[9px] sm:text-[10px] font-medium truncate">Klanten</p>
             </div>
-            <p className="text-lg sm:text-2xl lg:text-3xl font-bold">{stats?.total_customers || 0}</p>
+            <p className="text-base sm:text-xl lg:text-2xl font-bold">{stats?.total_customers || 0}</p>
           </div>
         </div>
 
         {/* Active Subscriptions */}
-        <div className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-card border border-border/50 p-2.5 sm:p-4">
-          <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500" />
+        <div className="group relative overflow-hidden rounded-lg bg-card border border-border/50 p-2 sm:p-3">
+          <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-500" />
             </div>
-            <p className="text-muted-foreground text-[10px] sm:text-xs font-medium truncate">Actief</p>
+            <p className="text-muted-foreground text-[9px] sm:text-[10px] font-medium truncate">Actief</p>
           </div>
-          <p className="text-lg sm:text-2xl font-bold text-emerald-600">{stats?.active_subscriptions || 0}</p>
-          <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate">Abonnementen</p>
+          <p className="text-base sm:text-xl font-bold text-emerald-600">{stats?.active_subscriptions || 0}</p>
         </div>
 
         {/* Expired Subscriptions */}
-        <div className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-card border border-border/50 p-2.5 sm:p-4">
-          <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-rose-500/10 flex items-center justify-center flex-shrink-0">
-              <XCircle className="w-3 h-3 sm:w-4 sm:h-4 text-rose-500" />
+        <div className="group relative overflow-hidden rounded-lg bg-card border border-border/50 p-2 sm:p-3">
+          <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-rose-500/10 flex items-center justify-center flex-shrink-0">
+              <XCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-500" />
             </div>
-            <p className="text-muted-foreground text-[10px] sm:text-xs font-medium truncate">Verlopen</p>
+            <p className="text-muted-foreground text-[9px] sm:text-[10px] font-medium truncate">Verlopen</p>
           </div>
-          <p className="text-lg sm:text-2xl font-bold text-rose-600">{stats?.expired_subscriptions || 0}</p>
-          <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 truncate">Abonnementen</p>
+          <p className="text-base sm:text-xl font-bold text-rose-600">{stats?.expired_subscriptions || 0}</p>
         </div>
 
         {/* Revenue Card */}
-        <div className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 p-2.5 sm:p-4">
-          <div className="absolute top-0 right-0 w-16 sm:w-24 h-16 sm:h-24 bg-emerald-500/20 rounded-full blur-[40px]"></div>
+        <div className="group relative overflow-hidden rounded-lg bg-gradient-to-br from-slate-900 to-slate-800 p-2 sm:p-3">
+          <div className="absolute top-0 right-0 w-12 sm:w-20 h-12 sm:h-20 bg-emerald-500/20 rounded-full blur-[30px]"></div>
           <div className="relative">
-            <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
-              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
-                <TrendingUp className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
+            <div className="flex items-center gap-1 sm:gap-1.5 mb-0.5">
+              <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-white/10 flex items-center justify-center flex-shrink-0">
+                <TrendingUp className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-emerald-400" />
               </div>
-              <p className="text-slate-400 text-[10px] sm:text-xs font-medium truncate">Omzet</p>
+              <p className="text-slate-400 text-[9px] sm:text-[10px] font-medium truncate">Omzet</p>
             </div>
-            <p className="text-lg sm:text-2xl font-bold text-white truncate">{formatCurrency(stats?.total_revenue || 0)}</p>
-            <p className="text-[9px] sm:text-[10px] text-emerald-400 mt-0.5 truncate">
-              Maand: {formatCurrency(stats?.revenue_this_month || 0)}
-            </p>
+            <p className="text-base sm:text-xl font-bold text-white truncate">{formatCurrency(stats?.total_revenue || 0)}</p>
           </div>
         </div>
       </div>
