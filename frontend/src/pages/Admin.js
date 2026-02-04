@@ -833,56 +833,56 @@ server {
       {/* Stats Cards - Responsive Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {/* Total Customers - Featured */}
-        <div className="sm:col-span-2 lg:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-6 text-white shadow-xl shadow-emerald-500/20">
-          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-3 sm:p-6 text-white shadow-xl shadow-emerald-500/20">
+          <div className="absolute top-0 right-0 w-20 sm:w-32 h-20 sm:h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center">
-                <Users className="w-5 h-5 sm:w-6 sm:h-6" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+              <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-white/20 flex items-center justify-center">
+                <Users className="w-4 h-4 sm:w-6 sm:h-6" />
               </div>
-              <p className="text-emerald-100 text-xs sm:text-sm font-medium">Totaal Klanten</p>
+              <p className="text-emerald-100 text-[11px] sm:text-sm font-medium">Totaal Klanten</p>
             </div>
-            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">{stats?.total_customers || 0}</p>
+            <p className="text-xl sm:text-3xl lg:text-4xl font-bold">{stats?.total_customers || 0}</p>
           </div>
         </div>
 
         {/* Active Subscriptions */}
-        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-6 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+              <CheckCircle className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-500" />
             </div>
-            <p className="text-muted-foreground text-xs sm:text-sm font-medium">Actief</p>
+            <p className="text-muted-foreground text-[11px] sm:text-sm font-medium">Actief</p>
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{stats?.active_subscriptions || 0}</p>
-          <p className="text-xs text-muted-foreground mt-1">Actieve Abonnementen</p>
+          <p className="text-xl sm:text-3xl font-bold text-emerald-600">{stats?.active_subscriptions || 0}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Actieve Abonnementen</p>
         </div>
 
         {/* Expired Subscriptions */}
-        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-rose-500/10 flex items-center justify-center">
-              <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500" />
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-6 hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-rose-500/10 flex items-center justify-center">
+              <XCircle className="w-4 h-4 sm:w-6 sm:h-6 text-rose-500" />
             </div>
-            <p className="text-muted-foreground text-xs sm:text-sm font-medium">Verlopen</p>
+            <p className="text-muted-foreground text-[11px] sm:text-sm font-medium">Verlopen</p>
           </div>
-          <p className="text-2xl sm:text-3xl font-bold text-rose-600">{stats?.expired_subscriptions || 0}</p>
-          <p className="text-xs text-muted-foreground mt-1">Verlopen Abonnementen</p>
+          <p className="text-xl sm:text-3xl font-bold text-rose-600">{stats?.expired_subscriptions || 0}</p>
+          <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">Verlopen Abonnementen</p>
         </div>
 
         {/* Revenue Card */}
-        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-4 sm:p-6">
-          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-emerald-500/20 rounded-full blur-[60px]"></div>
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-3 sm:p-6">
+          <div className="absolute top-0 right-0 w-20 sm:w-32 h-20 sm:h-32 bg-emerald-500/20 rounded-full blur-[60px]"></div>
           <div className="relative">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/10 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+              <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-2xl bg-white/10 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 sm:w-6 sm:h-6 text-emerald-400" />
               </div>
-              <p className="text-slate-400 text-xs sm:text-sm font-medium">Omzet</p>
+              <p className="text-slate-400 text-[11px] sm:text-sm font-medium">Omzet</p>
             </div>
-            <p className="text-2xl sm:text-3xl font-bold text-white">{formatCurrency(stats?.total_revenue || 0)}</p>
-            <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
-              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+            <p className="text-xl sm:text-3xl font-bold text-white">{formatCurrency(stats?.total_revenue || 0)}</p>
+            <p className="text-[10px] sm:text-xs text-emerald-400 mt-0.5 sm:mt-1 flex items-center gap-1">
+              <span className="inline-block w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400"></span>
               Deze maand: {formatCurrency(stats?.revenue_this_month || 0)}
             </p>
           </div>
@@ -891,7 +891,7 @@ server {
 
       {/* Pending Requests - Modern Alert */}
       {requests.length > 0 && (
-        <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-amber-200 dark:border-amber-900/50 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4 sm:p-6">
+        <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-amber-200 dark:border-amber-900/50 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-3 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/25 flex-shrink-0">
               <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
