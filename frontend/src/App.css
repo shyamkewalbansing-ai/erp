@@ -261,7 +261,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Main content */
 .main-content {
     flex: 1;
-    margin-left: 252px; /* 280px * 0.9 = 252px visual width after scale */
+    margin-left: 280px; /* Full sidebar width since no transform scale */
     min-height: 100vh;
     background: hsl(var(--background));
     padding-top: 60px; /* Space for fixed header */
