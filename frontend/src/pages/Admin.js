@@ -818,16 +818,15 @@ server {
             </p>
           </div>
           
-          <Button 
+          <button 
             onClick={() => setCreateCustomerDialogOpen(true)} 
             data-testid="create-customer-btn"
-            size="sm"
-            variant="secondary"
-            className="w-full sm:w-auto self-start !bg-white !hover:bg-gray-100 !text-emerald-700 font-semibold shadow-lg text-xs sm:text-sm h-9 sm:h-10 border-0"
+            className="w-full sm:w-auto self-start font-semibold shadow-lg text-xs sm:text-sm h-9 sm:h-10 px-4 rounded-md inline-flex items-center justify-center gap-2"
+            style={{ backgroundColor: 'white', color: '#047857' }}
           >
-            <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
-            Klant Aanmaken
-          </Button>
+            <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>Klant Aanmaken</span>
+          </button>
         </div>
       </div>
 
