@@ -753,57 +753,60 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8" data-testid="dashboard">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="dashboard">
       {/* Module Expiring Banner */}
       <ModuleExpiringBanner />
       
-      {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-8 lg:p-10">
+      {/* Hero Header - Responsive */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-10">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
         
-        {/* Decorative Blurs */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/30 rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-blue-500/20 rounded-full blur-[80px]"></div>
+        {/* Decorative Blurs - Hidden on mobile for performance */}
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-emerald-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-blue-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
         
-        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-emerald-300 text-sm mb-4">
-              <Calendar className="w-4 h-4" />
-              {currentDate}
+        <div className="relative flex flex-col gap-4 sm:gap-6">
+          <div className="flex-1">
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-emerald-300 text-xs sm:text-sm mb-3 sm:mb-4">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="truncate">{currentDate}</span>
             </div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
               Welkom terug, <span className="text-emerald-400">{user?.name?.split(' ')[0] || 'Gebruiker'}</span>
             </h1>
-            <p className="text-slate-400 text-lg">
+            <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
               Hier is een overzicht van uw verhuurportfolio
             </p>
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
             {user?.logo && (
               <img 
                 src={user.logo} 
                 alt="Logo" 
-                className="h-20 w-auto object-contain bg-white/10 backdrop-blur-sm rounded-2xl p-3"
+                className="h-12 sm:h-16 lg:h-20 w-auto object-contain bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-2 sm:p-3"
               />
             )}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Button 
                 onClick={() => setShowQuickStart(true)}
                 variant="outline"
-                className="bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20"
+                size="sm"
+                className="flex-1 sm:flex-none bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20 text-xs sm:text-sm"
               >
-                <Rocket className="w-4 h-4 mr-2" />
-                Quick Start
+                <Rocket className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden xs:inline">Quick Start</span>
+                <span className="xs:hidden">Start</span>
               </Button>
               <Button 
                 onClick={() => navigate('/app/boekhouding')}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white"
+                size="sm"
+                className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm"
               >
-                <BarChart3 className="w-4 h-4 mr-2" />
+                <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Boekhouding
               </Button>
             </div>
@@ -811,48 +814,48 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Stats Grid - Responsive */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {/* Occupancy Rate - Featured Card */}
-        <div className="lg:col-span-2 group relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-6 text-white shadow-xl shadow-emerald-500/20">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-          <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+        <div className="sm:col-span-2 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-6 text-white shadow-xl shadow-emerald-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-40 h-24 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-20 sm:w-32 h-20 sm:h-32 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
           
           <div className="relative">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <p className="text-emerald-100 text-sm font-medium mb-1">Bezettingsgraad</p>
+            <div className="flex items-start justify-between mb-4 sm:mb-6">
+              <div className="flex-1 min-w-0">
+                <p className="text-emerald-100 text-xs sm:text-sm font-medium mb-1">Bezettingsgraad</p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-5xl font-bold">{occupancyRate}%</span>
-                  <span className="text-emerald-200 text-sm">bezet</span>
+                  <span className="text-3xl sm:text-4xl lg:text-5xl font-bold">{occupancyRate}%</span>
+                  <span className="text-emerald-200 text-xs sm:text-sm">bezet</span>
                 </div>
               </div>
-              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <Activity className="w-7 h-7" />
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0 ml-2">
+                <Activity className="w-5 h-5 sm:w-7 sm:h-7" />
               </div>
             </div>
             
             {/* Progress Bar */}
-            <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden mb-4">
+            <div className="w-full h-2 sm:h-3 bg-white/20 rounded-full overflow-hidden mb-3 sm:mb-4">
               <div 
                 className="h-full bg-white rounded-full transition-all duration-1000 ease-out"
                 style={{ width: `${occupancyRate}%` }}
               ></div>
             </div>
             
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full">
-                  <Building2 className="w-4 h-4" />
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs sm:text-sm">
+              <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1 scrollbar-hide">
+                <span className="flex items-center gap-1 sm:gap-2 bg-white/20 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full whitespace-nowrap flex-shrink-0">
+                  <Building2 className="w-3 h-3 sm:w-4 sm:h-4" />
                   {stats?.total_apartments || 0} totaal
                 </span>
-                <span className="flex items-center gap-2">
-                  <Users className="w-4 h-4" />
+                <span className="flex items-center gap-1 sm:gap-2 whitespace-nowrap flex-shrink-0">
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4" />
                   {stats?.occupied_apartments || 0} bezet
                 </span>
               </div>
-              <Badge className="bg-white/20 text-white border-0 hover:bg-white/30">
-                <Zap className="w-3 h-3 mr-1" />
+              <Badge className="bg-white/20 text-white border-0 hover:bg-white/30 self-start sm:self-auto text-xs">
+                <Zap className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
                 Live
               </Badge>
             </div>
@@ -860,56 +863,56 @@ export default function Dashboard() {
         </div>
 
         {/* Income Card */}
-        <div className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 p-6 border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
-          <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900 p-4 sm:p-6 border border-slate-200 dark:border-slate-800 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+          <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-gradient-to-br from-blue-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2"></div>
           
-          <div className="flex items-start justify-between mb-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <TrendingUp className="w-6 h-6 text-white" />
+          <div className="flex items-start justify-between mb-3 sm:mb-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div className="flex items-center gap-1 text-emerald-600 text-sm font-medium bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
-              <ArrowUp className="w-3 h-3" />
+            <div className="flex items-center gap-1 text-emerald-600 text-xs font-medium bg-emerald-50 dark:bg-emerald-900/30 px-2 py-1 rounded-full">
+              <ArrowUp className="w-2 h-2 sm:w-3 sm:h-3" />
               +12%
             </div>
           </div>
           
-          <p className="text-muted-foreground text-sm font-medium">Inkomsten deze maand</p>
-          <p className="text-3xl font-bold text-foreground mt-1">
+          <p className="text-muted-foreground text-xs sm:text-sm font-medium">Inkomsten deze maand</p>
+          <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mt-1 truncate">
             {formatCurrency(stats?.total_income_this_month || 0)}
           </p>
           
-          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-            <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground hover:text-foreground" onClick={() => navigate('/app/betalingen')}>
+          <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-100 dark:border-slate-800">
+            <Button variant="ghost" size="sm" className="w-full justify-between text-muted-foreground hover:text-foreground text-xs sm:text-sm p-0 h-auto" onClick={() => navigate('/app/betalingen')}>
               Bekijk details
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           </div>
         </div>
 
         {/* Outstanding Card */}
-        <div className={`group relative overflow-hidden rounded-2xl p-6 border transition-all duration-300 hover:shadow-xl ${
+        <div className={`group relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 border transition-all duration-300 hover:shadow-xl ${
           (stats?.total_outstanding || 0) > 0 
             ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-orange-200 dark:border-orange-900 hover:shadow-orange-500/10' 
             : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:shadow-emerald-500/5'
         }`}>
-          <div className="flex items-start justify-between mb-4">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg ${
+          <div className="flex items-start justify-between mb-3 sm:mb-4">
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg ${
               (stats?.total_outstanding || 0) > 0 
                 ? 'bg-gradient-to-br from-orange-500 to-amber-500 shadow-orange-500/30' 
                 : 'bg-gradient-to-br from-slate-400 to-slate-500 shadow-slate-400/30'
             }`}>
-              <CreditCard className="w-6 h-6 text-white" />
+              <CreditCard className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             {(stats?.total_outstanding || 0) > 0 && (
-              <Badge className="bg-orange-500 text-white border-0 animate-pulse">
-                <AlertTriangle className="w-3 h-3 mr-1" />
+              <Badge className="bg-orange-500 text-white border-0 animate-pulse text-xs">
+                <AlertTriangle className="w-2 h-2 sm:w-3 sm:h-3 mr-1" />
                 Actie
               </Badge>
             )}
           </div>
           
-          <p className="text-muted-foreground text-sm font-medium">Openstaand</p>
-          <p className={`text-3xl font-bold mt-1 ${
+          <p className="text-muted-foreground text-xs sm:text-sm font-medium">Openstaand</p>
+          <p className={`text-xl sm:text-2xl lg:text-3xl font-bold mt-1 truncate ${
             (stats?.total_outstanding || 0) > 0 ? 'text-orange-600' : 'text-foreground'
           }`}>
             {formatCurrency((stats?.total_outstanding || 0) + (stats?.total_outstanding_loans || 0))}
@@ -917,26 +920,26 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Secondary Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Secondary Stats Row - Responsive */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
         {/* Cash Balance */}
         <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-hidden">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm font-medium mb-1">Kasgeld Saldo</p>
-                <p className={`text-3xl font-bold ${
+              <div className="flex-1 min-w-0">
+                <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Kasgeld Saldo</p>
+                <p className={`text-xl sm:text-2xl lg:text-3xl font-bold truncate ${
                   (stats?.total_kasgeld || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
                 }`}>
                   {formatCurrency(stats?.total_kasgeld || 0)}
                 </p>
               </div>
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${
+              <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ml-2 ${
                 (stats?.total_kasgeld || 0) >= 0 
                   ? 'bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50' 
                   : 'bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/50 dark:to-rose-900/50'
               }`}>
-                <Banknote className={`w-7 h-7 ${
+                <Banknote className={`w-5 h-5 sm:w-7 sm:h-7 ${
                   (stats?.total_kasgeld || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'
                 }`} />
               </div>
@@ -946,37 +949,37 @@ export default function Dashboard() {
 
         {/* Deposits */}
         <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-hidden">
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-sm font-medium mb-1">Borg in Beheer</p>
-                <p className="text-3xl font-bold text-foreground">
+              <div className="flex-1 min-w-0">
+                <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Borg in Beheer</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground truncate">
                   {formatCurrency(stats?.total_deposits_held || 0)}
                 </p>
               </div>
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/50 dark:to-cyan-900/50 flex items-center justify-center">
-                <Wallet className="w-7 h-7 text-teal-600" />
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/50 dark:to-cyan-900/50 flex items-center justify-center flex-shrink-0 ml-2">
+                <Wallet className="w-5 h-5 sm:w-7 sm:h-7 text-teal-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Quick Actions */}
-        <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-hidden bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-4">
-              <p className="text-muted-foreground text-sm font-medium">Snelle Acties</p>
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <BarChart3 className="w-5 h-5 text-primary" />
+        <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-hidden bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-800 sm:col-span-2 lg:col-span-1">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium">Snelle Acties</p>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center">
+                <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Button size="sm" variant="outline" onClick={() => navigate('/app/huurders')} className="justify-start">
-                <Users className="w-4 h-4 mr-2" />
+              <Button size="sm" variant="outline" onClick={() => navigate('/app/huurders')} className="justify-start text-xs sm:text-sm">
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Huurders
               </Button>
-              <Button size="sm" variant="outline" onClick={() => navigate('/app/appartementen')} className="justify-start">
-                <Building2 className="w-4 h-4 mr-2" />
+              <Button size="sm" variant="outline" onClick={() => navigate('/app/appartementen')} className="justify-start text-xs sm:text-sm">
+                <Building2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Panden
               </Button>
             </div>
@@ -984,8 +987,8 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Bottom Section - Reminders & Recent */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Bottom Section - Reminders & Recent - Responsive */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Reminders Card */}
         <Card className="border-0 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
           <CardHeader className="pb-2 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-b">
