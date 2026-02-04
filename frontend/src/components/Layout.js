@@ -644,7 +644,7 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* Mobile header - Dark style matching sidebar */}
+        {/* Mobile header - White matching sidebar */}
         <header className="mobile-header lg:hidden">
           <div className="mobile-header-left">
             <button
@@ -658,7 +658,7 @@ export default function Layout() {
               <div className="w-7 h-7 rounded-md bg-emerald-500 flex items-center justify-center">
                 <span className="text-white font-bold text-xs">F</span>
               </div>
-              <span className="text-white font-semibold text-sm">Facturatie</span>
+              <span className="text-slate-800 font-semibold text-sm">Facturatie</span>
             </div>
           </div>
           <div className="mobile-header-actions">
