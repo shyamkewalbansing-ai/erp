@@ -519,21 +519,6 @@ export default function Layout() {
             </>
           )}
 
-          {/* No add-ons message for customers */}
-          {!isSuperAdmin() && addonsLoaded && getVisibleNavItems().length === 0 && !isCollapsed && (
-            <div className="px-3 py-4 text-center">
-              <Package className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-              <p className="text-sm text-muted-foreground">Geen actieve modules</p>
-              <NavLink 
-                to="/app/abonnement" 
-                className="text-xs text-primary hover:underline mt-1 block"
-                onClick={() => setSidebarOpen(false)}
-              >
-                Bekijk beschikbare add-ons →
-              </NavLink>
-            </div>
-          )}
-
           {/* Settings dropdown - for customers only */}
           {!isSuperAdmin() && (
             <div className="mt-2">
