@@ -2338,7 +2338,7 @@ server {
           
           <div className="space-y-6 py-4">
             {/* Basic Info */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Workspace Naam *</Label>
                 <Input
@@ -2383,8 +2383,8 @@ server {
               </h4>
               
               <div className="space-y-4">
-                <div className="flex gap-4">
-                  <label className={`flex-1 p-4 border-2 rounded-lg cursor-pointer transition-colors ${newWorkspace.domain_type === 'subdomain' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                  <label className={`flex-1 p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-colors ${newWorkspace.domain_type === 'subdomain' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}>
                     <input
                       type="radio"
                       name="domain_type"
@@ -2393,12 +2393,12 @@ server {
                       onChange={() => setNewWorkspace({...newWorkspace, domain_type: 'subdomain'})}
                       className="sr-only"
                     />
-                    <div className="font-medium mb-1">Subdomein</div>
-                    <p className="text-sm text-gray-500">klantnaam.facturatie.sr</p>
+                    <div className="font-medium mb-1 text-sm sm:text-base">Subdomein</div>
+                    <p className="text-xs sm:text-sm text-gray-500">klantnaam.facturatie.sr</p>
                     <p className="text-xs text-green-600 mt-2">✓ Direct actief</p>
                   </label>
                   
-                  <label className={`flex-1 p-4 border-2 rounded-lg cursor-pointer transition-colors ${newWorkspace.domain_type === 'custom' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}>
+                  <label className={`flex-1 p-3 sm:p-4 border-2 rounded-lg cursor-pointer transition-colors ${newWorkspace.domain_type === 'custom' ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-gray-300'}`}>
                     <input
                       type="radio"
                       name="domain_type"
@@ -2407,8 +2407,8 @@ server {
                       onChange={() => setNewWorkspace({...newWorkspace, domain_type: 'custom'})}
                       className="sr-only"
                     />
-                    <div className="font-medium mb-1">Custom Domein</div>
-                    <p className="text-sm text-gray-500">portal.klantdomein.nl</p>
+                    <div className="font-medium mb-1 text-sm sm:text-base">Custom Domein</div>
+                    <p className="text-xs sm:text-sm text-gray-500">portal.klantdomein.nl</p>
                     <p className="text-xs text-orange-600 mt-2">⏳ DNS verificatie vereist</p>
                   </label>
                 </div>
