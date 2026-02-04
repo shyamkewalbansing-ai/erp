@@ -427,18 +427,20 @@ h1, h2, h3, h4, h5, h6 {
     z-index: 50;
 }
 
-/* Navigation item - Enhanced */
+/* Navigation item - Modern Premium */
 .nav-item {
     display: flex;
     align-items: center;
     gap: 0.875rem;
-    padding: 0.875rem 1rem;
-    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
     color: hsl(var(--muted-foreground));
     font-weight: 500;
+    font-size: 0.9rem;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    margin: 2px 0;
 }
 
 .nav-item::before {
@@ -449,32 +451,60 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(-50%);
     width: 3px;
     height: 0;
-    background: #0caf60;
-    border-radius: 0 2px 2px 0;
+    background: linear-gradient(180deg, #0caf60, #10b981);
+    border-radius: 0 3px 3px 0;
     transition: height 0.2s ease;
+    box-shadow: 0 0 8px rgba(12, 175, 96, 0.5);
 }
 
 .nav-item:hover {
-    background: hsl(var(--muted) / 0.5);
+    background: linear-gradient(90deg, 
+        rgba(12, 175, 96, 0.08) 0%, 
+        rgba(12, 175, 96, 0.03) 100%
+    );
     color: hsl(var(--foreground));
+    transform: translateX(2px);
 }
 
 .nav-item.active {
-    background: linear-gradient(135deg, rgba(12, 175, 96, 0.12), rgba(12, 175, 96, 0.05));
+    background: linear-gradient(90deg, 
+        rgba(12, 175, 96, 0.15) 0%, 
+        rgba(12, 175, 96, 0.05) 100%
+    );
     color: #0caf60;
     font-weight: 600;
+    box-shadow: 0 2px 8px rgba(12, 175, 96, 0.1);
 }
 
 .nav-item.active::before {
-    height: 60%;
+    height: 65%;
+}
+
+.nav-item svg {
+    transition: transform 0.2s ease;
+}
+
+.nav-item:hover svg {
+    transform: scale(1.05);
+}
+
+.nav-item.active svg {
+    filter: drop-shadow(0 0 4px rgba(12, 175, 96, 0.4));
 }
 
 .dark .nav-item:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: linear-gradient(90deg, 
+        rgba(12, 175, 96, 0.12) 0%, 
+        rgba(12, 175, 96, 0.04) 100%
+    );
 }
 
 .dark .nav-item.active {
-    background: linear-gradient(135deg, rgba(12, 175, 96, 0.2), rgba(12, 175, 96, 0.08));
+    background: linear-gradient(90deg, 
+        rgba(12, 175, 96, 0.2) 0%, 
+        rgba(12, 175, 96, 0.08) 100%
+    );
+    box-shadow: 0 2px 12px rgba(12, 175, 96, 0.15);
 }
 
 /* Page header - Enhanced */
