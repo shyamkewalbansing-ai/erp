@@ -378,54 +378,59 @@ export default function Layout() {
         />
       )}
 
-      {/* Floating Sidebar */}
+      {/* Dark Sidebar - Connected to Header */}
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
-        {/* Logo and Toggle Button */}
+        {/* Logo Area - Same height as header */}
         <div className="sidebar-logo">
-          <div className={`sidebar-logo-inner ${isCollapsed ? 'flex-col' : ''}`}>
+          <div className="sidebar-logo-inner">
             {/* Logo */}
-            <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
-              {branding?.logo_url ? (
+            {!isCollapsed ? (
+              branding?.logo_url ? (
                 <img 
                   src={branding.logo_url} 
                   alt={branding.portal_name || 'Logo'} 
-                  className={`${isCollapsed ? 'h-9 w-9' : 'h-7 w-auto max-w-[150px]'} object-contain`}
+                  className="h-7 w-auto max-w-[140px] object-contain brightness-0 invert"
                 />
               ) : user?.logo && !isSuperAdmin() ? (
                 <img 
                   src={user.logo} 
                   alt="Bedrijfslogo" 
-                  className={`${isCollapsed ? 'h-9 w-9' : 'h-7 w-auto max-w-[150px]'} object-contain`}
+                  className="h-7 w-auto max-w-[140px] object-contain brightness-0 invert"
                 />
               ) : (
-                <>
-                  {isCollapsed ? (
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center">
-                      <span className="text-white font-bold text-lg">F</span>
-                    </div>
-                  ) : (
-                    <img 
-                      src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-                      alt="Facturatie N.V." 
-                      className="h-6 w-auto"
-                    />
-                  )}
-                </>
-              )}
-            </div>
-            {/* Toggle Button - ONLY visible on desktop (lg and up) */}
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm">F</span>
+                  </div>
+                  <span className="text-white font-semibold text-lg tracking-tight">Facturatie</span>
+                </div>
+              )
+            ) : (
+              <div className="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center">
+                <span className="text-white font-bold text-base">F</span>
+              </div>
+            )}
+          </div>
+          {/* Toggle Button */}
+          {!isCollapsed && (
             <button
               onClick={toggleSidebarCollapse}
               className="sidebar-toggle-btn hidden lg:flex"
-              title={isCollapsed ? 'Sidebar uitklappen' : 'Sidebar inklappen'}
+              title="Sidebar inklappen"
             >
-              {isCollapsed ? (
-                <PanelLeftOpen className="w-4 h-4" />
-              ) : (
-                <PanelLeftClose className="w-4 h-4" />
-              )}
+              <PanelLeftClose className="w-4 h-4" />
             </button>
-          </div>
+          )}
+          {isCollapsed && (
+            <button
+              onClick={toggleSidebarCollapse}
+              className="sidebar-toggle-btn hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 bg-white shadow-md border border-slate-200"
+              style={{ width: '24px', height: '24px', borderRadius: '50%' }}
+              title="Sidebar uitklappen"
+            >
+              <PanelLeftOpen className="w-3 h-3 text-slate-600" />
+            </button>
+          )}
         </div>
 
         {/* Navigation */}
