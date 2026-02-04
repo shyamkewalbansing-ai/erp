@@ -485,49 +485,46 @@ export default function Layout() {
             </>
           )}
 
-          {/* Settings dropdown - for customers only */}
-          {!isSuperAdmin() && (
-            <div className="mt-2">
-              <button
-                onClick={() => setSettingsOpen(!settingsOpen)}
-                className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed || isSuperAdmin() ? 'justify-center px-3' : ''}`}
-                data-testid="nav-instellingen-dropdown"
-                title="Instellingen"
-              >
-                <div className={`flex items-center gap-3 ${isCollapsed || isSuperAdmin() ? 'justify-center' : ''}`}>
-                  <Settings className="w-5 h-5 flex-shrink-0" />
-                  {!(isCollapsed || isSuperAdmin()) && <span>Instellingen</span>}
-                </div>
-                {!(isCollapsed || isSuperAdmin()) && <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />}
-              </button>
-              
-              {/* Dropdown items */}
-              {!(isCollapsed || isSuperAdmin()) && (
-                <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
-                  <div className="pl-4 mt-1 space-y-1">
-                    {/* Workspace Settings - for customers only */}
-                    {!isSuperAdmin() && (
-                      <NavLink
-                        to="/app/workspace"
-                        onClick={() => setSidebarOpen(false)}
-                        className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
-                        data-testid="nav-workspace"
-                      >
-                        <Users className="w-4 h-4" />
-                        <span>Workspace & Team</span>
-                      </NavLink>
-                    )}
-                    <NavLink
-                      to="/app/betaalmethodes"
-                      onClick={() => setSidebarOpen(false)}
-                      className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
-                      data-testid="nav-betaalmethodes"
-                    >
-                      <CreditCard className="w-4 h-4" />
-                      <span>Betaalmethodes</span>
-                    </NavLink>
-                    <NavLink
-                      to="/app/abonnement"
+          {/* Settings dropdown */}
+          <div className="mt-2">
+            <button
+              onClick={() => setSettingsOpen(!settingsOpen)}
+              className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+              data-testid="nav-instellingen-dropdown"
+              title="Instellingen"
+            >
+              <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
+                <Settings className="w-5 h-5 flex-shrink-0" />
+                {!isCollapsed && <span>Instellingen</span>}
+              </div>
+              {!isCollapsed && <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />}
+            </button>
+            
+            {/* Dropdown items */}
+            {!isCollapsed && (
+              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="pl-4 mt-1 space-y-1">
+                  {/* Workspace Settings */}
+                  <NavLink
+                    to="/app/workspace"
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                    data-testid="nav-workspace"
+                  >
+                    <Users className="w-4 h-4" />
+                    <span>Workspace & Team</span>
+                  </NavLink>
+                  <NavLink
+                    to="/app/betaalmethodes"
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                    data-testid="nav-betaalmethodes"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Betaalmethodes</span>
+                  </NavLink>
+                  <NavLink
+                    to="/app/abonnement"
                       onClick={() => setSidebarOpen(false)}
                       className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
                       data-testid="nav-abonnement"
