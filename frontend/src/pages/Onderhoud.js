@@ -21,7 +21,11 @@ import {
   ChefHat,
   PaintBucket,
   DoorOpen,
-  Hammer
+  Hammer,
+  Loader2,
+  CheckCircle2,
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -200,189 +204,298 @@ export default function Onderhoud() {
 
   // Calculate total costs
   const totalCosts = maintenanceRecords.reduce((sum, r) => sum + r.cost, 0);
+  const completedCount = maintenanceRecords.filter(r => r.status === 'completed').length;
+  const pendingCount = maintenanceRecords.filter(r => r.status === 'pending' || r.status === 'in_progress').length;
+  const kasgeldCosts = maintenanceRecords.filter(r => r.cost_type === 'kasgeld').reduce((sum, r) => sum + r.cost, 0);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-blue-500 mx-auto mb-3" />
+          <p className="text-muted-foreground">Onderhoud laden...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" data-testid="onderhoud-page">
-      {/* Page Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Onderhoud</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Beheer reparaties en onderhoud van appartementen
-          </p>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="onderhoud-page">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-4 sm:p-6 lg:p-10">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
-        <Button 
-          onClick={() => { resetForm(); setShowModal(true); }}
-          className="rounded-full bg-primary hover:bg-primary/90"
-          data-testid="add-maintenance-btn"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Onderhoud registreren
-        </Button>
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-blue-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-cyan-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
+        
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-blue-300 text-xs sm:text-sm mb-3 sm:mb-4">
+              <Wrench className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>{maintenanceRecords.length} onderhoudsrecords</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+              Onderhoud Beheer
+            </h1>
+            <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
+              Beheer reparaties en onderhoud van appartementen
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => { resetForm(); setShowModal(true); }}
+            size="sm"
+            className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 text-white text-xs sm:text-sm"
+            data-testid="add-maintenance-btn"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            Onderhoud Registreren
+          </Button>
+        </div>
       </div>
 
-      {/* Summary Card */}
-      <Card className="bg-gradient-to-r from-blue-50 to-blue-100/50 border-blue-200">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        {/* Total Costs - Featured */}
+        <div className="col-span-2 lg:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 p-4 sm:p-6 text-white shadow-xl shadow-blue-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-40 h-24 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-sm text-blue-600 font-medium">Totale onderhoudskosten</p>
-              <p className="text-3xl font-bold text-blue-700">{formatCurrency(totalCosts)}</p>
-              <p className="text-xs text-blue-600 mt-1">
-                {maintenanceRecords.length} onderhoudsrecords
-              </p>
+              <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">Totale Kosten</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{formatCurrency(totalCosts)}</p>
             </div>
-            <div className="w-16 h-16 rounded-full bg-blue-200 flex items-center justify-center">
-              <Wrench className="w-8 h-8 text-blue-700" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Wrench className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Zoek op appartement of omschrijving..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-input border-transparent"
-            data-testid="search-maintenance"
-          />
         </div>
-        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="w-[180px]" data-testid="category-filter">
-            <SelectValue placeholder="Categorie" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle categorieën</SelectItem>
-            {MAINTENANCE_CATEGORIES.map(cat => (
-              <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        {/* Completed */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Voltooid</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600">{completedCount}</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Pending */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">In Behandeling</p>
+              <p className="text-xl sm:text-2xl font-bold text-orange-600">{pendingCount}</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Kasgeld Costs */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Van Kasgeld</p>
+              <p className="text-xl sm:text-2xl font-bold text-blue-600">{formatCurrency(kasgeldCosts)}</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Zoek op appartement of omschrijving..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-10 sm:h-11 bg-muted/30 border-transparent focus:border-primary text-sm"
+              data-testid="search-maintenance"
+            />
+          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-11" data-testid="category-filter">
+              <SelectValue placeholder="Categorie" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle categorieën</SelectItem>
+              {MAINTENANCE_CATEGORIES.map(cat => (
+                <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Maintenance Table */}
       {filteredRecords.length > 0 ? (
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Datum</TableHead>
-                <TableHead>Appartement</TableHead>
-                <TableHead>Categorie</TableHead>
-                <TableHead>Omschrijving</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Kosten voor</TableHead>
-                <TableHead className="text-right">Kosten</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRecords.map((record) => {
-                const categoryInfo = getCategoryInfo(record.category);
-                const CategoryIcon = categoryInfo.icon;
-                const statusInfo = getStatusInfo(record.status);
-                return (
-                  <TableRow key={record.id} data-testid={`maintenance-row-${record.id}`}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        {record.maintenance_date}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Home className="w-4 h-4 text-muted-foreground" />
-                        {record.apartment_name}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+          {/* Mobile Cards */}
+          <div className="block sm:hidden divide-y divide-border/50">
+            {filteredRecords.map((record) => {
+              const categoryInfo = getCategoryInfo(record.category);
+              const CategoryIcon = categoryInfo.icon;
+              const statusInfo = getStatusInfo(record.status);
+              return (
+                <div key={record.id} className="p-4" data-testid={`maintenance-row-${record.id}`}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
                         <CategoryIcon className="w-4 h-4 text-blue-600" />
-                        {categoryInfo.label}
                       </div>
-                    </TableCell>
-                    <TableCell className="max-w-[200px] truncate">
-                      {record.description}
-                    </TableCell>
-                    <TableCell>
-                      <span className={`status-badge ${
-                        record.status === 'completed' ? 'status-paid' :
-                        record.status === 'in_progress' ? 'bg-orange-50 text-orange-600' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>
-                        {statusInfo.label}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      <span className={`status-badge ${
-                        record.cost_type === 'tenant' ? 'bg-yellow-50 text-yellow-600' : 'bg-blue-50 text-blue-600'
-                      }`}>
-                        {record.cost_type === 'tenant' ? 'Huurder' : 'Kasgeld'}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right font-semibold text-blue-600">
-                      {formatCurrency(record.cost)}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEdit(record)}>
-                            <Edit className="w-4 h-4 mr-2" />
-                            Bewerken
-                          </DropdownMenuItem>
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => { setSelectedRecord(record); setShowDeleteDialog(true); }}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Verwijderen
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      <div>
+                        <p className="font-medium text-foreground text-sm">{record.apartment_name}</p>
+                        <p className="text-xs text-muted-foreground">{categoryInfo.label}</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                      record.status === 'completed' ? 'bg-green-500/10 text-green-600' :
+                      record.status === 'in_progress' ? 'bg-orange-500/10 text-orange-600' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {statusInfo.label}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-2 line-clamp-2">{record.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-semibold text-blue-600">{formatCurrency(record.cost)}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${
+                      record.cost_type === 'tenant' ? 'bg-yellow-500/10 text-yellow-600' : 'bg-blue-500/10 text-blue-600'
+                    }`}>
+                      {record.cost_type === 'tenant' ? 'Huurder' : 'Kasgeld'}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Desktop Table */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Datum</TableHead>
+                  <TableHead>Appartement</TableHead>
+                  <TableHead>Categorie</TableHead>
+                  <TableHead>Omschrijving</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Kosten voor</TableHead>
+                  <TableHead className="text-right">Kosten</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRecords.map((record) => {
+                  const categoryInfo = getCategoryInfo(record.category);
+                  const CategoryIcon = categoryInfo.icon;
+                  const statusInfo = getStatusInfo(record.status);
+                  return (
+                    <TableRow key={record.id} data-testid={`maintenance-row-${record.id}`}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          {record.maintenance_date}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Home className="w-4 h-4 text-muted-foreground" />
+                          {record.apartment_name}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <CategoryIcon className="w-4 h-4 text-blue-600" />
+                          {categoryInfo.label}
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-[200px] truncate">
+                        {record.description}
+                      </TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          record.status === 'completed' ? 'bg-green-500/10 text-green-600' :
+                          record.status === 'in_progress' ? 'bg-orange-500/10 text-orange-600' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {statusInfo.label}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          record.cost_type === 'tenant' ? 'bg-yellow-500/10 text-yellow-600' : 'bg-blue-500/10 text-blue-600'
+                        }`}>
+                          {record.cost_type === 'tenant' ? 'Huurder' : 'Kasgeld'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-blue-600">
+                        {formatCurrency(record.cost)}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(record)}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Bewerken
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => { setSelectedRecord(record); setShowDeleteDialog(true); }}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Verwijderen
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       ) : (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <Wrench className="w-8 h-8" />
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 border-dashed">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-muted flex items-center justify-center mb-3 sm:mb-4">
+              <Wrench className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-base sm:text-lg text-foreground mb-2 text-center">
+              {search || categoryFilter !== 'all' ? 'Geen onderhoudsrecords gevonden' : 'Nog geen onderhoud'}
+            </h3>
+            <p className="text-muted-foreground text-center mb-4 sm:mb-6 max-w-sm text-xs sm:text-sm">
+              {search || categoryFilter !== 'all' 
+                ? 'Probeer een andere zoekterm of pas uw filters aan' 
+                : 'Registreer uw eerste onderhoudswerk om te beginnen'}
+            </p>
+            {!search && categoryFilter === 'all' && (
+              <Button 
+                onClick={() => { resetForm(); setShowModal(true); }}
+                className="shadow-lg shadow-blue-500/20 bg-blue-500 hover:bg-blue-600 text-xs sm:text-sm"
+              >
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                Eerste Onderhoud Registreren
+              </Button>
+            )}
           </div>
-          <h3 className="font-semibold text-foreground mb-2">Geen onderhoudsrecords gevonden</h3>
-          <p className="text-muted-foreground mb-4">
-            {search || categoryFilter !== 'all' 
-              ? 'Probeer andere filters' 
-              : 'Registreer uw eerste onderhoudswerk'}
-          </p>
-          {!search && categoryFilter === 'all' && (
-            <Button 
-              onClick={() => { resetForm(); setShowModal(true); }}
-              className="rounded-full"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Onderhoud registreren
-            </Button>
-          )}
         </div>
       )}
 
