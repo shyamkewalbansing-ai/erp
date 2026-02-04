@@ -278,97 +278,99 @@ export default function Meterstanden() {
       </div>
 
       {/* Period Selector */}
-      <div className="flex items-center justify-center gap-4 bg-white rounded-lg p-4 shadow-sm border">
-        <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)}>
-          <ChevronLeft className="w-5 h-5" />
+      <div className="flex items-center justify-center gap-4 rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4">
+        <Button variant="ghost" size="icon" onClick={() => navigateMonth(-1)} className="h-8 w-8 sm:h-10 sm:w-10">
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
-        <div className="text-center min-w-[200px]">
-          <h2 className="text-xl font-semibold">{MONTHS[selectedMonth - 1]} {selectedYear}</h2>
+        <div className="text-center min-w-[150px] sm:min-w-[200px]">
+          <h2 className="text-base sm:text-xl font-semibold text-foreground">{MONTHS[selectedMonth - 1]} {selectedYear}</h2>
         </div>
-        <Button variant="ghost" size="icon" onClick={() => navigateMonth(1)}>
-          <ChevronRight className="w-5 h-5" />
+        <Button variant="ghost" size="icon" onClick={() => navigateMonth(1)} className="h-8 w-8 sm:h-10 sm:w-10">
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </Button>
       </div>
 
       {/* Summary Cards */}
       {summary && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Building2 className="w-5 h-5 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Ingediend</p>
-                  <p className="text-xl font-bold">{summary.submitted_count} / {summary.total_apartments}</p>
-                </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          {/* Ingediend - Featured */}
+          <div className="col-span-2 lg:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-yellow-500 via-yellow-600 to-amber-600 p-4 sm:p-6 text-white shadow-xl shadow-yellow-500/20">
+            <div className="absolute top-0 right-0 w-24 sm:w-40 h-24 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <div className="relative flex items-center justify-between">
+              <div>
+                <p className="text-yellow-100 text-xs sm:text-sm font-medium mb-1">Ingediend</p>
+                <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{summary.submitted_count} / {summary.total_apartments}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Building2 className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+            </div>
+          </div>
           
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <Zap className="w-5 h-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">EBS Totaal</p>
-                  <p className="text-xl font-bold">{summary.total_ebs_usage.toLocaleString()} kWh</p>
-                  <p className="text-sm text-emerald-600">{formatCurrency(summary.total_ebs_cost)}</p>
-                </div>
+          {/* EBS */}
+          <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">EBS Totaal</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground">{summary.total_ebs_usage.toLocaleString()} kWh</p>
+                <p className="text-xs sm:text-sm text-emerald-600">{formatCurrency(summary.total_ebs_cost)}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-yellow-500/10 flex items-center justify-center text-yellow-500">
+                <Zap className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+            </div>
+          </div>
           
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-cyan-100 rounded-lg">
-                  <Droplets className="w-5 h-5 text-cyan-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">SWM Totaal</p>
-                  <p className="text-xl font-bold">{summary.total_swm_usage.toLocaleString()} m³</p>
-                  <p className="text-sm text-emerald-600">{formatCurrency(summary.total_swm_cost)}</p>
-                </div>
+          {/* SWM */}
+          <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">SWM Totaal</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground">{summary.total_swm_usage.toLocaleString()} m³</p>
+                <p className="text-xs sm:text-sm text-emerald-600">{formatCurrency(summary.total_swm_cost)}</p>
               </div>
-            </CardContent>
-          </Card>
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-cyan-500/10 flex items-center justify-center text-cyan-500">
+                <Droplets className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+            </div>
+          </div>
           
-          <Card className={summary.unpaid_count > 0 ? 'border-orange-300 bg-orange-50' : 'border-emerald-300 bg-emerald-50'}>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg ${summary.unpaid_count > 0 ? 'bg-orange-200' : 'bg-emerald-200'}`}>
-                  <Receipt className={`w-5 h-5 ${summary.unpaid_count > 0 ? 'text-orange-600' : 'text-emerald-600'}`} />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Totaal Kosten</p>
-                  <p className="text-xl font-bold">{formatCurrency(summary.total_cost)}</p>
-                  <p className={`text-sm ${summary.unpaid_count > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>
-                    {summary.paid_count} betaald, {summary.unpaid_count} openstaand
-                  </p>
-                </div>
+          {/* Totaal Kosten */}
+          <div className={`group relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition-all duration-300 ${
+            summary.unpaid_count > 0 
+              ? 'bg-gradient-to-br from-orange-500/10 to-orange-500/5 border border-orange-500/30' 
+              : 'bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/30'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Totaal Kosten</p>
+                <p className="text-lg sm:text-xl font-bold text-foreground">{formatCurrency(summary.total_cost)}</p>
+                <p className={`text-xs sm:text-sm ${summary.unpaid_count > 0 ? 'text-orange-600' : 'text-emerald-600'}`}>
+                  {summary.paid_count} betaald, {summary.unpaid_count} openstaand
+                </p>
               </div>
-            </CardContent>
-          </Card>
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center ${
+                summary.unpaid_count > 0 ? 'bg-orange-500/20 text-orange-500' : 'bg-emerald-500/20 text-emerald-500'
+              }`}>
+                <Receipt className="w-5 h-5 sm:w-6 sm:h-6" />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 bg-white p-4 rounded-lg shadow-sm border">
-        <div className="flex-1 min-w-[200px]">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Zoeken op appartement of huurder..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="pl-10 h-10 sm:h-11 bg-muted/30 border-transparent focus:border-primary text-sm"
             />
           </div>
-        </div>
         
         <Select value={selectedApartment} onValueChange={setSelectedApartment}>
           <SelectTrigger className="w-[180px]">
