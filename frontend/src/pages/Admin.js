@@ -835,10 +835,15 @@ server {
         <Button 
           onClick={() => setCreateCustomerDialogOpen(true)} 
           data-testid="create-customer-btn-mobile"
-          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg"
+          className="w-full font-semibold shadow-lg"
+          style={{ 
+            backgroundColor: '#10b981', 
+            color: 'white',
+            border: 'none'
+          }}
         >
-          <UserPlus className="w-4 h-4 mr-2" />
-          Klant Aanmaken
+          <UserPlus className="w-4 h-4 mr-2" style={{ color: 'white' }} />
+          <span style={{ color: 'white' }}>Klant Aanmaken</span>
         </Button>
       </div>
 
