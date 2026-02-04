@@ -636,45 +636,9 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(0);
 }
 
-/* Theme Toggle Button */
-.theme-toggle {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: hsl(var(--muted) / 0.5);
-    border: 1px solid hsl(var(--border));
-    color: hsl(var(--foreground));
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.theme-toggle:hover {
-    background: hsl(var(--muted));
-    border-color: hsl(var(--primary) / 0.3);
-}
-
 /* Smooth transitions for theme change */
 *, *::before, *::after {
     transition: background-color 0.3s ease, border-color 0.3s ease;
-}
-
-/* Header Glass */
-.header-glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--glass-border);
-    position: sticky;
-    top: 0;
-    z-index: 30;
-}
-
-.dark .header-glass {
-    background: rgba(5, 15, 10, 0.8);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Card hover effects */
