@@ -652,12 +652,11 @@ export default function Layout() {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-md bg-emerald-500 flex items-center justify-center">
-                <span className="text-white font-bold text-xs">F</span>
-              </div>
-              <span className="text-slate-800 font-semibold text-sm">FACTURATIE</span>
-            </div>
+            <img 
+              src="https://customer-assets.emergentagent.com/job_e0e6d0f3-5640-4b42-9035-36d9fba2aead/artifacts/sn638vwv_logo_dark.webp" 
+              alt="FACTURATIE" 
+              className="h-6 w-auto object-contain"
+            />
           </div>
           <div className="mobile-header-actions">
             <button
