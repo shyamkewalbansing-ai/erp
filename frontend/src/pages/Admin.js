@@ -792,81 +792,96 @@ server {
   }
 
   return (
-    <div className="space-y-8" data-testid="admin-page">
-      {/* Modern Header */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8" data-testid="admin-page">
+      {/* Hero Header - Same style as Dashboard */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-10">
         {/* Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full blur-[100px]"></div>
         
-        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        {/* Decorative Blurs */}
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-emerald-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-teal-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
+        
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-medium mb-3">
-              <Shield className="w-3.5 h-3.5" />
-              SUPERADMIN
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-emerald-500/20 backdrop-blur-sm text-emerald-300 text-xs sm:text-sm mb-3 sm:mb-4">
+              <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>SUPERADMIN</span>
             </div>
-            <h1 className="text-3xl font-bold text-white tracking-tight">Beheerder Dashboard</h1>
-            <p className="text-slate-400 mt-1">Beheer klanten, modules en instellingen</p>
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+              Beheerder Dashboard
+            </h1>
+            <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
+              Beheer klanten, modules en instellingen
+            </p>
           </div>
+          
           <Button 
             onClick={() => setCreateCustomerDialogOpen(true)} 
             data-testid="create-customer-btn"
-            className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
+            size="sm"
+            className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25 text-xs sm:text-sm"
           >
-            <UserPlus className="w-4 h-4 mr-2" />
+            <UserPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
             Klant Aanmaken
           </Button>
         </div>
       </div>
 
-      {/* Stats Cards - Bento Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="group relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 hover:border-slate-300 dark:hover:border-slate-700 transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/25">
-              <Users className="w-6 h-6 text-white" />
-            </div>
-            <span className="text-xs font-medium text-slate-500 uppercase tracking-wider">Totaal</span>
-          </div>
-          <p className="text-3xl font-bold text-slate-900 dark:text-white">{stats?.total_customers || 0}</p>
-          <p className="text-sm text-slate-500 mt-1">Klanten</p>
-        </div>
-
-        <div className="group relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 hover:border-emerald-300 dark:hover:border-emerald-800 transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
-              <CheckCircle className="w-6 h-6 text-white" />
-            </div>
-            <span className="px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 text-xs font-medium">Actief</span>
-          </div>
-          <p className="text-3xl font-bold text-emerald-600">{stats?.active_subscriptions || 0}</p>
-          <p className="text-sm text-slate-500 mt-1">Actieve Abonnementen</p>
-        </div>
-
-        <div className="group relative overflow-hidden rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 hover:border-rose-300 dark:hover:border-rose-800 transition-all">
-          <div className="flex items-center justify-between mb-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/25">
-              <XCircle className="w-6 h-6 text-white" />
-            </div>
-            <span className="px-2 py-1 rounded-full bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-xs font-medium">Verlopen</span>
-          </div>
-          <p className="text-3xl font-bold text-rose-600">{stats?.expired_subscriptions || 0}</p>
-          <p className="text-sm text-slate-500 mt-1">Verlopen Abonnementen</p>
-        </div>
-
-        <div className="group relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-6">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/20 rounded-full blur-[60px]"></div>
+      {/* Stats Cards - Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        {/* Total Customers - Featured */}
+        <div className="sm:col-span-2 lg:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-6 text-white shadow-xl shadow-emerald-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-emerald-400" />
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Omzet</span>
+              <p className="text-emerald-100 text-xs sm:text-sm font-medium">Totaal Klanten</p>
             </div>
-            <p className="text-3xl font-bold text-white">{formatCurrency(stats?.total_revenue || 0)}</p>
-            <p className="text-sm text-emerald-400 mt-1 flex items-center gap-1">
+            <p className="text-2xl sm:text-3xl lg:text-4xl font-bold">{stats?.total_customers || 0}</p>
+          </div>
+        </div>
+
+        {/* Active Subscriptions */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
+            </div>
+            <p className="text-muted-foreground text-xs sm:text-sm font-medium">Actief</p>
+          </div>
+          <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{stats?.active_subscriptions || 0}</p>
+          <p className="text-xs text-muted-foreground mt-1">Actieve Abonnementen</p>
+        </div>
+
+        {/* Expired Subscriptions */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-rose-500/10 flex items-center justify-center">
+              <XCircle className="w-5 h-5 sm:w-6 sm:h-6 text-rose-500" />
+            </div>
+            <p className="text-muted-foreground text-xs sm:text-sm font-medium">Verlopen</p>
+          </div>
+          <p className="text-2xl sm:text-3xl font-bold text-rose-600">{stats?.expired_subscriptions || 0}</p>
+          <p className="text-xs text-muted-foreground mt-1">Verlopen Abonnementen</p>
+        </div>
+
+        {/* Revenue Card */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 p-4 sm:p-6">
+          <div className="absolute top-0 right-0 w-24 sm:w-32 h-24 sm:h-32 bg-emerald-500/20 rounded-full blur-[60px]"></div>
+          <div className="relative">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/10 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
+              </div>
+              <p className="text-slate-400 text-xs sm:text-sm font-medium">Omzet</p>
+            </div>
+            <p className="text-2xl sm:text-3xl font-bold text-white">{formatCurrency(stats?.total_revenue || 0)}</p>
+            <p className="text-xs text-emerald-400 mt-1 flex items-center gap-1">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
               Deze maand: {formatCurrency(stats?.revenue_this_month || 0)}
             </p>
@@ -876,25 +891,25 @@ server {
 
       {/* Pending Requests - Modern Alert */}
       {requests.length > 0 && (
-        <div className="relative overflow-hidden rounded-xl border-2 border-amber-200 dark:border-amber-900/50 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/25 flex-shrink-0">
-              <Clock className="w-6 h-6 text-white" />
+        <div className="relative overflow-hidden rounded-xl sm:rounded-2xl border-2 border-amber-200 dark:border-amber-900/50 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/25 flex-shrink-0">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold text-amber-800 dark:text-amber-200">
+              <h3 className="text-base sm:text-lg font-semibold text-amber-800 dark:text-amber-200">
                 Openstaande Verzoeken ({requests.length})
               </h3>
-              <p className="text-amber-700 dark:text-amber-300 text-sm mb-4">Klanten die wachten op activatie</p>
+              <p className="text-amber-700 dark:text-amber-300 text-xs sm:text-sm mb-3 sm:mb-4">Klanten die wachten op activatie</p>
               <div className="space-y-2">
                 {requests.slice(0, 3).map((request) => (
                   <div 
                     key={request.id}
-                    className="flex items-center justify-between p-3 bg-white/80 dark:bg-slate-900/50 rounded-lg border border-amber-200 dark:border-amber-900/30"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-white/80 dark:bg-slate-900/50 rounded-lg border border-amber-200 dark:border-amber-900/30"
                   >
-                    <div>
-                      <p className="font-medium text-slate-900 dark:text-white">{request.user_name}</p>
-                      <p className="text-sm text-slate-500">{request.user_email}</p>
+                    <div className="min-w-0">
+                      <p className="font-medium text-slate-900 dark:text-white text-sm truncate">{request.user_name}</p>
+                      <p className="text-xs text-slate-500 truncate">{request.user_email}</p>
                     </div>
                     <Button
                       size="sm"
