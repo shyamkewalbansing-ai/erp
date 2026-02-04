@@ -196,48 +196,119 @@ export default function Contracten() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto mb-3" />
+          <p className="text-muted-foreground">Contracten laden...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" data-testid="contracten-page">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">Contracten</h1>
-          <p className="text-muted-foreground mt-1">Beheer huurcontracten en digitale ondertekening</p>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="contracten-page">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900 p-4 sm:p-6 lg:p-10">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
-        <Button onClick={() => setShowModal(true)} data-testid="add-contract-btn">
-          <Plus className="w-4 h-4 mr-2" />
-          Nieuw Contract
-        </Button>
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-teal-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-cyan-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
+        
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-teal-300 text-xs sm:text-sm mb-3 sm:mb-4">
+              <FileSignature className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>{totalContracts} contracten</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+              Contracten Beheer
+            </h1>
+            <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
+              Beheer huurcontracten en digitale ondertekening
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => setShowModal(true)}
+            size="sm"
+            className="w-full sm:w-auto bg-teal-500 hover:bg-teal-600 text-white text-xs sm:text-sm"
+            data-testid="add-contract-btn"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            Nieuw Contract
+          </Button>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <FileText className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{totalContracts}</p>
-                <p className="text-sm text-muted-foreground">Totaal Contracten</p>
-              </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+        {/* Total Contracts - Featured */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-500 via-teal-600 to-cyan-600 p-4 sm:p-6 text-white shadow-xl shadow-teal-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-40 h-24 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative flex items-center justify-between">
+            <div>
+              <p className="text-teal-100 text-xs sm:text-sm font-medium mb-1">Totaal Contracten</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{totalContracts}</p>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle2 className="w-5 h-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{signedContracts}</p>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Signed */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Ondertekend</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600">{signedContracts}</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Signature */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Wacht op handtekening</p>
+              <p className="text-xl sm:text-2xl font-bold text-yellow-600">{pendingContracts}</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-yellow-500/10 flex items-center justify-center text-yellow-500">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Zoek op huurder of appartement..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-10 sm:h-11 bg-muted/30 border-transparent focus:border-primary text-sm"
+              data-testid="search-contracts"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-11" data-testid="status-filter">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle</SelectItem>
+              <SelectItem value="draft">Concept</SelectItem>
+              <SelectItem value="pending_signature">Wacht op handtekening</SelectItem>
+              <SelectItem value="signed">Ondertekend</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
                 <p className="text-sm text-muted-foreground">Ondertekend</p>
               </div>
             </div>
