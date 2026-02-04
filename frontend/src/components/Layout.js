@@ -378,46 +378,47 @@ export default function Layout() {
         />
       )}
 
-      {/* Sidebar - Hidden for superadmin on desktop */}
-      {!isSuperAdmin() && (
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+      {/* Sidebar - Always collapsed for superadmin */}
+      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed || isSuperAdmin() ? 'sidebar-collapsed' : ''}`}>
         {/* Logo and Toggle Button */}
-        <div className={`sidebar-logo ${isCollapsed ? 'p-4' : 'p-5'}`}>
-          <div className={`flex items-center ${isCollapsed ? 'flex-col gap-3' : 'justify-between'}`}>
+        <div className={`sidebar-logo ${isCollapsed || isSuperAdmin() ? 'p-4' : 'p-5'}`}>
+          <div className={`flex items-center ${isCollapsed || isSuperAdmin() ? 'flex-col gap-3' : 'justify-between'}`}>
             {/* Logo */}
-            <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
+            <div className={`flex items-center ${isCollapsed || isSuperAdmin() ? 'justify-center' : ''}`}>
               {branding?.logo_url ? (
                 <img 
                   src={branding.logo_url} 
                   alt={branding.portal_name || 'Logo'} 
-                  className={`${isCollapsed ? 'h-8 w-8' : 'h-8 w-auto max-w-[140px]'} object-contain`}
+                  className={`${isCollapsed || isSuperAdmin() ? 'h-8 w-8' : 'h-8 w-auto max-w-[140px]'} object-contain`}
                 />
               ) : user?.logo && !isSuperAdmin() ? (
                 <img 
                   src={user.logo} 
                   alt="Bedrijfslogo" 
-                  className={`${isCollapsed ? 'h-8 w-8' : 'h-8 w-auto max-w-[140px]'} object-contain`}
+                  className={`${isCollapsed || isSuperAdmin() ? 'h-8 w-8' : 'h-8 w-auto max-w-[140px]'} object-contain`}
                 />
               ) : (
                 <img 
                   src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
                   alt="Facturatie N.V." 
-                  className={`${isCollapsed ? 'hidden' : 'h-5 w-auto'}`}
+                  className={`${isCollapsed || isSuperAdmin() ? 'hidden' : 'h-5 w-auto'}`}
                 />
               )}
             </div>
-            {/* Toggle Button - ONLY visible on desktop (lg and up) */}
-            <button
-              onClick={toggleSidebarCollapse}
-              className="hidden lg:flex items-center justify-center w-8 h-8 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20 transition-all duration-200 flex-shrink-0"
-              title={isCollapsed ? 'Sidebar uitklappen' : 'Sidebar inklappen'}
-            >
-              {isCollapsed ? (
-                <PanelLeftOpen className="w-4 h-4 text-primary" />
-              ) : (
-                <PanelLeftClose className="w-4 h-4 text-primary" />
-              )}
-            </button>
+            {/* Toggle Button - ONLY visible on desktop (lg and up) and NOT for superadmin */}
+            {!isSuperAdmin() && (
+              <button
+                onClick={toggleSidebarCollapse}
+                className="hidden lg:flex items-center justify-center w-8 h-8 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20 transition-all duration-200 flex-shrink-0"
+                title={isCollapsed ? 'Sidebar uitklappen' : 'Sidebar inklappen'}
+              >
+                {isCollapsed ? (
+                  <PanelLeftOpen className="w-4 h-4 text-primary" />
+                ) : (
+                  <PanelLeftClose className="w-4 h-4 text-primary" />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
