@@ -82,11 +82,45 @@ export default function Login() {
     try {
       await login('demo@facturatie.sr', 'demo2024');
       toast.success('Welkom bij de demo!');
-      navigate('/app/dashboard');
+      await redirectToFirstModule();
     } catch (error) {
       console.error('Auto-login failed:', error);
       toast.error('Auto-login mislukt. Probeer handmatig in te loggen.');
       setAutoLoginInProgress(false);
+    }
+  };
+
+  const redirectToFirstModule = async () => {
+    try {
+      // Get user's active addons
+      const addonsRes = await api.get('/user/addons');
+      const addons = addonsRes.data || [];
+      
+      // Find first active addon
+      const activeAddon = addons.find(a => a.status === 'active' || a.status === 'trial');
+      
+      if (activeAddon) {
+        // Map addon slugs to their dashboard routes
+        const moduleRoutes = {
+          'boekhouding': '/app/boekhouding',
+          'vastgoed_beheer': '/app/dashboard',
+          'hrm': '/app/hrm',
+          'autodealer': '/app/autodealer',
+          'beauty': '/app/beauty',
+          'pompstation': '/app/pompstation',
+          'ai-chatbot': '/app/chatbot',
+          'cms': '/app/cms'
+        };
+        
+        const route = moduleRoutes[activeAddon.addon_slug] || '/app/dashboard';
+        navigate(route);
+      } else {
+        // No active modules - go to dashboard (will show module selection)
+        navigate('/app/dashboard');
+      }
+    } catch (error) {
+      console.error('Error checking addons:', error);
+      navigate('/app/dashboard');
     }
   };
 
@@ -97,7 +131,7 @@ export default function Login() {
     try {
       await login(email, password);
       toast.success('Welkom terug!');
-      navigate('/app/dashboard');
+      await redirectToFirstModule();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Inloggen mislukt');
     } finally {
