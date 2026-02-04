@@ -564,92 +564,78 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <main className={`main-content ${isCollapsed ? 'main-content-expanded' : ''} overflow-x-hidden`}>
-        {/* Desktop header with notifications */}
-        <header className={`desktop-header hidden lg:flex px-6 py-2.5 items-center justify-between header-glass ${isCollapsed ? 'desktop-header-expanded' : ''}`}>
-          {/* Left side - User info & Workspace/Portal buttons */}
-          <div className="flex items-center gap-3">
-            {/* User info - Compact Modern Style */}
-            <div className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/5 to-transparent border border-emerald-500/10">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20">
-                <span className="text-xs font-bold text-white">
-                  {user?.name?.charAt(0).toUpperCase()}
-                </span>
+      <main className={`main-content ${isCollapsed ? 'main-content-expanded' : ''}`}>
+        {/* Desktop header - Modern Minimal Style */}
+        <header className={`desktop-header hidden lg:flex`}>
+          {/* Left side - User Profile Pill */}
+          <div className="flex items-center gap-4">
+            {/* User Profile - Modern Pill Style */}
+            <div className="header-user-profile">
+              <div className="header-user-avatar">
+                {user?.name?.charAt(0).toUpperCase()}
               </div>
-              <div className="min-w-0">
-                <p className="font-medium text-xs text-foreground truncate max-w-[120px]">{user?.name}</p>
-                <p className="text-[10px] text-muted-foreground truncate max-w-[120px]">{user?.email}</p>
+              <div className="header-user-info">
+                <span className="header-user-name">{user?.name}</span>
+                <span className="header-user-email">{user?.email}</span>
               </div>
             </div>
             
-            {/* Workspace & Portal buttons - Compact Style */}
+            {/* Quick Action Buttons */}
             {!isSuperAdmin() && (
-              <div className="flex items-center gap-1.5">
-                {/* Workspace button */}
+              <div className="flex items-center gap-2">
                 {workspace && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  <button
                     onClick={openWorkspaceDialog}
-                    className="w-8 h-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border border-emerald-500/20 hover:border-emerald-500/30 transition-all"
+                    className="header-quick-btn emerald"
                     data-testid="workspace-btn"
                     title="Workspace Beheren"
                   >
-                    <Globe className="w-3.5 h-3.5" />
-                  </Button>
+                    <Globe className="w-4 h-4" />
+                  </button>
                 )}
-                {/* Tenant Portal button - only if vastgoed_beheer addon is active */}
                 {hasAddon('vastgoed_beheer') && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  <button
                     onClick={() => window.open('/huurder/login', '_blank')}
-                    className="w-8 h-8 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border border-blue-500/20 hover:border-blue-500/30 transition-all"
+                    className="header-quick-btn blue"
                     data-testid="tenant-portal-btn"
                     title="Huurders Portaal"
                   >
-                    <Building2 className="w-3.5 h-3.5" />
-                  </Button>
+                    <Building2 className="w-4 h-4" />
+                  </button>
                 )}
-                {/* Employee Portal button - only if hrm addon is active */}
                 {hasAddon('hrm') && (
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  <button
                     onClick={() => window.open('/werknemer/login', '_blank')}
-                    className="w-8 h-8 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 border border-purple-500/20 hover:border-purple-500/30 transition-all"
+                    className="header-quick-btn purple"
                     data-testid="employee-portal-btn"
                     title="Werknemers Portaal"
                   >
-                    <Briefcase className="w-3.5 h-3.5" />
-                  </Button>
+                    <Briefcase className="w-4 h-4" />
+                  </button>
                 )}
               </div>
             )}
           </div>
           
-          {/* Right side - Theme, Notifications, Logout - Compact Style */}
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="ghost"
-              size="icon"
+          {/* Right side - Actions */}
+          <div className="header-actions">
+            <button
               onClick={toggleDarkMode}
-              className="w-8 h-8 rounded-lg bg-slate-500/10 hover:bg-slate-500/20 text-slate-600 dark:text-slate-300 border border-slate-500/10 hover:border-slate-500/20 transition-all"
+              className="header-action-btn"
               data-testid="theme-toggle-btn"
+              title={darkMode ? 'Lichte modus' : 'Donkere modus'}
             >
-              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
             {!isSuperAdmin() && <NotificationBell />}
-            <Button 
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/10 hover:border-red-500/20 transition-all text-xs font-medium"
+            <button 
+              className="logout-btn"
               onClick={handleLogout}
               data-testid="logout-btn"
             >
-              <LogOut className="w-3.5 h-3.5 mr-1.5" />
-              Uitloggen
-            </Button>
+              <LogOut className="w-4 h-4" />
+              <span>Uitloggen</span>
+            </button>
           </div>
         </header>
 
