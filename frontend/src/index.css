@@ -101,6 +101,26 @@ code {
     background: hsl(var(--muted-foreground) / 0.5);
 }
 
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+
+/* Extra small screen breakpoint (xs) */
+@media (min-width: 475px) {
+    .xs\:inline {
+        display: inline !important;
+    }
+    .xs\:hidden {
+        display: none !important;
+    }
+}
+
 /* Button active states */
 .btn-scale:active {
     transform: scale(0.98);
