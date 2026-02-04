@@ -381,7 +381,7 @@ export default function Layout() {
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Logo and Toggle Button */}
-        <div className={`border-b border-border ${isCollapsed ? 'p-4' : 'p-6'}`}>
+        <div className={`sidebar-logo ${isCollapsed ? 'p-4' : 'p-5'}`}>
           <div className={`flex items-center ${isCollapsed ? 'flex-col gap-3' : 'justify-between'}`}>
             {/* Logo */}
             <div className={`flex items-center ${isCollapsed ? 'justify-center' : ''}`}>
@@ -408,13 +408,13 @@ export default function Layout() {
             {/* Toggle Button - ONLY visible on desktop (lg and up) */}
             <button
               onClick={toggleSidebarCollapse}
-              className="hidden lg:flex items-center justify-center w-8 h-8 rounded-lg hover:bg-muted transition-colors flex-shrink-0"
+              className="hidden lg:flex items-center justify-center w-8 h-8 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 hover:border-primary/20 transition-all duration-200 flex-shrink-0"
               title={isCollapsed ? 'Sidebar uitklappen' : 'Sidebar inklappen'}
             >
               {isCollapsed ? (
-                <PanelLeftOpen className="w-5 h-5 text-muted-foreground" />
+                <PanelLeftOpen className="w-4 h-4 text-primary" />
               ) : (
-                <PanelLeftClose className="w-5 h-5 text-muted-foreground" />
+                <PanelLeftClose className="w-4 h-4 text-primary" />
               )}
             </button>
           </div>
@@ -422,7 +422,7 @@ export default function Layout() {
 
         {/* Subscription Status Banner */}
         {!isSuperAdmin() && (showTrialBadge || showExpiredBadge) && !isCollapsed && (
-          <div className={`mx-4 mt-4 p-3 rounded-lg ${showExpiredBadge ? 'bg-red-500/10 border border-red-500/20' : 'bg-blue-500/10 border border-blue-500/20'}`}>
+          <div className={`mx-3 mt-3 p-3 rounded-xl ${showExpiredBadge ? 'bg-red-500/10 border border-red-500/20' : 'bg-blue-500/10 border border-blue-500/20'}`}>
             <div className="flex items-center gap-2">
               <Package className={`w-4 h-4 ${showExpiredBadge ? 'text-red-500' : 'text-blue-500'}`} />
               <span className={`text-xs font-medium ${showExpiredBadge ? 'text-red-500' : 'text-blue-500'}`}>
