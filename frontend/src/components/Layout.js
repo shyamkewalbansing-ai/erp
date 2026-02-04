@@ -661,7 +661,7 @@ export default function Layout() {
         </header>
 
         {/* Mobile header - Compact Style */}
-        <header className="mobile-header lg:hidden px-4 py-2.5 flex items-center justify-between header-glass">
+        <header className="mobile-header lg:hidden fixed top-0 left-0 right-0 z-50 px-4 py-2.5 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-emerald-100 dark:border-emerald-900/30 shadow-sm">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -709,8 +709,8 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* Page content */}
-        <div className="p-2 sm:p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden box-border">
+        {/* Page content - with padding top for fixed header */}
+        <div className="p-2 sm:p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden box-border pt-14 lg:pt-2">
           <Outlet />
         </div>
       </main>
