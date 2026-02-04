@@ -991,35 +991,35 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
         {/* Reminders Card */}
         <Card className="border-0 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
-          <CardHeader className="pb-2 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-b">
+          <CardHeader className="p-3 sm:p-4 pb-2 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-b">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-3 text-lg">
-                <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-                  <Bell className="w-5 h-5 text-white" />
+              <CardTitle className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base lg:text-lg">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                  <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 Herinneringen
               </CardTitle>
-              <Badge variant="outline" className="bg-white dark:bg-slate-800 font-semibold">
+              <Badge variant="outline" className="bg-white dark:bg-slate-800 font-semibold text-xs">
                 {(stats?.reminders?.length || 0)} items
               </Badge>
             </div>
           </CardHeader>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             {stats?.reminders && stats.reminders.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {stats.reminders.slice(0, 5).map((reminder, index) => (
                   <div 
                     key={index}
-                    className="group flex items-start gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-orange-50 dark:hover:bg-orange-950/20 transition-all cursor-pointer"
+                    className="group flex items-start gap-2 sm:gap-4 p-2 sm:p-4 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-orange-50 dark:hover:bg-orange-950/20 transition-all cursor-pointer"
                   >
-                    <div className="w-10 h-10 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
-                      <AlertTriangle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center flex-shrink-0">
+                      <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 dark:text-orange-400" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground truncate">
+                      <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
                         {reminder.title || reminder.message}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-xs text-muted-foreground mt-0.5 sm:mt-1">
                         {reminder.date || 'Vandaag'}
                       </p>
                     </div>
@@ -1027,12 +1027,12 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle className="w-8 h-8 text-emerald-500" />
+              <div className="text-center py-8 sm:py-12">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-500" />
                 </div>
-                <p className="text-foreground font-medium">Alles in orde!</p>
-                <p className="text-muted-foreground text-sm mt-1">Geen openstaande herinneringen</p>
+                <p className="text-foreground font-medium text-sm sm:text-base">Alles in orde!</p>
+                <p className="text-muted-foreground text-xs sm:text-sm mt-1">Geen openstaande herinneringen</p>
               </div>
             )}
           </CardContent>
@@ -1040,34 +1040,34 @@ export default function Dashboard() {
 
         {/* Recent Activity Card */}
         <Card className="border-0 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
-          <CardHeader className="pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b">
+          <CardHeader className="p-3 sm:p-4 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b">
             <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-3 text-lg">
-                <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                  <Clock className="w-5 h-5 text-white" />
+              <CardTitle className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base lg:text-lg">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 Recente Betalingen
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/app/betalingen')} className="text-blue-600">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/app/betalingen')} className="text-blue-600 text-xs sm:text-sm p-1 sm:p-2 h-auto">
                 Alles
-                <ChevronRight className="w-4 h-4 ml-1" />
+                <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="p-4">
+          <CardContent className="p-3 sm:p-4">
             {stats?.recent_payments && stats.recent_payments.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {stats.recent_payments.slice(0, 5).map((payment, index) => (
                   <div 
                     key={index}
-                    className="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all"
+                    className="flex items-center justify-between p-2 sm:p-4 rounded-lg sm:rounded-xl bg-slate-50 dark:bg-slate-800/50 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 transition-all"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                        <Banknote className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                        <Banknote className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 dark:text-emerald-400" />
                       </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
                           {payment.tenant_name || 'Onbekend'}
                         </p>
                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -1075,19 +1075,19 @@ export default function Dashboard() {
                         </p>
                       </div>
                     </div>
-                    <p className="text-sm font-bold text-emerald-600">
+                    <p className="text-xs sm:text-sm font-bold text-emerald-600 flex-shrink-0 ml-2">
                       +{formatCurrency(payment.amount || 0)}
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
-                  <CreditCard className="w-8 h-8 text-slate-400" />
+              <div className="text-center py-8 sm:py-12">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                 </div>
-                <p className="text-foreground font-medium">Geen betalingen</p>
-                <p className="text-muted-foreground text-sm mt-1">Nog geen recente betalingen</p>
+                <p className="text-foreground font-medium text-sm sm:text-base">Geen betalingen</p>
+                <p className="text-muted-foreground text-xs sm:text-sm mt-1">Nog geen recente betalingen</p>
               </div>
             )}
           </CardContent>
