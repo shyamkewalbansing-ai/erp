@@ -337,6 +337,132 @@ export default function Layout() {
     navigate('/login');
   };
 
+  // Close user dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Profile settings handlers
+  const openProfileDialog = () => {
+    setProfileForm({
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '',
+      address: user?.address || '',
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setProfilePhoto(user?.profile_photo || null);
+    setUserDropdownOpen(false);
+    setProfileDialogOpen(true);
+  };
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Alleen JPG, PNG en WebP bestanden zijn toegestaan');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Bestand is te groot (max 5MB)');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      const response = await fetch(`${API_URL}/api/user/profile/photo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProfilePhoto(data.photo_url);
+        toast.success('Profielfoto geüpload');
+      } else {
+        toast.error('Fout bij uploaden foto');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Fout bij uploaden foto');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    // Validate password if changing
+    if (profileForm.newPassword) {
+      if (!profileForm.currentPassword) {
+        toast.error('Voer uw huidige wachtwoord in');
+        return;
+      }
+      if (profileForm.newPassword !== profileForm.confirmPassword) {
+        toast.error('Nieuwe wachtwoorden komen niet overeen');
+        return;
+      }
+      if (profileForm.newPassword.length < 6) {
+        toast.error('Wachtwoord moet minimaal 6 tekens zijn');
+        return;
+      }
+    }
+
+    setSavingProfile(true);
+    try {
+      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      const response = await fetch(`${API_URL}/api/user/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          name: profileForm.name,
+          email: profileForm.email,
+          phone: profileForm.phone,
+          address: profileForm.address,
+          current_password: profileForm.currentPassword || undefined,
+          new_password: profileForm.newPassword || undefined
+        })
+      });
+
+      if (response.ok) {
+        toast.success('Profiel bijgewerkt');
+        setProfileDialogOpen(false);
+        // Refresh user data
+        window.location.reload();
+      } else {
+        const data = await response.json();
+        toast.error(data.detail || 'Fout bij opslaan profiel');
+      }
+    } catch (error) {
+      console.error('Save profile error:', error);
+      toast.error('Fout bij opslaan profiel');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   // Workspace popup handlers
   const openWorkspaceDialog = async () => {
     try {
