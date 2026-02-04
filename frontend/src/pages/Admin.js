@@ -838,7 +838,7 @@ server {
           type="button"
           style={{ 
             width: '100%',
-            backgroundColor: '#10b981', 
+            backgroundColor: '#059669', 
             color: 'white',
             border: 'none',
             borderRadius: '8px',
