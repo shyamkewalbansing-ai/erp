@@ -485,22 +485,21 @@ export default function Tenants() {
                   )}
                 </div>
 
-                  {/* Action Footer */}
-                  <div className="px-5 py-3 bg-muted/30 border-t border-border/50">
-                    <Button 
-                      variant="ghost" 
-                      className="w-full h-9 text-sm justify-between group/btn hover:bg-primary/10 hover:text-primary"
-                      onClick={() => handleViewBalance(tenant)}
-                    >
-                      <span className="flex items-center gap-2">
-                        <Wallet className="w-4 h-4" />
-                        Bekijk Saldo
-                      </span>
-                      <ChevronRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                {/* Action Footer */}
+                <div className="px-4 sm:px-5 py-2.5 sm:py-3 bg-muted/30 border-t border-border/50">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full h-8 sm:h-9 text-xs sm:text-sm justify-between group/btn hover:bg-emerald-500/10 hover:text-emerald-600"
+                    onClick={() => handleViewBalance(tenant)}
+                  >
+                    <span className="flex items-center gap-2">
+                      <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      Bekijk Saldo
+                    </span>
+                    <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform group-hover/btn:translate-x-1" />
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
