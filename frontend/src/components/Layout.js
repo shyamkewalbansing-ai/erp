@@ -840,10 +840,17 @@ export default function Layout() {
             >
               <Menu className="w-5 h-5" />
             </button>
+            {/* Light mode logo */}
             <img 
               src="https://customer-assets.emergentagent.com/job_e0e6d0f3-5640-4b42-9035-36d9fba2aead/artifacts/sn638vwv_logo_dark.webp" 
               alt="FACTURATIE" 
-              className="h-6 w-auto object-contain"
+              className="h-6 w-auto object-contain dark:hidden"
+            />
+            {/* Dark mode logo */}
+            <img 
+              src="https://customer-assets.emergentagent.com/job_e0e6d0f3-5640-4b42-9035-36d9fba2aead/artifacts/4jn2bbd5_logo_light.webp" 
+              alt="FACTURATIE" 
+              className="h-6 w-auto object-contain hidden dark:block"
             />
           </div>
           <div className="mobile-header-actions">
