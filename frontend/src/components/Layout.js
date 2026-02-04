@@ -722,16 +722,43 @@ export default function Layout() {
       <main className={`main-content ${isCollapsed ? 'main-content-expanded' : ''}`}>
         {/* Desktop header - Modern Minimal Style */}
         <header className={`desktop-header hidden lg:flex`}>
-          {/* Left side - User Profile Pill */}
+          {/* Left side - User Profile with Dropdown */}
           <div className="flex items-center gap-4">
-            {/* User Profile - Modern Pill Style */}
-            <div className="header-user-profile">
-              <div className="header-user-avatar">
-                {user?.name?.charAt(0).toUpperCase()}
+            {/* User Profile - Modern Pill Style with Dropdown */}
+            <div className="user-dropdown-container" ref={userDropdownRef}>
+              <div 
+                className="header-user-profile user-dropdown-trigger"
+                onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+              >
+                {profilePhoto || user?.profile_photo ? (
+                  <img 
+                    src={profilePhoto || user?.profile_photo} 
+                    alt={user?.name}
+                    className="w-9 h-9 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="header-user-avatar">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <div className="header-user-info">
+                  <span className="header-user-name">{user?.name}</span>
+                  <span className="header-user-email">{user?.email}</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${userDropdownOpen ? 'rotate-180' : ''}`} />
               </div>
-              <div className="header-user-info">
-                <span className="header-user-name">{user?.name}</span>
-                <span className="header-user-email">{user?.email}</span>
+              
+              {/* Dropdown Menu */}
+              <div className={`user-dropdown-menu ${userDropdownOpen ? 'open' : ''}`}>
+                <button className="user-dropdown-item" onClick={openProfileDialog}>
+                  <Settings className="w-4 h-4" />
+                  <span>Instellingen</span>
+                </button>
+                <div className="user-dropdown-divider" />
+                <button className="user-dropdown-item" onClick={handleLogout} style={{ color: '#ef4444' }}>
+                  <LogOut className="w-4 h-4" />
+                  <span>Uitloggen</span>
+                </button>
               </div>
             </div>
             
