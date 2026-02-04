@@ -251,6 +251,15 @@ h1, h2, h3, h4, h5, h6 {
     margin-left: 72px;
 }
 
+/* Main content full width when sidebar is hidden (superadmin) */
+.main-content.main-content-full-width {
+    margin-left: 0;
+}
+
+.main-content.main-content-full-width > header.desktop-header {
+    left: 0;
+}
+
 .main-content > header.desktop-header {
     position: fixed;
     top: 0;
