@@ -459,31 +459,31 @@ export default function Tenants() {
                     </div>
                   </div>
 
-                  {/* Contact Info */}
-                  <div className="px-5 pb-4 space-y-2.5">
-                    <div className="flex items-center gap-3 text-sm">
-                      <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                        <Phone className="w-4 h-4 text-muted-foreground" />
-                      </div>
-                      <span className="text-foreground">{tenant.phone}</span>
+                {/* Contact Info */}
+                <div className="px-4 sm:px-5 pb-3 sm:pb-4 space-y-2">
+                  <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
+                      <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
                     </div>
-                    {tenant.email && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                          <Mail className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-foreground truncate">{tenant.email}</span>
-                      </div>
-                    )}
-                    {tenant.address && (
-                      <div className="flex items-center gap-3 text-sm">
-                        <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center">
-                          <MapPin className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                        <span className="text-foreground truncate">{tenant.address}</span>
-                      </div>
-                    )}
+                    <span className="text-foreground truncate">{tenant.phone}</span>
                   </div>
+                  {tenant.email && (
+                    <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
+                        <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+                      </div>
+                      <span className="text-foreground truncate">{tenant.email}</span>
+                    </div>
+                  )}
+                  {tenant.address && (
+                    <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                      <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-muted/50 flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-muted-foreground" />
+                      </div>
+                      <span className="text-foreground truncate">{tenant.address}</span>
+                    </div>
+                  )}
+                </div>
 
                   {/* Action Footer */}
                   <div className="px-5 py-3 bg-muted/30 border-t border-border/50">
