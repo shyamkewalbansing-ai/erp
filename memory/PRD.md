@@ -15,20 +15,21 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 
 ## What's Been Implemented (4 Feb 2026)
 
-### APARTMENTS PAGINA MODERNISERING ✅ (VOLTOOID - 4 Feb 2026)
-Complete UI modernisering van de Appartements pagina in lijn met de Tenants pagina.
+### VASTGOED BEHEER UI MODERNISERING ✅ (VOLTOOID - 4 Feb 2026)
+Alle Vastgoed Beheer pagina's hebben nu een consistente, moderne look met hero banners en stats cards.
 
-**Wat is geïmplementeerd:**
-- [x] **Hero Banner** - Moderne gradient header met aantal appartementen, titel en nieuwe appartement knop
-- [x] **4 Stats Cards** - Totaal, Bezet (met bezettingspercentage), Beschikbaar, Huurinkomsten
-- [x] **Moderne Zoek/Filter Bar** - Consistent met Tenants pagina styling
-- [x] **Verbeterde Kaart Layout** - Met status badges, iconen en hover effecten
-- [x] **Volledig Responsief** - Grid past zich aan: 1 kolom mobiel, 2 kolom tablet, 3 kolom desktop
-- [x] **Moderne Loading Spinner** - Met tekst "Appartementen laden..."
-- [x] **Verbeterde Empty State** - Met CTA knop
+**Gemoderniseerde Pagina's:**
+- [x] **Appartementen** (`/app/apartments`) - Hero banner, 4 stats cards, moderne kaart layout
+- [x] **Kasgeld** (`/app/kasgeld`) - Hero banner met SRD/EUR toggle, 6 stats cards, wisselkoers info
+- [x] **Borg/Deposits** (`/app/deposits`) - Hero banner, 3 stats cards, mobile responsive cards
+- [x] **Leningen** (`/app/leningen`) - Hero banner, 4 stats cards, mobile responsive cards
 
-**Gewijzigde Bestanden:**
-- `/app/frontend/src/pages/Apartments.js` - Complete UI update
+**UI Componenten per Pagina:**
+- **Hero Banner**: Donkere gradient achtergrond (slate naar emerald/purple/orange), decoratieve blur elementen
+- **Stats Cards**: Featured card met gradient, normale cards met hover effecten
+- **Zoek/Filter Bar**: Consistent styling met muted achtergrond
+- **Tabellen**: Desktop table, mobile card layout
+- **Empty States**: Moderne iconen, CTA knoppen
 
 ### SUPERADMIN SIDEBAR UITGESCHAKELD ✅ (VOLTOOID - 4 Feb 2026)
 De zijbalk is nu volledig verborgen voor superadmin gebruikers.
