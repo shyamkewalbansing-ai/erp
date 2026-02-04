@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { formatCurrency, getAddons, getMyAddons, getModulePaymentStatus, requestAddonActivation } from '../lib/api';
+import { formatCurrency, getAddons, getMyAddons, getModulePaymentStatus } from '../lib/api';
+import api from '../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -24,7 +25,10 @@ import {
   Fuel,
   Scissors,
   MessageSquare,
-  Plus
+  Plus,
+  Copy,
+  Banknote,
+  ShoppingCart
 } from 'lucide-react';
 import {
   Dialog,
@@ -34,7 +38,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '../components/ui/dialog';
-import { Textarea } from '../components/ui/textarea';
 import { Label } from '../components/ui/label';
 
 // Module icons mapping
