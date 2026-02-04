@@ -837,10 +837,9 @@ server {
           data-testid="create-customer-btn-mobile"
           type="button"
           className="w-full bg-emerald-600 hover:bg-emerald-700 font-semibold py-3 px-4 rounded-lg shadow-lg flex items-center justify-center gap-2"
-          style={{ color: '#ffffff' }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
-          <span style={{ color: '#ffffff' }}>Klant Aanmaken</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
+          <span className="text-black">Klant Aanmaken</span>
         </button>
       </div>
 
