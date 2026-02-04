@@ -370,12 +370,11 @@ export default function Tenants() {
               className="h-10 w-10 sm:h-11 sm:w-11"
               onClick={() => setViewMode('list')}
             >
-                <List className="w-4 h-4" />
-              </Button>
-            </div>
+              <List className="w-4 h-4" />
+            </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Tenants Display */}
       {filteredTenants.length > 0 ? (
