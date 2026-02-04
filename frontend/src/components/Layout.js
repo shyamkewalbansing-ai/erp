@@ -639,18 +639,16 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* Mobile header - Compact Style */}
-        <header className="mobile-header lg:hidden fixed top-0 left-0 right-0 z-50 px-4 py-2.5 flex items-center justify-between bg-white dark:bg-slate-900 border-b border-emerald-100 dark:border-emerald-900/30 shadow-sm">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
+        {/* Mobile header - Modern Style */}
+        <header className="mobile-header lg:hidden">
+          <div className="mobile-header-left">
+            <button
               onClick={() => setSidebarOpen(true)}
-              className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600"
+              className="mobile-menu-btn"
               data-testid="mobile-menu-btn"
             >
               <Menu className="w-5 h-5" />
-            </Button>
+            </button>
             {user?.logo && !isSuperAdmin() ? (
               <img 
                 src={user.logo} 
@@ -661,35 +659,31 @@ export default function Layout() {
               <img 
                 src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
                 alt="Facturatie N.V." 
-                className="h-4 w-auto"
+                className="h-5 w-auto"
               />
             )}
           </div>
-          <div className="flex items-center gap-1.5">
-            <Button
-              variant="ghost"
-              size="icon"
+          <div className="mobile-header-actions">
+            <button
               onClick={toggleDarkMode}
-              className="w-8 h-8 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-300"
+              className="header-action-btn"
               data-testid="theme-toggle-btn-mobile"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
+            </button>
             {!isSuperAdmin() && <NotificationBell />}
-            <Button 
-              variant="ghost"
-              size="icon"
-              className="w-8 h-8 rounded-lg bg-red-500/10 text-red-600"
+            <button 
+              className="header-action-btn danger"
               onClick={handleLogout}
               data-testid="logout-btn-mobile"
             >
               <LogOut className="w-4 h-4" />
-            </Button>
+            </button>
           </div>
         </header>
 
-        {/* Page content - with padding top for fixed header */}
-        <div className="p-2 sm:p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden box-border pt-14 lg:pt-2">
+        {/* Page content */}
+        <div className="page-content">
           <Outlet />
         </div>
       </main>
