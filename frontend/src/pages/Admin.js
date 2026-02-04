@@ -821,10 +821,11 @@ server {
           <button 
             onClick={() => setCreateCustomerDialogOpen(true)} 
             data-testid="create-customer-btn"
-            className="w-full sm:w-auto self-start font-semibold shadow-lg text-xs sm:text-sm h-9 sm:h-10 px-4 rounded-md inline-flex items-center justify-center gap-2 bg-white text-emerald-700 hover:bg-gray-50 transition-colors"
+            className="w-full sm:w-auto self-start font-semibold shadow-lg text-xs sm:text-sm h-9 sm:h-10 px-4 rounded-md inline-flex items-center justify-center gap-2 transition-colors"
+            style={{ backgroundColor: '#ffffff', color: '#047857' }}
           >
-            <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-700" />
-            <span className="text-emerald-700">Klant Aanmaken</span>
+            <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#047857' }} />
+            <span style={{ color: '#047857' }}>Klant Aanmaken</span>
           </button>
         </div>
       </div>
