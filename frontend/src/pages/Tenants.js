@@ -608,7 +608,7 @@ export default function Tenants() {
                 </tbody>
               </table>
             </div>
-          </Card>
+          </div>
         )
       ) : (
         // Empty State
