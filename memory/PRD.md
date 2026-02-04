@@ -45,28 +45,48 @@ Alle Vastgoed Beheer pagina's hebben nu een consistente, moderne look met hero b
 - Meterstanden: Geel (#eab308)
 - Contracten: Teal (#14b8a6)
 
-### HEADER EN SIDEBAR REDESIGN ✅ (VOLTOOID - 4 Feb 2026)
-Moderne redesign van de header en sidebar met Crystal Forest Premium Design.
+### HEADER EN SIDEBAR REDESIGN - "EMERALD HORIZON" ✅ (VOLTOOID - 4 Feb 2026)
+Complete visuele herontwerp van de sidebar en header met het nieuwe "Emerald Horizon" design systeem.
 
-**Wat is geïmplementeerd:**
-- [x] **Sidebar**: Glassmorphism effect met backdrop-blur en emerald groene accenten
-- [x] **Nav items**: Hover en active states met groene indicator bar
-- [x] **Module secties**: Duidelijke headers met groene labels
-- [x] **Header**: Compacte desktop header met gebruikersinfo, portal knoppen, theme toggle en logout
-- [x] **Responsief**: Werkt correct op mobiel, tablet en desktop
-- [x] **Geen horizontale scrolling** op admin dashboard
+**Nieuwe Design Features:**
 
-**CSS Classes in App.css:**
-- `.sidebar` - Glassmorphism container met gradient achtergrond
-- `.sidebar-logo` - Logo sectie met decoratieve border
-- `.nav-item` - Navigatie items met hover/active states
-- `.module-group-header` - Module sectie headers
-- `.desktop-header` - Fixed header voor desktop
-- `.header-glass` - Solid achtergrond met subtiele border
+**Floating Sidebar:**
+- [x] Witte achtergrond met 20px afgeronde hoeken
+- [x] Floating effect - losgekoppeld van de randen (16px margin)
+- [x] Subtiele box-shadow voor diepte
+- [x] Module secties met groene labels
+- [x] Actieve nav items met groene indicator bar aan de linkerkant
+- [x] Smooth collapse animatie naar alleen-iconen modus
+- [x] Groene "F" logo badge wanneer collapsed
+
+**Moderne Header:**
+- [x] User Profile Pill met avatar en gebruikersinfo
+- [x] Quick action buttons (Workspace, Huurders Portaal, Werknemers Portaal)
+- [x] Theme toggle met subtiele border
+- [x] Notification bell
+- [x] "Uitloggen" button met rode styling
+
+**Nieuwe Achtergrond:**
+- [x] Lichtgrijze achtergrond (#F1F5F9) voor betere contrast
+- [x] Witte surfaces voor kaarten en containers
+
+**Responsive Design:**
+- [x] Desktop: Floating sidebar + sticky header
+- [x] Tablet/Mobiel: Verborgen sidebar met hamburger menu
+- [x] Geen horizontale scrolling
+
+**CSS Variabelen (App.css):**
+- `--emerald-500`: #0caf60 (primaire kleur)
+- `--background`: #F1F5F9 (lichte achtergrond)
+- `--surface`: #FFFFFF (kaart achtergrond)
+- `--sidebar-width`: 280px
+- `--sidebar-collapsed-width`: 80px
+- `--header-height`: 70px
 
 **Gewijzigde Bestanden:**
-- `/app/frontend/src/App.css` - Nieuwe CSS stijlen voor sidebar en header
-- `/app/frontend/src/components/Layout.js` - Component met moderne styling
+- `/app/frontend/src/App.css` - Volledig herschreven met Emerald Horizon design
+- `/app/frontend/src/components/Layout.js` - Nieuwe header en sidebar structuur
+- `/app/design_guidelines.json` - Design systeem documentatie
 
 ---
 
