@@ -351,8 +351,6 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: var(--sidebar-margin) var(--sidebar-margin) 0 0;
-    border-radius: 16px 16px 0 0;
 }
 
 .dark .desktop-header {
