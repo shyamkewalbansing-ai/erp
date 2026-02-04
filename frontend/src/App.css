@@ -304,6 +304,11 @@ h1, h2, h3, h4, h5, h6 {
     left: 72px;
 }
 
+/* Desktop header full width when sidebar hidden (superadmin) */
+.main-content > header.desktop-header.desktop-header-full-width {
+    left: 0;
+}
+
 .main-content > header.mobile-header {
     position: fixed;
     top: 0;
