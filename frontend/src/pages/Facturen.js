@@ -562,17 +562,15 @@ export default function Facturen() {
                   </span>
                   <span className="font-semibold">{monthPaidCount}</span>
                 </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-orange-600">Open:</span>
-                      <span className="font-medium">{monthUnpaidCount}</span>
-                    </div>
-                  </div>
-                  {isCurrentMonth && (
-                    <Badge variant="outline" className="mt-2 text-xs">Huidige maand</Badge>
-                  )}
+                <div className="flex justify-between text-xs">
+                  <span className="text-orange-600 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Open
+                  </span>
+                  <span className="font-semibold">{monthUnpaidCount}</span>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           );
         })}
       </div>
