@@ -790,6 +790,9 @@ class UserResponse(BaseModel):
     subscription_end_date: Optional[str] = None
     created_at: str
     logo: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    profile_photo: Optional[str] = None
 
 class TokenResponse(BaseModel):
     access_token: str
