@@ -342,7 +342,7 @@ export default function Facturen() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="facturen-page">
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8" data-testid="facturen-page">
       {/* Hero Header - Same style as Dashboard */}
       <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-10">
         {/* Background Pattern */}
