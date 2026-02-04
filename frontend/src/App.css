@@ -276,10 +276,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Premium Header Glass Effect */
 .header-glass {
-    background: linear-gradient(180deg, 
-        rgba(255, 255, 255, 0.92) 0%, 
-        rgba(255, 255, 255, 0.85) 100%
-    );
+    background: linear-gradient(180deg, #0caf600d, #0000);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-bottom: 1px solid rgba(12, 175, 96, 0.08);
@@ -287,11 +284,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .dark .header-glass {
-    background: linear-gradient(180deg, 
-        rgba(10, 20, 15, 0.95) 0%, 
-        rgba(5, 15, 10, 0.9) 100%
-    );
-    border-bottom: 1px solid rgba(12, 175, 96, 0.12);
+    background: linear-gradient(180deg, #0caf6015, #0000);
+    border-bottom: 1px solid rgba(12, 175, 96, 0.15);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
