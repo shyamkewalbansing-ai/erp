@@ -23,7 +23,13 @@ import {
   Trash2,
   UserPlus,
   UserMinus,
-  Home
+  Home,
+  CheckCircle2,
+  TrendingUp,
+  Grid3X3,
+  List,
+  Loader2,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
