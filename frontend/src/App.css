@@ -499,6 +499,113 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ========================================
+   USER DROPDOWN MENU
+   ======================================== */
+.user-dropdown-container {
+    position: relative;
+}
+
+.user-dropdown-trigger {
+    cursor: pointer;
+}
+
+.user-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    min-width: 200px;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
+    padding: 8px;
+    z-index: 50;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: all 0.2s ease;
+}
+
+.user-dropdown-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.user-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+}
+
+.user-dropdown-item:hover {
+    background: var(--emerald-50);
+    color: var(--emerald-500);
+}
+
+.user-dropdown-item svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.7;
+}
+
+.user-dropdown-item:hover svg {
+    opacity: 1;
+}
+
+.user-dropdown-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 6px 0;
+}
+
+/* ========================================
+   BUTTON FIX - SOLID BACKGROUNDS
+   ======================================== */
+button, .btn, [role="button"] {
+    background-color: var(--surface);
+}
+
+.btn-primary, button[class*="bg-emerald"], button[class*="bg-primary"] {
+    background-color: var(--emerald-500) !important;
+    color: white !important;
+}
+
+.btn-primary:hover, button[class*="bg-emerald"]:hover, button[class*="bg-primary"]:hover {
+    background-color: var(--emerald-600) !important;
+}
+
+/* Fix for Shadcn Button variants */
+button[class*="variant-default"], 
+.bg-primary {
+    background-color: hsl(var(--primary)) !important;
+}
+
+button[class*="variant-outline"] {
+    background-color: transparent !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+button[class*="variant-ghost"]:not(:hover) {
+    background-color: transparent !important;
+}
+
+button[class*="variant-ghost"]:hover {
+    background-color: var(--emerald-50) !important;
+}
+
+/* ========================================
    MOBILE HEADER - WHITE MATCHING SIDEBAR
    ======================================== */
 .mobile-header {
