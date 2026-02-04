@@ -709,10 +709,10 @@ export default function Facturen() {
                               className="p-2 text-center cursor-pointer hover:bg-primary/10 rounded"
                               onClick={() => openDetail(tenant, selectedYear, month)}
                             >
-                              <div className={`w-6 h-6 mx-auto rounded-full flex items-center justify-center ${
-                                data.status === 'paid' ? 'bg-green-100 text-green-700' :
-                                data.status === 'partial' ? 'bg-blue-100 text-blue-700' :
-                                'bg-orange-100 text-orange-700'
+                              <div className={`w-5 h-5 sm:w-6 sm:h-6 mx-auto rounded-full flex items-center justify-center text-[10px] sm:text-xs ${
+                                data.status === 'paid' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' :
+                                data.status === 'partial' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                                'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400'
                               }`}>
                                 {data.status === 'paid' ? '✓' : data.status === 'partial' ? '½' : '○'}
                               </div>
@@ -720,8 +720,8 @@ export default function Facturen() {
                           );
                         })}
                         <td className="p-2 text-right">
-                          <div className="text-xs">
-                            <span className="text-green-600">{formatCurrency(yearPaid)}</span>
+                          <div className="text-[10px] sm:text-xs">
+                            <span className="text-emerald-600">{formatCurrency(yearPaid)}</span>
                             <span className="text-muted-foreground"> / </span>
                             <span>{formatCurrency(yearTotal)}</span>
                           </div>
@@ -733,31 +733,31 @@ export default function Facturen() {
               </table>
             </div>
             
-            {/* Legend */}
-            <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
+            {/* Legend - Responsive */}
+            <div className="mt-4 flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-muted-foreground">
               <span className="flex items-center gap-1">
-                <span className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center text-green-700 text-xs">✓</span>
+                <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center text-emerald-700 dark:text-emerald-400 text-[10px] sm:text-xs">✓</span>
                 Betaald
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-xs">½</span>
+                <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-700 dark:text-blue-400 text-[10px] sm:text-xs">½</span>
                 Gedeeltelijk
               </span>
               <span className="flex items-center gap-1">
-                <span className="w-4 h-4 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 text-xs">○</span>
+                <span className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-700 dark:text-orange-400 text-[10px] sm:text-xs">○</span>
                 Openstaand
               </span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Detail Modal */}
       <Dialog open={showDetail} onOpenChange={setShowDetail}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-primary" />
+            <DialogTitle className="flex items-center gap-2 text-sm sm:text-lg">
+              <Receipt className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
               Factuur Details - {selectedTenant?.name}
             </DialogTitle>
           </DialogHeader>
@@ -771,13 +771,15 @@ export default function Facturen() {
                 return (
                   <>
                     {/* Period Info */}
-                    <div className="p-4 bg-muted/50 rounded-lg">
+                    <div className="p-3 sm:p-4 bg-muted/50 rounded-lg sm:rounded-xl">
                       <div className="flex justify-between items-center">
                         <div>
-                          <p className="text-sm text-muted-foreground">Periode</p>
-                          <p className="text-lg font-bold">{MONTHS[selectedPeriod.month - 1]} {selectedPeriod.year}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">Periode</p>
+                          <p className="text-base sm:text-lg font-bold">{MONTHS[selectedPeriod.month - 1]} {selectedPeriod.year}</p>
                         </div>
                         {getStatusBadge(data.status)}
+                      </div>
+                    </div>
                       </div>
                     </div>
                     
