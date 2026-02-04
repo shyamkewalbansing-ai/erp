@@ -398,19 +398,17 @@ export default function Layout() {
                   className="h-7 w-auto max-w-[140px] object-contain"
                 />
               ) : (
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">F</span>
-                  </div>
-                  <span className="text-slate-800 font-semibold text-lg tracking-tight">FACTURATIE</span>
-                </div>
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_e0e6d0f3-5640-4b42-9035-36d9fba2aead/artifacts/sn638vwv_logo_dark.webp" 
+                  alt="FACTURATIE" 
+                  className="h-8 w-auto object-contain"
+                />
               )
             ) : (
               <div className="w-9 h-9 rounded-lg bg-emerald-500 flex items-center justify-center">
                 <span className="text-white font-bold text-base">F</span>
               </div>
             )}
-          </div>
           {/* Toggle Button */}
           {!isCollapsed && (
             <button
