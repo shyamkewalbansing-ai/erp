@@ -309,55 +309,135 @@ export default function Contracten() {
           </Select>
         </div>
       </div>
-                <p className="text-sm text-muted-foreground">Ondertekend</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="w-5 h-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold">{pendingContracts}</p>
-                <p className="text-sm text-muted-foreground">Wacht op Handtekening</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Zoek op huurder of appartement..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-            data-testid="search-contracts"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[180px]" data-testid="status-filter">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle Status</SelectItem>
-            <SelectItem value="pending_signature">Wacht op handtekening</SelectItem>
-            <SelectItem value="signed">Ondertekend</SelectItem>
-            <SelectItem value="draft">Concept</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
 
       {/* Contracts List */}
-      <Card>
-        <CardContent className="p-0">
-          {filteredContracts.length === 0 ? (
+      {filteredContracts.length > 0 ? (
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+          {/* Mobile Cards */}
+          <div className="block sm:hidden divide-y divide-border/50">
+            {filteredContracts.map((contract) => (
+              <div key={contract.id} className="p-4" data-testid={`contract-card-${contract.id}`}>
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-medium text-foreground text-sm">{contract.tenant_name}</p>
+                    <p className="text-xs text-muted-foreground">{contract.apartment_name}</p>
+                  </div>
+                  {getStatusBadge(contract.status)}
+                </div>
+                <div className="flex items-center justify-between mt-3">
+                  <div className="text-xs text-muted-foreground">
+                    {contract.start_date} - {contract.end_date || 'Onbepaald'}
+                  </div>
+                  <p className="font-semibold text-teal-600 text-sm">{formatCurrency(contract.rent_amount)}</p>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => handleDownloadPdf(contract)}>
+                    <Download className="w-3 h-3 mr-1" />
+                    PDF
+                  </Button>
+                  {contract.status === 'pending_signature' && (
+                    <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => handleShowSigningLink(contract)}>
+                      <Link2 className="w-3 h-3 mr-1" />
+                      Link
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Desktop Table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-muted/50">
+                <tr>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Huurder</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Appartement</th>
+                  <th className="text-left p-4 font-medium text-muted-foreground text-sm">Periode</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground text-sm">Huur</th>
+                  <th className="text-center p-4 font-medium text-muted-foreground text-sm">Status</th>
+                  <th className="text-right p-4 font-medium text-muted-foreground text-sm">Acties</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/50">
+                {filteredContracts.map((contract) => (
+                  <tr key={contract.id} className="hover:bg-muted/30 transition-colors" data-testid={`contract-row-${contract.id}`}>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium">{contract.tenant_name}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-muted-foreground" />
+                        {contract.apartment_name}
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        {contract.start_date} - {contract.end_date || 'Onbepaald'}
+                      </div>
+                    </td>
+                    <td className="p-4 text-right font-semibold text-teal-600">
+                      {formatCurrency(contract.rent_amount)}
+                    </td>
+                    <td className="p-4 text-center">
+                      {getStatusBadge(contract.status)}
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDownloadPdf(contract)}>
+                          <Download className="w-4 h-4" />
+                        </Button>
+                        {contract.status === 'pending_signature' && (
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleShowSigningLink(contract)}>
+                            <Link2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => handleDelete(contract.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 border-dashed">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-muted flex items-center justify-center mb-3 sm:mb-4">
+              <FileSignature className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-base sm:text-lg text-foreground mb-2 text-center">
+              {search || statusFilter !== 'all' ? 'Geen contracten gevonden' : 'Nog geen contracten'}
+            </h3>
+            <p className="text-muted-foreground text-center mb-4 sm:mb-6 max-w-sm text-xs sm:text-sm">
+              {search || statusFilter !== 'all' 
+                ? 'Probeer een andere zoekterm of pas uw filters aan' 
+                : 'Maak uw eerste huurcontract aan om te beginnen'}
+            </p>
+            {!search && statusFilter === 'all' && (
+              <Button 
+                onClick={() => setShowModal(true)}
+                className="shadow-lg shadow-teal-500/20 bg-teal-500 hover:bg-teal-600 text-xs sm:text-sm"
+              >
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                Eerste Contract Aanmaken
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
             <div className="text-center py-12">
               <FileSignature className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
               <h3 className="text-lg font-medium text-foreground mb-2">Geen contracten gevonden</h3>
