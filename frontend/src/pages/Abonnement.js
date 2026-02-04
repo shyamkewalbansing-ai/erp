@@ -357,14 +357,15 @@ export default function MijnModules() {
                       </span>
                       <Button
                         size="sm"
-                        variant="outline"
                         onClick={() => {
                           setSelectedAddon(addon);
-                          setAddonRequestDialogOpen(true);
+                          setOrderStep(1);
+                          setOrderResult(null);
+                          setOrderDialogOpen(true);
                         }}
                       >
-                        Aanvragen
-                        <ArrowRight className="w-3 h-3 ml-1" />
+                        <ShoppingCart className="w-3 h-3 mr-1" />
+                        Bestellen
                       </Button>
                     </div>
                   </CardContent>
