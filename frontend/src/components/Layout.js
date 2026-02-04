@@ -592,36 +592,36 @@ export default function Layout() {
       {/* Main content */}
       <main className={`main-content ${isCollapsed ? 'main-content-expanded' : ''}`}>
         {/* Desktop header with notifications */}
-        <header className={`desktop-header hidden lg:flex header-glass px-6 py-3 items-center justify-between ${isCollapsed ? 'desktop-header-expanded' : ''}`}>
+        <header className={`desktop-header hidden lg:flex px-6 py-2.5 items-center justify-between ${isCollapsed ? 'desktop-header-expanded' : ''}`} style={{background: 'linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.92) 100%)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(12,175,96,0.08)'}}>
           {/* Left side - User info & Workspace/Portal buttons */}
-          <div className="flex items-center gap-4">
-            {/* User info - Modern Style */}
-            <div className="flex items-center gap-3 px-3 py-2 rounded-2xl bg-gradient-to-r from-emerald-500/5 to-transparent border border-emerald-500/10">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                <span className="text-sm font-bold text-white">
+          <div className="flex items-center gap-3">
+            {/* User info - Compact Modern Style */}
+            <div className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500/5 to-transparent border border-emerald-500/10">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/20">
+                <span className="text-xs font-bold text-white">
                   {user?.name?.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-sm text-foreground truncate max-w-[150px]">{user?.name}</p>
-                <p className="text-xs text-muted-foreground truncate max-w-[150px]">{user?.email}</p>
+                <p className="font-medium text-xs text-foreground truncate max-w-[120px]">{user?.name}</p>
+                <p className="text-[10px] text-muted-foreground truncate max-w-[120px]">{user?.email}</p>
               </div>
             </div>
             
-            {/* Workspace & Portal buttons - Modern Style */}
+            {/* Workspace & Portal buttons - Compact Style */}
             {!isSuperAdmin() && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 {/* Workspace button */}
                 {workspace && (
                   <Button
                     variant="ghost"
                     size="icon"
                     onClick={openWorkspaceDialog}
-                    className="w-10 h-10 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border border-emerald-500/20 hover:border-emerald-500/30 transition-all"
+                    className="w-8 h-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border border-emerald-500/20 hover:border-emerald-500/30 transition-all"
                     data-testid="workspace-btn"
                     title="Workspace Beheren"
                   >
-                    <Globe className="w-4 h-4" />
+                    <Globe className="w-3.5 h-3.5" />
                   </Button>
                 )}
                 {/* Tenant Portal button - only if vastgoed_beheer addon is active */}
@@ -630,11 +630,11 @@ export default function Layout() {
                     variant="ghost"
                     size="icon"
                     onClick={() => window.open('/huurder/login', '_blank')}
-                    className="w-10 h-10 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border border-blue-500/20 hover:border-blue-500/30 transition-all"
+                    className="w-8 h-8 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border border-blue-500/20 hover:border-blue-500/30 transition-all"
                     data-testid="tenant-portal-btn"
                     title="Huurders Portaal"
                   >
-                    <Building2 className="w-4 h-4" />
+                    <Building2 className="w-3.5 h-3.5" />
                   </Button>
                 )}
                 {/* Employee Portal button - only if hrm addon is active */}
@@ -643,49 +643,50 @@ export default function Layout() {
                     variant="ghost"
                     size="icon"
                     onClick={() => window.open('/werknemer/login', '_blank')}
-                    className="w-10 h-10 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 border border-purple-500/20 hover:border-purple-500/30 transition-all"
+                    className="w-8 h-8 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 border border-purple-500/20 hover:border-purple-500/30 transition-all"
                     data-testid="employee-portal-btn"
                     title="Werknemers Portaal"
                   >
-                    <Briefcase className="w-4 h-4" />
+                    <Briefcase className="w-3.5 h-3.5" />
                   </Button>
                 )}
               </div>
             )}
           </div>
           
-          {/* Right side - Theme, Notifications, Logout - Modern Style */}
-          <div className="flex items-center gap-2">
+          {/* Right side - Theme, Notifications, Logout - Compact Style */}
+          <div className="flex items-center gap-1.5">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleDarkMode}
-              className="w-10 h-10 rounded-xl bg-slate-500/10 hover:bg-slate-500/20 text-slate-600 dark:text-slate-300 border border-slate-500/20 hover:border-slate-500/30 transition-all"
+              className="w-8 h-8 rounded-lg bg-slate-500/10 hover:bg-slate-500/20 text-slate-600 dark:text-slate-300 border border-slate-500/10 hover:border-slate-500/20 transition-all"
               data-testid="theme-toggle-btn"
             >
-              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
             {!isSuperAdmin() && <NotificationBell />}
             <Button 
               variant="ghost"
-              className="h-10 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/20 hover:border-red-500/30 transition-all font-medium"
+              size="sm"
+              className="h-8 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/10 hover:border-red-500/20 transition-all text-xs font-medium"
               onClick={handleLogout}
               data-testid="logout-btn"
             >
-              <LogOut className="w-4 h-4 mr-2" />
+              <LogOut className="w-3.5 h-3.5 mr-1.5" />
               Uitloggen
             </Button>
           </div>
         </header>
 
-        {/* Mobile header - Modern Style */}
-        <header className="mobile-header lg:hidden header-glass px-4 py-3 flex items-center justify-between">
+        {/* Mobile header - Compact Style */}
+        <header className="mobile-header lg:hidden px-4 py-2.5 flex items-center justify-between" style={{background: 'linear-gradient(180deg, rgba(255,255,255,0.97) 0%, rgba(255,255,255,0.92) 100%)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(12,175,96,0.08)'}}>
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(true)}
-              className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600"
+              className="w-9 h-9 rounded-lg bg-emerald-500/10 text-emerald-600"
               data-testid="mobile-menu-btn"
             >
               <Menu className="w-5 h-5" />
@@ -704,12 +705,12 @@ export default function Layout() {
               />
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleDarkMode}
-              className="w-9 h-9 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-300"
+              className="w-8 h-8 rounded-lg bg-slate-500/10 text-slate-600 dark:text-slate-300"
               data-testid="theme-toggle-btn-mobile"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -718,7 +719,7 @@ export default function Layout() {
             <Button 
               variant="ghost"
               size="icon"
-              className="w-9 h-9 rounded-xl bg-red-500/10 text-red-600"
+              className="w-8 h-8 rounded-lg bg-red-500/10 text-red-600"
               onClick={handleLogout}
               data-testid="logout-btn-mobile"
             >
