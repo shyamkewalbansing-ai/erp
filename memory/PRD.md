@@ -45,48 +45,42 @@ Alle Vastgoed Beheer pagina's hebben nu een consistente, moderne look met hero b
 - Meterstanden: Geel (#eab308)
 - Contracten: Teal (#14b8a6)
 
-### HEADER EN SIDEBAR REDESIGN - "EMERALD HORIZON" ✅ (VOLTOOID - 4 Feb 2026)
-Complete visuele herontwerp van de sidebar en header met het nieuwe "Emerald Horizon" design systeem.
+### SIDEBAR + HEADER REDESIGN - GEÏNTEGREERD ✅ (VOLTOOID - 4 Feb 2026)
+Complete visuele herontwerp met donkere sidebar en witte header die samen verbonden zijn.
 
-**Nieuwe Design Features:**
+**Design Features:**
 
-**Floating Sidebar:**
-- [x] Witte achtergrond met 20px afgeronde hoeken
-- [x] Floating effect - losgekoppeld van de randen (16px margin)
-- [x] Subtiele box-shadow voor diepte
-- [x] Module secties met groene labels
-- [x] Actieve nav items met groene indicator bar aan de linkerkant
-- [x] Smooth collapse animatie naar alleen-iconen modus
-- [x] Groene "F" logo badge wanneer collapsed
+**Donkere Sidebar (#0F172A):**
+- [x] Volledige hoogte, verbonden met bovenkant
+- [x] Logo sectie met dezelfde hoogte als de header (64px)
+- [x] "F Facturatie" branding in wit/groen
+- [x] Module secties met emerald groene labels
+- [x] Nav items met grijze tekst, wit bij hover
+- [x] Actief item met groene indicator bar + groene tekst
+- [x] Collapsed mode met alleen iconen en groene achtergrond voor actief item
 
-**Moderne Header:**
-- [x] User Profile Pill met avatar en gebruikersinfo
-- [x] Quick action buttons (Workspace, Huurders Portaal, Werknemers Portaal)
-- [x] Theme toggle met subtiele border
-- [x] Notification bell
-- [x] "Uitloggen" button met rode styling
+**Witte Content Header:**
+- [x] Direct verbonden aan de sidebar
+- [x] User Profile Pill met avatar en naam/email
+- [x] Quick action buttons (Workspace, Portals)
+- [x] Theme toggle, notification bell, logout
 
-**Nieuwe Achtergrond:**
-- [x] Lichtgrijze achtergrond (#F1F5F9) voor betere contrast
-- [x] Witte surfaces voor kaarten en containers
+**Mobiele Header:**
+- [x] Donkere achtergrond matching sidebar
+- [x] "F Facturatie" branding
+- [x] Hamburger menu opent donkere sidebar
 
-**Responsive Design:**
-- [x] Desktop: Floating sidebar + sticky header
-- [x] Tablet/Mobiel: Verborgen sidebar met hamburger menu
-- [x] Geen horizontale scrolling
-
-**CSS Variabelen (App.css):**
-- `--emerald-500`: #0caf60 (primaire kleur)
-- `--background`: #F1F5F9 (lichte achtergrond)
-- `--surface`: #FFFFFF (kaart achtergrond)
-- `--sidebar-width`: 280px
-- `--sidebar-collapsed-width`: 80px
-- `--header-height`: 70px
+**CSS Variabelen:**
+- `--sidebar-bg`: #0F172A (donkerblauw)
+- `--sidebar-hover`: #1E293B
+- `--text-sidebar`: #94A3B8 (grijs)
+- `--text-sidebar-active`: #FFFFFF
+- `--sidebar-width`: 260px
+- `--header-height`: 64px
 
 **Gewijzigde Bestanden:**
-- `/app/frontend/src/App.css` - Volledig herschreven met Emerald Horizon design
-- `/app/frontend/src/components/Layout.js` - Nieuwe header en sidebar structuur
-- `/app/design_guidelines.json` - Design systeem documentatie
+- `/app/frontend/src/App.css` - Volledig herschreven
+- `/app/frontend/src/components/Layout.js` - Nieuwe structuur
 
 ---
 
