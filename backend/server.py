@@ -10806,10 +10806,12 @@ async def update_deployment_settings(
     return {"message": "Instellingen opgeslagen"}
 
 @api_router.post("/admin/deployment/update")
-async def trigger_system_update(current_user: dict = Depends(get_superadmin)):
+async def trigger_system_update(
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_superadmin)
+):
     """Trigger direct system update - superadmin only (self-hosted server)"""
     import subprocess
-    import asyncio
     
     settings = await db.deployment_settings.find_one({}, {"_id": 0}) or {}
     
@@ -10820,124 +10822,130 @@ async def trigger_system_update(current_user: dict = Depends(get_superadmin)):
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "status": "running",
         "message": "Update gestart...",
-        "details": []
+        "details": ["🚀 Update proces gestart in achtergrond..."]
     }
     await db.deployment_logs.insert_one(log_entry)
     
-    try:
+    # Update settings to show running status
+    await db.deployment_settings.update_one(
+        {},
+        {"$set": {
+            "last_update": datetime.now(timezone.utc).isoformat(),
+            "last_update_status": "running"
+        }},
+        upsert=True
+    )
+    
+    # Run the actual update in background
+    def run_update_script():
+        import time
         details = []
         base_path = os.environ.get("APP_BASE_PATH", "/home/clp/htdocs/facturatie.sr")
         update_script = f"{base_path}/server-update.sh"
         
-        # Check if update script exists
-        if os.path.exists(update_script):
-            # Use the dedicated update script for self-hosted servers
-            details.append("🚀 Server update script uitvoeren...")
-            result = subprocess.run(
-                ["sudo", update_script],
-                capture_output=True,
-                text=True,
-                timeout=600  # 10 minutes timeout for full update
-            )
-            
-            if result.returncode == 0:
-                details.append("✅ Update script succesvol uitgevoerd")
-                details.append(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
-            else:
-                details.append(f"⚠️ Script output: {result.stderr[-300:] if result.stderr else 'Geen errors'}")
-                details.append(result.stdout[-300:] if result.stdout else "")
-        else:
-            # Fallback: manual update steps
-            details.append("📥 Git pull uitvoeren...")
-            result = subprocess.run(
-                ["git", "pull", "origin", "main"],
-                cwd=base_path,
-                capture_output=True,
-                text=True,
-                timeout=60
-            )
-            details.append(f"Git: {result.stdout or result.stderr}")
-            
-            # Step 2: Rebuild frontend if enabled
-            if settings.get("auto_rebuild_frontend", True):
-                details.append("🏗️ Frontend herbouwen...")
-                subprocess.run(
-                    ["yarn", "install"],
-                    cwd=f"{base_path}/frontend",
-                    capture_output=True,
-                    text=True,
-                    timeout=120
-                )
-                result = subprocess.run(
-                    ["yarn", "build"],
-                    cwd=f"{base_path}/frontend",
-                    capture_output=True,
-                    text=True,
-                    timeout=180
-                )
-                if result.returncode == 0:
-                    details.append("✅ Frontend build succesvol")
-                else:
-                    details.append(f"⚠️ Frontend build: {result.stderr[:200] if result.stderr else 'error'}")
-            
-            # Step 3: Restart services via supervisor
-            details.append("🔄 Services herstarten via supervisor...")
-            subprocess.run(["sudo", "supervisorctl", "restart", "facturatie-backend"], capture_output=True)
-            subprocess.run(["sudo", "supervisorctl", "restart", "facturatie-frontend"], capture_output=True)
-            details.append("✅ Services herstart")
-        
-        # Step 4: Sync modules to database
-        details.append("📦 Modules synchroniseren...")
-        await sync_modules_to_database()
-        details.append("✅ Modules gesynchroniseerd")
-        
-        # Health check
-        details.append("🏥 Health check uitvoeren...")
-        await asyncio.sleep(3)
         try:
-            import httpx
-            async with httpx.AsyncClient() as client:
-                resp = await client.get("http://localhost:8001/health", timeout=5)
-                if resp.status_code == 200:
-                    details.append("✅ Backend is gezond")
+            if os.path.exists(update_script):
+                details.append("🚀 Server update script uitvoeren...")
+                result = subprocess.run(
+                    ["sudo", "bash", update_script],
+                    capture_output=True,
+                    text=True,
+                    timeout=600,
+                    cwd=base_path
+                )
+                
+                if result.returncode == 0:
+                    details.append("✅ Update script succesvol uitgevoerd")
+                    if result.stdout:
+                        details.append(result.stdout[-500:] if len(result.stdout) > 500 else result.stdout)
                 else:
-                    details.append("⚠️ Backend health check gefaald")
-        except Exception:
-            details.append("⚠️ Health check overgeslagen")
-        
-        # Update log and settings
-        await db.deployment_logs.update_one(
-            {"id": log_id},
-            {"$set": {
-                "status": "success",
-                "message": "Update succesvol afgerond",
-                "details": details
-            }}
-        )
-        await db.deployment_settings.update_one(
-            {},
-            {"$set": {
-                "last_update": datetime.now(timezone.utc).isoformat(),
-                "last_update_status": "success"
-            }},
-            upsert=True
-        )
-        
-        return {
-            "success": True,
-            "message": "Update succesvol afgerond",
-            "log_id": log_id,
-            "details": details
-        }
-        
-    except subprocess.TimeoutExpired:
-        await db.deployment_logs.update_one(
-            {"id": log_id},
-            {"$set": {
-                "status": "failed",
-                "message": "Timeout tijdens update (max 10 min)",
-                "details": details if 'details' in dir() else []
-            }}
+                    details.append(f"⚠️ Script returncode: {result.returncode}")
+                    if result.stderr:
+                        details.append(f"Errors: {result.stderr[-300:]}")
+                    if result.stdout:
+                        details.append(result.stdout[-300:])
+            else:
+                # Fallback: manual git pull
+                details.append("📥 Git pull uitvoeren (script niet gevonden)...")
+                result = subprocess.run(
+                    ["git", "pull", "origin", "main"],
+                    cwd=base_path,
+                    capture_output=True,
+                    text=True,
+                    timeout=60
+                )
+                details.append(f"Git: {result.stdout or result.stderr}")
+            
+            # Update log with success
+            from motor.motor_asyncio import AsyncIOMotorClient
+            import asyncio
+            
+            # Use sync pymongo for background task
+            from pymongo import MongoClient
+            mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+            db_name = os.environ.get("DB_NAME", "erp_db")
+            sync_client = MongoClient(mongo_url)
+            sync_db = sync_client[db_name]
+            
+            sync_db.deployment_logs.update_one(
+                {"id": log_id},
+                {"$set": {
+                    "status": "success",
+                    "message": "Update succesvol afgerond",
+                    "details": details,
+                    "completed_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            sync_db.deployment_settings.update_one(
+                {},
+                {"$set": {
+                    "last_update": datetime.now(timezone.utc).isoformat(),
+                    "last_update_status": "success"
+                }},
+                upsert=True
+            )
+            sync_client.close()
+            
+        except subprocess.TimeoutExpired:
+            details.append("❌ Timeout tijdens update (max 10 min)")
+            from pymongo import MongoClient
+            mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+            db_name = os.environ.get("DB_NAME", "erp_db")
+            sync_client = MongoClient(mongo_url)
+            sync_db = sync_client[db_name]
+            sync_db.deployment_logs.update_one(
+                {"id": log_id},
+                {"$set": {"status": "failed", "message": "Timeout", "details": details}}
+            )
+            sync_db.deployment_settings.update_one(
+                {}, {"$set": {"last_update_status": "failed"}}, upsert=True
+            )
+            sync_client.close()
+        except Exception as e:
+            details.append(f"❌ Fout: {str(e)}")
+            from pymongo import MongoClient
+            mongo_url = os.environ.get("MONGO_URL", "mongodb://localhost:27017")
+            db_name = os.environ.get("DB_NAME", "erp_db")
+            sync_client = MongoClient(mongo_url)
+            sync_db = sync_client[db_name]
+            sync_db.deployment_logs.update_one(
+                {"id": log_id},
+                {"$set": {"status": "failed", "message": str(e), "details": details}}
+            )
+            sync_db.deployment_settings.update_one(
+                {}, {"$set": {"last_update_status": "failed"}}, upsert=True
+            )
+            sync_client.close()
+    
+    # Add to background tasks
+    background_tasks.add_task(run_update_script)
+    
+    return {
+        "success": True,
+        "message": "Update gestart in achtergrond. Ververs de pagina over ~30 seconden voor de status.",
+        "log_id": log_id,
+        "status": "running"
+    }
         )
         raise HTTPException(status_code=504, detail="Update timeout - probeer opnieuw")
     except Exception as e:
