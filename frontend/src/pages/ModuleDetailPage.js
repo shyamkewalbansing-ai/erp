@@ -692,9 +692,21 @@ export default function ModuleDetailPage() {
   });
 
   // Check if we have hardcoded module detail, otherwise load from API
-  // Try both slug formats (hyphen and underscore)
-  const altSlug = slug?.includes('-') ? slug.replace(/-/g, '_') : slug?.replace(/_/g, '-');
-  const hardcodedModule = MODULES_DETAIL[slug] || MODULES_DETAIL[altSlug];
+  // Try multiple slug formats (hyphen, underscore, and no separator)
+  const getSlugVariants = (s) => {
+    if (!s) return [];
+    const variants = [s];
+    // Convert autodealer -> auto-dealer
+    if (s === 'autodealer') variants.push('auto-dealer');
+    // Convert with hyphens
+    if (s.includes('-')) variants.push(s.replace(/-/g, '_'));
+    // Convert with underscores
+    if (s.includes('_')) variants.push(s.replace(/_/g, '-'));
+    return variants;
+  };
+  
+  const slugVariants = getSlugVariants(slug);
+  const hardcodedModule = slugVariants.reduce((found, s) => found || MODULES_DETAIL[s], null);
 
   useEffect(() => {
     loadData();
