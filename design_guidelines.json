@@ -1,126 +1,117 @@
 {
   "design_system": {
-    "identity": {
-      "name": "Crystal Forest ERP",
-      "persona": "E1 - The Anti-AI Designer",
-      "tone": "Professional, Sleek, Nature-Tech Fusion",
-      "primary_color": "#0caf60"
-    },
+    "name": "Emerald Horizon",
+    "philosophy": "Structured, Floating, Data-First. Moving away from generic glassmorphism to distinct, card-based layouts.",
     "typography": {
-      "font_family": {
-        "heading": "Outfit, sans-serif",
-        "body": "Plus Jakarta Sans, sans-serif",
-        "mono": "JetBrains Mono, monospace"
+      "headings": {
+        "family": "Outfit, sans-serif",
+        "weights": {
+          "bold": 700,
+          "medium": 500
+        },
+        "tracking": "-0.02em"
       },
-      "scale": {
-        "h1": "text-4xl font-bold tracking-tight",
-        "h2": "text-3xl font-semibold tracking-tight",
-        "h3": "text-2xl font-semibold",
-        "body": "text-base leading-relaxed",
-        "small": "text-sm font-medium text-muted-foreground"
+      "body": {
+        "family": "Plus Jakarta Sans, sans-serif",
+        "weights": {
+          "regular": 400,
+          "medium": 500,
+          "semibold": 600
+        }
       }
     },
     "colors": {
       "primary": {
-        "DEFAULT": "#0caf60",
-        "foreground": "#ffffff",
-        "50": "#f0fdf4",
-        "100": "#dcfce7",
-        "500": "#10b981",
-        "600": "#059669",
-        "900": "#064e3b"
+        "base": "#0caf60",
+        "hover": "#059669",
+        "active": "#047857",
+        "subtle": "rgba(12, 175, 96, 0.1)"
       },
-      "background": {
-        "light": "#f8fafc",
-        "dark": "#020617",
-        "glass_light": "rgba(255, 255, 255, 0.7)",
-        "glass_dark": "rgba(2, 6, 23, 0.7)"
+      "light_mode": {
+        "background": "#F8FAFC",
+        "surface": "#FFFFFF",
+        "text_primary": "#0F172A",
+        "text_secondary": "#64748B",
+        "border": "#E2E8F0"
       },
-      "sidebar": {
-        "light": "rgba(255, 255, 255, 0.85)",
-        "dark": "rgba(10, 10, 10, 0.85)",
-        "border_light": "rgba(12, 175, 96, 0.1)",
-        "border_dark": "rgba(12, 175, 96, 0.2)"
+      "dark_mode": {
+        "background": "#020617",
+        "surface": "#0F172A",
+        "text_primary": "#F8FAFC",
+        "text_secondary": "#94A3B8",
+        "border": "#1E293B"
       }
     },
-    "visual_enhancers": {
-      "glassmorphism": {
-        "sidebar": "backdrop-blur-xl bg-background/80 border-r border-border/40 shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
-        "header": "backdrop-blur-md bg-background/60 border-b border-border/40 sticky top-0 z-50",
-        "card": "bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm hover:shadow-md transition-all duration-300"
-      },
-      "gradients": {
-        "hero_dark": "bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950",
-        "active_item": "bg-gradient-to-r from-emerald-500/10 to-transparent"
-      },
-      "shadows": {
-        "glow": "0 0 20px -5px rgba(12, 175, 96, 0.3)",
-        "subtle": "0 2px 10px rgba(0,0,0,0.03)"
-      }
-    },
-    "layout": {
-      "sidebar_width": {
-        "expanded": "280px",
-        "collapsed": "80px"
-      },
-      "header_height": "64px",
-      "spacing": {
-        "container_padding": "p-6 md:p-8 lg:p-10",
-        "section_gap": "gap-8"
-      }
+    "spacing": {
+      "sidebar_width": "280px",
+      "sidebar_collapsed_width": "80px",
+      "header_height": "70px",
+      "card_radius": "16px",
+      "container_padding": "24px"
     }
   },
   "components": {
-    "Sidebar": {
-      "path": "/app/frontend/src/components/layout/Sidebar.js",
-      "specs": {
-        "structure": [
-          "Logo Area (Top, Fixed Height)",
-          "ScrollArea (Middle, Flex-1)",
-          "User Profile / Logout (Bottom, Fixed)"
-        ],
-        "behavior": "Collapsible with smooth width transition. Icons visible in collapsed state with Tooltips.",
-        "styling": "Glassmorphic container. Navigation items grouped by module (e.g., 'Vastgoed', 'Financieel'). Active state uses emerald glow."
+    "sidebar": {
+      "style": "floating",
+      "desktop_behavior": "Floating panel with 16px margin from edges, rounded-2xl corners. Detached from header.",
+      "mobile_behavior": "Full height drawer, slide-over.",
+      "navigation_items": {
+        "style": "pill",
+        "active_state": "bg-emerald-500/10 text-emerald-600 font-semibold border-l-4 border-emerald-500",
+        "hover_state": "hover:bg-slate-100 dark:hover:bg-slate-800 hover:translate-x-1 transition-all"
       }
     },
-    "Header": {
-      "path": "/app/frontend/src/components/layout/Header.js",
-      "specs": {
-        "structure": [
-          "Left: Breadcrumbs / Page Title",
-          "Right: Search, Notifications, Theme Toggle, User Dropdown"
-        ],
-        "styling": "Transparent/Glassy. Blends with hero section. Elements float."
+    "header": {
+      "style": "minimal_sticky",
+      "layout": "Flex row, detached from sidebar on desktop.",
+      "elements": {
+        "user_profile": "Compact pill with avatar and name. No gradients.",
+        "theme_toggle": "Icon only, subtle border.",
+        "notifications": "Bell icon with emerald dot."
       }
     },
-    "DashboardLayout": {
-      "path": "/app/frontend/src/layouts/DashboardLayout.js",
-      "specs": {
-        "structure": "Flex container. Sidebar fixed left. Main content area with Header fixed top.",
-        "responsive": "Mobile: Sidebar becomes a Sheet/Drawer. Desktop: Collapsible Sidebar."
+    "dashboard": {
+      "layout": "Bento Grid (CSS Grid)",
+      "cards": {
+        "style": "Flat surface, subtle 1px border, no heavy shadows. Focus on typography.",
+        "hover": "Translate Y -2px, subtle emerald glow."
       }
     }
   },
   "assets": {
     "images": {
-      "user_avatar": "https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=srgb&fm=jpg&q=85",
-      "logo_placeholder": "https://images.unsplash.com/photo-1756999223507-72bfbb654193?crop=entropy&cs=srgb&fm=jpg&q=85"
-    },
-    "icons": "Lucide React (Home, Building2, Receipt, Users, Settings, Bell, Search, LogOut, ChevronLeft, ChevronRight, Menu)"
+      "user_avatar": "https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBidXNpbmVzcyUyMHBvcnRyYWl0JTIwaGVhZHNob3R8ZW58MHx8fHwxNzcwMjQxNDM3fDA&ixlib=rb-4.1.0&q=85",
+      "hero_background": "https://images.unsplash.com/photo-1670279975784-fa58f2365971?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMDNkJTIwc2hhcGVzJTIwZW1lcmFsZCUyMGdyZWVuJTIwd2hpdGUlMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3MDI0MTQzOXww&ixlib=rb-4.1.0&q=85",
+      "logo_placeholder": "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
+    }
   },
-  "instructions_to_main_agent": [
-    "1. IMPLEMENTATION ORDER: Create DashboardLayout.js first, then Sidebar.js and Header.js.",
-    "2. SIDEBAR LOGIC: Use a context or prop for 'isCollapsed' state. Ensure text fades out smoothly when collapsing.",
-    "3. GLASS EFFECT: Apply the 'glassmorphism.sidebar' class string to the sidebar container. Do not use solid backgrounds.",
-    "4. ACTIVE STATE: Navigation items must have a distinct active state (emerald text + subtle bg gradient).",
-    "5. MOBILE: On mobile, hide the sidebar and show a 'Menu' button in the Header that opens a Sheet containing the Sidebar content.",
-    "6. DATA-TESTID: Add 'data-testid' to all interactive elements (sidebar-toggle, nav-item-*, logout-btn, etc.).",
-    "7. THEME: Ensure all colors use Tailwind CSS variables (bg-background, text-foreground) to support the existing dark mode toggle.",
-    "8. NO MOCKING: Use the provided image URLs. Do not use placeholder text for images."
+  "implementation_steps": [
+    {
+      "file": "/app/frontend/src/App.css",
+      "action": "replace_content",
+      "instructions": "Replace the entire CSS with the new 'Emerald Horizon' system. Key changes: Remove global glassmorphism. Add .sidebar-floating class. Update root variables for cleaner, flatter colors. Ensure .sidebar has 'position: fixed; top: 1rem; bottom: 1rem; left: 1rem; border-radius: 1rem;' for the floating effect on desktop."
+    },
+    {
+      "file": "/app/frontend/src/components/Layout.js",
+      "action": "update_structure",
+      "instructions": "Refactor the layout structure. 1. Wrap the Sidebar in a container that allows it to float on desktop. 2. Update the Header to be 'sticky top-0' but respect the sidebar's space. 3. Ensure the 'main' content area has appropriate padding-left to account for the floating sidebar (approx 300px). 4. Update NavLink classes to match the new 'pill' style defined in CSS."
+    },
+    {
+      "file": "/app/frontend/tailwind.config.js",
+      "action": "verify",
+      "instructions": "Ensure 'emerald' color palette is available. (It usually is by default in Tailwind, but check if it needs to be explicitly added to 'extend')."
+    }
   ],
   "universal_guidelines": {
-    "do_not_use": ["Inter font for headings", "Solid gray backgrounds for sidebar", "Default blue colors"],
-    "must_use": ["Manrope/Outfit fonts", "Emerald Green (#0caf60) primary", "Glassmorphism effects"],
-    "accessibility": "Ensure text contrast is > 4.5:1. Use aria-labels for icon-only buttons."
+    "do_not": [
+      "Do not use heavy gradients for backgrounds.",
+      "Do not use 'Inter' font for headings.",
+      "Do not make the sidebar full-height on desktop (keep it floating)."
+    ],
+    "must_do": [
+      "Use #0caf60 for primary actions.",
+      "Ensure high contrast for text (WCAG AA).",
+      "Use 'Outfit' for all headings."
+    ]
   }
 }
