@@ -98,6 +98,17 @@ async def get_current_active_user(current_user: dict = Depends(get_current_user)
     if current_user.get("is_demo"):
         return current_user
     
+    # Check if user has any active addon (including free boekhouding)
+    user_id = current_user.get("id")
+    active_addons = await db.user_addons.find({
+        "user_id": user_id,
+        "status": {"$in": ["active", "trial"]}
+    }).to_list(100)
+    
+    # If user has active addons (like free boekhouding), allow access
+    if active_addons and len(active_addons) > 0:
+        return current_user
+    
     status = current_user.get("subscription_status")
     if status not in ["active", "trial"]:
         raise HTTPException(status_code=403, detail="Abonnement niet actief")
