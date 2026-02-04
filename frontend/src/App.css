@@ -188,7 +188,7 @@ h1, h2, h3, h4, h5, h6 {
     overflow-x: hidden;
     padding: 16px 12px;
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+    scrollbar-color: var(--border-color) transparent;
 }
 
 .sidebar nav::-webkit-scrollbar {
@@ -200,7 +200,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .sidebar nav::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--border-color);
     border-radius: 4px;
 }
 
@@ -222,7 +222,7 @@ h1, h2, h3, h4, h5, h6 {
     justify-content: center;
 }
 
-/* Navigation Items - Dark Theme */
+/* Navigation Items - Light Theme */
 .nav-item {
     display: flex;
     align-items: center;
@@ -265,12 +265,6 @@ h1, h2, h3, h4, h5, h6 {
     width: 18px;
     height: 18px;
     flex-shrink: 0;
-    opacity: 0.7;
-}
-
-.nav-item:hover svg,
-.nav-item.active svg {
-    opacity: 1;
 }
 
 .nav-item.active svg {
@@ -294,7 +288,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .sidebar.sidebar-collapsed .nav-item.active svg {
     color: white;
-    opacity: 1;
 }
 
 /* Mobile Sidebar */
