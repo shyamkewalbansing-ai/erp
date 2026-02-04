@@ -836,9 +836,20 @@ server {
           onClick={() => setCreateCustomerDialogOpen(true)} 
           data-testid="create-customer-btn-mobile"
           type="button"
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-lg shadow-lg text-center"
+          style={{
+            width: '100%',
+            backgroundColor: '#059669',
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: '18px',
+            padding: '16px',
+            borderRadius: '8px',
+            border: 'none',
+            textAlign: 'center',
+            cursor: 'pointer'
+          }}
         >
-          + Klant Aanmaken
+          + KLANT AANMAKEN
         </button>
       </div>
 
