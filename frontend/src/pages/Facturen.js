@@ -580,7 +580,7 @@ export default function Facturen() {
         <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
           <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border/50 bg-muted/30">
             <h3 className="font-semibold text-sm sm:text-lg flex items-center gap-2">
-              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
               {MONTHS[selectedMonth - 1]} {selectedYear} - Facturen per Huurder
             </h3>
           </div>
