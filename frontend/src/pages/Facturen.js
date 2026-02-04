@@ -333,128 +333,168 @@ export default function Facturen() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto mb-3" />
+          <p className="text-muted-foreground">Facturen laden...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" data-testid="facturen-page">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <FileText className="w-7 h-7 text-primary" />
-            Facturen Overzicht
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Maandelijks overzicht van alle huurbetalingen
-          </p>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="facturen-page">
+      {/* Hero Header - Same style as Dashboard */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-4 sm:p-6 lg:p-10">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
         
-        {/* Year Selector & Payment Button */}
-        <div className="flex items-center gap-4">
-          <Button 
-            onClick={goToPayments}
-            data-testid="add-payment-btn-facturen"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Betaling Registreren
-          </Button>
-          
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => setSelectedYear(y => y - 1)}
-              disabled={selectedYear <= 2020}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(parseInt(v))}>
-              <SelectTrigger className="w-[120px]" data-testid="year-selector">
-                <Calendar className="w-4 h-4 mr-2" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {getAvailableYears().map(year => (
-                  <SelectItem key={year} value={String(year)}>{year}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              variant="outline" 
-              size="icon"
-              onClick={() => setSelectedYear(y => y + 1)}
-              disabled={selectedYear >= currentDate.getFullYear() + 1}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+        {/* Decorative Blurs */}
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-blue-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-emerald-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
+        
+        <div className="relative flex flex-col gap-4 sm:gap-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-blue-300 text-xs sm:text-sm mb-3 sm:mb-4">
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span>{selectedYear}</span>
+              </div>
+              <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+                Facturen Overzicht
+              </h1>
+              <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
+                Maandelijks overzicht van alle huurbetalingen
+              </p>
+            </div>
+            
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
+              <Button 
+                onClick={goToPayments}
+                size="sm"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm flex-1 sm:flex-none"
+                data-testid="add-payment-btn-facturen"
+              >
+                <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                <span className="hidden xs:inline">Betaling Registreren</span>
+                <span className="xs:hidden">Betaling</span>
+              </Button>
+              
+              <div className="flex items-center gap-1 sm:gap-2 bg-white/10 backdrop-blur-sm rounded-lg p-1">
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-8 w-8 sm:h-9 sm:w-9 text-white hover:bg-white/20"
+                  onClick={() => setSelectedYear(y => y - 1)}
+                  disabled={selectedYear <= 2020}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(parseInt(v))}>
+                  <SelectTrigger className="w-[90px] sm:w-[110px] bg-transparent border-0 text-white text-sm" data-testid="year-selector">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getAvailableYears().map(year => (
+                      <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className="h-8 w-8 sm:h-9 sm:w-9 text-white hover:bg-white/20"
+                  onClick={() => setSelectedYear(y => y + 1)}
+                  disabled={selectedYear >= currentDate.getFullYear() + 1}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Totaal Verschuldigd</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(summary.totalDue)}</p>
-              </div>
-              <FileText className="w-8 h-8 text-primary opacity-80" />
+      {/* Summary Stats - Responsive Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        {/* Totaal Verschuldigd - Featured */}
+        <div className="col-span-2 sm:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 p-4 sm:p-5 text-white shadow-xl shadow-blue-500/20">
+          <div className="absolute top-0 right-0 w-20 sm:w-32 h-20 sm:h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">Totaal Verschuldigd</p>
+              <p className="text-xl sm:text-2xl font-bold truncate">{formatCurrency(summary.totalDue)}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 ml-2">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Totaal Ontvangen</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalPaid)}</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-green-500 opacity-80" />
+        {/* Totaal Ontvangen */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-5 hover:shadow-xl hover:shadow-emerald-500/5 transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Ontvangen</p>
+              <p className="text-lg sm:text-2xl font-bold text-emerald-600 truncate">{formatCurrency(summary.totalPaid)}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 ml-2">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Openstaand</p>
-                <p className="text-2xl font-bold text-orange-600">{formatCurrency(summary.balance)}</p>
-              </div>
-              <TrendingDown className="w-8 h-8 text-orange-500 opacity-80" />
+        {/* Openstaand */}
+        <div className={`group relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-5 transition-all duration-300 ${
+          summary.balance > 0 
+            ? 'bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border border-orange-200 dark:border-orange-900' 
+            : 'bg-card border border-border/50'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Openstaand</p>
+              <p className={`text-lg sm:text-2xl font-bold truncate ${summary.balance > 0 ? 'text-orange-600' : 'text-foreground'}`}>
+                {formatCurrency(summary.balance)}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ml-2 ${
+              summary.balance > 0 ? 'bg-orange-500/10' : 'bg-muted'
+            }`}>
+              <TrendingDown className={`w-5 h-5 sm:w-6 sm:h-6 ${summary.balance > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Betaald</p>
-                <p className="text-2xl font-bold text-green-600">{summary.paidCount}</p>
-              </div>
-              <CheckCircle2 className="w-8 h-8 text-green-500 opacity-80" />
+        {/* Betaald Count */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-5 hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Betaald</p>
+              <p className="text-lg sm:text-2xl font-bold text-emerald-600">{summary.paidCount}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0 ml-2">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
+            </div>
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Openstaand</p>
-                <p className="text-2xl font-bold text-orange-600">{summary.unpaidCount + summary.partialCount}</p>
-              </div>
-              <AlertCircle className="w-8 h-8 text-orange-500 opacity-80" />
+        {/* Openstaand Count */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-5 hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Openstaand</p>
+              <p className={`text-lg sm:text-2xl font-bold ${summary.unpaidCount > 0 ? 'text-orange-600' : 'text-foreground'}`}>
+                {summary.unpaidCount + summary.partialCount}
+              </p>
             </div>
-          </CardContent>
-        </Card>
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ml-2 ${
+              summary.unpaidCount > 0 ? 'bg-orange-500/10' : 'bg-muted'
+            }`}>
+              <AlertCircle className={`w-5 h-5 sm:w-6 sm:h-6 ${summary.unpaidCount > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Search */}
