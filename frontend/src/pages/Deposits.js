@@ -21,7 +21,10 @@ import {
   Calendar,
   CheckCircle2,
   Clock,
-  FileText
+  FileText,
+  Loader2,
+  Banknote,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -232,158 +235,301 @@ export default function Deposits() {
     return DEPOSIT_STATUSES.find(s => s.value === status) || DEPOSIT_STATUSES[0];
   };
 
+  // Calculate stats
+  const totalDeposits = deposits.length;
+  const heldDeposits = deposits.filter(d => d.status === 'held');
+  const totalHeldAmount = heldDeposits.reduce((sum, d) => sum + d.amount, 0);
+  const returnedDeposits = deposits.filter(d => d.status === 'returned' || d.status === 'partial_returned');
+  const totalReturnedAmount = returnedDeposits.reduce((sum, d) => sum + (d.return_amount || 0), 0);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto mb-3" />
+          <p className="text-muted-foreground">Borg laden...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" data-testid="deposits-page">
-      {/* Page Header */}
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Borg</h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Beheer borgbetalingen en terugbetalingen
-          </p>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="deposits-page">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-purple-900 p-4 sm:p-6 lg:p-10">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
-        <Button 
-          onClick={() => { resetForm(); setShowModal(true); }}
-          className="rounded-full bg-primary hover:bg-primary/90"
-          data-testid="add-deposit-btn"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Borg registreren
-        </Button>
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-purple-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-pink-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
+        
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-purple-300 text-xs sm:text-sm mb-3 sm:mb-4">
+              <Wallet className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>{totalDeposits} borgbetalingen</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+              Borg Beheer
+            </h1>
+            <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
+              Beheer borgbetalingen en terugbetalingen
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => { resetForm(); setShowModal(true); }}
+            size="sm"
+            className="w-full sm:w-auto bg-purple-500 hover:bg-purple-600 text-white text-xs sm:text-sm"
+            data-testid="add-deposit-btn"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            Borg Registreren
+          </Button>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Zoek op huurder of appartement..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-input border-transparent"
-            data-testid="search-deposits"
-          />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
+        {/* Total Held - Featured */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-500 via-purple-600 to-pink-600 p-4 sm:p-6 text-white shadow-xl shadow-purple-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-40 h-24 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative flex items-center justify-between">
+            <div>
+              <p className="text-purple-100 text-xs sm:text-sm font-medium mb-1">In Beheer</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{formatCurrency(totalHeldAmount)}</p>
+              <p className="text-purple-200 text-xs mt-1">{heldDeposits.length} actieve borgen</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Wallet className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]" data-testid="status-filter">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle</SelectItem>
-            {DEPOSIT_STATUSES.map(status => (
-              <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+
+        {/* Returned */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Terugbetaald</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600">{formatCurrency(totalReturnedAmount)}</p>
+              <p className="text-xs text-muted-foreground mt-1">{returnedDeposits.length} terugbetalingen</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+
+        {/* Total */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Totaal Geregistreerd</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{totalDeposits}</p>
+              <p className="text-xs text-muted-foreground mt-1">Alle borgbetalingen</p>
+            </div>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Zoek op huurder of appartement..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-10 sm:h-11 bg-muted/30 border-transparent focus:border-primary text-sm"
+              data-testid="search-deposits"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-11" data-testid="status-filter">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle</SelectItem>
+              {DEPOSIT_STATUSES.map(status => (
+                <SelectItem key={status.value} value={status.value}>{status.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Deposits Table */}
       {filteredDeposits.length > 0 ? (
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Datum</TableHead>
-                <TableHead>Huurder</TableHead>
-                <TableHead>Appartement</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Bedrag</TableHead>
-                <TableHead className="text-right">Terugbetaald</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredDeposits.map((deposit) => {
-                const statusInfo = getStatusInfo(deposit.status);
-                const StatusIcon = statusInfo.icon;
-                return (
-                  <TableRow key={deposit.id} data-testid={`deposit-row-${deposit.id}`}>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                        {deposit.deposit_date}
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+          {/* Mobile Cards */}
+          <div className="block sm:hidden divide-y divide-border/50">
+            {filteredDeposits.map((deposit) => {
+              const statusInfo = getStatusInfo(deposit.status);
+              const StatusIcon = statusInfo.icon;
+              return (
+                <div key={deposit.id} className="p-4" data-testid={`deposit-row-${deposit.id}`}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="font-medium text-foreground">{deposit.tenant_name}</p>
+                      <p className="text-xs text-muted-foreground">{deposit.apartment_name}</p>
+                    </div>
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium ${statusInfo.color}`}>
+                      <StatusIcon className="w-3 h-3" />
+                      {statusInfo.label}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Bedrag</p>
+                      <p className="font-semibold text-foreground">{formatCurrency(deposit.amount)}</p>
+                    </div>
+                    {deposit.return_amount && (
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">Terugbetaald</p>
+                        <p className="font-semibold text-green-600">{formatCurrency(deposit.return_amount)}</p>
                       </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{deposit.tenant_name}</TableCell>
-                    <TableCell>{deposit.apartment_name}</TableCell>
-                    <TableCell>
-                      <span className={`status-badge flex items-center gap-1 ${statusInfo.color}`}>
-                        <StatusIcon className="w-3 h-3" />
-                        {statusInfo.label}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">
-                      {formatCurrency(deposit.amount)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {deposit.return_amount 
-                        ? formatCurrency(deposit.return_amount)
-                        : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {deposit.status === 'held' && (
-                            <DropdownMenuItem onClick={() => openReturnModal(deposit)}>
-                              <RefreshCcw className="w-4 h-4 mr-2" />
-                              Borg terugbetalen
-                            </DropdownMenuItem>
-                          )}
-                          {(deposit.status === 'returned' || deposit.status === 'partial_returned') && (
-                            <DropdownMenuItem onClick={() => handleDownloadRefundPdf(deposit)}>
-                              <FileText className="w-4 h-4 mr-2" />
-                              Download PDF
-                            </DropdownMenuItem>
-                          )}
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => { setSelectedDeposit(deposit); setShowDeleteDialog(true); }}
-                          >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Verwijderen
+                    )}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {deposit.status === 'held' && (
+                          <DropdownMenuItem onClick={() => openReturnModal(deposit)}>
+                            <RefreshCcw className="w-4 h-4 mr-2" />
+                            Borg terugbetalen
                           </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                        )}
+                        {(deposit.status === 'returned' || deposit.status === 'partial_returned') && (
+                          <DropdownMenuItem onClick={() => handleDownloadRefundPdf(deposit)}>
+                            <FileText className="w-4 h-4 mr-2" />
+                            Download PDF
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem 
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => { setSelectedDeposit(deposit); setShowDeleteDialog(true); }}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Verwijderen
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Desktop Table */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Datum</TableHead>
+                  <TableHead>Huurder</TableHead>
+                  <TableHead>Appartement</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Bedrag</TableHead>
+                  <TableHead className="text-right">Terugbetaald</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredDeposits.map((deposit) => {
+                  const statusInfo = getStatusInfo(deposit.status);
+                  const StatusIcon = statusInfo.icon;
+                  return (
+                    <TableRow key={deposit.id} data-testid={`deposit-row-${deposit.id}`}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          {deposit.deposit_date}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">{deposit.tenant_name}</TableCell>
+                      <TableCell>{deposit.apartment_name}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${statusInfo.color}`}>
+                          <StatusIcon className="w-3 h-3" />
+                          {statusInfo.label}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold">
+                        {formatCurrency(deposit.amount)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {deposit.return_amount 
+                          ? formatCurrency(deposit.return_amount)
+                          : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {deposit.status === 'held' && (
+                              <DropdownMenuItem onClick={() => openReturnModal(deposit)}>
+                                <RefreshCcw className="w-4 h-4 mr-2" />
+                                Borg terugbetalen
+                              </DropdownMenuItem>
+                            )}
+                            {(deposit.status === 'returned' || deposit.status === 'partial_returned') && (
+                              <DropdownMenuItem onClick={() => handleDownloadRefundPdf(deposit)}>
+                                <FileText className="w-4 h-4 mr-2" />
+                                Download PDF
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuItem 
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => { setSelectedDeposit(deposit); setShowDeleteDialog(true); }}
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Verwijderen
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       ) : (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <Wallet className="w-8 h-8" />
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 border-dashed">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-muted flex items-center justify-center mb-3 sm:mb-4">
+              <Wallet className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-base sm:text-lg text-foreground mb-2 text-center">
+              {search || statusFilter !== 'all' ? 'Geen borgbetalingen gevonden' : 'Nog geen borgbetalingen'}
+            </h3>
+            <p className="text-muted-foreground text-center mb-4 sm:mb-6 max-w-sm text-xs sm:text-sm">
+              {search || statusFilter !== 'all' 
+                ? 'Probeer een andere zoekterm of pas uw filters aan' 
+                : 'Registreer uw eerste borgbetaling om te beginnen'}
+            </p>
+            {!search && statusFilter === 'all' && (
+              <Button 
+                onClick={() => { resetForm(); setShowModal(true); }}
+                className="shadow-lg shadow-purple-500/20 bg-purple-500 hover:bg-purple-600 text-xs sm:text-sm"
+              >
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                Eerste Borg Registreren
+              </Button>
+            )}
           </div>
-          <h3 className="font-semibold text-foreground mb-2">Geen borgbetalingen gevonden</h3>
-          <p className="text-muted-foreground mb-4">
-            {search || statusFilter !== 'all' 
-              ? 'Probeer andere filters' 
-              : 'Registreer uw eerste borgbetaling'}
-          </p>
-          {!search && statusFilter === 'all' && (
-            <Button 
-              onClick={() => { resetForm(); setShowModal(true); }}
-              className="rounded-full"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Borg registreren
-            </Button>
-          )}
         </div>
       )}
 
