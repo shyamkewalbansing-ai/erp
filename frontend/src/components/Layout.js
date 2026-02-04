@@ -710,7 +710,7 @@ export default function Layout() {
         </header>
 
         {/* Page content */}
-        <div className="p-3 sm:p-4 lg:p-6 xl:p-8 max-w-full overflow-x-hidden">
+        <div className="p-2 sm:p-3 md:p-4 lg:p-6 max-w-full overflow-x-hidden box-border">
           <Outlet />
         </div>
       </main>
