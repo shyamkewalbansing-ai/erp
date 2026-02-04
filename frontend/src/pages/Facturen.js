@@ -654,43 +654,46 @@ export default function Facturen() {
                 </table>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
-      {/* Year Overview Table (when no month selected) */}
+      {/* Year Overview Table (when no month selected) - Responsive */}
       {!selectedMonth && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border/50 bg-muted/30">
+            <h3 className="font-semibold text-sm sm:text-lg flex items-center gap-2">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
               Jaaroverzicht {selectedYear} - Alle Huurders
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/50">
+            </h3>
+          </div>
+          <div className="p-3 sm:p-6">
+            <div className="table-scroll-wrapper">
+              <table className="w-full text-xs sm:text-sm">
+                <thead className="bg-muted/30">
                   <tr>
-                    <th className="text-left p-2 font-medium sticky left-0 bg-muted/50">Huurder</th>
+                    <th className="text-left p-2 font-semibold sticky left-0 bg-muted/30 text-muted-foreground uppercase tracking-wider text-[10px] sm:text-xs">Huurder</th>
                     {getDisplayMonths().map(month => (
-                      <th key={month} className="text-center p-2 font-medium min-w-[80px]">
+                      <th key={month} className="text-center p-2 font-semibold min-w-[60px] sm:min-w-[80px] text-muted-foreground uppercase tracking-wider text-[10px] sm:text-xs">
                         {MONTHS[month - 1].substring(0, 3)}
                       </th>
                     ))}
-                    <th className="text-right p-2 font-medium">Totaal</th>
+                    <th className="text-right p-2 font-semibold text-muted-foreground uppercase tracking-wider text-[10px] sm:text-xs">Totaal</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-border/50">
                   {activeTenantsData.map(tenant => {
                     let yearTotal = 0;
                     let yearPaid = 0;
                     
                     return (
-                      <tr key={tenant.id} className="hover:bg-muted/30">
+                      <tr key={tenant.id} className="hover:bg-muted/30 transition-colors">
                         <td className="p-2 sticky left-0 bg-card">
-                          <div className="flex items-center gap-1">
-                            <span className="font-medium truncate max-w-[120px]" title={tenant.name}>
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-md sm:rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                              <span className="text-blue-600 font-semibold text-[10px] sm:text-xs">{tenant.name.charAt(0)}</span>
+                            </div>
+                            <span className="font-medium truncate max-w-[80px] sm:max-w-[120px] text-xs sm:text-sm" title={tenant.name}>
                               {tenant.name}
                             </span>
                           </div>
