@@ -804,7 +804,7 @@ server {
         <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-emerald-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
         <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-teal-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
         
-        <div className="relative flex flex-col gap-3 sm:gap-4">
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1 sm:py-2 rounded-full bg-emerald-500/20 backdrop-blur-sm text-emerald-300 text-[10px] sm:text-sm mb-2 sm:mb-4">
               <Shield className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -818,17 +818,28 @@ server {
             </p>
           </div>
           
+          {/* Desktop only button inside hero */}
           <Button 
             onClick={() => setCreateCustomerDialogOpen(true)} 
-            data-testid="create-customer-btn"
-            variant="outline"
-            size="sm"
-            className="w-full sm:w-auto self-start bg-white/95 hover:bg-white text-emerald-700 border-white/50 font-semibold shadow-lg text-xs sm:text-sm"
+            data-testid="create-customer-btn-desktop"
+            className="hidden sm:inline-flex bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg"
           >
-            <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
+            <UserPlus className="w-4 h-4 mr-2" />
             Klant Aanmaken
           </Button>
         </div>
+      </div>
+      
+      {/* Mobile action button - outside hero for better visibility */}
+      <div className="sm:hidden">
+        <Button 
+          onClick={() => setCreateCustomerDialogOpen(true)} 
+          data-testid="create-customer-btn-mobile"
+          className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg"
+        >
+          <UserPlus className="w-4 h-4 mr-2" />
+          Klant Aanmaken
+        </Button>
       </div>
 
       {/* Stats Cards - Responsive Grid */}
