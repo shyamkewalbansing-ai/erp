@@ -2139,6 +2139,124 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         logo=current_user.get("logo")
     )
 
+# Profile Update Models
+class ProfileUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    current_password: Optional[str] = None
+    new_password: Optional[str] = None
+
+@api_router.put("/user/profile")
+async def update_user_profile(
+    profile_data: ProfileUpdateRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user profile information"""
+    user_id = current_user["id"]
+    update_data = {}
+    
+    # Update basic fields if provided
+    if profile_data.name:
+        update_data["name"] = profile_data.name
+    if profile_data.email:
+        # Check if email is already in use by another user
+        existing = await db.users.find_one({
+            "email": profile_data.email,
+            "id": {"$ne": user_id}
+        })
+        if existing:
+            raise HTTPException(status_code=400, detail="E-mail is al in gebruik")
+        update_data["email"] = profile_data.email
+    if profile_data.phone is not None:
+        update_data["phone"] = profile_data.phone
+    if profile_data.address is not None:
+        update_data["address"] = profile_data.address
+    
+    # Handle password change
+    if profile_data.new_password:
+        if not profile_data.current_password:
+            raise HTTPException(status_code=400, detail="Huidig wachtwoord is vereist")
+        
+        # Verify current password
+        user = await db.users.find_one({"id": user_id})
+        if not user or not bcrypt.checkpw(
+            profile_data.current_password.encode('utf-8'),
+            user["password"].encode('utf-8')
+        ):
+            raise HTTPException(status_code=400, detail="Huidig wachtwoord is onjuist")
+        
+        # Hash new password
+        hashed = bcrypt.hashpw(profile_data.new_password.encode('utf-8'), bcrypt.gensalt())
+        update_data["password"] = hashed.decode('utf-8')
+    
+    if update_data:
+        update_data["updated_at"] = datetime.now(timezone.utc)
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": update_data}
+        )
+    
+    return {"message": "Profiel bijgewerkt", "success": True}
+
+@api_router.post("/user/profile/photo")
+async def upload_profile_photo(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload user profile photo"""
+    user_id = current_user["id"]
+    
+    # Validate file type
+    allowed_types = ["image/jpeg", "image/png", "image/webp"]
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Alleen JPG, PNG en WebP bestanden zijn toegestaan")
+    
+    # Read and validate file size (max 5MB)
+    contents = await file.read()
+    if len(contents) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Bestand is te groot (max 5MB)")
+    
+    try:
+        # Process image with PIL
+        img = PILImage.open(BytesIO(contents))
+        
+        # Resize if too large (max 500x500)
+        max_size = (500, 500)
+        img.thumbnail(max_size, PILImage.Resampling.LANCZOS)
+        
+        # Convert to RGB if necessary (for PNG with transparency)
+        if img.mode in ('RGBA', 'P'):
+            img = img.convert('RGB')
+        
+        # Save to bytes
+        output = BytesIO()
+        img.save(output, format='JPEG', quality=85)
+        output.seek(0)
+        
+        # Generate unique filename
+        filename = f"profile_{user_id}_{uuid.uuid4().hex[:8]}.jpg"
+        
+        # Store as base64 in database (simple solution)
+        photo_base64 = base64.b64encode(output.getvalue()).decode('utf-8')
+        photo_url = f"data:image/jpeg;base64,{photo_base64}"
+        
+        # Update user
+        await db.users.update_one(
+            {"id": user_id},
+            {"$set": {
+                "profile_photo": photo_url,
+                "updated_at": datetime.now(timezone.utc)
+            }}
+        )
+        
+        return {"photo_url": photo_url, "message": "Foto geüpload"}
+        
+    except Exception as e:
+        logging.error(f"Photo upload error: {e}")
+        raise HTTPException(status_code=500, detail="Fout bij verwerken afbeelding")
+
 @api_router.get("/workspace/current")
 async def get_current_workspace(current_user: dict = Depends(get_current_user)):
     """Get the current user's workspace with branding"""
