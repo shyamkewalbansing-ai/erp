@@ -344,20 +344,20 @@ export default function Facturen() {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="facturen-page">
       {/* Hero Header - Same style as Dashboard */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-4 sm:p-6 lg:p-10">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-10">
         {/* Background Pattern */}
         <div className="absolute inset-0 opacity-30">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
         
         {/* Decorative Blurs */}
-        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-blue-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
-        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-emerald-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-emerald-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-teal-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
         
         <div className="relative flex flex-col gap-4 sm:gap-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-blue-300 text-xs sm:text-sm mb-3 sm:mb-4">
+              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-emerald-300 text-xs sm:text-sm mb-3 sm:mb-4">
                 <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                 <span>{selectedYear}</span>
               </div>
@@ -419,11 +419,11 @@ export default function Facturen() {
       {/* Summary Stats - Responsive Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* Totaal Verschuldigd - Featured */}
-        <div className="col-span-2 sm:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 p-4 sm:p-5 text-white shadow-xl shadow-blue-500/20">
+        <div className="col-span-2 sm:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-5 text-white shadow-xl shadow-emerald-500/20">
           <div className="absolute top-0 right-0 w-20 sm:w-32 h-20 sm:h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative flex items-center justify-between">
             <div className="min-w-0 flex-1">
-              <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">Totaal Verschuldigd</p>
+              <p className="text-emerald-100 text-xs sm:text-sm font-medium mb-1">Totaal Verschuldigd</p>
               <p className="text-xl sm:text-2xl font-bold truncate">{formatCurrency(summary.totalDue)}</p>
             </div>
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 ml-2">
