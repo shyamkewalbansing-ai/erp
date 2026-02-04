@@ -378,8 +378,7 @@ export default function Layout() {
         />
       )}
 
-      {/* Sidebar - Hidden for superadmin */}
-      {!isSuperAdmin() && (
+      {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Logo and Toggle Button */}
         <div className={`sidebar-logo ${isCollapsed ? 'p-4' : 'p-5'}`}>
@@ -423,8 +422,23 @@ export default function Layout() {
 
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
-          {/* Customer navigation - only visible for non-superadmin users with active add-ons */}
-          {addonsLoaded && (
+          {/* Admin link - only for superadmin */}
+          {isSuperAdmin() && (
+            <NavLink
+              to="/app/admin"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+              data-testid="nav-admin"
+              title="Beheerder"
+            >
+              <Crown className="w-5 h-5 flex-shrink-0" />
+              {!isCollapsed && <span>Beheerder</span>}
+              {!isCollapsed && <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>}
+            </NavLink>
+          )}
+
+          {/* Customer navigation - only for non-superadmin users with active add-ons */}
+          {!isSuperAdmin() && addonsLoaded && (
             <>
               {/* Dynamic Module Sections - rendered in user's preferred order */}
               {getOrderedModules().map((moduleSlug, index) => {
