@@ -520,20 +520,23 @@ export default function Tenants() {
                   {filteredTenants.map((tenant) => (
                     <tr 
                       key={tenant.id} 
-                      className="border-b border-border/30 hover:bg-muted/30 transition-colors"
                       data-testid={`tenant-row-${tenant.id}`}
                     >
-                      <td className="p-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                            <span className="font-semibold text-primary">
+                      <td>
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center flex-shrink-0">
+                            <span className="font-semibold text-emerald-600 text-sm sm:text-base">
                               {tenant.name.charAt(0).toUpperCase()}
                             </span>
                           </div>
-                          <span className="font-medium text-foreground">{tenant.name}</span>
+                          <div className="min-w-0">
+                            <span className="font-medium text-foreground text-sm truncate block">{tenant.name}</span>
+                            {/* Mobile: show phone under name */}
+                            <span className="text-xs text-muted-foreground sm:hidden">{tenant.phone}</span>
+                          </div>
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="hidden sm:table-cell">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 text-sm">
                             <Phone className="w-3.5 h-3.5 text-muted-foreground" />
@@ -547,34 +550,38 @@ export default function Tenants() {
                           )}
                         </div>
                       </td>
-                      <td className="p-4">
+                      <td className="hidden md:table-cell">
                         <span className="text-sm text-muted-foreground">
                           {tenant.address || '—'}
                         </span>
                       </td>
-                      <td className="p-4">
+                      <td className="hidden lg:table-cell">
                         <span className="text-sm text-muted-foreground">
                           {tenant.id_number || '—'}
                         </span>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-end gap-2">
+                      <td>
+                        <div className="flex items-center justify-end gap-1 sm:gap-2">
                           <Button 
                             variant="ghost" 
                             size="sm"
-                            className="h-8"
+                            className="h-7 sm:h-8 text-xs sm:text-sm px-2 sm:px-3 hidden sm:flex"
                             onClick={() => handleViewBalance(tenant)}
                           >
-                            <Wallet className="w-4 h-4 mr-1.5" />
+                            <Wallet className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
                             Saldo
                           </Button>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8">
                                 <MoreHorizontal className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewBalance(tenant)} className="sm:hidden">
+                                <Wallet className="w-4 h-4 mr-2" />
+                                Bekijk Saldo
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => handleEdit(tenant)}>
                                 <Edit className="w-4 h-4 mr-2" />
                                 Bewerken
