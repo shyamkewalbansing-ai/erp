@@ -134,6 +134,7 @@ const HRMHandleiding = lazy(() => import("./pages/handleiding/HRMHandleidingPage
 const AutoDealerHandleiding = lazy(() => import("./pages/handleiding/AutoDealerHandleidingPage"));
 const BeautySpaHandleiding = lazy(() => import("./pages/handleiding/BeautySpaHandleidingPage"));
 const PompstationHandleiding = lazy(() => import("./pages/handleiding/PompstationHandleidingPage"));
+const BoekhoudingHandleiding = lazy(() => import("./pages/handleiding/BoekhoudingHandleidingPage"));
 
 // Boekhouding Module
 const BoekhoudingDashboard = lazy(() => import("./pages/boekhouding/DashboardPage"));
