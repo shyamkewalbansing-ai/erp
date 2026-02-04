@@ -1018,32 +1018,32 @@ server {
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-500 text-sm">Actief</p>
-                      <p className="text-3xl font-bold text-green-600">{workspaceStats.active}</p>
+                      <p className="text-gray-500 text-xs sm:text-sm">Actief</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-green-600">{workspaceStats.active}</p>
                     </div>
-                    <CheckCircle className="w-10 h-10 text-green-200" />
+                    <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-green-200" />
                   </div>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-gray-500 text-sm">In Afwachting</p>
-                      <p className="text-3xl font-bold text-orange-600">{workspaceStats.pending}</p>
+                      <p className="text-gray-500 text-xs sm:text-sm">In Afwachting</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-orange-600">{workspaceStats.pending}</p>
                     </div>
-                    <Clock className="w-10 h-10 text-orange-200" />
+                    <Clock className="w-8 h-8 sm:w-10 sm:h-10 text-orange-200" />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Create Workspace Dialog */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="relative max-w-md">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <div className="relative w-full sm:max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Zoek workspaces..."
@@ -1053,7 +1053,7 @@ server {
                   data-testid="workspace-search"
                 />
               </div>
-              <Button onClick={() => setCreateWorkspaceOpen(true)} data-testid="create-workspace-btn">
+              <Button onClick={() => setCreateWorkspaceOpen(true)} data-testid="create-workspace-btn" className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Nieuwe Workspace
               </Button>
@@ -1511,7 +1511,7 @@ server {
                         </div>
                         
                         {request.status === 'pending' && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mt-3 lg:mt-0">
                             <Select
                               defaultValue="1"
                               onValueChange={(value) => {
@@ -1519,7 +1519,7 @@ server {
                                 request.selectedMonths = parseInt(value);
                               }}
                             >
-                              <SelectTrigger className="w-32">
+                              <SelectTrigger className="w-full sm:w-32">
                                 <SelectValue placeholder="Maanden" />
                               </SelectTrigger>
                               <SelectContent>
@@ -1540,7 +1540,7 @@ server {
                                   toast.error('Fout bij bevestigen betaling');
                                 }
                               }}
-                              className="bg-emerald-600 hover:bg-emerald-700"
+                              className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto"
                             >
                               <CheckCircle className="w-4 h-4 mr-2" />
                               Bevestigen
@@ -1739,23 +1739,24 @@ server {
                 <CardContent>
                   <div className="space-y-3">
                     {addonRequests.map((request) => (
-                      <div key={request.id} className="flex items-center justify-between p-4 bg-background rounded-lg border">
-                        <div>
-                          <p className="font-medium">{request.user_name}</p>
-                          <p className="text-sm text-muted-foreground">{request.user_email}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="outline">{request.addon_name}</Badge>
+                      <div key={request.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 bg-background rounded-lg border">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{request.user_name}</p>
+                          <p className="text-sm text-muted-foreground truncate">{request.user_email}</p>
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-xs">{request.addon_name}</Badge>
                             <span className="text-sm text-primary font-medium">
                               {formatCurrency(request.addon_price || 0)}/maand
                             </span>
                           </div>
                           {request.notes && (
-                            <p className="text-sm text-muted-foreground mt-1">&quot;{request.notes}&quot;</p>
+                            <p className="text-sm text-muted-foreground mt-1 truncate">&quot;{request.notes}&quot;</p>
                           )}
                         </div>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-shrink-0">
                           <Button
                             size="sm"
+                            className="flex-1 sm:flex-none"
                             onClick={() => {
                               setSelectedAddonRequest(request);
                               setAddonMonths('1');
@@ -1763,15 +1764,18 @@ server {
                             }}
                           >
                             <CheckCircle className="w-4 h-4 mr-1" />
-                            Goedkeuren
+                            <span className="hidden sm:inline">Goedkeuren</span>
+                            <span className="sm:hidden">OK</span>
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
+                            className="flex-1 sm:flex-none"
                             onClick={() => handleRejectAddonRequest(request.id)}
                           >
                             <XCircle className="w-4 h-4 mr-1" />
-                            Afwijzen
+                            <span className="hidden sm:inline">Afwijzen</span>
+                            <span className="sm:hidden">Nee</span>
                           </Button>
                         </div>
                       </div>
