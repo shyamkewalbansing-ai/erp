@@ -261,7 +261,7 @@ h1, h2, h3, h4, h5, h6 {
 /* Main content */
 .main-content {
     flex: 1;
-    margin-left: 280px; /* Full sidebar width since no transform scale */
+    margin-left: 280px;
     min-height: 100vh;
     background: hsl(var(--background));
     padding-top: 60px; /* Space for fixed header */
@@ -277,7 +277,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Main content expanded when sidebar collapsed */
 .main-content.main-content-expanded {
-    margin-left: 72px; /* Full collapsed sidebar width since no transform scale */
+    margin-left: 72px;
 }
 
 /* Main content full width when sidebar is hidden (superadmin) */
