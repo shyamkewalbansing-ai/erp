@@ -507,10 +507,10 @@ export default function Layout() {
           )}
 
           {/* Settings dropdown */}
-          <div className="mt-2">
+          <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
             <button
               onClick={() => setSettingsOpen(!settingsOpen)}
-              className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+              className={`nav-item w-full ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed ? 'justify-center' : 'justify-between'}`}
               data-testid="nav-instellingen-dropdown"
               title="Instellingen"
             >
@@ -524,12 +524,12 @@ export default function Layout() {
             {/* Dropdown items */}
             {!isCollapsed && (
               <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
-                <div className="pl-4 mt-1 space-y-1">
+                <div className="pl-4 mt-2 space-y-1">
                   {/* Workspace Settings */}
                   <NavLink
                     to="/app/workspace"
                     onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                    className={({ isActive }) => `nav-item text-sm py-2.5 ${isActive ? 'active' : ''}`}
                     data-testid="nav-workspace"
                   >
                     <Users className="w-4 h-4" />
@@ -538,7 +538,7 @@ export default function Layout() {
                   <NavLink
                     to="/app/betaalmethodes"
                     onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                    className={({ isActive }) => `nav-item text-sm py-2.5 ${isActive ? 'active' : ''}`}
                     data-testid="nav-betaalmethodes"
                   >
                     <CreditCard className="w-4 h-4" />
@@ -547,13 +547,13 @@ export default function Layout() {
                   <NavLink
                     to="/app/abonnement"
                     onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) => `nav-item text-sm ${isActive ? 'active' : ''}`}
+                    className={({ isActive }) => `nav-item text-sm py-2.5 ${isActive ? 'active' : ''}`}
                     data-testid="nav-abonnement"
                   >
                     <Package className="w-4 h-4" />
                     <span>Mijn Modules</span>
                     {showExpiredBadge && (
-                      <Badge className="ml-auto text-[10px] bg-red-500/10 text-red-500 border-red-500/20">!</Badge>
+                      <Badge className="ml-auto text-[10px] bg-red-100 text-red-600 border-red-200">!</Badge>
                     )}
                   </NavLink>
                 </div>
