@@ -497,22 +497,22 @@ export default function Facturen() {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex gap-4">
-        <div className="relative flex-1 max-w-md">
+      {/* Search - Responsive */}
+      <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             placeholder="Zoek op huurder of appartement..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-10 sm:h-11 bg-muted/30 border-transparent focus:border-primary text-sm"
             data-testid="invoice-search"
           />
         </div>
       </div>
 
-      {/* Months Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+      {/* Months Grid - Responsive */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
         {getDisplayMonths().map(month => {
           // Calculate month totals
           let monthPaid = 0;
@@ -531,23 +531,37 @@ export default function Facturen() {
           const isCurrentMonth = selectedYear === currentDate.getFullYear() && month === currentDate.getMonth() + 1;
           
           return (
-            <Card 
+            <div 
               key={month} 
-              className={`cursor-pointer transition-all hover:shadow-md hover:border-primary/50 ${
-                selectedMonth === month ? 'border-primary ring-2 ring-primary/20' : ''
-              } ${isCurrentMonth ? 'bg-primary/5' : ''}`}
+              className={`group cursor-pointer transition-all rounded-xl sm:rounded-2xl border overflow-hidden ${
+                selectedMonth === month 
+                  ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50 dark:bg-blue-950/30' 
+                  : 'border-border/50 bg-card hover:border-blue-500/50 hover:shadow-lg'
+              } ${isCurrentMonth ? 'ring-2 ring-emerald-500/30' : ''}`}
               onClick={() => setSelectedMonth(selectedMonth === month ? null : month)}
               data-testid={`month-card-${month}`}
             >
-              <CardContent className="p-4">
+              <div className="p-3 sm:p-4">
                 <div className="text-center">
-                  <p className="text-sm font-medium text-muted-foreground">{MONTHS[month - 1]}</p>
-                  <p className="text-lg font-bold text-foreground">{selectedYear}</p>
-                  <div className="mt-2 space-y-1">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-green-600">Betaald:</span>
-                      <span className="font-medium">{monthPaidCount}</span>
-                    </div>
+                  <p className={`text-xs sm:text-sm font-medium ${selectedMonth === month ? 'text-blue-600' : 'text-muted-foreground'}`}>
+                    {MONTHS[month - 1]}
+                  </p>
+                  <p className="text-base sm:text-lg font-bold text-foreground">{selectedYear}</p>
+                  {isCurrentMonth && (
+                    <Badge className="mt-1 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]">
+                      Huidig
+                    </Badge>
+                  )}
+                </div>
+              </div>
+              <div className="px-3 sm:px-4 pb-3 sm:pb-4 space-y-1.5">
+                <div className="flex justify-between text-xs">
+                  <span className="text-emerald-600 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3" />
+                    Betaald
+                  </span>
+                  <span className="font-semibold">{monthPaidCount}</span>
+                </div>
                     <div className="flex justify-between text-xs">
                       <span className="text-orange-600">Open:</span>
                       <span className="font-medium">{monthUnpaidCount}</span>
