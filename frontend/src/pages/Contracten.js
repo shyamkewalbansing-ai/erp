@@ -438,30 +438,6 @@ export default function Contracten() {
           </div>
         </div>
       )}
-                            onClick={() => handleDownloadPdf(contract)}
-                            data-testid={`download-pdf-btn-${contract.id}`}
-                          >
-                            <Download className="w-4 h-4" />
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleDelete(contract.id)}
-                            className="text-destructive hover:text-destructive"
-                            data-testid={`delete-contract-btn-${contract.id}`}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* New Contract Modal */}
       <Dialog open={showModal} onOpenChange={setShowModal}>
