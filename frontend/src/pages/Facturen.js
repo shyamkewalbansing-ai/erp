@@ -535,15 +535,15 @@ export default function Facturen() {
               key={month} 
               className={`group cursor-pointer transition-all rounded-xl sm:rounded-2xl border overflow-hidden ${
                 selectedMonth === month 
-                  ? 'border-blue-500 ring-2 ring-blue-500/20 bg-blue-50 dark:bg-blue-950/30' 
-                  : 'border-border/50 bg-card hover:border-blue-500/50 hover:shadow-lg'
+                  ? 'border-emerald-500 ring-2 ring-emerald-500/20 bg-emerald-50 dark:bg-emerald-950/30' 
+                  : 'border-border/50 bg-card hover:border-emerald-500/50 hover:shadow-lg'
               } ${isCurrentMonth ? 'ring-2 ring-emerald-500/30' : ''}`}
               onClick={() => setSelectedMonth(selectedMonth === month ? null : month)}
               data-testid={`month-card-${month}`}
             >
               <div className="p-3 sm:p-4">
                 <div className="text-center">
-                  <p className={`text-xs sm:text-sm font-medium ${selectedMonth === month ? 'text-blue-600' : 'text-muted-foreground'}`}>
+                  <p className={`text-xs sm:text-sm font-medium ${selectedMonth === month ? 'text-emerald-600' : 'text-muted-foreground'}`}>
                     {MONTHS[month - 1]}
                   </p>
                   <p className="text-base sm:text-lg font-bold text-foreground">{selectedYear}</p>
