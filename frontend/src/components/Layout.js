@@ -555,12 +555,11 @@ export default function Layout() {
           </div>
         </nav>
       </aside>
-      )}
 
       {/* Main content */}
-      <main className={`main-content ${isCollapsed ? 'main-content-expanded' : ''} ${isSuperAdmin() ? 'main-content-full-width' : ''} overflow-x-hidden`}>
+      <main className={`main-content ${isCollapsed ? 'main-content-expanded' : ''} overflow-x-hidden`}>
         {/* Desktop header with notifications */}
-        <header className={`desktop-header hidden lg:flex px-6 py-2.5 items-center justify-between header-glass ${isCollapsed ? 'desktop-header-expanded' : ''} ${isSuperAdmin() ? 'desktop-header-full-width' : ''}`}>
+        <header className={`desktop-header hidden lg:flex px-6 py-2.5 items-center justify-between header-glass ${isCollapsed ? 'desktop-header-expanded' : ''}`}>
           {/* Left side - User info & Workspace/Portal buttons */}
           <div className="flex items-center gap-3">
             {/* User info - Compact Modern Style */}
