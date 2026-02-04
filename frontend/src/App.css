@@ -18,14 +18,14 @@
     /* Light Mode */
     --background: #F8FAFC;
     --surface: #FFFFFF;
-    --sidebar-bg: #0F172A;
-    --sidebar-hover: #1E293B;
-    --sidebar-active: rgba(12, 175, 96, 0.15);
+    --sidebar-bg: #FFFFFF;
+    --sidebar-hover: #F1F5F9;
+    --sidebar-active: rgba(12, 175, 96, 0.1);
     --text-primary: #0F172A;
     --text-secondary: #64748B;
     --text-muted: #94A3B8;
-    --text-sidebar: #94A3B8;
-    --text-sidebar-active: #FFFFFF;
+    --text-sidebar: #64748B;
+    --text-sidebar-active: #0F172A;
     --border-color: #E2E8F0;
     
     /* Shadcn compatibility */
