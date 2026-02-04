@@ -277,7 +277,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Main content expanded when sidebar collapsed */
 .main-content.main-content-expanded {
-    margin-left: 65px; /* 72px * 0.9 = ~65px visual width after scale */
+    margin-left: 72px; /* Full collapsed sidebar width since no transform scale */
 }
 
 /* Main content full width when sidebar is hidden (superadmin) */
