@@ -818,15 +818,21 @@ server {
             </p>
           </div>
           
-          <button 
+          <div 
             onClick={() => setCreateCustomerDialogOpen(true)} 
             data-testid="create-customer-btn"
-            className="w-full sm:w-auto self-start font-semibold shadow-lg text-xs sm:text-sm h-9 sm:h-10 px-4 rounded-md inline-flex items-center justify-center gap-2 transition-colors"
-            style={{ backgroundColor: '#ffffff', color: '#047857' }}
+            role="button"
+            tabIndex={0}
+            className="cursor-pointer w-full sm:w-auto self-start font-semibold shadow-lg text-xs sm:text-sm h-9 sm:h-10 px-4 rounded-md inline-flex items-center justify-center gap-2 transition-colors"
+            style={{ 
+              backgroundColor: '#ffffff', 
+              color: '#047857',
+              border: 'none'
+            }}
           >
             <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#047857' }} />
             <span style={{ color: '#047857' }}>Klant Aanmaken</span>
-          </button>
+          </div>
         </div>
       </div>
 
