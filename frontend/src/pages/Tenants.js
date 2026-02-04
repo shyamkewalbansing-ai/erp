@@ -387,44 +387,44 @@ export default function Tenants() {
                 className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 hover:border-emerald-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5"
                 data-testid={`tenant-card-${tenant.id}`}
               >
-                  {/* Card Header with Avatar */}
-                  <div className="p-5 pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="relative">
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-                            <span className="text-xl font-bold text-primary">
-                              {tenant.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-green-500 border-2 border-background flex items-center justify-center">
-                            <CheckCircle2 className="w-3 h-3 text-white" />
-                          </div>
+                {/* Card Header with Avatar */}
+                <div className="p-4 sm:p-5 pb-3 sm:pb-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
+                      <div className="relative flex-shrink-0">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-500/5 flex items-center justify-center">
+                          <span className="text-lg sm:text-xl font-bold text-emerald-600">
+                            {tenant.name.charAt(0).toUpperCase()}
+                          </span>
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-foreground text-lg">{tenant.name}</h3>
-                            {tenantAccounts[tenant.id] && (
-                              <Badge variant="outline" className="text-emerald-600 border-emerald-300 text-xs">
-                                <Key className="w-3 h-3 mr-1" />
-                                Portaal
-                              </Badge>
-                            )}
-                          </div>
-                          {tenant.id_number && (
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <IdCard className="w-3 h-3 text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">{tenant.id_number}</span>
-                            </div>
-                          )}
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-green-500 border-2 border-background flex items-center justify-center">
+                          <CheckCircle2 className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" />
                         </div>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-foreground text-sm sm:text-lg truncate">{tenant.name}</h3>
+                          {tenantAccounts[tenant.id] && (
+                            <Badge variant="outline" className="text-emerald-600 border-emerald-300 text-[10px] sm:text-xs flex-shrink-0">
+                              <Key className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
+                              Portaal
+                            </Badge>
+                          )}
+                        </div>
+                        {tenant.id_number && (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <IdCard className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-[10px] sm:text-xs text-muted-foreground">{tenant.id_number}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 sm:h-8 sm:w-8 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-48">
                           <DropdownMenuItem onClick={() => handleViewBalance(tenant)}>
                             <Eye className="w-4 h-4 mr-2" />
