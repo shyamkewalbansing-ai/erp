@@ -23,13 +23,27 @@ Alle Vastgoed Beheer pagina's hebben nu een consistente, moderne look met hero b
 - [x] **Kasgeld** (`/app/kasgeld`) - Hero banner met SRD/EUR toggle, 6 stats cards, wisselkoers info
 - [x] **Borg/Deposits** (`/app/deposits`) - Hero banner, 3 stats cards, mobile responsive cards
 - [x] **Leningen** (`/app/leningen`) - Hero banner, 4 stats cards, mobile responsive cards
+- [x] **Onderhoud** (`/app/onderhoud`) - Hero banner (blauw), 4 stats cards, mobile responsive
+- [x] **Betalingen** (`/app/payments`) - Hero banner (emerald), 4 stats cards, mobile responsive
+- [x] **Meterstanden** (`/app/meterstanden`) - Hero banner (geel), 4 stats cards, periode selector
+- [x] **Werknemers** (`/app/werknemers`) - Hero banner (paars), 3 stats cards, tabbed interface
+- [x] **Contracten** (`/app/contracten`) - Hero banner (teal), 3 stats cards, mobile responsive
 
 **UI Componenten per Pagina:**
-- **Hero Banner**: Donkere gradient achtergrond (slate naar emerald/purple/orange), decoratieve blur elementen
+- **Hero Banner**: Donkere gradient achtergrond (slate naar thema-kleur), decoratieve blur elementen
 - **Stats Cards**: Featured card met gradient, normale cards met hover effecten
 - **Zoek/Filter Bar**: Consistent styling met muted achtergrond
 - **Tabellen**: Desktop table, mobile card layout
 - **Empty States**: Moderne iconen, CTA knoppen
+
+**Kleur Schema per Module:**
+- Appartementen/Huurders: Emerald groen (#10b981)
+- Kasgeld/Betalingen: Emerald groen
+- Borg/Werknemers: Paars (#a855f7)
+- Leningen: Oranje (#f97316)
+- Onderhoud: Blauw (#3b82f6)
+- Meterstanden: Geel (#eab308)
+- Contracten: Teal (#14b8a6)
 
 ### SUPERADMIN SIDEBAR UITGESCHAKELD ✅ (VOLTOOID - 4 Feb 2026)
 De zijbalk is nu volledig verborgen voor superadmin gebruikers.
