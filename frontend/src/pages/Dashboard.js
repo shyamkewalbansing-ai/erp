@@ -150,6 +150,12 @@ export default function Dashboard() {
         addon.status === 'active' || addon.status === 'trial'
       );
       
+      // Check for boekhouding only
+      const hasBoekhouding = addons.some(addon => 
+        addon.addon_slug === 'boekhouding' && 
+        (addon.status === 'active' || addon.status === 'trial')
+      );
+      
       if (!hasAnyActiveModule) {
         // Show order popup for users without active modules
         await loadAvailableModules();
@@ -162,6 +168,10 @@ export default function Dashboard() {
         
         if (hasVastgoed) {
           await fetchDashboard();
+        } else if (hasBoekhouding && !hasVastgoed) {
+          // User has only boekhouding - redirect to boekhouding dashboard
+          setLoading(false);
+          // No redirect, just show a simplified welcome view
         } else {
           setLoading(false);
         }
