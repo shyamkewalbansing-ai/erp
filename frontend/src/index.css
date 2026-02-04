@@ -287,29 +287,29 @@ code {
 }
 
 .content-card-header {
-    @apply px-5 py-4 border-b border-border/50 flex items-center justify-between;
+    @apply px-3 sm:px-5 py-3 sm:py-4 border-b border-border/50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0;
 }
 
 .content-card-title {
-    @apply font-semibold flex items-center gap-2;
+    @apply font-semibold flex items-center gap-2 text-sm sm:text-base;
 }
 
 .content-card-body {
-    @apply p-5;
+    @apply p-3 sm:p-5;
 }
 
 /* Section Headers */
 .section-header {
-    @apply flex items-center gap-2 text-lg font-semibold mb-4;
+    @apply flex items-center gap-2 text-base sm:text-lg font-semibold mb-3 sm:mb-4;
 }
 
 .section-header-icon {
-    @apply w-5 h-5 text-emerald-500;
+    @apply w-4 h-4 sm:w-5 sm:h-5 text-emerald-500;
 }
 
-/* Modern Table */
+/* Modern Table - Responsive */
 .modern-table {
-    @apply w-full;
+    @apply w-full text-sm;
 }
 
 .modern-table thead {
@@ -317,7 +317,7 @@ code {
 }
 
 .modern-table th {
-    @apply px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider;
+    @apply px-2 sm:px-4 py-2 sm:py-3 text-left text-[10px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-wider;
 }
 
 .modern-table tbody tr {
@@ -325,12 +325,17 @@ code {
 }
 
 .modern-table td {
-    @apply px-4 py-3.5;
+    @apply px-2 sm:px-4 py-2.5 sm:py-3.5 text-xs sm:text-sm;
+}
+
+/* Table scroll wrapper for mobile */
+.table-scroll-wrapper {
+    @apply overflow-x-auto -mx-3 sm:mx-0 px-3 sm:px-0;
 }
 
 /* Currency Display */
 .currency-value {
-    @apply font-mono font-medium;
+    @apply font-mono font-medium text-xs sm:text-sm;
 }
 
 .currency-value.currency-srd { @apply text-emerald-600 dark:text-emerald-400; }
@@ -339,23 +344,23 @@ code {
 
 /* Empty State */
 .empty-state {
-    @apply flex flex-col items-center justify-center py-12 text-center;
+    @apply flex flex-col items-center justify-center py-8 sm:py-12 text-center px-4;
 }
 
 .empty-state-icon {
-    @apply w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mb-4;
+    @apply w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-muted/50 flex items-center justify-center mb-3 sm:mb-4;
 }
 
 .empty-state-icon svg {
-    @apply w-8 h-8 text-muted-foreground;
+    @apply w-6 h-6 sm:w-8 sm:h-8 text-muted-foreground;
 }
 
 .empty-state-title {
-    @apply text-lg font-semibold text-foreground mb-1;
+    @apply text-base sm:text-lg font-semibold text-foreground mb-1;
 }
 
 .empty-state-description {
-    @apply text-sm text-muted-foreground max-w-sm;
+    @apply text-xs sm:text-sm text-muted-foreground max-w-sm;
 }
 
 /* Modern Buttons */
@@ -363,24 +368,26 @@ code {
     @apply bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600;
     @apply text-white font-medium shadow-lg shadow-emerald-500/25;
     @apply transition-all duration-200 hover:shadow-xl hover:shadow-emerald-500/30;
+    @apply text-sm sm:text-base px-3 sm:px-4 py-2;
 }
 
 .btn-secondary-modern {
     @apply bg-muted hover:bg-muted/80 text-foreground font-medium;
     @apply border border-border/50 hover:border-border;
     @apply transition-all duration-200;
+    @apply text-sm sm:text-base;
 }
 
 /* Quick Action Cards */
 .quick-action-grid {
-    @apply grid grid-cols-2 md:grid-cols-4 gap-3;
+    @apply grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3;
 }
 
 .quick-action-card {
-    @apply p-4 rounded-xl border border-border/50 bg-card;
+    @apply p-3 sm:p-4 rounded-lg sm:rounded-xl border border-border/50 bg-card;
     @apply hover:border-emerald-500/30 hover:bg-emerald-500/5;
     @apply cursor-pointer transition-all duration-200;
-    @apply flex flex-col items-center justify-center gap-2 text-center;
+    @apply flex flex-col items-center justify-center gap-1.5 sm:gap-2 text-center;
 }
 
 .quick-action-card:hover {
@@ -388,12 +395,16 @@ code {
 }
 
 .quick-action-icon {
-    @apply w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center;
+    @apply w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-500/10 flex items-center justify-center;
     @apply text-emerald-600;
 }
 
+.quick-action-icon svg {
+    @apply w-4 h-4 sm:w-5 sm:h-5;
+}
+
 .quick-action-label {
-    @apply text-sm font-medium;
+    @apply text-xs sm:text-sm font-medium;
 }
 
 /* Card hover effect */
@@ -416,7 +427,7 @@ code {
 }
 
 .data-list-item {
-    @apply py-3 flex items-center justify-between hover:bg-muted/30 px-2 -mx-2 rounded-lg transition-colors;
+    @apply py-2 sm:py-3 flex items-center justify-between hover:bg-muted/30 px-2 -mx-2 rounded-lg transition-colors;
 }
 
 /* Badge Variants */
