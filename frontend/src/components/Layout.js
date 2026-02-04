@@ -402,7 +402,7 @@ export default function Layout() {
                   <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
                     <span className="text-white font-bold text-sm">F</span>
                   </div>
-                  <span className="text-slate-800 font-semibold text-lg tracking-tight">Facturatie</span>
+                  <span className="text-slate-800 font-semibold text-lg tracking-tight">FACTURATIE</span>
                 </div>
               )
             ) : (
@@ -658,7 +658,7 @@ export default function Layout() {
               <div className="w-7 h-7 rounded-md bg-emerald-500 flex items-center justify-center">
                 <span className="text-white font-bold text-xs">F</span>
               </div>
-              <span className="text-slate-800 font-semibold text-sm">Facturatie</span>
+              <span className="text-slate-800 font-semibold text-sm">FACTURATIE</span>
             </div>
           </div>
           <div className="mobile-header-actions">
