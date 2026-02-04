@@ -2461,7 +2461,7 @@ server {
                 Branding
               </h4>
               
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Portaal Naam</Label>
                   <Input
@@ -2514,10 +2514,10 @@ server {
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateWorkspaceDialogOpen(false)}>Annuleren</Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setCreateWorkspaceDialogOpen(false)} className="w-full sm:w-auto">Annuleren</Button>
             <Button 
-              className="bg-emerald-500 hover:bg-emerald-600"
+              className="bg-emerald-500 hover:bg-emerald-600 w-full sm:w-auto"
               onClick={async () => {
                 if (!newWorkspace.name || !newWorkspace.slug || !newWorkspace.owner_id) {
                   toast.error('Vul alle verplichte velden in');
@@ -2555,7 +2555,7 @@ server {
           
           <div className="space-y-6 py-4">
             {/* Basic Info */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Workspace Naam</Label>
                 <Input
@@ -2572,7 +2572,7 @@ server {
             {/* Branding */}
             <div className="border-t pt-4">
               <h4 className="font-medium mb-3">Branding</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Portaal Naam</Label>
                   <Input
