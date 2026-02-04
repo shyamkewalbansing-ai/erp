@@ -592,32 +592,32 @@ export default function Layout() {
       {/* Main content */}
       <main className={`main-content ${isCollapsed ? 'main-content-expanded' : ''}`}>
         {/* Desktop header with notifications */}
-        <header className={`desktop-header hidden lg:flex header-glass px-8 py-3 items-center justify-between border-b border-border/50 ${isCollapsed ? 'desktop-header-expanded' : ''}`}>
+        <header className={`desktop-header hidden lg:flex header-glass px-6 py-3 items-center justify-between ${isCollapsed ? 'desktop-header-expanded' : ''}`}>
           {/* Left side - User info & Workspace/Portal buttons */}
           <div className="flex items-center gap-4">
-            {/* User info */}
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center">
-                <span className="text-sm font-semibold text-primary">
+            {/* User info - Modern Style */}
+            <div className="flex items-center gap-3 px-3 py-2 rounded-2xl bg-gradient-to-r from-emerald-500/5 to-transparent border border-emerald-500/10">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                <span className="text-sm font-bold text-white">
                   {user?.name?.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="min-w-0">
-                <p className="font-medium text-sm text-foreground truncate max-w-[150px]">{user?.name}</p>
+                <p className="font-semibold text-sm text-foreground truncate max-w-[150px]">{user?.name}</p>
                 <p className="text-xs text-muted-foreground truncate max-w-[150px]">{user?.email}</p>
               </div>
             </div>
             
-            {/* Workspace & Portal buttons */}
+            {/* Workspace & Portal buttons - Modern Style */}
             {!isSuperAdmin() && (
               <div className="flex items-center gap-2">
                 {/* Workspace button */}
                 {workspace && (
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
                     onClick={openWorkspaceDialog}
-                    className="border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                    className="w-10 h-10 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 border border-emerald-500/20 hover:border-emerald-500/30 transition-all"
                     data-testid="workspace-btn"
                     title="Workspace Beheren"
                   >
@@ -627,10 +627,10 @@ export default function Layout() {
                 {/* Tenant Portal button - only if vastgoed_beheer addon is active */}
                 {hasAddon('vastgoed_beheer') && (
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
                     onClick={() => window.open('/huurder/login', '_blank')}
-                    className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                    className="w-10 h-10 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 border border-blue-500/20 hover:border-blue-500/30 transition-all"
                     data-testid="tenant-portal-btn"
                     title="Huurders Portaal"
                   >
@@ -640,10 +640,10 @@ export default function Layout() {
                 {/* Employee Portal button - only if hrm addon is active */}
                 {hasAddon('hrm') && (
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
                     onClick={() => window.open('/werknemer/login', '_blank')}
-                    className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                    className="w-10 h-10 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 border border-purple-500/20 hover:border-purple-500/30 transition-all"
                     data-testid="employee-portal-btn"
                     title="Werknemers Portaal"
                   >
@@ -654,22 +654,21 @@ export default function Layout() {
             )}
           </div>
           
-          {/* Right side - Theme, Notifications, Logout */}
-          <div className="flex items-center gap-3">
+          {/* Right side - Theme, Notifications, Logout - Modern Style */}
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={toggleDarkMode}
-              className="theme-toggle"
+              className="w-10 h-10 rounded-xl bg-slate-500/10 hover:bg-slate-500/20 text-slate-600 dark:text-slate-300 border border-slate-500/20 hover:border-slate-500/30 transition-all"
               data-testid="theme-toggle-btn"
             >
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </Button>
             {!isSuperAdmin() && <NotificationBell />}
             <Button 
-              variant="outline" 
-              size="sm"
-              className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-300"
+              variant="ghost"
+              className="h-10 px-4 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/20 hover:border-red-500/30 transition-all font-medium"
               onClick={handleLogout}
               data-testid="logout-btn"
             >
@@ -679,13 +678,14 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* Mobile header */}
+        {/* Mobile header - Modern Style */}
         <header className="mobile-header lg:hidden header-glass px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setSidebarOpen(true)}
+              className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600"
               data-testid="mobile-menu-btn"
             >
               <Menu className="w-5 h-5" />
@@ -709,16 +709,16 @@ export default function Layout() {
               variant="ghost"
               size="icon"
               onClick={toggleDarkMode}
-              className="theme-toggle w-9 h-9"
+              className="w-9 h-9 rounded-xl bg-slate-500/10 text-slate-600 dark:text-slate-300"
               data-testid="theme-toggle-btn-mobile"
             >
               {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </Button>
             {!isSuperAdmin() && <NotificationBell />}
             <Button 
-              variant="outline" 
+              variant="ghost"
               size="icon"
-              className="border-red-200 text-red-600 hover:bg-red-50 w-9 h-9"
+              className="w-9 h-9 rounded-xl bg-red-500/10 text-red-600"
               onClick={handleLogout}
               data-testid="logout-btn-mobile"
             >
