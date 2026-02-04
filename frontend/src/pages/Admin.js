@@ -832,25 +832,14 @@ server {
       
       {/* Mobile action button - outside hero for better visibility */}
       <div className="sm:hidden px-1">
-        <button 
+        <Button 
           onClick={() => setCreateCustomerDialogOpen(true)} 
           data-testid="create-customer-btn-mobile"
-          type="button"
-          style={{
-            width: '100%',
-            backgroundColor: '#059669',
-            color: 'white',
-            fontWeight: 'bold',
-            fontSize: '18px',
-            padding: '16px',
-            borderRadius: '8px',
-            border: 'none',
-            textAlign: 'center',
-            cursor: 'pointer'
-          }}
+          className="w-full"
         >
-          + KLANT AANMAKEN
-        </button>
+          <Plus className="w-4 h-4 mr-2" />
+          Klant Aanmaken
+        </Button>
       </div>
 
       {/* Stats Cards - Responsive Grid */}
