@@ -246,6 +246,13 @@ h1, h2, h3, h4, h5, h6 {
     transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Dashboard content zoom - 90% scale for better overview */
+.main-content .dashboard-content-wrapper {
+    zoom: 0.9;
+    -moz-transform: scale(0.9);
+    -moz-transform-origin: top left;
+}
+
 /* Main content expanded when sidebar collapsed */
 .main-content.main-content-expanded {
     margin-left: 72px;
