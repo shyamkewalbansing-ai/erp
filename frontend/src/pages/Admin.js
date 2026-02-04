@@ -1369,7 +1369,7 @@ server {
                     })}
                     {filteredCustomers.length === 0 && (
                       <tr>
-                        <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                        <td colSpan={6} className="py-8 text-center text-muted-foreground text-sm">
                           Geen klanten gevonden
                         </td>
                       </tr>
