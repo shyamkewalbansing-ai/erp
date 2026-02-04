@@ -45,17 +45,28 @@ Alle Vastgoed Beheer pagina's hebben nu een consistente, moderne look met hero b
 - Meterstanden: Geel (#eab308)
 - Contracten: Teal (#14b8a6)
 
-### SUPERADMIN SIDEBAR AANGEPAST ✅ (VOLTOOID - 4 Feb 2026)
-De zijbalk is nu altijd ingeklapt voor superadmin gebruikers en kan niet worden uitgevouwen.
+### HEADER EN SIDEBAR REDESIGN ✅ (VOLTOOID - 4 Feb 2026)
+Moderne redesign van de header en sidebar met Crystal Forest Premium Design.
 
 **Wat is geïmplementeerd:**
-- [x] Sidebar is altijd ingeklapt (alleen iconen zichtbaar)
-- [x] Toggle knop is verborgen voor superadmin
-- [x] Main content past zich aan met `main-content-expanded` class
-- [x] Werkt correct op zowel desktop als mobiel
+- [x] **Sidebar**: Glassmorphism effect met backdrop-blur en emerald groene accenten
+- [x] **Nav items**: Hover en active states met groene indicator bar
+- [x] **Module secties**: Duidelijke headers met groene labels
+- [x] **Header**: Compacte desktop header met gebruikersinfo, portal knoppen, theme toggle en logout
+- [x] **Responsief**: Werkt correct op mobiel, tablet en desktop
+- [x] **Geen horizontale scrolling** op admin dashboard
+
+**CSS Classes in App.css:**
+- `.sidebar` - Glassmorphism container met gradient achtergrond
+- `.sidebar-logo` - Logo sectie met decoratieve border
+- `.nav-item` - Navigatie items met hover/active states
+- `.module-group-header` - Module sectie headers
+- `.desktop-header` - Fixed header voor desktop
+- `.header-glass` - Solid achtergrond met subtiele border
 
 **Gewijzigde Bestanden:**
-- `/app/frontend/src/components/Layout.js` - Sidebar logica aangepast
+- `/app/frontend/src/App.css` - Nieuwe CSS stijlen voor sidebar en header
+- `/app/frontend/src/components/Layout.js` - Component met moderne styling
 
 ---
 
