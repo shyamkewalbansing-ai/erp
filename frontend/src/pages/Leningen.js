@@ -193,204 +193,282 @@ export default function Leningen() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="text-center">
+          <div className="w-10 h-10 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent mx-auto mb-3"></div>
+          <p className="text-muted-foreground">Leningen laden...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" data-testid="leningen-page">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Banknote className="w-7 h-7 text-primary" />
-            Leningen
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Beheer leningen aan huurders
-          </p>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="leningen-page">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-orange-900 p-4 sm:p-6 lg:p-10">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
-        <Button onClick={() => { resetForm(); setShowModal(true); }} data-testid="add-loan-btn">
-          <Plus className="w-4 h-4 mr-2" />
-          Nieuwe Lening
-        </Button>
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-96 h-48 lg:h-96 bg-orange-500/30 rounded-full blur-[60px] lg:blur-[100px]"></div>
+        <div className="hidden sm:block absolute bottom-0 left-1/4 w-32 lg:w-64 h-32 lg:h-64 bg-yellow-500/20 rounded-full blur-[40px] lg:blur-[80px]"></div>
+        
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-white/10 backdrop-blur-sm text-orange-300 text-xs sm:text-sm mb-3 sm:mb-4">
+              <Banknote className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>{summary.total} leningen</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-4xl font-bold text-white mb-1 sm:mb-2">
+              Leningen Beheer
+            </h1>
+            <p className="text-slate-400 text-sm sm:text-base lg:text-lg">
+              Beheer leningen aan huurders
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => { resetForm(); setShowModal(true); }}
+            size="sm"
+            className="w-full sm:w-auto bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm"
+            data-testid="add-loan-btn"
+          >
+            <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            Nieuwe Lening
+          </Button>
+        </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Totaal Uitgeleend</p>
-                <p className="text-2xl font-bold text-foreground">{formatCurrency(summary.totalAmount)}</p>
-              </div>
-              <Banknote className="w-8 h-8 text-primary opacity-80" />
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        {/* Total Loaned - Featured */}
+        <div className="col-span-2 lg:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-500 via-orange-600 to-amber-600 p-4 sm:p-6 text-white shadow-xl shadow-orange-500/20">
+          <div className="absolute top-0 right-0 w-24 sm:w-40 h-24 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="relative flex items-center justify-between">
+            <div>
+              <p className="text-orange-100 text-xs sm:text-sm font-medium mb-1">Totaal Uitgeleend</p>
+              <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{formatCurrency(summary.totalAmount)}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+              <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Terugbetaald</p>
-                <p className="text-2xl font-bold text-green-600">{formatCurrency(summary.totalPaid)}</p>
-              </div>
-              <CheckCircle2 className="w-8 h-8 text-green-500 opacity-80" />
+        {/* Repaid */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Terugbetaald</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-600">{formatCurrency(summary.totalPaid)}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
+              <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Openstaand</p>
-                <p className="text-2xl font-bold text-orange-600">{formatCurrency(summary.totalRemaining)}</p>
-              </div>
-              <AlertCircle className="w-8 h-8 text-orange-500 opacity-80" />
+        {/* Outstanding */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Openstaand</p>
+              <p className="text-xl sm:text-2xl font-bold text-orange-600">{formatCurrency(summary.totalRemaining)}</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-500">
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
 
-        <Card className="bg-card border-border">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Actieve Leningen</p>
-                <p className="text-2xl font-bold text-foreground">{summary.open + summary.partial}</p>
-                <p className="text-xs text-muted-foreground">{summary.paid} afbetaald</p>
-              </div>
-              <Clock className="w-8 h-8 text-blue-500 opacity-80" />
+        {/* Active Loans */}
+        <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Actieve Leningen</p>
+              <p className="text-xl sm:text-2xl font-bold text-foreground">{summary.open + summary.partial}</p>
+              <p className="text-xs text-muted-foreground mt-1">{summary.paid} afbetaald</p>
             </div>
-          </CardContent>
-        </Card>
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6" />
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Zoek op huurder of omschrijving..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-            data-testid="loan-search"
-          />
+      {/* Search and Filters */}
+      <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Zoek op huurder of omschrijving..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-10 sm:h-11 bg-muted/30 border-transparent focus:border-primary text-sm"
+              data-testid="loan-search"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[180px] h-10 sm:h-11" data-testid="loan-status-filter">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle status</SelectItem>
+              <SelectItem value="open">Open</SelectItem>
+              <SelectItem value="partial">Gedeeltelijk</SelectItem>
+              <SelectItem value="paid">Afbetaald</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]" data-testid="loan-status-filter">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Alle status</SelectItem>
-            <SelectItem value="open">Open</SelectItem>
-            <SelectItem value="partial">Gedeeltelijk</SelectItem>
-            <SelectItem value="paid">Afbetaald</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       {/* Loans Table */}
       {filteredLoans.length > 0 ? (
-        <div className="bg-card border border-border rounded-lg overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Huurder</TableHead>
-                <TableHead>Datum</TableHead>
-                <TableHead>Omschrijving</TableHead>
-                <TableHead className="text-right">Bedrag</TableHead>
-                <TableHead className="text-right">Betaald</TableHead>
-                <TableHead className="text-right">Openstaand</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredLoans.map((loan) => (
-                <TableRow key={loan.id} data-testid={`loan-row-${loan.id}`}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-muted-foreground" />
-                      <span className="font-medium">{loan.tenant_name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-muted-foreground" />
-                      {loan.loan_date}
-                    </div>
-                  </TableCell>
-                  <TableCell>{loan.description || '-'}</TableCell>
-                  <TableCell className="text-right font-semibold">
-                    {formatCurrency(loan.amount)}
-                  </TableCell>
-                  <TableCell className="text-right text-green-600">
-                    {formatCurrency(loan.amount_paid)}
-                  </TableCell>
-                  <TableCell className="text-right font-semibold text-orange-600">
-                    {formatCurrency(loan.remaining)}
-                  </TableCell>
-                  <TableCell>
-                    {loan.status === 'paid' ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckCircle2 className="w-3 h-3" />
-                        Afbetaald
-                      </span>
-                    ) : loan.status === 'partial' ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        <Clock className="w-3 h-3" />
-                        Gedeeltelijk
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                        <AlertCircle className="w-3 h-3" />
-                        Open
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditModal(loan)}>
-                          <Edit className="w-4 h-4 mr-2" />
-                          Bewerken
-                        </DropdownMenuItem>
-                        <DropdownMenuItem 
-                          className="text-destructive"
-                          onClick={() => { setSelectedLoan(loan); setShowDeleteDialog(true); }}
-                        >
-                          <Trash2 className="w-4 h-4 mr-2" />
-                          Verwijderen
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+          {/* Mobile Cards */}
+          <div className="block sm:hidden divide-y divide-border/50">
+            {filteredLoans.map((loan) => (
+              <div key={loan.id} className="p-4" data-testid={`loan-row-${loan.id}`}>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <p className="font-medium text-foreground">{loan.tenant_name}</p>
+                    <p className="text-xs text-muted-foreground">{loan.loan_date}</p>
+                  </div>
+                  {loan.status === 'paid' ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-green-100 text-green-800">
+                      <CheckCircle2 className="w-3 h-3" />
+                      Afbetaald
+                    </span>
+                  ) : loan.status === 'partial' ? (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800">
+                      <Clock className="w-3 h-3" />
+                      Gedeeltelijk
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-orange-100 text-orange-800">
+                      <AlertCircle className="w-3 h-3" />
+                      Open
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div>
+                    <p className="text-[10px] text-muted-foreground">Bedrag</p>
+                    <p className="text-sm font-semibold">{formatCurrency(loan.amount)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground">Betaald</p>
+                    <p className="text-sm font-semibold text-green-600">{formatCurrency(loan.amount_paid)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground">Open</p>
+                    <p className="text-sm font-semibold text-orange-600">{formatCurrency(loan.remaining)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Desktop Table */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Huurder</TableHead>
+                  <TableHead>Datum</TableHead>
+                  <TableHead>Omschrijving</TableHead>
+                  <TableHead className="text-right">Bedrag</TableHead>
+                  <TableHead className="text-right">Betaald</TableHead>
+                  <TableHead className="text-right">Openstaand</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filteredLoans.map((loan) => (
+                  <TableRow key={loan.id} data-testid={`loan-row-${loan.id}`}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium">{loan.tenant_name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        {loan.loan_date}
+                      </div>
+                    </TableCell>
+                    <TableCell>{loan.description || '-'}</TableCell>
+                    <TableCell className="text-right font-semibold">
+                      {formatCurrency(loan.amount)}
+                    </TableCell>
+                    <TableCell className="text-right text-green-600">
+                      {formatCurrency(loan.amount_paid)}
+                    </TableCell>
+                    <TableCell className="text-right font-semibold text-orange-600">
+                      {formatCurrency(loan.remaining)}
+                    </TableCell>
+                    <TableCell>
+                      {loan.status === 'paid' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <CheckCircle2 className="w-3 h-3" />
+                          Afbetaald
+                        </span>
+                      ) : loan.status === 'partial' ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <Clock className="w-3 h-3" />
+                          Gedeeltelijk
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                          <AlertCircle className="w-3 h-3" />
+                          Open
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openEditModal(loan)}>
+                            <Edit className="w-4 h-4 mr-2" />
+                            Bewerken
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => { setSelectedLoan(loan); setShowDeleteDialog(true); }}
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Verwijderen
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
         </div>
       ) : (
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <Banknote className="w-8 h-8" />
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 border-dashed">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-muted flex items-center justify-center mb-3 sm:mb-4">
+              <Banknote className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-semibold text-base sm:text-lg text-foreground mb-2 text-center">
+              {search || statusFilter !== 'all' ? 'Geen leningen gevonden' : 'Nog geen leningen'}
+            </h3>
+            <p className="text-muted-foreground text-center text-xs sm:text-sm">
+              {search || statusFilter !== 'all' 
+                ? 'Probeer een andere zoekterm of pas uw filters aan' 
+                : 'Klik op "Nieuwe Lening" om een lening toe te voegen'}
+            </p>
           </div>
-          <h3 className="font-semibold text-foreground mb-2">Geen leningen gevonden</h3>
-          <p className="text-muted-foreground">
-            {search || statusFilter !== 'all' 
-              ? 'Probeer andere filters' 
-              : 'Klik op "Nieuwe Lening" om een lening toe te voegen'}
-          </p>
         </div>
       )}
 
