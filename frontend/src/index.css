@@ -222,7 +222,6 @@ code {
 
 .stat-card-icon {
     @apply w-12 h-12 rounded-2xl flex items-center justify-center;
-    @apply bg-gradient-to-br from-current/10 to-current/5;
 }
 
 .stat-card-icon svg {
