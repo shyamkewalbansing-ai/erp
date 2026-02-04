@@ -378,7 +378,8 @@ export default function Layout() {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Hidden for superadmin on desktop */}
+      {!isSuperAdmin() && (
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Logo and Toggle Button */}
         <div className={`sidebar-logo ${isCollapsed ? 'p-4' : 'p-5'}`}>
