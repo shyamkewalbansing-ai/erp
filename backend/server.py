@@ -10946,18 +10946,6 @@ async def trigger_system_update(
         "log_id": log_id,
         "status": "running"
     }
-        )
-        raise HTTPException(status_code=504, detail="Update timeout - probeer opnieuw")
-    except Exception as e:
-        await db.deployment_logs.update_one(
-            {"id": log_id},
-            {"$set": {
-                "status": "failed", 
-                "message": f"Fout: {str(e)}",
-                "details": details if 'details' in dir() else []
-            }}
-        )
-        raise HTTPException(status_code=500, detail=f"Update fout: {str(e)}")
 
 
 async def sync_modules_to_database():
