@@ -2108,7 +2108,7 @@ server {
                     <Button 
                       size="sm" 
                       variant="outline"
-                      className="ml-auto"
+                      className="sm:ml-auto w-full sm:w-auto"
                       onClick={async () => {
                         const res = await getDeploymentSettings();
                         setDeploymentSettings(res.data);
@@ -2123,39 +2123,39 @@ server {
                   </div>
                 )}
                 
-                <div className="bg-white/70 rounded-lg p-4 border border-emerald-200">
-                  <h4 className="font-medium text-emerald-900 mb-2 flex items-center gap-2">
+                <div className="bg-white/70 rounded-lg p-3 sm:p-4 border border-emerald-200">
+                  <h4 className="font-medium text-emerald-900 mb-2 flex items-center gap-2 text-sm sm:text-base">
                     <Terminal className="w-4 h-4" />
                     Dit script voert uit:
                   </h4>
-                  <code className="block text-sm bg-slate-900 text-emerald-400 p-3 rounded-lg mb-3 font-mono">
+                  <code className="block text-xs sm:text-sm bg-slate-900 text-emerald-400 p-2 sm:p-3 rounded-lg mb-3 font-mono overflow-x-auto">
                     sudo /home/clp/htdocs/facturatie.sr/server-update.sh
                   </code>
-                  <ul className="text-sm text-emerald-800 space-y-1">
+                  <ul className="text-xs sm:text-sm text-emerald-800 space-y-1">
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500 flex-shrink-0" />
                       Maakt automatisch een backup
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500 flex-shrink-0" />
                       Haalt laatste code op via git pull
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500 flex-shrink-0" />
                       Installeert dependencies (pip/yarn)
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500 flex-shrink-0" />
                       Bouwt frontend opnieuw
                     </li>
                     <li className="flex items-center gap-2">
-                      <CheckCircle className="w-4 h-4 text-emerald-500" />
+                      <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-500 flex-shrink-0" />
                       Herstart backend en frontend services
                     </li>
                   </ul>
                 </div>
                 {deploymentSettings.last_update && (
-                  <div className="flex items-center gap-2 text-sm mt-3">
+                  <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm mt-3">
                     <History className="w-4 h-4 text-gray-500" />
                     <span className="text-gray-600">
                       Laatste update: {new Date(deploymentSettings.last_update).toLocaleString('nl-NL')}
@@ -2171,12 +2171,12 @@ server {
             </Card>
 
             {/* Warning Alert */}
-            <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+            <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-3 sm:p-4">
               <div className="flex items-start gap-3">
-                <AlertTriangle className="w-6 h-6 text-amber-600 flex-shrink-0 mt-0.5" />
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-amber-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-amber-900">Belangrijke eerste stap</h4>
-                  <p className="text-amber-800 text-sm mt-1">
+                  <h4 className="font-semibold text-amber-900 text-sm sm:text-base">Belangrijke eerste stap</h4>
+                  <p className="text-amber-800 text-xs sm:text-sm mt-1">
                     Voordat u op de knop klikt, zorg dat u de laatste code naar GitHub hebt gepushed via 
                     <strong> &quot;Save to Github&quot;</strong> in Emergent. Anders wordt er niets nieuws opgehaald.
                   </p>
