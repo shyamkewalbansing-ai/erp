@@ -1,167 +1,126 @@
 {
   "design_system": {
     "identity": {
-      "name": "Beheerder Pro",
-      "aesthetic": "Dutch Fintech Clean",
-      "archetype": "The Performance Pro",
-      "principles": [
-        "Density with Clarity: High information density without visual clutter",
-        "Swiss Precision: Grids, alignment, and typography over decoration",
-        "Functional Color: Color is used only for status and action, not decoration",
-        "Directness: Dutch business culture is direct; the UI should be too"
-      ]
+      "name": "Crystal Forest ERP",
+      "persona": "E1 - The Anti-AI Designer",
+      "tone": "Professional, Sleek, Nature-Tech Fusion",
+      "primary_color": "#0caf60"
     },
     "typography": {
       "font_family": {
-        "heading": "Manrope, sans-serif",
+        "heading": "Outfit, sans-serif",
         "body": "Plus Jakarta Sans, sans-serif",
         "mono": "JetBrains Mono, monospace"
       },
       "scale": {
-        "h1": "text-3xl font-bold tracking-tight",
-        "h2": "text-2xl font-semibold tracking-tight",
-        "h3": "text-xl font-semibold",
-        "body": "text-sm leading-relaxed",
-        "small": "text-xs font-medium text-muted-foreground"
-      },
-      "rules": [
-        "Use Manrope for all headings (h1-h3)",
-        "Use Plus Jakarta Sans for all body text, inputs, and table data",
-        "Use JetBrains Mono for API keys, IDs, and code snippets",
-        "Headings must have tight tracking (-0.02em)",
-        "Labels must be uppercase, text-xs, and tracking-wide"
-      ]
-    },
-    "colors": {
-      "palette": {
-        "primary": {
-          "name": "Dutch Navy",
-          "hex": "#0f172a",
-          "tailwind": "slate-900",
-          "usage": "Sidebar, Primary Buttons, Headings"
-        },
-        "accent": {
-          "name": "Growth Emerald",
-          "hex": "#10b981",
-          "tailwind": "emerald-500",
-          "usage": "Success states, Money, Active Indicators"
-        },
-        "background": {
-          "light": "#f8fafc",
-          "dark": "#020617"
-        },
-        "surface": {
-          "light": "#ffffff",
-          "dark": "#0f172a"
-        },
-        "border": {
-          "light": "#e2e8f0",
-          "dark": "#1e293b"
-        }
-      },
-      "status": {
-        "success": "text-emerald-600 bg-emerald-50 border-emerald-200",
-        "warning": "text-amber-600 bg-amber-50 border-amber-200",
-        "error": "text-rose-600 bg-rose-50 border-rose-200",
-        "info": "text-blue-600 bg-blue-50 border-blue-200"
+        "h1": "text-4xl font-bold tracking-tight",
+        "h2": "text-3xl font-semibold tracking-tight",
+        "h3": "text-2xl font-semibold",
+        "body": "text-base leading-relaxed",
+        "small": "text-sm font-medium text-muted-foreground"
       }
     },
-    "layout": {
-      "grid_system": "Bento Grid Mode B (High Density)",
-      "spacing": "Comfortable but dense (p-6 for containers, p-4 for cards)",
-      "radius": "rounded-lg (0.5rem) - Avoid fully rounded corners for admin",
+    "colors": {
+      "primary": {
+        "DEFAULT": "#0caf60",
+        "foreground": "#ffffff",
+        "50": "#f0fdf4",
+        "100": "#dcfce7",
+        "500": "#10b981",
+        "600": "#059669",
+        "900": "#064e3b"
+      },
+      "background": {
+        "light": "#f8fafc",
+        "dark": "#020617",
+        "glass_light": "rgba(255, 255, 255, 0.7)",
+        "glass_dark": "rgba(2, 6, 23, 0.7)"
+      },
       "sidebar": {
-        "width": "w-64",
-        "style": "Fixed, Dark (slate-900) in both modes for contrast",
-        "collapsed_width": "w-16"
-      },
-      "container": "max-w-[1600px] mx-auto p-6"
-    },
-    "components": {
-      "cards": {
-        "style": "Flat, 1px border, no shadow (or very subtle)",
-        "classes": "bg-card border border-border rounded-lg shadow-sm hover:border-primary/20 transition-colors"
-      },
-      "tables": {
-        "style": "Clean, horizontal lines only, hover rows",
-        "header": "bg-muted/50 text-xs uppercase tracking-wider font-medium text-muted-foreground",
-        "row": "hover:bg-muted/50 transition-colors border-b border-border"
-      },
-      "buttons": {
-        "primary": "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
-        "secondary": "bg-white border border-input hover:bg-accent hover:text-accent-foreground",
-        "ghost": "hover:bg-accent hover:text-accent-foreground"
-      },
-      "tabs": {
-        "style": "Underline with motion",
-        "wrapper": "border-b border-border w-full",
-        "list": "flex gap-6",
-        "trigger": "pb-3 text-sm font-medium text-muted-foreground hover:text-foreground data-[state=active]:text-primary data-[state=active]:border-b-2 data-[state=active]:border-primary transition-all"
+        "light": "rgba(255, 255, 255, 0.85)",
+        "dark": "rgba(10, 10, 10, 0.85)",
+        "border_light": "rgba(12, 175, 96, 0.1)",
+        "border_dark": "rgba(12, 175, 96, 0.2)"
       }
     },
     "visual_enhancers": {
-      "glassmorphism": "Use sparingly. Only for sticky headers or modal overlays. Blur-xl, opacity-80.",
-      "gradients": "None for backgrounds. Subtle gradients allowed on 'Premium' badges or 'Upgrade' buttons only.",
-      "shadows": "shadow-sm for cards, shadow-md for dropdowns/modals. Avoid large diffuse shadows.",
-      "motion": "Micro-interactions on hover. Smooth transitions for tab switching. No heavy parallax."
+      "glassmorphism": {
+        "sidebar": "backdrop-blur-xl bg-background/80 border-r border-border/40 shadow-[4px_0_24px_rgba(0,0,0,0.02)]",
+        "header": "backdrop-blur-md bg-background/60 border-b border-border/40 sticky top-0 z-50",
+        "card": "bg-card/50 backdrop-blur-sm border border-border/50 shadow-sm hover:shadow-md transition-all duration-300"
+      },
+      "gradients": {
+        "hero_dark": "bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950",
+        "active_item": "bg-gradient-to-r from-emerald-500/10 to-transparent"
+      },
+      "shadows": {
+        "glow": "0 0 20px -5px rgba(12, 175, 96, 0.3)",
+        "subtle": "0 2px 10px rgba(0,0,0,0.03)"
+      }
     },
-    "assets": {
-      "icons": "Lucide React (Stroke width 1.5px for elegance)",
-      "images": {
-        "avatars": [
-          "https://images.unsplash.com/photo-1689600944138-da3b150d9cb8?crop=entropy&cs=srgb&fm=jpg&q=85",
-          "https://images.unsplash.com/photo-1576558656222-ba66febe3dec?crop=entropy&cs=srgb&fm=jpg&q=85",
-          "https://images.unsplash.com/photo-1558531304-a4773b7e3a9c?crop=entropy&cs=srgb&fm=jpg&q=85"
-        ],
-        "placeholders": {
-          "logo": "Use a simple geometric shape (e.g., Hexagon) in Primary Color"
-        }
+    "layout": {
+      "sidebar_width": {
+        "expanded": "280px",
+        "collapsed": "80px"
+      },
+      "header_height": "64px",
+      "spacing": {
+        "container_padding": "p-6 md:p-8 lg:p-10",
+        "section_gap": "gap-8"
       }
     }
   },
-  "implementation_plan": {
-    "phases": [
-      {
-        "name": "Setup & Layout",
-        "tasks": [
-          "Install Lucide React: `yarn add lucide-react`",
-          "Configure Tailwind colors in `tailwind.config.js`",
-          "Create the Main Layout (Sidebar + Header + Content Area)",
-          "Implement the Tab System (11 Tabs)"
-        ]
-      },
-      {
-        "name": "Core Components",
-        "tasks": [
-          "Build the `StatCard` component (Label, Value, Trend, Icon)",
-          "Build the `DataTable` component (Search, Filter, Pagination, Status Badge)",
-          "Build the `ActionHeader` (Title, Breadcrumbs, Primary Action)"
-        ]
-      },
-      {
-        "name": "Tab Implementation",
-        "details": {
-          "Klanten": "Table view with status badges (Active, Inactive). Actions: Edit, Delete, Login as User.",
-          "Betalingen": "List of transactions. Currency formatting (€). Status: Paid, Pending, Failed.",
-          "Modules": "Grid of cards showing available add-ons. Toggle switches for enabling/disabling.",
-          "Module Verzoeken": "List of requests needing approval. Approve/Deny buttons.",
-          "Workspaces": "Table of tenant workspaces. Usage metrics (Storage, Users).",
-          "Domain Provisioning": "Form for DNS settings. Status checks.",
-          "Domeinen": "List of registered domains. Expiry dates.",
-          "Betaalmethodes": "Settings form for Stripe/Mollie. API Key inputs.",
-          "Email": "SMTP Configuration form. Template editor (simple textarea or rich text).",
-          "Website": "Website Builder Interface. Full width. Drag & drop placeholder.",
-          "Update": "Version history log. 'Check for Updates' button."
-        }
+  "components": {
+    "Sidebar": {
+      "path": "/app/frontend/src/components/layout/Sidebar.js",
+      "specs": {
+        "structure": [
+          "Logo Area (Top, Fixed Height)",
+          "ScrollArea (Middle, Flex-1)",
+          "User Profile / Logout (Bottom, Fixed)"
+        ],
+        "behavior": "Collapsible with smooth width transition. Icons visible in collapsed state with Tooltips.",
+        "styling": "Glassmorphic container. Navigation items grouped by module (e.g., 'Vastgoed', 'Financieel'). Active state uses emerald glow."
       }
-    ]
+    },
+    "Header": {
+      "path": "/app/frontend/src/components/layout/Header.js",
+      "specs": {
+        "structure": [
+          "Left: Breadcrumbs / Page Title",
+          "Right: Search, Notifications, Theme Toggle, User Dropdown"
+        ],
+        "styling": "Transparent/Glassy. Blends with hero section. Elements float."
+      }
+    },
+    "DashboardLayout": {
+      "path": "/app/frontend/src/layouts/DashboardLayout.js",
+      "specs": {
+        "structure": "Flex container. Sidebar fixed left. Main content area with Header fixed top.",
+        "responsive": "Mobile: Sidebar becomes a Sheet/Drawer. Desktop: Collapsible Sidebar."
+      }
+    }
   },
-  "universal_guidelines": [
-    "Do not use 'Inter' for headings. Use 'Manrope'.",
-    "Ensure all text has sufficient contrast (APCA standards).",
-    "Use 'data-testid' on all interactive elements.",
-    "Keep the interface in Dutch (Klanten, Betalingen, etc.).",
-    "Dark mode must be fully supported and tested.",
-    "Use 'sonner' for toast notifications."
-  ]
+  "assets": {
+    "images": {
+      "user_avatar": "https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "logo_placeholder": "https://images.unsplash.com/photo-1756999223507-72bfbb654193?crop=entropy&cs=srgb&fm=jpg&q=85"
+    },
+    "icons": "Lucide React (Home, Building2, Receipt, Users, Settings, Bell, Search, LogOut, ChevronLeft, ChevronRight, Menu)"
+  },
+  "instructions_to_main_agent": [
+    "1. IMPLEMENTATION ORDER: Create DashboardLayout.js first, then Sidebar.js and Header.js.",
+    "2. SIDEBAR LOGIC: Use a context or prop for 'isCollapsed' state. Ensure text fades out smoothly when collapsing.",
+    "3. GLASS EFFECT: Apply the 'glassmorphism.sidebar' class string to the sidebar container. Do not use solid backgrounds.",
+    "4. ACTIVE STATE: Navigation items must have a distinct active state (emerald text + subtle bg gradient).",
+    "5. MOBILE: On mobile, hide the sidebar and show a 'Menu' button in the Header that opens a Sheet containing the Sidebar content.",
+    "6. DATA-TESTID: Add 'data-testid' to all interactive elements (sidebar-toggle, nav-item-*, logout-btn, etc.).",
+    "7. THEME: Ensure all colors use Tailwind CSS variables (bg-background, text-foreground) to support the existing dark mode toggle.",
+    "8. NO MOCKING: Use the provided image URLs. Do not use placeholder text for images."
+  ],
+  "universal_guidelines": {
+    "do_not_use": ["Inter font for headings", "Solid gray backgrounds for sidebar", "Default blue colors"],
+    "must_use": ["Manrope/Outfit fonts", "Emerald Green (#0caf60) primary", "Glassmorphism effects"],
+    "accessibility": "Ensure text contrast is > 4.5:1. Use aria-labels for icon-only buttons."
+  }
 }
