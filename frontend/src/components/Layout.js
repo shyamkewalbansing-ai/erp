@@ -420,25 +420,6 @@ export default function Layout() {
           </div>
         </div>
 
-        {/* Subscription Status Banner */}
-        {!isSuperAdmin() && (showTrialBadge || showExpiredBadge) && !isCollapsed && (
-          <div className={`mx-3 mt-3 p-3 rounded-xl ${showExpiredBadge ? 'bg-red-500/10 border border-red-500/20' : 'bg-blue-500/10 border border-blue-500/20'}`}>
-            <div className="flex items-center gap-2">
-              <Package className={`w-4 h-4 ${showExpiredBadge ? 'text-red-500' : 'text-blue-500'}`} />
-              <span className={`text-xs font-medium ${showExpiredBadge ? 'text-red-500' : 'text-blue-500'}`}>
-                {showExpiredBadge ? 'Abonnement verlopen' : 'Proefperiode'}
-              </span>
-            </div>
-            <NavLink 
-              to="/abonnement" 
-              className="text-xs text-muted-foreground hover:underline mt-1 block"
-              onClick={() => setSidebarOpen(false)}
-            >
-              {showExpiredBadge ? 'Activeer nu →' : 'Bekijk details →'}
-            </NavLink>
-          </div>
-        )}
-
         {/* Navigation */}
         <nav className="flex-1 p-4 space-y-1">
           {/* Admin link - only for superadmin */}
