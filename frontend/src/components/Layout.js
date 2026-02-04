@@ -539,24 +539,15 @@ export default function Layout() {
                 </div>
               )}
             </div>
-          )}
-        </nav>
-
-        {/* Super Admin badge at bottom - only show when sidebar is expanded */}
-        {isSuperAdmin() && !(isCollapsed || isSuperAdmin()) && (
-          <div className="p-4 border-t border-border mt-auto flex-shrink-0">
-            <Badge className="w-full justify-center bg-primary/10 text-primary border-primary/20">
-              <Crown className="w-3 h-3 mr-1" />
-              Super Admin
-            </Badge>
           </div>
-        )}
+        </nav>
       </aside>
+      )}
 
       {/* Main content */}
-      <main className={`main-content ${isCollapsed || isSuperAdmin() ? 'main-content-expanded' : ''} overflow-x-hidden`}>
+      <main className={`main-content ${isCollapsed ? 'main-content-expanded' : ''} ${isSuperAdmin() ? 'main-content-full-width' : ''} overflow-x-hidden`}>
         {/* Desktop header with notifications */}
-        <header className={`desktop-header hidden lg:flex px-6 py-2.5 items-center justify-between header-glass ${isCollapsed ? 'desktop-header-expanded' : ''}`}>
+        <header className={`desktop-header hidden lg:flex px-6 py-2.5 items-center justify-between header-glass ${isCollapsed ? 'desktop-header-expanded' : ''} ${isSuperAdmin() ? 'desktop-header-full-width' : ''}`}>
           {/* Left side - User info & Workspace/Portal buttons */}
           <div className="flex items-center gap-3">
             {/* User info - Compact Modern Style */}
