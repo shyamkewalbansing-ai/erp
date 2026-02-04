@@ -644,7 +644,7 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* Mobile header - Modern Style */}
+        {/* Mobile header - Dark style matching sidebar */}
         <header className="mobile-header lg:hidden">
           <div className="mobile-header-left">
             <button
@@ -654,19 +654,12 @@ export default function Layout() {
             >
               <Menu className="w-5 h-5" />
             </button>
-            {user?.logo && !isSuperAdmin() ? (
-              <img 
-                src={user.logo} 
-                alt="Bedrijfslogo" 
-                className="h-6 w-auto max-w-[100px] object-contain"
-              />
-            ) : (
-              <img 
-                src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp" 
-                alt="Facturatie N.V." 
-                className="h-5 w-auto"
-              />
-            )}
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-md bg-emerald-500 flex items-center justify-center">
+                <span className="text-white font-bold text-xs">F</span>
+              </div>
+              <span className="text-white font-semibold text-sm">Facturatie</span>
+            </div>
           </div>
           <div className="mobile-header-actions">
             <button
