@@ -478,26 +478,25 @@ export default function Layout() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setSidebarOpen(false)}
-                          className={`nav-item ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+                          className={`nav-item ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
                           data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
                           title={item.label}
                         >
-                          <item.icon className="w-4 h-4 flex-shrink-0" />
+                          <item.icon className="w-5 h-5 flex-shrink-0" />
                           {!isCollapsed && <span>{item.label}</span>}
-                          {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-50" />}
+                          {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-40" />}
                         </a>
                       ) : (
                         <NavLink
                           key={item.to}
                           to={item.to}
                           onClick={() => setSidebarOpen(false)}
-                          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+                          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
                           data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
                           title={item.label}
                         >
                           <item.icon className="w-5 h-5 flex-shrink-0" />
                           {!isCollapsed && <span>{item.label}</span>}
-                          {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
                         </NavLink>
                       )
                     ))}
