@@ -2036,28 +2036,28 @@ server {
 
         {/* Update/Deployment Tab */}
         <TabsContent value="update">
-          <div className="grid gap-6">
+          <div className="grid gap-4 sm:gap-6">
             {/* Server Update Script Card - NEW */}
             <Card className="border-2 border-emerald-500 bg-gradient-to-r from-emerald-50 to-teal-50">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-emerald-500 rounded-xl">
-                      <Rocket className="w-6 h-6 text-white" />
+              <CardHeader className="p-4 sm:p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                  <div className="flex items-start sm:items-center gap-3">
+                    <div className="p-2 sm:p-3 bg-emerald-500 rounded-lg sm:rounded-xl flex-shrink-0">
+                      <Rocket className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
+                    <div className="min-w-0">
+                      <CardTitle className="flex flex-wrap items-center gap-2 text-base sm:text-lg">
                         Server Update Script
-                        <Badge className="bg-emerald-500 text-white">Aanbevolen</Badge>
+                        <Badge className="bg-emerald-500 text-white text-xs">Aanbevolen</Badge>
                       </CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-xs sm:text-sm">
                         Voer het veilige update script uit op uw productie server
                       </CardDescription>
                     </div>
                   </div>
                   <Button 
-                    size="lg"
-                    className="bg-emerald-600 hover:bg-emerald-700 shadow-lg"
+                    size="default"
+                    className="bg-emerald-600 hover:bg-emerald-700 shadow-lg w-full lg:w-auto text-sm sm:text-base"
                     onClick={async () => {
                       setUpdating(true);
                       try {
@@ -2082,22 +2082,24 @@ server {
                   >
                     {updating || deploymentSettings.last_update_status === 'running' ? (
                       <>
-                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                        Update draait op achtergrond...
+                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 mr-2 animate-spin" />
+                        <span className="hidden sm:inline">Update draait op achtergrond...</span>
+                        <span className="sm:hidden">Bezig...</span>
                       </>
                     ) : (
                       <>
-                        <Play className="w-5 h-5 mr-2" />
-                        Uitvoeren: server-update.sh
+                        <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                        <span className="hidden sm:inline">Uitvoeren: server-update.sh</span>
+                        <span className="sm:hidden">Update</span>
                       </>
                     )}
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="pt-0">
+              <CardContent className="pt-0 px-4 sm:px-6">
                 {/* Running status indicator */}
                 {deploymentSettings.last_update_status === 'running' && (
-                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+                  <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex flex-col sm:flex-row sm:items-center gap-3">
                     <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
                     <div>
                       <p className="text-blue-800 font-medium">Update draait op achtergrond</p>
