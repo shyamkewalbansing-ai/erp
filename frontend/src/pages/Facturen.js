@@ -575,70 +575,76 @@ export default function Facturen() {
         })}
       </div>
 
-      {/* Selected Month Detail Table */}
+      {/* Selected Month Detail Table - Responsive */}
       {selectedMonth && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-border/50 bg-muted/30">
+            <h3 className="font-semibold text-sm sm:text-lg flex items-center gap-2">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
               {MONTHS[selectedMonth - 1]} {selectedYear} - Facturen per Huurder
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+            </h3>
+          </div>
+          <div className="p-3 sm:p-6">
             {activeTenantsData.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Geen actieve huurders gevonden</p>
+              <div className="text-center py-8 sm:py-12">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl sm:rounded-2xl bg-muted flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <User className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground" />
+                </div>
+                <p className="text-foreground font-medium text-sm sm:text-base">Geen actieve huurders</p>
+                <p className="text-muted-foreground text-xs sm:text-sm mt-1">Er zijn geen actieve huurders gevonden</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-muted/50">
+              <div className="table-scroll-wrapper">
+                <table className="modern-table">
+                  <thead>
                     <tr>
-                      <th className="text-left p-3 font-medium">Huurder</th>
-                      <th className="text-left p-3 font-medium">Appartement</th>
-                      <th className="text-right p-3 font-medium">Huur</th>
-                      <th className="text-right p-3 font-medium">Betaald</th>
-                      <th className="text-right p-3 font-medium">Openstaand</th>
-                      <th className="text-right p-3 font-medium">Cum. Saldo</th>
-                      <th className="text-center p-3 font-medium">Status</th>
-                      <th className="text-center p-3 font-medium">Actie</th>
+                      <th>Huurder</th>
+                      <th className="hidden sm:table-cell">Appartement</th>
+                      <th className="text-right">Huur</th>
+                      <th className="text-right hidden md:table-cell">Betaald</th>
+                      <th className="text-right hidden lg:table-cell">Openstaand</th>
+                      <th className="text-center">Status</th>
+                      <th className="text-center">Actie</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody>
                     {activeTenantsData.map(tenant => {
                       const data = getInvoiceData(tenant.id, selectedYear, selectedMonth);
                       const cumulative = getCumulativeBalance(tenant.id, selectedYear, selectedMonth);
                       
                       return (
-                        <tr key={tenant.id} className="hover:bg-muted/30">
-                          <td className="p-3">
-                            <div className="flex items-center gap-2">
-                              <User className="w-4 h-4 text-muted-foreground" />
-                              <span className="font-medium">{tenant.name}</span>
+                        <tr key={tenant.id}>
+                          <td>
+                            <div className="flex items-center gap-2 sm:gap-3">
+                              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                                <span className="text-blue-600 font-semibold text-sm">{tenant.name.charAt(0).toUpperCase()}</span>
+                              </div>
+                              <div className="min-w-0">
+                                <span className="font-medium text-sm truncate block">{tenant.name}</span>
+                                {/* Mobile: show apartment under name */}
+                                <span className="text-xs text-muted-foreground sm:hidden">{tenant.apartment?.name}</span>
+                              </div>
                             </div>
                           </td>
-                          <td className="p-3">
+                          <td className="hidden sm:table-cell">
                             <div className="flex items-center gap-2">
                               <Building2 className="w-4 h-4 text-muted-foreground" />
-                              <span>{tenant.apartment?.name}</span>
+                              <span className="text-sm">{tenant.apartment?.name}</span>
                             </div>
                           </td>
-                          <td className="p-3 text-right font-medium">{formatCurrency(data.rentAmount)}</td>
-                          <td className="p-3 text-right text-green-600 font-medium">{formatCurrency(data.totalPaid)}</td>
-                          <td className="p-3 text-right text-orange-600 font-medium">{formatCurrency(data.remaining)}</td>
-                          <td className={`p-3 text-right font-bold ${cumulative.balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                            {cumulative.balance > 0 ? '-' : ''}{formatCurrency(Math.abs(cumulative.balance))}
-                          </td>
-                          <td className="p-3 text-center">{getStatusBadge(data.status)}</td>
-                          <td className="p-3 text-center">
+                          <td className="text-right font-medium text-sm">{formatCurrency(data.rentAmount)}</td>
+                          <td className="text-right text-emerald-600 font-medium hidden md:table-cell text-sm">{formatCurrency(data.totalPaid)}</td>
+                          <td className="text-right text-orange-600 font-medium hidden lg:table-cell text-sm">{formatCurrency(data.remaining)}</td>
+                          <td className="text-center">{getStatusBadge(data.status)}</td>
+                          <td className="text-center">
                             <Button 
-                              variant="outline" 
+                              variant="ghost" 
                               size="sm"
+                              className="h-7 w-7 sm:h-8 sm:w-8 p-0 hover:bg-blue-500/10 hover:text-blue-600"
                               onClick={() => openDetail(tenant, selectedYear, selectedMonth)}
                               data-testid={`detail-btn-${tenant.id}`}
                             >
-                              <Receipt className="w-4 h-4" />
+                              <Receipt className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             </Button>
                           </td>
                         </tr>
