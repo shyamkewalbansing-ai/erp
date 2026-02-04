@@ -285,7 +285,7 @@ export default function DebiterenPage() {
                       )}
                     </div>
                   </td>
-                  <td>
+                  <td className="hidden md:table-cell">
                     <Badge variant="outline" className={`
                       ${d.standaard_valuta === 'SRD' ? 'border-emerald-500/30 text-emerald-600' : ''}
                       ${d.standaard_valuta === 'USD' ? 'border-blue-500/30 text-blue-600' : ''}
@@ -294,7 +294,7 @@ export default function DebiterenPage() {
                       {d.standaard_valuta}
                     </Badge>
                   </td>
-                  <td>
+                  <td className="hidden lg:table-cell">
                     <span className="text-sm">{d.betalingstermijn} dagen</span>
                   </td>
                   <td>
@@ -307,12 +307,12 @@ export default function DebiterenPage() {
                     )}
                   </td>
                   <td>
-                    <div className="flex justify-end gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => handleEdit(d)} className="hover:bg-blue-500/10 hover:text-blue-600">
-                        <Pencil className="w-4 h-4" />
+                    <div className="flex justify-end gap-0.5 sm:gap-1">
+                      <Button size="sm" variant="ghost" onClick={() => handleEdit(d)} className="hover:bg-blue-500/10 hover:text-blue-600 p-1.5 sm:p-2 h-auto">
+                        <Pencil className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </Button>
-                      <Button size="sm" variant="ghost" className="hover:bg-red-500/10 hover:text-red-600" onClick={() => handleDelete(d.id)}>
-                        <Trash2 className="w-4 h-4" />
+                      <Button size="sm" variant="ghost" className="hover:bg-red-500/10 hover:text-red-600 p-1.5 sm:p-2 h-auto" onClick={() => handleDelete(d.id)}>
+                        <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                       </Button>
                     </div>
                   </td>
@@ -321,7 +321,7 @@ export default function DebiterenPage() {
               {filtered.length === 0 && (
                 <tr>
                   <td colSpan={6}>
-                    <div className="empty-state py-12">
+                    <div className="empty-state py-8 sm:py-12">
                       <div className="empty-state-icon">
                         <Users />
                       </div>
@@ -335,6 +335,7 @@ export default function DebiterenPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>
