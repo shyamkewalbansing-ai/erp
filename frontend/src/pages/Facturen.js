@@ -780,8 +780,6 @@ export default function Facturen() {
                         {getStatusBadge(data.status)}
                       </div>
                     </div>
-                      </div>
-                    </div>
                     
                     {/* Tenant & Apartment */}
                     <div className="grid grid-cols-2 gap-4">
