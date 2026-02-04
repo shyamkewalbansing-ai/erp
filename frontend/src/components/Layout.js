@@ -378,7 +378,7 @@ export default function Layout() {
         />
       )}
 
-      {/* Dark Sidebar - Connected to Header */}
+      {/* White Sidebar - Connected to Header */}
       <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
         {/* Logo Area - Same height as header */}
         <div className="sidebar-logo">
@@ -389,20 +389,20 @@ export default function Layout() {
                 <img 
                   src={branding.logo_url} 
                   alt={branding.portal_name || 'Logo'} 
-                  className="h-7 w-auto max-w-[140px] object-contain brightness-0 invert"
+                  className="h-7 w-auto max-w-[140px] object-contain"
                 />
               ) : user?.logo && !isSuperAdmin() ? (
                 <img 
                   src={user.logo} 
                   alt="Bedrijfslogo" 
-                  className="h-7 w-auto max-w-[140px] object-contain brightness-0 invert"
+                  className="h-7 w-auto max-w-[140px] object-contain"
                 />
               ) : (
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center">
                     <span className="text-white font-bold text-sm">F</span>
                   </div>
-                  <span className="text-white font-semibold text-lg tracking-tight">Facturatie</span>
+                  <span className="text-slate-800 font-semibold text-lg tracking-tight">Facturatie</span>
                 </div>
               )
             ) : (
