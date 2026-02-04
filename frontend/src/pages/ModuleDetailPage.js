@@ -732,9 +732,10 @@ export default function ModuleDetailPage() {
       setAddons(addonsRes?.data || []);
       
       // If no hardcoded module, try to load from API
-      // Also check with alternate slug format (underscore vs hyphen)
-      const altSlug = slug?.includes('-') ? slug.replace(/-/g, '_') : slug?.replace(/_/g, '-');
-      if (!MODULES_DETAIL[slug] && !MODULES_DETAIL[altSlug]) {
+      // Use the same slug variants check as above
+      const slugVariantsCheck = getSlugVariants(slug);
+      const hasHardcoded = slugVariantsCheck.some(s => MODULES_DETAIL[s]);
+      if (!hasHardcoded) {
         try {
           const addonRes = await api.get(`/addons/${slug}`);
           if (addonRes.data) {
