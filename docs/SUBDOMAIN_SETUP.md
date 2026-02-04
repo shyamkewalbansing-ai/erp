@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://bizbooks-suriname.preview.emergentagent.com/           → Landing page
-https://bizbooks-suriname.preview.emergentagent.com/login      → Login
-https://bizbooks-suriname.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://bizbooks-suriname.preview.emergentagent.com/booking/   → Publieke booking portals
+https://saas-accounting-5.preview.emergentagent.com/           → Landing page
+https://saas-accounting-5.preview.emergentagent.com/login      → Login
+https://saas-accounting-5.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://saas-accounting-5.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
