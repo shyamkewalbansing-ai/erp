@@ -429,13 +429,13 @@ export default function Layout() {
             <NavLink
               to="/app/admin"
               onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed || isSuperAdmin() ? 'justify-center px-3' : ''}`}
               data-testid="nav-admin"
               title="Beheerder"
             >
               <Crown className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>Beheerder</span>}
-              {!isCollapsed && <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>}
+              {!(isCollapsed || isSuperAdmin()) && <span>Beheerder</span>}
+              {!(isCollapsed || isSuperAdmin()) && <Badge className="ml-auto text-[10px] bg-primary/10 text-primary border-primary/20">Admin</Badge>}
             </NavLink>
           )}
 
@@ -456,14 +456,14 @@ export default function Layout() {
                 
                 return (
                   <div key={moduleSlug} className="mb-1">
-                    {!isCollapsed && (
+                    {!(isCollapsed || isSuperAdmin()) && (
                       <div className={`module-group-header ${isFirst ? 'mt-2' : ''}`}>
                         <ModuleIcon className="w-3.5 h-3.5" />
                         {config.name}
                         {moduleSlug === 'boekhouding' && <span className="text-emerald-400 font-normal">(Gratis)</span>}
                       </div>
                     )}
-                    {isCollapsed && !isFirst && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
+                    {(isCollapsed || isSuperAdmin()) && !isFirst && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
                     {config.items.filter(item => config.alwaysShow || hasAddon(item.addon)).map((item) => (
                       item.external ? (
                         <a
@@ -472,12 +472,12 @@ export default function Layout() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setSidebarOpen(false)}
-                          className={`nav-item ${!isSubscriptionActive && !isSuperAdmin() && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+                          className={`nav-item ${!isSubscriptionActive && !isSuperAdmin() && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed || isSuperAdmin() ? 'justify-center px-3' : ''}`}
                           data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
                           title={item.label}
                         >
                           <item.icon className="w-4 h-4 flex-shrink-0" />
-                          {!isCollapsed && <span>{item.label}</span>}
+                          {!(isCollapsed || isSuperAdmin()) && <span>{item.label}</span>}
                           {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-50" />}
                         </a>
                       ) : (
