@@ -478,20 +478,20 @@ export default function Layout() {
                         >
                           <item.icon className="w-4 h-4 flex-shrink-0" />
                           {!(isCollapsed || isSuperAdmin()) && <span>{item.label}</span>}
-                          {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-50" />}
+                          {!(isCollapsed || isSuperAdmin()) && <ExternalLink className="w-4 h-4 ml-auto opacity-50" />}
                         </a>
                       ) : (
                         <NavLink
                           key={item.to}
                           to={item.to}
                           onClick={() => setSidebarOpen(false)}
-                          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+                          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !isSuperAdmin() && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed || isSuperAdmin() ? 'justify-center px-3' : ''}`}
                           data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
                           title={item.label}
                         >
                           <item.icon className="w-5 h-5 flex-shrink-0" />
-                          {!isCollapsed && <span>{item.label}</span>}
-                          {!isCollapsed && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
+                          {!(isCollapsed || isSuperAdmin()) && <span>{item.label}</span>}
+                          {!(isCollapsed || isSuperAdmin()) && <ChevronRight className="w-4 h-4 ml-auto opacity-0 group-hover:opacity-100" />}
                         </NavLink>
                       )
                     ))}
@@ -506,19 +506,19 @@ export default function Layout() {
             <div className="mt-2">
               <button
                 onClick={() => setSettingsOpen(!settingsOpen)}
-                className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed ? 'justify-center px-3' : ''}`}
+                className={`nav-item w-full justify-between ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed || isSuperAdmin() ? 'justify-center px-3' : ''}`}
                 data-testid="nav-instellingen-dropdown"
                 title="Instellingen"
               >
-                <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
+                <div className={`flex items-center gap-3 ${isCollapsed || isSuperAdmin() ? 'justify-center' : ''}`}>
                   <Settings className="w-5 h-5 flex-shrink-0" />
-                  {!isCollapsed && <span>Instellingen</span>}
+                  {!(isCollapsed || isSuperAdmin()) && <span>Instellingen</span>}
                 </div>
-                {!isCollapsed && <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />}
+                {!(isCollapsed || isSuperAdmin()) && <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />}
               </button>
               
               {/* Dropdown items */}
-              {!isCollapsed && (
+              {!(isCollapsed || isSuperAdmin()) && (
                 <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
                   <div className="pl-4 mt-1 space-y-1">
                     {/* Workspace Settings - for customers only */}
