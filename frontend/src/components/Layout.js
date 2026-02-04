@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMyAddons, getWorkspaceSettings, updateWorkspaceSettings, updateWorkspaceDomain, getSidebarOrder } from '../lib/api';
+import { getMyAddons, getWorkspaceSettings, updateWorkspaceSettings, updateWorkspaceDomain, getSidebarOrder, updateUserProfile, uploadProfilePhoto } from '../lib/api';
 import { 
   LayoutDashboard, 
   Users, 
@@ -45,7 +45,13 @@ import {
   Gift,
   PanelLeftClose,
   PanelLeftOpen,
-  BookOpen
+  BookOpen,
+  Camera,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Lock
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
