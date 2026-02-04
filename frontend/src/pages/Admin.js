@@ -822,7 +822,8 @@ server {
             onClick={() => setCreateCustomerDialogOpen(true)} 
             data-testid="create-customer-btn"
             size="sm"
-            className="w-full sm:w-auto self-start bg-white hover:bg-gray-100 text-emerald-700 font-semibold shadow-lg text-xs sm:text-sm h-9 sm:h-10"
+            variant="secondary"
+            className="w-full sm:w-auto self-start !bg-white !hover:bg-gray-100 !text-emerald-700 font-semibold shadow-lg text-xs sm:text-sm h-9 sm:h-10 border-0"
           >
             <UserPlus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
             Klant Aanmaken
