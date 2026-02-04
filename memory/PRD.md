@@ -45,18 +45,17 @@ Alle Vastgoed Beheer pagina's hebben nu een consistente, moderne look met hero b
 - Meterstanden: Geel (#eab308)
 - Contracten: Teal (#14b8a6)
 
-### SUPERADMIN SIDEBAR UITGESCHAKELD ✅ (VOLTOOID - 4 Feb 2026)
-De zijbalk is nu volledig verborgen voor superadmin gebruikers.
+### SUPERADMIN SIDEBAR AANGEPAST ✅ (VOLTOOID - 4 Feb 2026)
+De zijbalk is nu altijd ingeklapt voor superadmin gebruikers en kan niet worden uitgevouwen.
 
 **Wat is geïmplementeerd:**
-- [x] Sidebar wordt niet gerenderd voor superadmin role
-- [x] Main content krijgt `main-content-full-width` class
-- [x] Header neemt volledige breedte in
-- [x] Werkt op zowel desktop als mobiel
+- [x] Sidebar is altijd ingeklapt (alleen iconen zichtbaar)
+- [x] Toggle knop is verborgen voor superadmin
+- [x] Main content past zich aan met `main-content-expanded` class
+- [x] Werkt correct op zowel desktop als mobiel
 
 **Gewijzigde Bestanden:**
-- `/app/frontend/src/components/Layout.js` - Conditie voor sidebar rendering
-- `/app/frontend/src/App.css` - Nieuwe `.main-content-full-width` class
+- `/app/frontend/src/components/Layout.js` - Sidebar logica aangepast
 
 ---
 
