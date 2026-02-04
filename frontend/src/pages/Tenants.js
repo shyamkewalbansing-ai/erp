@@ -503,17 +503,17 @@ export default function Tenants() {
             ))}
           </div>
         ) : (
-          // List View
-          <Card className="border-border/50 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
+          // List View - Responsive
+          <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+            <div className="table-scroll-wrapper">
+              <table className="modern-table">
                 <thead>
-                  <tr className="border-b border-border/50 bg-muted/30">
-                    <th className="text-left p-4 font-semibold text-sm text-muted-foreground">Huurder</th>
-                    <th className="text-left p-4 font-semibold text-sm text-muted-foreground">Contact</th>
-                    <th className="text-left p-4 font-semibold text-sm text-muted-foreground">Adres</th>
-                    <th className="text-left p-4 font-semibold text-sm text-muted-foreground">ID Nummer</th>
-                    <th className="text-right p-4 font-semibold text-sm text-muted-foreground">Acties</th>
+                  <tr>
+                    <th>Huurder</th>
+                    <th className="hidden sm:table-cell">Contact</th>
+                    <th className="hidden md:table-cell">Adres</th>
+                    <th className="hidden lg:table-cell">ID Nummer</th>
+                    <th className="text-right">Acties</th>
                   </tr>
                 </thead>
                 <tbody>
