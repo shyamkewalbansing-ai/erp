@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://module-trial.preview.emergentagent.com/           → Landing page
-https://module-trial.preview.emergentagent.com/login      → Login
-https://module-trial.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://module-trial.preview.emergentagent.com/booking/   → Publieke booking portals
+https://machine-manager-9.preview.emergentagent.com/           → Landing page
+https://machine-manager-9.preview.emergentagent.com/login      → Login
+https://machine-manager-9.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://machine-manager-9.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
