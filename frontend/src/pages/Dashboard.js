@@ -922,7 +922,7 @@ export default function Dashboard() {
 
       {/* Secondary Stats Row - Responsive */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
-        {/* Cash Balance */}
+        {/* Cash Balance - Same emerald color */}
         <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-hidden">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
@@ -936,7 +936,7 @@ export default function Dashboard() {
               </div>
               <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0 ml-2 ${
                 (stats?.total_kasgeld || 0) >= 0 
-                  ? 'bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50' 
+                  ? 'bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/50 dark:to-emerald-800/50' 
                   : 'bg-gradient-to-br from-red-100 to-rose-100 dark:from-red-900/50 dark:to-rose-900/50'
               }`}>
                 <Banknote className={`w-5 h-5 sm:w-7 sm:h-7 ${
