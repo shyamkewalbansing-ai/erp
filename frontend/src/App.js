@@ -696,6 +696,23 @@ function MainAppRoutes() {
           <Route path="boekhouding/handleiding" element={
             <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingHandleiding /></SubscriptionRoute>
           } />
+          
+          {/* Suribet Module Routes */}
+          <Route path="suribet" element={
+            <SubscriptionRoute requiredAddon="suribet"><SuribetDashboard /></SubscriptionRoute>
+          } />
+          <Route path="suribet/machines" element={
+            <SubscriptionRoute requiredAddon="suribet"><SuribetMachines /></SubscriptionRoute>
+          } />
+          <Route path="suribet/kasboek" element={
+            <SubscriptionRoute requiredAddon="suribet"><SuribetKasboek /></SubscriptionRoute>
+          } />
+          <Route path="suribet/werknemers" element={
+            <SubscriptionRoute requiredAddon="suribet"><SuribetWerknemers /></SubscriptionRoute>
+          } />
+          <Route path="suribet/loonuitbetaling" element={
+            <SubscriptionRoute requiredAddon="suribet"><SuribetLoonuitbetaling /></SubscriptionRoute>
+          } />
         </Route>
         
         {/* Redirect old routes to new app routes */}
