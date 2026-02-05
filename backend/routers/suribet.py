@@ -739,7 +739,8 @@ async def create_kasboek_entry(
     }
     
     await db.suribet_kasboek.insert_one(entry)
-    del entry["_id"] if "_id" in entry else None
+    if "_id" in entry:
+        del entry["_id"]
     return entry
 
 @router.put("/kasboek/{entry_id}")
