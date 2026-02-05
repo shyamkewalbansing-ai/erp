@@ -635,7 +635,8 @@ async def create_shift(
     }
     
     await db.suribet_shifts.insert_one(shift)
-    del shift["_id"] if "_id" in shift else None
+    if "_id" in shift:
+        del shift["_id"]
     return shift
 
 @router.put("/shifts/{shift_id}")
