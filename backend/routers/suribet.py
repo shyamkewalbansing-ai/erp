@@ -411,7 +411,8 @@ async def create_dagstaat(
     }
     
     await db.suribet_dagstaten.insert_one(dagstaat)
-    del dagstaat["_id"] if "_id" in dagstaat else None
+    if "_id" in dagstaat:
+        del dagstaat["_id"]
     return dagstaat
 
 @router.put("/dagstaten/{dagstaat_id}")
