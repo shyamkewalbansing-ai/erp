@@ -385,7 +385,7 @@ export default function Facturen() {
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="h-8 w-8 sm:h-9 sm:w-9 text-white hover:bg-white/20"
+                  className="h-8 w-8 sm:h-9 sm:w-9 text-white/70 hover:text-white hover:bg-white/20"
                   onClick={() => setSelectedYear(y => y - 1)}
                   disabled={selectedYear <= 2020}
                 >
@@ -404,7 +404,7 @@ export default function Facturen() {
                 <Button 
                   variant="ghost" 
                   size="icon"
-                  className="h-8 w-8 sm:h-9 sm:w-9 text-white hover:bg-white/20"
+                  className="h-8 w-8 sm:h-9 sm:w-9 text-white/70 hover:text-white hover:bg-white/20"
                   onClick={() => setSelectedYear(y => y + 1)}
                   disabled={selectedYear >= currentDate.getFullYear() + 1}
                 >
