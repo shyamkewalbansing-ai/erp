@@ -257,7 +257,8 @@ async def create_machine(
     }
     
     await db.suribet_machines.insert_one(machine)
-    del machine["_id"] if "_id" in machine else None
+    if "_id" in machine:
+        del machine["_id"]
     return machine
 
 @router.put("/machines/{machine_id}")
