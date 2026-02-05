@@ -151,6 +151,7 @@ const boekhoudingNavItems = [
 // Suribet Retailer Management module navigation
 const suribetNavItems = [
   { to: '/app/suribet', icon: LayoutDashboard, label: 'Dashboard', addon: 'suribet' },
+  { to: '/app/suribet/dagrapporten', icon: FileText, label: 'Dagrapporten', addon: 'suribet' },
   { to: '/app/suribet/machines', icon: Gamepad2, label: 'Machines', addon: 'suribet' },
   { to: '/app/suribet/kasboek', icon: Wallet, label: 'Kasboek', addon: 'suribet' },
   { to: '/app/suribet/werknemers', icon: Users2, label: 'Werknemers', addon: 'suribet' },
