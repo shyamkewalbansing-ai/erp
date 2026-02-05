@@ -169,7 +169,7 @@ class WisselkoersUpdate(BaseModel):
 # ============================================
 # DEPENDENCY - Get current user
 # ============================================
-from server import get_current_user, db
+from .deps import get_current_user, db
 
 # ============================================
 # WISSELKOERSEN ENDPOINTS
