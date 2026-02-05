@@ -148,6 +148,15 @@ const boekhoudingNavItems = [
   { to: '/app/boekhouding/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'boekhouding' },
 ];
 
+// Suribet Retailer Management module navigation
+const suribetNavItems = [
+  { to: '/app/suribet', icon: LayoutDashboard, label: 'Dashboard', addon: 'suribet' },
+  { to: '/app/suribet/machines', icon: Gamepad2, label: 'Machines', addon: 'suribet' },
+  { to: '/app/suribet/kasboek', icon: Wallet, label: 'Kasboek', addon: 'suribet' },
+  { to: '/app/suribet/werknemers', icon: Users2, label: 'Werknemers', addon: 'suribet' },
+  { to: '/app/suribet/loonuitbetaling', icon: Banknote, label: 'Loonuitbetaling', addon: 'suribet' },
+];
+
 export default function Layout() {
   const { user, logout, hasActiveSubscription, isSuperAdmin, workspace, branding } = useAuth();
   const navigate = useNavigate();
