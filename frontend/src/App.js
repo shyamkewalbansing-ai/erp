@@ -705,6 +705,9 @@ function MainAppRoutes() {
           <Route path="suribet/machines" element={
             <SubscriptionRoute requiredAddon="suribet"><SuribetMachines /></SubscriptionRoute>
           } />
+          <Route path="suribet/dagrapporten" element={
+            <SubscriptionRoute requiredAddon="suribet"><SuribetDagrapporten /></SubscriptionRoute>
+          } />
           <Route path="suribet/kasboek" element={
             <SubscriptionRoute requiredAddon="suribet"><SuribetKasboek /></SubscriptionRoute>
           } />
