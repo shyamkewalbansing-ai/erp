@@ -899,3 +899,57 @@ Complete uitgebreide instellingen voor alle modules met schaalbare architectuur.
 - Huurders hebben aparte `tenant_accounts` collectie (losgekoppeld van `users`)
 - Tenant portaal routes starten met `/huurder`
 - Verhuurder (landlord) ID wordt opgeslagen in tenant account voor data isolatie
+
+---
+
+## What's Been Implemented (5 Feb 2026)
+
+### SURIBET RETAILER MANAGEMENT MODULE ✅ (VOLTOOID - 5 Feb 2026)
+Complete module voor Suribet retailers om machines, werknemers, kasboek en loonuitbetaling te beheren.
+
+**Features:**
+- [x] Dashboard met omzet statistieken, commissie berekening, wisselkoersen
+- [x] Machine beheer - registratie, status tracking, locatie management
+- [x] Kasboek - inkomsten/uitgaven, categorieën, valuta ondersteuning (SRD/EUR/USD)
+- [x] Werknemers management - functies, uur/dagtarieven, contactgegevens
+- [x] Loonuitbetaling - automatische netto berekening, bonus/inhoudingen, voorschotten
+
+**Backend:** `/app/backend/routers/suribet.py`
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/suribet/dashboard/stats | GET | Dashboard statistieken |
+| /api/suribet/wisselkoersen | GET/PUT | Wisselkoersen ophalen/bijwerken |
+| /api/suribet/machines | GET/POST | Machines lijst/toevoegen |
+| /api/suribet/machines/{id} | PUT/DELETE | Machine bewerken/verwijderen |
+| /api/suribet/werknemers | GET/POST | Werknemers lijst/toevoegen |
+| /api/suribet/werknemers/{id} | PUT/DELETE | Werknemer bewerken/verwijderen |
+| /api/suribet/kasboek | GET/POST | Kasboek entries lijst/toevoegen |
+| /api/suribet/kasboek/{id} | DELETE | Kasboek entry verwijderen |
+| /api/suribet/loonbetalingen | GET/POST | Loonbetalingen lijst/toevoegen |
+| /api/suribet/loonbetalingen/{id} | DELETE | Loonbetaling verwijderen |
+
+**Frontend Pagina's:**
+```
+/app/frontend/src/pages/suribet/
+├── DashboardPage.js     # Dashboard met stats & wisselkoersen
+├── MachinesPage.js      # Machine beheer CRUD
+├── KasboekPage.js       # Kasboek transacties CRUD
+├── WerknemersPage.js    # Werknemers beheer CRUD
+└── LoonuitbetalingPage.js # Loonuitbetaling CRUD
+```
+
+**Navigatie Routes:**
+- `/app/suribet` - Dashboard
+- `/app/suribet/machines` - Machines
+- `/app/suribet/kasboek` - Kasboek
+- `/app/suribet/werknemers` - Werknemers
+- `/app/suribet/loonuitbetaling` - Loonuitbetaling
+
+**MongoDB Collecties:**
+- `suribet_machines` - Machine registraties
+- `suribet_werknemers` - Werknemers data
+- `suribet_kasboek` - Kasboek transacties
+- `suribet_loonbetalingen` - Loonbetalingen
+- `suribet_wisselkoersen` - Wisselkoersen per gebruiker
+
+**Test Rapport:** `/app/test_reports/iteration_33.json` - 100% geslaagd (29/29 backend tests, alle UI flows)
