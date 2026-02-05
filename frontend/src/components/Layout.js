@@ -291,11 +291,12 @@ export default function Layout() {
     beauty: { name: 'Beauty Spa', items: beautySpaItems, icon: Sparkles },
     pompstation: { name: 'Pompstation', items: pompstationNavItems, icon: Zap },
     boekhouding: { name: 'Boekhouding', items: boekhoudingNavItems, icon: FileText, alwaysShow: true },
+    suribet: { name: 'Suribet', items: suribetNavItems, icon: Gamepad2 },
   };
 
   // Get modules in the correct order based on user preference
   const getOrderedModules = () => {
-    const defaultOrder = ['vastgoed_beheer', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding'];
+    const defaultOrder = ['vastgoed_beheer', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding', 'suribet'];
     
     if (moduleOrder.length === 0) {
       return defaultOrder;
