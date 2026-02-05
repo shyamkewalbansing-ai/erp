@@ -947,7 +947,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Deposits */}
+        {/* Deposits - Same emerald color */}
         <Card className="border-0 shadow-lg shadow-slate-200/50 dark:shadow-none overflow-hidden">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
@@ -957,8 +957,8 @@ export default function Dashboard() {
                   {formatCurrency(stats?.total_deposits_held || 0)}
                 </p>
               </div>
-              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/50 dark:to-cyan-900/50 flex items-center justify-center flex-shrink-0 ml-2">
-                <Wallet className="w-5 h-5 sm:w-7 sm:h-7 text-teal-600" />
+              <div className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-200 dark:from-emerald-900/50 dark:to-emerald-800/50 flex items-center justify-center flex-shrink-0 ml-2">
+                <Wallet className="w-5 h-5 sm:w-7 sm:h-7 text-emerald-600" />
               </div>
             </div>
           </CardContent>
