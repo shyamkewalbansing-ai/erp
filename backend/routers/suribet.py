@@ -534,7 +534,8 @@ async def create_werknemer(
     }
     
     await db.suribet_werknemers.insert_one(werknemer)
-    del werknemer["_id"] if "_id" in werknemer else None
+    if "_id" in werknemer:
+        del werknemer["_id"]
     return werknemer
 
 @router.put("/werknemers/{werknemer_id}")
