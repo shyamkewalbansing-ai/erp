@@ -257,12 +257,12 @@ export default function Onderhoud() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
-        {/* Total Costs - Featured */}
-        <div className="col-span-2 lg:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600 p-4 sm:p-6 text-white shadow-xl shadow-blue-500/20">
+        {/* Total Costs - Featured - Emerald color like Huurders */}
+        <div className="col-span-2 lg:col-span-1 group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 p-4 sm:p-6 text-white shadow-xl shadow-emerald-500/20">
           <div className="absolute top-0 right-0 w-24 sm:w-40 h-24 sm:h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
           <div className="relative flex items-center justify-between">
             <div>
-              <p className="text-blue-100 text-xs sm:text-sm font-medium mb-1">Totale Kosten</p>
+              <p className="text-emerald-100 text-xs sm:text-sm font-medium mb-1">Totale Kosten</p>
               <p className="text-xl sm:text-2xl lg:text-3xl font-bold">{formatCurrency(totalCosts)}</p>
             </div>
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -276,9 +276,9 @@ export default function Onderhoud() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Voltooid</p>
-              <p className="text-xl sm:text-2xl font-bold text-green-600">{completedCount}</p>
+              <p className="text-xl sm:text-2xl font-bold text-emerald-600">{completedCount}</p>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-green-500/10 flex items-center justify-center text-green-500">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
               <CheckCircle2 className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
@@ -302,9 +302,9 @@ export default function Onderhoud() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-muted-foreground text-xs sm:text-sm font-medium mb-1">Van Kasgeld</p>
-              <p className="text-xl sm:text-2xl font-bold text-blue-600">{formatCurrency(kasgeldCosts)}</p>
+              <p className="text-xl sm:text-2xl font-bold text-emerald-600">{formatCurrency(kasgeldCosts)}</p>
             </div>
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
               <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
