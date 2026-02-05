@@ -145,6 +145,12 @@ const BoekhoudingVerkoopfacturen = lazy(() => import("./pages/boekhouding/Verkoo
 const BoekhoudingBankrekeningen = lazy(() => import("./pages/boekhouding/BankrekeningenPage"));
 const BoekhoudingRapportages = lazy(() => import("./pages/boekhouding/RapportagesPage"));
 
+// Suribet Module
+const SuribetDashboard = lazy(() => import("./pages/suribet/DashboardPage"));
+const SuribetMachines = lazy(() => import("./pages/suribet/MachinesPage"));
+const SuribetKasboek = lazy(() => import("./pages/suribet/KasboekPage"));
+const SuribetWerknemers = lazy(() => import("./pages/suribet/WerknemersPage"));
+const SuribetLoonuitbetaling = lazy(() => import("./pages/suribet/LoonuitbetalingPage"));
 
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
