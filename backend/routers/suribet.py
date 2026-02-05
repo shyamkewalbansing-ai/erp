@@ -849,7 +849,8 @@ async def create_loonbetaling(
     }
     
     await db.suribet_loonbetalingen.insert_one(betaling)
-    del betaling["_id"] if "_id" in betaling else None
+    if "_id" in betaling:
+        del betaling["_id"]
     
     # Also add to kasboek
     kasboek_entry = {
