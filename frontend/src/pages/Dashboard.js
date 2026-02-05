@@ -1038,17 +1038,17 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Recent Activity Card */}
+        {/* Recent Activity Card - Same emerald color */}
         <Card className="border-0 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
-          <CardHeader className="p-3 sm:p-4 pb-2 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-b">
+          <CardHeader className="p-3 sm:p-4 pb-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-b">
             <div className="flex items-center justify-between">
               <CardTitle className="flex items-center gap-2 sm:gap-3 text-sm sm:text-base lg:text-lg">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
                   <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 Recente Betalingen
               </CardTitle>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/app/betalingen')} className="text-blue-600 text-xs sm:text-sm p-1 sm:p-2 h-auto">
+              <Button variant="ghost" size="sm" onClick={() => navigate('/app/betalingen')} className="text-emerald-600 text-xs sm:text-sm p-1 sm:p-2 h-auto">
                 Alles
                 <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 ml-1" />
               </Button>
