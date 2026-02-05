@@ -9538,6 +9538,57 @@ async def seed_default_addons():
         }
         await db.addons.insert_one(boekhouding_doc)
         logger.info("Default 'Boekhouding' add-on created (GRATIS)")
+    
+    # Suribet Retailer Management Module
+    existing_suribet = await db.addons.find_one({"slug": "suribet"}, {"_id": 0})
+    if not existing_suribet:
+        suribet_doc = {
+            "id": str(uuid.uuid4()),
+            "name": "Suribet Retailer",
+            "slug": "suribet",
+            "description": "Compleet retailer management systeem voor Suribet. Beheer machines, werknemers, kasstromen, commissies en loonuitbetalingen met multi-valuta ondersteuning.",
+            "price": 149.99,
+            "is_active": True,
+            "is_free": False,
+            "auto_activate": False,
+            "category": "retail",
+            "icon_name": "Gamepad2",
+            "highlights": [
+                "Machine dagstaten met biljettenregistratie",
+                "Multi-valuta: SRD, EUR, USD",
+                "Automatische commissieberekening",
+                "Kasboek met inkomsten/uitgaven",
+                "Werknemerbeheer met shifts",
+                "Loonberekening en uitbetalingen",
+                "Dashboard met realtime statistieken",
+                "Wisselkoersen instelbaar"
+            ],
+            "features": [
+                {
+                    "title": "Machinebeheer",
+                    "description": "Registreer en beheer al uw machines",
+                    "features": ["Machine registratie", "Dagstaten invoer", "Biljettenregistratie", "Omzet tracking"]
+                },
+                {
+                    "title": "Kasboek",
+                    "description": "Financiële administratie",
+                    "features": ["Inkomsten/uitgaven", "Multi-valuta", "Dagelijkse kasrapporten", "Week/maand totalen"]
+                },
+                {
+                    "title": "Personeelsbeheer",
+                    "description": "Beheer uw werknemers",
+                    "features": ["Werknemer registratie", "Shift registratie", "Werkrooster", "Prestatie tracking"]
+                },
+                {
+                    "title": "Loonuitbetaling",
+                    "description": "Automatische loonberekening",
+                    "features": ["Uurloon/dagloon", "Bonussen", "Inhoudingen", "Uitbetalingshistorie"]
+                }
+            ],
+            "created_at": now
+        }
+        await db.addons.insert_one(suribet_doc)
+        logger.info("Default 'Suribet' add-on created")
 
 async def seed_default_cms_pages():
     """Seed default CMS pages if they don't exist"""
