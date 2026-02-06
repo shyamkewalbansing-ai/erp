@@ -1014,3 +1014,201 @@ async def get_dashboard_stats(
         },
         "netto_winst": netto_winst
     }
+
+
+# ============================================
+# WERKNEMER PORTAL ENDPOINTS (Public)
+# ============================================
+
+@router.post("/portal/login")
+async def werknemer_portal_login(data: WerknemerLogin):
+    """Login for employee shift portal - no auth required"""
+    # Find employee with matching username and password for this user
+    werknemer = await db.suribet_werknemers.find_one({
+        "user_id": data.user_id,
+        "username": data.username,
+        "status": "active"
+    })
+    
+    if not werknemer:
+        raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
+    
+    # Check password (simple comparison - in production use hashing)
+    if werknemer.get("password") != data.password:
+        raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
+    
+    # Get employer info
+    employer = await db.users.find_one({"id": data.user_id}, {"_id": 0, "company_name": 1, "name": 1})
+    
+    return {
+        "employee_id": werknemer["id"],
+        "name": werknemer["name"],
+        "function": werknemer.get("function", ""),
+        "user_id": data.user_id,
+        "employer_name": employer.get("company_name") or employer.get("name") if employer else "Onbekend"
+    }
+
+@router.get("/portal/machines/{user_id}")
+async def get_portal_machines(user_id: str):
+    """Get available machines for shift portal"""
+    machines = await db.suribet_machines.find(
+        {"user_id": user_id, "status": "active"},
+        {"_id": 0}
+    ).to_list(100)
+    return machines
+
+@router.get("/portal/active-shift/{user_id}/{employee_id}")
+async def get_active_shift(user_id: str, employee_id: str):
+    """Check if employee has an active shift"""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    active_shift = await db.suribet_shifts.find_one({
+        "user_id": user_id,
+        "employee_id": employee_id,
+        "date": today,
+        "end_time": None
+    }, {"_id": 0})
+    
+    return {"active_shift": active_shift}
+
+@router.post("/portal/shift/start")
+async def start_shift_portal(
+    user_id: str,
+    employee_id: str,
+    machine_id: str
+):
+    """Start a new shift from employee portal"""
+    now = datetime.now(timezone.utc)
+    today = now.strftime("%Y-%m-%d")
+    current_time = now.strftime("%H:%M")
+    
+    # Check for existing active shift
+    existing = await db.suribet_shifts.find_one({
+        "user_id": user_id,
+        "employee_id": employee_id,
+        "date": today,
+        "end_time": None
+    })
+    
+    if existing:
+        raise HTTPException(status_code=400, detail="Je hebt al een actieve shift")
+    
+    # Verify employee exists and is active
+    werknemer = await db.suribet_werknemers.find_one({
+        "id": employee_id,
+        "user_id": user_id,
+        "status": "active"
+    })
+    
+    if not werknemer:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    
+    # Verify machine exists
+    machine = await db.suribet_machines.find_one({
+        "id": machine_id,
+        "user_id": user_id
+    })
+    
+    if not machine:
+        raise HTTPException(status_code=404, detail="Machine niet gevonden")
+    
+    shift = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "employee_id": employee_id,
+        "machine_id": machine_id,
+        "date": today,
+        "start_time": current_time,
+        "end_time": None,
+        "cash_difference": 0,
+        "notes": "Gestart via werknemer portaal",
+        "created_at": now.isoformat(),
+        "updated_at": now.isoformat()
+    }
+    
+    await db.suribet_shifts.insert_one(shift)
+    if "_id" in shift:
+        del shift["_id"]
+    
+    return {
+        "shift": shift,
+        "machine_name": machine.get("machine_id", ""),
+        "message": f"Shift gestart op {machine.get('machine_id', '')} om {current_time}"
+    }
+
+@router.post("/portal/shift/stop")
+async def stop_shift_portal(
+    user_id: str,
+    employee_id: str,
+    shift_id: str,
+    cash_difference: float = 0,
+    notes: Optional[str] = None
+):
+    """Stop an active shift from employee portal"""
+    now = datetime.now(timezone.utc)
+    current_time = now.strftime("%H:%M")
+    
+    # Find the active shift
+    shift = await db.suribet_shifts.find_one({
+        "id": shift_id,
+        "user_id": user_id,
+        "employee_id": employee_id,
+        "end_time": None
+    })
+    
+    if not shift:
+        raise HTTPException(status_code=404, detail="Actieve shift niet gevonden")
+    
+    # Calculate hours worked
+    start_parts = shift["start_time"].split(":")
+    end_parts = current_time.split(":")
+    start_minutes = int(start_parts[0]) * 60 + int(start_parts[1])
+    end_minutes = int(end_parts[0]) * 60 + int(end_parts[1])
+    hours_worked = round((end_minutes - start_minutes) / 60, 2)
+    
+    # Update shift
+    update_data = {
+        "end_time": current_time,
+        "cash_difference": cash_difference,
+        "hours_worked": hours_worked,
+        "updated_at": now.isoformat()
+    }
+    
+    if notes:
+        update_data["notes"] = (shift.get("notes", "") + " | " + notes).strip(" | ")
+    
+    await db.suribet_shifts.update_one(
+        {"id": shift_id},
+        {"$set": update_data}
+    )
+    
+    # Get machine info
+    machine = await db.suribet_machines.find_one({"id": shift["machine_id"]}, {"_id": 0, "machine_id": 1})
+    
+    return {
+        "message": f"Shift beëindigd om {current_time}",
+        "hours_worked": hours_worked,
+        "machine_name": machine.get("machine_id", "") if machine else "",
+        "start_time": shift["start_time"],
+        "end_time": current_time
+    }
+
+@router.get("/portal/shift-history/{user_id}/{employee_id}")
+async def get_shift_history(user_id: str, employee_id: str, limit: int = 10):
+    """Get recent shift history for employee"""
+    shifts = await db.suribet_shifts.find(
+        {"user_id": user_id, "employee_id": employee_id},
+        {"_id": 0}
+    ).sort("date", -1).limit(limit).to_list(limit)
+    
+    # Add machine names
+    for shift in shifts:
+        machine = await db.suribet_machines.find_one(
+            {"id": shift["machine_id"]}, 
+            {"_id": 0, "machine_id": 1, "location": 1}
+        )
+        if machine:
+            shift["machine_name"] = machine.get("machine_id", "")
+            shift["machine_location"] = machine.get("location", "")
+    
+    return shifts
