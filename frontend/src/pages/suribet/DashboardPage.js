@@ -32,11 +32,6 @@ import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Biljet denominaties
-const SRD_DENOMINATIES = [5, 10, 20, 50, 100, 200, 500];
-const EUR_DENOMINATIES = [5, 10, 20, 50, 100, 200];
-const USD_DENOMINATIES = [1, 5, 10, 20, 50, 100];
-
 export default function SuribetDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -46,29 +41,14 @@ export default function SuribetDashboard() {
   const [wisselkoersen, setWisselkoersen] = useState({ eur_to_srd: 38.5, usd_to_srd: 35.5 });
   const [kasboek, setKasboek] = useState([]);
   const [loonbetalingen, setLoonbetalingen] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  // Nu gebruiken we een enkele datum in plaats van maand/jaar
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showKoersenModal, setShowKoersenModal] = useState(false);
   const [koersenForm, setKoersenForm] = useState({ eur_to_srd: 38.5, usd_to_srd: 35.5 });
 
-  const months = [
-    { value: 1, label: 'Januari' },
-    { value: 2, label: 'Februari' },
-    { value: 3, label: 'Maart' },
-    { value: 4, label: 'April' },
-    { value: 5, label: 'Mei' },
-    { value: 6, label: 'Juni' },
-    { value: 7, label: 'Juli' },
-    { value: 8, label: 'Augustus' },
-    { value: 9, label: 'September' },
-    { value: 10, label: 'Oktober' },
-    { value: 11, label: 'November' },
-    { value: 12, label: 'December' }
-  ];
-
   useEffect(() => {
     fetchData();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedDate]);
 
   const fetchData = async () => {
     try {
