@@ -32,6 +32,11 @@ import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Biljet denominaties (nodig voor berekeningen)
+const SRD_DENOMINATIES = [5, 10, 20, 50, 100, 200, 500];
+const EUR_DENOMINATIES = [5, 10, 20, 50, 100, 200];
+const USD_DENOMINATIES = [1, 5, 10, 20, 50, 100];
+
 export default function SuribetDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
