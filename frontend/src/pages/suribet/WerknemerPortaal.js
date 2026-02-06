@@ -524,11 +524,11 @@ export default function WerknemerPortaal() {
         </div>
 
         {/* Shift History */}
-        <Card className="border-0 shadow-xl bg-white dark:bg-slate-800">
+        <Card className="border-0 shadow-xl bg-slate-800">
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-3 text-lg">
-              <div className="w-10 h-10 bg-slate-500/10 rounded-xl flex items-center justify-center">
-                <History className="w-5 h-5 text-slate-500" />
+            <CardTitle className="flex items-center gap-3 text-lg text-white">
+              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                <History className="w-5 h-5 text-white/70" />
               </div>
               Recente Shifts
             </CardTitle>
@@ -539,17 +539,17 @@ export default function WerknemerPortaal() {
                 {shiftHistory.slice(0, 5).map((shift) => (
                   <div 
                     key={shift.id} 
-                    className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    className="flex items-center justify-between p-4 bg-slate-700/50 rounded-xl hover:bg-slate-700 transition-colors"
                   >
                     <div className="flex items-center gap-4">
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        shift.end_time ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
+                        shift.end_time ? 'bg-orange-500/20 text-orange-500' : 'bg-amber-500/20 text-amber-500'
                       }`}>
                         <Gamepad2 className="w-6 h-6" />
                       </div>
                       <div>
-                        <p className="font-medium">{shift.machine_name || 'Machine'}</p>
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <p className="font-medium text-white">{shift.machine_name || 'Machine'}</p>
+                        <div className="flex items-center gap-3 text-sm text-white/50">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {formatDate(shift.date)}
@@ -563,12 +563,12 @@ export default function WerknemerPortaal() {
                     </div>
                     <div className="text-right">
                       {shift.end_time ? (
-                        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
+                        <Badge className="bg-orange-500/20 text-orange-400 border-0">
                           <CheckCircle2 className="w-3 h-3 mr-1" />
                           {shift.hours_worked?.toFixed(1) || '?'}u
                         </Badge>
                       ) : (
-                        <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
+                        <Badge className="bg-amber-500/20 text-amber-400 border-0">
                           <AlertCircle className="w-3 h-3 mr-1" />
                           Actief
                         </Badge>
@@ -579,10 +579,10 @@ export default function WerknemerPortaal() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center">
-                  <History className="w-8 h-8 text-slate-400" />
+                <div className="w-16 h-16 mx-auto mb-4 bg-slate-700 rounded-2xl flex items-center justify-center">
+                  <History className="w-8 h-8 text-slate-500" />
                 </div>
-                <p className="text-muted-foreground">Nog geen shifts geregistreerd</p>
+                <p className="text-white/50">Nog geen shifts geregistreerd</p>
               </div>
             )}
           </CardContent>
