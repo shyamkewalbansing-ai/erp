@@ -297,7 +297,7 @@ export default function LoonuitbetalingPage() {
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
             <p className="text-muted-foreground text-sm">
-              {betalingen.length} betalingen in {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+              {betalingen.length} betalingen op {new Date(selectedDate).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
             <Button onClick={() => { resetForm(); setShowModal(true); }} className="bg-emerald-500 hover:bg-emerald-600">
               <Plus className="w-4 h-4 mr-2" />
