@@ -96,6 +96,9 @@ class WerknemerCreate(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     notes: Optional[str] = None
+    # Portal credentials
+    username: Optional[str] = None
+    password: Optional[str] = None
 
 class WerknemerUpdate(BaseModel):
     name: Optional[str] = None
@@ -106,6 +109,14 @@ class WerknemerUpdate(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     notes: Optional[str] = None
+    username: Optional[str] = None
+    password: Optional[str] = None
+
+# Werknemer Portal Login
+class WerknemerLogin(BaseModel):
+    username: str
+    password: str
+    user_id: str  # The owner's user_id for context
 
 # Shift Models
 class ShiftCreate(BaseModel):
