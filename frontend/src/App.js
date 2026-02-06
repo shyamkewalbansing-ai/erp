@@ -470,6 +470,9 @@ function MainAppRoutes() {
         {/* Public Spa Booking Portal - Always available */}
         <Route path="/booking/spa/:workspaceId" element={<SpaBookingPage />} />
         
+        {/* Public Suribet Werknemer Portal - Always available */}
+        <Route path="/portal/suribet/:userId" element={<SuribetWerknemerPortaal />} />
+        
         {/* Dynamic CMS Pages - Only on main domain */}
         <Route path="/pagina/:slug" element={
           onSubdomain ? <Navigate to="/login" replace /> : <CMSPage />
