@@ -2114,6 +2114,16 @@ def main():
         ("Balans Report", tester.test_balans_rapport),
         ("Add Wisselkoers", tester.test_add_wisselkoers),
         
+        # SURIBET DASHBOARD TESTING
+        ("=== SURIBET DASHBOARD TESTING ===", lambda: True),
+        ("Suribet Dagstaten with Date", tester.test_suribet_dagstaten_with_date),
+        ("Suribet Kasboek with Date", tester.test_suribet_kasboek_with_date),
+        ("Suribet Loonbetalingen with Date", tester.test_suribet_loonbetalingen_with_date),
+        ("Suribet Dagstaten Month/Year Filter", tester.test_suribet_dagstaten_month_year_filter),
+        ("Suribet Kasboek Month/Year Filter", tester.test_suribet_kasboek_month_year_filter),
+        ("Suribet Loonbetalingen Month/Year Filter", tester.test_suribet_loonbetalingen_month_year_filter),
+        ("Suribet Authentication Required", tester.test_suribet_authentication_required),
+        
         # CLEANUP TESTS
         ("Delete Salary Payment", tester.test_delete_salary_payment),
         ("Delete Employee", tester.test_delete_employee),
