@@ -431,32 +431,32 @@ export default function WerknemerPortaal() {
           </Card>
         ) : (
           /* Start Shift Card */
-          <Card className="border-0 shadow-xl bg-white dark:bg-slate-800">
+          <Card className="border-0 shadow-xl bg-slate-800">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-3 text-xl">
-                <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                  <Play className="w-5 h-5 text-emerald-500" />
+              <CardTitle className="flex items-center gap-3 text-xl text-white">
+                <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                  <Play className="w-5 h-5 text-orange-500" />
                 </div>
                 Nieuwe Shift Starten
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium">Selecteer Machine</Label>
+                <Label className="text-sm font-medium text-white/80">Selecteer Machine</Label>
                 <Select value={selectedMachine} onValueChange={setSelectedMachine}>
-                  <SelectTrigger className="h-14 text-base">
+                  <SelectTrigger className="h-14 text-base bg-slate-700 border-slate-600 text-white">
                     <SelectValue placeholder="Kies een machine..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-slate-800 border-slate-700">
                     {machines.map(machine => (
-                      <SelectItem key={machine.id} value={machine.id} className="py-3">
+                      <SelectItem key={machine.id} value={machine.id} className="py-3 text-white hover:bg-slate-700">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center">
-                            <Gamepad2 className="w-4 h-4 text-emerald-500" />
+                          <div className="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center">
+                            <Gamepad2 className="w-4 h-4 text-orange-500" />
                           </div>
                           <div>
                             <p className="font-medium">{machine.machine_id}</p>
-                            <p className="text-xs text-muted-foreground">{machine.location}</p>
+                            <p className="text-xs text-white/50">{machine.location}</p>
                           </div>
                         </div>
                       </SelectItem>
@@ -468,7 +468,7 @@ export default function WerknemerPortaal() {
               <Button 
                 onClick={handleStartShift}
                 disabled={loading || !selectedMachine}
-                className="w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-lg shadow-lg shadow-emerald-500/20"
+                className="w-full h-14 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold text-lg shadow-lg shadow-orange-500/20"
               >
                 {loading ? (
                   <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -485,15 +485,15 @@ export default function WerknemerPortaal() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <Card className="border-0 shadow-lg bg-white dark:bg-slate-800">
+          <Card className="border-0 shadow-lg bg-slate-800">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
-                  <History className="w-5 h-5 text-blue-500" />
+                <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                  <History className="w-5 h-5 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Shifts deze week</p>
-                  <p className="text-xl font-bold">{shiftHistory.filter(s => {
+                  <p className="text-xs text-white/50">Shifts deze week</p>
+                  <p className="text-xl font-bold text-white">{shiftHistory.filter(s => {
                     const shiftDate = new Date(s.date);
                     const weekAgo = new Date();
                     weekAgo.setDate(weekAgo.getDate() - 7);
@@ -503,15 +503,15 @@ export default function WerknemerPortaal() {
               </div>
             </CardContent>
           </Card>
-          <Card className="border-0 shadow-lg bg-white dark:bg-slate-800">
+          <Card className="border-0 shadow-lg bg-slate-800">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-emerald-500" />
+                <div className="w-10 h-10 bg-orange-500/20 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Uren deze week</p>
-                  <p className="text-xl font-bold">{shiftHistory.filter(s => {
+                  <p className="text-xs text-white/50">Uren deze week</p>
+                  <p className="text-xl font-bold text-white">{shiftHistory.filter(s => {
                     const shiftDate = new Date(s.date);
                     const weekAgo = new Date();
                     weekAgo.setDate(weekAgo.getDate() - 7);
