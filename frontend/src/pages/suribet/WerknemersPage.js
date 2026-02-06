@@ -213,7 +213,9 @@ export default function WerknemersPage() {
       status: werknemer.status,
       phone: werknemer.phone || '',
       address: werknemer.address || '',
-      notes: werknemer.notes || ''
+      notes: werknemer.notes || '',
+      username: werknemer.username || '',
+      password: ''  // Don't show existing password
     });
     setShowModal(true);
   };
@@ -228,8 +230,21 @@ export default function WerknemersPage() {
       status: 'active',
       phone: '',
       address: '',
-      notes: ''
+      notes: '',
+      username: '',
+      password: ''
     });
+  };
+
+  // Get portal URL for this user
+  const getPortalUrl = () => {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/portal/suribet/${user?.id}`;
+  };
+
+  const copyPortalLink = () => {
+    navigator.clipboard.writeText(getPortalUrl());
+    toast.success('Portaal link gekopieerd!');
   };
 
   const resetShiftForm = () => {
