@@ -267,7 +267,7 @@ export default function DagrapportenPage() {
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent"
+              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent border-0"
               onClick={() => {
                 const d = new Date(selectedDate);
                 d.setDate(d.getDate() - 1);
@@ -288,7 +288,7 @@ export default function DagrapportenPage() {
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent"
+              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent border-0"
               onClick={() => {
                 const d = new Date(selectedDate);
                 d.setDate(d.getDate() + 1);
@@ -300,7 +300,7 @@ export default function DagrapportenPage() {
             <Button 
               variant="ghost" 
               size="sm"
-              className="text-white/70 hover:text-white hover:bg-white/20 text-xs bg-transparent"
+              className="text-white/70 hover:text-white hover:bg-white/20 text-xs bg-transparent border-0"
               onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
             >
               Vandaag
