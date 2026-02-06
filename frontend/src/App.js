@@ -153,6 +153,7 @@ const SuribetKasboek = lazy(() => import("./pages/suribet/KasboekPage"));
 const SuribetWerknemers = lazy(() => import("./pages/suribet/WerknemersPage"));
 const SuribetLoonuitbetaling = lazy(() => import("./pages/suribet/LoonuitbetalingPage"));
 const SuribetWerknemerPortaal = lazy(() => import("./pages/suribet/WerknemerPortaal"));
+const SuribetPortaalLink = lazy(() => import("./pages/suribet/PortaalLinkPage"));
 
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
