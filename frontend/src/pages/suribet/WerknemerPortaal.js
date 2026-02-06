@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -18,7 +18,10 @@ import {
   LogOut,
   MapPin,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Timer,
+  TrendingUp,
+  Zap
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -26,7 +29,6 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function WerknemerPortaal() {
   const { userId } = useParams();
-  const navigate = useNavigate();
   
   // Auth state
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -42,6 +44,13 @@ export default function WerknemerPortaal() {
   const [loading, setLoading] = useState(false);
   const [cashDifference, setCashDifference] = useState('0');
   const [shiftNotes, setShiftNotes] = useState('');
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update current time every second for live clock
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Check for stored session
   useEffect(() => {
@@ -212,129 +221,191 @@ export default function WerknemerPortaal() {
     });
   };
 
-  // Login Screen
+  const calculateShiftDuration = () => {
+    if (!activeShift?.start_time) return '0:00';
+    const [hours, minutes] = activeShift.start_time.split(':').map(Number);
+    const startMinutes = hours * 60 + minutes;
+    const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+    const diff = nowMinutes - startMinutes;
+    const h = Math.floor(diff / 60);
+    const m = diff % 60;
+    return `${h}:${m.toString().padStart(2, '0')}`;
+  };
+
+  // Login Screen - Modern Design
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md border-0 shadow-2xl">
-          <CardHeader className="text-center pb-2">
-            <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <Gamepad2 className="w-8 h-8 text-white" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 flex items-center justify-center p-4">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="relative w-full max-w-md">
+          {/* Logo & Title */}
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-emerald-500/30 transform hover:scale-105 transition-transform">
+              <Gamepad2 className="w-10 h-10 text-white" />
             </div>
-            <CardTitle className="text-2xl font-bold">Suribet Shift Portaal</CardTitle>
-            <p className="text-muted-foreground">Log in om je shift te starten</p>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Gebruikersnaam</Label>
-                <Input
-                  type="text"
-                  value={loginForm.username}
-                  onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
-                  placeholder="Voer gebruikersnaam in"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Wachtwoord</Label>
-                <Input
-                  type="password"
-                  value={loginForm.password}
-                  onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
-                  placeholder="Voer wachtwoord in"
-                  required
-                />
-              </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-emerald-500 hover:bg-emerald-600"
-                disabled={loginLoading}
-              >
-                {loginLoading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Inloggen
-                  </>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            <h1 className="text-4xl font-bold text-white mb-2">Suribet</h1>
+            <p className="text-emerald-200/70">Log in om te beginnen</p>
+          </div>
+
+          {/* Login Card */}
+          <Card className="border-0 shadow-2xl bg-white/10 backdrop-blur-xl border border-white/20">
+            <CardContent className="p-6">
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div className="space-y-2">
+                  <Label className="text-white/80">Gebruikersnaam</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <Input
+                      type="text"
+                      value={loginForm.username}
+                      onChange={(e) => setLoginForm({...loginForm, username: e.target.value})}
+                      placeholder="Voer gebruikersnaam in"
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12"
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-white/80">Wachtwoord</Label>
+                  <div className="relative">
+                    <Zap className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                    <Input
+                      type="password"
+                      value={loginForm.password}
+                      onChange={(e) => setLoginForm({...loginForm, password: e.target.value})}
+                      placeholder="Voer wachtwoord in"
+                      className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/40 h-12"
+                      required
+                    />
+                  </div>
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold shadow-lg shadow-emerald-500/30"
+                  disabled={loginLoading}
+                >
+                  {loginLoading ? (
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <>
+                      <LogIn className="w-5 h-5 mr-2" />
+                      Inloggen
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Footer */}
+          <p className="text-center text-white/30 text-sm mt-6">
+            {currentTime.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+        </div>
       </div>
     );
   }
 
-  // Main Portal Screen
+  // Main Portal Screen - Modern Dashboard
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
       {/* Header */}
-      <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 shadow-lg">
-        <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-              <User className="w-5 h-5" />
+      <div className="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+        
+        <div className="relative max-w-2xl mx-auto p-4 sm:p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                <User className="w-7 h-7" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">{employee?.name}</h1>
+                <p className="text-emerald-100 text-sm">{employee?.function} • {employee?.employer_name}</p>
+              </div>
             </div>
-            <div>
-              <h1 className="font-bold">{employee?.name}</h1>
-              <p className="text-emerald-100 text-sm">{employee?.function} • {employee?.employer_name}</p>
-            </div>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="text-white/70 hover:text-white hover:bg-white/20 bg-transparent border-0 rounded-xl"
+              onClick={handleLogout}
+            >
+              <LogOut className="w-5 h-5" />
+            </Button>
           </div>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="text-white/70 hover:text-white hover:bg-white/20 bg-transparent border-0"
-            onClick={handleLogout}
-          >
-            <LogOut className="w-5 h-5" />
-          </Button>
+
+          {/* Live Clock */}
+          <div className="mt-4 flex items-center gap-2 text-emerald-100">
+            <Clock className="w-4 h-4" />
+            <span className="text-lg font-mono">
+              {currentTime.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+            <span className="text-sm ml-2">
+              {currentTime.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto p-4 space-y-4">
+      <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-4 -mt-4">
         {/* Active Shift Card */}
         {activeShift ? (
-          <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
-            <CardContent className="p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
-                <span className="font-semibold">Actieve Shift</span>
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+            <CardContent className="relative p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-3 h-3 bg-white rounded-full animate-pulse shadow-lg shadow-white/50" />
+                <span className="font-semibold text-lg">Actieve Shift</span>
+                <Badge className="bg-white/20 text-white border-0 ml-auto">
+                  <Timer className="w-3 h-3 mr-1" />
+                  {calculateShiftDuration()} uur
+                </Badge>
               </div>
               
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div>
-                  <p className="text-emerald-100 text-sm">Machine</p>
-                  <p className="font-bold text-lg">
+              <div className="grid grid-cols-2 gap-6 mb-6">
+                <div className="bg-white/10 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-emerald-100 text-sm mb-1">
+                    <Gamepad2 className="w-4 h-4" />
+                    Machine
+                  </div>
+                  <p className="font-bold text-xl">
                     {machines.find(m => m.id === activeShift.machine_id)?.machine_id || 'Onbekend'}
                   </p>
                 </div>
-                <div>
-                  <p className="text-emerald-100 text-sm">Gestart om</p>
-                  <p className="font-bold text-lg">{activeShift.start_time}</p>
+                <div className="bg-white/10 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-emerald-100 text-sm mb-1">
+                    <Clock className="w-4 h-4" />
+                    Gestart om
+                  </div>
+                  <p className="font-bold text-xl">{activeShift.start_time}</p>
                 </div>
               </div>
 
-              <div className="space-y-3 mb-4">
-                <div className="space-y-1">
-                  <Label className="text-emerald-100">Kas Verschil (SRD)</Label>
+              <div className="space-y-4 mb-6">
+                <div className="space-y-2">
+                  <Label className="text-emerald-100 text-sm">Kas Verschil (SRD)</Label>
                   <Input
                     type="number"
                     step="0.01"
                     value={cashDifference}
                     onChange={(e) => setCashDifference(e.target.value)}
-                    className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
+                    className="bg-white/20 border-white/30 text-white placeholder:text-white/50 h-12 text-lg"
                     placeholder="0.00"
                   />
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-emerald-100">Opmerkingen</Label>
+                <div className="space-y-2">
+                  <Label className="text-emerald-100 text-sm">Opmerkingen (optioneel)</Label>
                   <Input
                     value={shiftNotes}
                     onChange={(e) => setShiftNotes(e.target.value)}
                     className="bg-white/20 border-white/30 text-white placeholder:text-white/50"
-                    placeholder="Optioneel..."
+                    placeholder="Eventuele opmerkingen..."
                   />
                 </div>
               </div>
@@ -342,13 +413,13 @@ export default function WerknemerPortaal() {
               <Button 
                 onClick={handleStopShift}
                 disabled={loading}
-                className="w-full bg-white text-emerald-600 hover:bg-white/90"
+                className="w-full h-14 bg-white text-emerald-600 hover:bg-white/90 font-semibold text-lg shadow-lg"
               >
                 {loading ? (
-                  <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Square className="w-4 h-4 mr-2" />
+                    <Square className="w-5 h-5 mr-2" />
                     Shift Beëindigen
                   </>
                 )}
@@ -356,27 +427,34 @@ export default function WerknemerPortaal() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="border-0 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Play className="w-5 h-5 text-emerald-500" />
+          /* Start Shift Card */
+          <Card className="border-0 shadow-xl bg-white dark:bg-slate-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-3 text-xl">
+                <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                  <Play className="w-5 h-5 text-emerald-500" />
+                </div>
                 Nieuwe Shift Starten
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label>Selecteer Machine</Label>
+                <Label className="text-sm font-medium">Selecteer Machine</Label>
                 <Select value={selectedMachine} onValueChange={setSelectedMachine}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-14 text-base">
                     <SelectValue placeholder="Kies een machine..." />
                   </SelectTrigger>
                   <SelectContent>
                     {machines.map(machine => (
-                      <SelectItem key={machine.id} value={machine.id}>
-                        <div className="flex items-center gap-2">
-                          <Gamepad2 className="w-4 h-4" />
-                          {machine.machine_id}
-                          <span className="text-muted-foreground text-sm">• {machine.location}</span>
+                      <SelectItem key={machine.id} value={machine.id} className="py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                            <Gamepad2 className="w-4 h-4 text-emerald-500" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{machine.machine_id}</p>
+                            <p className="text-xs text-muted-foreground">{machine.location}</p>
+                          </div>
                         </div>
                       </SelectItem>
                     ))}
@@ -387,13 +465,13 @@ export default function WerknemerPortaal() {
               <Button 
                 onClick={handleStartShift}
                 disabled={loading || !selectedMachine}
-                className="w-full bg-emerald-500 hover:bg-emerald-600"
+                className="w-full h-14 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold text-lg shadow-lg shadow-emerald-500/20"
               >
                 {loading ? (
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Play className="w-4 h-4 mr-2" />
+                    <Play className="w-5 h-5 mr-2" />
                     Shift Starten
                   </>
                 )}
@@ -402,46 +480,92 @@ export default function WerknemerPortaal() {
           </Card>
         )}
 
+        {/* Quick Stats */}
+        <div className="grid grid-cols-2 gap-4">
+          <Card className="border-0 shadow-lg bg-white dark:bg-slate-800">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                  <History className="w-5 h-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Shifts deze week</p>
+                  <p className="text-xl font-bold">{shiftHistory.filter(s => {
+                    const shiftDate = new Date(s.date);
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return shiftDate >= weekAgo;
+                  }).length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-0 shadow-lg bg-white dark:bg-slate-800">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Uren deze week</p>
+                  <p className="text-xl font-bold">{shiftHistory.filter(s => {
+                    const shiftDate = new Date(s.date);
+                    const weekAgo = new Date();
+                    weekAgo.setDate(weekAgo.getDate() - 7);
+                    return shiftDate >= weekAgo && s.hours_worked;
+                  }).reduce((sum, s) => sum + (s.hours_worked || 0), 0).toFixed(1)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Shift History */}
-        <Card className="border-0 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <History className="w-5 h-5 text-emerald-500" />
+        <Card className="border-0 shadow-xl bg-white dark:bg-slate-800">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-3 text-lg">
+              <div className="w-10 h-10 bg-slate-500/10 rounded-xl flex items-center justify-center">
+                <History className="w-5 h-5 text-slate-500" />
+              </div>
               Recente Shifts
             </CardTitle>
           </CardHeader>
           <CardContent>
             {shiftHistory.length > 0 ? (
               <div className="space-y-3">
-                {shiftHistory.map((shift) => (
+                {shiftHistory.slice(0, 5).map((shift) => (
                   <div 
                     key={shift.id} 
-                    className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                    className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-700/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                        shift.end_time ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                    <div className="flex items-center gap-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        shift.end_time ? 'bg-emerald-500/10 text-emerald-500' : 'bg-amber-500/10 text-amber-500'
                       }`}>
-                        <Gamepad2 className="w-5 h-5" />
+                        <Gamepad2 className="w-6 h-6" />
                       </div>
                       <div>
                         <p className="font-medium">{shift.machine_name || 'Machine'}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Calendar className="w-3 h-3" />
-                          {formatDate(shift.date)}
-                          <Clock className="w-3 h-3 ml-1" />
-                          {shift.start_time} - {shift.end_time || 'Actief'}
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(shift.date)}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {shift.start_time} - {shift.end_time || 'Actief'}
+                          </span>
                         </div>
                       </div>
                     </div>
                     <div className="text-right">
                       {shift.end_time ? (
-                        <Badge className="bg-emerald-100 text-emerald-700">
+                        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400">
                           <CheckCircle2 className="w-3 h-3 mr-1" />
-                          {shift.hours_worked || '?'}u
+                          {shift.hours_worked?.toFixed(1) || '?'}u
                         </Badge>
                       ) : (
-                        <Badge className="bg-amber-100 text-amber-700">
+                        <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400">
                           <AlertCircle className="w-3 h-3 mr-1" />
                           Actief
                         </Badge>
@@ -451,9 +575,12 @@ export default function WerknemerPortaal() {
                 ))}
               </div>
             ) : (
-              <p className="text-center text-muted-foreground py-8">
-                Nog geen shifts geregistreerd
-              </p>
+              <div className="text-center py-12">
+                <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center">
+                  <History className="w-8 h-8 text-slate-400" />
+                </div>
+                <p className="text-muted-foreground">Nog geen shifts geregistreerd</p>
+              </div>
             )}
           </CardContent>
         </Card>
