@@ -267,7 +267,7 @@ export default function DagrapportenPage() {
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20"
+              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent"
               onClick={() => {
                 const d = new Date(selectedDate);
                 d.setDate(d.getDate() - 1);
@@ -276,16 +276,19 @@ export default function DagrapportenPage() {
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-transparent border-0 text-white w-[140px] text-center"
-            />
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-white/70" />
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="bg-transparent border-0 text-white w-[140px] text-center [color-scheme:dark]"
+              />
+            </div>
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20"
+              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent"
               onClick={() => {
                 const d = new Date(selectedDate);
                 d.setDate(d.getDate() + 1);
@@ -293,6 +296,14 @@ export default function DagrapportenPage() {
               }}
             >
               <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-white/70 hover:text-white hover:bg-white/20 text-xs bg-transparent"
+              onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+            >
+              Vandaag
             </Button>
           </div>
         </div>
