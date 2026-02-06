@@ -29,8 +29,7 @@ export default function LoonuitbetalingPage() {
   const [loading, setLoading] = useState(true);
   const [betalingen, setBetalingen] = useState([]);
   const [werknemers, setWerknemers] = useState([]);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedBetaling, setSelectedBetaling] = useState(null);
@@ -48,24 +47,9 @@ export default function LoonuitbetalingPage() {
     notes: ''
   });
 
-  const months = [
-    { value: 1, label: 'Januari' },
-    { value: 2, label: 'Februari' },
-    { value: 3, label: 'Maart' },
-    { value: 4, label: 'April' },
-    { value: 5, label: 'Mei' },
-    { value: 6, label: 'Juni' },
-    { value: 7, label: 'Juli' },
-    { value: 8, label: 'Augustus' },
-    { value: 9, label: 'September' },
-    { value: 10, label: 'Oktober' },
-    { value: 11, label: 'November' },
-    { value: 12, label: 'December' }
-  ];
-
   useEffect(() => {
     fetchData();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedDate]);
 
   const fetchData = async () => {
     try {
@@ -73,7 +57,7 @@ export default function LoonuitbetalingPage() {
       const headers = { 'Authorization': `Bearer ${token}` };
 
       const [betalingenRes, werknemersRes] = await Promise.all([
-        fetch(`${API_URL}/api/suribet/loonbetalingen?month=${selectedMonth}&year=${selectedYear}`, { headers }),
+        fetch(`${API_URL}/api/suribet/loonbetalingen?date=${selectedDate}`, { headers }),
         fetch(`${API_URL}/api/suribet/werknemers`, { headers })
       ]);
 
