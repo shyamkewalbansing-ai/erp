@@ -226,34 +226,40 @@ export default function WerknemerPortaal() {
     const [hours, minutes] = activeShift.start_time.split(':').map(Number);
     const startMinutes = hours * 60 + minutes;
     const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
-    const diff = nowMinutes - startMinutes;
+    let diff = nowMinutes - startMinutes;
+    // Handle overnight shifts
+    if (diff < 0) diff += 24 * 60;
     const h = Math.floor(diff / 60);
     const m = diff % 60;
     return `${h}:${m.toString().padStart(2, '0')}`;
   };
 
+  // Suribet Logo URL
+  const suribetLogo = "https://customer-assets.emergentagent.com/job_suribet-dayview/artifacts/ejicn20m_66d4fdc2-3b2f-41d5-a5b3-2a7fc7c1c4e2_medium.jpg";
+
   // Login Screen - Modern Design
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-emerald-900 to-slate-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/20 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-teal-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
 
         <div className="relative w-full max-w-md">
           {/* Logo & Title */}
           <div className="text-center mb-8">
-            <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center shadow-2xl shadow-emerald-500/30 transform hover:scale-105 transition-transform">
-              <Gamepad2 className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-4xl font-bold text-white mb-2">Suribet</h1>
-            <p className="text-emerald-200/70">Log in om te beginnen</p>
+            <img 
+              src={suribetLogo} 
+              alt="Suribet" 
+              className="w-48 h-auto mx-auto mb-6 object-contain"
+            />
+            <p className="text-white/50">Log in om te beginnen</p>
           </div>
 
           {/* Login Card */}
-          <Card className="border-0 shadow-2xl bg-white/10 backdrop-blur-xl border border-white/20">
+          <Card className="border-0 shadow-2xl bg-white/5 backdrop-blur-xl border border-white/10">
             <CardContent className="p-6">
               <form onSubmit={handleLogin} className="space-y-5">
                 <div className="space-y-2">
