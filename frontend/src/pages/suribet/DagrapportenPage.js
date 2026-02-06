@@ -809,6 +809,18 @@ export default function DagrapportenPage() {
                   <p className="text-xs text-muted-foreground">Werknemer</p>
                   <p className="font-medium">{getWerknemerName(selectedRapport.employee_id)}</p>
                 </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Datum</p>
+                  <p className="font-medium">{new Date(selectedRapport.date).toLocaleDateString('nl-NL')}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Aangemaakt om</p>
+                  <p className="font-medium">
+                    {selectedRapport.created_at 
+                      ? new Date(selectedRapport.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                      : '-'}
+                  </p>
+                </div>
               </div>
               
               <div className="border-t pt-4">
