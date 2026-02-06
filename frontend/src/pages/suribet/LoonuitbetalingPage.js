@@ -454,17 +454,36 @@ export default function LoonuitbetalingPage() {
               <Label>Werknemer *</Label>
               <Select 
                 value={formData.employee_id} 
-                onValueChange={(v) => setFormData({...formData, employee_id: v})}
+                onValueChange={(v) => handleFormChange('employee_id', v)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecteer werknemer..." />
                 </SelectTrigger>
                 <SelectContent>
                   {werknemers.filter(w => w.status === 'active').map(w => (
-                    <SelectItem key={w.id} value={w.id}>{w.name}</SelectItem>
+                    <SelectItem key={w.id} value={w.id}>
+                      {w.name} {w.hourly_rate > 0 || w.daily_rate > 0 ? `(${w.hourly_rate > 0 ? `${formatCurrency(w.hourly_rate)}/uur` : ''}${w.hourly_rate > 0 && w.daily_rate > 0 ? ', ' : ''}${w.daily_rate > 0 ? `${formatCurrency(w.daily_rate)}/dag` : ''})` : ''}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {/* Show selected employee's rates */}
+              {formData.employee_id && getSelectedEmployee() && (
+                <div className="text-xs text-muted-foreground mt-1 flex gap-3">
+                  {getSelectedEmployee().hourly_rate > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Uurloon: {formatCurrency(getSelectedEmployee().hourly_rate)}
+                    </span>
+                  )}
+                  {getSelectedEmployee().daily_rate > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      Dagloon: {formatCurrency(getSelectedEmployee().daily_rate)}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="grid grid-cols-3 gap-4">
@@ -473,7 +492,7 @@ export default function LoonuitbetalingPage() {
                 <Input
                   type="date"
                   value={formData.date}
-                  onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  onChange={(e) => handleFormChange('date', e.target.value)}
                   required
                 />
               </div>
@@ -482,7 +501,7 @@ export default function LoonuitbetalingPage() {
                 <Input
                   type="date"
                   value={formData.period_start}
-                  onChange={(e) => setFormData({...formData, period_start: e.target.value})}
+                  onChange={(e) => handleFormChange('period_start', e.target.value)}
                 />
               </div>
               <div className="space-y-2">
@@ -490,7 +509,7 @@ export default function LoonuitbetalingPage() {
                 <Input
                   type="date"
                   value={formData.period_end}
-                  onChange={(e) => setFormData({...formData, period_end: e.target.value})}
+                  onChange={(e) => handleFormChange('period_end', e.target.value)}
                 />
               </div>
             </div>
@@ -502,9 +521,14 @@ export default function LoonuitbetalingPage() {
                   type="number"
                   step="0.5"
                   value={formData.hours_worked}
-                  onChange={(e) => setFormData({...formData, hours_worked: e.target.value})}
+                  onChange={(e) => handleFormChange('hours_worked', e.target.value)}
                   placeholder="0"
                 />
+                {formData.hours_worked && getSelectedEmployee()?.hourly_rate > 0 && (
+                  <p className="text-xs text-emerald-600">
+                    = {formatCurrency(parseFloat(formData.hours_worked) * getSelectedEmployee().hourly_rate)}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label>Gewerkte Dagen</Label>
@@ -512,9 +536,14 @@ export default function LoonuitbetalingPage() {
                   type="number"
                   step="0.5"
                   value={formData.days_worked}
-                  onChange={(e) => setFormData({...formData, days_worked: e.target.value})}
+                  onChange={(e) => handleFormChange('days_worked', e.target.value)}
                   placeholder="0"
                 />
+                {formData.days_worked && getSelectedEmployee()?.daily_rate > 0 && (
+                  <p className="text-xs text-emerald-600">
+                    = {formatCurrency(parseFloat(formData.days_worked) * getSelectedEmployee().daily_rate)}
+                  </p>
+                )}
               </div>
             </div>
 
@@ -525,10 +554,11 @@ export default function LoonuitbetalingPage() {
                   type="number"
                   step="0.01"
                   value={formData.base_amount}
-                  onChange={(e) => setFormData({...formData, base_amount: e.target.value})}
+                  onChange={(e) => handleFormChange('base_amount', e.target.value)}
                   placeholder="0.00"
                   required
                 />
+                <p className="text-xs text-muted-foreground">Automatisch berekend op basis van uren/dagen</p>
               </div>
               <div className="space-y-2">
                 <Label>Bonus (SRD)</Label>
@@ -536,7 +566,7 @@ export default function LoonuitbetalingPage() {
                   type="number"
                   step="0.01"
                   value={formData.bonus}
-                  onChange={(e) => setFormData({...formData, bonus: e.target.value})}
+                  onChange={(e) => handleFormChange('bonus', e.target.value)}
                   placeholder="0.00"
                 />
               </div>
@@ -549,7 +579,7 @@ export default function LoonuitbetalingPage() {
                   type="number"
                   step="0.01"
                   value={formData.deductions}
-                  onChange={(e) => setFormData({...formData, deductions: e.target.value})}
+                  onChange={(e) => handleFormChange('deductions', e.target.value)}
                   placeholder="0.00"
                 />
               </div>
@@ -559,7 +589,7 @@ export default function LoonuitbetalingPage() {
                   type="number"
                   step="0.01"
                   value={formData.advance_payment}
-                  onChange={(e) => setFormData({...formData, advance_payment: e.target.value})}
+                  onChange={(e) => handleFormChange('advance_payment', e.target.value)}
                   placeholder="0.00"
                 />
               </div>
