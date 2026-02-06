@@ -292,7 +292,7 @@ export default function WerknemerPortaal() {
                 </div>
                 <Button 
                   type="submit" 
-                  className="w-full h-12 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold shadow-lg shadow-emerald-500/30"
+                  className="w-full h-12 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-semibold shadow-lg shadow-orange-500/30"
                   disabled={loginLoading}
                 >
                   {loginLoading ? (
@@ -317,20 +317,17 @@ export default function WerknemerPortaal() {
     );
   }
 
-  // Main Portal Screen - Modern Dashboard
+  // Main Portal Screen - Modern Dashboard with Suribet branding
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+    <div className="min-h-screen bg-slate-900">
       {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+      <div className="relative overflow-hidden bg-black text-white">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
         
         <div className="relative max-w-2xl mx-auto p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                <User className="w-7 h-7" />
-              </div>
+              <img src={suribetLogo} alt="Suribet" className="h-10 w-auto" />
               <div>
                 <h1 className="text-xl font-bold">{employee?.name}</h1>
                 <p className="text-emerald-100 text-sm">{employee?.function} • {employee?.employer_name}</p>
