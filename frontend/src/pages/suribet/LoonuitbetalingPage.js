@@ -202,57 +202,48 @@ export default function LoonuitbetalingPage() {
             </div>
           </div>
           
-          {/* Period Selector */}
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg p-1">
+          {/* Date Selector - Per dag */}
+          <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-lg p-2">
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20"
+              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent border-0"
               onClick={() => {
-                if (selectedMonth === 1) {
-                  setSelectedMonth(12);
-                  setSelectedYear(y => y - 1);
-                } else {
-                  setSelectedMonth(m => m - 1);
-                }
+                const d = new Date(selectedDate);
+                d.setDate(d.getDate() - 1);
+                setSelectedDate(d.toISOString().split('T')[0]);
               }}
             >
               <ChevronLeft className="w-4 h-4" />
             </Button>
-            <Select value={String(selectedMonth)} onValueChange={(v) => setSelectedMonth(parseInt(v))}>
-              <SelectTrigger className="w-[110px] bg-transparent border-0 text-white text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {months.map(m => (
-                  <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(parseInt(v))}>
-              <SelectTrigger className="w-[90px] bg-transparent border-0 text-white text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {[2024, 2025, 2026].map(y => (
-                  <SelectItem key={y} value={String(y)}>{y}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-white/70" />
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-[140px] bg-transparent border-0 text-white text-sm [color-scheme:dark]"
+              />
+            </div>
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20"
+              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent border-0"
               onClick={() => {
-                if (selectedMonth === 12) {
-                  setSelectedMonth(1);
-                  setSelectedYear(y => y + 1);
-                } else {
-                  setSelectedMonth(m => m + 1);
-                }
+                const d = new Date(selectedDate);
+                d.setDate(d.getDate() + 1);
+                setSelectedDate(d.toISOString().split('T')[0]);
               }}
             >
               <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-white/70 hover:text-white hover:bg-white/20 text-xs bg-transparent border-0"
+              onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+            >
+              Vandaag
             </Button>
           </div>
         </div>
