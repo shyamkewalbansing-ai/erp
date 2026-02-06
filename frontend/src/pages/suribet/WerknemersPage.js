@@ -756,6 +756,37 @@ export default function WerknemersPage() {
                 />
               </div>
             </div>
+
+            {/* Portal Access Section */}
+            <div className="border-t pt-4 mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Key className="w-4 h-4 text-blue-500" />
+                <Label className="text-sm font-medium">Portaal Toegang (Shift Starten)</Label>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Gebruikersnaam</Label>
+                  <Input
+                    value={formData.username}
+                    onChange={(e) => setFormData({...formData, username: e.target.value})}
+                    placeholder="bijv. jan123"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>{selectedWerknemer ? 'Nieuw Wachtwoord' : 'Wachtwoord'}</Label>
+                  <Input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                    placeholder={selectedWerknemer ? 'Laat leeg om te behouden' : 'Voer wachtwoord in'}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Met deze gegevens kan de werknemer inloggen op het shift portaal om zelf shifts te starten/stoppen.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label>Notities</Label>
               <Input
