@@ -491,7 +491,7 @@ export default function SuribetDashboard() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Gamepad2 className="w-5 h-5 text-emerald-500" />
-            Machine Overzicht - {months.find(m => m.value === selectedMonth)?.label} {selectedYear}
+            Machine Overzicht - {formatSelectedDate()}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -502,8 +502,8 @@ export default function SuribetDashboard() {
                   <tr className="text-left text-xs text-muted-foreground border-b">
                     <th className="pb-3 font-medium">Machine</th>
                     <th className="pb-3 font-medium">Locatie</th>
-                    <th className="pb-3 font-medium text-right">Totale Omzet</th>
-                    <th className="pb-3 font-medium text-right">Jouw Commissie</th>
+                    <th className="pb-3 font-medium text-right">Omzet (dag)</th>
+                    <th className="pb-3 font-medium text-right">Commissie (dag)</th>
                     <th className="pb-3 font-medium text-center">Rapporten</th>
                     <th className="pb-3 font-medium text-center">Status</th>
                   </tr>
@@ -520,7 +520,7 @@ export default function SuribetDashboard() {
                         {machine.status === 'verlies' && (
                           <Badge className="bg-red-100 text-red-700 border-red-200">
                             <AlertTriangle className="w-3 h-3 mr-1" />
-                            {machine.verliesDagen}x Verlies
+                            Verlies
                           </Badge>
                         )}
                         {machine.status === 'winst' && (
@@ -543,100 +543,6 @@ export default function SuribetDashboard() {
           ) : (
             <p className="text-center text-muted-foreground py-8">Geen machines geregistreerd</p>
           )}
-        </CardContent>
-      </Card>
-
-      {/* Biljetten Analyse */}
-      <Card className="border-0 shadow-lg">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <PieChart className="w-5 h-5 text-emerald-500" />
-            Biljetten Analyse - {months.find(m => m.value === selectedMonth)?.label}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* SRD */}
-            <div>
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-emerald-500"></span>
-                SRD Biljetten
-              </h4>
-              <div className="space-y-2">
-                {SRD_DENOMINATIES.map(denom => {
-                  const count = biljettenAnalyse.srd[denom] || 0;
-                  const totaal = count * denom;
-                  return (
-                    <div key={denom} className="flex items-center justify-between text-sm">
-                      <span>{denom} SRD</span>
-                      <span className="text-muted-foreground">{count}x</span>
-                      <span className="font-medium">{formatCurrency(totaal)}</span>
-                    </div>
-                  );
-                })}
-                <div className="pt-2 border-t flex justify-between font-bold">
-                  <span>Totaal SRD</span>
-                  <span className="text-emerald-600">
-                    {formatCurrency(SRD_DENOMINATIES.reduce((sum, d) => sum + (biljettenAnalyse.srd[d] || 0) * d, 0))}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* EUR */}
-            <div>
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-blue-500"></span>
-                EUR Biljetten
-              </h4>
-              <div className="space-y-2">
-                {EUR_DENOMINATIES.map(denom => {
-                  const count = biljettenAnalyse.eur[denom] || 0;
-                  const totaal = count * denom;
-                  return (
-                    <div key={denom} className="flex items-center justify-between text-sm">
-                      <span>€{denom}</span>
-                      <span className="text-muted-foreground">{count}x</span>
-                      <span className="font-medium">€ {totaal.toFixed(2)}</span>
-                    </div>
-                  );
-                })}
-                <div className="pt-2 border-t flex justify-between font-bold">
-                  <span>Totaal EUR</span>
-                  <span className="text-blue-600">
-                    € {EUR_DENOMINATIES.reduce((sum, d) => sum + (biljettenAnalyse.eur[d] || 0) * d, 0).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* USD */}
-            <div>
-              <h4 className="font-medium mb-3 flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-green-500"></span>
-                USD Biljetten
-              </h4>
-              <div className="space-y-2">
-                {USD_DENOMINATIES.map(denom => {
-                  const count = biljettenAnalyse.usd[denom] || 0;
-                  const totaal = count * denom;
-                  return (
-                    <div key={denom} className="flex items-center justify-between text-sm">
-                      <span>${denom}</span>
-                      <span className="text-muted-foreground">{count}x</span>
-                      <span className="font-medium">$ {totaal.toFixed(2)}</span>
-                    </div>
-                  );
-                })}
-                <div className="pt-2 border-t flex justify-between font-bold">
-                  <span>Totaal USD</span>
-                  <span className="text-green-600">
-                    $ {USD_DENOMINATIES.reduce((sum, d) => sum + (biljettenAnalyse.usd[d] || 0) * d, 0).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
