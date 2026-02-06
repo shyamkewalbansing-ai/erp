@@ -685,6 +685,7 @@ async def delete_shift(
 
 @router.get("/kasboek")
 async def get_kasboek(
+    date: Optional[str] = None,
     month: Optional[int] = None,
     year: Optional[int] = None,
     transaction_type: Optional[str] = None,
@@ -698,7 +699,10 @@ async def get_kasboek(
     if transaction_type:
         query["transaction_type"] = transaction_type
     
-    if month and year:
+    # Specifieke datum heeft prioriteit
+    if date:
+        query["date"] = date
+    elif month and year:
         start_date = f"{year}-{month:02d}-01"
         if month == 12:
             end_date = f"{year + 1}-01-01"
