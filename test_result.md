@@ -223,6 +223,18 @@ frontend:
         agent: "main"
         comment: "Create/edit dialogen uitgebreid met extra velden: category, icon_name, hero_image_url, highlights"
 
+  - task: "Suribet Dashboard per dag weergave"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/suribet/DashboardPage.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Dashboard aangepast om per dag data te tonen i.p.v. per maand/jaar. Datum selector toegevoegd met vorige/volgende dag knoppen en Vandaag knop. Biljetten Analyse sectie verwijderd. Labels aangepast naar dagelijkse weergave."
+
   - task: "Abonnement pagina add-ons sectie"
     implemented: true
     working: "NA"
