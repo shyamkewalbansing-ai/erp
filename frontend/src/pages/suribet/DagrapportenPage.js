@@ -660,8 +660,10 @@ export default function DagrapportenPage() {
                       <Label className="text-xs text-center block">{denom} SRD</Label>
                       <Input
                         type="number"
+                        inputMode="numeric"
                         min="0"
-                        value={formData.biljetten_srd[`b${denom}`]}
+                        value={formData.biljetten_srd[`b${denom}`] || ''}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => setFormData({
                           ...formData,
                           biljetten_srd: {
@@ -669,7 +671,8 @@ export default function DagrapportenPage() {
                             [`b${denom}`]: parseInt(e.target.value) || 0
                           }
                         })}
-                        className="text-center"
+                        className="text-center h-10 text-lg font-medium"
+                        placeholder="0"
                       />
                     </div>
                   ))}
@@ -687,8 +690,10 @@ export default function DagrapportenPage() {
                       <Label className="text-xs text-center block">€{denom}</Label>
                       <Input
                         type="number"
+                        inputMode="numeric"
                         min="0"
-                        value={formData.biljetten_eur[`b${denom}`]}
+                        value={formData.biljetten_eur[`b${denom}`] || ''}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => setFormData({
                           ...formData,
                           biljetten_eur: {
@@ -696,7 +701,8 @@ export default function DagrapportenPage() {
                             [`b${denom}`]: parseInt(e.target.value) || 0
                           }
                         })}
-                        className="text-center"
+                        className="text-center h-10 text-lg font-medium"
+                        placeholder="0"
                       />
                     </div>
                   ))}
@@ -713,8 +719,10 @@ export default function DagrapportenPage() {
                       <Label className="text-xs text-center block">${denom}</Label>
                       <Input
                         type="number"
+                        inputMode="numeric"
                         min="0"
-                        value={formData.biljetten_usd[`b${denom}`]}
+                        value={formData.biljetten_usd[`b${denom}`] || ''}
+                        onFocus={(e) => e.target.select()}
                         onChange={(e) => setFormData({
                           ...formData,
                           biljetten_usd: {
@@ -722,7 +730,8 @@ export default function DagrapportenPage() {
                             [`b${denom}`]: parseInt(e.target.value) || 0
                           }
                         })}
-                        className="text-center"
+                        className="text-center h-10 text-lg font-medium"
+                        placeholder="0"
                       />
                     </div>
                   ))}
