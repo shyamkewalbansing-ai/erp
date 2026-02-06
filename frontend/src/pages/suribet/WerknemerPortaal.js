@@ -60,18 +60,47 @@ export default function WerknemerPortaal() {
       if (emp.user_id === userId) {
         setEmployee(emp);
         setIsLoggedIn(true);
+        // Load data immediately with the stored employee
+        loadDataForEmployee(emp);
       }
     }
   }, [userId]);
 
-  // Load data when logged in
+  // Load data when logged in (for new logins)
   useEffect(() => {
     if (isLoggedIn && employee) {
-      loadMachines();
-      checkActiveShift();
-      loadShiftHistory();
+      loadDataForEmployee(employee);
     }
-  }, [isLoggedIn, employee]);
+  }, [isLoggedIn]);
+
+  const loadDataForEmployee = async (emp) => {
+    if (!emp || !emp.employee_id) return;
+    
+    try {
+      // Load all data in parallel
+      const [machinesRes, shiftRes, historyRes] = await Promise.all([
+        fetch(`${API_URL}/api/suribet/portal/machines/${userId}`),
+        fetch(`${API_URL}/api/suribet/portal/active-shift/${userId}/${emp.employee_id}`),
+        fetch(`${API_URL}/api/suribet/portal/shift-history/${userId}/${emp.employee_id}?limit=10`)
+      ]);
+
+      if (machinesRes.ok) {
+        setMachines(await machinesRes.json());
+      }
+      
+      if (shiftRes.ok) {
+        const data = await shiftRes.json();
+        setActiveShift(data.active_shift);
+        console.log('Active shift loaded:', data.active_shift);
+      }
+      
+      if (historyRes.ok) {
+        setShiftHistory(await historyRes.json());
+      }
+    } catch (error) {
+      console.error('Error loading data:', error);
+    }
+  };
 
   const loadMachines = async () => {
     try {
@@ -85,6 +114,7 @@ export default function WerknemerPortaal() {
   };
 
   const checkActiveShift = async () => {
+    if (!employee?.employee_id) return;
     try {
       const response = await fetch(`${API_URL}/api/suribet/portal/active-shift/${userId}/${employee.employee_id}`);
       if (response.ok) {
@@ -97,6 +127,7 @@ export default function WerknemerPortaal() {
   };
 
   const loadShiftHistory = async () => {
+    if (!employee?.employee_id) return;
     try {
       const response = await fetch(`${API_URL}/api/suribet/portal/shift-history/${userId}/${employee.employee_id}?limit=10`);
       if (response.ok) {
