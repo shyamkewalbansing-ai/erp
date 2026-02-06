@@ -533,6 +533,15 @@ async def create_werknemer(
     """Create a new employee"""
     user_id = current_user["id"]
     
+    # Check if username is unique within this user's employees
+    if data.username:
+        existing = await db.suribet_werknemers.find_one({
+            "user_id": user_id,
+            "username": data.username
+        })
+        if existing:
+            raise HTTPException(status_code=400, detail="Gebruikersnaam is al in gebruik")
+    
     werknemer = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
@@ -544,6 +553,8 @@ async def create_werknemer(
         "phone": data.phone,
         "address": data.address,
         "notes": data.notes,
+        "username": data.username,
+        "password": data.password,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
@@ -551,6 +562,10 @@ async def create_werknemer(
     await db.suribet_werknemers.insert_one(werknemer)
     if "_id" in werknemer:
         del werknemer["_id"]
+    # Don't return password
+    if "password" in werknemer:
+        werknemer["has_portal_access"] = bool(werknemer.get("username") and werknemer.get("password"))
+        del werknemer["password"]
     return werknemer
 
 @router.put("/werknemers/{werknemer_id}")
