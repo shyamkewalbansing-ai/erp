@@ -253,7 +253,7 @@ export default function SuribetDashboard() {
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent"
+              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent border-0"
               onClick={() => changeDate(-1)}
             >
               <ChevronLeft className="w-4 h-4" />
@@ -270,7 +270,7 @@ export default function SuribetDashboard() {
             <Button 
               variant="ghost" 
               size="icon"
-              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent"
+              className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 bg-transparent border-0"
               onClick={() => changeDate(1)}
             >
               <ChevronRight className="w-4 h-4" />
@@ -278,7 +278,7 @@ export default function SuribetDashboard() {
             <Button 
               variant="ghost" 
               size="sm"
-              className="text-white/70 hover:text-white hover:bg-white/20 text-xs bg-transparent"
+              className="text-white/70 hover:text-white hover:bg-white/20 text-xs bg-transparent border-0"
               onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
             >
               Vandaag
