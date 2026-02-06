@@ -2011,7 +2011,7 @@ class SuriRentalsAPITester:
             "Suribet Dagstaten Without Auth",
             "GET",
             "suribet/dagstaten?date=2025-02-06",
-            401  # Expect unauthorized
+            403  # Expect forbidden (not authenticated)
         )
         
         # Restore token
