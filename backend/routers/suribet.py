@@ -523,6 +523,13 @@ async def get_werknemers(current_user: dict = Depends(get_current_user)):
         {"user_id": user_id},
         {"_id": 0}
     ).sort("name", 1).to_list(1000)
+    
+    # Add has_portal_access flag and remove password from response
+    for w in werknemers:
+        w["has_portal_access"] = bool(w.get("username") and w.get("password"))
+        if "password" in w:
+            del w["password"]
+    
     return werknemers
 
 @router.post("/werknemers")
