@@ -1864,6 +1864,164 @@ class SuriRentalsAPITester:
             return True
         return False
 
+    # ==================== SURIBET DASHBOARD TESTING ====================
+    
+    def test_suribet_dagstaten_with_date(self):
+        """Test Suribet dagstaten endpoint with date parameter"""
+        test_date = "2025-02-06"
+        
+        success, response = self.run_test(
+            f"Suribet Dagstaten for {test_date}",
+            "GET",
+            f"suribet/dagstaten?date={test_date}",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} dagstaten for {test_date}")
+            if response:
+                for dagstaat in response:
+                    print(f"   - Machine: {dagstaat.get('machine_id', 'N/A')}, Omzet: {dagstaat.get('omzet', 0)}")
+            else:
+                print(f"   ✅ No data for {test_date} (expected for test date)")
+            return True
+        return False
+
+    def test_suribet_kasboek_with_date(self):
+        """Test Suribet kasboek endpoint with date parameter"""
+        test_date = "2025-02-06"
+        
+        success, response = self.run_test(
+            f"Suribet Kasboek for {test_date}",
+            "GET",
+            f"suribet/kasboek?date={test_date}",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} kasboek entries for {test_date}")
+            if response:
+                for entry in response:
+                    print(f"   - {entry.get('description', 'N/A')}: {entry.get('amount', 0)} {entry.get('currency', 'SRD')}")
+            else:
+                print(f"   ✅ No kasboek data for {test_date} (expected for test date)")
+            return True
+        return False
+
+    def test_suribet_loonbetalingen_with_date(self):
+        """Test Suribet loonbetalingen endpoint with date parameter"""
+        test_date = "2025-02-06"
+        
+        success, response = self.run_test(
+            f"Suribet Loonbetalingen for {test_date}",
+            "GET",
+            f"suribet/loonbetalingen?date={test_date}",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} loonbetalingen for {test_date}")
+            if response:
+                for betaling in response:
+                    print(f"   - Employee: {betaling.get('employee_id', 'N/A')}, Amount: {betaling.get('net_amount', 0)}")
+            else:
+                print(f"   ✅ No loonbetalingen data for {test_date} (expected for test date)")
+            return True
+        return False
+
+    def test_suribet_dagstaten_month_year_filter(self):
+        """Test that old month/year filtering still works for dagstaten"""
+        success, response = self.run_test(
+            "Suribet Dagstaten Month/Year Filter",
+            "GET",
+            "suribet/dagstaten?month=2&year=2025",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} dagstaten for February 2025")
+            if response:
+                for dagstaat in response:
+                    date = dagstaat.get('date', '')
+                    if date.startswith('2025-02'):
+                        print(f"   ✅ Date {date} is in February 2025")
+                    else:
+                        print(f"   ❌ Date {date} is NOT in February 2025")
+                        return False
+            else:
+                print(f"   ✅ No data for February 2025 (expected)")
+            return True
+        return False
+
+    def test_suribet_kasboek_month_year_filter(self):
+        """Test that old month/year filtering still works for kasboek"""
+        success, response = self.run_test(
+            "Suribet Kasboek Month/Year Filter",
+            "GET",
+            "suribet/kasboek?month=2&year=2025",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} kasboek entries for February 2025")
+            if response:
+                for entry in response:
+                    date = entry.get('date', '')
+                    if date.startswith('2025-02'):
+                        print(f"   ✅ Date {date} is in February 2025")
+                    else:
+                        print(f"   ❌ Date {date} is NOT in February 2025")
+                        return False
+            else:
+                print(f"   ✅ No kasboek data for February 2025 (expected)")
+            return True
+        return False
+
+    def test_suribet_loonbetalingen_month_year_filter(self):
+        """Test that old month/year filtering still works for loonbetalingen"""
+        success, response = self.run_test(
+            "Suribet Loonbetalingen Month/Year Filter",
+            "GET",
+            "suribet/loonbetalingen?month=2&year=2025",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} loonbetalingen for February 2025")
+            if response:
+                for betaling in response:
+                    date = betaling.get('date', '')
+                    if date.startswith('2025-02'):
+                        print(f"   ✅ Date {date} is in February 2025")
+                    else:
+                        print(f"   ❌ Date {date} is NOT in February 2025")
+                        return False
+            else:
+                print(f"   ✅ No loonbetalingen data for February 2025 (expected)")
+            return True
+        return False
+
+    def test_suribet_authentication_required(self):
+        """Test that Suribet endpoints require authentication"""
+        # Temporarily remove token
+        temp_token = self.token
+        self.token = None
+        
+        success, response = self.run_test(
+            "Suribet Dagstaten Without Auth",
+            "GET",
+            "suribet/dagstaten?date=2025-02-06",
+            401  # Expect unauthorized
+        )
+        
+        # Restore token
+        self.token = temp_token
+        
+        if success:
+            print("   ✅ Suribet endpoints correctly require authentication")
+            return True
+        return False
+
 def main():
     print("🏠 SuriRentals API Testing Suite")
     print("=" * 50)
