@@ -793,6 +793,7 @@ async def delete_kasboek_entry(
 
 @router.get("/loonbetalingen")
 async def get_loonbetalingen(
+    date: Optional[str] = None,
     month: Optional[int] = None,
     year: Optional[int] = None,
     employee_id: Optional[str] = None,
@@ -806,7 +807,10 @@ async def get_loonbetalingen(
     if employee_id:
         query["employee_id"] = employee_id
     
-    if month and year:
+    # Specifieke datum heeft prioriteit
+    if date:
+        query["date"] = date
+    elif month and year:
         start_date = f"{year}-{month:02d}-01"
         if month == 12:
             end_date = f"{year + 1}-01-01"
