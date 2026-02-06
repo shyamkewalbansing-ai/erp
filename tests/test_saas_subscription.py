@@ -8,7 +8,7 @@ import os
 import uuid
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://machine-manager-9.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://suribet-dayview.preview.emergentagent.com')
 
 # Test credentials
 SUPERADMIN_EMAIL = "admin@surirentals.sr"

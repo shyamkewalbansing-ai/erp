@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://machine-manager-9.preview.emergentagent.com/           → Landing page
-https://machine-manager-9.preview.emergentagent.com/login      → Login
-https://machine-manager-9.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://machine-manager-9.preview.emergentagent.com/booking/   → Publieke booking portals
+https://suribet-dayview.preview.emergentagent.com/           → Landing page
+https://suribet-dayview.preview.emergentagent.com/login      → Login
+https://suribet-dayview.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://suribet-dayview.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
