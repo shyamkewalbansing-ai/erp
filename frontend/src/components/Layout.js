@@ -52,7 +52,8 @@ import {
   Phone,
   MapPin,
   Lock,
-  Gamepad2
+  Gamepad2,
+  Link
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
