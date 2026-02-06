@@ -330,7 +330,7 @@ export default function WerknemerPortaal() {
               <img src={suribetLogo} alt="Suribet" className="h-10 w-auto" />
               <div>
                 <h1 className="text-xl font-bold">{employee?.name}</h1>
-                <p className="text-emerald-100 text-sm">{employee?.function} • {employee?.employer_name}</p>
+                <p className="text-white/60 text-sm">{employee?.function} • {employee?.employer_name}</p>
               </div>
             </div>
             <Button 
@@ -344,7 +344,7 @@ export default function WerknemerPortaal() {
           </div>
 
           {/* Live Clock */}
-          <div className="mt-4 flex items-center gap-2 text-emerald-100">
+          <div className="mt-4 flex items-center gap-2 text-white/60">
             <Clock className="w-4 h-4" />
             <span className="text-lg font-mono">
               {currentTime.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
@@ -359,7 +359,7 @@ export default function WerknemerPortaal() {
       <div className="max-w-2xl mx-auto p-4 sm:p-6 space-y-4 -mt-4">
         {/* Active Shift Card */}
         {activeShift ? (
-          <Card className="border-0 shadow-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white overflow-hidden">
+          <Card className="border-0 shadow-2xl bg-gradient-to-br from-orange-500 to-orange-600 text-white overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
             <CardContent className="relative p-6">
               <div className="flex items-center gap-3 mb-6">
@@ -373,7 +373,7 @@ export default function WerknemerPortaal() {
               
               <div className="grid grid-cols-2 gap-6 mb-6">
                 <div className="bg-white/10 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-emerald-100 text-sm mb-1">
+                  <div className="flex items-center gap-2 text-orange-100 text-sm mb-1">
                     <Gamepad2 className="w-4 h-4" />
                     Machine
                   </div>
@@ -382,7 +382,7 @@ export default function WerknemerPortaal() {
                   </p>
                 </div>
                 <div className="bg-white/10 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-emerald-100 text-sm mb-1">
+                  <div className="flex items-center gap-2 text-orange-100 text-sm mb-1">
                     <Clock className="w-4 h-4" />
                     Gestart om
                   </div>
@@ -392,7 +392,7 @@ export default function WerknemerPortaal() {
 
               <div className="space-y-4 mb-6">
                 <div className="space-y-2">
-                  <Label className="text-emerald-100 text-sm">Kas Verschil (SRD)</Label>
+                  <Label className="text-orange-100 text-sm">Kas Verschil (SRD)</Label>
                   <Input
                     type="number"
                     step="0.01"
@@ -403,7 +403,7 @@ export default function WerknemerPortaal() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-emerald-100 text-sm">Opmerkingen (optioneel)</Label>
+                  <Label className="text-orange-100 text-sm">Opmerkingen (optioneel)</Label>
                   <Input
                     value={shiftNotes}
                     onChange={(e) => setShiftNotes(e.target.value)}
@@ -416,7 +416,7 @@ export default function WerknemerPortaal() {
               <Button 
                 onClick={handleStopShift}
                 disabled={loading}
-                className="w-full h-14 bg-white text-emerald-600 hover:bg-white/90 font-semibold text-lg shadow-lg"
+                className="w-full h-14 bg-white text-orange-600 hover:bg-white/90 font-semibold text-lg shadow-lg"
               >
                 {loading ? (
                   <div className="w-6 h-6 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin" />
