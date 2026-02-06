@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -27,13 +28,17 @@ import {
   Play,
   Square,
   AlertTriangle,
-  Gamepad2
+  Gamepad2,
+  Key,
+  Link,
+  Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function WerknemersPage() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [werknemers, setWerknemers] = useState([]);
   const [machines, setMachines] = useState([]);
@@ -54,7 +59,9 @@ export default function WerknemersPage() {
     status: 'active',
     phone: '',
     address: '',
-    notes: ''
+    notes: '',
+    username: '',
+    password: ''
   });
 
   const [shiftForm, setShiftForm] = useState({
