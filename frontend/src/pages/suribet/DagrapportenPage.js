@@ -391,6 +391,13 @@ export default function DagrapportenPage() {
             const omzet = berekenTotaleOmzet(rapport);
             const { suribetDeel, jouwCommissie } = berekenCommissies(omzet, rapport.suribet_percentage || 80);
             const verlies = isVerlies(rapport);
+            
+            // Format tijd uit created_at
+            const formatTime = (dateString) => {
+              if (!dateString) return '';
+              const date = new Date(dateString);
+              return date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+            };
 
             return (
               <Card key={rapport.id} className={`border-0 shadow-lg hover:shadow-xl transition-shadow ${verlies ? 'ring-2 ring-red-500 bg-red-50 dark:bg-red-950/20' : ''}`}>
@@ -419,9 +426,17 @@ export default function DagrapportenPage() {
                             </Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Users2 className="w-3.5 h-3.5" />
-                          <span>{getWerknemerName(rapport.employee_id)}</span>
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Users2 className="w-3.5 h-3.5" />
+                            {getWerknemerName(rapport.employee_id)}
+                          </span>
+                          {rapport.created_at && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5" />
+                              {formatTime(rapport.created_at)}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
