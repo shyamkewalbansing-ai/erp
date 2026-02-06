@@ -307,6 +307,7 @@ async def delete_machine(
 
 @router.get("/dagstaten")
 async def get_dagstaten(
+    date: Optional[str] = None,
     month: Optional[int] = None,
     year: Optional[int] = None,
     machine_id: Optional[str] = None,
@@ -320,7 +321,10 @@ async def get_dagstaten(
     if machine_id:
         query["machine_id"] = machine_id
     
-    if month and year:
+    # Specifieke datum heeft prioriteit
+    if date:
+        query["date"] = date
+    elif month and year:
         start_date = f"{year}-{month:02d}-01"
         if month == 12:
             end_date = f"{year + 1}-01-01"
