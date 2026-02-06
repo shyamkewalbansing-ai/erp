@@ -577,6 +577,16 @@ async def update_werknemer(
     """Update an employee"""
     user_id = current_user["id"]
     
+    # Check if username is unique (if being changed)
+    if data.username:
+        existing = await db.suribet_werknemers.find_one({
+            "user_id": user_id,
+            "username": data.username,
+            "id": {"$ne": werknemer_id}
+        })
+        if existing:
+            raise HTTPException(status_code=400, detail="Gebruikersnaam is al in gebruik")
+    
     update_data = {k: v for k, v in data.dict().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
