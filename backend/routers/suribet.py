@@ -1091,13 +1091,11 @@ async def get_portal_machines(user_id: str):
 
 @router.get("/portal/active-shift/{user_id}/{employee_id}")
 async def get_active_shift(user_id: str, employee_id: str):
-    """Check if employee has an active shift"""
-    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-    
+    """Check if employee has an active shift (any day, not just today)"""
+    # Find any shift without end_time (active shift), regardless of date
     active_shift = await db.suribet_shifts.find_one({
         "user_id": user_id,
         "employee_id": employee_id,
-        "date": today,
         "end_time": None
     }, {"_id": 0})
     
