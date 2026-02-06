@@ -120,6 +120,18 @@ backend:
         agent: "testing"
         comment: "✅ PASSED - All add-on CRUD endpoints working correctly. Fixed critical bug in get_superadmin function. Tested: GET /api/addons (public), POST/PUT/DELETE /api/admin/addons (superadmin only). Created test add-on, updated price from SRD 2500 to SRD 3000, deleted successfully."
 
+  - task: "Suribet Dashboard per dag API endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/routers/suribet.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "API endpoints aangepast om data per specifieke dag op te halen. Nieuwe date parameter toegevoegd aan: GET /api/suribet/dagstaten?date=YYYY-MM-DD, GET /api/suribet/kasboek?date=YYYY-MM-DD, GET /api/suribet/loonbetalingen?date=YYYY-MM-DD. Test met demo account of nieuwe user."
+
   - task: "User add-ons management endpoints"
     implemented: true
     working: true
