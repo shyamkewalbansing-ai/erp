@@ -1112,11 +1112,10 @@ async def start_shift_portal(
     today = now.strftime("%Y-%m-%d")
     current_time = now.strftime("%H:%M")
     
-    # Check for existing active shift
+    # Check for existing active shift (any day, not just today)
     existing = await db.suribet_shifts.find_one({
         "user_id": user_id,
         "employee_id": employee_id,
-        "date": today,
         "end_time": None
     })
     
