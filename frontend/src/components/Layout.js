@@ -157,7 +157,7 @@ const suribetNavItems = [
   { to: '/app/suribet/kasboek', icon: Wallet, label: 'Kasboek', addon: 'suribet' },
   { to: '/app/suribet/werknemers', icon: Users2, label: 'Werknemers', addon: 'suribet' },
   { to: '/app/suribet/loonuitbetaling', icon: Banknote, label: 'Loonuitbetaling', addon: 'suribet' },
-  { to: '/app/suribet/portaal', icon: Link, label: 'Shift Portaal', addon: 'suribet', isPortalLink: true },
+  { to: '/app/suribet/portaal', icon: Link, label: 'Suribet', addon: 'suribet', isPortalLink: true },
 ];
 
 export default function Layout() {
