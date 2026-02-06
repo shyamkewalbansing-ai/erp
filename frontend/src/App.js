@@ -722,6 +722,9 @@ function MainAppRoutes() {
           <Route path="suribet/loonuitbetaling" element={
             <SubscriptionRoute requiredAddon="suribet"><SuribetLoonuitbetaling /></SubscriptionRoute>
           } />
+          <Route path="suribet/portaal" element={
+            <SubscriptionRoute requiredAddon="suribet"><SuribetPortaalLink /></SubscriptionRoute>
+          } />
         </Route>
         
         {/* Redirect old routes to new app routes */}
