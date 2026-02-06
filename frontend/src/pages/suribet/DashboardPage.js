@@ -55,16 +55,14 @@ export default function SuribetDashboard() {
       const token = localStorage.getItem('token');
       const headers = { 'Authorization': `Bearer ${token}` };
 
-      // Get dates for the selected month
-      const startDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
-      const endDate = new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0];
-
-      const [machinesRes, werknemersRes, koersenRes, kasboekRes, loonRes] = await Promise.all([
+      // Haal data op voor de geselecteerde datum
+      const [machinesRes, werknemersRes, koersenRes, kasboekRes, loonRes, dagstatenRes] = await Promise.all([
         fetch(`${API_URL}/api/suribet/machines`, { headers }),
         fetch(`${API_URL}/api/suribet/werknemers`, { headers }),
         fetch(`${API_URL}/api/suribet/wisselkoersen`, { headers }),
-        fetch(`${API_URL}/api/suribet/kasboek?month=${selectedMonth}&year=${selectedYear}`, { headers }),
-        fetch(`${API_URL}/api/suribet/loonbetalingen?month=${selectedMonth}&year=${selectedYear}`, { headers })
+        fetch(`${API_URL}/api/suribet/kasboek?date=${selectedDate}`, { headers }),
+        fetch(`${API_URL}/api/suribet/loonbetalingen?date=${selectedDate}`, { headers }),
+        fetch(`${API_URL}/api/suribet/dagstaten?date=${selectedDate}`, { headers })
       ]);
 
       if (machinesRes.ok) setMachines(await machinesRes.json());
@@ -76,18 +74,7 @@ export default function SuribetDashboard() {
       }
       if (kasboekRes.ok) setKasboek(await kasboekRes.json());
       if (loonRes.ok) setLoonbetalingen(await loonRes.json());
-
-      // Fetch dagrapporten for each day of the month
-      const dagrapportenPromises = [];
-      const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        dagrapportenPromises.push(
-          fetch(`${API_URL}/api/suribet/dagstaten?date=${date}`, { headers }).then(r => r.ok ? r.json() : [])
-        );
-      }
-      const allDagrapporten = await Promise.all(dagrapportenPromises);
-      setDagrapporten(allDagrapporten.flat());
+      if (dagstatenRes.ok) setDagrapporten(await dagstatenRes.json());
       
     } catch (error) {
       console.error('Error fetching data:', error);
