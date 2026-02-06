@@ -48,21 +48,6 @@ export default function KasboekPage() {
     employee_id: ''
   });
 
-  const months = [
-    { value: 1, label: 'Januari' },
-    { value: 2, label: 'Februari' },
-    { value: 3, label: 'Maart' },
-    { value: 4, label: 'April' },
-    { value: 5, label: 'Mei' },
-    { value: 6, label: 'Juni' },
-    { value: 7, label: 'Juli' },
-    { value: 8, label: 'Augustus' },
-    { value: 9, label: 'September' },
-    { value: 10, label: 'Oktober' },
-    { value: 11, label: 'November' },
-    { value: 12, label: 'December' }
-  ];
-
   const categories = {
     income: [
       { value: 'commissie', label: 'Commissie' },
@@ -81,7 +66,7 @@ export default function KasboekPage() {
 
   useEffect(() => {
     fetchData();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedDate]);
 
   const fetchData = async () => {
     try {
@@ -89,7 +74,7 @@ export default function KasboekPage() {
       const headers = { 'Authorization': `Bearer ${token}` };
 
       const [kasboekRes, machinesRes, werknemersRes] = await Promise.all([
-        fetch(`${API_URL}/api/suribet/kasboek?month=${selectedMonth}&year=${selectedYear}`, { headers }),
+        fetch(`${API_URL}/api/suribet/kasboek?date=${selectedDate}`, { headers }),
         fetch(`${API_URL}/api/suribet/machines`, { headers }),
         fetch(`${API_URL}/api/suribet/werknemers`, { headers })
       ]);
