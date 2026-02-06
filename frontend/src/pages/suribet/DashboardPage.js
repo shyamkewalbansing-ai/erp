@@ -201,24 +201,26 @@ export default function SuribetDashboard() {
     };
   });
 
-  // Biljettenanalyse
-  const biljettenAnalyse = {
-    srd: SRD_DENOMINATIES.reduce((acc, denom) => {
-      acc[denom] = dagrapporten.reduce((sum, r) => sum + (r.biljetten_srd?.[`b${denom}`] || 0), 0);
-      return acc;
-    }, {}),
-    eur: EUR_DENOMINATIES.reduce((acc, denom) => {
-      acc[denom] = dagrapporten.reduce((sum, r) => sum + (r.biljetten_eur?.[`b${denom}`] || 0), 0);
-      return acc;
-    }, {}),
-    usd: USD_DENOMINATIES.reduce((acc, denom) => {
-      acc[denom] = dagrapporten.reduce((sum, r) => sum + (r.biljetten_usd?.[`b${denom}`] || 0), 0);
-      return acc;
-    }, {})
-  };
-
   const getMachineName = (id) => machines.find(m => m.id === id)?.machine_id || 'Onbekend';
   const getWerknemerName = (id) => werknemers.find(w => w.id === id)?.name || 'Onbekend';
+  
+  // Helper functie om datum naar vorige/volgende dag te zetten
+  const changeDate = (days) => {
+    const date = new Date(selectedDate);
+    date.setDate(date.getDate() + days);
+    setSelectedDate(date.toISOString().split('T')[0]);
+  };
+  
+  // Format geselecteerde datum voor weergave
+  const formatSelectedDate = () => {
+    const date = new Date(selectedDate);
+    return date.toLocaleDateString('nl-NL', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
 
   if (loading) {
     return (
