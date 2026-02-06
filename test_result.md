@@ -122,15 +122,18 @@ backend:
 
   - task: "Suribet Dashboard per dag API endpoints"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/routers/suribet.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "API endpoints aangepast om data per specifieke dag op te halen. Nieuwe date parameter toegevoegd aan: GET /api/suribet/dagstaten?date=YYYY-MM-DD, GET /api/suribet/kasboek?date=YYYY-MM-DD, GET /api/suribet/loonbetalingen?date=YYYY-MM-DD. Test met demo account of nieuwe user."
+      - working: true
+        agent: "testing"
+        comment: "✅ PASSED - All Suribet dashboard API endpoints working correctly with new date parameter. Tested: 1) GET /api/suribet/dagstaten?date=2025-02-06 - returns correct data for specific date (empty list for test date), 2) GET /api/suribet/kasboek?date=2025-02-06 - returns correct kasboek entries for specific date, 3) GET /api/suribet/loonbetalingen?date=2025-02-06 - returns correct salary payments for specific date, 4) Backward compatibility verified: month/year filtering still works (GET /api/suribet/dagstaten?month=2&year=2025), 5) Authentication properly enforced - endpoints return 403 without Bearer token. All endpoints respond correctly and date filtering works as expected. Demo account (demo@facturatie.sr / demo2024) has proper access."
 
   - task: "User add-ons management endpoints"
     implemented: true
