@@ -322,7 +322,15 @@ export default function WerknemersPage() {
             </div>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              onClick={copyPortalLink}
+              className="bg-white/20 hover:bg-white/30 text-white border-0"
+              title="Kopieer portaal link voor werknemers"
+            >
+              <Link className="w-4 h-4 mr-2" />
+              Portaal Link
+            </Button>
             <Button 
               onClick={() => { resetShiftForm(); setShowShiftModal(true); }}
               className="bg-white/20 hover:bg-white/30 text-white border-0"
