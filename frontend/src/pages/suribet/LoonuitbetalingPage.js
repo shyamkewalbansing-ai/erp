@@ -78,6 +78,41 @@ export default function LoonuitbetalingPage() {
     return base + bonus - deductions - advance;
   };
 
+  // Get selected employee's rates
+  const getSelectedEmployee = () => {
+    return werknemers.find(w => w.id === formData.employee_id);
+  };
+
+  // Auto-calculate base amount based on hours or days worked
+  const calculateBaseAmount = (hours, days, employeeId) => {
+    const employee = werknemers.find(w => w.id === employeeId);
+    if (!employee) return 0;
+    
+    const hoursAmount = (parseFloat(hours) || 0) * (employee.hourly_rate || 0);
+    const daysAmount = (parseFloat(days) || 0) * (employee.daily_rate || 0);
+    
+    return hoursAmount + daysAmount;
+  };
+
+  // Handle form field changes with auto-calculation
+  const handleFormChange = (field, value) => {
+    const newFormData = { ...formData, [field]: value };
+    
+    // Auto-calculate base amount when hours, days, or employee changes
+    if (field === 'hours_worked' || field === 'days_worked' || field === 'employee_id') {
+      const hours = field === 'hours_worked' ? value : newFormData.hours_worked;
+      const days = field === 'days_worked' ? value : newFormData.days_worked;
+      const employeeId = field === 'employee_id' ? value : newFormData.employee_id;
+      
+      const calculatedBase = calculateBaseAmount(hours, days, employeeId);
+      if (calculatedBase > 0) {
+        newFormData.base_amount = calculatedBase.toFixed(2);
+      }
+    }
+    
+    setFormData(newFormData);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
