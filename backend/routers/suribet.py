@@ -1374,7 +1374,7 @@ Return ONLY valid JSON, no other text. Use this exact structure:
 Product codes: SB=Sports Betting, SF=Scratch Fun, VSF=Virtual Scratch Fun, Topup, PT=Prize Transfer, S2W=Spin2Win, VSB=Virtual Sports Betting, WDR=Withdrawal, WDRNC=Withdrawal No Commission, YGT=Your Game Ticket, AMT=Amount.
 
 Extract ALL products shown on the receipt. Use 0.00 for missing values."""
-        ).with_model("gemini", "gemini-2.0-flash")
+        ).with_model("gemini-2.0-flash")
         
         # Create image content
         image_content = ImageContent(image_base64=base64_image)
