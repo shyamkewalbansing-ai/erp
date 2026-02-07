@@ -696,9 +696,24 @@ export default function DagrapportenPage() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Balance:</span>
-                      <span className="font-bold">{formatCurrency(bonData.balance)}</span>
+                      <span className="font-bold text-lg">{formatCurrency(bonData.balance)}</span>
                     </div>
                   </div>
+                  
+                  {/* Gedetailleerde commissie breakdown */}
+                  {bonData.pos_sales && bonData.pos_sales.length > 0 && (
+                    <div className="mt-3 pt-3 border-t">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">POS Sales Commissies:</p>
+                      <div className="space-y-1">
+                        {bonData.pos_sales.map((item, idx) => (
+                          <div key={idx} className="flex justify-between text-xs">
+                            <span>{item.product}: {formatCurrency(item.total_bets)} × {item.comm_percentage}%</span>
+                            <span className="text-emerald-600">{formatCurrency(item.commission)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
