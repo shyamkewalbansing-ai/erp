@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -26,7 +26,12 @@ import {
   Eye,
   Calculator,
   DollarSign,
-  Euro
+  Euro,
+  Camera,
+  Upload,
+  QrCode,
+  Loader2,
+  Receipt
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -48,6 +53,9 @@ export default function DagrapportenPage() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedRapport, setSelectedRapport] = useState(null);
+  const [scanningBon, setScanningBon] = useState(false);
+  const [bonData, setBonData] = useState(null);
+  const fileInputRef = useRef(null);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -63,6 +71,7 @@ export default function DagrapportenPage() {
     biljetten_srd: { b5: 0, b10: 0, b20: 0, b50: 0, b100: 0, b200: 0, b500: 0 },
     biljetten_eur: { b5: 0, b10: 0, b20: 0, b50: 0, b100: 0, b200: 0 },
     biljetten_usd: { b1: 0, b5: 0, b10: 0, b20: 0, b50: 0, b100: 0 },
+    bon_data: null,
     suribet_percentage: 80,
     notes: ''
   });
