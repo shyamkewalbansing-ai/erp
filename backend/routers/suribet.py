@@ -1465,7 +1465,7 @@ async def get_mobile_upload_status(
 @router.post("/mobile-upload")
 async def mobile_upload_bon(
     file: UploadFile = File(...),
-    session_id: str = None,
+    session_id: str = Query(..., description="Session ID from QR code"),
     current_user: dict = Depends(get_current_user)
 ):
     """Handle mobile bon upload and process with AI"""
