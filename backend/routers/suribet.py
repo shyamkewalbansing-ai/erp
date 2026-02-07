@@ -1312,15 +1312,15 @@ async def parse_bon_image(
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage
         
-        # Try to import ImageContent, fall back to FileContent
-        try:
-            from emergentintegrations.llm.chat import ImageContent
-        except ImportError:
-            from emergentintegrations.llm.chat import FileContent
-            # Create a simple ImageContent class if not available
-            class ImageContent(FileContent):
-                def __init__(self, image_base64: str):
-                    super().__init__("image", image_base64)
+        # Define FileContent and ImageContent locally (for older library versions)
+        class FileContent:
+            def __init__(self, content_type: str, file_content_base64: str):
+                self.content_type = content_type
+                self.file_content_base64 = file_content_base64
+        
+        class ImageContent(FileContent):
+            def __init__(self, image_base64: str):
+                super().__init__("image", image_base64)
         
         # Read file contents
         contents = await file.read()
