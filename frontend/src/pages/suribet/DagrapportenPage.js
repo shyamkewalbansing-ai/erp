@@ -741,7 +741,7 @@ export default function DagrapportenPage() {
                   className="hidden"
                   id="bon-upload"
                 />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2 justify-center">
                   <Button
                     type="button"
                     variant="outline"
@@ -766,6 +766,16 @@ export default function DagrapportenPage() {
                   >
                     <Upload className="w-4 h-4 mr-2" />
                     Upload
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={createQrSession}
+                    disabled={scanningBon}
+                    className="border-blue-300 hover:bg-blue-100"
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    QR Code
                   </Button>
                 </div>
               </div>
