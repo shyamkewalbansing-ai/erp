@@ -317,8 +317,17 @@ export default function DagrapportenPage() {
   const formOmzetSRD = berekenBiljettenTotaal(formData.biljetten_srd, SRD_DENOMINATIES);
   const formOmzetEUR = berekenBiljettenTotaal(formData.biljetten_eur, EUR_DENOMINATIES);
   const formOmzetUSD = berekenBiljettenTotaal(formData.biljetten_usd, USD_DENOMINATIES);
-  const formTotaalOmzet = formOmzetSRD + (formOmzetEUR * wisselkoersen.eur_to_srd) + (formOmzetUSD * wisselkoersen.usd_to_srd);
-  const formCommissies = berekenCommissies(formTotaalOmzet, formData.suribet_percentage);
+  const formBiljettenTotaal = formOmzetSRD + (formOmzetEUR * wisselkoersen.eur_to_srd) + (formOmzetUSD * wisselkoersen.usd_to_srd);
+  
+  // Als bon data beschikbaar is, gebruik die voor omzet en commissie
+  const formTotaalOmzet = bonData?.balance || formBiljettenTotaal;
+  const formCommissies = berekenCommissies(formTotaalOmzet, formData.suribet_percentage, bonData);
+  
+  // Bereken begin en eind saldo
+  const formBeginsaldo = formData.beginsaldo_srd + (formData.beginsaldo_eur * wisselkoersen.eur_to_srd) + (formData.beginsaldo_usd * wisselkoersen.usd_to_srd);
+  const formEindsaldo = bonData?.balance 
+    ? formBeginsaldo + bonData.balance - formBiljettenTotaal
+    : formData.eindsaldo_srd + (formData.eindsaldo_eur * wisselkoersen.eur_to_srd) + (formData.eindsaldo_usd * wisselkoersen.usd_to_srd);
 
   if (loading) {
     return (
