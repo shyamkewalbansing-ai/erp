@@ -103,6 +103,48 @@ export default function DagrapportenPage() {
     }
   };
 
+  // Bon scanner functie
+  const handleBonUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setScanningBon(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await fetch(`${API_URL}/api/suribet/parse-bon`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formDataUpload
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setBonData(result.bon_data);
+        setFormData(prev => ({
+          ...prev,
+          bon_data: result.bon_data
+        }));
+        toast.success('Bon succesvol gescand!');
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Fout bij scannen bon');
+      }
+    } catch (error) {
+      console.error('Bon scan error:', error);
+      toast.error('Fout bij scannen bon');
+    } finally {
+      setScanningBon(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   // Bereken totaal biljetten in SRD
   const berekenBiljettenTotaal = (biljetten, denominaties, multiplier = 1) => {
     if (!biljetten) return 0;
@@ -112,19 +154,33 @@ export default function DagrapportenPage() {
     }, 0);
   };
 
-  // Bereken totale omzet in SRD (inclusief EUR en USD conversie)
+  // Bereken totale omzet - nu ook met bon data
   const berekenTotaleOmzet = (rapport) => {
+    // Als er bon data is, gebruik de balance daarvan
+    if (rapport.bon_data?.balance) {
+      return rapport.bon_data.balance;
+    }
+    // Anders bereken van biljetten
     const srd = berekenBiljettenTotaal(rapport.biljetten_srd, SRD_DENOMINATIES);
     const eur = berekenBiljettenTotaal(rapport.biljetten_eur, EUR_DENOMINATIES, wisselkoersen.eur_to_srd);
     const usd = berekenBiljettenTotaal(rapport.biljetten_usd, USD_DENOMINATIES, wisselkoersen.usd_to_srd);
     return srd + eur + usd;
   };
 
-  // Bereken commissies
-  const berekenCommissies = (omzet, suribetPercentage) => {
+  // Bereken commissies - nu van bon data
+  const berekenCommissies = (omzet, suribetPercentage, bonData = null) => {
+    if (bonData?.total_pos_commission) {
+      // Gebruik de commissie van de bon
+      const totaleCommissie = bonData.total_pos_commission;
+      // Retailer krijgt (100 - suribetPercentage)% van de commissie
+      const jouwCommissie = totaleCommissie * ((100 - suribetPercentage) / 100);
+      const suribetDeel = totaleCommissie * (suribetPercentage / 100);
+      return { suribetDeel, jouwCommissie, totaleCommissie };
+    }
+    // Fallback naar oude berekening
     const suribetDeel = omzet * (suribetPercentage / 100);
     const jouwCommissie = omzet - suribetDeel;
-    return { suribetDeel, jouwCommissie };
+    return { suribetDeel, jouwCommissie, totaleCommissie: omzet };
   };
 
   // Check of machine verlies draait
