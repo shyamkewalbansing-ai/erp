@@ -132,17 +132,6 @@ export default function Dashboard() {
     }
   };
 
-  // Module slug to route path mapping
-  const moduleRoutes = {
-    'vastgoed_beheer': '/app/vastgoed',
-    'hrm': '/app/hrm',
-    'autodealer': '/app/autodealer',
-    'beauty': '/app/beautyspa',
-    'pompstation': '/app/pompstation',
-    'boekhouding': '/app/boekhouding',
-    'suribet': '/app/suribet'
-  };
-
   const checkAddonsAndFetch = async () => {
     try {
       const addonsResponse = await getMyAddons();
