@@ -1292,3 +1292,168 @@ async def get_shift_history(user_id: str, employee_id: str, limit: int = 10):
             shift["machine_location"] = machine.get("location", "")
     
     return shifts
+
+
+# ============================================
+# BON SCANNER ENDPOINT
+# ============================================
+
+@router.post("/parse-bon")
+async def parse_bon_image(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Parse a Suribet receipt image using AI vision"""
+    try:
+        from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
+        
+        # Read and encode the image
+        contents = await file.read()
+        base64_image = base64.b64encode(contents).decode('utf-8')
+        
+        # Get API key
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="EMERGENT_LLM_KEY not configured")
+        
+        # Create chat instance with Gemini Vision
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"bon-parse-{uuid.uuid4()}",
+            system_message="""You are a receipt data extractor. Extract ALL data from Suribet receipts.
+            
+Return ONLY valid JSON, no other text. Use this exact structure:
+{
+  "pos_sales": [
+    {"product": "SB", "total_bets": 0.00, "comm_percentage": 0.00, "commission": 0.00}
+  ],
+  "pos_sales_total": 0.00,
+  "pos_sales_commission": 0.00,
+  "pos_payout": [
+    {"product": "PT", "total_paid": 0.00, "comm_percentage": 0.00, "commission": 0.00}
+  ],
+  "pos_payout_total": 0.00,
+  "pos_payout_commission": 0.00,
+  "playable_ticket": [
+    {"product": "SB", "total_bets": 0.00, "comm_percentage": 0.00, "commission": 0.00}
+  ],
+  "playable_ticket_total": 0.00,
+  "playable_ticket_commission": 0.00,
+  "total_sales": 0.00,
+  "kiosk_cash_in": 0.00,
+  "kiosk_commission": 0.00,
+  "total_pc_sales": 0.00,
+  "total_payout": 0.00,
+  "total_pt_pos_cancel_bets": 0.00,
+  "total_pos_commission": 0.00,
+  "balance": 0.00
+}
+
+Product codes: SB=Sports Betting, SF=Scratch Fun, VSF=Virtual Scratch Fun, Topup, PT=Prize Transfer, S2W=Spin2Win, VSB=Virtual Sports Betting, WDR=Withdrawal, WDRNC=Withdrawal No Commission, YGT=Your Game Ticket, AMT=Amount.
+
+Extract ALL products shown on the receipt. Use 0.00 for missing values."""
+        ).with_model("gemini", "gemini-2.5-flash")
+        
+        # Create image content
+        image_content = ImageContent(image_base64=base64_image)
+        
+        # Send message with image
+        user_message = UserMessage(
+            text="Extract all data from this Suribet receipt. Return ONLY the JSON, nothing else.",
+            image_contents=[image_content]
+        )
+        
+        response = await chat.send_message(user_message)
+        
+        # Parse the JSON response
+        # Clean the response - remove markdown code blocks if present
+        json_str = response.strip()
+        if json_str.startswith("```"):
+            json_str = re.sub(r'^```(?:json)?\n?', '', json_str)
+            json_str = re.sub(r'\n?```$', '', json_str)
+        
+        try:
+            bon_data = json.loads(json_str)
+        except json.JSONDecodeError:
+            # Try to extract JSON from response
+            json_match = re.search(r'\{[\s\S]*\}', response)
+            if json_match:
+                bon_data = json.loads(json_match.group())
+            else:
+                raise HTTPException(status_code=400, detail="Could not parse receipt data")
+        
+        return {
+            "success": True,
+            "bon_data": bon_data
+        }
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="emergentintegrations library not installed")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error parsing receipt: {str(e)}")
+
+# ============================================
+# PRODUCT SETTINGS ENDPOINTS
+# ============================================
+
+@router.get("/product-settings")
+async def get_product_settings(current_user: dict = Depends(get_current_user)):
+    """Get user's product commission settings"""
+    user_id = current_user["id"]
+    
+    settings = await db.suribet_product_settings.find_one(
+        {"user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not settings:
+        # Return default settings
+        settings = {
+            "user_id": user_id,
+            "pos_sales_products": [
+                {"code": "SB", "name": "Sports Betting", "comm_percentage": 5.0},
+                {"code": "SF", "name": "Scratch Fun", "comm_percentage": 8.0},
+                {"code": "VSF", "name": "Virtual Scratch Fun", "comm_percentage": 8.0},
+                {"code": "Topup", "name": "Topup", "comm_percentage": 2.0},
+                {"code": "PT", "name": "Prize Transfer", "comm_percentage": 0.0},
+                {"code": "S2W", "name": "Spin2Win", "comm_percentage": 8.0},
+                {"code": "VSB", "name": "Virtual Sports Betting", "comm_percentage": 5.0},
+            ],
+            "pos_payout_products": [
+                {"code": "PT", "name": "Prize Transfer", "comm_percentage": 0.0},
+                {"code": "S2W", "name": "Spin2Win", "comm_percentage": 0.0},
+                {"code": "SF", "name": "Scratch Fun", "comm_percentage": 0.0},
+                {"code": "VSB", "name": "Virtual Sports Betting", "comm_percentage": 0.0},
+                {"code": "WDR", "name": "Withdrawal", "comm_percentage": 0.0},
+                {"code": "WDRNC", "name": "Withdrawal No Commission", "comm_percentage": 0.0},
+            ],
+            "playable_ticket_products": [
+                {"code": "SB", "name": "Sports Betting", "comm_percentage": 5.0},
+                {"code": "VSF", "name": "Virtual Scratch Fun", "comm_percentage": 8.0},
+                {"code": "S2W", "name": "Spin2Win", "comm_percentage": 8.0},
+                {"code": "YGT", "name": "Your Game Ticket", "comm_percentage": 5.0},
+                {"code": "AMT", "name": "Amount", "comm_percentage": 5.0},
+            ],
+            "retailer_percentage": 20.0  # Retailer gets 20%, Suribet gets 80%
+        }
+    
+    return settings
+
+@router.put("/product-settings")
+async def update_product_settings(
+    settings: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's product commission settings"""
+    user_id = current_user["id"]
+    
+    settings["user_id"] = user_id
+    settings["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.suribet_product_settings.update_one(
+        {"user_id": user_id},
+        {"$set": settings},
+        upsert=True
+    )
+    
+    return {"message": "Instellingen opgeslagen"}
