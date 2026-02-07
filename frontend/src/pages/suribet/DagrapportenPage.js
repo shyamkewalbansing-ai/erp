@@ -954,25 +954,81 @@ export default function DagrapportenPage() {
             </div>
 
             {/* Totalen Preview */}
-            <div className="p-4 bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950/30 dark:to-blue-950/30 rounded-lg space-y-3">
+            <div className="p-4 bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950/30 dark:to-blue-950/30 rounded-lg space-y-4">
               <h4 className="font-medium flex items-center gap-2">
                 <Calculator className="w-4 h-4" />
-                Berekening
+                Berekening Overzicht
               </h4>
-              <div className="grid grid-cols-3 gap-4">
+              
+              {/* Saldo Overzicht */}
+              <div className="grid grid-cols-2 gap-4 p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg">
                 <div>
-                  <p className="text-xs text-muted-foreground">Totale Omzet</p>
-                  <p className="text-xl font-bold text-emerald-600">{formatCurrency(formTotaalOmzet)}</p>
+                  <p className="text-xs text-muted-foreground">Beginsaldo (totaal)</p>
+                  <p className="text-lg font-bold">{formatCurrency(formBeginsaldo)}</p>
                 </div>
                 <div>
+                  <p className="text-xs text-muted-foreground">Eindsaldo (berekend)</p>
+                  <p className="text-lg font-bold">{formatCurrency(formEindsaldo)}</p>
+                </div>
+              </div>
+
+              {/* Biljetten Totaal */}
+              <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                <p className="text-xs text-muted-foreground">Getelde Biljetten Totaal (SRD)</p>
+                <p className="text-xl font-bold text-purple-600">{formatCurrency(formBiljettenTotaal)}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  SRD: {formatCurrency(formOmzetSRD)} | EUR: €{formOmzetEUR.toFixed(2)} | USD: ${formOmzetUSD.toFixed(2)}
+                </p>
+              </div>
+
+              {/* Bon vs Biljetten vergelijking */}
+              {bonData && (
+                <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+                  <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-2">📊 Bon vs Biljetten Vergelijking</p>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Bon Balance:</span>
+                      <span className="font-bold">{formatCurrency(bonData.balance)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Getelde Biljetten:</span>
+                      <span className="font-bold">{formatCurrency(formBiljettenTotaal)}</span>
+                    </div>
+                  </div>
+                  {Math.abs((bonData.balance || 0) - formBiljettenTotaal) > 1 && (
+                    <p className="text-xs text-amber-600 mt-2">
+                      ⚠️ Verschil: {formatCurrency(Math.abs((bonData.balance || 0) - formBiljettenTotaal))}
+                    </p>
+                  )}
+                </div>
+              )}
+              
+              {/* Commissie Berekening */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Totale Omzet (Bon)</p>
+                  <p className="text-xl font-bold text-emerald-600">{formatCurrency(formTotaalOmzet)}</p>
+                </div>
+                <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg">
                   <p className="text-xs text-muted-foreground">Deel Suribet ({formData.suribet_percentage}%)</p>
                   <p className="text-xl font-bold text-orange-600">{formatCurrency(formCommissies.suribetDeel)}</p>
                 </div>
-                <div>
+                <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg">
                   <p className="text-xs text-muted-foreground">Jouw Commissie ({100 - formData.suribet_percentage}%)</p>
                   <p className="text-xl font-bold text-blue-600">{formatCurrency(formCommissies.jouwCommissie)}</p>
                 </div>
               </div>
+
+              {/* Totale POS Commissie van bon */}
+              {bonData?.total_pos_commission > 0 && (
+                <div className="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Totale POS Commissie (van bon)</p>
+                  <p className="text-lg font-bold text-emerald-700">{formatCurrency(bonData.total_pos_commission)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Jouw deel ({100 - formData.suribet_percentage}%): <span className="font-bold text-blue-600">{formatCurrency(formCommissies.jouwCommissie)}</span>
+                  </p>
+                </div>
+              )}
             </div>
 
             <DialogFooter>
