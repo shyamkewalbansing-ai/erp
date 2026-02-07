@@ -1387,9 +1387,15 @@ Extract ALL products shown on the receipt. Use 0.00 for missing values."""
             "bon_data": bon_data
         }
         
-    except ImportError:
+    except ImportError as e:
+        print(f"Import error: {e}")
         raise HTTPException(status_code=500, detail="emergentintegrations library not installed")
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Bon parse error: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error parsing receipt: {str(e)}")
 
 # ============================================
