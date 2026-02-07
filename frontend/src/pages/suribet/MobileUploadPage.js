@@ -40,9 +40,8 @@ export default function MobileUploadPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('session_id', sessionId);
 
-      const response = await fetch(`${API_URL}/api/suribet/mobile-upload`, {
+      const response = await fetch(`${API_URL}/api/suribet/mobile-upload?session_id=${sessionId}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -53,10 +52,11 @@ export default function MobileUploadPage() {
       if (response.ok) {
         setUploaded(true);
       } else {
-        const data = await response.json();
+        const data = await response.json().catch(() => ({}));
         setError(data.detail || 'Upload mislukt');
       }
     } catch (err) {
+      console.error('Upload error:', err);
       setError('Netwerkfout - probeer opnieuw');
     } finally {
       setUploading(false);
