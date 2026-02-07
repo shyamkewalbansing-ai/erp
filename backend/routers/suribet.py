@@ -1368,12 +1368,13 @@ Extract ALL products shown on the receipt. Use 0.00 for missing values."""
         ).with_model("gemini", "gemini-2.5-flash")
         
         # Create image content using ImageContent with base64
+        # ImageContent inherits from FileContent, so use file_contents parameter
         image_content = ImageContent(image_base64=base64_image)
         
-        # Send message with image - use the image_contents parameter
+        # Send message with image - use file_contents parameter (not image_contents)
         user_message = UserMessage(
             text="Extract all data from this Suribet receipt. Return ONLY the JSON, nothing else.",
-            image_contents=[image_content]
+            file_contents=[image_content]
         )
         
         logger.info("Sending message to Gemini Vision API...")
