@@ -31,9 +31,12 @@ import {
   Upload,
   QrCode,
   Loader2,
-  Receipt
+  Receipt,
+  Smartphone,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { QRCodeSVG } from 'qrcode.react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
