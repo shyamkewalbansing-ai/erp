@@ -122,34 +122,34 @@ export default function DagrapportenPage() {
         body: formDataUpload
       });
 
-      const responseText = await response.text();
+      // Clone response first to avoid "body stream already read" error
+      const responseClone = response.clone();
       
-      if (response.ok) {
-        try {
-          const result = JSON.parse(responseText);
-          setBonData(result.bon_data);
-          setFormData(prev => ({
-            ...prev,
-            bon_data: result.bon_data
-          }));
-          toast.success('Bon succesvol gescand!');
-        } catch (parseError) {
-          console.error('JSON parse error:', parseError);
-          toast.error('Fout bij verwerken bon data');
-        }
+      let responseData;
+      try {
+        responseData = await response.json();
+      } catch {
+        // If JSON parsing fails, try reading as text from clone
+        const textData = await responseClone.text();
+        console.error('Response was not JSON:', textData);
+        throw new Error(textData || 'Server returned invalid response');
+      }
+      
+      if (response.ok && responseData.success) {
+        setBonData(responseData.bon_data);
+        setFormData(prev => ({
+          ...prev,
+          bon_data: responseData.bon_data
+        }));
+        toast.success('Bon succesvol gescand!');
       } else {
-        try {
-          const error = JSON.parse(responseText);
-          console.error('Server error:', error);
-          toast.error(error.detail || 'Fout bij scannen bon');
-        } catch {
-          console.error('Server error (raw):', responseText);
-          toast.error('Fout bij scannen bon: ' + (responseText || 'Onbekende fout'));
-        }
+        const errorMessage = responseData.detail || responseData.message || 'Fout bij scannen bon';
+        console.error('Server error:', responseData);
+        toast.error(errorMessage);
       }
     } catch (error) {
       console.error('Bon scan error:', error);
-      toast.error('Fout bij scannen bon: Netwerkfout');
+      toast.error(error.message || 'Fout bij scannen bon');
     } finally {
       setScanningBon(false);
       if (fileInputRef.current) {
