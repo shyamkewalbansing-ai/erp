@@ -931,26 +931,14 @@ export default function DagrapportenPage() {
               </TabsContent>
             </Tabs>
 
-            {/* Commissie Percentage */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Suribet Percentage (%)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.suribet_percentage}
-                  onChange={(e) => setFormData({...formData, suribet_percentage: parseFloat(e.target.value) || 80})}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Notities</Label>
-                <Input
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  placeholder="Optionele notities"
-                />
-              </div>
+            {/* Notities - alleen indien nodig */}
+            <div className="space-y-2">
+              <Label>Notities (optioneel)</Label>
+              <Input
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                placeholder="Optionele notities"
+              />
             </div>
 
             {/* Totalen Preview */}
