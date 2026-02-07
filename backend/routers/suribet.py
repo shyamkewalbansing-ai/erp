@@ -1330,6 +1330,7 @@ async def parse_bon_image(
         
         prompt = """Extract ALL data from this Suribet receipt. Return ONLY valid JSON:
 {
+  "receipt_date": "YYYY-MM-DD",
   "pos_sales": [{"product": "SB", "total_bets": 0.00, "comm_percentage": 0.00, "commission": 0.00}],
   "pos_sales_total": 0.00,
   "pos_sales_commission": 0.00,
@@ -1348,6 +1349,7 @@ async def parse_bon_image(
   "total_pos_commission": 0.00,
   "balance": 0.00
 }
+IMPORTANT: Extract the date from the receipt and put it in receipt_date field (format: YYYY-MM-DD).
 Product codes: SB, SF, VSF, Topup, PT, S2W, VSB, WDR, WDRNC. Return ONLY JSON."""
 
         logger.info("Sending to Emergent proxy...")
@@ -1500,6 +1502,7 @@ async def mobile_upload_bon(
         
         prompt = """Extract ALL data from this Suribet receipt. Return ONLY valid JSON:
 {
+  "receipt_date": "YYYY-MM-DD",
   "pos_sales": [{"product": "SB", "total_bets": 0.00, "comm_percentage": 0.00, "commission": 0.00}],
   "pos_sales_total": 0.00,
   "pos_sales_commission": 0.00,
@@ -1518,6 +1521,7 @@ async def mobile_upload_bon(
   "total_pos_commission": 0.00,
   "balance": 0.00
 }
+IMPORTANT: Extract the date from the receipt and put it in receipt_date field (format: YYYY-MM-DD).
 Product codes: SB, SF, VSF, Topup, PT, S2W, VSB, WDR, WDRNC. Return ONLY JSON."""
 
         logger.info("Processing mobile upload via Emergent proxy...")
