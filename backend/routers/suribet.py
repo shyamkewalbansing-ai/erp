@@ -1305,60 +1305,42 @@ async def parse_bon_image(
 ):
     """Parse a Suribet receipt image using AI vision"""
     import logging
+    import litellm
     
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
     
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-        
-        # Define FileContent and ImageContent locally (for older library versions)
-        class FileContent:
-            def __init__(self, content_type: str, file_content_base64: str):
-                self.content_type = content_type
-                self.file_content_base64 = file_content_base64
-        
-        class ImageContent(FileContent):
-            def __init__(self, image_base64: str):
-                super().__init__("image", image_base64)
-        
         # Read file contents
         contents = await file.read()
-        logger.info(f"Received file: {file.filename}, size: {len(contents)} bytes, content_type: {file.content_type}")
+        logger.info(f"Received file: {file.filename}, size: {len(contents)} bytes")
         
         # Encode image to base64
         base64_image = base64.b64encode(contents).decode('utf-8')
-        logger.info(f"Base64 encoded image length: {len(base64_image)}")
+        
+        # Determine mime type
+        mime_type = "image/jpeg"
+        if base64_image.startswith('iVBORw0KGgo'):
+            mime_type = "image/png"
+        elif base64_image.startswith('/9j/'):
+            mime_type = "image/jpeg"
         
         # Get API key
         api_key = os.environ.get('EMERGENT_LLM_KEY')
         if not api_key:
-            logger.error("EMERGENT_LLM_KEY not found in environment")
             raise HTTPException(status_code=500, detail="EMERGENT_LLM_KEY not configured")
         
-        logger.info("Creating LlmChat instance with gemini-2.0-flash model")
-        
-        # Create chat instance with Gemini Vision
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"bon-parse-{uuid.uuid4()}",
-            system_message="""You are a receipt data extractor. Extract ALL data from Suribet receipts.
-            
+        prompt = """You are a receipt data extractor. Extract ALL data from this Suribet receipt.
+
 Return ONLY valid JSON, no other text. Use this exact structure:
 {
-  "pos_sales": [
-    {"product": "SB", "total_bets": 0.00, "comm_percentage": 0.00, "commission": 0.00}
-  ],
+  "pos_sales": [{"product": "SB", "total_bets": 0.00, "comm_percentage": 0.00, "commission": 0.00}],
   "pos_sales_total": 0.00,
   "pos_sales_commission": 0.00,
-  "pos_payout": [
-    {"product": "PT", "total_paid": 0.00, "comm_percentage": 0.00, "commission": 0.00}
-  ],
+  "pos_payout": [{"product": "PT", "total_paid": 0.00, "comm_percentage": 0.00, "commission": 0.00}],
   "pos_payout_total": 0.00,
   "pos_payout_commission": 0.00,
-  "playable_ticket": [
-    {"product": "SB", "total_bets": 0.00, "comm_percentage": 0.00, "commission": 0.00}
-  ],
+  "playable_ticket": [],
   "playable_ticket_total": 0.00,
   "playable_ticket_commission": 0.00,
   "total_sales": 0.00,
@@ -1371,58 +1353,51 @@ Return ONLY valid JSON, no other text. Use this exact structure:
   "balance": 0.00
 }
 
-Product codes: SB=Sports Betting, SF=Scratch Fun, VSF=Virtual Scratch Fun, Topup, PT=Prize Transfer, S2W=Spin2Win, VSB=Virtual Sports Betting, WDR=Withdrawal, WDRNC=Withdrawal No Commission, YGT=Your Game Ticket, AMT=Amount.
+Product codes: SB=Sports Betting, SF=Scratch Fun, VSF=Virtual Scratch Fun, Topup, PT=Prize Transfer, S2W=Spin2Win, VSB=Virtual Sports Betting, WDR=Withdrawal, WDRNC=Withdrawal No Commission.
+Extract ALL products shown. Use 0.00 for missing values. Return ONLY JSON."""
 
-Extract ALL products shown on the receipt. Use 0.00 for missing values."""
+        logger.info("Sending to Gemini Vision via litellm...")
+        
+        # Use litellm with Gemini
+        response = await litellm.acompletion(
+            model="gemini/gemini-2.0-flash",
+            api_key=api_key,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{mime_type};base64,{base64_image}"
+                            }
+                        }
+                    ]
+                }
+            ]
         )
         
-        # Support both old and new library versions
-        try:
-            chat = chat.with_model("gemini", "gemini-2.0-flash")
-        except TypeError:
-            chat = chat.with_model("gemini-2.0-flash")
+        response_text = response.choices[0].message.content
+        logger.info(f"Response: {response_text[:300]}...")
         
-        # Create image content
-        image_content = ImageContent(image_base64=base64_image)
-        
-        # Send message with image
-        user_message = UserMessage(
-            text="Extract all data from this Suribet receipt. Return ONLY the JSON, nothing else.",
-            file_contents=[image_content]
-        )
-        
-        logger.info("Sending message to Gemini Vision API...")
-        response = await chat.send_message(user_message)
-        logger.info(f"Received response from Gemini: {response[:500] if response else 'Empty response'}...")
-        
-        # Parse the JSON response - clean markdown if present
-        json_str = response.strip()
+        # Parse JSON - clean markdown if present
+        json_str = response_text.strip()
         if json_str.startswith("```"):
             json_str = re.sub(r'^```(?:json)?\n?', '', json_str)
             json_str = re.sub(r'\n?```$', '', json_str)
         
         try:
             bon_data = json.loads(json_str)
-            logger.info("Successfully parsed JSON response")
-        except json.JSONDecodeError as je:
-            logger.warning(f"Initial JSON parse failed: {je}")
-            # Try to extract JSON from response
-            json_match = re.search(r'\{[\s\S]*\}', response)
+        except json.JSONDecodeError:
+            json_match = re.search(r'\{[\s\S]*\}', response_text)
             if json_match:
                 bon_data = json.loads(json_match.group())
-                logger.info("Extracted JSON from response using regex")
             else:
-                logger.error(f"Could not parse JSON from response: {response[:500]}")
-                raise HTTPException(status_code=400, detail="Could not parse receipt data from AI response")
+                raise HTTPException(status_code=400, detail="Could not parse receipt data")
         
-        return {
-            "success": True,
-            "bon_data": bon_data
-        }
+        return {"success": True, "bon_data": bon_data}
         
-    except ImportError as e:
-        logger.error(f"Import error: {e}")
-        raise HTTPException(status_code=500, detail=f"Missing library: {str(e)}")
     except HTTPException:
         raise
     except Exception as e:
