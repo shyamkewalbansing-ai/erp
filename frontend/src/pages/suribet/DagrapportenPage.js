@@ -149,9 +149,12 @@ export default function DagrapportenPage() {
 
       if (result.success) {
         setBonData(result.bon_data);
+        // Update form with bon data including date if available
         setFormData(prev => ({
           ...prev,
-          bon_data: result.bon_data
+          bon_data: result.bon_data,
+          // Auto-fill date from receipt if available
+          date: result.bon_data.receipt_date || prev.date
         }));
         toast.success('Bon succesvol gescand!');
       } else {
