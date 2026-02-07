@@ -871,67 +871,6 @@ export default function DagrapportenPage() {
               </div>
             </div>
 
-            {/* Saldo's */}
-            <div className="space-y-3">
-              <h4 className="font-medium">Begin- en Eindsaldo</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs">Begin SRD</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.beginsaldo_srd}
-                    onChange={(e) => setFormData({...formData, beginsaldo_srd: parseFloat(e.target.value) || 0})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Begin EUR</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.beginsaldo_eur}
-                    onChange={(e) => setFormData({...formData, beginsaldo_eur: parseFloat(e.target.value) || 0})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Begin USD</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.beginsaldo_usd}
-                    onChange={(e) => setFormData({...formData, beginsaldo_usd: parseFloat(e.target.value) || 0})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Eind SRD</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.eindsaldo_srd}
-                    onChange={(e) => setFormData({...formData, eindsaldo_srd: parseFloat(e.target.value) || 0})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Eind EUR</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.eindsaldo_eur}
-                    onChange={(e) => setFormData({...formData, eindsaldo_eur: parseFloat(e.target.value) || 0})}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs">Eind USD</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.eindsaldo_usd}
-                    onChange={(e) => setFormData({...formData, eindsaldo_usd: parseFloat(e.target.value) || 0})}
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Biljetten Tabs */}
             <Tabs defaultValue="srd" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
