@@ -58,7 +58,11 @@ export default function DagrapportenPage() {
   const [selectedRapport, setSelectedRapport] = useState(null);
   const [scanningBon, setScanningBon] = useState(false);
   const [bonData, setBonData] = useState(null);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrSessionId, setQrSessionId] = useState(null);
+  const [qrPolling, setQrPolling] = useState(false);
   const fileInputRef = useRef(null);
+  const qrPollIntervalRef = useRef(null);
   
   // Form state
   const [formData, setFormData] = useState({
