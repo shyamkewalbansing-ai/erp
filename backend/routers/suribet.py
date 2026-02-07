@@ -1,12 +1,19 @@
 """
 Suribet Retailer Management Module - Backend Routes
 """
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone
 from bson import ObjectId
 import uuid
+import base64
+import os
+import json
+import re
+from dotenv import load_dotenv
+
+load_dotenv()
 
 router = APIRouter(prefix="/suribet", tags=["Suribet"])
 
