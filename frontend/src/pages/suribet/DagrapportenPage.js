@@ -114,38 +114,41 @@ export default function DagrapportenPage() {
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
 
-      const response = await fetch(`${API_URL}/api/suribet/parse-bon`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formDataUpload
+      // Use XMLHttpRequest to avoid service worker interference
+      const result = await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${API_URL}/api/suribet/parse-bon`);
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+        
+        xhr.onload = () => {
+          try {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300) {
+              resolve(data);
+            } else {
+              reject(new Error(data.detail || 'Server error'));
+            }
+          } catch (e) {
+            reject(new Error('Ongeldige server response'));
+          }
+        };
+        
+        xhr.onerror = () => reject(new Error('Netwerkfout'));
+        xhr.ontimeout = () => reject(new Error('Timeout - probeer opnieuw'));
+        xhr.timeout = 120000; // 2 minuten timeout voor AI processing
+        
+        xhr.send(formDataUpload);
       });
 
-      // Clone response first to avoid "body stream already read" error
-      const responseClone = response.clone();
-      
-      let responseData;
-      try {
-        responseData = await response.json();
-      } catch {
-        // If JSON parsing fails, try reading as text from clone
-        const textData = await responseClone.text();
-        console.error('Response was not JSON:', textData);
-        throw new Error(textData || 'Server returned invalid response');
-      }
-      
-      if (response.ok && responseData.success) {
-        setBonData(responseData.bon_data);
+      if (result.success) {
+        setBonData(result.bon_data);
         setFormData(prev => ({
           ...prev,
-          bon_data: responseData.bon_data
+          bon_data: result.bon_data
         }));
         toast.success('Bon succesvol gescand!');
       } else {
-        const errorMessage = responseData.detail || responseData.message || 'Fout bij scannen bon';
-        console.error('Server error:', responseData);
-        toast.error(errorMessage);
+        toast.error(result.detail || 'Fout bij scannen bon');
       }
     } catch (error) {
       console.error('Bon scan error:', error);
