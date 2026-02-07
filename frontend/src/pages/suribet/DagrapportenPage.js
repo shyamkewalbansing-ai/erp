@@ -216,7 +216,9 @@ export default function DagrapportenPage() {
             setBonData(data.bon_data);
             setFormData(prev => ({
               ...prev,
-              bon_data: data.bon_data
+              bon_data: data.bon_data,
+              // Auto-fill date from receipt if available
+              date: data.bon_data.receipt_date || prev.date
             }));
             toast.success('Bon succesvol ontvangen via telefoon!');
             stopQrPolling();
