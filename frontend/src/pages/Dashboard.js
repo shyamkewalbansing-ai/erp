@@ -149,17 +149,23 @@ export default function Dashboard() {
       const addons = addonsResponse.data || [];
       setActiveAddons(addons);
       
-      // Get active modules
-      const activeModules = addons.filter(addon => 
-        addon.status === 'active' || addon.status === 'trial'
+      const hasVastgoed = addons.some(addon => 
+        addon.addon_slug === 'vastgoed_beheer' && 
+        (addon.status === 'active' || addon.status === 'trial')
       );
-      
-      const hasVastgoed = activeModules.some(addon => addon.addon_slug === 'vastgoed_beheer');
       setHasVastgoedAddon(hasVastgoed);
       setAddonsChecked(true);
       
       // Check if user has ANY active modules
-      const hasAnyActiveModule = activeModules.length > 0;
+      const hasAnyActiveModule = addons.some(addon => 
+        addon.status === 'active' || addon.status === 'trial'
+      );
+      
+      // Check for boekhouding only
+      const hasBoekhouding = addons.some(addon => 
+        addon.addon_slug === 'boekhouding' && 
+        (addon.status === 'active' || addon.status === 'trial')
+      );
       
       if (!hasAnyActiveModule) {
         // Show order popup for users without active modules
@@ -168,35 +174,14 @@ export default function Dashboard() {
         setOrderPopupOpen(true);
         setLoading(false);
       } else {
-        // Get user's sidebar order preference
-        let sidebarOrder = [];
-        try {
-          const orderRes = await getSidebarOrder();
-          sidebarOrder = orderRes.data?.module_order || [];
-        } catch (e) {
-          console.log('No sidebar order found, using default');
-        }
-        
-        // Default order if no preference saved
-        const defaultOrder = ['vastgoed_beheer', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding', 'suribet'];
-        const moduleOrder = sidebarOrder.length > 0 ? sidebarOrder : defaultOrder;
-        
-        // Find the first active module based on order preference
-        const firstActiveModule = moduleOrder.find(slug => 
-          activeModules.some(addon => addon.addon_slug === slug)
-        );
-        
-        // Redirect to the first active module's dashboard
-        if (firstActiveModule && moduleRoutes[firstActiveModule]) {
-          navigate(moduleRoutes[firstActiveModule], { replace: true });
-          return;
-        }
-        
-        // Fallback: Check for expired modules and load dashboard
+        // Check for expired modules
         await checkPaymentStatus();
         
         if (hasVastgoed) {
           await fetchDashboard();
+        } else if (hasBoekhouding && !hasVastgoed) {
+          // User has only boekhouding - show simplified welcome view
+          setLoading(false);
         } else {
           setLoading(false);
         }
