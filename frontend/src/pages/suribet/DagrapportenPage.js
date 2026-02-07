@@ -989,18 +989,6 @@ export default function DagrapportenPage() {
                 <Calculator className="w-4 h-4" />
                 Berekening Overzicht
               </h4>
-              
-              {/* Saldo Overzicht */}
-              <div className="grid grid-cols-2 gap-4 p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg">
-                <div>
-                  <p className="text-xs text-muted-foreground">Beginsaldo (totaal)</p>
-                  <p className="text-lg font-bold">{formatCurrency(formBeginsaldo)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Eindsaldo (berekend)</p>
-                  <p className="text-lg font-bold">{formatCurrency(formEindsaldo)}</p>
-                </div>
-              </div>
 
               {/* Biljetten Totaal */}
               <div className="p-3 bg-white/50 dark:bg-slate-800/50 rounded-lg">
@@ -1014,6 +1002,14 @@ export default function DagrapportenPage() {
               {/* Bon Data Berekening - alleen tonen als bon gescand is */}
               {bonData ? (
                 <>
+                  {/* Bon Datum */}
+                  {bonData.receipt_date && (
+                    <div className="p-2 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-center">
+                      <p className="text-xs text-muted-foreground">Datum van Bon</p>
+                      <p className="font-bold text-blue-600">{new Date(bonData.receipt_date).toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                    </div>
+                  )}
+                
                   {/* Bon vs Biljetten vergelijking */}
                   <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
                     <p className="text-xs font-medium text-amber-700 dark:text-amber-400 mb-2">📊 Bon vs Biljetten Vergelijking</p>
