@@ -81,6 +81,8 @@ class PlayableTicketProduct(BaseModel):
     commission: float = 0
 
 class BonData(BaseModel):
+    # Receipt metadata
+    receipt_date: Optional[str] = None  # YYYY-MM-DD format
     # POS Sales
     pos_sales: Optional[List[POSSalesProduct]] = []
     pos_sales_total: float = 0
