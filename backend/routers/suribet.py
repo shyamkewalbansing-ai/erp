@@ -54,6 +54,48 @@ class BiljettenUSD(BaseModel):
     b50: int = 0
     b100: int = 0
 
+# Product data from bon
+class POSSalesProduct(BaseModel):
+    product: str  # SB, SF, VSF, Topup, PT, S2W, VSB
+    total_bets: float = 0
+    comm_percentage: float = 0
+    commission: float = 0
+
+class POSPayoutProduct(BaseModel):
+    product: str  # PT, S2W, SF, VSB, WDR, WDRNC
+    total_paid: float = 0
+    comm_percentage: float = 0
+    commission: float = 0
+
+class PlayableTicketProduct(BaseModel):
+    product: str  # SB, VSF, S2W, YGT, AMT
+    total_bets: float = 0
+    comm_percentage: float = 0
+    commission: float = 0
+
+class BonData(BaseModel):
+    # POS Sales
+    pos_sales: Optional[List[POSSalesProduct]] = []
+    pos_sales_total: float = 0
+    pos_sales_commission: float = 0
+    # POS Payout
+    pos_payout: Optional[List[POSPayoutProduct]] = []
+    pos_payout_total: float = 0
+    pos_payout_commission: float = 0
+    # Playable Ticket
+    playable_ticket: Optional[List[PlayableTicketProduct]] = []
+    playable_ticket_total: float = 0
+    playable_ticket_commission: float = 0
+    # Totals from bon
+    total_sales: float = 0
+    kiosk_cash_in: float = 0
+    kiosk_commission: float = 0
+    total_pc_sales: float = 0
+    total_payout: float = 0
+    total_pt_pos_cancel_bets: float = 0
+    total_pos_commission: float = 0
+    balance: float = 0
+
 class DagstaatCreate(BaseModel):
     machine_id: str
     date: str  # YYYY-MM-DD
@@ -67,6 +109,7 @@ class DagstaatCreate(BaseModel):
     biljetten_srd: Optional[BiljettenSRD] = None
     biljetten_eur: Optional[BiljettenEUR] = None
     biljetten_usd: Optional[BiljettenUSD] = None
+    bon_data: Optional[BonData] = None  # New: parsed bon data
     omzet: float = 0
     suribet_percentage: float = 80  # Default 80%
     notes: Optional[str] = None
@@ -82,6 +125,7 @@ class DagstaatUpdate(BaseModel):
     biljetten_srd: Optional[BiljettenSRD] = None
     biljetten_eur: Optional[BiljettenEUR] = None
     biljetten_usd: Optional[BiljettenUSD] = None
+    bon_data: Optional[BonData] = None
     omzet: Optional[float] = None
     suribet_percentage: Optional[float] = None
     notes: Optional[str] = None
