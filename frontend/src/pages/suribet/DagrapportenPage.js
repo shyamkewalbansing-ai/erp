@@ -168,6 +168,91 @@ export default function DagrapportenPage() {
     }
   };
 
+  // QR Code functies
+  const createQrSession = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/suribet/mobile-upload/create-session`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setQrSessionId(data.session_id);
+        setShowQrModal(true);
+        startQrPolling(data.session_id);
+      } else {
+        toast.error('Kon QR sessie niet aanmaken');
+      }
+    } catch (error) {
+      toast.error('Fout bij aanmaken QR sessie');
+    }
+  };
+
+  const startQrPolling = (sessionId) => {
+    setQrPolling(true);
+    
+    // Poll elke 3 seconden voor upload status
+    qrPollIntervalRef.current = setInterval(async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/api/suribet/mobile-upload/status/${sessionId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          if (data.status === 'completed' && data.bon_data) {
+            // Upload is voltooid!
+            setBonData(data.bon_data);
+            setFormData(prev => ({
+              ...prev,
+              bon_data: data.bon_data
+            }));
+            toast.success('Bon succesvol ontvangen via telefoon!');
+            stopQrPolling();
+            setShowQrModal(false);
+          } else if (data.status === 'expired') {
+            toast.error('QR sessie verlopen');
+            stopQrPolling();
+            setShowQrModal(false);
+          }
+        }
+      } catch (error) {
+        console.error('Polling error:', error);
+      }
+    }, 3000);
+  };
+
+  const stopQrPolling = () => {
+    setQrPolling(false);
+    if (qrPollIntervalRef.current) {
+      clearInterval(qrPollIntervalRef.current);
+      qrPollIntervalRef.current = null;
+    }
+  };
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (qrPollIntervalRef.current) {
+        clearInterval(qrPollIntervalRef.current);
+      }
+    };
+  }, []);
+
+  const getQrUrl = () => {
+    const baseUrl = window.location.origin;
+    const token = localStorage.getItem('token');
+    return `${baseUrl}/upload/suribet/${qrSessionId}?token=${token}`;
+  };
+
   // Bereken totaal biljetten in SRD
   const berekenBiljettenTotaal = (biljetten, denominaties, multiplier = 1) => {
     if (!biljetten) return 0;
