@@ -1310,32 +1310,40 @@ async def parse_bon_image(
     logger = logging.getLogger(__name__)
     
     try:
-        import google.generativeai as genai
-        from PIL import Image
-        import io
+        from emergentintegrations.llm.chat import LlmChat, UserMessage
+        
+        # Try to import ImageContent, fall back to FileContent
+        try:
+            from emergentintegrations.llm.chat import ImageContent
+        except ImportError:
+            from emergentintegrations.llm.chat import FileContent
+            # Create a simple ImageContent class if not available
+            class ImageContent(FileContent):
+                def __init__(self, image_base64: str):
+                    super().__init__("image", image_base64)
         
         # Read file contents
         contents = await file.read()
         logger.info(f"Received file: {file.filename}, size: {len(contents)} bytes, content_type: {file.content_type}")
         
-        # Get API key - use EMERGENT_LLM_KEY or GOOGLE_API_KEY
-        api_key = os.environ.get('EMERGENT_LLM_KEY') or os.environ.get('GOOGLE_API_KEY')
+        # Encode image to base64
+        base64_image = base64.b64encode(contents).decode('utf-8')
+        logger.info(f"Base64 encoded image length: {len(base64_image)}")
+        
+        # Get API key
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
         if not api_key:
-            logger.error("No API key found (EMERGENT_LLM_KEY or GOOGLE_API_KEY)")
-            raise HTTPException(status_code=500, detail="API key not configured")
+            logger.error("EMERGENT_LLM_KEY not found in environment")
+            raise HTTPException(status_code=500, detail="EMERGENT_LLM_KEY not configured")
         
-        # Configure Gemini
-        genai.configure(api_key=api_key)
+        logger.info("Creating LlmChat instance with gemini-2.0-flash model")
         
-        # Load image
-        image = Image.open(io.BytesIO(contents))
-        logger.info(f"Image loaded: {image.size}")
-        
-        # Create model
-        model = genai.GenerativeModel('gemini-2.0-flash')
-        
-        prompt = """You are a receipt data extractor. Extract ALL data from this Suribet receipt.
-
+        # Create chat instance with Gemini Vision
+        chat = LlmChat(
+            api_key=api_key,
+            session_id=f"bon-parse-{uuid.uuid4()}",
+            system_message="""You are a receipt data extractor. Extract ALL data from Suribet receipts.
+            
 Return ONLY valid JSON, no other text. Use this exact structure:
 {
   "pos_sales": [
@@ -1365,15 +1373,24 @@ Return ONLY valid JSON, no other text. Use this exact structure:
 
 Product codes: SB=Sports Betting, SF=Scratch Fun, VSF=Virtual Scratch Fun, Topup, PT=Prize Transfer, S2W=Spin2Win, VSB=Virtual Sports Betting, WDR=Withdrawal, WDRNC=Withdrawal No Commission, YGT=Your Game Ticket, AMT=Amount.
 
-Extract ALL products shown on the receipt. Use 0.00 for missing values. Return ONLY the JSON."""
-
-        logger.info("Sending image to Gemini Vision API...")
-        response = model.generate_content([prompt, image])
-        response_text = response.text
-        logger.info(f"Received response: {response_text[:500] if response_text else 'Empty'}...")
+Extract ALL products shown on the receipt. Use 0.00 for missing values."""
+        ).with_model("gemini", "gemini-2.0-flash")
+        
+        # Create image content
+        image_content = ImageContent(image_base64=base64_image)
+        
+        # Send message with image
+        user_message = UserMessage(
+            text="Extract all data from this Suribet receipt. Return ONLY the JSON, nothing else.",
+            file_contents=[image_content]
+        )
+        
+        logger.info("Sending message to Gemini Vision API...")
+        response = await chat.send_message(user_message)
+        logger.info(f"Received response from Gemini: {response[:500] if response else 'Empty response'}...")
         
         # Parse the JSON response - clean markdown if present
-        json_str = response_text.strip()
+        json_str = response.strip()
         if json_str.startswith("```"):
             json_str = re.sub(r'^```(?:json)?\n?', '', json_str)
             json_str = re.sub(r'\n?```$', '', json_str)
@@ -1384,12 +1401,12 @@ Extract ALL products shown on the receipt. Use 0.00 for missing values. Return O
         except json.JSONDecodeError as je:
             logger.warning(f"Initial JSON parse failed: {je}")
             # Try to extract JSON from response
-            json_match = re.search(r'\{[\s\S]*\}', response_text)
+            json_match = re.search(r'\{[\s\S]*\}', response)
             if json_match:
                 bon_data = json.loads(json_match.group())
                 logger.info("Extracted JSON from response using regex")
             else:
-                logger.error(f"Could not parse JSON from response: {response_text[:500]}")
+                logger.error(f"Could not parse JSON from response: {response[:500]}")
                 raise HTTPException(status_code=400, detail="Could not parse receipt data from AI response")
         
         return {
