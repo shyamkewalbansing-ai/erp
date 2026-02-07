@@ -267,6 +267,7 @@ export default function DagrapportenPage() {
       biljetten_srd: { b5: 0, b10: 0, b20: 0, b50: 0, b100: 0, b200: 0, b500: 0 },
       biljetten_eur: { b5: 0, b10: 0, b20: 0, b50: 0, b100: 0, b200: 0 },
       biljetten_usd: { b1: 0, b5: 0, b10: 0, b20: 0, b50: 0, b100: 0 },
+      bon_data: null,
       suribet_percentage: 80,
       notes: ''
     });
