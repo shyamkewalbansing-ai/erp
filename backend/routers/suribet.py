@@ -1304,19 +1304,32 @@ async def parse_bon_image(
     current_user: dict = Depends(get_current_user)
 ):
     """Parse a Suribet receipt image using AI vision"""
+    import tempfile
+    import logging
+    
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    
     try:
         from emergentintegrations.llm.chat import LlmChat, UserMessage, ImageContent
         
-        # Read and encode the image
+        # Read file contents
         contents = await file.read()
+        logger.info(f"Received file: {file.filename}, size: {len(contents)} bytes, content_type: {file.content_type}")
+        
+        # Encode image to base64
         base64_image = base64.b64encode(contents).decode('utf-8')
+        logger.info(f"Base64 encoded image length: {len(base64_image)}")
         
         # Get API key
         api_key = os.environ.get('EMERGENT_LLM_KEY')
         if not api_key:
+            logger.error("EMERGENT_LLM_KEY not found in environment")
             raise HTTPException(status_code=500, detail="EMERGENT_LLM_KEY not configured")
         
-        # Create chat instance with Gemini Vision
+        logger.info("Creating LlmChat instance with gemini-2.5-flash model")
+        
+        # Create chat instance with Gemini Vision - using recommended model
         chat = LlmChat(
             api_key=api_key,
             session_id=f"bon-parse-{uuid.uuid4()}",
@@ -1352,18 +1365,20 @@ Return ONLY valid JSON, no other text. Use this exact structure:
 Product codes: SB=Sports Betting, SF=Scratch Fun, VSF=Virtual Scratch Fun, Topup, PT=Prize Transfer, S2W=Spin2Win, VSB=Virtual Sports Betting, WDR=Withdrawal, WDRNC=Withdrawal No Commission, YGT=Your Game Ticket, AMT=Amount.
 
 Extract ALL products shown on the receipt. Use 0.00 for missing values."""
-        ).with_model("gemini", "gemini-2.0-flash")
+        ).with_model("gemini", "gemini-2.5-flash")
         
-        # Create image content
+        # Create image content using ImageContent with base64
         image_content = ImageContent(image_base64=base64_image)
         
-        # Send message with image
+        # Send message with image - use the image_contents parameter
         user_message = UserMessage(
             text="Extract all data from this Suribet receipt. Return ONLY the JSON, nothing else.",
             image_contents=[image_content]
         )
         
+        logger.info("Sending message to Gemini Vision API...")
         response = await chat.send_message(user_message)
+        logger.info(f"Received response from Gemini: {response[:500] if response else 'Empty response'}...")
         
         # Parse the JSON response
         # Clean the response - remove markdown code blocks if present
@@ -1374,13 +1389,17 @@ Extract ALL products shown on the receipt. Use 0.00 for missing values."""
         
         try:
             bon_data = json.loads(json_str)
-        except json.JSONDecodeError:
+            logger.info("Successfully parsed JSON response")
+        except json.JSONDecodeError as je:
+            logger.warning(f"Initial JSON parse failed: {je}")
             # Try to extract JSON from response
             json_match = re.search(r'\{[\s\S]*\}', response)
             if json_match:
                 bon_data = json.loads(json_match.group())
+                logger.info("Extracted JSON from response using regex")
             else:
-                raise HTTPException(status_code=400, detail="Could not parse receipt data")
+                logger.error(f"Could not parse JSON from response: {response[:500]}")
+                raise HTTPException(status_code=400, detail="Could not parse receipt data from AI response")
         
         return {
             "success": True,
@@ -1388,12 +1407,12 @@ Extract ALL products shown on the receipt. Use 0.00 for missing values."""
         }
         
     except ImportError as e:
-        print(f"Import error: {e}")
+        logger.error(f"Import error: {e}")
         raise HTTPException(status_code=500, detail="emergentintegrations library not installed")
     except HTTPException:
         raise
     except Exception as e:
-        print(f"Bon parse error: {e}")
+        logger.error(f"Bon parse error: {e}")
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error parsing receipt: {str(e)}")
