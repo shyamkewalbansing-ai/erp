@@ -1255,6 +1255,69 @@ export default function DagrapportenPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* QR Code Modal */}
+      <Dialog open={showQrModal} onOpenChange={(open) => {
+        if (!open) stopQrPolling();
+        setShowQrModal(open);
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-blue-500" />
+              Scan met Telefoon
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex flex-col items-center py-6">
+            {qrSessionId && (
+              <>
+                <div className="p-4 bg-white rounded-xl shadow-lg">
+                  <QRCodeSVG 
+                    value={getQrUrl()} 
+                    size={200}
+                    level="M"
+                    includeMargin={true}
+                  />
+                </div>
+                
+                <div className="mt-4 text-center">
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Scan deze QR code met je telefoon om de bon te uploaden
+                  </p>
+                  
+                  {qrPolling && (
+                    <div className="flex items-center justify-center gap-2 text-blue-600">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm">Wachten op upload...</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg w-full">
+                  <p className="text-xs text-center text-blue-700 dark:text-blue-300">
+                    <strong>Tip:</strong> Open de camera app op je telefoon en richt op de QR code. 
+                    De upload pagina opent automatisch.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                stopQrPolling();
+                setShowQrModal(false);
+              }}
+            >
+              <X className="w-4 h-4 mr-2" />
+              Sluiten
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
