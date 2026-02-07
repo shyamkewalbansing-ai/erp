@@ -122,21 +122,34 @@ export default function DagrapportenPage() {
         body: formDataUpload
       });
 
+      const responseText = await response.text();
+      
       if (response.ok) {
-        const result = await response.json();
-        setBonData(result.bon_data);
-        setFormData(prev => ({
-          ...prev,
-          bon_data: result.bon_data
-        }));
-        toast.success('Bon succesvol gescand!');
+        try {
+          const result = JSON.parse(responseText);
+          setBonData(result.bon_data);
+          setFormData(prev => ({
+            ...prev,
+            bon_data: result.bon_data
+          }));
+          toast.success('Bon succesvol gescand!');
+        } catch (parseError) {
+          console.error('JSON parse error:', parseError);
+          toast.error('Fout bij verwerken bon data');
+        }
       } else {
-        const error = await response.json();
-        toast.error(error.detail || 'Fout bij scannen bon');
+        try {
+          const error = JSON.parse(responseText);
+          console.error('Server error:', error);
+          toast.error(error.detail || 'Fout bij scannen bon');
+        } catch {
+          console.error('Server error (raw):', responseText);
+          toast.error('Fout bij scannen bon: ' + (responseText || 'Onbekende fout'));
+        }
       }
     } catch (error) {
       console.error('Bon scan error:', error);
-      toast.error('Fout bij scannen bon');
+      toast.error('Fout bij scannen bon: Netwerkfout');
     } finally {
       setScanningBon(false);
       if (fileInputRef.current) {
