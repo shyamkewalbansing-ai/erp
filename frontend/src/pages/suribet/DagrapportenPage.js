@@ -605,6 +605,88 @@ export default function DagrapportenPage() {
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Bon Scanner */}
+            <div className="p-4 border-2 border-dashed border-emerald-200 dark:border-emerald-800 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-3">
+                  {scanningBon ? (
+                    <Loader2 className="w-7 h-7 text-emerald-500 animate-spin" />
+                  ) : (
+                    <Camera className="w-7 h-7 text-emerald-500" />
+                  )}
+                </div>
+                <h4 className="font-semibold mb-1">Scan Suribet Bon</h4>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Upload een foto van de bon om automatisch de bedragen uit te lezen
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleBonUpload}
+                  className="hidden"
+                  id="bon-upload"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={scanningBon}
+                    className="border-emerald-300 hover:bg-emerald-100"
+                  >
+                    <Camera className="w-4 h-4 mr-2" />
+                    {scanningBon ? 'Scannen...' : 'Maak Foto'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const input = document.createElement('input');
+                      input.type = 'file';
+                      input.accept = 'image/*';
+                      input.onchange = (e) => handleBonUpload(e);
+                      input.click();
+                    }}
+                    disabled={scanningBon}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Bon Data Preview */}
+              {bonData && (
+                <div className="mt-4 p-3 bg-white dark:bg-slate-800 rounded-lg border">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Receipt className="w-4 h-4 text-emerald-500" />
+                    <span className="font-medium text-sm">Bon Data Geladen</span>
+                    <Badge className="bg-emerald-100 text-emerald-700 text-xs">Gescand</Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total Sales:</span>
+                      <span className="font-medium">{formatCurrency(bonData.total_sales)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Total Payout:</span>
+                      <span className="font-medium">{formatCurrency(bonData.total_payout)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">POS Commissie:</span>
+                      <span className="font-medium text-emerald-600">{formatCurrency(bonData.total_pos_commission)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Balance:</span>
+                      <span className="font-bold">{formatCurrency(bonData.balance)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Basis Info */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
