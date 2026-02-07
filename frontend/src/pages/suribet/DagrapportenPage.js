@@ -271,6 +271,7 @@ export default function DagrapportenPage() {
       suribet_percentage: 80,
       notes: ''
     });
+    setBonData(null);
   };
 
   const getMachineName = (id) => machines.find(m => m.id === id)?.machine_id || 'Onbekend';
