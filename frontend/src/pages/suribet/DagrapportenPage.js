@@ -534,18 +534,14 @@ export default function DagrapportenPage() {
                     </div>
 
                     {/* Financiële Info */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 lg:gap-8">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-8">
                       <div className="text-center">
-                        <p className="text-xs text-muted-foreground">Totale Omzet</p>
+                        <p className="text-xs text-muted-foreground">Totale Omzet (Bon)</p>
                         <p className="font-bold text-lg text-emerald-600">{formatCurrency(omzet)}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-xs text-muted-foreground">Deel Suribet ({rapport.suribet_percentage}%)</p>
-                        <p className="font-bold text-lg text-orange-600">{formatCurrency(suribetDeel)}</p>
-                      </div>
-                      <div className="text-center">
                         <p className="text-xs text-muted-foreground">Jouw Commissie</p>
-                        <p className="font-bold text-lg text-blue-600">{formatCurrency(jouwCommissie)}</p>
+                        <p className="font-bold text-lg text-blue-600">{formatCurrency(rapport.bon_data?.total_pos_commission || jouwCommissie)}</p>
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-muted-foreground">Begin → Eind</p>
