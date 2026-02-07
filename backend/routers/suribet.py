@@ -1416,6 +1416,181 @@ Product codes: SB, SF, VSF, Topup, PT, S2W, VSB, WDR, WDRNC. Return ONLY JSON.""
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Error parsing receipt: {str(e)}")
 
+
+# ============================================
+# MOBILE UPLOAD ENDPOINTS (QR Code Upload)
+# ============================================
+
+# In-memory storage for mobile upload sessions (in production use Redis)
+mobile_upload_sessions = {}
+
+@router.post("/mobile-upload/create-session")
+async def create_mobile_upload_session(current_user: dict = Depends(get_current_user)):
+    """Create a new mobile upload session for QR code"""
+    session_id = str(uuid.uuid4())
+    user_id = current_user["id"]
+    
+    # Store session with expiry (15 minutes)
+    mobile_upload_sessions[session_id] = {
+        "user_id": user_id,
+        "created_at": datetime.now(timezone.utc),
+        "status": "pending",
+        "bon_data": None
+    }
+    
+    return {
+        "session_id": session_id,
+        "expires_in": 900  # 15 minutes
+    }
+
+@router.get("/mobile-upload/status/{session_id}")
+async def get_mobile_upload_status(
+    session_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Check if mobile upload has been completed"""
+    session = mobile_upload_sessions.get(session_id)
+    
+    if not session:
+        return {"status": "expired", "bon_data": None}
+    
+    if session["user_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    return {
+        "status": session["status"],
+        "bon_data": session.get("bon_data")
+    }
+
+@router.post("/mobile-upload")
+async def mobile_upload_bon(
+    file: UploadFile = File(...),
+    session_id: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Handle mobile bon upload and process with AI"""
+    import logging
+    import aiohttp
+    
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    
+    # Validate session
+    session = mobile_upload_sessions.get(session_id)
+    if not session:
+        raise HTTPException(status_code=400, detail="Invalid or expired session")
+    
+    try:
+        # Read file contents
+        contents = await file.read()
+        logger.info(f"Mobile upload: {file.filename}, size: {len(contents)} bytes")
+        
+        # Encode image to base64
+        base64_image = base64.b64encode(contents).decode('utf-8')
+        
+        # Determine mime type
+        mime_type = "image/png"
+        if base64_image.startswith('/9j/'):
+            mime_type = "image/jpeg"
+        
+        # Get API key
+        api_key = os.environ.get('EMERGENT_LLM_KEY')
+        if not api_key:
+            raise HTTPException(status_code=500, detail="EMERGENT_LLM_KEY not configured")
+        
+        prompt = """Extract ALL data from this Suribet receipt. Return ONLY valid JSON:
+{
+  "pos_sales": [{"product": "SB", "total_bets": 0.00, "comm_percentage": 0.00, "commission": 0.00}],
+  "pos_sales_total": 0.00,
+  "pos_sales_commission": 0.00,
+  "pos_payout": [{"product": "PT", "total_paid": 0.00, "comm_percentage": 0.00, "commission": 0.00}],
+  "pos_payout_total": 0.00,
+  "pos_payout_commission": 0.00,
+  "playable_ticket": [],
+  "playable_ticket_total": 0.00,
+  "playable_ticket_commission": 0.00,
+  "total_sales": 0.00,
+  "kiosk_cash_in": 0.00,
+  "kiosk_commission": 0.00,
+  "total_pc_sales": 0.00,
+  "total_payout": 0.00,
+  "total_pt_pos_cancel_bets": 0.00,
+  "total_pos_commission": 0.00,
+  "balance": 0.00
+}
+Product codes: SB, SF, VSF, Topup, PT, S2W, VSB, WDR, WDRNC. Return ONLY JSON."""
+
+        logger.info("Processing mobile upload via Emergent proxy...")
+        
+        # Call Emergent integration proxy
+        async with aiohttp.ClientSession() as http_session:
+            payload = {
+                "model": "gemini/gemini-2.0-flash",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
+                            }
+                        ]
+                    }
+                ]
+            }
+            
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            async with http_session.post(
+                "https://integrations.emergentagent.com/llm/chat/completions",
+                json=payload,
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=120)
+            ) as resp:
+                if resp.status != 200:
+                    error_text = await resp.text()
+                    logger.error(f"API error: {error_text}")
+                    raise HTTPException(status_code=500, detail=f"AI API error")
+                
+                result = await resp.json()
+        
+        response_text = result["choices"][0]["message"]["content"]
+        
+        # Parse JSON
+        json_str = response_text.strip()
+        if json_str.startswith("```"):
+            json_str = re.sub(r'^```(?:json)?\n?', '', json_str)
+            json_str = re.sub(r'\n?```$', '', json_str)
+        
+        try:
+            bon_data = json.loads(json_str)
+        except json.JSONDecodeError:
+            json_match = re.search(r'\{[\s\S]*\}', response_text)
+            if json_match:
+                bon_data = json.loads(json_match.group())
+            else:
+                raise HTTPException(status_code=400, detail="Could not parse receipt data")
+        
+        # Update session with bon data
+        mobile_upload_sessions[session_id] = {
+            **session,
+            "status": "completed",
+            "bon_data": bon_data
+        }
+        
+        return {"success": True, "bon_data": bon_data}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Mobile upload error: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing upload: {str(e)}")
+
+
 # ============================================
 # PRODUCT SETTINGS ENDPOINTS
 # ============================================
