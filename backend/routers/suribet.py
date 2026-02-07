@@ -1376,7 +1376,7 @@ Product codes: SB, SF, VSF, Topup, PT, S2W, VSB, WDR, WDRNC. Return ONLY JSON.""
             }
             
             async with session.post(
-                "https://integrations.emergentagent.com/api/llm/chat/completions",
+                "https://integrations.emergentagent.com/llm/chat/completions",
                 json=payload,
                 headers=headers,
                 timeout=aiohttp.ClientTimeout(total=120)
