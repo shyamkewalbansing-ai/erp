@@ -1305,7 +1305,7 @@ async def parse_bon_image(
 ):
     """Parse a Suribet receipt image using AI vision"""
     import logging
-    import litellm
+    import aiohttp
     
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
@@ -1319,10 +1319,8 @@ async def parse_bon_image(
         base64_image = base64.b64encode(contents).decode('utf-8')
         
         # Determine mime type
-        mime_type = "image/jpeg"
-        if base64_image.startswith('iVBORw0KGgo'):
-            mime_type = "image/png"
-        elif base64_image.startswith('/9j/'):
+        mime_type = "image/png"
+        if base64_image.startswith('/9j/'):
             mime_type = "image/jpeg"
         
         # Get API key
@@ -1330,9 +1328,7 @@ async def parse_bon_image(
         if not api_key:
             raise HTTPException(status_code=500, detail="EMERGENT_LLM_KEY not configured")
         
-        prompt = """You are a receipt data extractor. Extract ALL data from this Suribet receipt.
-
-Return ONLY valid JSON, no other text. Use this exact structure:
+        prompt = """Extract ALL data from this Suribet receipt. Return ONLY valid JSON:
 {
   "pos_sales": [{"product": "SB", "total_bets": 0.00, "comm_percentage": 0.00, "commission": 0.00}],
   "pos_sales_total": 0.00,
@@ -1352,36 +1348,50 @@ Return ONLY valid JSON, no other text. Use this exact structure:
   "total_pos_commission": 0.00,
   "balance": 0.00
 }
+Product codes: SB, SF, VSF, Topup, PT, S2W, VSB, WDR, WDRNC. Return ONLY JSON."""
 
-Product codes: SB=Sports Betting, SF=Scratch Fun, VSF=Virtual Scratch Fun, Topup, PT=Prize Transfer, S2W=Spin2Win, VSB=Virtual Sports Betting, WDR=Withdrawal, WDRNC=Withdrawal No Commission.
-Extract ALL products shown. Use 0.00 for missing values. Return ONLY JSON."""
-
-        logger.info("Sending to Gemini Vision via litellm...")
+        logger.info("Sending to Emergent proxy...")
         
-        # Use litellm with Gemini
-        response = await litellm.acompletion(
-            model="gemini/gemini-2.0-flash",
-            api_key=api_key,
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{mime_type};base64,{base64_image}"
+        # Call Emergent integration proxy directly
+        async with aiohttp.ClientSession() as session:
+            payload = {
+                "model": "gemini/gemini-2.0-flash",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": f"data:{mime_type};base64,{base64_image}"}
                             }
-                        }
-                    ]
-                }
-            ]
-        )
+                        ]
+                    }
+                ]
+            }
+            
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            async with session.post(
+                "https://integrations.emergentagent.com/api/llm/chat/completions",
+                json=payload,
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=120)
+            ) as resp:
+                if resp.status != 200:
+                    error_text = await resp.text()
+                    logger.error(f"API error: {error_text}")
+                    raise HTTPException(status_code=500, detail=f"AI API error: {error_text[:200]}")
+                
+                result = await resp.json()
         
-        response_text = response.choices[0].message.content
+        response_text = result["choices"][0]["message"]["content"]
         logger.info(f"Response: {response_text[:300]}...")
         
-        # Parse JSON - clean markdown if present
+        # Parse JSON
         json_str = response_text.strip()
         if json_str.startswith("```"):
             json_str = re.sub(r'^```(?:json)?\n?', '', json_str)
