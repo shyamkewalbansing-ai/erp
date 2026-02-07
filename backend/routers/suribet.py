@@ -1,7 +1,7 @@
 """
 Suribet Retailer Management Module - Backend Routes
 """
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Query
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone
