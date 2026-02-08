@@ -977,12 +977,6 @@ export default function DagrapportenPage() {
                         <p className="text-xs text-muted-foreground">Jouw Commissie</p>
                         <p className="font-bold text-blue-600">{formatCurrency(bonCommission)}</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Verschil</p>
-                        <p className={`font-bold ${(rapport.total_in_srd || 0) - bonBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency((rapport.total_in_srd || 0) - bonBalance)}
-                        </p>
-                      </div>
                       <div className="bg-gray-50 dark:bg-gray-800 rounded p-2 -m-1">
                         <p className="text-xs text-muted-foreground">Begin / Eind Saldo</p>
                         <p className="font-medium text-sm">
