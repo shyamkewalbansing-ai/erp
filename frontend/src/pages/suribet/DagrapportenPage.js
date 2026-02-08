@@ -1850,6 +1850,130 @@ export default function DagrapportenPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Saldo Toevoegen aan Suribet Modal */}
+      <Dialog open={showSaldoSuribetModal} onOpenChange={setShowSaldoSuribetModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-orange-500" />
+              Saldo Toevoegen aan Suribet
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
+              <p className="text-sm text-muted-foreground">Dit bedrag wordt uit uw commissie gehaald en toegevoegd aan Suribet.</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Bedrag (SRD)</Label>
+              <Input
+                type="number"
+                value={saldoAmount}
+                onChange={(e) => setSaldoAmount(e.target.value)}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Notities (optioneel)</Label>
+              <Input
+                value={saldoNotes}
+                onChange={(e) => setSaldoNotes(e.target.value)}
+                placeholder="Bijv. Correctie saldo"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaldoSuribetModal(false)}>
+              Annuleren
+            </Button>
+            <Button 
+              onClick={handleSaldoNaarSuribet} 
+              disabled={processingSaldo || !saldoAmount}
+              className="bg-orange-500 hover:bg-orange-600"
+            >
+              {processingSaldo ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verwerken...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Toevoegen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Saldo Toevoegen aan Commissie Modal */}
+      <Dialog open={showSaldoCommissieModal} onOpenChange={setShowSaldoCommissieModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5 text-blue-500" />
+              Saldo Toevoegen aan Commissie
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+              <p className="text-sm text-muted-foreground">Dit bedrag wordt uit het kasboek gehaald en toegevoegd aan uw commissie.</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Bedrag (SRD)</Label>
+              <Input
+                type="number"
+                value={saldoAmount}
+                onChange={(e) => setSaldoAmount(e.target.value)}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Notities (optioneel)</Label>
+              <Input
+                value={saldoNotes}
+                onChange={(e) => setSaldoNotes(e.target.value)}
+                placeholder="Bijv. Correctie commissie"
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaldoCommissieModal(false)}>
+              Annuleren
+            </Button>
+            <Button 
+              onClick={handleSaldoNaarCommissie} 
+              disabled={processingSaldo || !saldoAmount}
+              className="bg-blue-500 hover:bg-blue-600"
+            >
+              {processingSaldo ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verwerken...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Toevoegen
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
