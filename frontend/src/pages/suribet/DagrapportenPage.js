@@ -668,7 +668,7 @@ export default function DagrapportenPage() {
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">Openstaand Suribet</p>
+                <p className="text-sm text-orange-700 dark:text-orange-300 font-medium">Suribet Deel</p>
                 <p className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-400">
                   {totalsLoading ? '...' : formatCurrency(runningTotals.total_suribet)}
                 </p>
