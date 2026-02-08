@@ -95,8 +95,14 @@ export default function DagrapportenPage() {
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [payoutNotes, setPayoutNotes] = useState('');
   const [processingPayout, setProcessingPayout] = useState(false);
+  const [showCommissieModal, setShowCommissieModal] = useState(false);
+  const [processingCommissie, setProcessingCommissie] = useState(false);
+  const [commissieNotes, setCommissieNotes] = useState('');
   const fileInputRef = useRef(null);
   const qrPollIntervalRef = useRef(null);
+  
+  // Running totals hook
+  const { totals: runningTotals, loading: totalsLoading, fetchTotals } = useRunningTotals();
   
   // Form state
   const [formData, setFormData] = useState({
