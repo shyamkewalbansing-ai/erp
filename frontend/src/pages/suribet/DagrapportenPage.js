@@ -358,6 +358,7 @@ export default function DagrapportenPage() {
         setSelectedForPayout([]);
         setPayoutNotes('');
         fetchData();
+        fetchTotals(); // Refresh running totals
       } else {
         const error = await response.json();
         toast.error(error.detail || 'Fout bij uitbetaling');
