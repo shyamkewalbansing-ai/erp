@@ -262,6 +262,76 @@ export default function DagrapportenPage() {
     return `${baseUrl}/upload/suribet/${qrSessionId}?token=${token}`;
   };
 
+  // Payout functies
+  const toggleSelectForPayout = (rapportId) => {
+    setSelectedForPayout(prev => 
+      prev.includes(rapportId) 
+        ? prev.filter(id => id !== rapportId)
+        : [...prev, rapportId]
+    );
+  };
+
+  const selectAllUnpaid = () => {
+    const unpaidIds = dagrapporten
+      .filter(r => !r.is_paid)
+      .map(r => r.id);
+    setSelectedForPayout(unpaidIds);
+  };
+
+  const clearSelection = () => {
+    setSelectedForPayout([]);
+  };
+
+  const calculatePayoutTotal = () => {
+    return dagrapporten
+      .filter(r => selectedForPayout.includes(r.id))
+      .reduce((sum, r) => {
+        const balance = r.bon_data?.balance || 0;
+        const commission = r.bon_data?.total_pos_commission || 0;
+        return sum + (balance - commission);
+      }, 0);
+  };
+
+  const handlePayout = async () => {
+    if (selectedForPayout.length === 0) {
+      toast.error('Selecteer eerst dagrapporten');
+      return;
+    }
+
+    setProcessingPayout(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/suribet/uitbetalingen`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          dagstaat_ids: selectedForPayout,
+          amount: calculatePayoutTotal(),
+          notes: payoutNotes
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(result.message);
+        setShowPayoutModal(false);
+        setSelectedForPayout([]);
+        setPayoutNotes('');
+        fetchData();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Fout bij uitbetaling');
+      }
+    } catch (error) {
+      toast.error('Fout bij uitbetaling');
+    } finally {
+      setProcessingPayout(false);
+    }
+  };
+
   // Bereken totaal biljetten in SRD
   const berekenBiljettenTotaal = (biljetten, denominaties, multiplier = 1) => {
     if (!biljetten) return 0;
