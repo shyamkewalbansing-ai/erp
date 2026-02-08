@@ -585,10 +585,10 @@ export default function DagrapportenPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-xs sm:text-sm">Totale Omzet</p>
-                <p className="text-lg sm:text-xl font-bold text-emerald-600">{formatCurrency(stats.totaalOmzet)}</p>
+                <p className="text-muted-foreground text-xs sm:text-sm">Suribet Deel</p>
+                <p className="text-lg sm:text-xl font-bold text-orange-600">{formatCurrency(stats.totaalOmzet)}</p>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
                 <TrendingUp className="w-5 h-5" />
               </div>
             </div>
