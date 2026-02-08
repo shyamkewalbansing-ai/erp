@@ -139,6 +139,12 @@ class DagstaatUpdate(BaseModel):
     suribet_percentage: Optional[float] = None
     notes: Optional[str] = None
 
+# Suribet Uitbetaling Models
+class SuribetUitbetalingCreate(BaseModel):
+    dagstaat_ids: List[str]  # List of dagstaat IDs to mark as paid
+    amount: float
+    notes: Optional[str] = None
+
 # Werknemer Models
 class WerknemerCreate(BaseModel):
     name: str
