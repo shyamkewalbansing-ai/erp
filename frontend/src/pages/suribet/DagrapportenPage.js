@@ -324,13 +324,14 @@ export default function DagrapportenPage() {
     setSelectedForPayout([]);
   };
 
+  // Calculate total Suribet Deel for selected reports (= bon balance)
   const calculatePayoutTotal = () => {
     return dagrapporten
       .filter(r => selectedForPayout.includes(r.id))
       .reduce((sum, r) => {
+        // Suribet Deel = bon balance (niet balance - commission)
         const balance = r.bon_data?.balance || 0;
-        const commission = r.bon_data?.total_pos_commission || 0;
-        return sum + (balance - commission);
+        return sum + balance;
       }, 0);
   };
 
