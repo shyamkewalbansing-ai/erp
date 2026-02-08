@@ -786,16 +786,18 @@ export default function DagrapportenPage() {
                     {/* Financial info */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 ml-9 pl-4 border-l-2 border-emerald-200">
                       <div>
-                        <p className="text-xs text-muted-foreground">Totale Omzet (Bon)</p>
-                        <p className="font-bold text-emerald-600">{formatCurrency(bonBalance)}</p>
+                        <p className="text-xs text-muted-foreground">Suribet Deel</p>
+                        <p className="font-bold text-orange-600">{formatCurrency(bonBalance)}</p>
                       </div>
                       <div>
                         <p className="text-xs text-muted-foreground">Jouw Commissie</p>
                         <p className="font-bold text-blue-600">{formatCurrency(bonCommission)}</p>
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Suribet Deel</p>
-                        <p className="font-bold text-orange-600">{formatCurrency(suribetAmount)}</p>
+                        <p className="text-xs text-muted-foreground">Verschil</p>
+                        <p className={`font-bold ${(rapport.total_in_srd || 0) - bonBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {formatCurrency((rapport.total_in_srd || 0) - bonBalance)}
+                        </p>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-800 rounded p-2 -m-1">
                         <p className="text-xs text-muted-foreground">Lopend Totaal</p>
