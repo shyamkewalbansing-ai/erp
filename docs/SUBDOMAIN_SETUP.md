@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://shift-portal-1.preview.emergentagent.com/           → Landing page
-https://shift-portal-1.preview.emergentagent.com/login      → Login
-https://shift-portal-1.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://shift-portal-1.preview.emergentagent.com/booking/   → Publieke booking portals
+https://daily-reports-13.preview.emergentagent.com/           → Landing page
+https://daily-reports-13.preview.emergentagent.com/login      → Login
+https://daily-reports-13.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://daily-reports-13.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
