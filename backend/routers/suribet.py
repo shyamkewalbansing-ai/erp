@@ -774,14 +774,15 @@ async def commissie_opnemen(
     """Withdraw available commission to kasboek"""
     user_id = current_user["id"]
     
-    # Verify there is commission available
-    dagstaten = await db.suribet_dagstaten.find({
+    # Get all dagstaten where commission is not yet withdrawn
+    # (regardless of whether Suribet is paid)
+    commission_dagstaten = await db.suribet_dagstaten.find({
         "user_id": user_id,
-        "$or": [{"is_paid": False}, {"is_paid": {"$exists": False}}]
+        "$or": [{"commission_withdrawn": False}, {"commission_withdrawn": {"$exists": False}}]
     }).to_list(None)
     
     total_commission = 0
-    for dagstaat in dagstaten:
+    for dagstaat in commission_dagstaten:
         bon_data = dagstaat.get("bon_data", {})
         if bon_data:
             total_commission += bon_data.get("total_pos_commission", 0)
@@ -798,18 +799,18 @@ async def commissie_opnemen(
         "category": "commissie",
         "amount": total_commission,
         "currency": "SRD",
-        "description": data.notes or "Commissie opname uit openstaande dagrapporten",
+        "description": data.notes or "Commissie opname uit beschikbare dagrapporten",
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.suribet_kasboek.insert_one(kasboek_entry)
     
-    # Mark all unpaid dagstaten as commission_withdrawn
+    # Mark all dagstaten with available commission as commission_withdrawn
     await db.suribet_dagstaten.update_many(
         {
             "user_id": user_id,
-            "$or": [{"is_paid": False}, {"is_paid": {"$exists": False}}]
+            "$or": [{"commission_withdrawn": False}, {"commission_withdrawn": {"$exists": False}}]
         },
         {"$set": {
             "commission_withdrawn": True,
