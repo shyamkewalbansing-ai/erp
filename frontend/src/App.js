@@ -150,6 +150,7 @@ const SuribetDashboard = lazy(() => import("./pages/suribet/DashboardPage"));
 const SuribetMachines = lazy(() => import("./pages/suribet/MachinesPage"));
 const SuribetDagrapporten = lazy(() => import("./pages/suribet/DagrapportenPage"));
 const SuribetKasboek = lazy(() => import("./pages/suribet/KasboekPage"));
+const SuribetUitbetalingen = lazy(() => import("./pages/suribet/UitbetalingenPage"));
 const SuribetWerknemers = lazy(() => import("./pages/suribet/WerknemersPage"));
 const SuribetLoonuitbetaling = lazy(() => import("./pages/suribet/LoonuitbetalingPage"));
 const SuribetWerknemerPortaal = lazy(() => import("./pages/suribet/WerknemerPortaal"));
