@@ -826,6 +826,104 @@ async def commissie_opnemen(
     }
 
 # ============================================
+# SALDO TOEVOEGEN ENDPOINTS
+# ============================================
+
+class SaldoToevoegenRequest(BaseModel):
+    amount: float
+    notes: Optional[str] = None
+
+@router.post("/saldo-naar-suribet")
+async def saldo_naar_suribet(
+    data: SaldoToevoegenRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Add balance to Suribet from commission"""
+    user_id = current_user["id"]
+    
+    if data.amount <= 0:
+        raise HTTPException(status_code=400, detail="Bedrag moet groter dan 0 zijn")
+    
+    # Create a manual adjustment record
+    adjustment = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "type": "saldo_naar_suribet",
+        "amount": data.amount,
+        "notes": data.notes or "Saldo toevoeging aan Suribet uit commissie",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.suribet_saldo_adjustments.insert_one(adjustment)
+    
+    # Also create a kasboek entry to track the expense from commission
+    kasboek_entry = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "transaction_type": "expense",
+        "category": "suribet_saldo",
+        "amount": data.amount,
+        "currency": "SRD",
+        "description": data.notes or "Saldo toevoeging aan Suribet uit commissie",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.suribet_kasboek.insert_one(kasboek_entry)
+    
+    return {
+        "success": True,
+        "amount": data.amount,
+        "message": f"Saldo van {data.amount:.2f} SRD is toegevoegd aan Suribet"
+    }
+
+@router.post("/saldo-naar-commissie")
+async def saldo_naar_commissie(
+    data: SaldoToevoegenRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Add balance to commission from kasboek"""
+    user_id = current_user["id"]
+    
+    if data.amount <= 0:
+        raise HTTPException(status_code=400, detail="Bedrag moet groter dan 0 zijn")
+    
+    # Create a manual adjustment record
+    adjustment = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "type": "saldo_naar_commissie",
+        "amount": data.amount,
+        "notes": data.notes or "Saldo toevoeging aan commissie uit kasboek",
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.suribet_saldo_adjustments.insert_one(adjustment)
+    
+    # Create kasboek entry to track the expense
+    kasboek_entry = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "transaction_type": "expense",
+        "category": "commissie_toevoeging",
+        "amount": data.amount,
+        "currency": "SRD",
+        "description": data.notes or "Saldo toevoeging aan commissie uit kasboek",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.suribet_kasboek.insert_one(kasboek_entry)
+    
+    return {
+        "success": True,
+        "amount": data.amount,
+        "message": f"Saldo van {data.amount:.2f} SRD is toegevoegd aan uw commissie"
+    }
+
+# ============================================
 # WERKNEMERS ENDPOINTS
 # ============================================
 
