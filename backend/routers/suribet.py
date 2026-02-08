@@ -737,8 +737,8 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
             # Only add to commission if not already withdrawn
             if not dagstaat.get("commission_withdrawn"):
                 total_commission += commission
-            # Suribet deel = balance - commission
-            total_suribet += (balance - commission)
+            # Suribet Deel = balance (het totaal van de bon, niet balance - commission)
+            total_suribet += balance
     
     return {
         "total_balance": total_balance,
