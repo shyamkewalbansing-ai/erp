@@ -682,10 +682,23 @@ export default function DagrapportenPage() {
       {/* Dagrapporten List */}
       {dagrapporten.length > 0 ? (
         <div className="grid grid-cols-1 gap-4">
-          {dagrapporten.map((rapport) => {
+          {dagrapporten.map((rapport, index) => {
             const omzet = berekenTotaleOmzet(rapport);
             const { suribetDeel, jouwCommissie } = berekenCommissies(omzet, rapport.suribet_percentage || 80);
             const verlies = isVerlies(rapport);
+            const bonBalance = rapport.bon_data?.balance || 0;
+            const bonCommission = rapport.bon_data?.total_pos_commission || 0;
+            const suribetAmount = bonBalance - bonCommission;
+            const isPaid = rapport.is_paid;
+            const isSelected = selectedForPayout.includes(rapport.id);
+            
+            // Bereken lopend totaal
+            const runningTotal = dagrapporten.slice(0, index + 1).reduce((sum, r) => {
+              return sum + (r.bon_data?.balance || 0);
+            }, 0);
+            const runningCommission = dagrapporten.slice(0, index + 1).reduce((sum, r) => {
+              return sum + (r.bon_data?.total_pos_commission || 0);
+            }, 0);
             
             // Format tijd uit created_at
             const formatTime = (dateString) => {
@@ -695,51 +708,101 @@ export default function DagrapportenPage() {
             };
 
             return (
-              <Card key={rapport.id} className={`border-0 shadow-lg hover:shadow-xl transition-shadow ${verlies ? 'ring-2 ring-red-500 bg-red-50 dark:bg-red-950/20' : ''}`}>
+              <Card key={rapport.id} className={`border-0 shadow-lg hover:shadow-xl transition-shadow ${verlies ? 'ring-2 ring-red-500 bg-red-50 dark:bg-red-950/20' : ''} ${isPaid ? 'opacity-60' : ''} ${isSelected ? 'ring-2 ring-orange-500' : ''}`}>
                 <CardContent className="p-4 sm:p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    {/* Machine & Werknemer Info */}
-                    <div className="flex items-center gap-4">
+                  <div className="flex flex-col gap-4">
+                    {/* Top row: checkbox, machine info, actions */}
+                    <div className="flex items-start gap-4">
+                      {/* Checkbox - only for unpaid */}
+                      {!isPaid && (
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleSelectForPayout(rapport.id)}
+                          className="w-5 h-5 mt-1 rounded border-gray-300 text-orange-500 focus:ring-orange-500"
+                        />
+                      )}
+                      {isPaid && (
+                        <div className="w-5 h-5 mt-1 flex items-center justify-center">
+                          <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        </div>
+                      )}
+                      
                       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                         verlies ? 'bg-red-500/20 text-red-500' : 'bg-emerald-500/10 text-emerald-500'
                       }`}>
                         <Gamepad2 className="w-6 h-6" />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-lg">{getMachineName(rapport.machine_id)}</h3>
-                          {verlies && (
+                          {isPaid ? (
+                            <Badge className="bg-green-100 text-green-700 border-green-200">
+                              <CheckCircle2 className="w-3 h-3 mr-1" />
+                              Betaald
+                            </Badge>
+                          ) : verlies ? (
                             <Badge className="bg-red-100 text-red-700 border-red-200">
                               <AlertTriangle className="w-3 h-3 mr-1" />
                               Verlies
                             </Badge>
-                          )}
-                          {!verlies && (
-                            <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">
-                              <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Winst
+                          ) : (
+                            <Badge className="bg-orange-100 text-orange-700 border-orange-200">
+                              Openstaand
                             </Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                          <span className="flex items-center gap-1 font-medium text-blue-600">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {new Date(rapport.date).toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' })}
+                          </span>
                           <span className="flex items-center gap-1">
                             <Users2 className="w-3.5 h-3.5" />
                             {getWerknemerName(rapport.employee_id)}
                           </span>
-                          {rapport.created_at && (
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5" />
-                              {formatTime(rapport.created_at)}
-                            </span>
-                          )}
                         </div>
                       </div>
+                      
+                      {/* Actions */}
+                      <div className="flex gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => { setSelectedRapport(rapport); setShowDetailModal(true); }}>
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="text-red-500 hover:text-red-600" onClick={() => { setSelectedRapport(rapport); setShowDeleteDialog(true); }}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
-
-                    {/* Financiële Info */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-8">
-                      <div className="text-center">
+                    
+                    {/* Financial info */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 ml-9 pl-4 border-l-2 border-emerald-200">
+                      <div>
                         <p className="text-xs text-muted-foreground">Totale Omzet (Bon)</p>
+                        <p className="font-bold text-emerald-600">{formatCurrency(bonBalance)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Jouw Commissie</p>
+                        <p className="font-bold text-blue-600">{formatCurrency(bonCommission)}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Suribet Deel</p>
+                        <p className="font-bold text-orange-600">{formatCurrency(suribetAmount)}</p>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-800 rounded p-2 -m-1">
+                        <p className="text-xs text-muted-foreground">Lopend Totaal</p>
+                        <p className="font-medium text-sm">{formatCurrency(runningTotal)}</p>
+                        <p className="text-xs text-blue-600">Comm: {formatCurrency(runningCommission)}</p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      ) : (
                         <p className="font-bold text-lg text-emerald-600">{formatCurrency(omzet)}</p>
                       </div>
                       <div className="text-center">
