@@ -736,6 +736,11 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
         "user_id": user_id
     }).to_list(None)
     
+    # Get kasboek entries for commission calculation
+    kasboek_entries = await db.suribet_kasboek.find({
+        "user_id": user_id
+    }).to_list(None)
+    
     total_balance = 0
     total_suribet = 0
     
@@ -755,6 +760,14 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
         if bon_data:
             commission = bon_data.get("total_pos_commission", 0)
             total_commission += commission
+    
+    # Add kasboek income entries to commission (inkomsten)
+    # Subtract kasboek expense entries from commission (uitgaven)
+    for entry in kasboek_entries:
+        if entry.get("transaction_type") == "income":
+            total_commission += entry.get("amount", 0)
+        elif entry.get("transaction_type") == "expense":
+            total_commission -= entry.get("amount", 0)
     
     # Adjust based on saldo adjustments
     for adjustment in saldo_adjustments:
