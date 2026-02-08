@@ -636,14 +636,46 @@ export default function DagrapportenPage() {
       <Card className="border-0 shadow-lg">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3 justify-between items-center">
-            <div className="text-sm text-muted-foreground">
-              Wisselkoersen: 1 EUR = {wisselkoersen.eur_to_srd} SRD | 1 USD = {wisselkoersen.usd_to_srd} SRD
+            <div className="flex items-center gap-4">
+              <div className="text-sm text-muted-foreground">
+                Wisselkoersen: 1 EUR = {wisselkoersen.eur_to_srd} SRD | 1 USD = {wisselkoersen.usd_to_srd} SRD
+              </div>
             </div>
-            <Button onClick={() => { resetForm(); setFormData(f => ({...f, date: selectedDate})); setShowModal(true); }} className="bg-emerald-500 hover:bg-emerald-600">
-              <Plus className="w-4 h-4 mr-2" />
-              Nieuw Dagrapport
-            </Button>
+            <div className="flex gap-2">
+              {selectedForPayout.length > 0 && (
+                <Button 
+                  onClick={() => setShowPayoutModal(true)} 
+                  className="bg-orange-500 hover:bg-orange-600"
+                >
+                  <Banknote className="w-4 h-4 mr-2" />
+                  Betaal Suribet ({selectedForPayout.length})
+                </Button>
+              )}
+              <Button onClick={() => { resetForm(); setFormData(f => ({...f, date: selectedDate})); setShowModal(true); }} className="bg-emerald-500 hover:bg-emerald-600">
+                <Plus className="w-4 h-4 mr-2" />
+                Nieuw Dagrapport
+              </Button>
+            </div>
           </div>
+          
+          {/* Selection controls */}
+          {dagrapporten.filter(r => !r.is_paid).length > 0 && (
+            <div className="mt-3 pt-3 border-t flex items-center gap-3">
+              <Button variant="outline" size="sm" onClick={selectAllUnpaid}>
+                Selecteer Alle Openstaand
+              </Button>
+              {selectedForPayout.length > 0 && (
+                <>
+                  <Button variant="ghost" size="sm" onClick={clearSelection}>
+                    Deselecteer
+                  </Button>
+                  <span className="text-sm text-muted-foreground">
+                    Geselecteerd: {formatCurrency(calculatePayoutTotal())} voor Suribet
+                  </span>
+                </>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
