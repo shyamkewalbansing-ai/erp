@@ -968,7 +968,7 @@ export default function DagrapportenPage() {
                     </div>
                     
                     {/* Financial info */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 ml-9 pl-4 border-l-2 border-emerald-200">
+                    <div className="grid grid-cols-3 gap-3 ml-9 pl-4 border-l-2 border-emerald-200">
                       <div>
                         <p className="text-xs text-muted-foreground">Suribet Deel</p>
                         <p className="font-bold text-orange-600">{formatCurrency(bonBalance)}</p>
