@@ -1319,11 +1319,6 @@ export default function DagrapportenPage() {
                         <span className="font-bold">{formatCurrency(formBiljettenTotaal)}</span>
                       </div>
                     </div>
-                    {Math.abs((bonData.balance || 0) - formBiljettenTotaal) > 1 && (
-                      <p className="text-xs text-amber-600 mt-2">
-                        ⚠️ Verschil: {formatCurrency(Math.abs((bonData.balance || 0) - formBiljettenTotaal))}
-                      </p>
-                    )}
                   </div>
                   
                   {/* Omzet & Commissie uit Bon */}
