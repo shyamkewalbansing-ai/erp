@@ -40,6 +40,36 @@ import { QRCodeSVG } from 'qrcode.react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
+// Running totals state
+const useRunningTotals = () => {
+  const [totals, setTotals] = useState({
+    total_balance: 0,
+    total_commission: 0,
+    total_suribet: 0,
+    unpaid_count: 0
+  });
+  const [loading, setLoading] = useState(true);
+
+  const fetchTotals = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/suribet/openstaand-totaal`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setTotals(data);
+      }
+    } catch (error) {
+      console.error('Error fetching totals:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { totals, loading, fetchTotals };
+};
+
 // Biljet denominaties
 const SRD_DENOMINATIES = [5, 10, 20, 50, 100, 200, 500];
 const EUR_DENOMINATIES = [5, 10, 20, 50, 100, 200];
