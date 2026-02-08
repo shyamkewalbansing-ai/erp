@@ -716,7 +716,6 @@ async def delete_uitbetaling(uitbetaling_id: str, current_user: dict = Depends(g
 @router.get("/openstaand-totaal")
 async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
     """Get total outstanding Suribet amount (not yet paid)"""
-    from server import db
     user_id = current_user["id"]
     
     # Get all unpaid dagstaten
@@ -735,8 +734,17 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
             balance = bon_data.get("balance", 0)
             commission = bon_data.get("total_pos_commission", 0)
             total_balance += balance
-            total_commission += commission
+            # Only add to commission if not already withdrawn
+            if not dagstaat.get("commission_withdrawn"):
+                total_commission += commission
             total_suribet += (balance - commission)
+    
+    return {
+        "total_balance": total_balance,
+        "total_commission": total_commission,
+        "total_suribet": total_suribet,
+        "unpaid_count": len(dagstaten)
+    }
     
     return {
         "total_balance": total_balance,
