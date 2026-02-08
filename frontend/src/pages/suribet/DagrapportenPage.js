@@ -1517,7 +1517,7 @@ export default function DagrapportenPage() {
                   <p className="text-3xl font-bold text-orange-600">{formatCurrency(calculatePayoutTotal())}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-muted-foreground">{selectedForPayout.length} van {getUnpaidReports().length}</p>
+                  <p className="text-sm text-muted-foreground">{selectedForPayout.length} rapport(en)</p>
                   <p className="text-xs text-muted-foreground">geselecteerd</p>
                 </div>
               </div>
@@ -1534,49 +1534,48 @@ export default function DagrapportenPage() {
               </Button>
             </div>
             
-            {/* Scrollable list of unpaid reports */}
+            {/* Scrollable list of unpaid reports grouped by date */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-2">
-              {getUnpaidReports().map((rapport) => {
-                const bonBalance = rapport.bon_data?.balance || 0;
-                const bonCommission = rapport.bon_data?.total_pos_commission || 0;
-                const isSelected = selectedForPayout.includes(rapport.id);
+              {getUnpaidReportsGroupedByDate().map((group) => {
+                const isSelected = isDateFullySelected(group.date);
+                const machineNames = group.reports.map(r => getMachineName(r.machine_id)).join(', ');
                 
                 return (
                   <div 
-                    key={rapport.id}
-                    onClick={() => togglePayoutSelection(rapport.id)}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                    key={group.date}
+                    onClick={() => toggleDateSelection(group.date)}
+                    className={`p-4 rounded-lg border cursor-pointer transition-all ${
                       isSelected 
                         ? 'bg-orange-50 border-orange-300 dark:bg-orange-950/30' 
                         : 'bg-gray-50 border-gray-200 dark:bg-gray-800 hover:border-gray-300'
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                      <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 ${
                         isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
                       }`}>
-                        {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
+                        {isSelected && <CheckCircle2 className="w-4 h-4 text-white" />}
                       </div>
                       
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">
-                              {new Date(rapport.date).toLocaleDateString('nl-NL', { 
-                                weekday: 'short', day: 'numeric', month: 'short' 
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-lg">
+                              {new Date(group.date).toLocaleDateString('nl-NL', { 
+                                weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
                               })}
                             </span>
-                            <Badge variant="outline" className="text-xs">
-                              {getMachineName(rapport.machine_id)}
+                            <Badge className="bg-purple-100 text-purple-700">
+                              {group.reports.length} machine{group.reports.length > 1 ? 's' : ''}
                             </Badge>
                           </div>
-                          <span className="font-bold text-orange-600">
-                            {formatCurrency(bonBalance)}
+                          <span className="font-bold text-xl text-orange-600 flex-shrink-0">
+                            {formatCurrency(group.totalBalance)}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-                          <span>{getWerknemerName(rapport.employee_id)}</span>
-                          <span>Commissie: {formatCurrency(bonCommission)}</span>
+                        <div className="flex items-center justify-between text-sm text-muted-foreground mt-1">
+                          <span className="truncate">{machineNames}</span>
+                          <span className="flex-shrink-0">Commissie: {formatCurrency(group.totalCommission)}</span>
                         </div>
                       </div>
                     </div>
@@ -1584,7 +1583,7 @@ export default function DagrapportenPage() {
                 );
               })}
               
-              {getUnpaidReports().length === 0 && (
+              {getUnpaidReportsGroupedByDate().length === 0 && (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>Geen openstaande rapporten</p>
                 </div>
@@ -1619,7 +1618,7 @@ export default function DagrapportenPage() {
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Bevestig ({selectedForPayout.length})
+                  Bevestig Uitbetaling
                 </>
               )}
             </Button>
