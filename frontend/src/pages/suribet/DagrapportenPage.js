@@ -320,18 +320,56 @@ export default function DagrapportenPage() {
     }
   };
 
-  // Get all unpaid reports for the payout modal
+  // Get unpaid reports grouped by date
+  const getUnpaidReportsGroupedByDate = () => {
+    const unpaid = dagrapporten.filter(r => !r.is_paid);
+    const grouped = {};
+    
+    unpaid.forEach(rapport => {
+      const date = rapport.date;
+      if (!grouped[date]) {
+        grouped[date] = {
+          date: date,
+          reports: [],
+          totalBalance: 0,
+          totalCommission: 0
+        };
+      }
+      grouped[date].reports.push(rapport);
+      grouped[date].totalBalance += rapport.bon_data?.balance || 0;
+      grouped[date].totalCommission += rapport.bon_data?.total_pos_commission || 0;
+    });
+    
+    // Convert to array and sort by date descending
+    return Object.values(grouped).sort((a, b) => new Date(b.date) - new Date(a.date));
+  };
+
+  // Get all unpaid reports for backward compatibility
   const getUnpaidReports = () => {
     return dagrapporten.filter(r => !r.is_paid);
   };
 
-  // Toggle selection of a report in the payout modal
-  const togglePayoutSelection = (id) => {
-    setSelectedForPayout(prev => 
-      prev.includes(id) 
-        ? prev.filter(x => x !== id)
-        : [...prev, id]
-    );
+  // Toggle selection of all reports for a specific date
+  const toggleDateSelection = (date) => {
+    const reportsForDate = dagrapporten.filter(r => r.date === date && !r.is_paid);
+    const reportIds = reportsForDate.map(r => r.id);
+    
+    // Check if all reports for this date are already selected
+    const allSelected = reportIds.every(id => selectedForPayout.includes(id));
+    
+    if (allSelected) {
+      // Deselect all reports for this date
+      setSelectedForPayout(prev => prev.filter(id => !reportIds.includes(id)));
+    } else {
+      // Select all reports for this date
+      setSelectedForPayout(prev => [...new Set([...prev, ...reportIds])]);
+    }
+  };
+
+  // Check if all reports for a date are selected
+  const isDateFullySelected = (date) => {
+    const reportsForDate = dagrapporten.filter(r => r.date === date && !r.is_paid);
+    return reportsForDate.length > 0 && reportsForDate.every(r => selectedForPayout.includes(r.id));
   };
 
   // Select all unpaid in the modal
