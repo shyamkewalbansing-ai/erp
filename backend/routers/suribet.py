@@ -1182,7 +1182,7 @@ async def get_kasboek(
     transaction_type: Optional[str] = None,
     current_user: dict = Depends(get_current_user)
 ):
-    """Get kasboek entries"""
+    """Get kasboek entries including commission from dagrapporten"""
     user_id = current_user["id"]
     
     query = {"user_id": user_id}
@@ -1207,6 +1207,41 @@ async def get_kasboek(
         query,
         {"_id": 0}
     ).sort("date", -1).to_list(1000)
+    
+    # Also get commission from dagrapporten and add as income entries
+    dagstaat_query = {"user_id": user_id}
+    if date:
+        dagstaat_query["date"] = date
+    elif month and year:
+        dagstaat_query["date"] = {"$gte": start_date, "$lt": end_date}
+    elif year:
+        dagstaat_query["date"] = {"$gte": f"{year}-01-01", "$lt": f"{year + 1}-01-01"}
+    
+    # Only add commission entries if not filtering for expenses only
+    if transaction_type != "expense":
+        dagstaten = await db.suribet_dagstaten.find(dagstaat_query).to_list(1000)
+        
+        for dagstaat in dagstaten:
+            bon_data = dagstaat.get("bon_data", {})
+            if bon_data and bon_data.get("total_pos_commission", 0) > 0:
+                # Add commission as income entry
+                commission_entry = {
+                    "id": f"comm_{dagstaat.get('id')}",
+                    "user_id": user_id,
+                    "date": dagstaat.get("date"),
+                    "transaction_type": "income",
+                    "category": "commissie",
+                    "amount": bon_data.get("total_pos_commission", 0),
+                    "currency": "SRD",
+                    "description": f"Commissie dagrapport {dagstaat.get('date')}",
+                    "machine_id": dagstaat.get("machine_id"),
+                    "is_commission": True,
+                    "created_at": dagstaat.get("created_at")
+                }
+                entries.append(commission_entry)
+    
+    # Sort all entries by date descending
+    entries.sort(key=lambda x: x.get("date", ""), reverse=True)
     
     return entries
 
