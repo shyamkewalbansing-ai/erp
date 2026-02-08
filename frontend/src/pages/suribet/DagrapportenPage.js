@@ -803,68 +803,6 @@ export default function DagrapportenPage() {
           })}
         </div>
       ) : (
-                        <p className="font-bold text-lg text-emerald-600">{formatCurrency(omzet)}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-muted-foreground">Jouw Commissie</p>
-                        <p className="font-bold text-lg text-blue-600">{formatCurrency(rapport.bon_data?.total_pos_commission || jouwCommissie)}</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-xs text-muted-foreground">Begin → Eind</p>
-                        <p className="font-medium text-sm">
-                          {formatCurrency(rapport.beginsaldo_srd)} → {formatCurrency(rapport.eindsaldo_srd)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => { setSelectedRapport(rapport); setShowDetailModal(true); }}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Details
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={() => { setSelectedRapport(rapport); setShowDeleteDialog(true); }}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Biljetten Breakdown */}
-                  <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                        <span className="font-bold">SRD</span>
-                      </p>
-                      <p className="font-semibold">{formatCurrency(berekenBiljettenTotaal(rapport.biljetten_srd, SRD_DENOMINATIES))}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                        <Euro className="w-3 h-3" /> EUR
-                      </p>
-                      <p className="font-semibold">€ {berekenBiljettenTotaal(rapport.biljetten_eur, EUR_DENOMINATIES).toFixed(2)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-1 flex items-center gap-1">
-                        <DollarSign className="w-3 h-3" /> USD
-                      </p>
-                      <p className="font-semibold">$ {berekenBiljettenTotaal(rapport.biljetten_usd, USD_DENOMINATIES).toFixed(2)}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      ) : (
         <Card className="border-0 shadow-lg border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
