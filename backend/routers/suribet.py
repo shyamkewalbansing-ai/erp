@@ -718,7 +718,7 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
     """Get total outstanding Suribet amount (not yet paid)"""
     user_id = current_user["id"]
     
-    # Get all unpaid dagstaten
+    # Get all unpaid dagstaten (Suribet not yet paid)
     dagstaten = await db.suribet_dagstaten.find({
         "user_id": user_id,
         "$or": [{"is_paid": False}, {"is_paid": {"$exists": False}}]
@@ -737,6 +737,7 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
             # Only add to commission if not already withdrawn
             if not dagstaat.get("commission_withdrawn"):
                 total_commission += commission
+            # Suribet deel = balance - commission
             total_suribet += (balance - commission)
     
     return {
@@ -745,9 +746,6 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
         "total_suribet": total_suribet,
         "unpaid_count": len(dagstaten)
     }
-    
-    return {
-        "total_balance": total_balance,
         "total_commission": total_commission,
         "total_suribet": total_suribet,
         "unpaid_count": len(dagstaten)
