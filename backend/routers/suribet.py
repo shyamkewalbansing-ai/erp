@@ -715,36 +715,47 @@ async def delete_uitbetaling(uitbetaling_id: str, current_user: dict = Depends(g
 
 @router.get("/openstaand-totaal")
 async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
-    """Get total outstanding Suribet amount (not yet paid)"""
+    """Get total outstanding Suribet amount and available commission"""
     user_id = current_user["id"]
     
-    # Get all unpaid dagstaten (Suribet not yet paid)
-    dagstaten = await db.suribet_dagstaten.find({
+    # Get all unpaid dagstaten (Suribet not yet paid) for Suribet totals
+    unpaid_dagstaten = await db.suribet_dagstaten.find({
         "user_id": user_id,
         "$or": [{"is_paid": False}, {"is_paid": {"$exists": False}}]
     }).to_list(None)
     
+    # Get all dagstaten where commission is not yet withdrawn (for commission total)
+    # This is SEPARATE from Suribet payment status
+    commission_dagstaten = await db.suribet_dagstaten.find({
+        "user_id": user_id,
+        "$or": [{"commission_withdrawn": False}, {"commission_withdrawn": {"$exists": False}}]
+    }).to_list(None)
+    
     total_balance = 0
-    total_commission = 0
     total_suribet = 0
     
-    for dagstaat in dagstaten:
+    # Calculate Suribet totals from unpaid reports
+    for dagstaat in unpaid_dagstaten:
         bon_data = dagstaat.get("bon_data", {})
         if bon_data:
             balance = bon_data.get("balance", 0)
-            commission = bon_data.get("total_pos_commission", 0)
             total_balance += balance
-            # Only add to commission if not already withdrawn
-            if not dagstaat.get("commission_withdrawn"):
-                total_commission += commission
-            # Suribet Deel = balance (het totaal van de bon, niet balance - commission)
             total_suribet += balance
+    
+    # Calculate commission from reports where commission not yet withdrawn
+    # (regardless of whether Suribet is paid)
+    total_commission = 0
+    for dagstaat in commission_dagstaten:
+        bon_data = dagstaat.get("bon_data", {})
+        if bon_data:
+            commission = bon_data.get("total_pos_commission", 0)
+            total_commission += commission
     
     return {
         "total_balance": total_balance,
         "total_commission": total_commission,
         "total_suribet": total_suribet,
-        "unpaid_count": len(dagstaten)
+        "unpaid_count": len(unpaid_dagstaten)
     }
 
 # ============================================
