@@ -309,15 +309,40 @@ export default function DagrapportenPage() {
   };
 
   const selectAllUnpaid = () => {
-    const unpaidIds = dagrapporten
-      .filter(r => !r.is_paid)
-      .map(r => r.id);
-    setSelectedForPayout(unpaidIds);
-    if (unpaidIds.length > 0) {
+    // Get all unpaid reports (not just current date)
+    const allUnpaid = dagrapporten.filter(r => !r.is_paid);
+    if (allUnpaid.length > 0) {
+      // Clear selection and open modal - user will select in the modal
+      setSelectedForPayout([]);
       setShowPayoutModal(true);
     } else {
       toast.info('Geen openstaande rapporten gevonden');
     }
+  };
+
+  // Get all unpaid reports for the payout modal
+  const getUnpaidReports = () => {
+    return dagrapporten.filter(r => !r.is_paid);
+  };
+
+  // Toggle selection of a report in the payout modal
+  const togglePayoutSelection = (id) => {
+    setSelectedForPayout(prev => 
+      prev.includes(id) 
+        ? prev.filter(x => x !== id)
+        : [...prev, id]
+    );
+  };
+
+  // Select all unpaid in the modal
+  const selectAllInModal = () => {
+    const unpaidIds = dagrapporten.filter(r => !r.is_paid).map(r => r.id);
+    setSelectedForPayout(unpaidIds);
+  };
+
+  // Clear all selections in modal
+  const clearAllInModal = () => {
+    setSelectedForPayout([]);
   };
 
   const clearSelection = () => {
