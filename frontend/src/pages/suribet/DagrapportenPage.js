@@ -61,6 +61,10 @@ export default function DagrapportenPage() {
   const [showQrModal, setShowQrModal] = useState(false);
   const [qrSessionId, setQrSessionId] = useState(null);
   const [qrPolling, setQrPolling] = useState(false);
+  const [selectedForPayout, setSelectedForPayout] = useState([]);
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [payoutNotes, setPayoutNotes] = useState('');
+  const [processingPayout, setProcessingPayout] = useState(false);
   const fileInputRef = useRef(null);
   const qrPollIntervalRef = useRef(null);
   
