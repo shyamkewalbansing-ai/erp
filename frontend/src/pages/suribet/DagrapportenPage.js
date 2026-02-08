@@ -1462,7 +1462,7 @@ export default function DagrapportenPage() {
 
       {/* Payout Modal */}
       <Dialog open={showPayoutModal} onOpenChange={setShowPayoutModal}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Banknote className="w-5 h-5 text-orange-500" />
@@ -1470,14 +1470,91 @@ export default function DagrapportenPage() {
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4 py-4">
-            <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
-              <p className="text-sm text-muted-foreground">Totaal uit te betalen aan Suribet:</p>
-              <p className="text-3xl font-bold text-orange-600">{formatCurrency(calculatePayoutTotal())}</p>
-              <p className="text-sm text-muted-foreground mt-1">{selectedForPayout.length} dagrapport(en) geselecteerd</p>
+          <div className="flex-1 overflow-hidden flex flex-col space-y-4 py-4">
+            {/* Summary */}
+            <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg flex-shrink-0">
+              <div className="flex justify-between items-center">
+                <div>
+                  <p className="text-sm text-muted-foreground">Totaal uit te betalen:</p>
+                  <p className="text-3xl font-bold text-orange-600">{formatCurrency(calculatePayoutTotal())}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">{selectedForPayout.length} van {getUnpaidReports().length}</p>
+                  <p className="text-xs text-muted-foreground">geselecteerd</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Selection buttons */}
+            <div className="flex gap-2 flex-shrink-0">
+              <Button variant="outline" size="sm" onClick={selectAllInModal}>
+                <CheckCircle2 className="w-4 h-4 mr-1" />
+                Selecteer Alles
+              </Button>
+              <Button variant="outline" size="sm" onClick={clearAllInModal}>
+                Deselecteer Alles
+              </Button>
             </div>
             
-            <div className="space-y-2">
+            {/* Scrollable list of unpaid reports */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+              {getUnpaidReports().map((rapport) => {
+                const bonBalance = rapport.bon_data?.balance || 0;
+                const bonCommission = rapport.bon_data?.total_pos_commission || 0;
+                const isSelected = selectedForPayout.includes(rapport.id);
+                
+                return (
+                  <div 
+                    key={rapport.id}
+                    onClick={() => togglePayoutSelection(rapport.id)}
+                    className={`p-3 rounded-lg border cursor-pointer transition-all ${
+                      isSelected 
+                        ? 'bg-orange-50 border-orange-300 dark:bg-orange-950/30' 
+                        : 'bg-gray-50 border-gray-200 dark:bg-gray-800 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
+                        isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
+                      }`}>
+                        {isSelected && <CheckCircle2 className="w-3 h-3 text-white" />}
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">
+                              {new Date(rapport.date).toLocaleDateString('nl-NL', { 
+                                weekday: 'short', day: 'numeric', month: 'short' 
+                              })}
+                            </span>
+                            <Badge variant="outline" className="text-xs">
+                              {getMachineName(rapport.machine_id)}
+                            </Badge>
+                          </div>
+                          <span className="font-bold text-orange-600">
+                            {formatCurrency(bonBalance)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
+                          <span>{getWerknemerName(rapport.employee_id)}</span>
+                          <span>Commissie: {formatCurrency(bonCommission)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+              
+              {getUnpaidReports().length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>Geen openstaande rapporten</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Notes */}
+            <div className="space-y-2 flex-shrink-0">
               <Label>Notities (optioneel)</Label>
               <Input
                 value={payoutNotes}
@@ -1485,19 +1562,15 @@ export default function DagrapportenPage() {
                 placeholder="Bijv. Opgehaald door Jan"
               />
             </div>
-            
-            <div className="text-sm text-muted-foreground">
-              <p>Na bevestiging worden de geselecteerde dagrapporten gemarkeerd als betaald.</p>
-            </div>
           </div>
           
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0">
             <Button variant="outline" onClick={() => setShowPayoutModal(false)}>
               Annuleren
             </Button>
             <Button 
               onClick={handlePayout} 
-              disabled={processingPayout}
+              disabled={processingPayout || selectedForPayout.length === 0}
               className="bg-orange-500 hover:bg-orange-600"
             >
               {processingPayout ? (
@@ -1508,7 +1581,7 @@ export default function DagrapportenPage() {
               ) : (
                 <>
                   <CheckCircle2 className="w-4 h-4 mr-2" />
-                  Bevestig Uitbetaling
+                  Bevestig ({selectedForPayout.length})
                 </>
               )}
             </Button>
