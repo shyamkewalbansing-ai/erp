@@ -448,9 +448,19 @@ async def create_dagstaat(
     # Convert to SRD
     total_in_srd = total_srd + (total_eur * eur_rate) + (total_usd * usd_rate)
     
-    # Calculate Suribet deel and commission
-    suribet_deel = data.omzet * (data.suribet_percentage / 100)
-    commissie = data.omzet * ((100 - data.suribet_percentage) / 100)
+    # Get omzet and commission from bon_data if available
+    bon_dict = None
+    omzet = data.omzet
+    commissie = 0
+    
+    if data.bon_data:
+        bon_dict = data.bon_data.dict()
+        # Use bon data for omzet and commission
+        omzet = data.bon_data.balance or data.omzet
+        commissie = data.bon_data.total_pos_commission or 0
+    
+    # Calculate Suribet deel (what they get = omzet - your commission)
+    suribet_deel = omzet - commissie
     
     # Determine profit/loss
     status = "winst" if commissie > 0 else "verlies"
@@ -474,12 +484,14 @@ async def create_dagstaat(
         "total_counted_eur": total_eur,
         "total_counted_usd": total_usd,
         "total_in_srd": total_in_srd,
-        "omzet": data.omzet,
+        "bon_data": bon_dict,  # Save bon data
+        "omzet": omzet,
         "suribet_percentage": data.suribet_percentage,
         "suribet_deel": suribet_deel,
         "commissie": commissie,
         "status": status,
         "notes": data.notes,
+        "is_paid": False,  # New: track payment status
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
