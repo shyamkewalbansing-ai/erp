@@ -388,12 +388,15 @@ export default function DagrapportenPage() {
     try {
       const token = localStorage.getItem('token');
       
-      // Bereken omzet automatisch
-      const omzet = berekenTotaleOmzet({
+      // Bereken omzet automatisch van biljetten (of gebruik bon balance)
+      const biljettenOmzet = berekenTotaleOmzet({
         biljetten_srd: formData.biljetten_srd,
         biljetten_eur: formData.biljetten_eur,
         biljetten_usd: formData.biljetten_usd
       });
+      
+      // Use bon balance if available, otherwise use counted bills
+      const omzet = formData.bon_data?.balance || biljettenOmzet;
 
       const response = await fetch(`${API_URL}/api/suribet/dagstaten`, {
         method: 'POST',
@@ -403,7 +406,8 @@ export default function DagrapportenPage() {
         },
         body: JSON.stringify({
           ...formData,
-          omzet
+          omzet,
+          bon_data: formData.bon_data || null
         })
       });
 
@@ -411,6 +415,7 @@ export default function DagrapportenPage() {
         toast.success('Dagrapport toegevoegd');
         setShowModal(false);
         resetForm();
+        setBonData(null);
         fetchData();
       } else {
         const error = await response.json();
