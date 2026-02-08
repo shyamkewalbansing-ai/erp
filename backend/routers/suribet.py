@@ -746,6 +746,72 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
     }
 
 # ============================================
+# COMMISSIE OPNEMEN ENDPOINT
+# ============================================
+
+class CommissieOpnemenRequest(BaseModel):
+    amount: float
+    notes: Optional[str] = None
+
+@router.post("/commissie-opnemen")
+async def commissie_opnemen(
+    data: CommissieOpnemenRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """Withdraw available commission to kasboek"""
+    user_id = current_user["id"]
+    
+    # Verify there is commission available
+    dagstaten = await db.suribet_dagstaten.find({
+        "user_id": user_id,
+        "$or": [{"is_paid": False}, {"is_paid": {"$exists": False}}]
+    }).to_list(None)
+    
+    total_commission = 0
+    for dagstaat in dagstaten:
+        bon_data = dagstaat.get("bon_data", {})
+        if bon_data:
+            total_commission += bon_data.get("total_pos_commission", 0)
+    
+    if total_commission <= 0:
+        raise HTTPException(status_code=400, detail="Geen commissie beschikbaar om op te nemen")
+    
+    # Create kasboek entry for the commission
+    kasboek_entry = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "transaction_type": "income",
+        "category": "commissie",
+        "amount": total_commission,
+        "currency": "SRD",
+        "description": data.notes or "Commissie opname uit openstaande dagrapporten",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.suribet_kasboek.insert_one(kasboek_entry)
+    
+    # Mark all unpaid dagstaten as commission_withdrawn
+    await db.suribet_dagstaten.update_many(
+        {
+            "user_id": user_id,
+            "$or": [{"is_paid": False}, {"is_paid": {"$exists": False}}]
+        },
+        {"$set": {
+            "commission_withdrawn": True,
+            "commission_withdrawn_date": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "success": True,
+        "amount": total_commission,
+        "kasboek_id": kasboek_entry["id"],
+        "message": f"Commissie van {total_commission:.2f} SRD is toegevoegd aan uw kasboek"
+    }
+
+# ============================================
 # WERKNEMERS ENDPOINTS
 # ============================================
 
