@@ -487,6 +487,90 @@ export default function DagrapportenPage() {
     }
   };
 
+  // Saldo toevoegen aan Suribet (uit commissie)
+  const handleSaldoNaarSuribet = async () => {
+    const amount = parseFloat(saldoAmount);
+    if (!amount || amount <= 0) {
+      toast.error('Voer een geldig bedrag in');
+      return;
+    }
+
+    setProcessingSaldo(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/suribet/saldo-naar-suribet`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          amount: amount,
+          notes: saldoNotes || 'Saldo toevoeging aan Suribet'
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(result.message);
+        setShowSaldoSuribetModal(false);
+        setSaldoAmount('');
+        setSaldoNotes('');
+        fetchData();
+        fetchTotals();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Fout bij saldo toevoegen');
+      }
+    } catch (error) {
+      toast.error('Fout bij saldo toevoegen');
+    } finally {
+      setProcessingSaldo(false);
+    }
+  };
+
+  // Saldo toevoegen aan Commissie (uit kasboek)
+  const handleSaldoNaarCommissie = async () => {
+    const amount = parseFloat(saldoAmount);
+    if (!amount || amount <= 0) {
+      toast.error('Voer een geldig bedrag in');
+      return;
+    }
+
+    setProcessingSaldo(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/suribet/saldo-naar-commissie`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          amount: amount,
+          notes: saldoNotes || 'Saldo toevoeging uit kasboek'
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(result.message);
+        setShowSaldoCommissieModal(false);
+        setSaldoAmount('');
+        setSaldoNotes('');
+        fetchData();
+        fetchTotals();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Fout bij saldo toevoegen');
+      }
+    } catch (error) {
+      toast.error('Fout bij saldo toevoegen');
+    } finally {
+      setProcessingSaldo(false);
+    }
+  };
+
   // Bereken totaal biljetten in SRD
   const berekenBiljettenTotaal = (biljetten, denominaties, multiplier = 1) => {
     if (!biljetten) return 0;
