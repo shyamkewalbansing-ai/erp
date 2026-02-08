@@ -731,6 +731,11 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
         "$or": [{"commission_withdrawn": False}, {"commission_withdrawn": {"$exists": False}}]
     }).to_list(None)
     
+    # Get saldo adjustments that affect commission
+    saldo_adjustments = await db.suribet_saldo_adjustments.find({
+        "user_id": user_id
+    }).to_list(None)
+    
     total_balance = 0
     total_suribet = 0
     
@@ -750,6 +755,18 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
         if bon_data:
             commission = bon_data.get("total_pos_commission", 0)
             total_commission += commission
+    
+    # Adjust commission based on saldo adjustments
+    for adjustment in saldo_adjustments:
+        if adjustment.get("type") == "saldo_naar_suribet":
+            # This reduces commission (money went to Suribet)
+            total_commission -= adjustment.get("amount", 0)
+        elif adjustment.get("type") == "saldo_naar_commissie":
+            # This increases commission (money came from kasboek)
+            total_commission += adjustment.get("amount", 0)
+    
+    # Ensure commission doesn't go negative
+    total_commission = max(0, total_commission)
     
     return {
         "total_balance": total_balance,
