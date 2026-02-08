@@ -836,16 +836,27 @@ export default function DagrapportenPage() {
                 <TrendingUp className="w-6 h-6 text-orange-600" />
               </div>
             </div>
-            {runningTotals.total_suribet > 0 && (
+            <div className="flex gap-2 mt-3">
+              {runningTotals.total_suribet > 0 && (
+                <Button 
+                  onClick={selectAllUnpaid}
+                  size="sm"
+                  className="flex-1 bg-orange-500 hover:bg-orange-600 text-white"
+                >
+                  <Banknote className="w-4 h-4 mr-1" />
+                  Uitbetalen
+                </Button>
+              )}
               <Button 
-                onClick={selectAllUnpaid}
+                onClick={() => { setSaldoAmount(''); setSaldoNotes(''); setShowSaldoSuribetModal(true); }}
                 size="sm"
-                className="mt-3 w-full bg-orange-500 hover:bg-orange-600 text-white"
+                variant="outline"
+                className="flex-1 border-orange-300 text-orange-600 hover:bg-orange-50"
               >
-                <Banknote className="w-4 h-4 mr-1" />
-                Suribet Uitbetalen
+                <Plus className="w-4 h-4 mr-1" />
+                Saldo +
               </Button>
-            )}
+            </div>
           </CardContent>
         </Card>
 
@@ -863,16 +874,27 @@ export default function DagrapportenPage() {
                 <DollarSign className="w-6 h-6 text-blue-600" />
               </div>
             </div>
-            {runningTotals.total_commission > 0 && (
+            <div className="flex gap-2 mt-3">
+              {runningTotals.total_commission > 0 && (
+                <Button 
+                  onClick={() => setShowCommissieModal(true)}
+                  size="sm"
+                  className="flex-1 bg-blue-500 hover:bg-blue-600 text-white"
+                >
+                  <Banknote className="w-4 h-4 mr-1" />
+                  Opnemen
+                </Button>
+              )}
               <Button 
-                onClick={() => setShowCommissieModal(true)}
+                onClick={() => { setSaldoAmount(''); setSaldoNotes(''); setShowSaldoCommissieModal(true); }}
                 size="sm"
-                className="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white"
+                variant="outline"
+                className="flex-1 border-blue-300 text-blue-600 hover:bg-blue-50"
               >
-                <Banknote className="w-4 h-4 mr-1" />
-                Commissie Opnemen
+                <Plus className="w-4 h-4 mr-1" />
+                Saldo +
               </Button>
-            )}
+            </div>
           </CardContent>
         </Card>
 
