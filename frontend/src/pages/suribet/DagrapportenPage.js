@@ -921,9 +921,10 @@ export default function DagrapportenPage() {
                         </p>
                       </div>
                       <div className="bg-gray-50 dark:bg-gray-800 rounded p-2 -m-1">
-                        <p className="text-xs text-muted-foreground">Lopend Totaal</p>
-                        <p className="font-medium text-sm">{formatCurrency(runningTotal)}</p>
-                        <p className="text-xs text-blue-600">Comm: {formatCurrency(runningCommission)}</p>
+                        <p className="text-xs text-muted-foreground">Begin / Eind Saldo</p>
+                        <p className="font-medium text-sm">
+                          {formatCurrency(rapport.beginsaldo_srd || 0)} / {formatCurrency(rapport.eindsaldo_srd || 0)}
+                        </p>
                       </div>
                     </div>
                   </div>
