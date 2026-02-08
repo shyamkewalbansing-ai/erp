@@ -923,8 +923,9 @@ export default function DagrapportenPage() {
                       <div className="bg-gray-50 dark:bg-gray-800 rounded p-2 -m-1">
                         <p className="text-xs text-muted-foreground">Begin / Eind Saldo</p>
                         <p className="font-medium text-sm">
-                          {formatCurrency(rapport.beginsaldo_srd || 0)} / {formatCurrency(rapport.eindsaldo_srd || 0)}
+                          {formatCurrency(bonBalance)} / {formatCurrency(rapport.total_in_srd || 0)}
                         </p>
+                        <p className="text-xs text-muted-foreground">Bon / Geteld</p>
                       </div>
                     </div>
                   </div>
