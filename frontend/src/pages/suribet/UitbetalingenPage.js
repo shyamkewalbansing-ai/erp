@@ -257,13 +257,12 @@ export default function UitbetalingenPage() {
                           <p className="text-xs text-muted-foreground">Machine: {detail.machine_id}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Suribet deel</p>
+                          <p className="text-sm text-muted-foreground">Suribet Deel</p>
                           <p className="font-bold text-emerald-600">{formatCurrency(detail.suribet_amount)}</p>
                         </div>
                       </div>
                       <div className="flex justify-between mt-2 text-xs text-muted-foreground">
-                        <span>Omzet: {formatCurrency(detail.balance)}</span>
-                        <span>Commissie: {formatCurrency(detail.commission)}</span>
+                        <span>Jouw Commissie: {formatCurrency(detail.commission)}</span>
                       </div>
                     </div>
                   ))}
