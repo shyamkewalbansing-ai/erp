@@ -98,6 +98,14 @@ export default function DagrapportenPage() {
   const [showCommissieModal, setShowCommissieModal] = useState(false);
   const [processingCommissie, setProcessingCommissie] = useState(false);
   const [commissieNotes, setCommissieNotes] = useState('');
+  
+  // Saldo toevoegen modals
+  const [showSaldoSuribetModal, setShowSaldoSuribetModal] = useState(false);
+  const [showSaldoCommissieModal, setShowSaldoCommissieModal] = useState(false);
+  const [saldoAmount, setSaldoAmount] = useState('');
+  const [saldoNotes, setSaldoNotes] = useState('');
+  const [processingSaldo, setProcessingSaldo] = useState(false);
+  
   const fileInputRef = useRef(null);
   const qrPollIntervalRef = useRef(null);
   
