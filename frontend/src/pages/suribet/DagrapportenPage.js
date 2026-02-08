@@ -370,6 +370,46 @@ export default function DagrapportenPage() {
     }
   };
 
+  // Commissie opnemen handler
+  const handleCommissieOpnemen = async () => {
+    if (runningTotals.total_commission <= 0) {
+      toast.error('Geen commissie beschikbaar om op te nemen');
+      return;
+    }
+
+    setProcessingCommissie(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/suribet/commissie-opnemen`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          amount: runningTotals.total_commission,
+          notes: commissieNotes || 'Commissie opname'
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(result.message);
+        setShowCommissieModal(false);
+        setCommissieNotes('');
+        fetchData();
+        fetchTotals(); // Refresh running totals
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Fout bij commissie opnemen');
+      }
+    } catch (error) {
+      toast.error('Fout bij commissie opnemen');
+    } finally {
+      setProcessingCommissie(false);
+    }
+  };
+
   // Bereken totaal biljetten in SRD
   const berekenBiljettenTotaal = (biljetten, denominaties, multiplier = 1) => {
     if (!biljetten) return 0;
