@@ -904,6 +904,36 @@ Complete uitgebreide instellingen voor alle modules met schaalbare architectuur.
 
 ## What's Been Implemented (5 Feb 2026)
 
+### SURIBET GEAVANCEERDE LOPENDE TOTALEN ✅ (VOLTOOID - 10 Dec 2025)
+Complete financiële tracking met dynamische updates voor het Suribet module:
+
+**Features:**
+- [x] Prominente "Lopend Totaal" header sectie bovenaan de pagina
+- [x] Drie kaarten: Openstaand Suribet, Beschikbare Commissie, Totaal Omzet
+- [x] "Commissie Opnemen" knop direct in de commissie kaart
+- [x] Totalen updaten automatisch bij:
+  - Suribet uitbetaling (vermindert openstaand Suribet)
+  - Commissie opname (vermindert beschikbare commissie, boekt naar kasboek)
+- [x] Commissie opname creëert automatisch kasboek entry met categorie "commissie"
+- [x] Tracking van welke dagrapporten al commissie opgenomen hebben
+
+**Backend API's:** `/app/backend/routers/suribet.py`
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/suribet/openstaand-totaal | GET | Haal openstaande totalen op |
+| /api/suribet/commissie-opnemen | POST | **NIEUW** Neem commissie op naar kasboek |
+
+**Frontend:** `/app/frontend/src/pages/suribet/DagrapportenPage.js`
+- Nieuwe `useRunningTotals` hook voor real-time totaal tracking
+- Running totals header sectie met 3 prominente kaarten
+- Commissie opnemen modal met bevestiging
+
+**Database Velden Toegevoegd aan `suribet_dagstaten`:**
+- `commission_withdrawn`: boolean - of commissie al opgenomen is
+- `commission_withdrawn_date`: datetime - wanneer commissie opgenomen is
+
+---
+
 ### SURIBET RETAILER MANAGEMENT MODULE ✅ (VOLTOOID - 5 Feb 2026)
 Complete module voor Suribet retailers om machines, werknemers, kasboek en loonuitbetaling te beheren.
 
