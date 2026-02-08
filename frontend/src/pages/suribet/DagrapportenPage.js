@@ -477,13 +477,15 @@ export default function DagrapportenPage() {
     }).format(amount || 0);
   };
 
-  // Stats berekenen
+  // Stats berekenen - gebruik bon_data als beschikbaar
   const stats = {
-    totaalOmzet: dagrapporten.reduce((sum, r) => sum + berekenTotaleOmzet(r), 0),
+    totaalOmzet: dagrapporten.reduce((sum, r) => {
+      // Gebruik bon balance als beschikbaar, anders berekende omzet
+      return sum + (r.bon_data?.balance || r.omzet || berekenTotaleOmzet(r));
+    }, 0),
     totaalCommissie: dagrapporten.reduce((sum, r) => {
-      const omzet = berekenTotaleOmzet(r);
-      const { jouwCommissie } = berekenCommissies(omzet, r.suribet_percentage || 80);
-      return sum + jouwCommissie;
+      // Gebruik bon commissie als beschikbaar
+      return sum + (r.bon_data?.total_pos_commission || r.commissie || 0);
     }, 0),
     aantalMachines: dagrapporten.length,
     verliesMachines: dagrapporten.filter(r => isVerlies(r)).length
