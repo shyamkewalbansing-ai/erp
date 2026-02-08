@@ -613,19 +613,19 @@ async def create_uitbetaling(
     
     for dagstaat in dagstaten:
         bon_data = dagstaat.get("bon_data", {})
-        # Suribet amount = balance - commission (what belongs to Suribet)
+        # Suribet Deel = balance (de totale bon omzet)
         balance = bon_data.get("balance", 0) if bon_data else 0
         commission = bon_data.get("total_pos_commission", 0) if bon_data else 0
-        suribet_amount = balance - commission
+        suribet_deel = balance  # Suribet Deel = bon balance
         
-        total_suribet_amount += suribet_amount
+        total_suribet_amount += suribet_deel
         dagstaat_details.append({
             "dagstaat_id": dagstaat["id"],
             "date": dagstaat.get("date"),
             "machine_id": dagstaat.get("machine_id"),
             "balance": balance,
             "commission": commission,
-            "suribet_amount": suribet_amount
+            "suribet_amount": suribet_deel  # Dit is nu de bon balance
         })
     
     # Create uitbetaling record
