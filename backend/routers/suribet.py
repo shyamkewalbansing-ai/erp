@@ -571,6 +571,169 @@ async def delete_dagstaat(
     return {"message": "Dagstaat verwijderd"}
 
 # ============================================
+# SURIBET UITBETALINGEN ENDPOINTS
+# ============================================
+
+@router.post("/uitbetalingen")
+async def create_uitbetaling(
+    data: SuribetUitbetalingCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a new Suribet payout - mark dagstaten as paid"""
+    from server import db
+    user_id = current_user["id"]
+    
+    if not data.dagstaat_ids:
+        raise HTTPException(status_code=400, detail="Geen dagrapporten geselecteerd")
+    
+    # Get the dagstaten to calculate total
+    dagstaten = await db.suribet_dagstaten.find({
+        "user_id": user_id,
+        "id": {"$in": data.dagstaat_ids}
+    }).to_list(None)
+    
+    if not dagstaten:
+        raise HTTPException(status_code=404, detail="Geen dagrapporten gevonden")
+    
+    # Calculate total Suribet amount from bon data
+    total_suribet_amount = 0
+    dagstaat_details = []
+    
+    for dagstaat in dagstaten:
+        bon_data = dagstaat.get("bon_data", {})
+        # Suribet amount = balance - commission (what belongs to Suribet)
+        balance = bon_data.get("balance", 0) if bon_data else 0
+        commission = bon_data.get("total_pos_commission", 0) if bon_data else 0
+        suribet_amount = balance - commission
+        
+        total_suribet_amount += suribet_amount
+        dagstaat_details.append({
+            "dagstaat_id": dagstaat["id"],
+            "date": dagstaat.get("date"),
+            "machine_id": dagstaat.get("machine_id"),
+            "balance": balance,
+            "commission": commission,
+            "suribet_amount": suribet_amount
+        })
+    
+    # Create uitbetaling record
+    uitbetaling = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "dagstaat_ids": data.dagstaat_ids,
+        "dagstaat_details": dagstaat_details,
+        "total_amount": total_suribet_amount,
+        "notes": data.notes,
+        "payout_date": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.suribet_uitbetalingen.insert_one(uitbetaling)
+    
+    # Mark dagstaten as paid
+    await db.suribet_dagstaten.update_many(
+        {"user_id": user_id, "id": {"$in": data.dagstaat_ids}},
+        {"$set": {
+            "is_paid": True,
+            "paid_date": datetime.now(timezone.utc).isoformat(),
+            "uitbetaling_id": uitbetaling["id"]
+        }}
+    )
+    
+    return {
+        "id": uitbetaling["id"],
+        "total_amount": total_suribet_amount,
+        "dagstaten_count": len(data.dagstaat_ids),
+        "message": f"Uitbetaling van {total_suribet_amount:.2f} SRD geregistreerd voor {len(data.dagstaat_ids)} dagrapporten"
+    }
+
+@router.get("/uitbetalingen")
+async def get_uitbetalingen(current_user: dict = Depends(get_current_user)):
+    """Get all Suribet payouts"""
+    from server import db
+    user_id = current_user["id"]
+    
+    uitbetalingen = await db.suribet_uitbetalingen.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("payout_date", -1).to_list(None)
+    
+    return uitbetalingen
+
+@router.get("/uitbetalingen/{uitbetaling_id}")
+async def get_uitbetaling(uitbetaling_id: str, current_user: dict = Depends(get_current_user)):
+    """Get a specific Suribet payout with details"""
+    from server import db
+    user_id = current_user["id"]
+    
+    uitbetaling = await db.suribet_uitbetalingen.find_one(
+        {"user_id": user_id, "id": uitbetaling_id},
+        {"_id": 0}
+    )
+    
+    if not uitbetaling:
+        raise HTTPException(status_code=404, detail="Uitbetaling niet gevonden")
+    
+    return uitbetaling
+
+@router.delete("/uitbetalingen/{uitbetaling_id}")
+async def delete_uitbetaling(uitbetaling_id: str, current_user: dict = Depends(get_current_user)):
+    """Delete a Suribet payout and unmark dagstaten"""
+    from server import db
+    user_id = current_user["id"]
+    
+    # Get uitbetaling first
+    uitbetaling = await db.suribet_uitbetalingen.find_one(
+        {"user_id": user_id, "id": uitbetaling_id}
+    )
+    
+    if not uitbetaling:
+        raise HTTPException(status_code=404, detail="Uitbetaling niet gevonden")
+    
+    # Unmark dagstaten
+    await db.suribet_dagstaten.update_many(
+        {"user_id": user_id, "id": {"$in": uitbetaling.get("dagstaat_ids", [])}},
+        {"$set": {"is_paid": False}, "$unset": {"paid_date": "", "uitbetaling_id": ""}}
+    )
+    
+    # Delete uitbetaling
+    await db.suribet_uitbetalingen.delete_one({"user_id": user_id, "id": uitbetaling_id})
+    
+    return {"message": "Uitbetaling verwijderd en dagrapporten weer openstaand"}
+
+@router.get("/openstaand-totaal")
+async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
+    """Get total outstanding Suribet amount (not yet paid)"""
+    from server import db
+    user_id = current_user["id"]
+    
+    # Get all unpaid dagstaten
+    dagstaten = await db.suribet_dagstaten.find({
+        "user_id": user_id,
+        "$or": [{"is_paid": False}, {"is_paid": {"$exists": False}}]
+    }).to_list(None)
+    
+    total_balance = 0
+    total_commission = 0
+    total_suribet = 0
+    
+    for dagstaat in dagstaten:
+        bon_data = dagstaat.get("bon_data", {})
+        if bon_data:
+            balance = bon_data.get("balance", 0)
+            commission = bon_data.get("total_pos_commission", 0)
+            total_balance += balance
+            total_commission += commission
+            total_suribet += (balance - commission)
+    
+    return {
+        "total_balance": total_balance,
+        "total_commission": total_commission,
+        "total_suribet": total_suribet,
+        "unpaid_count": len(dagstaten)
+    }
+
+# ============================================
 # WERKNEMERS ENDPOINTS
 # ============================================
 
