@@ -7,13 +7,35 @@ ERP SaaS systeem voor Surinaamse bedrijven met modulaire add-ons, CMS beheer en 
 - **Backend**: FastAPI (Python) met JWT authenticatie
 - **Frontend**: React met Shadcn UI, lazy loading
 - **Database**: MongoDB (erp_db)
-- **AI**: OpenAI GPT-4o via Emergent LLM Key
+- **AI**: OpenAI GPT-4o via Emergent LLM Key, Gemini Vision voor bon scanning
 - **Styling**: Tailwind CSS met glassmorphism effecten
 - **Fonts**: Outfit (headings), Plus Jakarta Sans (body)
 - **Primary Color**: #0caf60 (groen)
 - **Multi-tenant**: Workspace-based isolatie per klant
 
-## What's Been Implemented (4 Feb 2026)
+## What's Been Implemented (8 Feb 2026)
+
+### SURIBET FINANCIËLE HEADER ✅ (VOLTOOID - 8 Feb 2026)
+Prominente financiële overzicht header op de Dagrapporten pagina:
+
+**Features:**
+- [x] 4-kolom header met: Suribet Deel, Jouw Commissie, Machines Vandaag, Verlies
+- [x] "Suribet Uitbetalen" knop bij Suribet Deel kaart
+- [x] "Commissie Opnemen" knop bij Jouw Commissie kaart
+- [x] Dynamische updates na uitbetalingen en commissie opnames
+- [x] Commissie opname boekt automatisch naar kasboek
+
+**Backend API's:** `/app/backend/routers/suribet.py`
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| /api/suribet/openstaand-totaal | GET | Haalt lopende totalen op (Suribet Deel = bon balance) |
+| /api/suribet/commissie-opnemen | POST | Neemt commissie op naar kasboek |
+
+**Database Velden:**
+- `commission_withdrawn`: boolean - of commissie al opgenomen is
+- `commission_withdrawn_date`: datetime - wanneer commissie opgenomen is
+
+---
 
 ### VASTGOED BEHEER UI MODERNISERING ✅ (VOLTOOID - 4 Feb 2026)
 Alle Vastgoed Beheer pagina's hebben nu een consistente, moderne look met hero banners en stats cards.
