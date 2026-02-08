@@ -547,19 +547,6 @@ export default function DagrapportenPage() {
   const getMachineName = (id) => machines.find(m => m.id === id)?.machine_id || 'Onbekend';
   const getWerknemerName = (id) => werknemers.find(w => w.id === id)?.name || 'Onbekend';
 
-  // Select all unpaid reports for payout
-  const selectAllUnpaid = () => {
-    const unpaidIds = dagrapporten
-      .filter(r => !r.is_paid)
-      .map(r => r.id);
-    setSelectedForPayout(unpaidIds);
-    if (unpaidIds.length > 0) {
-      setShowPayoutModal(true);
-    } else {
-      toast.info('Geen openstaande rapporten gevonden');
-    }
-  };
-
   const formatCurrency = (amount, currency = 'SRD') => {
     return new Intl.NumberFormat('nl-SR', {
       style: 'currency',
