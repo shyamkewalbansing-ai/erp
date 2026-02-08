@@ -1365,6 +1365,62 @@ export default function DagrapportenPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Payout Modal */}
+      <Dialog open={showPayoutModal} onOpenChange={setShowPayoutModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Banknote className="w-5 h-5 text-orange-500" />
+              Betaal Suribet Uit
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg">
+              <p className="text-sm text-muted-foreground">Totaal uit te betalen aan Suribet:</p>
+              <p className="text-3xl font-bold text-orange-600">{formatCurrency(calculatePayoutTotal())}</p>
+              <p className="text-sm text-muted-foreground mt-1">{selectedForPayout.length} dagrapport(en) geselecteerd</p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Notities (optioneel)</Label>
+              <Input
+                value={payoutNotes}
+                onChange={(e) => setPayoutNotes(e.target.value)}
+                placeholder="Bijv. Opgehaald door Jan"
+              />
+            </div>
+            
+            <div className="text-sm text-muted-foreground">
+              <p>Na bevestiging worden de geselecteerde dagrapporten gemarkeerd als betaald.</p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPayoutModal(false)}>
+              Annuleren
+            </Button>
+            <Button 
+              onClick={handlePayout} 
+              disabled={processingPayout}
+              className="bg-orange-500 hover:bg-orange-600"
+            >
+              {processingPayout ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verwerken...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Bevestig Uitbetaling
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* QR Code Modal */}
       <Dialog open={showQrModal} onOpenChange={(open) => {
         if (!open) stopQrPolling();
