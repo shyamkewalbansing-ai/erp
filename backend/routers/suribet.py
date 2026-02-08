@@ -746,10 +746,6 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
         "total_suribet": total_suribet,
         "unpaid_count": len(dagstaten)
     }
-        "total_commission": total_commission,
-        "total_suribet": total_suribet,
-        "unpaid_count": len(dagstaten)
-    }
 
 # ============================================
 # COMMISSIE OPNEMEN ENDPOINT
