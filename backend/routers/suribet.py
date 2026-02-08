@@ -724,11 +724,9 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
         "$or": [{"is_paid": False}, {"is_paid": {"$exists": False}}]
     }).to_list(None)
     
-    # Get all dagstaten where commission is not yet withdrawn (for commission total)
-    # This is SEPARATE from Suribet payment status
-    commission_dagstaten = await db.suribet_dagstaten.find({
-        "user_id": user_id,
-        "$or": [{"commission_withdrawn": False}, {"commission_withdrawn": {"$exists": False}}]
+    # Get ALL dagstaten for commission calculation (commission is earned regardless of payment status)
+    all_dagstaten = await db.suribet_dagstaten.find({
+        "user_id": user_id
     }).to_list(None)
     
     # Get saldo adjustments that affect commission and suribet
@@ -736,9 +734,10 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
         "user_id": user_id
     }).to_list(None)
     
-    # Get kasboek entries for commission calculation
+    # Get kasboek entries (excluding commission entries which come from dagstaten)
     kasboek_entries = await db.suribet_kasboek.find({
-        "user_id": user_id
+        "user_id": user_id,
+        "category": {"$ne": "commissie"}  # Exclude commissie category to avoid double counting
     }).to_list(None)
     
     total_balance = 0
@@ -752,17 +751,15 @@ async def get_openstaand_totaal(current_user: dict = Depends(get_current_user)):
             total_balance += balance
             total_suribet += balance
     
-    # Calculate commission from reports where commission not yet withdrawn
-    # (regardless of whether Suribet is paid)
+    # Calculate commission from ALL dagrapporten (not just unpaid)
     total_commission = 0
-    for dagstaat in commission_dagstaten:
+    for dagstaat in all_dagstaten:
         bon_data = dagstaat.get("bon_data", {})
         if bon_data:
             commission = bon_data.get("total_pos_commission", 0)
             total_commission += commission
     
-    # Add kasboek income entries to commission (inkomsten)
-    # Subtract kasboek expense entries from commission (uitgaven)
+    # Add/subtract kasboek entries (income adds, expense subtracts)
     for entry in kasboek_entries:
         if entry.get("transaction_type") == "income":
             total_commission += entry.get("amount", 0)
