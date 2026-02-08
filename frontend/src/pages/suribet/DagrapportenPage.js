@@ -658,7 +658,7 @@ export default function DagrapportenPage() {
       </div>
 
       {/* Running Totals Header - Prominent Financial Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/20">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
@@ -671,10 +671,20 @@ export default function DagrapportenPage() {
                   {runningTotals.unpaid_count} rapport{runningTotals.unpaid_count !== 1 ? 'en' : ''} openstaand
                 </p>
               </div>
-              <div className="w-14 h-14 rounded-2xl bg-orange-500/20 flex items-center justify-center">
-                <TrendingUp className="w-7 h-7 text-orange-600" />
+              <div className="w-12 h-12 rounded-2xl bg-orange-500/20 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-orange-600" />
               </div>
             </div>
+            {runningTotals.total_suribet > 0 && (
+              <Button 
+                onClick={selectAllUnpaid}
+                size="sm"
+                className="mt-3 w-full bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                <Banknote className="w-4 h-4 mr-1" />
+                Suribet Uitbetalen
+              </Button>
+            )}
           </CardContent>
         </Card>
 
@@ -682,14 +692,14 @@ export default function DagrapportenPage() {
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Beschikbare Commissie</p>
+                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">Jouw Commissie</p>
                 <p className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-400">
                   {totalsLoading ? '...' : formatCurrency(runningTotals.total_commission)}
                 </p>
-                <p className="text-xs text-blue-600/70 mt-1">Jouw verdiensten</p>
+                <p className="text-xs text-blue-600/70 mt-1">Beschikbaar om op te nemen</p>
               </div>
-              <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center">
-                <Banknote className="w-7 h-7 text-blue-600" />
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/20 flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-blue-600" />
               </div>
             </div>
             {runningTotals.total_commission > 0 && (
@@ -698,85 +708,46 @@ export default function DagrapportenPage() {
                 size="sm"
                 className="mt-3 w-full bg-blue-500 hover:bg-blue-600 text-white"
               >
-                <DollarSign className="w-4 h-4 mr-1" />
+                <Banknote className="w-4 h-4 mr-1" />
                 Commissie Opnemen
               </Button>
             )}
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-950/30 dark:to-emerald-900/20">
+        <Card className="border-0 shadow-lg">
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">Totaal Omzet</p>
-                <p className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400">
-                  {totalsLoading ? '...' : formatCurrency(runningTotals.total_balance)}
+                <p className="text-sm text-muted-foreground font-medium">Machines Vandaag</p>
+                <p className="text-2xl sm:text-3xl font-bold text-purple-600">
+                  {stats.aantalMachines}
                 </p>
-                <p className="text-xs text-emerald-600/70 mt-1">Alle openstaande bonnen</p>
+                <p className="text-xs text-muted-foreground mt-1">Geregistreerde rapporten</p>
               </div>
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
-                <Receipt className="w-7 h-7 text-emerald-600" />
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/20 flex items-center justify-center">
+                <Gamepad2 className="w-6 h-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-4">
+        <Card className={`border-0 shadow-lg ${stats.verliesMachines > 0 ? 'ring-2 ring-red-500 bg-red-50/50 dark:bg-red-950/20' : ''}`}>
+          <CardContent className="p-4 sm:p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-muted-foreground text-xs sm:text-sm">Suribet Deel</p>
-                <p className="text-lg sm:text-xl font-bold text-orange-600">{formatCurrency(stats.totaalOmzet)}</p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center text-orange-500">
-                <TrendingUp className="w-5 h-5" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-xs sm:text-sm">Jouw Commissie</p>
-                <p className="text-lg sm:text-xl font-bold text-blue-600">{formatCurrency(stats.totaalCommissie)}</p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-                <Banknote className="w-5 h-5" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-0 shadow-lg">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-xs sm:text-sm">Machines</p>
-                <p className="text-lg sm:text-xl font-bold">{stats.aantalMachines}</p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-500">
-                <Gamepad2 className="w-5 h-5" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className={`border-0 shadow-lg ${stats.verliesMachines > 0 ? 'ring-2 ring-red-500' : ''}`}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-muted-foreground text-xs sm:text-sm">Verlies</p>
-                <p className={`text-lg sm:text-xl font-bold ${stats.verliesMachines > 0 ? 'text-red-600' : 'text-slate-600'}`}>
+                <p className="text-sm text-muted-foreground font-medium">Verlies</p>
+                <p className={`text-2xl sm:text-3xl font-bold ${stats.verliesMachines > 0 ? 'text-red-600' : 'text-slate-400'}`}>
                   {stats.verliesMachines}
                 </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {stats.verliesMachines > 0 ? 'Let op!' : 'Geen verlies'}
+                </p>
               </div>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                stats.verliesMachines > 0 ? 'bg-red-500/10 text-red-500' : 'bg-slate-500/10 text-slate-500'
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                stats.verliesMachines > 0 ? 'bg-red-500/20' : 'bg-slate-500/10'
               }`}>
-                <AlertTriangle className="w-5 h-5" />
+                <AlertTriangle className={`w-6 h-6 ${stats.verliesMachines > 0 ? 'text-red-600' : 'text-slate-400'}`} />
               </div>
             </div>
           </CardContent>
