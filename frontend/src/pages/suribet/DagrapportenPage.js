@@ -1574,6 +1574,65 @@ export default function DagrapportenPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Commissie Opnemen Modal */}
+      <Dialog open={showCommissieModal} onOpenChange={setShowCommissieModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="w-5 h-5 text-blue-500" />
+              Commissie Opnemen
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
+              <p className="text-sm text-muted-foreground">Beschikbare commissie:</p>
+              <p className="text-3xl font-bold text-blue-600">{formatCurrency(runningTotals.total_commission)}</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Dit bedrag wordt naar uw kasboek geboekt
+              </p>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Notities (optioneel)</Label>
+              <Input
+                value={commissieNotes}
+                onChange={(e) => setCommissieNotes(e.target.value)}
+                placeholder="Bijv. Commissie week 1"
+              />
+            </div>
+            
+            <div className="text-sm text-muted-foreground bg-amber-50 dark:bg-amber-950/30 p-3 rounded-lg">
+              <p className="font-medium text-amber-700 dark:text-amber-400">Let op:</p>
+              <p className="text-amber-600 dark:text-amber-500">Na opname wordt dit bedrag als inkomst toegevoegd aan uw kasboek en worden de openstaande commissies gereset.</p>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCommissieModal(false)}>
+              Annuleren
+            </Button>
+            <Button 
+              onClick={handleCommissieOpnemen} 
+              disabled={processingCommissie || runningTotals.total_commission <= 0}
+              className="bg-blue-500 hover:bg-blue-600"
+            >
+              {processingCommissie ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Verwerken...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Opnemen naar Kasboek
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
