@@ -313,6 +313,11 @@ export default function DagrapportenPage() {
       .filter(r => !r.is_paid)
       .map(r => r.id);
     setSelectedForPayout(unpaidIds);
+    if (unpaidIds.length > 0) {
+      setShowPayoutModal(true);
+    } else {
+      toast.info('Geen openstaande rapporten gevonden');
+    }
   };
 
   const clearSelection = () => {
