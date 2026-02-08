@@ -125,6 +125,7 @@ export default function DagrapportenPage() {
 
   useEffect(() => {
     fetchData();
+    fetchTotals();
   }, [selectedDate]);
 
   const fetchData = async () => {
