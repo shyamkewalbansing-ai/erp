@@ -952,6 +952,60 @@ async def saldo_naar_commissie(
         "message": f"Saldo van {data.amount:.2f} SRD is toegevoegd aan uw commissie"
     }
 
+@router.get("/saldo-aanpassingen")
+async def get_saldo_aanpassingen(current_user: dict = Depends(get_current_user)):
+    """Get all saldo adjustments"""
+    user_id = current_user["id"]
+    
+    adjustments = await db.suribet_saldo_adjustments.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return adjustments
+
+@router.delete("/saldo-aanpassingen/{adjustment_id}")
+async def delete_saldo_aanpassing(
+    adjustment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete a saldo adjustment"""
+    user_id = current_user["id"]
+    
+    # Find the adjustment first
+    adjustment = await db.suribet_saldo_adjustments.find_one({
+        "id": adjustment_id,
+        "user_id": user_id
+    })
+    
+    if not adjustment:
+        raise HTTPException(status_code=404, detail="Aanpassing niet gevonden")
+    
+    # Delete the adjustment
+    await db.suribet_saldo_adjustments.delete_one({
+        "id": adjustment_id,
+        "user_id": user_id
+    })
+    
+    # Also delete the related kasboek entry if exists
+    if adjustment.get("type") == "saldo_naar_suribet":
+        await db.suribet_kasboek.delete_one({
+            "user_id": user_id,
+            "category": "suribet_saldo",
+            "amount": adjustment.get("amount")
+        })
+    elif adjustment.get("type") == "saldo_naar_commissie":
+        await db.suribet_kasboek.delete_one({
+            "user_id": user_id,
+            "category": "commissie_toevoeging",
+            "amount": adjustment.get("amount")
+        })
+    
+    return {
+        "success": True,
+        "message": "Saldo aanpassing verwijderd"
+    }
+
 # ============================================
 # WERKNEMERS ENDPOINTS
 # ============================================
