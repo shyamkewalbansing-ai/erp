@@ -688,7 +688,7 @@ export default function Layout() {
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
             <button
               onClick={() => setSettingsOpen(!settingsOpen)}
-              className={`nav-item w-full ${(location.pathname === '/instellingen' || location.pathname === '/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed ? 'justify-center' : 'justify-between'}`}
+              className={`nav-item w-full ${(location.pathname === '/app/instellingen' || location.pathname === '/app/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed ? 'justify-center' : 'justify-between'}`}
               data-testid="nav-instellingen-dropdown"
               title="Instellingen"
             >
