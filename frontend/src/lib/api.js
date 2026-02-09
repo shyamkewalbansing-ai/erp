@@ -275,6 +275,7 @@ export const confirmModulePayment = (requestId, months = 1) => api.post(`/admin/
 // Sidebar Module Order (User)
 export const getSidebarOrder = () => api.get('/user/sidebar-order');
 export const updateSidebarOrder = (moduleOrder) => api.put('/user/sidebar-order', { module_order: moduleOrder });
+export const updateDefaultDashboard = (defaultDashboard) => api.put('/user/default-dashboard', { default_dashboard: defaultDashboard });
 
 // Module Settings (User)
 export const getModuleSettings = (moduleSlug) => api.get(`/module-settings/${moduleSlug}`);
