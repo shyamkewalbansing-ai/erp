@@ -191,23 +191,9 @@ export default function Layout() {
   const [domainForm, setDomainForm] = useState({ domain_type: 'subdomain', subdomain: '', custom_domain: '' });
   const [savingWorkspace, setSavingWorkspace] = useState(false);
   
-  // User dropdown and profile settings state
+  // User dropdown state
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
-  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
-  const [profileForm, setProfileForm] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  });
-  const [savingProfile, setSavingProfile] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [profilePhoto, setProfilePhoto] = useState(null);
   const userDropdownRef = useRef(null);
-  const fileInputRef = useRef(null);
   
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
