@@ -942,6 +942,15 @@ export default function DagrapportenPage() {
                 <Plus className="w-4 h-4 mr-1" />
                 Saldo +
               </Button>
+              <Button 
+                onClick={() => setShowSaldoOverzicht(true)}
+                size="sm"
+                variant="ghost"
+                className="px-2"
+                title="Saldo aanpassingen bekijken"
+              >
+                <FileText className="w-4 h-4 text-gray-500" />
+              </Button>
             </div>
           </CardContent>
         </Card>
