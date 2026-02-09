@@ -9,10 +9,18 @@ import {
   ArrowUp,
   ArrowDown,
   LayoutList,
-  Check
+  Check,
+  Home
 } from 'lucide-react';
-import { getSidebarOrder, updateSidebarOrder, getMyAddons } from '../lib/api';
+import { getSidebarOrder, updateSidebarOrder, updateDefaultDashboard, getMyAddons } from '../lib/api';
 import { useAuth } from '../context/AuthContext';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 // All available modules for superadmin
 const ALL_MODULES = [
