@@ -132,11 +132,31 @@ export default function Dashboard() {
     }
   };
 
+  // Module slug to route mapping
+  const moduleRoutes = {
+    'vastgoed_beheer': '/app/dashboard', // Stay here for vastgoed
+    'suribet': '/app/suribet',
+    'hrm': '/app/hrm',
+    'autodealer': '/app/autodealer',
+    'beauty': '/app/beauty',
+    'pompstation': '/app/pompstation',
+    'boekhouding': '/app/boekhouding'
+  };
+
   const checkAddonsAndFetch = async () => {
     try {
-      const addonsResponse = await getMyAddons();
+      // Get user's addons and sidebar settings in parallel
+      const [addonsResponse, sidebarResponse] = await Promise.all([
+        getMyAddons(),
+        getSidebarOrder()
+      ]);
+      
       const addons = addonsResponse.data || [];
       setActiveAddons(addons);
+      
+      const sidebarSettings = sidebarResponse.data || {};
+      const savedOrder = sidebarSettings.module_order || [];
+      const defaultDashboard = sidebarSettings.default_dashboard;
       
       const hasVastgoed = addons.some(addon => 
         addon.addon_slug === 'vastgoed_beheer' && 
@@ -145,46 +165,64 @@ export default function Dashboard() {
       setHasVastgoedAddon(hasVastgoed);
       setAddonsChecked(true);
       
-      // Check if user has ANY active modules
-      const hasAnyActiveModule = addons.some(addon => 
+      // Get active modules
+      const activeModules = addons.filter(addon => 
         addon.status === 'active' || addon.status === 'trial'
       );
       
-      // Check for boekhouding only
-      const hasBoekhouding = addons.some(addon => 
-        addon.addon_slug === 'boekhouding' && 
-        (addon.status === 'active' || addon.status === 'trial')
-      );
-      
-      // Check for suribet
-      const hasSuribet = addons.some(addon => 
-        addon.addon_slug === 'suribet' && 
-        (addon.status === 'active' || addon.status === 'trial')
-      );
-      
-      if (!hasAnyActiveModule) {
+      if (activeModules.length === 0) {
         // Show order popup for users without active modules
         await loadAvailableModules();
         await checkPaymentStatus();
         setOrderPopupOpen(true);
         setLoading(false);
-      } else {
-        // Check for expired modules
-        await checkPaymentStatus();
-        
-        // Redirect to appropriate dashboard based on active modules
-        if (hasSuribet && !hasVastgoed) {
-          // User has Suribet but not Vastgoed - redirect to Suribet dashboard
-          navigate('/app/suribet');
-          return;
-        } else if (hasVastgoed) {
-          await fetchDashboard();
-        } else if (hasBoekhouding && !hasVastgoed) {
-          // User has only boekhouding - show simplified welcome view
-          setLoading(false);
-        } else {
-          setLoading(false);
+        return;
+      }
+      
+      // Check for expired modules
+      await checkPaymentStatus();
+      
+      // Determine which dashboard to show
+      let targetModule = null;
+      
+      // Priority 1: User's explicit default dashboard choice
+      if (defaultDashboard) {
+        const hasDefaultModule = activeModules.some(m => m.addon_slug === defaultDashboard);
+        if (hasDefaultModule) {
+          targetModule = defaultDashboard;
         }
+      }
+      
+      // Priority 2: First module in sidebar order
+      if (!targetModule && savedOrder.length > 0) {
+        for (const slug of savedOrder) {
+          const hasModule = activeModules.some(m => m.addon_slug === slug);
+          if (hasModule) {
+            targetModule = slug;
+            break;
+          }
+        }
+      }
+      
+      // Priority 3: First active module (fallback)
+      if (!targetModule && activeModules.length > 0) {
+        targetModule = activeModules[0].addon_slug;
+      }
+      
+      // Navigate to target module dashboard
+      if (targetModule && targetModule !== 'vastgoed_beheer') {
+        const route = moduleRoutes[targetModule];
+        if (route) {
+          navigate(route);
+          return;
+        }
+      }
+      
+      // Default: show vastgoed dashboard or welcome screen
+      if (hasVastgoed) {
+        await fetchDashboard();
+      } else {
+        setLoading(false);
       }
     } catch (error) {
       console.error('Error checking addons:', error);
