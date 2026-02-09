@@ -108,11 +108,14 @@ export default function Instellingen() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [activeSection, setActiveSection] = useState(searchParams.get('tab') || 'profile');
   const [activeAddons, setActiveAddons] = useState([]);
+  const [profilePhoto, setProfilePhoto] = useState(null);
   const fileInputRef = useRef(null);
+  const photoInputRef = useRef(null);
   
   const isSuperAdmin = user?.role === 'superadmin';
   
@@ -138,6 +141,13 @@ export default function Instellingen() {
     new_password: '',
     confirm_password: ''
   });
+
+  // Load profile photo from user
+  useEffect(() => {
+    if (user?.profile_photo) {
+      setProfilePhoto(user.profile_photo);
+    }
+  }, [user]);
 
   useEffect(() => {
     loadProfile();
