@@ -92,30 +92,68 @@ export default function Login() {
 
   const redirectToFirstModule = async () => {
     try {
-      // Get user's active addons
-      const addonsRes = await api.get('/user/addons');
+      // Get user's active addons and sidebar settings
+      const [addonsRes, sidebarRes] = await Promise.all([
+        api.get('/user/addons'),
+        api.get('/user/sidebar-order')
+      ]);
+      
       const addons = addonsRes.data || [];
+      const sidebarSettings = sidebarRes.data || {};
+      const savedOrder = sidebarSettings.module_order || [];
+      const defaultDashboard = sidebarSettings.default_dashboard;
       
-      // Find first active addon
-      const activeAddon = addons.find(a => a.status === 'active' || a.status === 'trial');
+      // Get active module slugs
+      const activeModuleSlugs = addons
+        .filter(a => a.status === 'active' || a.status === 'trial')
+        .map(a => a.addon_slug);
       
-      if (activeAddon) {
-        // Map addon slugs to their dashboard routes
-        const moduleRoutes = {
-          'boekhouding': '/app/boekhouding',
-          'vastgoed_beheer': '/app/dashboard',
-          'hrm': '/app/hrm',
-          'autodealer': '/app/autodealer',
-          'beauty': '/app/beauty',
-          'pompstation': '/app/pompstation',
-          'ai-chatbot': '/app/chatbot',
-          'cms': '/app/cms'
-        };
-        
-        const route = moduleRoutes[activeAddon.addon_slug] || '/app/dashboard';
-        navigate(route);
-      } else {
-        // No active modules - go to dashboard (will show module selection)
+      // Module routes mapping
+      const moduleRoutes = {
+        'vastgoed_beheer': '/app/dashboard',
+        'suribet': '/app/suribet',
+        'hrm': '/app/hrm',
+        'autodealer': '/app/autodealer',
+        'beauty': '/app/beauty',
+        'pompstation': '/app/pompstation',
+        'boekhouding': '/app/boekhouding',
+        'ai-chatbot': '/app/chatbot',
+        'cms': '/app/cms'
+      };
+      
+      // Default order - same as sidebar
+      const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding'];
+      
+      // Get ordered modules (same logic as sidebar)
+      let orderedModules = defaultOrder;
+      if (savedOrder.length > 0) {
+        orderedModules = [...savedOrder];
+        defaultOrder.forEach(slug => {
+          if (!orderedModules.includes(slug)) {
+            orderedModules.push(slug);
+          }
+        });
+      }
+      
+      // Find first active module in sidebar order
+      let firstActiveModule = null;
+      for (const slug of orderedModules) {
+        if (activeModuleSlugs.includes(slug)) {
+          firstActiveModule = slug;
+          break;
+        }
+      }
+      
+      // Priority 1: User's explicit default dashboard choice
+      if (defaultDashboard && activeModuleSlugs.includes(defaultDashboard)) {
+        navigate(moduleRoutes[defaultDashboard] || '/app/dashboard');
+      }
+      // Priority 2: First module in sidebar order
+      else if (firstActiveModule && moduleRoutes[firstActiveModule]) {
+        navigate(moduleRoutes[firstActiveModule]);
+      }
+      // Fallback
+      else {
         navigate('/app/dashboard');
       }
     } catch (error) {
