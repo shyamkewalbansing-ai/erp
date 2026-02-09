@@ -793,7 +793,7 @@ export default function Layout() {
               
               {/* Dropdown Menu */}
               <div className={`user-dropdown-menu ${userDropdownOpen ? 'open' : ''}`}>
-                <button className="user-dropdown-item" onClick={openProfileDialog}>
+                <button className="user-dropdown-item" onClick={() => { setUserDropdownOpen(false); navigate('/app/instellingen?tab=profile'); }}>
                   <Settings className="w-4 h-4" />
                   <span>Instellingen</span>
                 </button>
