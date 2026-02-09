@@ -1006,6 +1006,42 @@ async def delete_saldo_aanpassing(
         "message": "Saldo aanpassing verwijderd"
     }
 
+@router.delete("/saldo-aanpassingen")
+async def delete_all_saldo_aanpassingen(
+    current_user: dict = Depends(get_current_user)
+):
+    """Delete all saldo adjustments for user and clean up related kasboek entries"""
+    user_id = current_user["id"]
+    
+    # Get all adjustments first to know what kasboek entries to delete
+    adjustments = await db.suribet_saldo_adjustments.find({
+        "user_id": user_id
+    }).to_list(None)
+    
+    # Delete related kasboek entries
+    for adjustment in adjustments:
+        if adjustment.get("type") == "saldo_naar_suribet":
+            await db.suribet_kasboek.delete_many({
+                "user_id": user_id,
+                "category": "suribet_saldo"
+            })
+        elif adjustment.get("type") == "saldo_naar_commissie":
+            await db.suribet_kasboek.delete_many({
+                "user_id": user_id,
+                "category": "commissie_toevoeging"
+            })
+    
+    # Delete all saldo adjustments
+    result = await db.suribet_saldo_adjustments.delete_many({
+        "user_id": user_id
+    })
+    
+    return {
+        "success": True,
+        "deleted_count": result.deleted_count,
+        "message": f"{result.deleted_count} saldo aanpassing(en) verwijderd"
+    }
+
 # ============================================
 # WERKNEMERS ENDPOINTS
 # ============================================
