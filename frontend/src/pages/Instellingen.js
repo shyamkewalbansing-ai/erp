@@ -634,8 +634,8 @@ export default function Instellingen() {
     const file = event.target.files[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Logo is te groot. Maximum 2MB toegestaan.');
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Logo is te groot. Maximum 5MB toegestaan.');
       return;
     }
 
