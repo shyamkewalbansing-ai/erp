@@ -31,7 +31,8 @@ import {
   Car,
   Sparkles,
   Fuel,
-  Calculator
+  Calculator,
+  CreditCard
 } from 'lucide-react';
 import EmailSettingsCustomer from '../components/EmailSettingsCustomer';
 import SidebarOrderSettings from '../components/SidebarOrderSettings';
