@@ -453,6 +453,42 @@ export default function Instellingen() {
                 </p>
               </div>
               <CardContent className="p-6 space-y-6">
+                {/* Profile Photo */}
+                <div className="flex flex-col items-center gap-3 pb-6 border-b border-border/50">
+                  <div className="relative">
+                    {profilePhoto || user?.profile_photo ? (
+                      <img 
+                        src={profilePhoto || user?.profile_photo} 
+                        alt="Profiel" 
+                        className="w-24 h-24 rounded-full object-cover border-4 border-primary/20"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary/80 to-primary flex items-center justify-center text-white text-3xl font-bold border-4 border-primary/20">
+                        {user?.name?.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <button
+                      onClick={() => photoInputRef.current?.click()}
+                      className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center shadow-lg hover:bg-primary/90 transition-colors"
+                      disabled={uploadingPhoto}
+                    >
+                      {uploadingPhoto ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Camera className="w-4 h-4" />
+                      )}
+                    </button>
+                    <input
+                      ref={photoInputRef}
+                      type="file"
+                      accept=".jpg,.jpeg,.png,.webp"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">Klik op het camera icoon om uw profielfoto te wijzigen (JPG, PNG of WebP, max 5MB)</p>
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name" className="text-sm font-medium flex items-center gap-2">
