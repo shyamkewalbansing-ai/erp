@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
-import { lazy, Suspense, memo, useEffect } from "react";
+import React, { lazy, Suspense, memo, useEffect } from "react";
 import { preloadCriticalData } from "./lib/api";
 import { initPerformanceMonitoring, prefetch } from "./lib/performance";
 
