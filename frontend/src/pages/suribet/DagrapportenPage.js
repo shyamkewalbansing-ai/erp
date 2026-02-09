@@ -2022,6 +2022,71 @@ export default function DagrapportenPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Saldo Aanpassingen Overzicht Modal */}
+      <Dialog open={showSaldoOverzicht} onOpenChange={(open) => {
+        if (open) fetchSaldoAanpassingen();
+        setShowSaldoOverzicht(open);
+      }}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-purple-500" />
+              Saldo Aanpassingen
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto space-y-2 py-4">
+            {saldoAanpassingen.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>Geen saldo aanpassingen gevonden</p>
+              </div>
+            ) : (
+              saldoAanpassingen.map((aanpassing) => (
+                <div 
+                  key={aanpassing.id}
+                  className={`p-3 rounded-lg border ${
+                    aanpassing.type === 'saldo_naar_suribet' 
+                      ? 'bg-orange-50 border-orange-200 dark:bg-orange-950/20' 
+                      : 'bg-blue-50 border-blue-200 dark:bg-blue-950/20'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Badge className={aanpassing.type === 'saldo_naar_suribet' ? 'bg-orange-500' : 'bg-blue-500'}>
+                          {aanpassing.type === 'saldo_naar_suribet' ? 'Naar Suribet' : 'Naar Commissie'}
+                        </Badge>
+                        <span className="font-bold">{formatCurrency(aanpassing.amount)}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">{aanpassing.notes}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(aanpassing.created_at).toLocaleDateString('nl-NL', {
+                          day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                        })}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => handleDeleteSaldoAanpassing(aanpassing.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaldoOverzicht(false)}>
+              Sluiten
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
