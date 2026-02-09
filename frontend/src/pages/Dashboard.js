@@ -156,6 +156,12 @@ export default function Dashboard() {
         (addon.status === 'active' || addon.status === 'trial')
       );
       
+      // Check for suribet
+      const hasSuribet = addons.some(addon => 
+        addon.addon_slug === 'suribet' && 
+        (addon.status === 'active' || addon.status === 'trial')
+      );
+      
       if (!hasAnyActiveModule) {
         // Show order popup for users without active modules
         await loadAvailableModules();
@@ -166,7 +172,12 @@ export default function Dashboard() {
         // Check for expired modules
         await checkPaymentStatus();
         
-        if (hasVastgoed) {
+        // Redirect to appropriate dashboard based on active modules
+        if (hasSuribet && !hasVastgoed) {
+          // User has Suribet but not Vastgoed - redirect to Suribet dashboard
+          navigate('/app/suribet');
+          return;
+        } else if (hasVastgoed) {
           await fetchDashboard();
         } else if (hasBoekhouding && !hasVastgoed) {
           // User has only boekhouding - show simplified welcome view
