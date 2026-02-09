@@ -406,13 +406,37 @@ export default function DagrapportenPage() {
 
   // Calculate total Suribet Deel for selected reports (= bon balance)
   const calculatePayoutTotal = () => {
-    return dagrapporten
+    const reportsTotal = dagrapporten
       .filter(r => selectedForPayout.includes(r.id))
       .reduce((sum, r) => {
         // Suribet Deel = bon balance (niet balance - commission)
         const balance = r.bon_data?.balance || 0;
         return sum + balance;
       }, 0);
+    
+    // Also include saldo adjustments that were added to Suribet
+    const saldoTotal = saldoAanpassingen
+      .filter(a => a.type === 'saldo_naar_suribet')
+      .reduce((sum, a) => sum + (a.amount || 0), 0);
+    
+    return reportsTotal + saldoTotal;
+  };
+
+  // Calculate just reports total (without saldo adjustments)
+  const calculateReportsTotal = () => {
+    return dagrapporten
+      .filter(r => selectedForPayout.includes(r.id))
+      .reduce((sum, r) => {
+        const balance = r.bon_data?.balance || 0;
+        return sum + balance;
+      }, 0);
+  };
+
+  // Calculate saldo adjustments total
+  const calculateSaldoAdjustmentsTotal = () => {
+    return saldoAanpassingen
+      .filter(a => a.type === 'saldo_naar_suribet')
+      .reduce((sum, a) => sum + (a.amount || 0), 0);
   };
 
   const handlePayout = async () => {
