@@ -701,13 +701,23 @@ export default function Layout() {
             
             {/* Dropdown items */}
             {!isCollapsed && (
-              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="pl-4 mt-2 space-y-1">
+                  {/* Profile Settings */}
+                  <NavLink
+                    to="/app/instellingen?tab=profile"
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) => `nav-item text-sm py-2.5 ${location.pathname === '/app/instellingen' && location.search.includes('profile') ? 'active' : ''}`}
+                    data-testid="nav-profiel"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Profiel Instellingen</span>
+                  </NavLink>
                   {/* System Settings */}
                   <NavLink
                     to="/app/instellingen"
                     onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) => `nav-item text-sm py-2.5 ${isActive ? 'active' : ''}`}
+                    className={({ isActive }) => `nav-item text-sm py-2.5 ${isActive && !location.search.includes('profile') ? 'active' : ''}`}
                     data-testid="nav-systeeminstellingen"
                   >
                     <Settings className="w-4 h-4" />
