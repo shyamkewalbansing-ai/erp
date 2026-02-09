@@ -517,6 +517,30 @@ export default function Instellingen() {
             <SidebarOrderSettings />
           )}
 
+          {/* Betaalmethodes Section */}
+          {activeSection === 'betaalmethodes' && (
+            <Card className="border-border/50 overflow-hidden">
+              <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 border-b border-border/50">
+                <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
+                  <CreditCard className="w-5 h-5 text-primary" />
+                  Betaalmethodes
+                </h2>
+                <p className="text-muted-foreground mt-1">
+                  Beheer uw betaalmethodes voor facturen
+                </p>
+              </div>
+              <CardContent className="p-6">
+                <p className="text-muted-foreground mb-4">
+                  Configureer welke betaalmethodes beschikbaar zijn voor uw klanten.
+                </p>
+                <Button onClick={() => navigate('/app/betaalmethodes')}>
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Betaalmethodes Beheren
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Email Section */}
           {activeSection === 'email' && (
             <EmailSettingsCustomer />
