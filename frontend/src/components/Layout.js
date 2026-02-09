@@ -701,8 +701,18 @@ export default function Layout() {
             
             {/* Dropdown items */}
             {!isCollapsed && (
-              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-80 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="pl-4 mt-2 space-y-1">
+                  {/* System Settings */}
+                  <NavLink
+                    to="/app/instellingen"
+                    onClick={() => setSidebarOpen(false)}
+                    className={({ isActive }) => `nav-item text-sm py-2.5 ${isActive ? 'active' : ''}`}
+                    data-testid="nav-systeeminstellingen"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Systeeminstellingen</span>
+                  </NavLink>
                   {/* Workspace Settings */}
                   <NavLink
                     to="/app/workspace"
