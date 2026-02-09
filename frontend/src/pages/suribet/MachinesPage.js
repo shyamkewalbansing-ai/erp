@@ -460,6 +460,9 @@ export default function MachinesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Snelle Acties */}
+      <SnelleActies />
     </div>
   );
 }

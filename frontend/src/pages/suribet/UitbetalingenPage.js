@@ -114,9 +114,6 @@ export default function UitbetalingenPage() {
         </div>
       </div>
 
-      {/* Snelle Acties */}
-      <SnelleActies />
-
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card>
@@ -300,6 +297,9 @@ export default function UitbetalingenPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Snelle Acties */}
+      <SnelleActies />
     </div>
   );
 }

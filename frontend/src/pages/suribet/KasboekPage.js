@@ -560,6 +560,9 @@ export default function KasboekPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Snelle Acties */}
+      <SnelleActies />
     </div>
   );
 }

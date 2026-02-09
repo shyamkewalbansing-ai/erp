@@ -920,6 +920,9 @@ export default function WerknemersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Snelle Acties */}
+      <SnelleActies />
     </div>
   );
 }

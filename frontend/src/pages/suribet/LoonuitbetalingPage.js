@@ -643,6 +643,9 @@ export default function LoonuitbetalingPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Snelle Acties */}
+      <SnelleActies />
     </div>
   );
 }
