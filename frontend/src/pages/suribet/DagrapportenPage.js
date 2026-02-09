@@ -2215,6 +2215,9 @@ export default function DagrapportenPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Snelle Acties */}
+      <SnelleActies />
     </div>
   );
 }
