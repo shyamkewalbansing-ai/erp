@@ -159,6 +159,11 @@ export default function DagrapportenPage() {
     }
   };
 
+  // Centrale refresh functie - roept beide data en totalen op
+  const refreshAll = async () => {
+    await Promise.all([fetchData(), fetchTotals()]);
+  };
+
   // Bon scanner functie
   const handleBonUpload = async (e) => {
     const file = e.target.files?.[0];
