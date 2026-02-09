@@ -137,6 +137,20 @@ export default function SidebarOrderSettings() {
     }
   };
 
+  const handleDefaultDashboardChange = async (value) => {
+    setSavingDefault(true);
+    try {
+      const newValue = value === 'auto' ? null : value;
+      await updateDefaultDashboard(newValue);
+      setDefaultDashboard(newValue);
+      toast.success('Standaard dashboard opgeslagen!');
+    } catch (error) {
+      toast.error('Fout bij opslaan van standaard dashboard');
+    } finally {
+      setSavingDefault(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
