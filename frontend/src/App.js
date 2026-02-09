@@ -326,6 +326,12 @@ const SmartRedirect = () => {
           'boekhouding': '/app/boekhouding'
         };
 
+        // Default order - same as Layout.js sidebar
+        const defaultOrder = ['vastgoed_beheer', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding', 'suribet'];
+
+        // Determine the module order to use
+        let effectiveOrder = savedOrder.length > 0 ? savedOrder : defaultOrder;
+
         let targetModule = null;
 
         // Priority 1: User's explicit default dashboard choice
@@ -336,9 +342,9 @@ const SmartRedirect = () => {
           }
         }
 
-        // Priority 2: First module in sidebar order
-        if (!targetModule && savedOrder.length > 0) {
-          for (const slug of savedOrder) {
+        // Priority 2: First module in sidebar order (saved or default)
+        if (!targetModule) {
+          for (const slug of effectiveOrder) {
             const hasModule = activeModules.some(m => m.addon_slug === slug);
             if (hasModule) {
               targetModule = slug;
@@ -347,7 +353,7 @@ const SmartRedirect = () => {
           }
         }
 
-        // Priority 3: First active module (fallback)
+        // Priority 3: First active module (ultimate fallback)
         if (!targetModule && activeModules.length > 0) {
           targetModule = activeModules[0].addon_slug;
         }
