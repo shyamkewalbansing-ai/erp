@@ -1042,6 +1042,31 @@ async def delete_all_saldo_aanpassingen(
         "message": f"{result.deleted_count} saldo aanpassing(en) verwijderd"
     }
 
+@router.post("/reset-saldo-data")
+async def reset_saldo_data(
+    current_user: dict = Depends(get_current_user)
+):
+    """Force reset all saldo adjustments and related kasboek entries - use when data is stuck"""
+    user_id = current_user["id"]
+    
+    # Delete ALL saldo adjustments for this user
+    adj_result = await db.suribet_saldo_adjustments.delete_many({
+        "user_id": user_id
+    })
+    
+    # Delete saldo-related kasboek entries
+    kasboek_result = await db.suribet_kasboek.delete_many({
+        "user_id": user_id,
+        "category": {"$in": ["suribet_saldo", "commissie_toevoeging"]}
+    })
+    
+    return {
+        "success": True,
+        "adjustments_deleted": adj_result.deleted_count,
+        "kasboek_deleted": kasboek_result.deleted_count,
+        "message": f"Reset voltooid: {adj_result.deleted_count} aanpassingen en {kasboek_result.deleted_count} kasboek entries verwijderd"
+    }
+
 # ============================================
 # WERKNEMERS ENDPOINTS
 # ============================================
