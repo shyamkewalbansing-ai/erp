@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { getDashboard, formatCurrency, getMyAddons, getModulePaymentStatus, submitModulePaymentRequest, getPublicAddons, getSidebarOrder } from '../lib/api';
+import { getDashboard, formatCurrency, getMyAddons, getModulePaymentStatus, submitModulePaymentRequest, getPublicAddons } from '../lib/api';
 import { REFRESH_EVENTS } from '../lib/refreshEvents';
 import { toast } from 'sonner';
 import { 
