@@ -297,7 +297,6 @@ const SmartRedirect = () => {
       }
 
       try {
-        // Import api functions dynamically to avoid circular deps
         const { getMyAddons, getSidebarOrder } = await import('./lib/api');
         
         const [addonsResponse, sidebarResponse] = await Promise.all([
@@ -310,10 +309,10 @@ const SmartRedirect = () => {
         const savedOrder = sidebarSettings.module_order || [];
         const defaultDashboard = sidebarSettings.default_dashboard;
 
-        // Get active modules
-        const activeModules = addons.filter(addon => 
-          addon.status === 'active' || addon.status === 'trial'
-        );
+        // Get active module slugs
+        const activeModuleSlugs = addons
+          .filter(addon => addon.status === 'active' || addon.status === 'trial')
+          .map(addon => addon.addon_slug);
 
         // Module routes mapping
         const moduleRoutes = {
@@ -326,42 +325,40 @@ const SmartRedirect = () => {
           'boekhouding': '/app/boekhouding'
         };
 
-        // Default order - same as Layout.js sidebar (suribet before boekhouding)
+        // Default order - same as Layout.js sidebar
         const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding'];
 
-        // Determine the module order to use
-        let effectiveOrder = savedOrder.length > 0 ? savedOrder : defaultOrder;
-
-        let targetModule = null;
-
-        // Priority 1: User's explicit default dashboard choice
-        if (defaultDashboard) {
-          const hasDefaultModule = activeModules.some(m => m.addon_slug === defaultDashboard);
-          if (hasDefaultModule) {
-            targetModule = defaultDashboard;
-          }
-        }
-
-        // Priority 2: First module in sidebar order (saved or default)
-        if (!targetModule) {
-          for (const slug of effectiveOrder) {
-            const hasModule = activeModules.some(m => m.addon_slug === slug);
-            if (hasModule) {
-              targetModule = slug;
-              break;
+        // Get ordered modules (same logic as Layout.js getOrderedModules)
+        let orderedModules = defaultOrder;
+        if (savedOrder.length > 0) {
+          orderedModules = [...savedOrder];
+          // Add any modules not in saved order
+          defaultOrder.forEach(slug => {
+            if (!orderedModules.includes(slug)) {
+              orderedModules.push(slug);
             }
+          });
+        }
+
+        // Find first active module in the ordered list (= first in sidebar)
+        let firstActiveModule = null;
+        for (const slug of orderedModules) {
+          if (activeModuleSlugs.includes(slug)) {
+            firstActiveModule = slug;
+            break;
           }
         }
 
-        // Priority 3: First active module (ultimate fallback)
-        if (!targetModule && activeModules.length > 0) {
-          targetModule = activeModules[0].addon_slug;
+        // Priority 1: User's explicit default dashboard choice (from settings)
+        if (defaultDashboard && activeModuleSlugs.includes(defaultDashboard)) {
+          setTargetRoute(moduleRoutes[defaultDashboard] || "/app/dashboard");
         }
-
-        // Set the target route
-        if (targetModule && moduleRoutes[targetModule]) {
-          setTargetRoute(moduleRoutes[targetModule]);
-        } else {
+        // Priority 2: First module in sidebar
+        else if (firstActiveModule && moduleRoutes[firstActiveModule]) {
+          setTargetRoute(moduleRoutes[firstActiveModule]);
+        }
+        // Fallback
+        else {
           setTargetRoute("/app/dashboard");
         }
       } catch (error) {
