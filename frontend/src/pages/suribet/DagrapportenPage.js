@@ -943,6 +943,9 @@ export default function DagrapportenPage() {
         </div>
       </div>
 
+      {/* Snelle Acties */}
+      <SnelleActies />
+
       {/* Running Totals Header - Prominent Financial Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/30 dark:to-orange-900/20">
