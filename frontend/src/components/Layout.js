@@ -644,9 +644,9 @@ export default function Layout() {
                 className="header-user-profile user-dropdown-trigger"
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
               >
-                {profilePhoto || user?.profile_photo ? (
+                {user?.profile_photo ? (
                   <img 
-                    src={profilePhoto || user?.profile_photo} 
+                    src={user?.profile_photo} 
                     alt={user?.name}
                     className="w-9 h-9 rounded-full object-cover"
                   />
