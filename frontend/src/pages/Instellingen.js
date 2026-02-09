@@ -268,6 +268,53 @@ export default function Instellingen() {
     }
   };
 
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Alleen JPG, PNG en WebP bestanden zijn toegestaan');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Bestand is te groot (max 5MB)');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const API_URL = process.env.REACT_APP_BACKEND_URL;
+      const response = await fetch(`${API_URL}/api/user/profile/photo`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setProfilePhoto(data.photo_url);
+        toast.success('Profielfoto geüpload');
+        if (refreshUser) await refreshUser();
+      } else {
+        toast.error('Fout bij uploaden foto');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Fout bij uploaden foto');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     setSaving(true);
     try {
