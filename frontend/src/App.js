@@ -326,8 +326,8 @@ const SmartRedirect = () => {
           'boekhouding': '/app/boekhouding'
         };
 
-        // Default order - same as Layout.js sidebar
-        const defaultOrder = ['vastgoed_beheer', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding', 'suribet'];
+        // Default order - same as Layout.js sidebar (suribet before boekhouding)
+        const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding'];
 
         // Determine the module order to use
         let effectiveOrder = savedOrder.length > 0 ? savedOrder : defaultOrder;
