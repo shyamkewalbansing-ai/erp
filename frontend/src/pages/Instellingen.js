@@ -1012,7 +1012,7 @@ export default function Instellingen() {
                   </Button>
                   
                   <p className="text-xs text-muted-foreground text-center max-w-xs">
-                    Aanbevolen: Vierkante afbeelding (PNG of JPG). Maximum 2MB.
+                    Aanbevolen: Vierkante afbeelding (PNG of JPG). Maximum 5MB.
                   </p>
                 </div>
               </CardContent>
