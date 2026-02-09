@@ -328,9 +328,10 @@ export default function DagrapportenPage() {
   const selectAllUnpaid = () => {
     // Get all unpaid reports (not just current date)
     const allUnpaid = dagrapporten.filter(r => !r.is_paid);
-    if (allUnpaid.length > 0) {
+    if (allUnpaid.length > 0 || runningTotals.total_suribet > 0) {
       // Clear selection and open modal - user will select in the modal
       setSelectedForPayout([]);
+      fetchSaldoAanpassingen(); // Fetch saldo adjustments for the modal
       setShowPayoutModal(true);
     } else {
       toast.info('Geen openstaande rapporten gevonden');
