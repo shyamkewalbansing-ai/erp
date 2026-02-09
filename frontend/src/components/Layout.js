@@ -79,7 +79,6 @@ const vastgoedNavItems = [
   { to: '/app/onderhoud', icon: Wrench, label: 'Onderhoud', addon: 'vastgoed_beheer' },
   { to: '/app/meterstanden', icon: Zap, label: 'Meterstanden', addon: 'vastgoed_beheer' },
   { to: '/app/werknemers', icon: Users2, label: 'Werknemers', addon: 'vastgoed_beheer' },
-  { to: '/app/instellingen', icon: Settings, label: 'Huurinstellingen', addon: 'vastgoed_beheer' },
   { to: '/app/vastgoed/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'vastgoed_beheer' },
 ];
 
