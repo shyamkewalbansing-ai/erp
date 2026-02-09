@@ -642,6 +642,32 @@ export default function DagrapportenPage() {
     }
   };
 
+  // Force reset all saldo data (for stuck data)
+  const handleResetSaldoData = async () => {
+    if (!window.confirm('Dit zal ALLE saldo data resetten. Weet u het zeker?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/suribet/reset-saldo-data`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const result = await response.json();
+        toast.success(result.message);
+        fetchSaldoAanpassingen();
+        fetchTotals();
+        setShowSaldoOverzicht(false);
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Fout bij reset');
+      }
+    } catch (error) {
+      toast.error('Fout bij reset');
+    }
+  };
+
   // Bereken totaal biljetten in SRD
   const berekenBiljettenTotaal = (biljetten, denominaties, multiplier = 1) => {
     if (!biljetten) return 0;
