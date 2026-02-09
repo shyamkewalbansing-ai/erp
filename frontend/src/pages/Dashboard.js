@@ -143,6 +143,9 @@ export default function Dashboard() {
     'boekhouding': '/app/boekhouding'
   };
 
+  // State to track if we're redirecting
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   const checkAddonsAndFetch = async () => {
     try {
       // Get user's addons and sidebar settings in parallel
@@ -163,7 +166,6 @@ export default function Dashboard() {
         (addon.status === 'active' || addon.status === 'trial')
       );
       setHasVastgoedAddon(hasVastgoed);
-      setAddonsChecked(true);
       
       // Get active modules
       const activeModules = addons.filter(addon => 
@@ -175,6 +177,7 @@ export default function Dashboard() {
         await loadAvailableModules();
         await checkPaymentStatus();
         setOrderPopupOpen(true);
+        setAddonsChecked(true);
         setLoading(false);
         return;
       }
@@ -209,11 +212,12 @@ export default function Dashboard() {
         targetModule = activeModules[0].addon_slug;
       }
       
-      // Navigate to target module dashboard
+      // Navigate to target module dashboard (if not vastgoed)
       if (targetModule && targetModule !== 'vastgoed_beheer') {
         const route = moduleRoutes[targetModule];
         if (route) {
-          // Keep loading true and use replace to avoid back button issues
+          // Set redirecting state and keep loading - prevents flash
+          setIsRedirecting(true);
           navigate(route, { replace: true });
           return; // Don't set loading to false - we're navigating away
         }
