@@ -684,6 +684,7 @@ export default function DagrapportenPage() {
         setShowDeleteDialog(false);
         setSelectedRapport(null);
         fetchData();
+        fetchTotals(); // Refresh running totals after delete
       }
     } catch (error) {
       toast.error('Fout bij verwijderen');
