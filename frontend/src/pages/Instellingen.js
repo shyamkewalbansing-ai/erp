@@ -965,25 +965,28 @@ export default function Instellingen() {
               </div>
               <CardContent className="p-6">
                 <div className="flex flex-col items-center gap-6">
-                  <div className="relative">
+                  {/* Logo Preview - Same style as Dashboard */}
+                  <div className="flex flex-col items-center gap-4">
                     {profile.logo ? (
-                      <div className="relative w-40 h-40 rounded-2xl overflow-hidden bg-muted/30 border-2 border-dashed border-border/50 p-2">
-                        <img 
-                          src={profile.logo} 
-                          alt="Logo" 
-                          className="w-full h-full object-contain rounded-xl"
-                        />
+                      <div className="relative">
+                        <div className="bg-gradient-to-br from-primary/20 to-primary/5 backdrop-blur-sm rounded-2xl p-4">
+                          <img 
+                            src={profile.logo} 
+                            alt="Logo" 
+                            className="h-20 w-auto object-contain max-w-[200px]"
+                          />
+                        </div>
                         <button
                           onClick={handleDeleteLogo}
                           disabled={uploadingLogo}
-                          className="absolute top-2 right-2 p-1.5 bg-red-500/90 hover:bg-red-600 text-white rounded-lg transition-colors"
+                          className="absolute -top-2 -right-2 p-1.5 bg-red-500/90 hover:bg-red-600 text-white rounded-lg transition-colors shadow-lg"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     ) : (
-                      <div className="w-40 h-40 rounded-2xl bg-muted/30 border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-2">
-                        <ImageIcon className="w-12 h-12 text-muted-foreground/50" />
+                      <div className="w-48 h-24 rounded-2xl bg-muted/30 border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-2">
+                        <ImageIcon className="w-10 h-10 text-muted-foreground/50" />
                         <span className="text-xs text-muted-foreground">Geen logo</span>
                       </div>
                     )}
