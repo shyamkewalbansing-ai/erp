@@ -661,6 +661,7 @@ export default function DagrapportenPage() {
         resetForm();
         setBonData(null);
         fetchData();
+        fetchTotals(); // Refresh running totals
       } else {
         const error = await response.json();
         toast.error(error.detail || 'Fout bij opslaan');
