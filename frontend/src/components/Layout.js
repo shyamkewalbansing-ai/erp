@@ -574,9 +574,6 @@ export default function Layout() {
             {!isCollapsed && (
               <div className={`overflow-hidden transition-all duration-200 ${settingsOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                 <div className="pl-4 mt-2 space-y-1">
-                  {/* Profile Settings */}
-                  <NavLink
-                    to="/app/instellingen?tab=profile"
                   {/* System Settings */}
                   <NavLink
                     to="/app/instellingen"
