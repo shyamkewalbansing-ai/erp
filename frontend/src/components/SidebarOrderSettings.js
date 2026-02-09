@@ -38,6 +38,8 @@ export default function SidebarOrderSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [defaultDashboard, setDefaultDashboard] = useState(null);
+  const [savingDefault, setSavingDefault] = useState(false);
   const isSuperAdmin = user?.role === 'superadmin';
 
   useEffect(() => {
@@ -75,9 +77,11 @@ export default function SidebarOrderSettings() {
         }
       }
 
-      // Get saved order
+      // Get saved order and default dashboard
       const orderRes = await getSidebarOrder();
       const savedOrder = orderRes.data.module_order || [];
+      const savedDefault = orderRes.data.default_dashboard || null;
+      setDefaultDashboard(savedDefault);
 
       // Sort modules based on saved order
       const sortedModules = [...activeModules].sort((a, b) => {
