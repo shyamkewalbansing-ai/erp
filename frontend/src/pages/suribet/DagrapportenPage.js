@@ -580,6 +580,43 @@ export default function DagrapportenPage() {
     }
   };
 
+  // Fetch saldo aanpassingen
+  const fetchSaldoAanpassingen = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/suribet/saldo-aanpassingen`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSaldoAanpassingen(data);
+      }
+    } catch (error) {
+      console.error('Error fetching saldo aanpassingen:', error);
+    }
+  };
+
+  // Delete saldo aanpassing
+  const handleDeleteSaldoAanpassing = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/suribet/saldo-aanpassingen/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        toast.success('Saldo aanpassing verwijderd');
+        fetchSaldoAanpassingen();
+        fetchTotals();
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Fout bij verwijderen');
+      }
+    } catch (error) {
+      toast.error('Fout bij verwijderen');
+    }
+  };
+
   // Bereken totaal biljetten in SRD
   const berekenBiljettenTotaal = (biljetten, denominaties, multiplier = 1) => {
     if (!biljetten) return 0;
