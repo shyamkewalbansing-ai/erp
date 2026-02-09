@@ -46,6 +46,7 @@ export default function SuribetDashboard() {
   const [wisselkoersen, setWisselkoersen] = useState({ eur_to_srd: 38.5, usd_to_srd: 35.5 });
   const [kasboek, setKasboek] = useState([]);
   const [loonbetalingen, setLoonbetalingen] = useState([]);
+  const [runningTotals, setRunningTotals] = useState({ total_suribet: 0, total_commission: 0, unpaid_count: 0 });
   // Nu gebruiken we een enkele datum in plaats van maand/jaar
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [showKoersenModal, setShowKoersenModal] = useState(false);
@@ -53,7 +54,23 @@ export default function SuribetDashboard() {
 
   useEffect(() => {
     fetchData();
+    fetchRunningTotals();
   }, [selectedDate]);
+
+  const fetchRunningTotals = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/suribet/openstaand-totaal`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setRunningTotals(data);
+      }
+    } catch (error) {
+      console.error('Error fetching totals:', error);
+    }
+  };
 
   const fetchData = async () => {
     try {
