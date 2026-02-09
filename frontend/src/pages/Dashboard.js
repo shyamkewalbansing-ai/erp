@@ -132,17 +132,6 @@ export default function Dashboard() {
     }
   };
 
-  // Module slug to route mapping
-  const moduleRoutes = {
-    'vastgoed_beheer': '/app/dashboard', // Stay here for vastgoed
-    'suribet': '/app/suribet',
-    'hrm': '/app/hrm',
-    'autodealer': '/app/autodealer',
-    'beauty': '/app/beauty',
-    'pompstation': '/app/pompstation',
-    'boekhouding': '/app/boekhouding'
-  };
-
   const checkAddonsAndFetch = async () => {
     try {
       const addonsResponse = await getMyAddons();
