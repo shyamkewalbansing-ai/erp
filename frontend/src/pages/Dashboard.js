@@ -148,29 +148,68 @@ export default function Dashboard() {
 
   const checkAddonsAndFetch = async () => {
     try {
-      // Get user's addons and sidebar settings in parallel
+      // FIRST: Get user's addons and sidebar settings to determine redirect
       const [addonsResponse, sidebarResponse] = await Promise.all([
         getMyAddons(),
         getSidebarOrder()
       ]);
       
       const addons = addonsResponse.data || [];
-      setActiveAddons(addons);
-      
       const sidebarSettings = sidebarResponse.data || {};
       const savedOrder = sidebarSettings.module_order || [];
       const defaultDashboard = sidebarSettings.default_dashboard;
-      
-      const hasVastgoed = addons.some(addon => 
-        addon.addon_slug === 'vastgoed_beheer' && 
-        (addon.status === 'active' || addon.status === 'trial')
-      );
-      setHasVastgoedAddon(hasVastgoed);
       
       // Get active modules
       const activeModules = addons.filter(addon => 
         addon.status === 'active' || addon.status === 'trial'
       );
+      
+      const hasVastgoed = activeModules.some(addon => 
+        addon.addon_slug === 'vastgoed_beheer'
+      );
+      
+      // IMMEDIATE REDIRECT CHECK - before any other logic
+      if (activeModules.length > 0) {
+        let targetModule = null;
+        
+        // Priority 1: User's explicit default dashboard choice
+        if (defaultDashboard) {
+          const hasDefaultModule = activeModules.some(m => m.addon_slug === defaultDashboard);
+          if (hasDefaultModule) {
+            targetModule = defaultDashboard;
+          }
+        }
+        
+        // Priority 2: First module in sidebar order
+        if (!targetModule && savedOrder.length > 0) {
+          for (const slug of savedOrder) {
+            const hasModule = activeModules.some(m => m.addon_slug === slug);
+            if (hasModule) {
+              targetModule = slug;
+              break;
+            }
+          }
+        }
+        
+        // Priority 3: First active module (fallback)
+        if (!targetModule) {
+          targetModule = activeModules[0].addon_slug;
+        }
+        
+        // REDIRECT NOW if not vastgoed_beheer
+        if (targetModule && targetModule !== 'vastgoed_beheer') {
+          const route = moduleRoutes[targetModule];
+          if (route) {
+            setIsRedirecting(true);
+            navigate(route, { replace: true });
+            return; // Exit immediately - don't load anything else
+          }
+        }
+      }
+      
+      // If we reach here, we're staying on this dashboard
+      setActiveAddons(addons);
+      setHasVastgoedAddon(hasVastgoed);
       
       if (activeModules.length === 0) {
         // Show order popup for users without active modules
@@ -182,51 +221,11 @@ export default function Dashboard() {
         return;
       }
       
-      // Check for expired modules
+      // Check for expired modules (only if staying on this page)
       await checkPaymentStatus();
-      
-      // Determine which dashboard to show
-      let targetModule = null;
-      
-      // Priority 1: User's explicit default dashboard choice
-      if (defaultDashboard) {
-        const hasDefaultModule = activeModules.some(m => m.addon_slug === defaultDashboard);
-        if (hasDefaultModule) {
-          targetModule = defaultDashboard;
-        }
-      }
-      
-      // Priority 2: First module in sidebar order
-      if (!targetModule && savedOrder.length > 0) {
-        for (const slug of savedOrder) {
-          const hasModule = activeModules.some(m => m.addon_slug === slug);
-          if (hasModule) {
-            targetModule = slug;
-            break;
-          }
-        }
-      }
-      
-      // Priority 3: First active module (fallback)
-      if (!targetModule && activeModules.length > 0) {
-        targetModule = activeModules[0].addon_slug;
-      }
-      
-      // Navigate to target module dashboard (if not vastgoed)
-      if (targetModule && targetModule !== 'vastgoed_beheer') {
-        const route = moduleRoutes[targetModule];
-        if (route) {
-          // Set redirecting state and keep loading - prevents flash
-          setIsRedirecting(true);
-          navigate(route, { replace: true });
-          return; // Don't set loading to false - we're navigating away
-        }
-      }
-      
-      // Only set addonsChecked if we're NOT redirecting (staying on this page)
       setAddonsChecked(true);
       
-      // Default: show vastgoed dashboard or welcome screen
+      // Load vastgoed dashboard
       if (hasVastgoed) {
         await fetchDashboard();
       } else {
