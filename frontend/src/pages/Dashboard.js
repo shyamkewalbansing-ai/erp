@@ -213,8 +213,9 @@ export default function Dashboard() {
       if (targetModule && targetModule !== 'vastgoed_beheer') {
         const route = moduleRoutes[targetModule];
         if (route) {
-          navigate(route);
-          return;
+          // Keep loading true and use replace to avoid back button issues
+          navigate(route, { replace: true });
+          return; // Don't set loading to false - we're navigating away
         }
       }
       
