@@ -1004,9 +1004,6 @@ export default function Dashboard() {
       
       {/* Payment Popup for expired modules */}
       {renderPaymentPopup()}
-      
-      {/* Quick Start Wizard */}
-      <QuickStartWizard open={showQuickStart} onOpenChange={setShowQuickStart} />
     </div>
   );
 }
