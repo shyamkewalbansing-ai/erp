@@ -223,6 +223,9 @@ export default function Dashboard() {
         }
       }
       
+      // Only set addonsChecked if we're NOT redirecting (staying on this page)
+      setAddonsChecked(true);
+      
       // Default: show vastgoed dashboard or welcome screen
       if (hasVastgoed) {
         await fetchDashboard();
