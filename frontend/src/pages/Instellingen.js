@@ -101,16 +101,25 @@ const moduleSettingsConfig = {
 
 export default function Instellingen() {
   const { user, refreshUser } = useAuth();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [activeSection, setActiveSection] = useState('profile');
+  const [activeSection, setActiveSection] = useState(searchParams.get('tab') || 'profile');
   const [activeAddons, setActiveAddons] = useState([]);
   const fileInputRef = useRef(null);
   
   const isSuperAdmin = user?.role === 'superadmin';
+  
+  // Update active section when URL changes
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab) {
+      setActiveSection(tab);
+    }
+  }, [searchParams]);
   
   // Profile form
   const [profile, setProfile] = useState({
