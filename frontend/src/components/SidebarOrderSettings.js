@@ -160,34 +160,78 @@ export default function SidebarOrderSettings() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <LayoutList className="w-5 h-5 text-primary" />
-              Module Volgorde
-            </CardTitle>
-            <CardDescription>
-              Bepaal de volgorde van modules in de zijbalk
-            </CardDescription>
+    <div className="space-y-6">
+      {/* Default Dashboard Selection */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Home className="w-5 h-5 text-primary" />
+                Standaard Dashboard
+              </CardTitle>
+              <CardDescription>
+                Kies welke module als eerste laadt na het inloggen
+              </CardDescription>
+            </div>
+            {savingDefault && <Loader2 className="w-5 h-5 animate-spin text-primary" />}
           </div>
-          {hasChanges && (
-            <Button 
-              onClick={handleSave} 
-              disabled={saving}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              {saving ? (
-                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Opslaan...</>
-              ) : (
-                <><Save className="w-4 h-4 mr-2" /> Opslaan</>
-              )}
-            </Button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
+        </CardHeader>
+        <CardContent>
+          <Select 
+            value={defaultDashboard || 'auto'} 
+            onValueChange={handleDefaultDashboardChange}
+            disabled={savingDefault}
+          >
+            <SelectTrigger className="w-full md:w-[300px]">
+              <SelectValue placeholder="Selecteer standaard dashboard" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">
+                Automatisch (eerste in sidebar)
+              </SelectItem>
+              {modules.map((module) => (
+                <SelectItem key={module.addon_slug} value={module.addon_slug}>
+                  {module.addon_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-2">
+            Bij "Automatisch" wordt de eerste module uit de sidebar volgorde geladen.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Module Order */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <LayoutList className="w-5 h-5 text-primary" />
+                Module Volgorde
+              </CardTitle>
+              <CardDescription>
+                Bepaal de volgorde van modules in de zijbalk
+              </CardDescription>
+            </div>
+            {hasChanges && (
+              <Button 
+                onClick={handleSave} 
+                disabled={saving}
+                className="bg-emerald-600 hover:bg-emerald-700"
+              >
+                {saving ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Opslaan...</>
+                ) : (
+                  <><Save className="w-4 h-4 mr-2" /> Opslaan</>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
         {modules.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <LayoutList className="w-12 h-12 mx-auto mb-3 opacity-50" />
