@@ -326,18 +326,19 @@ export default function SuribetDashboard() {
         </CardContent>
       </Card>
 
-      {/* Main Stats Grid */}
+      {/* Main Stats Grid - Running Totals */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Totale Omzet */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+        {/* Suribet Deel (Openstaand) */}
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-emerald-100 text-xs sm:text-sm">Totale Omzet</p>
-                <p className="text-xl sm:text-2xl font-bold">{formatCurrency(stats.totaleOmzet)}</p>
+                <p className="text-orange-100 text-xs sm:text-sm">Suribet Deel</p>
+                <p className="text-xl sm:text-2xl font-bold">{formatCurrency(runningTotals.total_suribet)}</p>
+                <p className="text-orange-200 text-xs">{runningTotals.unpaid_count} openstaand</p>
               </div>
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
+                <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
             </div>
           </CardContent>
@@ -349,7 +350,8 @@ export default function SuribetDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-xs sm:text-sm">Jouw Commissie</p>
-                <p className="text-xl sm:text-2xl font-bold">{formatCurrency(stats.jouwCommissie)}</p>
+                <p className="text-xl sm:text-2xl font-bold">{formatCurrency(runningTotals.total_commission)}</p>
+                <p className="text-blue-200 text-xs">Beschikbaar</p>
               </div>
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center">
                 <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -358,13 +360,14 @@ export default function SuribetDashboard() {
           </CardContent>
         </Card>
 
-        {/* Deel Suribet */}
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-orange-500 to-orange-600 text-white">
+        {/* Machines Vandaag */}
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-orange-100 text-xs sm:text-sm">Deel Suribet</p>
-                <p className="text-xl sm:text-2xl font-bold">{formatCurrency(stats.suribetDeel)}</p>
+                <p className="text-purple-100 text-xs sm:text-sm">Machines Vandaag</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.totaalDagen}</p>
+                <p className="text-purple-200 text-xs">{stats.actieveMachines} actief</p>
               </div>
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center">
                 <Gamepad2 className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -373,16 +376,19 @@ export default function SuribetDashboard() {
           </CardContent>
         </Card>
 
-        {/* Netto Winst */}
-        <Card className={`border-0 shadow-lg text-white ${stats.nettoWinst >= 0 ? 'bg-gradient-to-br from-purple-500 to-purple-600' : 'bg-gradient-to-br from-red-500 to-red-600'}`}>
+        {/* Verlies */}
+        <Card className={`border-0 shadow-lg text-white ${stats.verliesDagen > 0 ? 'bg-gradient-to-br from-red-500 to-red-600' : 'bg-gradient-to-br from-emerald-500 to-emerald-600'}`}>
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className={`text-xs sm:text-sm ${stats.nettoWinst >= 0 ? 'text-purple-100' : 'text-red-100'}`}>Netto Winst</p>
-                <p className="text-xl sm:text-2xl font-bold">{formatCurrency(stats.nettoWinst)}</p>
+                <p className={`text-xs sm:text-sm ${stats.verliesDagen > 0 ? 'text-red-100' : 'text-emerald-100'}`}>Verlies</p>
+                <p className="text-xl sm:text-2xl font-bold">{stats.verliesDagen}</p>
+                <p className={`text-xs ${stats.verliesDagen > 0 ? 'text-red-200' : 'text-emerald-200'}`}>
+                  {stats.verliesDagen > 0 ? 'Let op!' : 'Geen verlies'}
+                </p>
               </div>
               <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white/20 flex items-center justify-center">
-                <Calculator className="w-5 h-5 sm:w-6 sm:h-6" />
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
             </div>
           </CardContent>
