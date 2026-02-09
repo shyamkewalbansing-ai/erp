@@ -577,18 +577,11 @@ export default function Layout() {
                   {/* Profile Settings */}
                   <NavLink
                     to="/app/instellingen?tab=profile"
-                    onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) => `nav-item text-sm py-2.5 ${location.pathname === '/app/instellingen' && location.search.includes('profile') ? 'active' : ''}`}
-                    data-testid="nav-profiel"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Profiel Instellingen</span>
-                  </NavLink>
                   {/* System Settings */}
                   <NavLink
                     to="/app/instellingen"
                     onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) => `nav-item text-sm py-2.5 ${isActive && !location.search.includes('profile') ? 'active' : ''}`}
+                    className={({ isActive }) => `nav-item text-sm py-2.5 ${isActive ? 'active' : ''}`}
                     data-testid="nav-systeeminstellingen"
                   >
                     <Settings className="w-4 h-4" />
@@ -603,15 +596,6 @@ export default function Layout() {
                   >
                     <Users className="w-4 h-4" />
                     <span>Workspace & Team</span>
-                  </NavLink>
-                  <NavLink
-                    to="/app/betaalmethodes"
-                    onClick={() => setSidebarOpen(false)}
-                    className={({ isActive }) => `nav-item text-sm py-2.5 ${isActive ? 'active' : ''}`}
-                    data-testid="nav-betaalmethodes"
-                  >
-                    <CreditCard className="w-4 h-4" />
-                    <span>Betaalmethodes</span>
                   </NavLink>
                   <NavLink
                     to="/app/abonnement"
