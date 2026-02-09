@@ -24,7 +24,7 @@ export default function SnelleActies() {
           <Button
             variant="outline"
             className="h-auto py-4 flex flex-col items-center gap-2 border-emerald-200 bg-emerald-50 hover:bg-emerald-100"
-            onClick={() => navigate('/app/suribet/dashboard')}
+            onClick={() => navigate('/app/suribet')}
           >
             <LayoutDashboard className="w-5 h-5 text-emerald-600" />
             <span className="text-xs font-medium">Dashboard</span>
