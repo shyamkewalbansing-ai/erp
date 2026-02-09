@@ -628,12 +628,34 @@ async def create_uitbetaling(
             "suribet_amount": suribet_deel  # Dit is nu de bon balance
         })
     
+    # Get saldo adjustments (saldo_naar_suribet) to include in payout
+    saldo_adjustments = await db.suribet_saldo_adjustments.find({
+        "user_id": user_id,
+        "type": "saldo_naar_suribet"
+    }).to_list(None)
+    
+    saldo_adjustment_total = 0
+    saldo_adjustment_details = []
+    for adj in saldo_adjustments:
+        saldo_adjustment_total += adj.get("amount", 0)
+        saldo_adjustment_details.append({
+            "id": adj.get("id"),
+            "amount": adj.get("amount"),
+            "notes": adj.get("notes"),
+            "created_at": adj.get("created_at")
+        })
+    
+    # Add saldo adjustments to total
+    total_suribet_amount += saldo_adjustment_total
+    
     # Create uitbetaling record
     uitbetaling = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
         "dagstaat_ids": data.dagstaat_ids,
         "dagstaat_details": dagstaat_details,
+        "saldo_adjustment_details": saldo_adjustment_details,
+        "saldo_adjustment_total": saldo_adjustment_total,
         "total_amount": total_suribet_amount,
         "notes": data.notes,
         "payout_date": datetime.now(timezone.utc).isoformat(),
@@ -652,10 +674,23 @@ async def create_uitbetaling(
         }}
     )
     
+    # Delete saldo adjustments (they are now paid out)
+    if saldo_adjustments:
+        await db.suribet_saldo_adjustments.delete_many({
+            "user_id": user_id,
+            "type": "saldo_naar_suribet"
+        })
+        # Also delete related kasboek entries
+        await db.suribet_kasboek.delete_many({
+            "user_id": user_id,
+            "category": "suribet_saldo"
+        })
+    
     return {
         "id": uitbetaling["id"],
         "total_amount": total_suribet_amount,
         "dagstaten_count": len(data.dagstaat_ids),
+        "saldo_adjustment_total": saldo_adjustment_total,
         "message": f"Uitbetaling van {total_suribet_amount:.2f} SRD geregistreerd voor {len(data.dagstaat_ids)} dagrapporten"
     }
 
