@@ -48,7 +48,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from '../components/ui/dialog';
-import QuickStartWizard from '../components/QuickStartWizard';
 import ModuleExpiringBanner from '../components/ModuleExpiringBanner';
 
 export default function Dashboard() {
@@ -59,9 +58,6 @@ export default function Dashboard() {
   const [hasVastgoedAddon, setHasVastgoedAddon] = useState(false);
   const [addonsChecked, setAddonsChecked] = useState(false);
   const [activeAddons, setActiveAddons] = useState([]);
-  
-  // Quick Start wizard state
-  const [showQuickStart, setShowQuickStart] = useState(false);
   
   // Payment popup state (for expired modules)
   const [paymentPopupOpen, setPaymentPopupOpen] = useState(false);
@@ -84,13 +80,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     checkAddonsAndFetch();
-    
-    // Check if user should see Quick Start wizard
-    const quickStartCompleted = localStorage.getItem('quickStartCompleted');
-    if (!quickStartCompleted && user?.role !== 'superadmin') {
-      // Show wizard for new users after a short delay
-      setTimeout(() => setShowQuickStart(true), 1500);
-    }
   }, [user]);
 
   const checkPaymentStatus = async () => {
