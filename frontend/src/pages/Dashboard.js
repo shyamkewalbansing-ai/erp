@@ -273,8 +273,8 @@ export default function Dashboard() {
     }
   };
 
-  // Show loading screen while checking addons or redirecting
-  if (loading || isRedirecting) {
+  // Show loading screen while checking addons
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
@@ -284,9 +284,7 @@ export default function Dashboard() {
               <Sparkles className="w-8 h-8 text-primary animate-pulse" />
             </div>
           </div>
-          <p className="mt-6 text-muted-foreground font-medium">
-            {isRedirecting ? 'Doorverwijzen naar uw dashboard...' : 'Dashboard laden...'}
-          </p>
+          <p className="mt-6 text-muted-foreground font-medium">Dashboard laden...</p>
         </div>
       </div>
     );
