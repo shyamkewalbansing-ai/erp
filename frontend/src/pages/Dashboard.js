@@ -707,16 +707,6 @@ export default function Dashboard() {
             )}
             <div className="flex flex-wrap gap-2 w-full sm:w-auto">
               <Button 
-                onClick={() => setShowQuickStart(true)}
-                variant="outline"
-                size="sm"
-                className="flex-1 sm:flex-none bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm border border-white/20 text-xs sm:text-sm"
-              >
-                <Rocket className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden xs:inline">Quick Start</span>
-                <span className="xs:hidden">Start</span>
-              </Button>
-              <Button 
                 onClick={() => navigate('/app/boekhouding')}
                 size="sm"
                 className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm"
