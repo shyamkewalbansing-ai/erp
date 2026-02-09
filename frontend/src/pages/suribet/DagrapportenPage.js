@@ -106,6 +106,10 @@ export default function DagrapportenPage() {
   const [saldoNotes, setSaldoNotes] = useState('');
   const [processingSaldo, setProcessingSaldo] = useState(false);
   
+  // Saldo aanpassingen
+  const [saldoAanpassingen, setSaldoAanpassingen] = useState([]);
+  const [showSaldoOverzicht, setShowSaldoOverzicht] = useState(false);
+  
   const fileInputRef = useRef(null);
   const qrPollIntervalRef = useRef(null);
   
