@@ -104,6 +104,7 @@ const moduleSettingsConfig = {
 export default function Instellingen() {
   const { user, refreshUser } = useAuth();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
