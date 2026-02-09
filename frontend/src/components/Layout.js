@@ -645,9 +645,17 @@ export default function Layout() {
               
               {/* Dropdown Menu */}
               <div className={`user-dropdown-menu ${userDropdownOpen ? 'open' : ''}`}>
-                <button className="user-dropdown-item" onClick={() => { setUserDropdownOpen(false); navigate('/app/instellingen?tab=profile'); }}>
+                <button className="user-dropdown-item" onClick={() => { setUserDropdownOpen(false); navigate('/app/instellingen'); }}>
                   <Settings className="w-4 h-4" />
-                  <span>Instellingen</span>
+                  <span>Systeeminstellingen</span>
+                </button>
+                <button className="user-dropdown-item" onClick={() => { setUserDropdownOpen(false); navigate('/app/workspace'); }}>
+                  <Users className="w-4 h-4" />
+                  <span>Workspace & Team</span>
+                </button>
+                <button className="user-dropdown-item" onClick={() => { setUserDropdownOpen(false); navigate('/app/abonnement'); }}>
+                  <Package className="w-4 h-4" />
+                  <span>Mijn Modules</span>
                 </button>
                 <div className="user-dropdown-divider" />
                 <button className="user-dropdown-item" onClick={handleLogout} style={{ color: '#ef4444' }}>
