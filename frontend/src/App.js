@@ -281,10 +281,105 @@ const PublicRoute = ({ children }) => {
   return children;
 };
 
-// Smart redirect based on user role
+// Smart redirect based on user role and default dashboard setting
 const SmartRedirect = () => {
   const { isSuperAdmin } = useAuth();
-  return <Navigate to={isSuperAdmin() ? "/app/admin" : "/app/dashboard"} replace />;
+  const [targetRoute, setTargetRoute] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const determineRoute = async () => {
+      // Superadmin always goes to admin
+      if (isSuperAdmin()) {
+        setTargetRoute("/app/admin");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Import api functions dynamically to avoid circular deps
+        const { getMyAddons, getSidebarOrder } = await import('./lib/api');
+        
+        const [addonsResponse, sidebarResponse] = await Promise.all([
+          getMyAddons(),
+          getSidebarOrder()
+        ]);
+
+        const addons = addonsResponse.data || [];
+        const sidebarSettings = sidebarResponse.data || {};
+        const savedOrder = sidebarSettings.module_order || [];
+        const defaultDashboard = sidebarSettings.default_dashboard;
+
+        // Get active modules
+        const activeModules = addons.filter(addon => 
+          addon.status === 'active' || addon.status === 'trial'
+        );
+
+        // Module routes mapping
+        const moduleRoutes = {
+          'vastgoed_beheer': '/app/dashboard',
+          'suribet': '/app/suribet',
+          'hrm': '/app/hrm',
+          'autodealer': '/app/autodealer',
+          'beauty': '/app/beauty',
+          'pompstation': '/app/pompstation',
+          'boekhouding': '/app/boekhouding'
+        };
+
+        let targetModule = null;
+
+        // Priority 1: User's explicit default dashboard choice
+        if (defaultDashboard) {
+          const hasDefaultModule = activeModules.some(m => m.addon_slug === defaultDashboard);
+          if (hasDefaultModule) {
+            targetModule = defaultDashboard;
+          }
+        }
+
+        // Priority 2: First module in sidebar order
+        if (!targetModule && savedOrder.length > 0) {
+          for (const slug of savedOrder) {
+            const hasModule = activeModules.some(m => m.addon_slug === slug);
+            if (hasModule) {
+              targetModule = slug;
+              break;
+            }
+          }
+        }
+
+        // Priority 3: First active module (fallback)
+        if (!targetModule && activeModules.length > 0) {
+          targetModule = activeModules[0].addon_slug;
+        }
+
+        // Set the target route
+        if (targetModule && moduleRoutes[targetModule]) {
+          setTargetRoute(moduleRoutes[targetModule]);
+        } else {
+          setTargetRoute("/app/dashboard");
+        }
+      } catch (error) {
+        console.error('Error determining redirect:', error);
+        setTargetRoute("/app/dashboard");
+      }
+      setLoading(false);
+    };
+
+    determineRoute();
+  }, [isSuperAdmin]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Laden...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <Navigate to={targetRoute} replace />;
 };
 
 // Customer only route - superadmin cannot access
