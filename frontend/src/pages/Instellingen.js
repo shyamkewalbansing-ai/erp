@@ -50,6 +50,7 @@ const systemSettingsNav = [
   { id: 'profile', icon: User, label: 'Profiel', description: 'Naam, e-mail en bedrijfsgegevens', category: 'system' },
   { id: 'logo', icon: ImageIcon, label: 'Logo', description: 'Bedrijfslogo uploaden', category: 'system' },
   { id: 'sidebar', icon: LayoutList, label: 'Sidebar Volgorde', description: 'Module volgorde aanpassen', category: 'system' },
+  { id: 'betaalmethodes', icon: CreditCard, label: 'Betaalmethodes', description: 'Betaalmethodes beheren', category: 'system' },
   { id: 'email', icon: Send, label: 'Email', description: 'SMTP instellingen voor facturen', category: 'system' },
   { id: 'security', icon: Shield, label: 'Beveiliging', description: 'Wachtwoord wijzigen', category: 'system' },
 ];
