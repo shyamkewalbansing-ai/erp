@@ -8119,12 +8119,12 @@ class SidebarModuleOrder(BaseModel):
 
 @api_router.get("/user/sidebar-order")
 async def get_user_sidebar_order(current_user: dict = Depends(get_current_user)):
-    """Get user's sidebar module order preference"""
+    """Get user's sidebar module order preference and default dashboard"""
     settings = await db.user_sidebar_settings.find_one(
         {"user_id": current_user["id"]},
         {"_id": 0}
     )
-    return settings or {"module_order": []}
+    return settings or {"module_order": [], "default_dashboard": None}
 
 @api_router.put("/user/sidebar-order")
 async def update_user_sidebar_order(
@@ -8132,16 +8132,39 @@ async def update_user_sidebar_order(
     current_user: dict = Depends(get_current_user)
 ):
     """Update user's sidebar module order preference"""
+    update_data = {
+        "user_id": current_user["id"],
+        "module_order": data.module_order,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    # Include default_dashboard if provided
+    if hasattr(data, 'default_dashboard') and data.default_dashboard is not None:
+        update_data["default_dashboard"] = data.default_dashboard
+    
+    await db.user_sidebar_settings.update_one(
+        {"user_id": current_user["id"]},
+        {"$set": update_data},
+        upsert=True
+    )
+    return {"success": True, "message": "Sidebar volgorde opgeslagen"}
+
+@api_router.put("/user/default-dashboard")
+async def update_default_dashboard(
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Update user's default dashboard preference"""
+    default_dashboard = data.get("default_dashboard")
     await db.user_sidebar_settings.update_one(
         {"user_id": current_user["id"]},
         {"$set": {
             "user_id": current_user["id"],
-            "module_order": data.module_order,
+            "default_dashboard": default_dashboard,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }},
         upsert=True
     )
-    return {"success": True, "message": "Sidebar volgorde opgeslagen"}
+    return {"success": True, "message": "Standaard dashboard opgeslagen"}
 
 # ==================== MODULE SETTINGS SYSTEM ====================
 
