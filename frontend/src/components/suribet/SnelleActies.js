@@ -7,7 +7,8 @@ import {
   Gamepad2, 
   Wallet, 
   Users2, 
-  DollarSign
+  DollarSign,
+  LayoutDashboard
 } from 'lucide-react';
 
 export default function SnelleActies() {
@@ -19,7 +20,15 @@ export default function SnelleActies() {
         <CardTitle className="text-lg">Snelle Acties</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+          <Button
+            variant="outline"
+            className="h-auto py-4 flex flex-col items-center gap-2 border-emerald-200 bg-emerald-50 hover:bg-emerald-100"
+            onClick={() => navigate('/app/suribet/dashboard')}
+          >
+            <LayoutDashboard className="w-5 h-5 text-emerald-600" />
+            <span className="text-xs font-medium">Dashboard</span>
+          </Button>
           <Button
             variant="outline"
             className="h-auto py-4 flex flex-col items-center gap-2"
