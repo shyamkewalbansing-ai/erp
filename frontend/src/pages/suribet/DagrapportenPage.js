@@ -2149,17 +2149,27 @@ export default function DagrapportenPage() {
             )}
           </div>
           
-          <DialogFooter className="flex justify-between">
-            {saldoAanpassingen.length > 0 && (
+          <DialogFooter className="flex justify-between gap-2">
+            <div className="flex gap-2">
+              {saldoAanpassingen.length > 0 && (
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  onClick={handleDeleteAllSaldoAanpassingen}
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Alles Verwijderen
+                </Button>
+              )}
               <Button 
-                variant="destructive" 
+                variant="outline" 
                 size="sm"
-                onClick={handleDeleteAllSaldoAanpassingen}
+                className="text-red-500 border-red-300 hover:bg-red-50"
+                onClick={handleResetSaldoData}
               >
-                <Trash2 className="w-4 h-4 mr-1" />
-                Alles Verwijderen
+                Reset Saldo Data
               </Button>
-            )}
+            </div>
             <Button variant="outline" onClick={() => setShowSaldoOverzicht(false)}>
               Sluiten
             </Button>
