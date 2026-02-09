@@ -1760,6 +1760,11 @@ export default function DagrapportenPage() {
                 <div>
                   <p className="text-sm text-muted-foreground">Totaal uit te betalen:</p>
                   <p className="text-3xl font-bold text-orange-600">{formatCurrency(calculatePayoutTotal())}</p>
+                  {calculateSaldoAdjustmentsTotal() > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Incl. {formatCurrency(calculateSaldoAdjustmentsTotal())} saldo toevoegingen
+                    </p>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">{selectedForPayout.length} rapport(en)</p>
@@ -1767,6 +1772,14 @@ export default function DagrapportenPage() {
                 </div>
               </div>
             </div>
+
+            {/* Saldo adjustments info */}
+            {calculateSaldoAdjustmentsTotal() > 0 && (
+              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg flex-shrink-0 text-sm">
+                <p className="font-medium text-blue-700">Saldo Toevoegingen:</p>
+                <p className="text-blue-600">{formatCurrency(calculateSaldoAdjustmentsTotal())} wordt mee uitbetaald en verwijderd</p>
+              </div>
+            )}
 
             {/* Selection buttons */}
             <div className="flex gap-2 flex-shrink-0">
