@@ -287,7 +287,8 @@ export default function SidebarOrderSettings() {
             </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
