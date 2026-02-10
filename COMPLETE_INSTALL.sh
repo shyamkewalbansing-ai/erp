@@ -142,6 +142,60 @@ get_configuration() {
         echo "Installatie geannuleerd."
         exit 0
     fi
+    
+    # Site user password genereren
+    SITE_USER_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
+}
+
+# =============================================================================
+# STAP 0: CLOUDPANEL SITE AANMAKEN
+# =============================================================================
+create_cloudpanel_site() {
+    log_step "STAP 0/11: CloudPanel site aanmaken..."
+    
+    # Check of CloudPanel is geïnstalleerd
+    if ! command -v clpctl &> /dev/null; then
+        log_warning "CloudPanel CLI (clpctl) niet gevonden!"
+        log_info "Installeer CloudPanel eerst: https://www.cloudpanel.io/docs/v2/getting-started/"
+        log_info "Of maak de site handmatig aan in CloudPanel."
+        return 1
+    fi
+    
+    # Check of site al bestaat
+    if [ -d "$APP_DIR" ]; then
+        log_info "Site directory bestaat al: $APP_DIR"
+        log_info "Site wordt niet opnieuw aangemaakt in CloudPanel"
+        return 0
+    fi
+    
+    # Maak Node.js site aan in CloudPanel
+    log_info "Site aanmaken via CloudPanel CLI..."
+    
+    clpctl site:add:nodejs \
+        --domainName="$DOMAIN" \
+        --nodejsVersion="20" \
+        --appPort="$FRONTEND_PORT" \
+        --siteUser="clp" \
+        --siteUserPassword="$SITE_USER_PASSWORD" 2>/dev/null || {
+        
+        log_warning "Kon site niet aanmaken via clpctl"
+        log_info "Probeer alternatieve methode..."
+        
+        # Alternatief: maak directory structuur handmatig
+        mkdir -p "$APP_DIR"
+        chown -R clp:clp "$APP_DIR" 2>/dev/null || true
+    }
+    
+    # Voeg app subdomain toe
+    log_info "App subdomain toevoegen..."
+    clpctl site:domain:add --domainName="$DOMAIN" --newDomainName="app.$DOMAIN" 2>/dev/null || {
+        log_info "Subdomain toevoegen via CLI niet gelukt - wordt later via Nginx geconfigureerd"
+    }
+    
+    # Voeg www subdomain toe
+    clpctl site:domain:add --domainName="$DOMAIN" --newDomainName="www.$DOMAIN" 2>/dev/null || true
+    
+    log_success "CloudPanel site geconfigureerd"
 }
 
 # =============================================================================
