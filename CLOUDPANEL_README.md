@@ -13,20 +13,22 @@ sudo ./COMPLETE_INSTALL.sh
 
 ---
 
-## 📋 Wat doet dit script?
+## 📋 Wat doet dit script? (12 Stappen)
 
 | Stap | Beschrijving |
 |------|-------------|
+| 0 | **CloudPanel site aanmaken** (via clpctl CLI) |
 | 1 | Systeem voorbereiden (curl, git, supervisor, certbot) |
 | 2 | Node.js 20 + Yarn installeren |
 | 3 | Python 3 + pip + venv installeren |
 | 4 | MongoDB 7.0 installeren + database aanmaken |
-| 5 | App directory voorbereiden |
+| 5 | App directory voorbereiden + code downloaden |
 | 6 | Backend configureren (.env, venv) |
 | 7 | Frontend configureren (.env, build) |
 | 8 | SSL certificaten aanvragen (Let's Encrypt) |
 | 9 | Nginx configureren (hoofddomein + app subdomain) |
 | 10 | Supervisor services + cron jobs |
+| 11 | SSL via CloudPanel (backup methode) |
 
 ---
 
