@@ -444,7 +444,7 @@ export default function ModulesOverviewPage() {
               Klaar om te starten?
             </h2>
             <p className="text-lg text-slate-600 mb-8 max-w-xl mx-auto">
-              Probeer alle modules gratis met onze demo account of neem contact met ons op voor meer informatie
+              Probeer alle modules 3 dagen gratis met onze demo account of neem contact met ons op voor meer informatie
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
