@@ -9,9 +9,10 @@
 #   ██║     ██║  ██║╚██████╗   ██║   ╚██████╔╝██║  ██║██║  ██║   ██║   ██║███████╗
 #   ╚═╝     ╚═╝  ╚═╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝╚══════╝
 #
-#   COMPLETE CLOUDPANEL INSTALLER v3.0
+#   COMPLETE CLOUDPANEL INSTALLER v3.1
 #   
 #   Dit script installeert ALLES automatisch:
+#   - CloudPanel site aanmaken (via clpctl)
 #   - MongoDB 7.0
 #   - Node.js 20 + Yarn
 #   - Python 3 + venv
