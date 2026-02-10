@@ -58,7 +58,13 @@ Het script vraagt om:
 - **Domein** (bijv. `facturatie.sr`)
 - **E-mail** (voor SSL certificaten)
 - **Admin wachtwoord**
-- **GitHub URL** (optioneel)
+- **GitHub URL** (standaard: de ERP repo)
+
+**Dat is alles!** Het script doet de rest:
+- ✅ Maakt automatisch de site aan in CloudPanel
+- ✅ Configureert alle subdomains (www, app)
+- ✅ Installeert SSL certificaten
+- ✅ Download en installeert de applicatie
 
 ---
 
