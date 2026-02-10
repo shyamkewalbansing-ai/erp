@@ -231,16 +231,23 @@ install_nodejs() {
 }
 
 # =============================================================================
-# STAP 3: PYTHON INSTALLEREN
+# STAP 3: PYTHON 3.11 INSTALLEREN
 # =============================================================================
 install_python() {
-    log_step "STAP 3/11: Python installeren..."
+    log_step "STAP 3/11: Python 3.11 installeren..."
+    
+    # Voeg deadsnakes PPA toe voor Python 3.11
+    add-apt-repository -y ppa:deadsnakes/ppa > /dev/null 2>&1 || true
+    apt-get update -qq
     
     apt-get install -y -qq \
-        python3 python3-pip python3-venv \
-        python3-dev > /dev/null 2>&1
+        python3.11 python3.11-venv python3.11-dev \
+        python3-pip > /dev/null 2>&1
     
-    log_success "Python $(python3 --version | cut -d' ' -f2) geïnstalleerd"
+    # Maak python3.11 de default python3
+    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 > /dev/null 2>&1 || true
+    
+    log_success "Python $(python3.11 --version | cut -d' ' -f2) geïnstalleerd"
 }
 
 # =============================================================================
