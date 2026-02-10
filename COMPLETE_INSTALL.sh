@@ -9,22 +9,21 @@
 #   ██║     ██║  ██║╚██████╗   ██║   ╚██████╔╝██║  ██║██║  ██║   ██║   ██║███████╗
 #   ╚═╝     ╚═╝  ╚═╝ ╚═════╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝╚══════╝
 #
-#   COMPLETE CLOUDPANEL INSTALLER v3.1
+#   COMPLETE CLOUDPANEL INSTALLER v4.0
 #   
 #   Dit script installeert ALLES automatisch:
 #   - CloudPanel site aanmaken (via clpctl)
 #   - MongoDB 7.0
 #   - Node.js 20 + Yarn
-#   - Python 3 + venv
-#   - SSL certificaten (Let's Encrypt)
+#   - Python 3.11 + venv
+#   - SSL certificaten (Let's Encrypt via Snap)
 #   - Nginx (hoofddomein + app subdomain)
 #   - Supervisor services
 #   - Database backup cron
 #   - Beheer commands (update/backup/restore)
 #
 #   GEBRUIK:
-#   chmod +x COMPLETE_INSTALL.sh
-#   sudo ./COMPLETE_INSTALL.sh
+#   curl -sSL https://raw.githubusercontent.com/shyamkewalbansing-ai/erp/main/COMPLETE_INSTALL.sh -o install.sh && chmod +x install.sh && sudo ./install.sh
 #
 # =============================================================================
 
@@ -49,8 +48,7 @@ print_banner() {
     echo -e "${CYAN}"
     echo "╔═══════════════════════════════════════════════════════════════════╗"
     echo "║                                                                   ║"
-    echo "║   FACTURATIE ERP - COMPLETE CLOUDPANEL INSTALLER                  ║"
-    echo "║   Versie 3.0                                                      ║"
+    echo "║   FACTURATIE ERP - COMPLETE CLOUDPANEL INSTALLER v4.0             ║"
     echo "║                                                                   ║"
     echo "╚═══════════════════════════════════════════════════════════════════╝"
     echo -e "${NC}"
@@ -105,6 +103,12 @@ get_configuration() {
         log_info "Admin wachtwoord gegenereerd: $ADMIN_PASSWORD"
     fi
     
+    # Site user
+    read -p "$(echo -e ${CYAN}CloudPanel site user ${NC}[standaard: facturatie]: )" SITE_USER
+    if [ -z "$SITE_USER" ]; then
+        SITE_USER="facturatie"
+    fi
+    
     # Database wachtwoord
     DB_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
     
@@ -118,11 +122,21 @@ get_configuration() {
         GITHUB_REPO="$GITHUB_REPO_DEFAULT"
     fi
     
-    # Directories
-    APP_DIR="/home/clp/htdocs/$DOMAIN"
+    # Directories - detecteer CloudPanel structuur
+    if [ -d "/home/$SITE_USER/htdocs" ]; then
+        APP_DIR="/home/$SITE_USER/htdocs/$DOMAIN"
+    elif [ -d "/home/clp/htdocs" ]; then
+        APP_DIR="/home/clp/htdocs/$DOMAIN"
+    else
+        APP_DIR="/home/$SITE_USER/htdocs/$DOMAIN"
+    fi
+    
     BACKEND_PORT=8001
     FRONTEND_PORT=3000
     MONGO_DB_NAME="facturatie_db"
+    
+    # Site user password genereren
+    SITE_USER_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
     
     echo ""
     echo -e "${BOLD}Configuratie overzicht:${NC}"
@@ -130,6 +144,7 @@ get_configuration() {
     echo "  Domein:           $DOMAIN"
     echo "  App subdomain:    app.$DOMAIN"
     echo "  E-mail:           $EMAIL"
+    echo "  Site user:        $SITE_USER"
     echo "  App directory:    $APP_DIR"
     echo "  Database:         $MONGO_DB_NAME"
     echo "  Backend poort:    $BACKEND_PORT"
@@ -142,77 +157,24 @@ get_configuration() {
         echo "Installatie geannuleerd."
         exit 0
     fi
-    
-    # Site user password genereren
-    SITE_USER_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
-}
-
-# =============================================================================
-# STAP 0: CLOUDPANEL SITE AANMAKEN
-# =============================================================================
-create_cloudpanel_site() {
-    log_step "STAP 0/11: CloudPanel site aanmaken..."
-    
-    # Check of CloudPanel is geïnstalleerd
-    if ! command -v clpctl &> /dev/null; then
-        log_warning "CloudPanel CLI (clpctl) niet gevonden!"
-        log_info "Installeer CloudPanel eerst: https://www.cloudpanel.io/docs/v2/getting-started/"
-        log_info "Of maak de site handmatig aan in CloudPanel."
-        return 1
-    fi
-    
-    # Check of site al bestaat
-    if [ -d "$APP_DIR" ]; then
-        log_info "Site directory bestaat al: $APP_DIR"
-        log_info "Site wordt niet opnieuw aangemaakt in CloudPanel"
-        return 0
-    fi
-    
-    # Maak Node.js site aan in CloudPanel
-    log_info "Site aanmaken via CloudPanel CLI..."
-    
-    clpctl site:add:nodejs \
-        --domainName="$DOMAIN" \
-        --nodejsVersion="20" \
-        --appPort="$FRONTEND_PORT" \
-        --siteUser="clp" \
-        --siteUserPassword="$SITE_USER_PASSWORD" 2>/dev/null || {
-        
-        log_warning "Kon site niet aanmaken via clpctl"
-        log_info "Probeer alternatieve methode..."
-        
-        # Alternatief: maak directory structuur handmatig
-        mkdir -p "$APP_DIR"
-        chown -R clp:clp "$APP_DIR" 2>/dev/null || true
-    }
-    
-    # Voeg app subdomain toe
-    log_info "App subdomain toevoegen..."
-    clpctl site:domain:add --domainName="$DOMAIN" --newDomainName="app.$DOMAIN" 2>/dev/null || {
-        log_info "Subdomain toevoegen via CLI niet gelukt - wordt later via Nginx geconfigureerd"
-    }
-    
-    # Voeg www subdomain toe
-    clpctl site:domain:add --domainName="$DOMAIN" --newDomainName="www.$DOMAIN" 2>/dev/null || true
-    
-    log_success "CloudPanel site geconfigureerd"
 }
 
 # =============================================================================
 # STAP 1: SYSTEEM VOORBEREIDEN
 # =============================================================================
 prepare_system() {
-    log_step "STAP 1/11: Systeem voorbereiden..."
+    log_step "STAP 1/12: Systeem voorbereiden..."
     
     apt-get update -qq
     apt-get install -y -qq \
         curl wget git build-essential \
         software-properties-common unzip \
-        supervisor \
-        gnupg ca-certificates snapd > /dev/null 2>&1
+        supervisor snapd \
+        gnupg ca-certificates > /dev/null 2>&1
     
     # Installeer certbot via snap (voorkomt Python conflicten)
     log_info "Certbot installeren via snap..."
+    apt-get remove -y certbot python3-certbot-nginx > /dev/null 2>&1 || true
     snap install --classic certbot > /dev/null 2>&1 || true
     ln -sf /snap/bin/certbot /usr/bin/certbot 2>/dev/null || true
     
@@ -223,7 +185,7 @@ prepare_system() {
 # STAP 2: NODE.JS 20 INSTALLEREN
 # =============================================================================
 install_nodejs() {
-    log_step "STAP 2/11: Node.js 20 installeren..."
+    log_step "STAP 2/12: Node.js 20 installeren..."
     
     if ! command -v node &> /dev/null || [[ $(node -v | cut -d'.' -f1 | sed 's/v//') -lt 20 ]]; then
         curl -fsSL https://deb.nodesource.com/setup_20.x | bash - > /dev/null 2>&1
@@ -239,7 +201,7 @@ install_nodejs() {
 # STAP 3: PYTHON 3.11 INSTALLEREN
 # =============================================================================
 install_python() {
-    log_step "STAP 3/11: Python 3.11 installeren..."
+    log_step "STAP 3/12: Python 3.11 installeren..."
     
     # Voeg deadsnakes PPA toe voor Python 3.11
     add-apt-repository -y ppa:deadsnakes/ppa > /dev/null 2>&1 || true
@@ -249,9 +211,6 @@ install_python() {
         python3.11 python3.11-venv python3.11-dev \
         python3-pip > /dev/null 2>&1
     
-    # Maak python3.11 de default python3
-    update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 1 > /dev/null 2>&1 || true
-    
     log_success "Python $(python3.11 --version | cut -d' ' -f2) geïnstalleerd"
 }
 
@@ -259,7 +218,7 @@ install_python() {
 # STAP 4: MONGODB 7.0 INSTALLEREN
 # =============================================================================
 install_mongodb() {
-    log_step "STAP 4/11: MongoDB 7.0 installeren..."
+    log_step "STAP 4/12: MongoDB 7.0 installeren..."
     
     if ! command -v mongod &> /dev/null; then
         # Import GPG key
@@ -294,24 +253,58 @@ install_mongodb() {
 }
 
 # =============================================================================
-# STAP 5: APP DIRECTORY VOORBEREIDEN
+# STAP 5: CLOUDPANEL SITE AANMAKEN
 # =============================================================================
-prepare_app_directory() {
-    log_step "STAP 5/11: App directory voorbereiden..."
+create_cloudpanel_site() {
+    log_step "STAP 5/12: CloudPanel site voorbereiden..."
     
+    # Maak directory structuur
     mkdir -p $APP_DIR/{backend,frontend,logs,backups}
     mkdir -p /var/www/certbot/.well-known/acme-challenge
     chown -R www-data:www-data /var/www/certbot
     
-    # Download from GitHub if specified
+    # Check of clpctl beschikbaar is
+    if command -v clpctl &> /dev/null; then
+        log_info "Site aanmaken via CloudPanel CLI..."
+        clpctl site:add:nodejs \
+            --domainName="$DOMAIN" \
+            --nodejsVersion="20" \
+            --appPort="$FRONTEND_PORT" \
+            --siteUser="$SITE_USER" \
+            --siteUserPassword="$SITE_USER_PASSWORD" 2>/dev/null || log_info "Site bestaat mogelijk al"
+        
+        # Voeg subdomains toe
+        clpctl site:domain:add --domainName="$DOMAIN" --newDomainName="app.$DOMAIN" 2>/dev/null || true
+        clpctl site:domain:add --domainName="$DOMAIN" --newDomainName="www.$DOMAIN" 2>/dev/null || true
+    fi
+    
+    # Update APP_DIR als CloudPanel een andere locatie gebruikt
+    if [ -d "/home/$SITE_USER/htdocs/$DOMAIN" ]; then
+        APP_DIR="/home/$SITE_USER/htdocs/$DOMAIN"
+    fi
+    
+    mkdir -p $APP_DIR/{backend,frontend,logs,backups}
+    
+    log_success "CloudPanel site voorbereid: $APP_DIR"
+}
+
+# =============================================================================
+# STAP 6: CODE DOWNLOADEN
+# =============================================================================
+download_code() {
+    log_step "STAP 6/12: Code downloaden van GitHub..."
+    
+    cd $APP_DIR
+    
+    # Clone repo
     if [ -n "$GITHUB_REPO" ]; then
-        log_info "Code downloaden van GitHub..."
-        cd $APP_DIR
+        log_info "Code downloaden van: $GITHUB_REPO"
         git clone --depth 1 "$GITHUB_REPO" temp_clone 2>/dev/null || true
         
         if [ -d "temp_clone/backend" ]; then
             cp -r temp_clone/backend/* backend/ 2>/dev/null || true
             cp -r temp_clone/frontend/* frontend/ 2>/dev/null || true
+            cp temp_clone/setup_demo_account.py ./ 2>/dev/null || true
             rm -rf temp_clone
             log_success "Code gedownload van GitHub"
         else
@@ -319,15 +312,13 @@ prepare_app_directory() {
             log_warning "GitHub clone mislukt - upload bestanden handmatig"
         fi
     fi
-    
-    log_success "App directory voorbereid: $APP_DIR"
 }
 
 # =============================================================================
-# STAP 6: BACKEND CONFIGUREREN
+# STAP 7: BACKEND CONFIGUREREN
 # =============================================================================
 configure_backend() {
-    log_step "STAP 6/11: Backend configureren..."
+    log_step "STAP 7/12: Backend configureren..."
     
     cd $APP_DIR/backend
     
@@ -338,10 +329,24 @@ configure_backend() {
     # Upgrade pip
     pip install --upgrade pip -q
     
-    # Install dependencies if requirements.txt exists
+    # Install ALL required dependencies
+    log_info "Backend dependencies installeren (dit duurt even)..."
+    
+    # Core dependencies
+    pip install -q \
+        motor pymongo bcrypt passlib python-jose python-multipart \
+        PyJWT reportlab email-validator aiosmtplib apscheduler \
+        fastapi uvicorn starlette python-dotenv pydantic \
+        httpx aiohttp requests pillow jinja2 \
+        2>&1 | grep -v "WARNING\|DEPRECATION" || true
+    
+    # Install from requirements.txt if exists
     if [ -f "requirements.txt" ]; then
-        pip install -r requirements.txt -q 2>&1 | grep -v "WARNING\|DEPRECATION" || true
+        pip install -r requirements.txt -q 2>&1 | grep -v "WARNING\|DEPRECATION\|ERROR.*emergentintegrations" || true
     fi
+    
+    # Install emergentintegrations from custom index
+    pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ -q 2>&1 || true
     
     # Create .env file
     cat > .env << EOF
@@ -351,7 +356,7 @@ configure_backend() {
 # =============================================================================
 
 # Database
-MONGO_URL=mongodb://facturatie_user:$DB_PASSWORD@localhost:27017/$MONGO_DB_NAME?authSource=$MONGO_DB_NAME
+MONGO_URL=mongodb://localhost:27017/$MONGO_DB_NAME
 DB_NAME=$MONGO_DB_NAME
 
 # Server
@@ -372,13 +377,6 @@ LANDING_URL=https://$DOMAIN
 
 # CORS
 CORS_ORIGINS=https://$DOMAIN,https://www.$DOMAIN,https://app.$DOMAIN
-
-# SMTP (configureer naar eigen instellingen)
-SMTP_HOST=smtp.example.com
-SMTP_PORT=587
-SMTP_USER=
-SMTP_PASSWORD=
-SMTP_FROM=noreply@$DOMAIN
 EOF
     
     chmod 600 .env
@@ -388,10 +386,10 @@ EOF
 }
 
 # =============================================================================
-# STAP 7: FRONTEND CONFIGUREREN
+# STAP 8: FRONTEND CONFIGUREREN
 # =============================================================================
 configure_frontend() {
-    log_step "STAP 7/11: Frontend configureren..."
+    log_step "STAP 8/12: Frontend configureren..."
     
     cd $APP_DIR/frontend
     
@@ -423,10 +421,10 @@ EOF
 }
 
 # =============================================================================
-# STAP 8: SSL CERTIFICATEN
+# STAP 9: SSL CERTIFICATEN
 # =============================================================================
 setup_ssl() {
-    log_step "STAP 8/11: SSL certificaten aanvragen..."
+    log_step "STAP 9/12: SSL certificaten aanvragen..."
     
     # Stop nginx if running
     systemctl stop nginx 2>/dev/null || true
@@ -454,7 +452,9 @@ setup_ssl() {
         log_info "  A   app   -> UW_SERVER_IP"
         log_info ""
         log_info "Probeer later handmatig:"
-        log_info "  certbot certonly --standalone -d $DOMAIN -d www.$DOMAIN -d app.$DOMAIN"
+        log_info "  sudo systemctl stop nginx"
+        log_info "  sudo certbot certonly --standalone -d $DOMAIN -d www.$DOMAIN -d app.$DOMAIN"
+        log_info "  sudo systemctl start nginx"
         return 1
     }
     
@@ -462,191 +462,149 @@ setup_ssl() {
 }
 
 # =============================================================================
-# STAP 9: NGINX CONFIGUREREN
+# STAP 10: NGINX CONFIGUREREN
 # =============================================================================
 configure_nginx() {
-    log_step "STAP 9/11: Nginx configureren..."
+    log_step "STAP 10/12: Nginx configureren..."
     
-    # Remove old configurations
-    rm -f /etc/nginx/sites-enabled/$DOMAIN*
-    rm -f /etc/nginx/sites-available/$DOMAIN*
+    # Remove CloudPanel and default configs
+    rm -f /etc/nginx/sites-enabled/$DOMAIN.conf
+    rm -f /etc/nginx/sites-enabled/${DOMAIN}.conf
+    rm -f /etc/nginx/sites-enabled/default
+    rm -f /etc/nginx/sites-enabled/default.conf
     
-    # Check if SSL certificate exists
-    if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-        SSL_ENABLED=true
-    else
-        SSL_ENABLED=false
-        log_warning "Geen SSL certificaat - configureer HTTP only"
-    fi
-    
-    # Create nginx configuration
-    cat > /etc/nginx/sites-available/$DOMAIN.conf << 'NGINXEOF'
+    # Create nginx configuration (compatible with older nginx versions)
+    cat > /etc/nginx/sites-available/$DOMAIN.conf << EOF
 # =============================================================================
 # FACTURATIE ERP - NGINX CONFIGURATIE
+# Automatisch gegenereerd op: $(date)
 # =============================================================================
 
 # HTTP -> HTTPS redirect
 server {
     listen 80;
     listen [::]:80;
-    server_name DOMAIN_PLACEHOLDER www.DOMAIN_PLACEHOLDER app.DOMAIN_PLACEHOLDER;
+    server_name $DOMAIN www.$DOMAIN app.$DOMAIN;
     
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
     
     location / {
-        return 301 https://$host$request_uri;
+        return 301 https://\$host\$request_uri;
     }
 }
 
-# =============================================================================
-# HOOFDDOMEIN - LANDING PAGES
-# =============================================================================
+# HOOFDDOMEIN - Landing Pages
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2 on;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
     
-    server_name DOMAIN_PLACEHOLDER www.DOMAIN_PLACEHOLDER;
+    server_name $DOMAIN www.$DOMAIN;
     
-    # SSL
-    ssl_certificate /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
     ssl_session_timeout 1d;
     ssl_session_cache shared:MainSSL:10m;
     ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
-    ssl_prefer_server_ciphers off;
     
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
     
     # Gzip
     gzip on;
     gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss;
+    gzip_types text/plain text/css text/xml application/json application/javascript;
     
     # Frontend
     location / {
-        proxy_pass http://127.0.0.1:FRONTEND_PORT_PLACEHOLDER;
+        proxy_pass http://127.0.0.1:$FRONTEND_PORT;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 86400;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
     }
     
     # API routes
     location /api/ {
-        proxy_pass http://127.0.0.1:BACKEND_PORT_PLACEHOLDER/api/;
+        proxy_pass http://127.0.0.1:$BACKEND_PORT/api/;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_read_timeout 300s;
-        proxy_connect_timeout 75s;
         client_max_body_size 50M;
     }
     
     # Redirect to app subdomain
-    location /app {
-        return 301 https://app.DOMAIN_PLACEHOLDER$request_uri;
-    }
-    
-    location = /login {
-        return 301 https://app.DOMAIN_PLACEHOLDER/login;
-    }
-    
-    location = /register {
-        return 301 https://app.DOMAIN_PLACEHOLDER/register;
-    }
+    location = /login { return 301 https://app.$DOMAIN/login; }
+    location = /register { return 301 https://app.$DOMAIN/register; }
+    location = /dashboard { return 301 https://app.$DOMAIN/dashboard; }
 }
 
-# =============================================================================
-# APP SUBDOMAIN - APPLICATIE
-# =============================================================================
+# APP SUBDOMAIN - Applicatie
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2 on;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
     
-    server_name app.DOMAIN_PLACEHOLDER;
+    server_name app.$DOMAIN;
     
-    # SSL
-    ssl_certificate /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/DOMAIN_PLACEHOLDER/privkey.pem;
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
     ssl_session_timeout 1d;
     ssl_session_cache shared:AppSSL:10m;
     ssl_protocols TLSv1.2 TLSv1.3;
-    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
-    ssl_prefer_server_ciphers off;
     
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
     add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
     
     # Gzip
     gzip on;
     gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_types text/plain text/css text/xml application/json application/javascript application/xml+rss;
+    gzip_types text/plain text/css text/xml application/json application/javascript;
     
     # Frontend
     location / {
-        proxy_pass http://127.0.0.1:FRONTEND_PORT_PLACEHOLDER;
+        proxy_pass http://127.0.0.1:$FRONTEND_PORT;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-        proxy_read_timeout 86400;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
     }
     
     # API routes
     location /api/ {
-        proxy_pass http://127.0.0.1:BACKEND_PORT_PLACEHOLDER/api/;
+        proxy_pass http://127.0.0.1:$BACKEND_PORT/api/;
         proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
         proxy_read_timeout 300s;
-        proxy_connect_timeout 75s;
         client_max_body_size 50M;
     }
     
     # WebSocket
     location /ws {
-        proxy_pass http://127.0.0.1:FRONTEND_PORT_PLACEHOLDER;
+        proxy_pass http://127.0.0.1:$FRONTEND_PORT;
         proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
-        proxy_set_header Host $host;
-        proxy_read_timeout 86400;
+        proxy_set_header Host \$host;
     }
 }
-NGINXEOF
-    
-    # Replace placeholders
-    sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g" /etc/nginx/sites-available/$DOMAIN.conf
-    sed -i "s/BACKEND_PORT_PLACEHOLDER/$BACKEND_PORT/g" /etc/nginx/sites-available/$DOMAIN.conf
-    sed -i "s/FRONTEND_PORT_PLACEHOLDER/$FRONTEND_PORT/g" /etc/nginx/sites-available/$DOMAIN.conf
+EOF
     
     # Enable site
     ln -sf /etc/nginx/sites-available/$DOMAIN.conf /etc/nginx/sites-enabled/
@@ -657,15 +615,18 @@ NGINXEOF
         systemctl enable nginx > /dev/null 2>&1
         log_success "Nginx geconfigureerd en gestart"
     else
-        log_error "Nginx configuratie test mislukt!"
+        log_warning "Nginx configuratie test mislukt - check handmatig met: nginx -t"
     fi
 }
 
 # =============================================================================
-# STAP 10: SUPERVISOR EN CRON JOBS
+# STAP 11: SUPERVISOR SERVICES
 # =============================================================================
 configure_services() {
-    log_step "STAP 10/11: Services en cron jobs configureren..."
+    log_step "STAP 11/12: Supervisor services configureren..."
+    
+    # Maak logs directory
+    mkdir -p $APP_DIR/logs
     
     # Backend supervisor service
     cat > /etc/supervisor/conf.d/facturatie-backend.conf << EOF
@@ -699,10 +660,18 @@ EOF
     # Start services if server.py exists
     if [ -f "$APP_DIR/backend/server.py" ]; then
         supervisorctl restart all > /dev/null 2>&1
-        log_success "Backend en frontend services gestart"
-        
-        # Wait for backend to start
         sleep 5
+        
+        # Check if running
+        if supervisorctl status facturatie-backend | grep -q "RUNNING"; then
+            log_success "Backend service gestart"
+        else
+            log_warning "Backend start probleem - check logs met: cat $APP_DIR/logs/backend.err.log"
+        fi
+        
+        if supervisorctl status facturatie-frontend | grep -q "RUNNING"; then
+            log_success "Frontend service gestart"
+        fi
         
         # Setup demo account
         if [ -f "$APP_DIR/setup_demo_account.py" ]; then
@@ -711,7 +680,7 @@ EOF
             source venv/bin/activate
             python3 $APP_DIR/setup_demo_account.py > /dev/null 2>&1 || true
             deactivate
-            log_success "Demo account aangemaakt (demo@facturatie.sr / demo2024)"
+            log_success "Demo account aangemaakt"
         fi
     else
         log_warning "server.py niet gevonden - upload eerst de applicatie bestanden"
@@ -719,47 +688,26 @@ EOF
     
     # SSL auto-renewal cron
     (crontab -l 2>/dev/null | grep -v "certbot"; \
-        echo "0 3 1 * * certbot renew --quiet --post-hook 'systemctl reload nginx'") | crontab -
+        echo "0 3 1 * * /snap/bin/certbot renew --quiet --post-hook 'systemctl reload nginx'") | crontab -
     
     # Database backup cron (daily at 2 AM)
     (crontab -l 2>/dev/null | grep -v "mongodump"; \
         echo "0 2 * * * mongodump --db=$MONGO_DB_NAME --out=$APP_DIR/backups/\$(date +\%Y\%m\%d) --quiet") | crontab -
     
-    log_success "Cron jobs geconfigureerd (SSL renewal + database backup)"
+    log_success "Cron jobs geconfigureerd"
 }
 
 # =============================================================================
-# STAP 11: SSL VIA CLOUDPANEL (OPTIONEEL)
-# =============================================================================
-setup_cloudpanel_ssl() {
-    log_step "STAP 11/11: SSL certificaat via CloudPanel..."
-    
-    # Check of clpctl beschikbaar is
-    if ! command -v clpctl &> /dev/null; then
-        log_info "CloudPanel CLI niet beschikbaar - SSL al geconfigureerd via certbot"
-        return 0
-    fi
-    
-    # Probeer SSL via CloudPanel aan te vragen
-    log_info "SSL certificaat aanvragen via CloudPanel..."
-    clpctl lets-encrypt:install:certificate --domainName="$DOMAIN" 2>/dev/null || {
-        log_info "SSL via CloudPanel niet gelukt - certificaat is al geconfigureerd via certbot"
-    }
-    
-    log_success "SSL configuratie voltooid"
-}
-
-# =============================================================================
-# BEHEER SCRIPTS INSTALLEREN
+# STAP 12: BEHEER SCRIPTS INSTALLEREN
 # =============================================================================
 install_management_scripts() {
-    log_info "Beheer scripts installeren..."
+    log_step "STAP 12/12: Beheer scripts installeren..."
     
     # facturatie command
     cat > /usr/local/bin/facturatie << 'CMDEOF'
 #!/bin/bash
 
-APP_DIR="/home/clp/htdocs/DOMAIN_PLACEHOLDER"
+APP_DIR="APP_DIR_PLACEHOLDER"
 DB_NAME="facturatie_db"
 
 case "$1" in
@@ -806,7 +754,7 @@ case "$1" in
         ;;
     ssl-renew)
         echo "SSL certificaat vernieuwen..."
-        certbot renew --quiet
+        /snap/bin/certbot renew --quiet
         systemctl reload nginx
         echo "✓ Klaar!"
         ;;
@@ -835,7 +783,7 @@ case "$1" in
 esac
 CMDEOF
     
-    sed -i "s/DOMAIN_PLACEHOLDER/$DOMAIN/g" /usr/local/bin/facturatie
+    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" /usr/local/bin/facturatie
     chmod +x /usr/local/bin/facturatie
     
     log_success "Beheer command geïnstalleerd: facturatie"
@@ -871,7 +819,7 @@ Database:
   Wachtwoord:      $DB_PASSWORD
   
 MongoDB URL:
-  mongodb://facturatie_user:$DB_PASSWORD@localhost:27017/$MONGO_DB_NAME?authSource=$MONGO_DB_NAME
+  mongodb://localhost:27017/$MONGO_DB_NAME
 
 JWT Secret:
   $JWT_SECRET
@@ -890,6 +838,7 @@ Beheer Commands:
   facturatie backup     - Database backup
   facturatie update     - Applicatie updaten
   facturatie ssl-renew  - SSL vernieuwen
+  facturatie demo       - Demo account aanmaken
 
 ⚠ BEWAAR DEZE GEGEVENS VEILIG EN VERWIJDER DIT BESTAND DAARNA!
 
@@ -918,40 +867,15 @@ EOF
     echo "  E-mail:          demo@facturatie.sr"
     echo "  Wachtwoord:      demo2024"
     echo ""
-    echo -e "${BOLD}Database:${NC}"
-    echo "  Database:        $MONGO_DB_NAME"
-    echo "  Wachtwoord:      $DB_PASSWORD"
-    echo ""
     echo -e "${BOLD}Beheer:${NC}"
     echo "  facturatie status   - Service status bekijken"
     echo "  facturatie restart  - Services herstarten"
     echo "  facturatie logs     - Logs bekijken"
     echo "  facturatie backup   - Database backup maken"
     echo ""
-    echo -e "${YELLOW}CREDENTIALS:${NC}"
-    echo "  Opgeslagen in: $APP_DIR/CREDENTIALS.txt"
+    echo -e "${YELLOW}CREDENTIALS opgeslagen in:${NC}"
+    echo "  $APP_DIR/CREDENTIALS.txt"
     echo ""
-    
-    if [ ! -f "$APP_DIR/backend/server.py" ]; then
-        echo -e "${YELLOW}VOLGENDE STAPPEN:${NC}"
-        echo ""
-        echo "  1. Upload applicatie bestanden naar:"
-        echo "     Backend:  $APP_DIR/backend/"
-        echo "     Frontend: $APP_DIR/frontend/"
-        echo ""
-        echo "  2. Installeer backend dependencies:"
-        echo "     cd $APP_DIR/backend"
-        echo "     source venv/bin/activate"
-        echo "     pip install -r requirements.txt"
-        echo ""
-        echo "  3. Bouw frontend:"
-        echo "     cd $APP_DIR/frontend"
-        echo "     yarn install && yarn build"
-        echo ""
-        echo "  4. Start services:"
-        echo "     facturatie restart"
-        echo ""
-    fi
 }
 
 # =============================================================================
@@ -961,18 +885,17 @@ main() {
     check_root
     get_configuration
     
-    create_cloudpanel_site
     prepare_system
     install_nodejs
     install_python
     install_mongodb
-    prepare_app_directory
+    create_cloudpanel_site
+    download_code
     configure_backend
     configure_frontend
     setup_ssl
     configure_nginx
     configure_services
-    setup_cloudpanel_ssl
     install_management_scripts
     show_completion
 }
