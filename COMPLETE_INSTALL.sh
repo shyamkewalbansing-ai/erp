@@ -110,8 +110,12 @@ get_configuration() {
     # JWT Secret
     JWT_SECRET=$(openssl rand -hex 32)
     
-    # GitHub URL (optioneel)
-    read -p "$(echo -e ${CYAN}GitHub repo URL ${NC}[leeg = handmatig uploaden]: )" GITHUB_REPO
+    # GitHub URL
+    GITHUB_REPO_DEFAULT="https://github.com/shyamkewalbansing-ai/erp.git"
+    read -p "$(echo -e ${CYAN}GitHub repo URL ${NC}[$GITHUB_REPO_DEFAULT]: )" GITHUB_REPO
+    if [ -z "$GITHUB_REPO" ]; then
+        GITHUB_REPO="$GITHUB_REPO_DEFAULT"
+    fi
     
     # Directories
     APP_DIR="/home/clp/htdocs/$DOMAIN"
