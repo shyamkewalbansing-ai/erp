@@ -204,9 +204,9 @@ async def setup_demo():
     print(f"   Password: {demo_password}")
     print(f"   Geactiveerde modules: GEEN")
     print(f"   ")
-    print(f"   Klanten kunnen zelf modules activeren:")
-    print(f"   - 3 dagen GRATIS testen")
-    print(f"   - Daarna betalen")
+    print(f"   Module prijzen:")
+    print(f"   - Boekhouding: GRATIS (max 5 klanten, 5 facturen)")
+    print(f"   - Overige: 3 dagen gratis, daarna betalen")
     print("=" * 50)
     
     client.close()
