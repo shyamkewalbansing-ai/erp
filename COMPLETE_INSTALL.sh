@@ -914,6 +914,17 @@ EOF
     echo -e "${YELLOW}CREDENTIALS opgeslagen in:${NC}"
     echo "  $APP_DIR/CREDENTIALS.txt"
     echo ""
+    echo -e "${BOLD}GitHub Webhook (Automatische Updates):${NC}"
+    echo "  URL:     https://$DOMAIN/api/webhook/github"
+    echo "  Secret:  (zie .env bestand)"
+    echo ""
+    echo "  Configureer in GitHub:"
+    echo "  1. Ga naar: https://github.com/JOUW-REPO/settings/hooks"
+    echo "  2. Add webhook"
+    echo "  3. Payload URL: https://$DOMAIN/api/webhook/github"
+    echo "  4. Content type: application/json"
+    echo "  5. Secret: (kopieer GITHUB_WEBHOOK_SECRET uit .env)"
+    echo ""
 }
 
 # =============================================================================
