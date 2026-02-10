@@ -151,7 +151,8 @@ const MODULE_UI_DATA = {
     shadowColor: 'shadow-emerald-200',
     detailSlug: 'boekhouding',
     image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80',
-    isFree: true,
+    isFree: false,
+    trialDays: 3,
     features: [
       'Multi-valuta: SRD, USD, EUR',
       'BTW-tarieven: 0%, 10%, 25%',
