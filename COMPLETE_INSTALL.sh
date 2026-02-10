@@ -740,6 +740,7 @@ case "$1" in
         echo "  backup     - Maak database backup"
         echo "  update     - Update applicatie van Git"
         echo "  ssl-renew  - Vernieuw SSL certificaat"
+        echo "  demo       - Maak/reset demo account"
         ;;
 esac
 CMDEOF
