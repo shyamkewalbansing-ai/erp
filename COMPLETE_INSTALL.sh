@@ -366,6 +366,10 @@ PORT=$BACKEND_PORT
 # Security
 JWT_SECRET=$JWT_SECRET
 
+# GitHub Webhook (voor automatische updates)
+GITHUB_WEBHOOK_SECRET=webhook_secret_$(openssl rand -hex 16)
+DEPLOY_SCRIPT=$APP_DIR/webhook-deploy.sh
+
 # Admin Account
 ADMIN_EMAIL=admin@$DOMAIN
 ADMIN_PASSWORD=$ADMIN_PASSWORD
