@@ -274,6 +274,53 @@ const MODULES_DETAIL = {
       }
     ]
   },
+  'suribet': {
+    id: 'suribet',
+    name: 'Suribet Retailer',
+    title: 'Suribet Retailer Management',
+    subtitle: 'Complete administratie voor Suribet verkooppunten',
+    description: 'Beheer uw Suribet retailer vestiging met dagelijkse rapporten, kasboek, werknemers en loonuitbetalingen. Speciaal ontworpen voor Surinaamse Suribet retailers.',
+    icon: Receipt,
+    gradient: 'from-green-500 to-emerald-600',
+    lightGradient: 'from-green-50 to-emerald-50',
+    accentColor: 'green',
+    category: 'Retail',
+    price: 'SRD 2.000',
+    priceAmount: 2000,
+    priceNote: 'per maand',
+    heroImage: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&q=80',
+    highlights: ['Dagstaten', 'Kasboek', 'Werknemers', 'Loonuitbetalingen'],
+    sections: [
+      {
+        title: 'Dagstaten & Rapporten',
+        description: 'Dagelijkse financiële overzichten per machine.',
+        icon: BarChart3,
+        features: ['Dagelijkse dagstaten per machine', 'Verkoop en uitbetalingen tracking', 'Commissie berekeningen', 'Maandelijkse totaaloverzichten', 'Export naar PDF/Excel'],
+        image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80'
+      },
+      {
+        title: 'Kasboek Administratie',
+        description: 'Volledige kas- en banktransacties bijhouden.',
+        icon: Receipt,
+        features: ['Dagelijkse kas inkomsten/uitgaven', 'Bankoverschrijvingen', 'Automatische saldo berekening', 'Kascontrole ondersteuning', 'Categorieën en beschrijvingen'],
+        image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80'
+      },
+      {
+        title: 'Werknemersbeheer',
+        description: 'Beheer uw winkelpersoneel.',
+        icon: Users,
+        features: ['Werknemerprofielen', 'Contactgegevens', 'Salaris informatie', 'Werknemer portaal', 'Documentenbeheer'],
+        image: 'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&q=80'
+      },
+      {
+        title: 'Loonuitbetalingen',
+        description: 'Automatische loonberekening en uitbetaling.',
+        icon: DollarSign,
+        features: ['Maandelijkse loonberekening', 'Loonstrook generatie (PDF)', 'Voorschotten beheren', 'Uitbetalingshistorie', 'Bulk uitbetalingen'],
+        image: 'https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&q=80'
+      }
+    ]
+  },
   'ai-chatbot': {
     id: 'ai-chatbot',
     name: 'AI Chatbot',
