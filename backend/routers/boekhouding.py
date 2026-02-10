@@ -860,6 +860,19 @@ async def get_verkoopfacturen(
 async def create_verkoopfactuur(data: VerkoopfactuurCreate, current_user: dict = Depends(get_current_active_user)):
     user_id = current_user["id"]
     
+    # Check free tier limits
+    user_addon = await db.user_addons.find_one({"user_id": user_id, "addon_slug": "boekhouding"}, {"_id": 0})
+    is_paid = user_addon and user_addon.get("is_paid", False)
+    
+    if not is_paid:
+        # Free tier - check limits (max 5 facturen)
+        factuur_count = await db.boekhouding_verkoopfacturen.count_documents({"user_id": user_id})
+        if factuur_count >= 5:
+            raise HTTPException(
+                status_code=403, 
+                detail="Gratis limiet bereikt: maximaal 5 facturen. Upgrade naar betaald voor onbeperkt."
+            )
+    
     debiteur = await db.boekhouding_debiteuren.find_one({"id": data.debiteur_id, "user_id": user_id}, {"_id": 0})
     if not debiteur:
         raise HTTPException(status_code=404, detail="Debiteur niet gevonden")
