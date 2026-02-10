@@ -326,14 +326,16 @@ configure_backend() {
     
     cd $APP_DIR/backend
     
-    # Create virtual environment
-    python3 -m venv venv
+    # Create virtual environment met Python 3.11
+    python3.11 -m venv venv
     source venv/bin/activate
+    
+    # Upgrade pip
+    pip install --upgrade pip -q
     
     # Install dependencies if requirements.txt exists
     if [ -f "requirements.txt" ]; then
-        pip install --upgrade pip -q
-        pip install -r requirements.txt -q
+        pip install -r requirements.txt -q 2>&1 | grep -v "WARNING\|DEPRECATION" || true
     fi
     
     # Create .env file
