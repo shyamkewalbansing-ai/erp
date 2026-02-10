@@ -725,6 +725,8 @@ const getSlugVariants = (s) => {
   if (s === 'autodealer') variants.push('auto-dealer');
   // Convert aichatbot -> ai-chatbot
   if (s === 'aichatbot') variants.push('ai-chatbot');
+  // Convert suribet_retailer or suribet-retailer -> suribet
+  if (s === 'suribet_retailer' || s === 'suribet-retailer') variants.push('suribet');
   // Convert with hyphens
   if (s.includes('-')) variants.push(s.replace(/-/g, '_'));
   // Convert with underscores
