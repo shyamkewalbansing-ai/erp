@@ -145,48 +145,57 @@ async def setup_demo():
     result = await db.user_addons.delete_many({"user_id": user_id})
     print(f"  ✓ Removed {result.deleted_count} activated modules")
     
-    # Ensure all modules exist in addons collection - ALLEMAAL BETAALD
-    print("\n--- Ensuring all modules exist (alle betaald, 3 dagen trial) ---")
+    # Ensure all modules exist in addons collection
+    print("\n--- Ensuring all modules exist ---")
     for module in ALL_MODULES:
         existing = await db.addons.find_one({"slug": module["slug"]})
+        addon_data = {
+            "name": module["name"],
+            "slug": module["slug"],
+            "description": module["description"],
+            "price": module["price"],
+            "is_active": True,
+            "is_free": module.get("is_free", False),
+            "trial_days": module.get("trial_days", 3),
+            "category": module["category"],
+        }
+        
+        # Voeg free_limits toe voor boekhouding
+        if module.get("free_limits"):
+            addon_data["free_limits"] = module["free_limits"]
+        
         if not existing:
-            addon_doc = {
-                "id": str(uuid.uuid4()),
-                "name": module["name"],
-                "slug": module["slug"],
-                "description": module["description"],
-                "price": module["price"],
-                "is_active": True,
-                "is_free": False,
-                "trial_days": 3,
-                "category": module["category"],
-                "created_at": now.isoformat()
-            }
-            await db.addons.insert_one(addon_doc)
-            print(f"  ✓ Created addon: {module['name']} (SRD {module['price']}/maand, 3 dagen gratis)")
+            addon_data["id"] = str(uuid.uuid4())
+            addon_data["created_at"] = now.isoformat()
+            await db.addons.insert_one(addon_data)
+            if module.get("is_free"):
+                print(f"  ✓ Created addon: {module['name']} (GRATIS met limieten)")
+            else:
+                print(f"  ✓ Created addon: {module['name']} (SRD {module['price']}/maand, 3 dagen gratis)")
         else:
-            # Update addon - NIET meer gratis, 3 dagen trial
             await db.addons.update_one(
                 {"slug": module["slug"]},
-                {"$set": {
-                    "is_active": True,
-                    "is_free": False,
-                    "trial_days": 3,
-                    "price": module["price"]
-                }}
+                {"$set": addon_data}
             )
-            print(f"  ✓ Updated addon: {module['name']} (SRD {module['price']}/maand, 3 dagen gratis)")
+            if module.get("is_free"):
+                print(f"  ✓ Updated addon: {module['name']} (GRATIS met limieten)")
+            else:
+                print(f"  ✓ Updated addon: {module['name']} (SRD {module['price']}/maand, 3 dagen gratis)")
     
-    # Update boekhouding specifically - NIET meer gratis
+    # Update boekhouding specifically - GRATIS met limieten
     await db.addons.update_one(
         {"slug": "boekhouding"},
         {"$set": {
-            "is_free": False,
-            "trial_days": 3,
-            "price": 500.0
+            "is_free": True,
+            "trial_days": 0,
+            "price": 500.0,
+            "free_limits": {
+                "max_customers": 5,
+                "max_invoices": 5
+            }
         }}
     )
-    print("\n✓ Boekhouding is nu BETAALD (SRD 500/maand, 3 dagen gratis trial)")
+    print("\n✓ Boekhouding is GRATIS (max 5 klanten, 5 facturen - daarna upgraden)")
     
     print("\n" + "=" * 50)
     print("✅ DEMO ACCOUNT SETUP COMPLETE!")
