@@ -23,7 +23,8 @@ import {
   CheckCircle,
   Scissors,
   Fuel,
-  Gift
+  Gift,
+  Receipt
 } from 'lucide-react';
 import api from '../lib/api';
 import PublicNav from '../components/PublicNav';
