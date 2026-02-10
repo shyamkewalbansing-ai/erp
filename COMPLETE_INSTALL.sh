@@ -208,8 +208,13 @@ prepare_system() {
     apt-get install -y -qq \
         curl wget git build-essential \
         software-properties-common unzip \
-        supervisor certbot python3-certbot-nginx \
-        gnupg ca-certificates > /dev/null 2>&1
+        supervisor \
+        gnupg ca-certificates snapd > /dev/null 2>&1
+    
+    # Installeer certbot via snap (voorkomt Python conflicten)
+    log_info "Certbot installeren via snap..."
+    snap install --classic certbot > /dev/null 2>&1 || true
+    ln -sf /snap/bin/certbot /usr/bin/certbot 2>/dev/null || true
     
     log_success "Systeem pakketten geïnstalleerd"
 }
