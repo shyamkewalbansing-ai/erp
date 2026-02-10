@@ -234,7 +234,7 @@ install_nodejs() {
 # STAP 3: PYTHON INSTALLEREN
 # =============================================================================
 install_python() {
-    log_step "STAP 3/10: Python installeren..."
+    log_step "STAP 3/11: Python installeren..."
     
     apt-get install -y -qq \
         python3 python3-pip python3-venv \
