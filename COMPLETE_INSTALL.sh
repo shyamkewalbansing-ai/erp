@@ -218,7 +218,7 @@ prepare_system() {
 # STAP 2: NODE.JS 20 INSTALLEREN
 # =============================================================================
 install_nodejs() {
-    log_step "STAP 2/10: Node.js 20 installeren..."
+    log_step "STAP 2/11: Node.js 20 installeren..."
     
     if ! command -v node &> /dev/null || [[ $(node -v | cut -d'.' -f1 | sed 's/v//') -lt 20 ]]; then
         curl -fsSL https://deb.nodesource.com/setup_20.x | bash - > /dev/null 2>&1
