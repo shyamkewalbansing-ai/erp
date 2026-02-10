@@ -9,10 +9,10 @@ Deze applicatie ondersteunt twee modi:
 ## Huidige Setup (Development/Preview)
 
 ```
-https://receipt-scan-14.preview.emergentagent.com/           → Landing page
-https://receipt-scan-14.preview.emergentagent.com/login      → Login
-https://receipt-scan-14.preview.emergentagent.com/app/       → Ingelogde applicatie
-https://receipt-scan-14.preview.emergentagent.com/booking/   → Publieke booking portals
+https://workspace-config-1.preview.emergentagent.com/           → Landing page
+https://workspace-config-1.preview.emergentagent.com/login      → Login
+https://workspace-config-1.preview.emergentagent.com/app/       → Ingelogde applicatie
+https://workspace-config-1.preview.emergentagent.com/booking/   → Publieke booking portals
 ```
 
 ## Productie Setup (Subdomain Mode)
