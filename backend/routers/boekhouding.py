@@ -678,6 +678,23 @@ async def get_debiteuren(current_user: dict = Depends(get_current_active_user)):
 @router.post("/debiteuren", response_model=DebiteurResponse)
 async def create_debiteur(data: DebiteurCreate, current_user: dict = Depends(get_current_active_user)):
     user_id = current_user["id"]
+    
+    # Check free tier limits
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    user_addon = await db.user_addons.find_one({"user_id": user_id, "addon_slug": "boekhouding"}, {"_id": 0})
+    
+    # Check if user has paid boekhouding or is on free tier
+    is_paid = user_addon and user_addon.get("is_paid", False)
+    
+    if not is_paid:
+        # Free tier - check limits (max 5 debiteuren/klanten)
+        debiteur_count = await db.boekhouding_debiteuren.count_documents({"user_id": user_id})
+        if debiteur_count >= 5:
+            raise HTTPException(
+                status_code=403, 
+                detail="Gratis limiet bereikt: maximaal 5 klanten. Upgrade naar betaald voor onbeperkt."
+            )
+    
     debiteur_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     
