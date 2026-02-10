@@ -770,6 +770,10 @@ Admin Login:
   E-mail:          admin@$DOMAIN
   Wachtwoord:      $ADMIN_PASSWORD
 
+Demo Login:
+  E-mail:          demo@facturatie.sr
+  Wachtwoord:      demo2024
+
 Database:
   Host:            localhost
   Database:        $MONGO_DB_NAME
