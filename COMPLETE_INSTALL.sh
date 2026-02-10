@@ -202,7 +202,7 @@ create_cloudpanel_site() {
 # STAP 1: SYSTEEM VOORBEREIDEN
 # =============================================================================
 prepare_system() {
-    log_step "STAP 1/10: Systeem voorbereiden..."
+    log_step "STAP 1/11: Systeem voorbereiden..."
     
     apt-get update -qq
     apt-get install -y -qq \
