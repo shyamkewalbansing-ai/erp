@@ -247,7 +247,7 @@ install_python() {
 # STAP 4: MONGODB 7.0 INSTALLEREN
 # =============================================================================
 install_mongodb() {
-    log_step "STAP 4/10: MongoDB 7.0 installeren..."
+    log_step "STAP 4/11: MongoDB 7.0 installeren..."
     
     if ! command -v mongod &> /dev/null; then
         # Import GPG key
