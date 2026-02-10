@@ -387,6 +387,40 @@ EOF
     deactivate
     
     log_success "Backend geconfigureerd"
+    
+    # Create webhook deploy script
+    cat > $APP_DIR/webhook-deploy.sh << 'DEPLOYEOF'
+#!/bin/bash
+APP_DIR="APP_DIR_PLACEHOLDER"
+LOG_FILE="$APP_DIR/logs/deploy.log"
+LOCK_FILE="/tmp/facturatie-deploy.lock"
+
+if [ -f "$LOCK_FILE" ]; then
+    echo "$(date): Deploy already running" >> $LOG_FILE
+    exit 0
+fi
+touch $LOCK_FILE
+
+echo "$(date): Starting auto-deploy..." >> $LOG_FILE
+cd $APP_DIR
+git pull origin main >> $LOG_FILE 2>&1
+
+cd $APP_DIR/backend
+source venv/bin/activate
+pip install -r requirements.txt -q >> $LOG_FILE 2>&1
+deactivate
+
+cd $APP_DIR/frontend
+yarn install --silent >> $LOG_FILE 2>&1
+yarn build --silent >> $LOG_FILE 2>&1
+
+supervisorctl restart all >> $LOG_FILE 2>&1
+rm -f $LOCK_FILE
+echo "$(date): Deploy completed!" >> $LOG_FILE
+DEPLOYEOF
+    
+    sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" $APP_DIR/webhook-deploy.sh
+    chmod +x $APP_DIR/webhook-deploy.sh
 }
 
 # =============================================================================
