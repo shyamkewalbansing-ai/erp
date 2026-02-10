@@ -1,12 +1,15 @@
 # 🚀 FACTURATIE ERP - COMPLETE CLOUDPANEL INSTALLER
 
-## ✅ Nieuw: Één Script voor Alles!
+## ✅ Één Script voor Alles!
 
-In plaats van al die losse scripts heb je nu **één compleet install script** dat alles automatisch doet:
+**Geen losse scripts meer!** Nu heb je **één compleet install script** dat alles automatisch doet:
 
 ```bash
+chmod +x COMPLETE_INSTALL.sh
 sudo ./COMPLETE_INSTALL.sh
 ```
+
+**Standaard GitHub repo:** `https://github.com/shyamkewalbansing-ai/erp.git`
 
 ---
 
