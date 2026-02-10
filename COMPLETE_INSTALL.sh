@@ -958,6 +958,7 @@ main() {
     setup_ssl
     configure_nginx
     configure_services
+    setup_cloudpanel_ssl
     install_management_scripts
     show_completion
 }
