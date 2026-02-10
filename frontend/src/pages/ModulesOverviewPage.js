@@ -349,11 +349,18 @@ export default function ModulesOverviewPage() {
                       )}
                       
                       {/* Free Badge */}
-                      {(addon.price === 0 || addon.is_free || moduleUI.isFree) && (
+                      {(addon.price === 0 || addon.is_free || moduleUI.isFree) ? (
                         <div className="absolute top-4 left-4">
                           <Badge className="bg-emerald-500 text-white border-0 shadow-lg px-3 py-1">
                             <Gift className="w-3 h-3 mr-1" />
                             GRATIS
+                          </Badge>
+                        </div>
+                      ) : (
+                        <div className="absolute top-4 left-4">
+                          <Badge className="bg-blue-500 text-white border-0 shadow-lg px-3 py-1">
+                            <Clock className="w-3 h-3 mr-1" />
+                            3 dagen gratis
                           </Badge>
                         </div>
                       )}
