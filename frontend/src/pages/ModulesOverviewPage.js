@@ -158,6 +158,20 @@ const MODULE_UI_DATA = {
       'Balans & Resultatenrekening'
     ]
   },
+  'suribet': {
+    icon: Receipt,
+    gradient: 'from-green-500 to-emerald-600',
+    lightBg: 'from-green-50 to-emerald-50',
+    shadowColor: 'shadow-green-200',
+    detailSlug: 'suribet',
+    image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80',
+    features: [
+      'Dagstaten per machine',
+      'Kasboek administratie',
+      'Werknemersbeheer',
+      'Loonuitbetalingen'
+    ]
+  },
   'multi-tenant': {
     icon: Shield,
     gradient: 'from-slate-500 to-slate-700',
