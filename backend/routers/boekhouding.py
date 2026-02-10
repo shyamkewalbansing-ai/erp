@@ -13,6 +13,44 @@ from .deps import db, get_current_active_user, get_current_user
 
 router = APIRouter(prefix="/boekhouding", tags=["Boekhouding"])
 
+# ==================== FREE TIER LIMITS ====================
+
+FREE_TIER_LIMITS = {
+    "max_customers": 5,
+    "max_invoices": 5
+}
+
+@router.get("/limits")
+async def get_boekhouding_limits(current_user: dict = Depends(get_current_active_user)):
+    """Get current usage and limits for boekhouding module"""
+    user_id = current_user["id"]
+    
+    # Check if user has paid version
+    user_addon = await db.user_addons.find_one({"user_id": user_id, "addon_slug": "boekhouding"}, {"_id": 0})
+    is_paid = user_addon and user_addon.get("is_paid", False)
+    
+    # Count current usage
+    customer_count = await db.boekhouding_debiteuren.count_documents({"user_id": user_id})
+    invoice_count = await db.boekhouding_verkoopfacturen.count_documents({"user_id": user_id})
+    
+    return {
+        "is_paid": is_paid,
+        "limits": {
+            "customers": {
+                "used": customer_count,
+                "max": None if is_paid else FREE_TIER_LIMITS["max_customers"],
+                "remaining": None if is_paid else max(0, FREE_TIER_LIMITS["max_customers"] - customer_count)
+            },
+            "invoices": {
+                "used": invoice_count,
+                "max": None if is_paid else FREE_TIER_LIMITS["max_invoices"],
+                "remaining": None if is_paid else max(0, FREE_TIER_LIMITS["max_invoices"] - invoice_count)
+            }
+        },
+        "upgrade_price": 500.0,
+        "upgrade_currency": "SRD"
+    }
+
 # ==================== ENUMS ====================
 
 class Currency(str, Enum):
