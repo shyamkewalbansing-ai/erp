@@ -14984,6 +14984,50 @@ api_router.include_router(pompstation_router)
 api_router.include_router(boekhouding_router)
 api_router.include_router(suribet_router)
 
+# =============================================================================
+# GITHUB WEBHOOK AUTO-DEPLOY
+# =============================================================================
+import subprocess
+import hmac
+import hashlib
+
+WEBHOOK_SECRET = os.environ.get('GITHUB_WEBHOOK_SECRET', 'your-webhook-secret-here')
+DEPLOY_SCRIPT = os.environ.get('DEPLOY_SCRIPT', '/home/facturatie/htdocs/facturatie.sr/webhook-deploy.sh')
+
+def verify_github_signature(payload: bytes, signature: str) -> bool:
+    """Verify GitHub webhook signature"""
+    if not signature or WEBHOOK_SECRET == 'your-webhook-secret-here':
+        return True  # Skip verification if no secret configured
+    expected = 'sha256=' + hmac.new(WEBHOOK_SECRET.encode(), payload, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, signature)
+
+def run_deploy_script():
+    """Run the deploy script in background"""
+    try:
+        subprocess.Popen(['bash', DEPLOY_SCRIPT], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except Exception as e:
+        logger.error(f"Deploy script error: {e}")
+
+@api_router.post("/webhook/github")
+async def github_webhook(request: Request, background_tasks: BackgroundTasks):
+    """GitHub Webhook endpoint for auto-deploy"""
+    signature = request.headers.get('X-Hub-Signature-256', '')
+    payload = await request.body()
+    
+    if not verify_github_signature(payload, signature):
+        raise HTTPException(status_code=401, detail="Invalid signature")
+    
+    event = request.headers.get('X-GitHub-Event', '')
+    
+    if event == 'push':
+        background_tasks.add_task(run_deploy_script)
+        logger.info("GitHub push received - starting auto-deploy")
+        return {"status": "ok", "message": "Deploy started"}
+    elif event == 'ping':
+        return {"status": "ok", "message": "Pong!"}
+    
+    return {"status": "ok", "message": f"Event {event} ignored"}
+
 # Include the router in the main app
 app.include_router(api_router)
 
