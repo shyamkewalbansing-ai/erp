@@ -631,6 +631,19 @@ EOF
     if [ -f "$APP_DIR/backend/server.py" ]; then
         supervisorctl restart all > /dev/null 2>&1
         log_success "Backend en frontend services gestart"
+        
+        # Wait for backend to start
+        sleep 5
+        
+        # Setup demo account
+        if [ -f "$APP_DIR/setup_demo_account.py" ]; then
+            log_info "Demo account aanmaken..."
+            cd $APP_DIR/backend
+            source venv/bin/activate
+            python3 $APP_DIR/setup_demo_account.py > /dev/null 2>&1 || true
+            deactivate
+            log_success "Demo account aangemaakt (demo@facturatie.sr / demo2024)"
+        fi
     else
         log_warning "server.py niet gevonden - upload eerst de applicatie bestanden"
     fi
