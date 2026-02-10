@@ -285,7 +285,7 @@ install_mongodb() {
 # STAP 5: APP DIRECTORY VOORBEREIDEN
 # =============================================================================
 prepare_app_directory() {
-    log_step "STAP 5/10: App directory voorbereiden..."
+    log_step "STAP 5/11: App directory voorbereiden..."
     
     mkdir -p $APP_DIR/{backend,frontend,logs,backups}
     mkdir -p /var/www/certbot/.well-known/acme-challenge
@@ -315,7 +315,7 @@ prepare_app_directory() {
 # STAP 6: BACKEND CONFIGUREREN
 # =============================================================================
 configure_backend() {
-    log_step "STAP 6/10: Backend configureren..."
+    log_step "STAP 6/11: Backend configureren..."
     
     cd $APP_DIR/backend
     
@@ -377,7 +377,7 @@ EOF
 # STAP 7: FRONTEND CONFIGUREREN
 # =============================================================================
 configure_frontend() {
-    log_step "STAP 7/10: Frontend configureren..."
+    log_step "STAP 7/11: Frontend configureren..."
     
     cd $APP_DIR/frontend
     
@@ -412,7 +412,7 @@ EOF
 # STAP 8: SSL CERTIFICATEN
 # =============================================================================
 setup_ssl() {
-    log_step "STAP 8/10: SSL certificaten aanvragen..."
+    log_step "STAP 8/11: SSL certificaten aanvragen..."
     
     # Stop nginx if running
     systemctl stop nginx 2>/dev/null || true
@@ -451,7 +451,7 @@ setup_ssl() {
 # STAP 9: NGINX CONFIGUREREN
 # =============================================================================
 configure_nginx() {
-    log_step "STAP 9/10: Nginx configureren..."
+    log_step "STAP 9/11: Nginx configureren..."
     
     # Remove old configurations
     rm -f /etc/nginx/sites-enabled/$DOMAIN*
@@ -651,7 +651,7 @@ NGINXEOF
 # STAP 10: SUPERVISOR EN CRON JOBS
 # =============================================================================
 configure_services() {
-    log_step "STAP 10/10: Services en cron jobs configureren..."
+    log_step "STAP 10/11: Services en cron jobs configureren..."
     
     # Backend supervisor service
     cat > /etc/supervisor/conf.d/facturatie-backend.conf << EOF
