@@ -17,7 +17,7 @@ load_dotenv('.env')
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
-# All available modules - allemaal BETAALD (3 dagen gratis trial)
+# All available modules - met gratis limieten en betaalde versies
 ALL_MODULES = [
     {
         "name": "Boekhouding",
@@ -25,8 +25,12 @@ ALL_MODULES = [
         "description": "Complete boekhouding met multi-valuta (SRD, EUR, USD) en BTW.",
         "price": 500.0,
         "category": "financieel",
-        "is_free": False,
-        "trial_days": 3
+        "is_free": True,
+        "trial_days": 0,
+        "free_limits": {
+            "max_customers": 5,
+            "max_invoices": 5
+        }
     },
     {
         "name": "Vastgoed Beheer",
