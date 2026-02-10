@@ -715,6 +715,27 @@ EOF
 }
 
 # =============================================================================
+# STAP 11: SSL VIA CLOUDPANEL (OPTIONEEL)
+# =============================================================================
+setup_cloudpanel_ssl() {
+    log_step "STAP 11/11: SSL certificaat via CloudPanel..."
+    
+    # Check of clpctl beschikbaar is
+    if ! command -v clpctl &> /dev/null; then
+        log_info "CloudPanel CLI niet beschikbaar - SSL al geconfigureerd via certbot"
+        return 0
+    fi
+    
+    # Probeer SSL via CloudPanel aan te vragen
+    log_info "SSL certificaat aanvragen via CloudPanel..."
+    clpctl lets-encrypt:install:certificate --domainName="$DOMAIN" 2>/dev/null || {
+        log_info "SSL via CloudPanel niet gelukt - certificaat is al geconfigureerd via certbot"
+    }
+    
+    log_success "SSL configuratie voltooid"
+}
+
+# =============================================================================
 # BEHEER SCRIPTS INSTALLEREN
 # =============================================================================
 install_management_scripts() {
