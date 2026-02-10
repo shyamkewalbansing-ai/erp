@@ -926,6 +926,7 @@ main() {
     check_root
     get_configuration
     
+    create_cloudpanel_site
     prepare_system
     install_nodejs
     install_python
