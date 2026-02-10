@@ -720,6 +720,14 @@ case "$1" in
         systemctl reload nginx
         echo "✓ Klaar!"
         ;;
+    demo)
+        echo "Demo account aanmaken/resetten..."
+        cd $APP_DIR/backend
+        source venv/bin/activate
+        python3 $APP_DIR/setup_demo_account.py
+        deactivate
+        echo "✓ Demo account klaar!"
+        ;;
     *)
         echo "Facturatie ERP Beheer"
         echo ""
