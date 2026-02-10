@@ -136,35 +136,14 @@ Het script configureert automatisch:
 
 ---
 
-## ❌ Oude Scripts (Kunnen Verwijderd Worden)
+## 📁 Beschikbare Scripts
 
-Na gebruik van `COMPLETE_INSTALL.sh` zijn deze oude scripts niet meer nodig:
-
-```bash
-# Deze kunnen weg:
-rm -f /app/fix-nginx.sh
-rm -f /app/fix-nginx-ssl.sh
-rm -f /app/install-cloudpanel.sh
-rm -f /app/install-cloudpanel-v2.sh
-rm -f /app/auto-install.sh
-rm -f /app/auto_domain_setup.sh
-rm -f /app/setup_all_workspaces.sh
-rm -f /app/setup_workspace_subdomain.sh
-rm -f /app/nginx-subdomain.conf.template
-rm -f /app/CLOUDPANEL_INSTALL.sh
-rm -f /app/install.sh
-rm -f /app/update.sh
-rm -f /app/quick-update.sh
-rm -f /app/setup-cron.sh
-rm -f /app/deploy.sh
-rm -rf /app/deploy/
-rm -rf /app/scripts/
-```
-
-**Behoud alleen:**
-- `COMPLETE_INSTALL.sh` - Nieuwe complete installer
-- `BACKUP.sh` - Uitgebreide backup (optioneel)
-- `RESTORE.sh` - Restore functie (optioneel)
+| Script | Beschrijving |
+|--------|-------------|
+| `COMPLETE_INSTALL.sh` | **Hoofdscript** - Complete installatie |
+| `BACKUP.sh` | Database + bestanden backup |
+| `RESTORE.sh` | Backup terugzetten |
+| `UPDATE.sh` | Applicatie updaten |
 
 ---
 
