@@ -6,8 +6,6 @@
 # Locatie: /home/facturatie/htdocs/facturatie.sr/webhook-deploy.sh
 # =============================================================================
 
-set -e
-
 # Configuratie
 APP_DIR="/home/facturatie/htdocs/facturatie.sr"
 LOG_FILE="$APP_DIR/logs/deploy.log"
@@ -15,8 +13,9 @@ LOCK_FILE="/tmp/facturatie-deploy.lock"
 SERVER_IP="72.62.174.80"
 GITHUB_BRANCH="main"
 
-# Maak logs directory aan
+# Maak logs directory aan EERST
 mkdir -p "$APP_DIR/logs"
+touch "$LOG_FILE"
 
 # Fix git safe directory
 git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
@@ -54,8 +53,11 @@ git fetch origin --prune >> $LOG_FILE 2>&1
 # Reset lokale wijzigingen en sync met remote (verwijdert oude code)
 git reset --hard origin/$GITHUB_BRANCH >> $LOG_FILE 2>&1
 
-# Verwijder ongetrackte bestanden en directories (oude code)
-git clean -fd >> $LOG_FILE 2>&1
+# Verwijder ongetrackte bestanden BEHALVE logs en .env files
+git clean -fd -e logs -e "*.env" -e ".env*" >> $LOG_FILE 2>&1
+
+# Maak logs directory opnieuw aan (voor het geval git clean het verwijderde)
+mkdir -p "$APP_DIR/logs"
 
 # Log huidige commit
 CURRENT_COMMIT=$(git rev-parse --short HEAD)
