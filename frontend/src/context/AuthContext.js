@@ -69,6 +69,7 @@ const hexToHSL = (hex) => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [brandingLoading, setBrandingLoading] = useState(true);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [workspace, setWorkspace] = useState(null);
   const [branding, setBranding] = useState(DEFAULT_BRANDING);
@@ -76,7 +77,10 @@ export const AuthProvider = ({ children }) => {
 
   // Fetch public branding for tenant subdomains/custom domains (no auth required)
   const fetchPublicBranding = useCallback(async () => {
-    if (!tenantIdentifier) return;
+    if (!tenantIdentifier) {
+      setBrandingLoading(false);
+      return;
+    }
     
     try {
       const response = await axios.get(`${API_URL}/workspace/branding-public/${tenantIdentifier}`);
@@ -94,6 +98,8 @@ export const AuthProvider = ({ children }) => {
       });
     } catch (error) {
       console.error('Failed to fetch public branding:', error);
+    } finally {
+      setBrandingLoading(false);
     }
   }, [tenantIdentifier]);
 
@@ -124,10 +130,8 @@ export const AuthProvider = ({ children }) => {
 
   // Fetch public branding when on tenant subdomain (before auth check)
   useEffect(() => {
-    if (tenantIdentifier) {
-      fetchPublicBranding();
-    }
-  }, [tenantIdentifier, fetchPublicBranding]);
+    fetchPublicBranding();
+  }, [fetchPublicBranding]);
 
   useEffect(() => {
     if (token) {
