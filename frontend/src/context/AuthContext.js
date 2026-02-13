@@ -1,9 +1,29 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
+import { isTenantSubdomain, getTenantSubdomain } from '../lib/subdomain';
 
 const AuthContext = createContext(null);
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+
+// Helper to get tenant identifier from hostname
+const getTenantIdentifier = () => {
+  const hostname = window.location.hostname;
+  
+  // Check for tenant subdomain (e.g., demogebruiker.facturatie.sr)
+  if (isTenantSubdomain()) {
+    return getTenantSubdomain();
+  }
+  
+  // Check for custom domain (not facturatie.sr or subdomains)
+  if (!hostname.includes('facturatie.sr') && 
+      !hostname.includes('localhost') && 
+      !hostname.includes('preview.emergentagent.com')) {
+    return hostname; // Return full custom domain
+  }
+  
+  return null;
+};
 
 // Default branding
 const DEFAULT_BRANDING = {
