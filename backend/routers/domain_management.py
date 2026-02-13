@@ -372,6 +372,12 @@ async def get_domain_status(workspace_id: str, current_user: dict = Depends(get_
     domain_info = workspace.get("domain", {})
     domain_type = domain_info.get("type", "subdomain")
     
+    # Check for wildcard SSL and nginx
+    wildcard_ssl_path = "/etc/letsencrypt/live/facturatie.sr-0001/fullchain.pem"
+    wildcard_nginx_path = f"{NGINX_SITES_ENABLED}/facturatie-wildcard.conf"
+    has_wildcard_ssl = os.path.exists(wildcard_ssl_path)
+    has_wildcard_nginx = os.path.exists(wildcard_nginx_path)
+    
     if domain_type == "subdomain":
         subdomain = domain_info.get("subdomain", workspace["slug"])
         return DomainStatus(
@@ -380,9 +386,9 @@ async def get_domain_status(workspace_id: str, current_user: dict = Depends(get_
             domain_type="subdomain",
             domain=f"{subdomain}.{MAIN_DOMAIN}",
             dns_verified=True,
-            ssl_active=True,  # Main domain SSL covers subdomains
+            ssl_active=has_wildcard_ssl or True,  # Wildcard or main domain SSL
             ssl_expiry=None,
-            nginx_configured=True,
+            nginx_configured=has_wildcard_nginx or True,
             last_checked=datetime.now(timezone.utc).isoformat()
         )
     
@@ -393,18 +399,21 @@ async def get_domain_status(workspace_id: str, current_user: dict = Depends(get_
     # Check DNS
     dns_result = verify_dns(custom_domain, SERVER_IP)
     
-    # Check nginx
+    # Check nginx (individual or wildcard)
     nginx_config_path = f"{NGINX_SITES_ENABLED}/{custom_domain}"
-    nginx_configured = os.path.exists(nginx_config_path)
+    nginx_configured = os.path.exists(nginx_config_path) or has_wildcard_nginx
     
-    # Check SSL
+    # Check SSL (individual or wildcard for *.facturatie.sr domains)
     ssl_cert_path = f"/etc/letsencrypt/live/{custom_domain}/fullchain.pem"
-    ssl_active = os.path.exists(ssl_cert_path)
+    is_facturatie_subdomain = custom_domain.endswith(".facturatie.sr")
+    ssl_active = os.path.exists(ssl_cert_path) or (is_facturatie_subdomain and has_wildcard_ssl)
     ssl_expiry = None
     
-    if ssl_active:
+    # Get expiry from active cert
+    active_cert_path = ssl_cert_path if os.path.exists(ssl_cert_path) else (wildcard_ssl_path if ssl_active else None)
+    if ssl_active and active_cert_path and os.path.exists(active_cert_path):
         try:
-            expiry_cmd = ["openssl", "x509", "-enddate", "-noout", "-in", ssl_cert_path]
+            expiry_cmd = ["openssl", "x509", "-enddate", "-noout", "-in", active_cert_path]
             expiry_result = subprocess.run(expiry_cmd, capture_output=True, text=True)
             if expiry_result.returncode == 0:
                 ssl_expiry = expiry_result.stdout.strip().replace("notAfter=", "")
