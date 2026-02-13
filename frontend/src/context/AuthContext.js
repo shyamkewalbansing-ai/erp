@@ -72,6 +72,30 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [workspace, setWorkspace] = useState(null);
   const [branding, setBranding] = useState(DEFAULT_BRANDING);
+  const [tenantIdentifier] = useState(getTenantIdentifier());
+
+  // Fetch public branding for tenant subdomains/custom domains (no auth required)
+  const fetchPublicBranding = useCallback(async () => {
+    if (!tenantIdentifier) return;
+    
+    try {
+      const response = await axios.get(`${API_URL}/workspace/branding-public/${tenantIdentifier}`);
+      setBranding({
+        logo_url: response.data.logo_url,
+        favicon_url: response.data.favicon_url,
+        primary_color: response.data.primary_color || '#0caf60',
+        secondary_color: response.data.secondary_color || '#059669',
+        portal_name: response.data.portal_name || response.data.workspace_name
+      });
+      setWorkspace({
+        id: response.data.workspace_id,
+        name: response.data.workspace_name,
+        slug: response.data.slug
+      });
+    } catch (error) {
+      console.error('Failed to fetch public branding:', error);
+    }
+  }, [tenantIdentifier]);
 
   const fetchUser = useCallback(async () => {
     try {
@@ -83,7 +107,10 @@ export const AuthProvider = ({ children }) => {
         setWorkspace(wsResponse.data.workspace);
         setBranding(wsResponse.data.branding || DEFAULT_BRANDING);
       } catch {
-        setBranding(DEFAULT_BRANDING);
+        // If workspace fetch fails but we're on a tenant domain, keep the public branding
+        if (!tenantIdentifier) {
+          setBranding(DEFAULT_BRANDING);
+        }
       }
     } catch {
       localStorage.removeItem('token');
@@ -93,7 +120,14 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [tenantIdentifier]);
+
+  // Fetch public branding when on tenant subdomain (before auth check)
+  useEffect(() => {
+    if (tenantIdentifier) {
+      fetchPublicBranding();
+    }
+  }, [tenantIdentifier, fetchPublicBranding]);
 
   useEffect(() => {
     if (token) {
