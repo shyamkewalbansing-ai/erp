@@ -264,6 +264,29 @@ export const AuthProvider = ({ children }) => {
     return user?.role === 'superadmin';
   };
 
+  // Show loading screen while branding is being fetched for tenant subdomains
+  if (brandingLoading && tenantIdentifier) {
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+        backgroundColor: '#f8fafc'
+      }}>
+        <div style={{
+          width: '40px',
+          height: '40px',
+          border: '3px solid #e2e8f0',
+          borderTopColor: '#0caf60',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
     <AuthContext.Provider value={{ 
       user, 
