@@ -8,52 +8,53 @@ De gebruiker wil een geconsolideerd installatiescript voor hun CloudPanel-server
 2. **GitHub Webhook voor Auto-Deploy** - Push naar main branch triggert automatische update
 3. **Modulaire Add-ons Systeem** - Boekhouding, HRM, Vastgoed, Auto Dealer, etc.
 4. **Multi-tenant Workspaces** - Elke klant krijgt eigen workspace met custom domein
-5. **Automatische Domain Setup** - Nginx + SSL automatisch via `setup-domain.sh`
+5. **Automatische Domain Setup** - Nginx + SSL automatisch via wildcard certificaat
+6. **Wildcard SSL** (`*.facturatie.sr`) - Alle subdomeinen automatisch beveiligd
 
 ## Technische Stack
 - **Frontend**: React, TailwindCSS, Shadcn/UI
 - **Backend**: FastAPI, Python 3.11
 - **Database**: MongoDB (facturatie_db)
 - **Server**: CloudPanel, Nginx, Supervisor
-- **SSL**: Certbot (Let's Encrypt)
+- **SSL**: Let's Encrypt via Cloudflare DNS (wildcard)
+- **DNS**: Cloudflare
 
 ## Voltooide Taken
 
 ### Februari 2025 (Huidige Sessie)
-- [x] IP-adres probleem opgelost - hardcoded `72.62.174.117` vervangen door `72.62.174.80`
-- [x] IP verplaatst naar environment variabele `REACT_APP_SERVER_IP`
+- [x] IP-adres probleem opgelost - hardcoded IP vervangen door environment variabele
 - [x] CORS geconfigureerd voor alle subdomeinen (`CORS_ORIGINS="*"`)
-- [x] Workspace branding laadt nu correct op subdomeinen
-- [x] Laadscherm toegevoegd voor branding (geen "Facturatie" flash meer)
-- [x] "Nieuwe Workspace" knop gefixed (verkeerde state variabele)
-- [x] Automatische domain setup script aangemaakt (`setup-domain.sh`)
-- [x] Backend pad gecorrigeerd naar `/home/facturatie/htdocs/facturatie.sr/`
+- [x] Workspace branding laadt correct op subdomeinen
+- [x] Laadscherm toegevoegd voor branding (geen flash meer)
+- [x] "Nieuwe Workspace" knop gefixed
+- [x] **Wildcard SSL certificaat** (`*.facturatie.sr`) via Cloudflare DNS
+- [x] **Wildcard Nginx config** - Alle subdomeinen automatisch
+- [x] **Webhook-deploy.sh** geüpdatet met git safe.directory fix
+- [x] **COMPLETE_INSTALL.sh** uitgebreid met Cloudflare wildcard SSL
+- [x] Domain status detecteert wildcard certificaat correct
 
 ### Eerdere Sessies
 - [x] Geconsolideerd installatiescript: `COMPLETE_INSTALL.sh`
 - [x] GitHub webhook systeem voor automatische deployments
 - [x] Gratis tier voor boekhoudmodule (5 klanten, 5 facturen limiet)
 - [x] Demo account zonder vooraf geactiveerde modules
-- [x] WhatsApp floating button verwijderd van landingspagina
-
-## Openstaande Items
-- [ ] Test "Nieuwe Workspace" knop na deploy
-- [ ] Test automatische domain setup via Domain Management pagina
-- [ ] Oude/ongebruikte shell scripts opruimen
-
-## Backlog / Toekomstige Verbeteringen
-- [ ] Wildcard SSL certificaat (`*.facturatie.sr`) voor alle subdomeinen
-- [ ] Email notificaties bij workspace aanmaak
-- [ ] Uitgebreidere branding opties (fonts, login achtergrond)
-- [ ] `.env.example` bestanden aanmaken
 
 ## Belangrijke Bestanden
-- `/app/COMPLETE_INSTALL.sh` - Master installatiescript
+- `/app/COMPLETE_INSTALL.sh` - Master installatiescript (met Cloudflare wildcard SSL)
 - `/app/webhook-deploy.sh` - Webhook auto-deploy script
-- `/app/setup-domain.sh` - **NIEUW** Automatische Nginx + SSL setup
-- `/app/frontend/.env` - Frontend configuratie (inclusief `REACT_APP_SERVER_IP`)
+- `/app/setup-domain.sh` - Automatische domain setup (voor custom domains)
+- `/app/frontend/.env` - Frontend configuratie
 - `/app/backend/.env` - Backend configuratie
 - `/app/backend/routers/domain_management.py` - Domain management API
+
+## SSL Certificaten
+- **Wildcard**: `/etc/letsencrypt/live/facturatie.sr-0001/` (`*.facturatie.sr`)
+- **Hoofddomein**: `/etc/letsencrypt/live/facturatie.sr/` (`facturatie.sr`, `www`, `app`)
+- **Cloudflare credentials**: `/root/.secrets/cloudflare.ini`
+
+## Nginx Configuraties
+- `/etc/nginx/sites-available/facturatie.conf` - Hoofddomein
+- `/etc/nginx/sites-available/facturatie-wildcard.conf` - Alle subdomeinen
 
 ## Database
 - **Naam**: `facturatie_db`
@@ -72,3 +73,4 @@ De gebruiker wil een geconsolideerd installatiescript voor hun CloudPanel-server
 - `POST /api/domains/setup-automated` - Automatische domain setup
 - `GET /api/workspace/branding-public/{slug}` - Publieke workspace branding
 - `POST /api/webhook/github` - GitHub webhook voor auto-deploy
+- `GET /api/domains/status/{workspace_id}` - Domain status (detecteert wildcard)
