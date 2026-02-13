@@ -1,16 +1,19 @@
 #!/bin/bash
 
 # =============================================================================
-# GITHUB WEBHOOK AUTO-DEPLOY SCRIPT
-# Dit script wordt aangeroepen door de webhook wanneer je naar GitHub pusht
+# GITHUB WEBHOOK AUTO-DEPLOY SCRIPT v2.0
+# Dit script wordt automatisch aangeroepen wanneer je naar GitHub pusht
+# Locatie: /home/facturatie/htdocs/facturatie.sr/webhook-deploy.sh
 # =============================================================================
 
-APP_DIR="APP_DIR_PLACEHOLDER"
+# Configuratie
+APP_DIR="/home/facturatie/htdocs/facturatie.sr"
 LOG_FILE="$APP_DIR/logs/deploy.log"
 LOCK_FILE="/tmp/facturatie-deploy.lock"
-
-# Server IP - pas dit aan naar jouw server IP
 SERVER_IP="72.62.174.80"
+
+# Maak logs directory aan als die niet bestaat
+mkdir -p "$APP_DIR/logs"
 
 # Voorkom meerdere deploys tegelijk
 if [ -f "$LOCK_FILE" ]; then
@@ -18,6 +21,7 @@ if [ -f "$LOCK_FILE" ]; then
     exit 0
 fi
 
+trap "rm -f $LOCK_FILE" EXIT
 touch $LOCK_FILE
 
 echo "" >> $LOG_FILE
@@ -25,62 +29,63 @@ echo "========================================" >> $LOG_FILE
 echo "$(date): Starting auto-deploy..." >> $LOG_FILE
 echo "========================================" >> $LOG_FILE
 
-cd $APP_DIR
+cd $APP_DIR || exit 1
 
 # Pull latest code
 echo "$(date): Pulling latest code from GitHub..." >> $LOG_FILE
-git pull origin main >> $LOG_FILE 2>&1
+git fetch origin >> $LOG_FILE 2>&1
+git reset --hard origin/main >> $LOG_FILE 2>&1
 
-# Update backend
+# Update backend dependencies
 echo "$(date): Updating backend dependencies..." >> $LOG_FILE
 cd $APP_DIR/backend
-source venv/bin/activate
-pip install -r requirements.txt -q >> $LOG_FILE 2>&1
-deactivate
+if [ -d "venv" ]; then
+    source venv/bin/activate
+    pip install -r requirements.txt -q >> $LOG_FILE 2>&1
+    deactivate
+fi
 
-# Ensure frontend .env has correct SERVER_IP
-echo "$(date): Checking frontend .env configuration..." >> $LOG_FILE
+# Update frontend
+echo "$(date): Updating frontend..." >> $LOG_FILE
 cd $APP_DIR/frontend
+
+# Ensure .env has correct SERVER_IP
 if ! grep -q "REACT_APP_SERVER_IP" .env 2>/dev/null; then
     echo "REACT_APP_SERVER_IP=$SERVER_IP" >> .env
     echo "$(date): Added REACT_APP_SERVER_IP to .env" >> $LOG_FILE
 fi
 
-# Rebuild frontend
-echo "$(date): Rebuilding frontend..." >> $LOG_FILE
-yarn install --silent >> $LOG_FILE 2>&1
+# Install dependencies and build
+yarn install --frozen-lockfile >> $LOG_FILE 2>&1 || yarn install >> $LOG_FILE 2>&1
 yarn build >> $LOG_FILE 2>&1
 
 # Restart services
 echo "$(date): Restarting services..." >> $LOG_FILE
-supervisorctl restart all >> $LOG_FILE 2>&1
+supervisorctl restart facturatie-backend >> $LOG_FILE 2>&1
+sleep 2
+supervisorctl restart facturatie-frontend >> $LOG_FILE 2>&1
+sleep 3
 
-# Wait for services to start
-sleep 5
+# Verify services are running
+echo "$(date): Verifying services..." >> $LOG_FILE
+BACKEND_STATUS=$(supervisorctl status facturatie-backend 2>/dev/null | grep -c "RUNNING")
+FRONTEND_STATUS=$(supervisorctl status facturatie-frontend 2>/dev/null | grep -c "RUNNING")
 
-# Check service status
-echo "$(date): Checking service status..." >> $LOG_FILE
-supervisorctl status >> $LOG_FILE 2>&1
-
-# Double check - if services not running, restart again
-if ! supervisorctl status facturatie-backend | grep -q "RUNNING"; then
-    echo "$(date): Backend not running, restarting again..." >> $LOG_FILE
+if [ "$BACKEND_STATUS" -eq 0 ]; then
+    echo "$(date): WARNING - Backend not running, retrying..." >> $LOG_FILE
     supervisorctl restart facturatie-backend >> $LOG_FILE 2>&1
     sleep 3
 fi
 
-if ! supervisorctl status facturatie-frontend | grep -q "RUNNING"; then
-    echo "$(date): Frontend not running, restarting again..." >> $LOG_FILE
+if [ "$FRONTEND_STATUS" -eq 0 ]; then
+    echo "$(date): WARNING - Frontend not running, retrying..." >> $LOG_FILE
     supervisorctl restart facturatie-frontend >> $LOG_FILE 2>&1
     sleep 3
 fi
 
-# Final status check
-echo "$(date): Final service status:" >> $LOG_FILE
+# Final status
+echo "$(date): Final status:" >> $LOG_FILE
 supervisorctl status >> $LOG_FILE 2>&1
 
-# Cleanup
-rm -f $LOCK_FILE
-
-echo "$(date): Deploy completed successfully!" >> $LOG_FILE
-echo "========================================"  >> $LOG_FILE
+echo "$(date): Deploy completed!" >> $LOG_FILE
+echo "========================================" >> $LOG_FILE
