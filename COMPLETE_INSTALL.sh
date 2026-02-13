@@ -713,6 +713,71 @@ server {
 }
 EOF
     
+    # Create wildcard config for customer subdomains (if wildcard SSL was obtained)
+    if [ "$WILDCARD_SSL" = "true" ] || [ -f "/etc/letsencrypt/live/$DOMAIN-0001/fullchain.pem" ]; then
+        log_info "Wildcard Nginx configuratie aanmaken..."
+        
+        cat > /etc/nginx/sites-available/facturatie-wildcard.conf << WEOF
+# =============================================================================
+# WILDCARD SUBDOMAIN CONFIGURATIE
+# Alle *.${DOMAIN} subdomeinen worden automatisch ondersteund
+# =============================================================================
+
+# HTTP -> HTTPS redirect voor alle subdomeinen
+server {
+    listen 80;
+    listen [::]:80;
+    server_name *.$DOMAIN;
+    return 301 https://\\\$host\\\$request_uri;
+}
+
+# HTTPS voor alle subdomeinen
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name *.$DOMAIN;
+    
+    # Wildcard SSL certificaat
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN-0001/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN-0001/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+    
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    
+    # Frontend
+    location / {
+        proxy_pass http://127.0.0.1:$FRONTEND_PORT;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \\\$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \\\$scheme;
+        proxy_cache_bypass \\\$http_upgrade;
+    }
+    
+    # API routes
+    location /api/ {
+        proxy_pass http://127.0.0.1:$BACKEND_PORT/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host \\\$host;
+        proxy_set_header X-Real-IP \\\$remote_addr;
+        proxy_set_header X-Forwarded-For \\\$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \\\$scheme;
+        proxy_read_timeout 300s;
+        client_max_body_size 50M;
+    }
+}
+WEOF
+        
+        ln -sf /etc/nginx/sites-available/facturatie-wildcard.conf /etc/nginx/sites-enabled/
+        log_success "Wildcard Nginx configuratie aangemaakt"
+    fi
+    
     # Enable site
     ln -sf /etc/nginx/sites-available/$DOMAIN.conf /etc/nginx/sites-enabled/
     
