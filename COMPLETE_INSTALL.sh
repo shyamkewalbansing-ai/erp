@@ -401,7 +401,10 @@ if [ -f "$LOCK_FILE" ]; then
 fi
 touch $LOCK_FILE
 
+echo "" >> $LOG_FILE
+echo "========================================" >> $LOG_FILE
 echo "$(date): Starting auto-deploy..." >> $LOG_FILE
+
 cd $APP_DIR
 git pull origin main >> $LOG_FILE 2>&1
 
@@ -412,11 +415,31 @@ deactivate
 
 cd $APP_DIR/frontend
 yarn install --silent >> $LOG_FILE 2>&1
-yarn build --silent >> $LOG_FILE 2>&1
+yarn build >> $LOG_FILE 2>&1
 
+echo "$(date): Restarting services..." >> $LOG_FILE
 supervisorctl restart all >> $LOG_FILE 2>&1
+sleep 5
+
+# Double check services
+if ! supervisorctl status facturatie-backend | grep -q "RUNNING"; then
+    echo "$(date): Backend not running, restarting..." >> $LOG_FILE
+    supervisorctl restart facturatie-backend >> $LOG_FILE 2>&1
+    sleep 3
+fi
+
+if ! supervisorctl status facturatie-frontend | grep -q "RUNNING"; then
+    echo "$(date): Frontend not running, restarting..." >> $LOG_FILE
+    supervisorctl restart facturatie-frontend >> $LOG_FILE 2>&1
+    sleep 3
+fi
+
+echo "$(date): Final status:" >> $LOG_FILE
+supervisorctl status >> $LOG_FILE 2>&1
+
 rm -f $LOCK_FILE
 echo "$(date): Deploy completed!" >> $LOG_FILE
+echo "========================================" >> $LOG_FILE
 DEPLOYEOF
     
     sed -i "s|APP_DIR_PLACEHOLDER|$APP_DIR|g" $APP_DIR/webhook-deploy.sh
