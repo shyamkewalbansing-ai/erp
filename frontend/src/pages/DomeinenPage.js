@@ -164,8 +164,8 @@ export default function DomeinenPage() {
           <div className="bg-white rounded-lg p-3 font-mono text-sm space-y-1">
             <div className="flex items-center justify-between">
               <span><strong>Type:</strong> A</span>
-              <span><strong>Value:</strong> 72.62.174.117</span>
-              <Button variant="ghost" size="sm" onClick={() => copyToClipboard('72.62.174.117')}>
+              <span><strong>Value:</strong> 72.62.174.80</span>
+              <Button variant="ghost" size="sm" onClick={() => copyToClipboard('72.62.174.80')}>
                 <Copy className="w-3 h-3" />
               </Button>
             </div>

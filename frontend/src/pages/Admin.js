@@ -1606,12 +1606,12 @@ server {
                   </div>
                   <div className="flex items-center gap-4">
                     <span className="text-muted-foreground text-sm w-20">Waarde:</span>
-                    <span className="font-mono font-semibold text-primary">72.62.174.117</span>
+                    <span className="font-mono font-semibold text-primary">72.62.174.80</span>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       className="h-6"
-                      onClick={() => copyToClipboard('72.62.174.117')}
+                      onClick={() => copyToClipboard('72.62.174.80')}
                     >
                       <Copy className="w-3 h-3 mr-1" />
                       Kopieer
@@ -2462,7 +2462,7 @@ server {
                       <div className="bg-white rounded p-2 font-mono text-sm">
                         <span className="text-gray-500">Type:</span> A<br />
                         <span className="text-gray-500">Naam:</span> {newWorkspace.custom_domain || 'portal.klantdomein.nl'}<br />
-                        <span className="text-gray-500">Waarde:</span> 72.62.174.117
+                        <span className="text-gray-500">Waarde:</span> 72.62.174.80
                       </div>
                     </div>
                   </div>
