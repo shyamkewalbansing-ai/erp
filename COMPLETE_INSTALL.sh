@@ -134,6 +134,10 @@ get_configuration() {
     BACKEND_PORT=8001
     FRONTEND_PORT=3000
     MONGO_DB_NAME="facturatie_db"
+    WILDCARD_SSL=false
+    
+    # Detecteer server IP
+    SERVER_IP=$(curl -s ifconfig.me || curl -s ipinfo.io/ip || echo "UNKNOWN")
     
     # Site user password genereren
     SITE_USER_PASSWORD=$(openssl rand -base64 16 | tr -dc 'a-zA-Z0-9' | head -c 16)
@@ -142,6 +146,7 @@ get_configuration() {
     echo -e "${BOLD}Configuratie overzicht:${NC}"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     echo "  Domein:           $DOMAIN"
+    echo "  Server IP:        $SERVER_IP"
     echo "  App subdomain:    app.$DOMAIN"
     echo "  E-mail:           $EMAIL"
     echo "  Site user:        $SITE_USER"
