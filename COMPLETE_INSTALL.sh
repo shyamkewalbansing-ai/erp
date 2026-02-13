@@ -490,13 +490,59 @@ setup_ssl() {
     # Stop nginx if running
     systemctl stop nginx 2>/dev/null || true
     
-    # Check if certificate already exists
-    if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-        log_info "SSL certificaat bestaat al"
+    # Check if wildcard certificate already exists
+    if [ -f "/etc/letsencrypt/live/$DOMAIN-0001/fullchain.pem" ]; then
+        log_info "Wildcard SSL certificaat bestaat al"
         return 0
     fi
     
-    # Request certificate using standalone method
+    # Check if regular certificate already exists
+    if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+        log_info "SSL certificaat bestaat al"
+    fi
+    
+    # Ask for Cloudflare API token for wildcard SSL
+    echo ""
+    echo -e "${CYAN}Wildcard SSL Certificaat Setup${NC}"
+    echo "Voor een wildcard certificaat (*.${DOMAIN}) is Cloudflare DNS validatie nodig."
+    echo ""
+    read -p "$(echo -e ${CYAN}Cloudflare API Token ${NC}[leeg voor standaard SSL]: )" CLOUDFLARE_TOKEN
+    
+    if [ -n "$CLOUDFLARE_TOKEN" ]; then
+        log_info "Wildcard SSL certificaat aanvragen via Cloudflare..."
+        
+        # Install Cloudflare DNS plugin
+        snap install certbot-dns-cloudflare 2>/dev/null || true
+        snap set certbot trust-plugin-with-root=ok 2>/dev/null || true
+        snap connect certbot:plugin certbot-dns-cloudflare 2>/dev/null || true
+        
+        # Create credentials file
+        mkdir -p /root/.secrets
+        cat > /root/.secrets/cloudflare.ini << CFEOF
+dns_cloudflare_api_token = $CLOUDFLARE_TOKEN
+CFEOF
+        chmod 600 /root/.secrets/cloudflare.ini
+        
+        # Request wildcard certificate
+        certbot certonly \
+            --dns-cloudflare \
+            --dns-cloudflare-credentials /root/.secrets/cloudflare.ini \
+            --dns-cloudflare-propagation-seconds 120 \
+            -d "$DOMAIN" \
+            -d "*.$DOMAIN" \
+            --email $EMAIL \
+            --agree-tos \
+            --non-interactive 2>/dev/null && {
+            
+            log_success "Wildcard SSL certificaat verkregen voor *.$DOMAIN"
+            WILDCARD_SSL=true
+            return 0
+        }
+        
+        log_warning "Wildcard SSL mislukt, probeer standaard SSL..."
+    fi
+    
+    # Fallback to standard SSL
     certbot certonly --standalone \
         -d $DOMAIN \
         -d www.$DOMAIN \
@@ -508,9 +554,9 @@ setup_ssl() {
         
         log_warning "SSL certificaat aanvraag mislukt"
         log_info "Controleer of DNS records correct zijn geconfigureerd:"
-        log_info "  A   @     -> UW_SERVER_IP"
-        log_info "  A   www   -> UW_SERVER_IP"
-        log_info "  A   app   -> UW_SERVER_IP"
+        log_info "  A   @     -> $SERVER_IP"
+        log_info "  A   www   -> $SERVER_IP"
+        log_info "  A   app   -> $SERVER_IP"
         log_info ""
         log_info "Probeer later handmatig:"
         log_info "  sudo systemctl stop nginx"
