@@ -755,7 +755,7 @@ class AutomatedDomainSetupResponse(BaseModel):
 # Path to the setup script on the server
 DOMAIN_SETUP_SCRIPT = os.environ.get(
     "DOMAIN_SETUP_SCRIPT", 
-    "/home/clp/htdocs/facturatie.sr/setup-domain.sh"
+    "/home/facturatie/htdocs/facturatie.sr/setup-domain.sh"
 )
 
 @router.post("/setup-automated", response_model=AutomatedDomainSetupResponse)
