@@ -227,8 +227,6 @@ export default function Admin() {
   const [verifyingDns, setVerifyingDns] = useState(false);
   const [workspaceSearch, setWorkspaceSearch] = useState('');
   const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
-  const [createWorkspaceOpen, setCreateWorkspaceOpen] = useState(false);
-  const [editWorkspaceOpen, setEditWorkspaceOpen] = useState(false);
   const [filteredWorkspaces, setFilteredWorkspaces] = useState([]);
   const [newWorkspace, setNewWorkspace] = useState({
     name: '',
