@@ -15,6 +15,9 @@ SERVER_IP="72.62.174.80"
 # Maak logs directory aan als die niet bestaat
 mkdir -p "$APP_DIR/logs"
 
+# Fix git safe directory (voorkomt ownership errors)
+git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
+
 # Voorkom meerdere deploys tegelijk
 if [ -f "$LOCK_FILE" ]; then
     echo "$(date): Deploy already running, skipping..." >> $LOG_FILE
