@@ -2407,14 +2407,29 @@ async def get_workspace_settings(current_user: dict = Depends(get_current_user))
 
 @api_router.get("/workspace/branding-public/{slug_or_domain}")
 async def get_workspace_branding_public(slug_or_domain: str):
-    """Get workspace branding by slug or custom domain (public, no auth required)"""
+    """Get workspace branding by slug, subdomain, or custom domain (public, no auth required)"""
     # Try to find by slug first
     workspace = await db.workspaces.find_one({"slug": slug_or_domain}, {"_id": 0})
     
-    # If not found, try by custom domain
+    # If not found, try by subdomain
+    if not workspace:
+        workspace = await db.workspaces.find_one(
+            {"domain.subdomain": slug_or_domain}, 
+            {"_id": 0}
+        )
+    
+    # If not found, try by custom domain (full domain)
     if not workspace:
         workspace = await db.workspaces.find_one(
             {"domain.custom_domain": slug_or_domain}, 
+            {"_id": 0}
+        )
+    
+    # If not found, try by custom domain (subdomain.facturatie.sr format)
+    if not workspace:
+        full_subdomain = f"{slug_or_domain}.facturatie.sr"
+        workspace = await db.workspaces.find_one(
+            {"domain.custom_domain": full_subdomain}, 
             {"_id": 0}
         )
     
