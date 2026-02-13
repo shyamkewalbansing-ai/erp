@@ -324,18 +324,22 @@ async def get_all_domain_status(current_user: dict = Depends(get_superadmin)):
         # Check DNS
         dns_result = verify_dns(custom_domain, SERVER_IP)
         
-        # Check if nginx config exists
+        # Check if nginx config exists (individual or wildcard)
         nginx_config_path = f"{NGINX_SITES_ENABLED}/{custom_domain}"
-        nginx_configured = os.path.exists(nginx_config_path)
+        wildcard_nginx_path = f"{NGINX_SITES_ENABLED}/facturatie-wildcard.conf"
+        nginx_configured = os.path.exists(nginx_config_path) or os.path.exists(wildcard_nginx_path)
         
-        # Check SSL certificate
+        # Check SSL certificate (individual or wildcard)
         ssl_cert_path = f"/etc/letsencrypt/live/{custom_domain}/fullchain.pem"
-        ssl_active = os.path.exists(ssl_cert_path)
+        wildcard_ssl_path = "/etc/letsencrypt/live/facturatie.sr-0001/fullchain.pem"
+        ssl_active = os.path.exists(ssl_cert_path) or os.path.exists(wildcard_ssl_path)
         ssl_expiry = None
         
-        if ssl_active:
+        # Get expiry from whichever cert is active
+        active_cert_path = ssl_cert_path if os.path.exists(ssl_cert_path) else wildcard_ssl_path
+        if ssl_active and os.path.exists(active_cert_path):
             try:
-                expiry_cmd = ["openssl", "x509", "-enddate", "-noout", "-in", ssl_cert_path]
+                expiry_cmd = ["openssl", "x509", "-enddate", "-noout", "-in", active_cert_path]
                 expiry_result = subprocess.run(expiry_cmd, capture_output=True, text=True)
                 if expiry_result.returncode == 0:
                     ssl_expiry = expiry_result.stdout.strip().replace("notAfter=", "")
