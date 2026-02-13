@@ -32,6 +32,7 @@ import {
 import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
+const SERVER_IP = process.env.REACT_APP_SERVER_IP || '72.62.174.80';
 
 export default function DomeinenPage() {
   const { user } = useAuth();
@@ -164,8 +165,8 @@ export default function DomeinenPage() {
           <div className="bg-white rounded-lg p-3 font-mono text-sm space-y-1">
             <div className="flex items-center justify-between">
               <span><strong>Type:</strong> A</span>
-              <span><strong>Value:</strong> 72.62.174.80</span>
-              <Button variant="ghost" size="sm" onClick={() => copyToClipboard('72.62.174.80')}>
+              <span><strong>Value:</strong> {SERVER_IP}</span>
+              <Button variant="ghost" size="sm" onClick={() => copyToClipboard(SERVER_IP)}>
                 <Copy className="w-3 h-3" />
               </Button>
             </div>
