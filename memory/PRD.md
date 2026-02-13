@@ -1,65 +1,54 @@
-# Suribet Dashboard - Product Requirements Document
+# Facturatie.sr - Product Requirements Document
 
-## Oorspronkelijke Probleemstelling
-Een "Dagrapporten" applicatie voor Suribet met financieel beheer, inclusief bon scanning, commissie tracking, en uitbetalingen.
+## Originele Probleem
+De gebruiker wil een geconsolideerd installatiescript voor hun CloudPanel-server setup, samen met automatische deployments via GitHub webhooks en diverse module-aanpassingen.
 
-## Huidige Status
-**Fase**: MVP Compleet + Iteratieve verbeteringen
-
-## Geïmplementeerde Functies
-
-### Core Features
-- **Bon Scanner & QR Upload**: AI-gedreven receipt scanning met Gemini Vision
-- **Financiële Header**: Live tracking van "Suribet Deel" en "Jouw Commissie"
-- **Payout System**: Modal om meerdere rapporten te selecteren en uit te betalen
-- **Commission Management**: Opnemen van commissie naar kasboek
-- **Balance Transfers**: Transfers tussen commissie, Suribet saldo en kasboek
-- **Balance Adjustment Management**: Bekijken en verwijderen van saldo aanpassingen
-- **Force Reset**: Functie om vastgelopen data te resetten
-
-### UI/UX
-- **Snelle Acties Component**: Navigatie onderaan alle Suribet pagina's (Dec 2024)
-- **Date Selector**: Navigeren per dag op alle pagina's
-- **Payout Modal**: Rapporten gegroepeerd per datum
-- **Report Cards**: Begin/Eindsaldo weergave
-
-### Pagina's
-1. Dashboard (`/app/suribet/dashboard`)
-2. Dagrapporten (`/app/suribet/dagrapporten`)
-3. Uitbetalingen (`/app/suribet/uitbetalingen`)
-4. Kasboek (`/app/suribet/kasboek`)
-5. Machines (`/app/suribet/machines`)
-6. Werknemers (`/app/suribet/werknemers`)
-7. Loonuitbetaling (`/app/suribet/loonuitbetaling`)
+## Kernfunctionaliteiten
+1. **All-in-one Installatiescript** (`COMPLETE_INSTALL.sh`) - Installeert alle dependencies, configureert Nginx/Supervisor, SSL
+2. **GitHub Webhook voor Auto-Deploy** - Push naar main branch triggert automatische update
+3. **Modulaire Add-ons Systeem** - Boekhouding, HRM, Vastgoed, Auto Dealer, etc.
+4. **Multi-tenant Workspaces** - Elke klant krijgt eigen workspace met custom domein
 
 ## Technische Stack
-- **Frontend**: React, Tailwind CSS, Shadcn/ui
-- **Backend**: FastAPI, MongoDB
-- **AI Integration**: Gemini Vision (via Emergent LLM Key)
+- **Frontend**: React, TailwindCSS, Shadcn/UI
+- **Backend**: FastAPI, Python 3.11
+- **Database**: MongoDB
+- **Server**: CloudPanel, Nginx, Supervisor
+- **SSL**: Certbot (Let's Encrypt)
 
-## Database Collections
-- `suribet_dagstaten` - Dagelijkse rapporten
-- `suribet_uitbetalingen` - Uitbetaling records
-- `suribet_kasboek` - Kasboek entries
-- `suribet_saldo_aanpassingen` - Saldo aanpassingen
+## Voltooide Taken
 
-## Belangrijke Endpoints
-- `/api/suribet/openstaand-totaal` - Running totals
-- `/api/suribet/uitbetalingen` - Payouts
-- `/api/suribet/commissie-opnemen` - Commission withdrawal
-- `/api/suribet/saldo-naar-suribet` - Balance to Suribet
-- `/api/suribet/saldo-naar-commissie` - Balance to Commission
+### December 2025 (Huidige Sessie)
+- [x] IP-adres probleem opgelost - hardcoded `72.62.174.117` vervangen door `72.62.174.80`
+- [x] IP verplaatst naar environment variabele `REACT_APP_SERVER_IP`
+- [x] Aangepaste bestanden: `DomeinenPage.js`, `Admin.js`, `Layout.js`, `webhook-deploy.sh`
 
-## Backlog
+### Eerdere Sessies
+- [x] Geconsolideerd installatiescript: `COMPLETE_INSTALL.sh`
+- [x] GitHub webhook systeem voor automatische deployments
+- [x] Gratis tier voor boekhoudmodule (5 klanten, 5 facturen limiet)
+- [x] Demo account zonder vooraf geactiveerde modules
+- [x] WhatsApp floating button verwijderd van landingspagina
+- [x] Broken links en ontbrekende module detail pagina's gefixed
 
-### P1 - Aankomend
-- **Dashboard Redirect**: Automatische redirect van `/app/dashboard` naar eerste module
+## Openstaande Items
+Geen
 
-### P2 - Toekomstig
-- **Refactoring DagrapportenPage.js**: Bestand is >2500 regels, moet opgesplitst worden
+## Backlog / Toekomstige Verbeteringen
+- [ ] `.env.example` bestanden aanmaken voor makkelijkere installatie
+- [ ] Alle hardcoded waarden naar environment variabelen verplaatsen
 
-## Credentials
-- Test account: `demo@facturatie.sr` / `demo2024`
+## Belangrijke Bestanden
+- `/app/COMPLETE_INSTALL.sh` - Master installatiescript
+- `/app/webhook-deploy.sh` - Webhook auto-deploy script
+- `/app/frontend/.env` - Frontend configuratie (inclusief `REACT_APP_SERVER_IP`)
+- `/app/backend/.env` - Backend configuratie
 
-## Laatste Update
-December 2024 - Snelle Acties component correct geplaatst onderaan alle Suribet pagina's
+## Credentials voor Testing
+- **Admin**: `admin@facturatie.sr` / `Admin123!`
+- **Demo**: `demo@facturatie.sr` / `demo2024`
+
+## Server Info
+- **IP**: `72.62.174.80`
+- **App Path**: `/home/facturatie/htdocs/facturatie.sr/`
+- **Webhook**: `https://facturatie.sr/api/webhook/github`
