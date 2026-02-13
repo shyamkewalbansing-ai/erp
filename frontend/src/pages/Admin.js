@@ -1050,7 +1050,7 @@ server {
                   data-testid="workspace-search"
                 />
               </div>
-              <Button onClick={() => setCreateWorkspaceOpen(true)} data-testid="create-workspace-btn" className="w-full sm:w-auto">
+              <Button onClick={() => setCreateWorkspaceDialogOpen(true)} data-testid="create-workspace-btn" className="w-full sm:w-auto">
                 <Plus className="w-4 h-4 mr-2" />
                 Nieuwe Workspace
               </Button>
