@@ -125,6 +125,9 @@ import {
   Play
 } from 'lucide-react';
 
+// Server IP from environment variable for DNS instructions
+const SERVER_IP = process.env.REACT_APP_SERVER_IP || '72.62.174.80';
+
 export default function Admin() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
