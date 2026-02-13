@@ -65,6 +65,9 @@ import NotificationBell from './NotificationBell';
 import AIAssistant from './AIAssistant';
 import { toast } from 'sonner';
 
+// Server IP from environment variable for DNS instructions
+const SERVER_IP = process.env.REACT_APP_SERVER_IP || '72.62.174.80';
+
 // Navigation items for Vastgoed Beheer add-on
 const vastgoedNavItems = [
   { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', addon: 'vastgoed_beheer' },
