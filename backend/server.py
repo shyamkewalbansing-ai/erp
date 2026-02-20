@@ -68,6 +68,11 @@ from routers.spa_booking import router as spa_booking_router
 from routers.pompstation import router as pompstation_router
 from routers.boekhouding import router as boekhouding_router
 from routers.suribet import router as suribet_router
+from routers.inkoop import router as inkoop_router
+from routers.verkoop import router as verkoop_router
+from routers.voorraad import router as voorraad_router
+from routers.activa import router as activa_router
+from routers.projecten import router as projecten_router
 from services.email_service import get_email_service, EMAIL_TEMPLATES
 from services.scheduled_tasks import get_scheduled_tasks
 
