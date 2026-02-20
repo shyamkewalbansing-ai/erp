@@ -310,6 +310,7 @@ export default function Layout() {
   };
 
   // Module configurations for dynamic sidebar rendering
+  // Inkoop, Verkoop, Voorraad, Projecten zijn nu onderdeel van Boekhouding
   const moduleConfigs = {
     vastgoed_beheer: { name: 'Vastgoed Beheer', items: vastgoedNavItems, icon: Building2 },
     hrm: { name: 'HRM Module', items: hrmNavItems, icon: Users },
@@ -317,10 +318,6 @@ export default function Layout() {
     beauty: { name: 'Beauty Spa', items: beautySpaItems, icon: Sparkles },
     pompstation: { name: 'Pompstation', items: pompstationNavItems, icon: Zap },
     boekhouding: { name: 'Boekhouding', items: boekhoudingNavItems, icon: FileText, alwaysShow: true },
-    inkoop: { name: 'Inkoop', items: inkoopNavItems, icon: ShoppingCart, alwaysShow: true },
-    verkoop: { name: 'Verkoop', items: verkoopNavItems, icon: Banknote, alwaysShow: true },
-    voorraad: { name: 'Voorraad', items: voorraadNavItems, icon: Package, alwaysShow: true },
-    projecten: { name: 'Projecten', items: projectenNavItems, icon: Briefcase, alwaysShow: true },
     suribet: { name: 'Suribet', items: suribetNavItems, icon: Gamepad2 },
   };
 
