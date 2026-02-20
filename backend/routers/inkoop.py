@@ -285,6 +285,8 @@ async def create_leverancier(data: LeverancierCreate, current_user: dict = Depen
     }
     await db.boekhouding_crediteuren.insert_one(crediteur_doc)
     
+    # Remove MongoDB _id before returning
+    leverancier_doc.pop("_id", None)
     return leverancier_doc
 
 @router.put("/leveranciers/{leverancier_id}")
