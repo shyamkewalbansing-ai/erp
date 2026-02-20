@@ -15003,6 +15003,11 @@ api_router.include_router(spa_booking_router)
 api_router.include_router(pompstation_router)
 api_router.include_router(boekhouding_router)
 api_router.include_router(suribet_router)
+api_router.include_router(inkoop_router)
+api_router.include_router(verkoop_router)
+api_router.include_router(voorraad_router)
+api_router.include_router(activa_router)
+api_router.include_router(projecten_router)
 
 # =============================================================================
 # GITHUB WEBHOOK AUTO-DEPLOY
