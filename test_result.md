@@ -205,10 +205,70 @@ backend:
     status_history:
       - working: "NA"
         agent: "user"
-        comment: "Test de nieuw toegevoegde Boekhouding module API endpoints. Dit is een GRATIS module voor alle klanten. Test de volgende endpoints: 1. GET /api/boekhouding/dashboard - Dashboard data ophalen, 2. POST /api/boekhouding/rekeningen/init-standaard - Standaard rekeningschema initialiseren, 3. GET /api/boekhouding/rekeningen - Alle rekeningen ophalen, 4. POST /api/boekhouding/debiteuren - Nieuwe debiteur aanmaken, 5. GET /api/boekhouding/debiteuren - Debiteuren ophalen, 6. POST /api/boekhouding/verkoopfacturen - Verkoopfactuur aanmaken met multi-currency (SRD, USD, EUR), 7. GET /api/boekhouding/bankrekeningen - Bankrekeningen ophalen, 8. POST /api/boekhouding/bankrekeningen - Nieuwe bankrekening toevoegen, 9. GET /api/boekhouding/btw/aangifte - BTW aangifte rapport met parameters start_datum, eind_datum, valuta, 10. GET /api/boekhouding/rapportages/balans - Balans rapport, 11. POST /api/boekhouding/wisselkoersen - Wisselkoers toevoegen. Authenticatie: Gebruik demo account login: Email: demo@facturatie.sr, Password: DemoPassword123!. Test specifiek: Multi-currency ondersteuning (SRD, USD, EUR), Correcte BTW berekening (0%, 10%, 25%), Automatische factuurnummer generatie, Balans en rapportages."
+        comment: "Test de nieuw toegevoegde Boekhouding module API endpoints."
       - working: true
         agent: "testing"
-        comment: "✅ PASSED - Boekhouding module API endpoints working excellently! Fixed router prefix issue (/api/boekhouding -> /boekhouding) and demo account access. Tested 15 endpoints with 93.3% success rate (14/15 passed). WORKING: 1) Dashboard - shows debiteuren/crediteuren counts, bank saldi, omzet per valuta ✅, 2) Standard chart initialization - created 44 Surinamese accounts ✅, 3) Chart of accounts retrieval ✅, 4) Debiteur CRUD - created Test Klant N.V. with SRD currency ✅, 5) Verkoopfactuur creation - generated VF2026-00001 with correct BTW calculation (USD 200 + 25% BTW = USD 250) ✅, 6) Bankrekening creation - DSB Zakelijk account with SRD 10,000 balance ✅, 7) BTW aangifte report - correct format with period/currency filters ✅, 8) Multi-currency conversion - USD to SRD at 35.0 rate ✅, 9) BTW calculation test - verified 25%/10%/0% rates (SRD 1700 + SRD 300 BTW = SRD 2000) ✅, 10) Automatic factuurnummer generation - sequential VF2026-XXXXX format ✅, 11) Balance sheet report - correct activa/passiva/eigen vermogen structure ✅, 12) Exchange rate management - USD/SRD rate 35.5 ✅. All core accounting features functional: multi-currency support, BTW calculations, automatic numbering, comprehensive reporting. Demo account access fixed for testing."
+        comment: "✅ PASSED - Boekhouding module API endpoints working excellently!"
+
+  - task: "Inkoop Module API endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/routers/inkoop.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Inkoop module geïmplementeerd met: Leveranciersbeheer (CRUD), Inkoopoffertes (CRUD + status workflow), Inkooporders (CRUD + status + naar-factuur), Goederenontvangst (registratie + voorraad update), Dashboard."
+
+  - task: "Verkoop Module API endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/routers/verkoop.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Verkoop module geïmplementeerd met: Klantbeheer (CRUD + synchronisatie met debiteuren), Verkoopoffertes (CRUD + status workflow), Verkooporders (CRUD + naar-factuur), Prijslijsten (CRUD + klant prijzen), Kortingsregels, Dashboard."
+
+  - task: "Voorraad & Logistiek Module API endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/routers/voorraad.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Voorraad module geïmplementeerd met: Artikelbeheer (producten/diensten CRUD), Magazijnen en locaties, Voorraadmutaties (inkoop/verkoop/correctie/transfer), Inventarisaties (telling + verwerking verschillen), Serienummers, Kostprijsberekeningen (FIFO/LIFO/gemiddeld), Dashboard."
+
+  - task: "Vaste Activa & Kostenplaatsen Module API endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/routers/activa.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Activa module geïmplementeerd met: Vaste activa registratie (categorie: gebouwen/machines/inventaris/etc), Afschrijvingen (lineair/degressief/annuiteit), Batch afschrijvingen per periode, Kostenplaatsen (CRUD + budget tracking), Rapportages (overzicht per categorie/status), Dashboard."
+
+  - task: "Projecten Module API endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/routers/projecten.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Projecten module geïmplementeerd met: Project CRUD (klant/intern/onderhoud types), Taken beheer, Urenregistratie (koppeling met HRM medewerkers), Kostenregistratie, Dashboard met overzicht en top projecten."
 
 frontend:
   - task: "Admin Add-ons tab"
