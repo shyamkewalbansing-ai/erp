@@ -439,7 +439,7 @@ async def batch_afschrijvingen(
         }
         
         await db.activa_afschrijvingen.insert_one(afschrijving_doc)
-    afschrijving_doc.pop("_id", None)
+        afschrijving_doc.pop("_id", None)
         
         # Update activum
         update_fields = {
