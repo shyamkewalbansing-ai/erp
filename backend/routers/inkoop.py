@@ -936,7 +936,7 @@ async def create_goederenontvangst(data: GoederenontvangstCreate, current_user: 
                 "created_at": now
             }
             await db.voorraad_mutaties.insert_one(mutatie_doc)
-    mutatie_doc.pop("_id", None)
+            mutatie_doc.pop("_id", None)
             
             # Update voorraad niveau
             await db.voorraad_artikelen.update_one(
