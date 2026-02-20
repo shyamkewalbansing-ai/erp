@@ -96,7 +96,7 @@
   "rca_of_the_issue": {
     "root_cause": "Demo user was created but not properly configured with subscription and addons",
     "reproduction_steps": [
-      "1. Go to https://deploy-script-3.preview.emergentagent.com/demo",
+      "1. Go to https://boekhouding-pro.preview.emergentagent.com/demo",
       "2. Click 'Inloggen met Demo Account'",
       "3. Login with demo@facturatie.sr / demo2024",
       "4. User is redirected to /app/abonnement instead of dashboard",
