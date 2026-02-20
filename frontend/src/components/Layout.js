@@ -323,7 +323,7 @@ export default function Layout() {
 
   // Get modules in the correct order based on user preference
   const getOrderedModules = () => {
-    const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding', 'inkoop', 'verkoop', 'voorraad', 'projecten'];
+    const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding'];
     
     if (moduleOrder.length === 0) {
       return defaultOrder;
