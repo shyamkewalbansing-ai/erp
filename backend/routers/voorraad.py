@@ -772,7 +772,7 @@ async def afronden_inventarisatie(
                     "created_at": now
                 }
                 await db.voorraad_mutaties.insert_one(mutatie_doc)
-    mutatie_doc.pop("_id", None)
+                mutatie_doc.pop("_id", None)
                 
                 # Update artikel voorraad
                 await db.voorraad_artikelen.update_one(
