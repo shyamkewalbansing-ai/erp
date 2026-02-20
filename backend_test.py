@@ -2022,6 +2022,571 @@ class SuriRentalsAPITester:
             return True
         return False
 
+    # ==================== ERP MODULES TESTING ====================
+    
+    def test_inkoop_dashboard(self):
+        """Test inkoop dashboard endpoint"""
+        success, response = self.run_test(
+            "Inkoop Dashboard",
+            "GET",
+            "inkoop/dashboard",
+            200
+        )
+        
+        if success:
+            print(f"   Leveranciers count: {response.get('leveranciers_count', 0)}")
+            print(f"   Open offertes: {response.get('open_offertes', 0)}")
+            print(f"   Open orders: {response.get('open_orders', 0)}")
+            print(f"   Orders deze week: {response.get('orders_deze_week', 0)}")
+            return True
+        return False
+
+    def test_create_leverancier(self):
+        """Test creating a leverancier (supplier)"""
+        leverancier_data = {
+            "naam": "Test Leverancier BV",
+            "bedrijfsnaam": "Test Leverancier BV",
+            "email": "leverancier@test.sr",
+            "telefoon": "+597 123 4567",
+            "adres": "Paramaribo, Suriname",
+            "btw_nummer": "SR123456789",
+            "standaard_valuta": "SRD",
+            "betalingstermijn": 30,
+            "categorie": "Algemeen",
+            "is_actief": True
+        }
+        
+        success, response = self.run_test(
+            "Create Leverancier",
+            "POST",
+            "inkoop/leveranciers",
+            200,
+            data=leverancier_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('leveranciers', []).append(response['id'])
+            print(f"   Created leverancier ID: {response['id']}")
+            print(f"   Name: {response.get('naam')}")
+            print(f"   Currency: {response.get('standaard_valuta')}")
+            return True
+        return False
+
+    def test_get_leveranciers(self):
+        """Test getting all leveranciers"""
+        success, response = self.run_test(
+            "Get Leveranciers",
+            "GET",
+            "inkoop/leveranciers",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} leveranciers")
+            return True
+        return False
+
+    def test_create_inkoopofferte(self):
+        """Test creating an inkoopofferte"""
+        if not self.created_resources.get('leveranciers'):
+            print("⚠️  Skipping inkoopofferte creation - no leverancier created")
+            return True
+            
+        leverancier_id = self.created_resources['leveranciers'][0]
+        
+        offerte_data = {
+            "leverancier_id": leverancier_id,
+            "offertedatum": "2025-02-06",
+            "geldig_tot": "2025-03-06",
+            "valuta": "SRD",
+            "regels": [
+                {
+                    "omschrijving": "Test Product A",
+                    "aantal": 10,
+                    "eenheid": "stuk",
+                    "prijs_per_stuk": 50.0,
+                    "korting_percentage": 0,
+                    "btw_tarief": "25"
+                }
+            ],
+            "opmerkingen": "Test inkoopofferte"
+        }
+        
+        success, response = self.run_test(
+            "Create Inkoopofferte",
+            "POST",
+            "inkoop/offertes",
+            200,
+            data=offerte_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('inkoopoffertes', []).append(response['id'])
+            print(f"   Created offerte ID: {response['id']}")
+            print(f"   Offertenummer: {response.get('offertenummer')}")
+            print(f"   Totaal: {response.get('totaal')} {response.get('valuta')}")
+            return True
+        return False
+
+    def test_create_inkooporder(self):
+        """Test creating an inkooporder"""
+        if not self.created_resources.get('leveranciers'):
+            print("⚠️  Skipping inkooporder creation - no leverancier created")
+            return True
+            
+        leverancier_id = self.created_resources['leveranciers'][0]
+        
+        order_data = {
+            "leverancier_id": leverancier_id,
+            "orderdatum": "2025-02-06",
+            "verwachte_leverdatum": "2025-02-20",
+            "valuta": "SRD",
+            "regels": [
+                {
+                    "omschrijving": "Test Product B",
+                    "aantal": 5,
+                    "eenheid": "stuk",
+                    "prijs_per_stuk": 100.0,
+                    "korting_percentage": 0,
+                    "btw_tarief": "25"
+                }
+            ],
+            "opmerkingen": "Test inkooporder"
+        }
+        
+        success, response = self.run_test(
+            "Create Inkooporder",
+            "POST",
+            "inkoop/orders",
+            200,
+            data=order_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('inkooporders', []).append(response['id'])
+            print(f"   Created order ID: {response['id']}")
+            print(f"   Ordernummer: {response.get('ordernummer')}")
+            print(f"   Totaal: {response.get('totaal')} {response.get('valuta')}")
+            return True
+        return False
+
+    def test_verkoop_dashboard(self):
+        """Test verkoop dashboard endpoint"""
+        success, response = self.run_test(
+            "Verkoop Dashboard",
+            "GET",
+            "verkoop/dashboard",
+            200
+        )
+        
+        if success:
+            print(f"   Klanten count: {response.get('klanten_count', 0)}")
+            print(f"   Open offertes: {response.get('open_offertes', 0)}")
+            print(f"   Open orders: {response.get('open_orders', 0)}")
+            print(f"   Conversie ratio: {response.get('conversie_ratio', 0)}%")
+            return True
+        return False
+
+    def test_create_klant(self):
+        """Test creating a klant (customer)"""
+        klant_data = {
+            "naam": "Test Klant BV",
+            "bedrijfsnaam": "Test Klant BV",
+            "email": "klant@test.sr",
+            "telefoon": "+597 123 4567",
+            "adres": "Paramaribo, Suriname",
+            "btw_nummer": "SR987654321",
+            "standaard_valuta": "SRD",
+            "betalingstermijn": 30,
+            "categorie": "Algemeen",
+            "is_actief": True
+        }
+        
+        success, response = self.run_test(
+            "Create Klant",
+            "POST",
+            "verkoop/klanten",
+            200,
+            data=klant_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('klanten', []).append(response['id'])
+            print(f"   Created klant ID: {response['id']}")
+            print(f"   Name: {response.get('naam')}")
+            print(f"   Currency: {response.get('standaard_valuta')}")
+            return True
+        return False
+
+    def test_get_klanten(self):
+        """Test getting all klanten"""
+        success, response = self.run_test(
+            "Get Klanten",
+            "GET",
+            "verkoop/klanten",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} klanten")
+            return True
+        return False
+
+    def test_create_verkoopofferte(self):
+        """Test creating a verkoopofferte"""
+        if not self.created_resources.get('klanten'):
+            print("⚠️  Skipping verkoopofferte creation - no klant created")
+            return True
+            
+        klant_id = self.created_resources['klanten'][0]
+        
+        offerte_data = {
+            "klant_id": klant_id,
+            "offertedatum": "2025-02-06",
+            "geldig_tot": "2025-03-06",
+            "valuta": "SRD",
+            "regels": [
+                {
+                    "omschrijving": "Test Service A",
+                    "aantal": 1,
+                    "eenheid": "stuk",
+                    "prijs_per_stuk": 1000.0,
+                    "korting_percentage": 0,
+                    "btw_tarief": "25"
+                }
+            ],
+            "opmerkingen": "Test verkoopofferte"
+        }
+        
+        success, response = self.run_test(
+            "Create Verkoopofferte",
+            "POST",
+            "verkoop/offertes",
+            200,
+            data=offerte_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('verkoopoffertes', []).append(response['id'])
+            print(f"   Created offerte ID: {response['id']}")
+            print(f"   Offertenummer: {response.get('offertenummer')}")
+            print(f"   Totaal: {response.get('totaal')} {response.get('valuta')}")
+            return True
+        return False
+
+    def test_create_prijslijst(self):
+        """Test creating a prijslijst"""
+        prijslijst_data = {
+            "naam": "Standaard Prijslijst",
+            "beschrijving": "Test prijslijst voor klanten",
+            "valuta": "SRD",
+            "is_standaard": True,
+            "is_actief": True
+        }
+        
+        success, response = self.run_test(
+            "Create Prijslijst",
+            "POST",
+            "verkoop/prijslijsten",
+            200,
+            data=prijslijst_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('prijslijsten', []).append(response['id'])
+            print(f"   Created prijslijst ID: {response['id']}")
+            print(f"   Name: {response.get('naam')}")
+            print(f"   Currency: {response.get('valuta')}")
+            return True
+        return False
+
+    def test_voorraad_dashboard(self):
+        """Test voorraad dashboard endpoint"""
+        success, response = self.run_test(
+            "Voorraad Dashboard",
+            "GET",
+            "voorraad/dashboard",
+            200
+        )
+        
+        if success:
+            print(f"   Artikelen count: {response.get('artikelen_count', 0)}")
+            print(f"   Lage voorraad count: {response.get('lage_voorraad_count', 0)}")
+            print(f"   Totale voorraad waarde: {response.get('totale_voorraad_waarde', 0)}")
+            print(f"   Magazijnen count: {response.get('magazijnen_count', 0)}")
+            return True
+        return False
+
+    def test_create_artikel(self):
+        """Test creating an artikel"""
+        artikel_data = {
+            "artikelcode": "ART001",
+            "naam": "Test Product",
+            "omschrijving": "Test product voor voorraad",
+            "type": "product",
+            "categorie": "Algemeen",
+            "eenheid": "stuk",
+            "inkoopprijs": 50.0,
+            "verkoopprijs": 100.0,
+            "standaard_valuta": "SRD",
+            "btw_tarief": "25",
+            "voorraad_beheer": True,
+            "min_voorraad": 10,
+            "max_voorraad": 100,
+            "is_actief": True
+        }
+        
+        success, response = self.run_test(
+            "Create Artikel",
+            "POST",
+            "voorraad/artikelen",
+            200,
+            data=artikel_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('artikelen', []).append(response['id'])
+            print(f"   Created artikel ID: {response['id']}")
+            print(f"   Artikelcode: {response.get('artikelcode')}")
+            print(f"   Name: {response.get('naam')}")
+            print(f"   Verkoopprijs: {response.get('verkoopprijs')} {response.get('standaard_valuta')}")
+            return True
+        return False
+
+    def test_get_artikelen(self):
+        """Test getting all artikelen"""
+        success, response = self.run_test(
+            "Get Artikelen",
+            "GET",
+            "voorraad/artikelen",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} artikelen")
+            return True
+        return False
+
+    def test_create_magazijn(self):
+        """Test creating a magazijn"""
+        magazijn_data = {
+            "naam": "Hoofdmagazijn",
+            "code": "MAG001",
+            "adres": "Paramaribo, Suriname",
+            "contactpersoon": "Magazijn Manager",
+            "telefoon": "+597 123 4567",
+            "is_standaard": True,
+            "is_actief": True
+        }
+        
+        success, response = self.run_test(
+            "Create Magazijn",
+            "POST",
+            "voorraad/magazijnen",
+            200,
+            data=magazijn_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('magazijnen', []).append(response['id'])
+            print(f"   Created magazijn ID: {response['id']}")
+            print(f"   Code: {response.get('code')}")
+            print(f"   Name: {response.get('naam')}")
+            return True
+        return False
+
+    def test_create_voorraad_mutatie(self):
+        """Test creating a voorraad mutatie"""
+        if not self.created_resources.get('artikelen'):
+            print("⚠️  Skipping voorraad mutatie creation - no artikel created")
+            return True
+            
+        artikel_id = self.created_resources['artikelen'][0]
+        
+        mutatie_data = {
+            "artikel_id": artikel_id,
+            "type": "inkoop",
+            "aantal": 10,
+            "kostprijs": 50.0,
+            "omschrijving": "Test voorraad inkoop",
+            "datum": "2025-02-06"
+        }
+        
+        success, response = self.run_test(
+            "Create Voorraad Mutatie",
+            "POST",
+            "voorraad/mutaties",
+            200,
+            data=mutatie_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('voorraad_mutaties', []).append(response['id'])
+            print(f"   Created mutatie ID: {response['id']}")
+            print(f"   Type: {response.get('type')}")
+            print(f"   Aantal: {response.get('aantal')}")
+            print(f"   Voorraad na: {response.get('voorraad_na')}")
+            return True
+        return False
+
+    def test_activa_dashboard(self):
+        """Test activa dashboard endpoint"""
+        success, response = self.run_test(
+            "Activa Dashboard",
+            "GET",
+            "activa/dashboard",
+            200
+        )
+        
+        if success:
+            print(f"   Activa count: {response.get('activa_count', 0)}")
+            print(f"   Totaal aanschafwaarde: {response.get('totaal_aanschafwaarde', 0)}")
+            print(f"   Totaal boekwaarde: {response.get('totaal_boekwaarde', 0)}")
+            print(f"   Kostenplaatsen count: {response.get('kostenplaatsen_count', 0)}")
+            return True
+        return False
+
+    def test_create_vast_activum(self):
+        """Test creating a vast activum"""
+        activum_data = {
+            "naam": "Computer",
+            "omschrijving": "Test computer voor kantoor",
+            "categorie": "computers",
+            "aanschafdatum": "2025-01-01",
+            "aanschafwaarde": 5000.0,
+            "valuta": "SRD",
+            "verwachte_levensduur": 5,
+            "restwaarde": 500.0,
+            "afschrijvings_methode": "lineair",
+            "locatie": "Kantoor",
+            "verzekerd": True,
+            "notities": "Test vast activum"
+        }
+        
+        success, response = self.run_test(
+            "Create Vast Activum",
+            "POST",
+            "activa/",
+            200,
+            data=activum_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('activa', []).append(response['id'])
+            print(f"   Created activum ID: {response['id']}")
+            print(f"   Activum nummer: {response.get('activum_nummer')}")
+            print(f"   Name: {response.get('naam')}")
+            print(f"   Aanschafwaarde: {response.get('aanschafwaarde')} {response.get('valuta')}")
+            print(f"   Jaarlijkse afschrijving: {response.get('jaarlijkse_afschrijving')}")
+            return True
+        return False
+
+    def test_get_activa(self):
+        """Test getting all activa"""
+        success, response = self.run_test(
+            "Get Vaste Activa",
+            "GET",
+            "activa/",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} activa")
+            return True
+        return False
+
+    def test_create_kostenplaats(self):
+        """Test creating a kostenplaats"""
+        kostenplaats_data = {
+            "code": "AFD01",
+            "naam": "Administratie",
+            "omschrijving": "Administratie afdeling",
+            "type": "afdeling",
+            "verantwoordelijke": "Manager Admin",
+            "budget": 50000.0,
+            "budget_valuta": "SRD",
+            "is_actief": True
+        }
+        
+        success, response = self.run_test(
+            "Create Kostenplaats",
+            "POST",
+            "activa/kostenplaatsen",
+            200,
+            data=kostenplaats_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('kostenplaatsen', []).append(response['id'])
+            print(f"   Created kostenplaats ID: {response['id']}")
+            print(f"   Code: {response.get('code')}")
+            print(f"   Name: {response.get('naam')}")
+            print(f"   Budget: {response.get('budget')} {response.get('budget_valuta')}")
+            return True
+        return False
+
+    def test_projecten_dashboard(self):
+        """Test projecten dashboard endpoint"""
+        success, response = self.run_test(
+            "Projecten Dashboard",
+            "GET",
+            "projecten/dashboard/overzicht",
+            200
+        )
+        
+        if success:
+            print(f"   Actieve projecten: {response.get('actieve_projecten', 0)}")
+            print(f"   Uren deze maand: {response.get('uren_deze_maand', 0)}")
+            print(f"   Kosten deze maand: {response.get('kosten_deze_maand', 0)}")
+            return True
+        return False
+
+    def test_create_project(self):
+        """Test creating a project"""
+        project_data = {
+            "naam": "Test Project",
+            "code": "PRJ001",
+            "omschrijving": "Test project voor ERP systeem",
+            "type": "intern",
+            "startdatum": "2025-02-01",
+            "einddatum": "2025-06-30",
+            "budget": 25000.0,
+            "budget_valuta": "SRD",
+            "uurtarief": 75.0,
+            "notities": "Test project"
+        }
+        
+        success, response = self.run_test(
+            "Create Project",
+            "POST",
+            "projecten/",
+            200,
+            data=project_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('projecten', []).append(response['id'])
+            print(f"   Created project ID: {response['id']}")
+            print(f"   Project nummer: {response.get('project_nummer')}")
+            print(f"   Name: {response.get('naam')}")
+            print(f"   Budget: {response.get('budget')} {response.get('budget_valuta')}")
+            return True
+        return False
+
+    def test_get_projecten(self):
+        """Test getting all projecten"""
+        success, response = self.run_test(
+            "Get Projecten",
+            "GET",
+            "projecten/",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} projecten")
+            return True
+        return False
+
 def main():
     print("🏠 SuriRentals API Testing Suite")
     print("=" * 50)
