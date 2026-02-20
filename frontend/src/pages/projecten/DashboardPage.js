@@ -58,7 +58,7 @@ export default function ProjectenDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dashboard?.actieve_projecten || 0}</div>
-            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/projecten/overzicht')}>
+            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/boekhouding/projecten/overzicht')}>
               Bekijk alle <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardContent>
@@ -71,7 +71,7 @@ export default function ProjectenDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dashboard?.uren_deze_maand?.toFixed(1) || 0}</div>
-            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/projecten/uren')}>
+            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/boekhouding/projecten/uren')}>
               Urenregistratie <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardContent>
@@ -130,10 +130,10 @@ export default function ProjectenDashboard() {
       </Card>
 
       <div className="flex gap-4">
-        <Button onClick={() => navigate('/app/projecten/overzicht')}>
+        <Button onClick={() => navigate('/app/boekhouding/projecten/overzicht')}>
           <Briefcase className="mr-2 h-4 w-4" /> Projecten Beheren
         </Button>
-        <Button variant="outline" onClick={() => navigate('/app/projecten/uren')}>
+        <Button variant="outline" onClick={() => navigate('/app/boekhouding/projecten/uren')}>
           <Clock className="mr-2 h-4 w-4" /> Uren Registreren
         </Button>
       </div>

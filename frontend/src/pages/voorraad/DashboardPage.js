@@ -58,7 +58,7 @@ export default function VoorraadDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dashboard?.artikelen_count || 0}</div>
-            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/voorraad/artikelen')}>
+            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/boekhouding/voorraad/artikelen')}>
               Bekijk alle <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardContent>
@@ -84,7 +84,7 @@ export default function VoorraadDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dashboard?.magazijnen_count || 0}</div>
-            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/voorraad/magazijnen')}>
+            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/boekhouding/voorraad/magazijnen')}>
               Beheren <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardContent>
@@ -158,13 +158,13 @@ export default function VoorraadDashboard() {
       </div>
 
       <div className="flex gap-4">
-        <Button onClick={() => navigate('/app/voorraad/artikelen')}>
+        <Button onClick={() => navigate('/app/boekhouding/voorraad/artikelen')}>
           <Package className="mr-2 h-4 w-4" /> Artikelen Beheren
         </Button>
-        <Button variant="outline" onClick={() => navigate('/app/voorraad/mutaties')}>
+        <Button variant="outline" onClick={() => navigate('/app/boekhouding/voorraad/mutaties')}>
           <ArrowUpDown className="mr-2 h-4 w-4" /> Voorraadmutatie
         </Button>
-        <Button variant="outline" onClick={() => navigate('/app/voorraad/inventarisatie')}>
+        <Button variant="outline" onClick={() => navigate('/app/boekhouding/voorraad/inventarisatie')}>
           <Clipboard className="mr-2 h-4 w-4" /> Inventarisatie
         </Button>
       </div>
