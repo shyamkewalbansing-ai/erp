@@ -8,7 +8,7 @@ from typing import List, Optional
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 import uuid
-from .deps import db, get_current_active_user
+from .deps import db, get_current_active_user, clean_doc
 
 router = APIRouter(prefix="/inkoop", tags=["Inkoop"])
 
