@@ -265,6 +265,7 @@ async def create_leverancier(data: LeverancierCreate, current_user: dict = Depen
     }
     
     await db.inkoop_leveranciers.insert_one(leverancier_doc)
+    leverancier_doc.pop("_id", None)
     
     # Synchroniseer met crediteuren in boekhouding
     crediteur_doc = {
@@ -284,6 +285,7 @@ async def create_leverancier(data: LeverancierCreate, current_user: dict = Depen
         "leverancier_id": leverancier_id  # Link naar leverancier
     }
     await db.boekhouding_crediteuren.insert_one(crediteur_doc)
+    crediteur_doc.pop("_id", None)
     
     # Remove MongoDB _id before returning
     leverancier_doc.pop("_id", None)
@@ -489,6 +491,7 @@ async def create_inkoopofferte(data: InkoopofferteCreate, current_user: dict = D
     }
     
     await db.inkoop_offertes.insert_one(offerte_doc)
+    offerte_doc.pop("_id", None)
     return offerte_doc
 
 @router.put("/offertes/{offerte_id}")
@@ -578,6 +581,7 @@ async def offerte_naar_order(offerte_id: str, current_user: dict = Depends(get_c
     }
     
     await db.inkoop_orders.insert_one(order_doc)
+    order_doc.pop("_id", None)
     
     # Update offerte status
     await db.inkoop_offertes.update_one(
@@ -702,6 +706,7 @@ async def create_inkooporder(data: InkooporderCreate, current_user: dict = Depen
     }
     
     await db.inkoop_orders.insert_one(order_doc)
+    order_doc.pop("_id", None)
     return order_doc
 
 @router.put("/orders/{order_id}/status")
@@ -780,6 +785,7 @@ async def order_naar_factuur(order_id: str, current_user: dict = Depends(get_cur
     }
     
     await db.boekhouding_inkoopfacturen.insert_one(factuur_doc)
+    factuur_doc.pop("_id", None)
     
     # Update order met factuur link
     await db.inkoop_orders.update_one(
@@ -881,6 +887,7 @@ async def create_goederenontvangst(data: GoederenontvangstCreate, current_user: 
     }
     
     await db.inkoop_ontvangsten.insert_one(ontvangst_doc)
+    ontvangst_doc.pop("_id", None)
     
     # Update order regels met ontvangen aantallen
     order_regels = order.get("regels", [])
@@ -929,6 +936,7 @@ async def create_goederenontvangst(data: GoederenontvangstCreate, current_user: 
                 "created_at": now
             }
             await db.voorraad_mutaties.insert_one(mutatie_doc)
+    mutatie_doc.pop("_id", None)
             
             # Update voorraad niveau
             await db.voorraad_artikelen.update_one(

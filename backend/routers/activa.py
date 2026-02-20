@@ -228,6 +228,7 @@ async def create_vast_activum(data: VastActivumCreate, current_user: dict = Depe
     }
     
     await db.vaste_activa.insert_one(activum_doc)
+    activum_doc.pop("_id", None)
     return activum_doc
 
 @router.put("/{activum_id}")
@@ -346,6 +347,7 @@ async def create_afschrijving(
     }
     
     await db.activa_afschrijvingen.insert_one(afschrijving_doc)
+    afschrijving_doc.pop("_id", None)
     
     # Update activum
     update_fields = {
@@ -437,6 +439,7 @@ async def batch_afschrijvingen(
         }
         
         await db.activa_afschrijvingen.insert_one(afschrijving_doc)
+    afschrijving_doc.pop("_id", None)
         
         # Update activum
         update_fields = {
@@ -553,6 +556,7 @@ async def create_kostenplaats(data: KostenplaatsCreate, current_user: dict = Dep
     }
     
     await db.kostenplaatsen.insert_one(kostenplaats_doc)
+    kostenplaats_doc.pop("_id", None)
     return kostenplaats_doc
 
 @router.put("/kostenplaatsen/{kostenplaats_id}")
