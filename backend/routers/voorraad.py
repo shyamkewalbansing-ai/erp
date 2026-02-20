@@ -270,7 +270,7 @@ async def create_artikel(data: ArtikelCreate, current_user: dict = Depends(get_c
     
     await db.voorraad_artikelen.insert_one(artikel_doc)
     artikel_doc.pop("_id", None)
-    return artikel_doc
+    return clean_doc(artikel_doc)
 
 @router.put("/artikelen/{artikel_id}")
 async def update_artikel(
@@ -396,7 +396,7 @@ async def create_magazijn(data: MagazijnCreate, current_user: dict = Depends(get
     
     await db.voorraad_magazijnen.insert_one(magazijn_doc)
     magazijn_doc.pop("_id", None)
-    return magazijn_doc
+    return clean_doc(magazijn_doc)
 
 @router.put("/magazijnen/{magazijn_id}")
 async def update_magazijn(
@@ -489,7 +489,7 @@ async def create_locatie(data: LocatieCreate, current_user: dict = Depends(get_c
     
     await db.voorraad_locaties.insert_one(locatie_doc)
     locatie_doc.pop("_id", None)
-    return locatie_doc
+    return clean_doc(locatie_doc)
 
 @router.delete("/locaties/{locatie_id}")
 async def delete_locatie(locatie_id: str, current_user: dict = Depends(get_current_active_user)):
@@ -640,7 +640,7 @@ async def create_voorraad_mutatie(data: VoorraadMutatieCreate, current_user: dic
                 upsert=True
             )
     
-    return mutatie_doc
+    return clean_doc(mutatie_doc)
 
 # ==================== INVENTARISATIE ENDPOINTS ====================
 
@@ -675,7 +675,7 @@ async def create_inventarisatie(data: InventarisatieCreate, current_user: dict =
     
     await db.voorraad_inventarisaties.insert_one(inventarisatie_doc)
     inventarisatie_doc.pop("_id", None)
-    return inventarisatie_doc
+    return clean_doc(inventarisatie_doc)
 
 @router.get("/inventarisaties/{inventarisatie_id}")
 async def get_inventarisatie(inventarisatie_id: str, current_user: dict = Depends(get_current_active_user)):
@@ -843,7 +843,7 @@ async def create_serienummer(data: SerienummerCreate, current_user: dict = Depen
     
     await db.voorraad_serienummers.insert_one(serienummer_doc)
     serienummer_doc.pop("_id", None)
-    return serienummer_doc
+    return clean_doc(serienummer_doc)
 
 # ==================== KOSTPRIJSBEREKENINGEN ====================
 

@@ -203,7 +203,7 @@ async def create_project(data: ProjectCreate, current_user: dict = Depends(get_c
     
     await db.projecten.insert_one(project_doc)
     project_doc.pop("_id", None)
-    return project_doc
+    return clean_doc(project_doc)
 
 @router.put("/{project_id}")
 async def update_project(
@@ -292,7 +292,7 @@ async def create_project_taak(
     
     await db.project_taken.insert_one(taak_doc)
     taak_doc.pop("_id", None)
-    return taak_doc
+    return clean_doc(taak_doc)
 
 @router.put("/{project_id}/taken/{taak_id}")
 async def update_project_taak(
@@ -392,7 +392,7 @@ async def create_project_uren(
             {"$inc": {"gewerkte_uren": data.uren}}
         )
     
-    return uren_doc
+    return clean_doc(uren_doc)
 
 @router.delete("/{project_id}/uren/{uren_id}")
 async def delete_project_uren(
@@ -462,7 +462,7 @@ async def create_project_kosten(
     
     await db.project_kosten.insert_one(kosten_doc)
     kosten_doc.pop("_id", None)
-    return kosten_doc
+    return clean_doc(kosten_doc)
 
 @router.delete("/{project_id}/kosten/{kosten_id}")
 async def delete_project_kosten(

@@ -289,7 +289,7 @@ async def create_leverancier(data: LeverancierCreate, current_user: dict = Depen
     
     # Remove MongoDB _id before returning
     leverancier_doc.pop("_id", None)
-    return leverancier_doc
+    return clean_doc(leverancier_doc)
 
 @router.put("/leveranciers/{leverancier_id}")
 async def update_leverancier(
@@ -492,7 +492,7 @@ async def create_inkoopofferte(data: InkoopofferteCreate, current_user: dict = D
     
     await db.inkoop_offertes.insert_one(offerte_doc)
     offerte_doc.pop("_id", None)
-    return offerte_doc
+    return clean_doc(offerte_doc)
 
 @router.put("/offertes/{offerte_id}")
 async def update_inkoopofferte(
@@ -589,7 +589,7 @@ async def offerte_naar_order(offerte_id: str, current_user: dict = Depends(get_c
         {"$set": {"status": "omgezet_naar_order", "order_id": order_id, "updated_at": now}}
     )
     
-    return order_doc
+    return clean_doc(order_doc)
 
 @router.delete("/offertes/{offerte_id}")
 async def delete_inkoopofferte(offerte_id: str, current_user: dict = Depends(get_current_active_user)):
@@ -707,7 +707,7 @@ async def create_inkooporder(data: InkooporderCreate, current_user: dict = Depen
     
     await db.inkoop_orders.insert_one(order_doc)
     order_doc.pop("_id", None)
-    return order_doc
+    return clean_doc(order_doc)
 
 @router.put("/orders/{order_id}/status")
 async def update_inkooporder_status(
@@ -793,7 +793,7 @@ async def order_naar_factuur(order_id: str, current_user: dict = Depends(get_cur
         {"$set": {"factuur_id": factuur_id, "updated_at": now}}
     )
     
-    return factuur_doc
+    return clean_doc(factuur_doc)
 
 @router.delete("/orders/{order_id}")
 async def delete_inkooporder(order_id: str, current_user: dict = Depends(get_current_active_user)):
@@ -944,7 +944,7 @@ async def create_goederenontvangst(data: GoederenontvangstCreate, current_user: 
                 {"$inc": {"voorraad_aantal": regel.ontvangen_aantal}}
             )
     
-    return ontvangst_doc
+    return clean_doc(ontvangst_doc)
 
 @router.put("/ontvangsten/{ontvangst_id}/status")
 async def update_goederenontvangst_status(

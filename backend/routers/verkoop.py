@@ -307,7 +307,7 @@ async def create_klant(data: KlantCreate, current_user: dict = Depends(get_curre
     await db.boekhouding_debiteuren.insert_one(debiteur_doc)
     debiteur_doc.pop("_id", None)
     
-    return klant_doc
+    return clean_doc(klant_doc)
 
 @router.put("/klanten/{klant_id}")
 async def update_klant(klant_id: str, data: KlantUpdate, current_user: dict = Depends(get_current_active_user)):
@@ -516,7 +516,7 @@ async def create_verkoopofferte(data: VerkoopofferteCreate, current_user: dict =
     
     await db.verkoop_offertes.insert_one(offerte_doc)
     offerte_doc.pop("_id", None)
-    return offerte_doc
+    return clean_doc(offerte_doc)
 
 @router.put("/offertes/{offerte_id}/status")
 async def update_verkoopofferte_status(
@@ -589,7 +589,7 @@ async def offerte_naar_order(offerte_id: str, current_user: dict = Depends(get_c
         {"$set": {"status": "omgezet_naar_order", "order_id": order_id, "updated_at": now}}
     )
     
-    return order_doc
+    return clean_doc(order_doc)
 
 @router.delete("/offertes/{offerte_id}")
 async def delete_verkoopofferte(offerte_id: str, current_user: dict = Depends(get_current_active_user)):
@@ -709,7 +709,7 @@ async def create_verkooporder(data: VerkooporderCreate, current_user: dict = Dep
     
     await db.verkoop_orders.insert_one(order_doc)
     order_doc.pop("_id", None)
-    return order_doc
+    return clean_doc(order_doc)
 
 @router.put("/orders/{order_id}/status")
 async def update_verkooporder_status(
@@ -796,7 +796,7 @@ async def order_naar_factuur(order_id: str, current_user: dict = Depends(get_cur
         {"$set": {"factuur_id": factuur_id, "status": "gefactureerd", "updated_at": now}}
     )
     
-    return factuur_doc
+    return clean_doc(factuur_doc)
 
 @router.delete("/orders/{order_id}")
 async def delete_verkooporder(order_id: str, current_user: dict = Depends(get_current_active_user)):
@@ -866,7 +866,7 @@ async def create_prijslijst(data: PrijslijstCreate, current_user: dict = Depends
     
     await db.verkoop_prijslijsten.insert_one(prijslijst_doc)
     prijslijst_doc.pop("_id", None)
-    return prijslijst_doc
+    return clean_doc(prijslijst_doc)
 
 @router.put("/prijslijsten/{prijslijst_id}")
 async def update_prijslijst(
@@ -946,7 +946,7 @@ async def add_prijslijst_item(
     
     await db.verkoop_prijslijst_items.insert_one(item_doc)
     item_doc.pop("_id", None)
-    return item_doc
+    return clean_doc(item_doc)
 
 @router.delete("/prijslijsten/{prijslijst_id}/items/{item_id}")
 async def delete_prijslijst_item(
@@ -992,7 +992,7 @@ async def create_kortingsregel(data: KortingsregelCreate, current_user: dict = D
     
     await db.verkoop_kortingsregels.insert_one(regel_doc)
     regel_doc.pop("_id", None)
-    return regel_doc
+    return clean_doc(regel_doc)
 
 @router.delete("/kortingsregels/{regel_id}")
 async def delete_kortingsregel(regel_id: str, current_user: dict = Depends(get_current_active_user)):
