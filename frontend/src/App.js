@@ -840,65 +840,65 @@ function MainAppRoutes() {
             <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingKostenplaatsen /></SubscriptionRoute>
           } />
           
-          {/* Inkoop Module Routes */}
-          <Route path="inkoop" element={
+          {/* Inkoop Routes - Onderdeel van Boekhouding */}
+          <Route path="boekhouding/inkoop" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopDashboard /></SubscriptionRoute>
           } />
-          <Route path="inkoop/leveranciers" element={
+          <Route path="boekhouding/inkoop/leveranciers" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopLeveranciers /></SubscriptionRoute>
           } />
-          <Route path="inkoop/offertes" element={
+          <Route path="boekhouding/inkoop/offertes" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopOffertes /></SubscriptionRoute>
           } />
-          <Route path="inkoop/orders" element={
+          <Route path="boekhouding/inkoop/orders" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopOrders /></SubscriptionRoute>
           } />
-          <Route path="inkoop/ontvangsten" element={
+          <Route path="boekhouding/inkoop/ontvangsten" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopOntvangsten /></SubscriptionRoute>
           } />
           
-          {/* Verkoop Module Routes */}
-          <Route path="verkoop" element={
+          {/* Verkoop Routes - Onderdeel van Boekhouding */}
+          <Route path="boekhouding/verkoop" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopDashboard /></SubscriptionRoute>
           } />
-          <Route path="verkoop/klanten" element={
+          <Route path="boekhouding/verkoop/klanten" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopKlanten /></SubscriptionRoute>
           } />
-          <Route path="verkoop/offertes" element={
+          <Route path="boekhouding/verkoop/offertes" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopOffertes /></SubscriptionRoute>
           } />
-          <Route path="verkoop/orders" element={
+          <Route path="boekhouding/verkoop/orders" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopOrders /></SubscriptionRoute>
           } />
-          <Route path="verkoop/prijslijsten" element={
+          <Route path="boekhouding/verkoop/prijslijsten" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopPrijslijsten /></SubscriptionRoute>
           } />
           
-          {/* Voorraad Module Routes */}
-          <Route path="voorraad" element={
+          {/* Voorraad Routes - Onderdeel van Boekhouding */}
+          <Route path="boekhouding/voorraad" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VoorraadDashboard /></SubscriptionRoute>
           } />
-          <Route path="voorraad/artikelen" element={
+          <Route path="boekhouding/voorraad/artikelen" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VoorraadArtikelen /></SubscriptionRoute>
           } />
-          <Route path="voorraad/magazijnen" element={
+          <Route path="boekhouding/voorraad/magazijnen" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VoorraadMagazijnen /></SubscriptionRoute>
           } />
-          <Route path="voorraad/mutaties" element={
+          <Route path="boekhouding/voorraad/mutaties" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VoorraadMutaties /></SubscriptionRoute>
           } />
-          <Route path="voorraad/inventarisatie" element={
+          <Route path="boekhouding/voorraad/inventarisatie" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VoorraadInventarisatie /></SubscriptionRoute>
           } />
           
-          {/* Projecten Module Routes */}
-          <Route path="projecten" element={
+          {/* Projecten Routes - Onderdeel van Boekhouding */}
+          <Route path="boekhouding/projecten" element={
             <SubscriptionRoute requiredAddon="boekhouding"><ProjectenDashboard /></SubscriptionRoute>
           } />
-          <Route path="projecten/overzicht" element={
+          <Route path="boekhouding/projecten/overzicht" element={
             <SubscriptionRoute requiredAddon="boekhouding"><ProjectenOverzicht /></SubscriptionRoute>
           } />
-          <Route path="projecten/uren" element={
+          <Route path="boekhouding/projecten/uren" element={
             <SubscriptionRoute requiredAddon="boekhouding"><ProjectenUren /></SubscriptionRoute>
           } />
           
