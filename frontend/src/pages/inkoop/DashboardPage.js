@@ -58,7 +58,7 @@ export default function InkoopDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dashboard?.leveranciers_count || 0}</div>
-            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/inkoop/leveranciers')}>
+            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/boekhouding/inkoop/leveranciers')}>
               Bekijk alle <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardContent>
@@ -71,7 +71,7 @@ export default function InkoopDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dashboard?.open_offertes || 0}</div>
-            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/inkoop/offertes')}>
+            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/boekhouding/inkoop/offertes')}>
               Bekijk alle <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardContent>
@@ -84,7 +84,7 @@ export default function InkoopDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{dashboard?.open_orders || 0}</div>
-            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/inkoop/orders')}>
+            <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/app/boekhouding/inkoop/orders')}>
               Bekijk alle <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardContent>
@@ -139,13 +139,13 @@ export default function InkoopDashboard() {
       </div>
 
       <div className="flex gap-4">
-        <Button onClick={() => navigate('/app/inkoop/leveranciers')}>
+        <Button onClick={() => navigate('/app/boekhouding/inkoop/leveranciers')}>
           <Building2 className="mr-2 h-4 w-4" /> Leveranciers Beheren
         </Button>
-        <Button variant="outline" onClick={() => navigate('/app/inkoop/offertes')}>
+        <Button variant="outline" onClick={() => navigate('/app/boekhouding/inkoop/offertes')}>
           <FileText className="mr-2 h-4 w-4" /> Nieuwe Offerte
         </Button>
-        <Button variant="outline" onClick={() => navigate('/app/inkoop/orders')}>
+        <Button variant="outline" onClick={() => navigate('/app/boekhouding/inkoop/orders')}>
           <ShoppingCart className="mr-2 h-4 w-4" /> Nieuwe Order
         </Button>
       </div>
