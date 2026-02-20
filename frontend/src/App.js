@@ -144,6 +144,34 @@ const BoekhoudingCrediteuren = lazy(() => import("./pages/boekhouding/Crediteren
 const BoekhoudingVerkoopfacturen = lazy(() => import("./pages/boekhouding/VerkoopfacturenPage"));
 const BoekhoudingBankrekeningen = lazy(() => import("./pages/boekhouding/BankrekeningenPage"));
 const BoekhoudingRapportages = lazy(() => import("./pages/boekhouding/RapportagesPage"));
+const BoekhoudingActiva = lazy(() => import("./pages/boekhouding/ActivaPage"));
+const BoekhoudingKostenplaatsen = lazy(() => import("./pages/boekhouding/KostenplaatsenPage"));
+
+// Inkoop Module
+const InkoopDashboard = lazy(() => import("./pages/inkoop/DashboardPage"));
+const InkoopLeveranciers = lazy(() => import("./pages/inkoop/LeveranciersPage"));
+const InkoopOffertes = lazy(() => import("./pages/inkoop/OffertesPage"));
+const InkoopOrders = lazy(() => import("./pages/inkoop/OrdersPage"));
+const InkoopOntvangsten = lazy(() => import("./pages/inkoop/OntvangstenPage"));
+
+// Verkoop Module
+const VerkoopDashboard = lazy(() => import("./pages/verkoop/DashboardPage"));
+const VerkoopKlanten = lazy(() => import("./pages/verkoop/KlantenPage"));
+const VerkoopOffertes = lazy(() => import("./pages/verkoop/OffertesPage"));
+const VerkoopOrders = lazy(() => import("./pages/verkoop/OrdersPage"));
+const VerkoopPrijslijsten = lazy(() => import("./pages/verkoop/PrijslijstenPage"));
+
+// Voorraad Module
+const VoorraadDashboard = lazy(() => import("./pages/voorraad/DashboardPage"));
+const VoorraadArtikelen = lazy(() => import("./pages/voorraad/ArtikelenPage"));
+const VoorraadMagazijnen = lazy(() => import("./pages/voorraad/MagazijnenPage"));
+const VoorraadMutaties = lazy(() => import("./pages/voorraad/MutatiesPage"));
+const VoorraadInventarisatie = lazy(() => import("./pages/voorraad/InventarisatiePage"));
+
+// Projecten Module
+const ProjectenDashboard = lazy(() => import("./pages/projecten/DashboardPage"));
+const ProjectenOverzicht = lazy(() => import("./pages/projecten/OverzichtPage"));
+const ProjectenUren = lazy(() => import("./pages/projecten/UrenPage"));
 
 // Suribet Module
 const SuribetDashboard = lazy(() => import("./pages/suribet/DashboardPage"));
