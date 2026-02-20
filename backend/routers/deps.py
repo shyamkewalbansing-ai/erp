@@ -20,6 +20,12 @@ mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get('DB_NAME', 'erp_db')]
 
+def clean_doc(doc: dict) -> dict:
+    """Remove MongoDB _id from document to prevent ObjectId serialization errors"""
+    if doc and "_id" in doc:
+        doc.pop("_id", None)
+    return doc
+
 async def get_db():
     """Get database instance - async compatible"""
     return db
