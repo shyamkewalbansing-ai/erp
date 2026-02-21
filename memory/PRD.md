@@ -74,3 +74,85 @@ De gebruiker wil een geconsolideerd installatiescript voor hun CloudPanel-server
 - `GET /api/workspace/branding-public/{slug}` - Publieke workspace branding
 - `POST /api/webhook/github` - GitHub webhook voor auto-deploy
 - `GET /api/domains/status/{workspace_id}` - Domain status (detecteert wildcard)
+
+## Boekhouding Module Uitbreiding (20 Feb 2025)
+
+### Geïmplementeerd
+De Boekhouding module is uitgebreid met de volgende submodules, allemaal gegroepeerd onder `/app/boekhouding/`:
+
+#### 1. Inkoop Module (`/app/boekhouding/inkoop/*`)
+- **Dashboard**: Overzicht inkoopprocessen
+- **Leveranciers**: CRUD voor leveranciersbeheer
+- **Inkoopoffertes**: Offertes aanvragen bij leveranciers
+- **Inkooporders**: Bestellingen plaatsen
+- **Goederenontvangst**: Inkomende goederen registreren
+
+#### 2. Verkoop Module (`/app/boekhouding/verkoop/*`)
+- **Dashboard**: Overzicht verkoopprocessen
+- **Klanten**: CRUD voor klantenbeheer
+- **Verkoopoffertes**: Offertes maken voor klanten
+- **Verkooporders**: Verkooporders beheren
+- **Prijslijsten**: Prijzen en kortingen beheren
+
+#### 3. Voorraad Module (`/app/boekhouding/voorraad/*`)
+- **Dashboard**: Voorraadoverzicht
+- **Artikelen**: Artikelbeheer met SKU, prijzen, etc.
+- **Magazijnen**: Magazijnlocaties beheren
+- **Voorraadmutaties**: In/uit bewegingen registreren
+- **Inventarisatie**: Voorraadtellingen
+
+#### 4. Projecten Module (`/app/boekhouding/projecten/*`)
+- **Dashboard**: Projectenoverzicht met KPI's
+- **Alle Projecten**: Project CRUD (klant/intern/onderhoud)
+- **Urenregistratie**: Uren boeken op projecten
+
+#### 5. Vaste Activa & Kostenplaatsen
+- **Vaste Activa**: Registratie en afschrijvingen
+- **Kostenplaatsen**: Budget tracking per afdeling
+
+### Backend Bestanden
+- `/app/backend/routers/inkoop.py`
+- `/app/backend/routers/verkoop.py`
+- `/app/backend/routers/voorraad.py`
+- `/app/backend/routers/projecten.py`
+- `/app/backend/routers/activa.py`
+
+### Frontend Bestanden
+- `/app/frontend/src/pages/inkoop/*.js`
+- `/app/frontend/src/pages/verkoop/*.js`
+- `/app/frontend/src/pages/voorraad/*.js`
+- `/app/frontend/src/pages/projecten/*.js`
+- `/app/frontend/src/pages/boekhouding/ActivaPage.js`
+- `/app/frontend/src/pages/boekhouding/KostenplaatsenPage.js`
+
+### Database Collecties
+- `inkoop_leveranciers`, `inkoop_offertes`, `inkoop_orders`, `inkoop_ontvangsten`
+- `verkoop_klanten`, `verkoop_offertes`, `verkoop_orders`, `verkoop_prijslijsten`
+- `voorraad_artikelen`, `voorraad_magazijnen`, `voorraad_mutaties`
+- `vaste_activa`, `activa_afschrijvingen`, `kostenplaatsen`
+- `projecten`, `project_taken`, `project_uren`, `project_kosten`
+
+### Test Account
+- **Email**: `boekhoud@test.nl`
+- **Wachtwoord**: `test1234`
+
+## Roadmap / Backlog
+
+### P0 - Kritiek
+- [x] Frontend debuggen (opgelost)
+- [x] Navigatie herstructureren onder Boekhouding
+
+### P1 - Hoog
+- [ ] Bank/Kas uitbreiding (koppeling met facturen)
+- [ ] Nieuwe menu items: Gebruikersbeheer, Product/Dienst
+- [ ] Inkomsten/Uitgaven overzichten
+
+### P2 - Medium
+- [ ] HRM integratie met boekhouding (personeelskosten automatisch boeken)
+- [ ] Salaris koppeling met Bank/Kas
+- [ ] Project uren koppeling met HRM medewerkers
+
+### P3 - Laag
+- [ ] Geavanceerde rapportages per module
+- [ ] Export functies (Excel, PDF)
+- [ ] Bulk import/export
