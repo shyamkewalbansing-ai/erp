@@ -149,23 +149,22 @@ const boekhoudingNavItems = [
   { to: '/app/boekhouding/grootboek', icon: FileText, label: 'Grootboek', addon: 'boekhouding' },
   { to: '/app/boekhouding/debiteuren', icon: Users, label: 'Debiteuren', addon: 'boekhouding' },
   { to: '/app/boekhouding/crediteuren', icon: Building2, label: 'Crediteuren', addon: 'boekhouding' },
-  { to: '/app/boekhouding/verkoopfacturen', icon: FileText, label: 'Facturen', addon: 'boekhouding' },
   { to: '/app/boekhouding/bankrekeningen', icon: CreditCard, label: 'Bank/Kas', addon: 'boekhouding' },
   { to: '/app/boekhouding/activa', icon: Building2, label: 'Vaste Activa', addon: 'boekhouding' },
   { to: '/app/boekhouding/kostenplaatsen', icon: Target, label: 'Kostenplaatsen', addon: 'boekhouding' },
   
-  // Inkoop (submodule)
+  // Inkoop (submodule) - Crediteuren = Leveranciers
   { to: '/app/boekhouding/inkoop', icon: ShoppingCart, label: 'Inkoop', addon: 'boekhouding', isSubmenu: true },
-  { to: '/app/boekhouding/inkoop/leveranciers', icon: Building2, label: '• Leveranciers', addon: 'boekhouding' },
   { to: '/app/boekhouding/inkoop/offertes', icon: FileText, label: '• Inkoopoffertes', addon: 'boekhouding' },
   { to: '/app/boekhouding/inkoop/orders', icon: ShoppingCart, label: '• Inkooporders', addon: 'boekhouding' },
   { to: '/app/boekhouding/inkoop/ontvangsten', icon: Package, label: '• Goederenontvangst', addon: 'boekhouding' },
+  { to: '/app/boekhouding/inkoop/facturen', icon: FileText, label: '• Inkoopfacturen', addon: 'boekhouding' },
   
-  // Verkoop (submodule)
+  // Verkoop (submodule) - Debiteuren = Klanten
   { to: '/app/boekhouding/verkoop', icon: Banknote, label: 'Verkoop', addon: 'boekhouding', isSubmenu: true },
-  { to: '/app/boekhouding/verkoop/klanten', icon: Users, label: '• Klanten', addon: 'boekhouding' },
   { to: '/app/boekhouding/verkoop/offertes', icon: FileText, label: '• Verkoopoffertes', addon: 'boekhouding' },
   { to: '/app/boekhouding/verkoop/orders', icon: ShoppingCart, label: '• Verkooporders', addon: 'boekhouding' },
+  { to: '/app/boekhouding/verkoop/facturen', icon: FileText, label: '• Verkoopfacturen', addon: 'boekhouding' },
   { to: '/app/boekhouding/verkoop/prijslijsten', icon: Banknote, label: '• Prijslijsten', addon: 'boekhouding' },
   
   // Voorraad (submodule)
