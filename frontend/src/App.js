@@ -153,6 +153,7 @@ const InkoopLeveranciers = lazy(() => import("./pages/inkoop/LeveranciersPage"))
 const InkoopOffertes = lazy(() => import("./pages/inkoop/OffertesPage"));
 const InkoopOrders = lazy(() => import("./pages/inkoop/OrdersPage"));
 const InkoopOntvangsten = lazy(() => import("./pages/inkoop/OntvangstenPage"));
+const InkoopFacturen = lazy(() => import("./pages/boekhouding/InkoopfacturenPage"));
 
 // Verkoop Module
 const VerkoopDashboard = lazy(() => import("./pages/verkoop/DashboardPage"));
@@ -160,6 +161,7 @@ const VerkoopKlanten = lazy(() => import("./pages/verkoop/KlantenPage"));
 const VerkoopOffertes = lazy(() => import("./pages/verkoop/OffertesPage"));
 const VerkoopOrders = lazy(() => import("./pages/verkoop/OrdersPage"));
 const VerkoopPrijslijsten = lazy(() => import("./pages/verkoop/PrijslijstenPage"));
+const VerkoopFacturen = lazy(() => import("./pages/boekhouding/VerkoopfacturenPage"));
 
 // Voorraad Module
 const VoorraadDashboard = lazy(() => import("./pages/voorraad/DashboardPage"));
