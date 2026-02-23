@@ -432,10 +432,12 @@ async def create_verkoopofferte(data: VerkoopofferteCreate, current_user: dict =
     """Maak een nieuwe verkoopofferte aan"""
     user_id = current_user["id"]
     
-    # Valideer klant
-    klant = await db.verkoop_klanten.find_one({"id": data.klant_id, "user_id": user_id}, {"_id": 0})
+    # Valideer klant - eerst in debiteuren zoeken, dan in verkoop_klanten
+    klant = await db.boekhouding_debiteuren.find_one({"id": data.klant_id, "user_id": user_id}, {"_id": 0})
     if not klant:
-        raise HTTPException(status_code=404, detail="Klant niet gevonden")
+        klant = await db.verkoop_klanten.find_one({"id": data.klant_id, "user_id": user_id}, {"_id": 0})
+    if not klant:
+        raise HTTPException(status_code=404, detail="Debiteur/klant niet gevonden")
     
     offerte_id = str(uuid.uuid4())
     offertenummer = await genereer_offertenummer(user_id)
