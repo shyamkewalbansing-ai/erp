@@ -355,7 +355,7 @@ export default function InkoopOrdersPage() {
                       </Button>
                     )}
                     {(order.status === 'gedeeltelijk_ontvangen' || order.status === 'volledig_ontvangen') && !order.factuur_id && (
-                      <Button size="sm" onClick={() => createFactuur(order.id)} className="flex-1 sm:flex-none bg-purple-500 hover:bg-purple-600 text-xs sm:text-sm">
+                      <Button size="sm" onClick={() => createFactuur(order.id)} className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-xs sm:text-sm">
                         <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Factuur
                       </Button>
                     )}
