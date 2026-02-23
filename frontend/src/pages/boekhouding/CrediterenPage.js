@@ -203,7 +203,7 @@ export default function CrediterenPage() {
             </div>
             <h3 className="text-lg font-semibold mb-2">Geen crediteuren gevonden</h3>
             <p className="text-muted-foreground text-sm mb-4">Voeg uw eerste crediteur toe</p>
-            <Button onClick={() => { resetForm(); setDialogOpen(true); }} className="bg-purple-500 hover:bg-purple-600">
+            <Button onClick={() => { resetForm(); setDialogOpen(true); }} className="bg-emerald-500 hover:bg-emerald-600">
               <Plus className="w-4 h-4 mr-2" /> Nieuwe Crediteur
             </Button>
           </div>
