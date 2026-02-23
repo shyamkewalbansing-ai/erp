@@ -287,7 +287,7 @@ export default function VerkoopOffertesPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {klanten.map((k) => (
-                      <SelectItem key={k.id} value={k.id}>{k.naam} ({k.klantnummer})</SelectItem>
+                      <SelectItem key={k.id} value={k.id}>{k.naam} {k.debiteur_nummer ? `(${k.debiteur_nummer})` : ''}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

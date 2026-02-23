@@ -285,7 +285,7 @@ export default function InkoopOffertesPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {leveranciers.map((l) => (
-                      <SelectItem key={l.id} value={l.id}>{l.naam} ({l.leveranciersnummer})</SelectItem>
+                      <SelectItem key={l.id} value={l.id}>{l.naam} {l.crediteur_nummer ? `(${l.crediteur_nummer})` : ''}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
