@@ -136,6 +136,11 @@ De Boekhouding module is uitgebreid met de volgende submodules, allemaal gegroep
 - **Email**: `boekhoud@test.nl`
 - **Wachtwoord**: `test1234`
 
+### Bug Fixes (21 Feb 2025)
+- **Veldnamen gefixed**: Frontend formulieren gebruikten verkeerde veldnamen (`prijs`, `btw_percentage`) terwijl backend `prijs_per_stuk` en `btw_tarief` verwachtte
+- **Datum veld toegevoegd**: `orderdatum` en `offertedatum` worden nu automatisch ingevuld
+- **Alle CRUD dialogen werkend**: Verkooporders, Verkoopoffertes, Inkooporders, Inkoopoffertes hebben nu werkende aanmaak-dialogen
+
 ## Roadmap / Backlog
 
 ### P0 - Kritiek
