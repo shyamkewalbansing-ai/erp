@@ -205,7 +205,7 @@ export default function DebiterenPage() {
             </div>
             <h3 className="text-lg font-semibold mb-2">Geen debiteuren gevonden</h3>
             <p className="text-muted-foreground text-sm mb-4">Voeg uw eerste debiteur toe</p>
-            <Button onClick={() => { resetForm(); setDialogOpen(true); }} className="bg-blue-500 hover:bg-blue-600">
+            <Button onClick={() => { resetForm(); setDialogOpen(true); }} className="bg-emerald-500 hover:bg-emerald-600">
               <Plus className="w-4 h-4 mr-2" /> Nieuwe Debiteur
             </Button>
           </div>
