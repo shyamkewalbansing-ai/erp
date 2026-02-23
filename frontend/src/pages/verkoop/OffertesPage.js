@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Plus, FileText, ArrowRight, Trash2 } from 'lucide-react';
+import { 
+  Plus, FileText, ArrowRight, Trash2, Search, Loader2,
+  Calendar, Clock, CheckCircle, Send
+} from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const statusColors = {
-  concept: 'bg-gray-100 text-gray-800',
-  verzonden: 'bg-blue-100 text-blue-800',
-  bekeken: 'bg-purple-100 text-purple-800',
-  geaccepteerd: 'bg-green-100 text-green-800',
-  afgewezen: 'bg-red-100 text-red-800',
-  verlopen: 'bg-orange-100 text-orange-800'
+  concept: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
+  verzonden: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300',
+  bekeken: 'bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300',
+  geaccepteerd: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
+  afgewezen: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300',
+  verlopen: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300'
 };
 
 export default function VerkoopOffertesPage() {
@@ -26,6 +28,7 @@ export default function VerkoopOffertesPage() {
   const [artikelen, setArtikelen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({
     klant_id: '',
     valuta: 'SRD',
@@ -60,7 +63,6 @@ export default function VerkoopOffertesPage() {
   const fetchKlanten = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Gebruik debiteuren als klanten (gekoppeld met boekhouding)
       const res = await fetch(`${API_URL}/api/boekhouding/debiteuren`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -125,7 +127,7 @@ export default function VerkoopOffertesPage() {
 
   const handleSubmit = async () => {
     if (!form.klant_id) {
-      toast.error('Selecteer een klant');
+      toast.error('Selecteer een debiteur');
       return;
     }
     if (form.regels.length === 0 || !form.regels[0].omschrijving) {
@@ -183,7 +185,6 @@ export default function VerkoopOffertesPage() {
     const newRegels = [...form.regels];
     newRegels[index][field] = value;
     
-    // Als artikel geselecteerd wordt, vul prijs en omschrijving automatisch in
     if (field === 'artikel_id' && value) {
       const artikel = artikelen.find(a => a.id === value);
       if (artikel) {
@@ -203,87 +204,190 @@ export default function VerkoopOffertesPage() {
     }, 0);
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Verkoopoffertes</h1>
-          <p className="text-muted-foreground">Beheer offertes voor klanten</p>
+  const filteredOffertes = offertes.filter(offerte =>
+    offerte.offertenummer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    offerte.klant_naam?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const stats = {
+    totaal: offertes.length,
+    concept: offertes.filter(o => o.status === 'concept').length,
+    verzonden: offertes.filter(o => o.status === 'verzonden').length,
+    geaccepteerd: offertes.filter(o => o.status === 'geaccepteerd').length
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto mb-3" />
+          <p className="text-muted-foreground">Offertes laden...</p>
         </div>
-        <Button onClick={() => { resetForm(); setDialogOpen(true); }} data-testid="nieuwe-offerte-btn">
-          <Plus className="mr-2 h-4 w-4" /> Nieuwe Offerte
-        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="verkoop-offertes-page">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-8">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+        </div>
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-72 h-48 lg:h-72 bg-emerald-500/30 rounded-full blur-[80px]"></div>
+        
+        <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-emerald-300 text-xs sm:text-sm mb-3">
+              <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Verkoop Module</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">Verkoopoffertes</h1>
+            <p className="text-slate-400 text-sm sm:text-base">Beheer offertes voor uw debiteuren</p>
+          </div>
+          <Button 
+            onClick={() => { resetForm(); setDialogOpen(true); }} 
+            className="bg-emerald-500 hover:bg-emerald-600 text-white w-full sm:w-auto"
+            data-testid="nieuwe-offerte-btn"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Nieuwe Offerte
+          </Button>
+        </div>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4 lg:p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
             </div>
-          ) : offertes.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              Geen verkoopoffertes gevonden
+            <div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Totaal</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.totaal}</p>
             </div>
-          ) : (
-            <div className="space-y-4">
-              {offertes.map((offerte) => (
-                <div key={offerte.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-green-100 dark:bg-green-900 rounded-lg">
-                      <FileText className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-medium">{offerte.offertenummer}</p>
-                      <p className="text-sm text-muted-foreground">{offerte.klant_naam}</p>
-                      <p className="text-xs text-muted-foreground">Datum: {offerte.offertedatum} | Geldig tot: {offerte.geldig_tot}</p>
-                    </div>
+          </div>
+        </div>
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4 lg:p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-500/10 flex items-center justify-center">
+              <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-slate-500" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Concept</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.concept}</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4 lg:p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+              <Send className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Verzonden</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.verzonden}</p>
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-3 sm:p-4 lg:p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm text-muted-foreground">Geaccepteerd</p>
+              <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.geaccepteerd}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Zoek op offertenummer of debiteur..."
+          className="pl-10 rounded-xl"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+
+      {/* Offertes List */}
+      <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 overflow-hidden">
+        {filteredOffertes.length === 0 ? (
+          <div className="text-center py-12 sm:py-16 px-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-4">
+              <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Geen offertes gevonden</h3>
+            <p className="text-muted-foreground text-sm mb-4">Maak uw eerste verkoopofferte aan</p>
+            <Button onClick={() => { resetForm(); setDialogOpen(true); }} className="bg-emerald-500 hover:bg-emerald-600">
+              <Plus className="w-4 h-4 mr-2" /> Nieuwe Offerte
+            </Button>
+          </div>
+        ) : (
+          <div className="divide-y divide-border">
+            {filteredOffertes.map((offerte) => (
+              <div key={offerte.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 hover:bg-muted/50 transition-colors gap-4">
+                <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-600" />
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-bold">{offerte.valuta} {offerte.totaal?.toLocaleString()}</p>
-                      <Badge className={statusColors[offerte.status] || 'bg-gray-100'}>
-                        {offerte.status}
-                      </Badge>
-                    </div>
-                    <div className="flex gap-2">
-                      {offerte.status === 'concept' && (
-                        <Button size="sm" variant="outline" onClick={() => updateStatus(offerte.id, 'verzonden')}>
-                          Verzenden
-                        </Button>
-                      )}
-                      {(offerte.status === 'verzonden' || offerte.status === 'bekeken') && (
-                        <Button size="sm" variant="outline" onClick={() => updateStatus(offerte.id, 'geaccepteerd')}>
-                          Accepteren
-                        </Button>
-                      )}
-                      {offerte.status === 'geaccepteerd' && (
-                        <Button size="sm" onClick={() => convertToOrder(offerte.id)}>
-                          <ArrowRight className="mr-1 h-4 w-4" /> Naar Order
-                        </Button>
-                      )}
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm sm:text-base truncate">{offerte.offertenummer}</p>
+                    <p className="text-sm text-muted-foreground truncate">{offerte.klant_naam}</p>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                      <Calendar className="w-3 h-3" />
+                      <span>Geldig tot: {offerte.geldig_tot}</span>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 ml-13 sm:ml-0">
+                  <div className="text-left sm:text-right">
+                    <p className="font-bold text-base sm:text-lg">{offerte.valuta} {offerte.totaal?.toLocaleString()}</p>
+                    <Badge className={`${statusColors[offerte.status]} text-xs`}>
+                      {offerte.status}
+                    </Badge>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    {offerte.status === 'concept' && (
+                      <Button size="sm" variant="outline" onClick={() => updateStatus(offerte.id, 'verzonden')} className="flex-1 sm:flex-none text-xs sm:text-sm">
+                        Verzenden
+                      </Button>
+                    )}
+                    {(offerte.status === 'verzonden' || offerte.status === 'bekeken') && (
+                      <Button size="sm" variant="outline" onClick={() => updateStatus(offerte.id, 'geaccepteerd')} className="flex-1 sm:flex-none text-xs sm:text-sm">
+                        Accepteren
+                      </Button>
+                    )}
+                    {offerte.status === 'geaccepteerd' && (
+                      <Button size="sm" onClick={() => convertToOrder(offerte.id)} className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-xs sm:text-sm">
+                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Naar Order
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
-      {/* Nieuwe Offerte Dialog */}
+      {/* Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nieuwe Verkoopofferte</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">Nieuwe Verkoopofferte</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label>Klant *</Label>
+                <Label className="text-sm">Debiteur *</Label>
                 <Select value={form.klant_id} onValueChange={(v) => setForm({...form, klant_id: v})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecteer klant" />
+                  <SelectTrigger className="rounded-lg">
+                    <SelectValue placeholder="Selecteer debiteur" />
                   </SelectTrigger>
                   <SelectContent>
                     {klanten.map((k) => (
@@ -293,9 +397,9 @@ export default function VerkoopOffertesPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Valuta</Label>
+                <Label className="text-sm">Valuta</Label>
                 <Select value={form.valuta} onValueChange={(v) => setForm({...form, valuta: v})}>
-                  <SelectTrigger>
+                  <SelectTrigger className="rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -306,33 +410,34 @@ export default function VerkoopOffertesPage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Geldigheid (dagen)</Label>
+                <Label className="text-sm">Geldigheid (dagen)</Label>
                 <Input 
                   type="number" 
                   value={form.geldigheid_dagen} 
                   onChange={(e) => setForm({...form, geldigheid_dagen: parseInt(e.target.value) || 30})}
                   min="1"
+                  className="rounded-lg"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <Label>Offerteregels</Label>
-                <Button type="button" variant="outline" size="sm" onClick={addRegel}>
+                <Label className="text-sm font-semibold">Offerteregels</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addRegel} className="rounded-lg">
                   <Plus className="h-4 w-4 mr-1" /> Regel
                 </Button>
               </div>
               
               {form.regels.map((regel, index) => (
-                <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 border rounded-lg bg-muted/30">
-                  <div className="col-span-3">
-                    <Label className="text-xs">Artikel</Label>
+                <div key={index} className="grid grid-cols-12 gap-2 items-end p-3 sm:p-4 border rounded-xl bg-muted/30">
+                  <div className="col-span-12 sm:col-span-3">
+                    <Label className="text-xs text-muted-foreground">Artikel</Label>
                     <Select 
                       value={regel.artikel_id} 
                       onValueChange={(v) => updateRegel(index, 'artikel_id', v)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="rounded-lg mt-1">
                         <SelectValue placeholder="Selecteer" />
                       </SelectTrigger>
                       <SelectContent>
@@ -342,39 +447,42 @@ export default function VerkoopOffertesPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="col-span-3">
-                    <Label className="text-xs">Omschrijving *</Label>
+                  <div className="col-span-12 sm:col-span-3">
+                    <Label className="text-xs text-muted-foreground">Omschrijving *</Label>
                     <Input 
                       value={regel.omschrijving} 
                       onChange={(e) => updateRegel(index, 'omschrijving', e.target.value)}
                       placeholder="Omschrijving"
+                      className="rounded-lg mt-1"
                     />
                   </div>
-                  <div className="col-span-1">
-                    <Label className="text-xs">Aantal</Label>
+                  <div className="col-span-4 sm:col-span-1">
+                    <Label className="text-xs text-muted-foreground">Aantal</Label>
                     <Input 
                       type="number" 
                       value={regel.aantal} 
                       onChange={(e) => updateRegel(index, 'aantal', parseInt(e.target.value) || 1)}
                       min="1"
+                      className="rounded-lg mt-1"
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">Prijs</Label>
+                  <div className="col-span-4 sm:col-span-2">
+                    <Label className="text-xs text-muted-foreground">Prijs</Label>
                     <Input 
                       type="number" 
                       value={regel.prijs_per_stuk} 
                       onChange={(e) => updateRegel(index, 'prijs_per_stuk', parseFloat(e.target.value) || 0)}
                       step="0.01"
+                      className="rounded-lg mt-1"
                     />
                   </div>
-                  <div className="col-span-2">
-                    <Label className="text-xs">BTW %</Label>
+                  <div className="col-span-3 sm:col-span-2">
+                    <Label className="text-xs text-muted-foreground">BTW</Label>
                     <Select 
                       value={regel.btw_tarief} 
                       onValueChange={(v) => updateRegel(index, 'btw_tarief', v)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="rounded-lg mt-1">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -391,6 +499,7 @@ export default function VerkoopOffertesPage() {
                       size="icon"
                       onClick={() => removeRegel(index)}
                       disabled={form.regels.length === 1}
+                      className="rounded-lg"
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />
                     </Button>
@@ -402,13 +511,13 @@ export default function VerkoopOffertesPage() {
             <div className="flex justify-end pt-4 border-t">
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Totaal (incl. BTW)</p>
-                <p className="text-2xl font-bold">{form.valuta} {calculateTotal().toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{form.valuta} {calculateTotal().toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Annuleren</Button>
-            <Button onClick={handleSubmit}>Offerte Aanmaken</Button>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto rounded-lg">Annuleren</Button>
+            <Button onClick={handleSubmit} className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 rounded-lg">Offerte Aanmaken</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
