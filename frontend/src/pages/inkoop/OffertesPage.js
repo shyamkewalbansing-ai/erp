@@ -360,16 +360,16 @@ export default function InkoopOffertesPage() {
                     <Label className="text-xs">Prijs</Label>
                     <Input 
                       type="number" 
-                      value={regel.prijs} 
-                      onChange={(e) => updateRegel(index, 'prijs', parseFloat(e.target.value) || 0)}
+                      value={regel.prijs_per_stuk} 
+                      onChange={(e) => updateRegel(index, 'prijs_per_stuk', parseFloat(e.target.value) || 0)}
                       step="0.01"
                     />
                   </div>
                   <div className="col-span-2">
                     <Label className="text-xs">BTW %</Label>
                     <Select 
-                      value={regel.btw_percentage.toString()} 
-                      onValueChange={(v) => updateRegel(index, 'btw_percentage', parseInt(v))}
+                      value={regel.btw_tarief} 
+                      onValueChange={(v) => updateRegel(index, 'btw_tarief', v)}
                     >
                       <SelectTrigger>
                         <SelectValue />
