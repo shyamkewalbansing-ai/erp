@@ -499,7 +499,7 @@ export default function InkoopOrdersPage() {
           </div>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto rounded-lg">Annuleren</Button>
-            <Button onClick={handleSubmit} className="w-full sm:w-auto bg-purple-500 hover:bg-purple-600 rounded-lg">Order Aanmaken</Button>
+            <Button onClick={handleSubmit} className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 rounded-lg">Order Aanmaken</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
