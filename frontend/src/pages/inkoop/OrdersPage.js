@@ -320,7 +320,7 @@ export default function InkoopOrdersPage() {
             </div>
             <h3 className="text-lg font-semibold mb-2">Geen inkooporders gevonden</h3>
             <p className="text-muted-foreground text-sm mb-4">Maak uw eerste inkooporder aan</p>
-            <Button onClick={() => { resetForm(); setDialogOpen(true); }} className="bg-purple-500 hover:bg-purple-600">
+            <Button onClick={() => { resetForm(); setDialogOpen(true); }} className="bg-emerald-500 hover:bg-emerald-600">
               <Plus className="w-4 h-4 mr-2" /> Nieuwe Order
             </Button>
           </div>
