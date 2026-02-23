@@ -185,7 +185,7 @@ export default function VerkoopOrdersPage() {
       const artikel = artikelen.find(a => a.id === value);
       if (artikel) {
         newRegels[index].omschrijving = artikel.naam;
-        newRegels[index].prijs = artikel.verkoopprijs || 0;
+        newRegels[index].prijs_per_stuk = artikel.verkoopprijs || 0;
       }
     }
     
@@ -194,8 +194,8 @@ export default function VerkoopOrdersPage() {
 
   const calculateTotal = () => {
     return form.regels.reduce((sum, regel) => {
-      const subtotal = regel.aantal * regel.prijs;
-      const btw = subtotal * (regel.btw_percentage / 100);
+      const subtotal = regel.aantal * regel.prijs_per_stuk;
+      const btw = subtotal * (parseInt(regel.btw_tarief) / 100);
       return sum + subtotal + btw;
     }, 0);
   };
