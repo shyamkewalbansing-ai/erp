@@ -111,15 +111,15 @@ export default function CrediterenPage() {
   return (
     <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="crediteuren-page">
       {/* Hero Header */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-purple-900 p-4 sm:p-6 lg:p-8">
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-8">
         <div className="absolute inset-0 opacity-30">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
         </div>
-        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-72 h-48 lg:h-72 bg-purple-500/30 rounded-full blur-[80px]"></div>
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-72 h-48 lg:h-72 bg-emerald-500/30 rounded-full blur-[80px]"></div>
         
         <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-purple-300 text-xs sm:text-sm mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-emerald-300 text-xs sm:text-sm mb-3">
               <Building2 className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Boekhouding</span>
             </div>
@@ -128,7 +128,7 @@ export default function CrediterenPage() {
           </div>
           <Button 
             onClick={() => { resetForm(); setDialogOpen(true); }} 
-            className="bg-purple-500 hover:bg-purple-600 text-white w-full sm:w-auto"
+            className="bg-emerald-500 hover:bg-emerald-600 text-white w-full sm:w-auto"
           >
             <Plus className="w-4 h-4 mr-2" /> Nieuwe Crediteur
           </Button>
