@@ -141,6 +141,18 @@ De Boekhouding module is uitgebreid met de volgende submodules, allemaal gegroep
 - **Datum veld toegevoegd**: `orderdatum` en `offertedatum` worden nu automatisch ingevuld
 - **Alle CRUD dialogen werkend**: Verkooporders, Verkoopoffertes, Inkooporders, Inkoopoffertes hebben nu werkende aanmaak-dialogen
 
+### Debiteuren/Crediteuren Koppeling (23 Feb 2025)
+- **Debiteuren = Klanten**: Verkoop module gebruikt nu `boekhouding_debiteuren` in plaats van aparte `verkoop_klanten` tabel
+- **Crediteuren = Leveranciers**: Inkoop module gebruikt nu `boekhouding_crediteuren` in plaats van aparte `inkoop_leveranciers` tabel
+- **Navigatie geherstructureerd**: 
+  - Klanten verwijderd uit Verkoop submenu
+  - Leveranciers verwijderd uit Inkoop submenu
+  - Debiteuren en Crediteuren zijn nu de centrale entiteiten
+- **Facturen Routes toegevoegd**:
+  - `/app/boekhouding/verkoop/facturen` → Verkoopfacturen (gegenereerd uit orders)
+  - `/app/boekhouding/inkoop/facturen` → Inkoopfacturen
+- **Backend aangepast**: Orders en offertes zoeken nu eerst in debiteuren/crediteuren, met fallback naar legacy tabellen
+
 ## Roadmap / Backlog
 
 ### P0 - Kritiek
