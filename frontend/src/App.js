@@ -846,9 +846,6 @@ function MainAppRoutes() {
           <Route path="boekhouding/inkoop" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopDashboard /></SubscriptionRoute>
           } />
-          <Route path="boekhouding/inkoop/leveranciers" element={
-            <SubscriptionRoute requiredAddon="boekhouding"><InkoopLeveranciers /></SubscriptionRoute>
-          } />
           <Route path="boekhouding/inkoop/offertes" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopOffertes /></SubscriptionRoute>
           } />
@@ -858,19 +855,22 @@ function MainAppRoutes() {
           <Route path="boekhouding/inkoop/ontvangsten" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopOntvangsten /></SubscriptionRoute>
           } />
+          <Route path="boekhouding/inkoop/facturen" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><InkoopFacturen /></SubscriptionRoute>
+          } />
           
           {/* Verkoop Routes - Onderdeel van Boekhouding */}
           <Route path="boekhouding/verkoop" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopDashboard /></SubscriptionRoute>
-          } />
-          <Route path="boekhouding/verkoop/klanten" element={
-            <SubscriptionRoute requiredAddon="boekhouding"><VerkoopKlanten /></SubscriptionRoute>
           } />
           <Route path="boekhouding/verkoop/offertes" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopOffertes /></SubscriptionRoute>
           } />
           <Route path="boekhouding/verkoop/orders" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopOrders /></SubscriptionRoute>
+          } />
+          <Route path="boekhouding/verkoop/facturen" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><VerkoopFacturen /></SubscriptionRoute>
           } />
           <Route path="boekhouding/verkoop/prijslijsten" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopPrijslijsten /></SubscriptionRoute>
