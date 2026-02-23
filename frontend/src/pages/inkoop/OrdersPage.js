@@ -158,14 +158,15 @@ export default function InkoopOrdersPage() {
     setForm({
       leverancier_id: '',
       valuta: 'SRD',
-      regels: [{ artikel_id: '', omschrijving: '', aantal: 1, prijs: 0, btw_percentage: 10 }]
+      orderdatum: new Date().toISOString().split('T')[0],
+      regels: [{ artikel_id: '', omschrijving: '', aantal: 1, prijs_per_stuk: 0, btw_tarief: '10' }]
     });
   };
 
   const addRegel = () => {
     setForm({
       ...form,
-      regels: [...form.regels, { artikel_id: '', omschrijving: '', aantal: 1, prijs: 0, btw_percentage: 10 }]
+      regels: [...form.regels, { artikel_id: '', omschrijving: '', aantal: 1, prijs_per_stuk: 0, btw_tarief: '10' }]
     });
   };
 
@@ -182,7 +183,7 @@ export default function InkoopOrdersPage() {
       const artikel = artikelen.find(a => a.id === value);
       if (artikel) {
         newRegels[index].omschrijving = artikel.naam;
-        newRegels[index].prijs = artikel.inkoopprijs || 0;
+        newRegels[index].prijs_per_stuk = artikel.inkoopprijs || 0;
       }
     }
     
@@ -191,8 +192,8 @@ export default function InkoopOrdersPage() {
 
   const calculateTotal = () => {
     return form.regels.reduce((sum, regel) => {
-      const subtotal = regel.aantal * regel.prijs;
-      const btw = subtotal * (regel.btw_percentage / 100);
+      const subtotal = regel.aantal * regel.prijs_per_stuk;
+      const btw = subtotal * (parseInt(regel.btw_tarief) / 100);
       return sum + subtotal + btw;
     }, 0);
   };
