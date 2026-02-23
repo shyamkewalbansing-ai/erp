@@ -343,7 +343,7 @@ export default function DebiterenPage() {
               <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} className="w-full sm:w-auto rounded-lg">
                 Annuleren
               </Button>
-              <Button type="submit" className="w-full sm:w-auto bg-blue-500 hover:bg-blue-600 rounded-lg">
+              <Button type="submit" className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 rounded-lg">
                 {editingId ? 'Opslaan' : 'Aanmaken'}
               </Button>
             </DialogFooter>
