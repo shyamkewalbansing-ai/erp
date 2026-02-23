@@ -419,12 +419,16 @@ async def create_inkoopofferte(data: InkoopofferteCreate, current_user: dict = D
     """Maak een nieuwe inkoopofferte aan"""
     user_id = current_user["id"]
     
-    # Valideer leverancier
-    leverancier = await db.inkoop_leveranciers.find_one(
+    # Valideer leverancier - eerst in crediteuren zoeken, dan in inkoop_leveranciers
+    leverancier = await db.boekhouding_crediteuren.find_one(
         {"id": data.leverancier_id, "user_id": user_id}, {"_id": 0}
     )
     if not leverancier:
-        raise HTTPException(status_code=404, detail="Leverancier niet gevonden")
+        leverancier = await db.inkoop_leveranciers.find_one(
+            {"id": data.leverancier_id, "user_id": user_id}, {"_id": 0}
+        )
+    if not leverancier:
+        raise HTTPException(status_code=404, detail="Crediteur/leverancier niet gevonden")
     
     offerte_id = str(uuid.uuid4())
     offertenummer = await genereer_offertenummer(user_id)
