@@ -60,7 +60,8 @@ export default function VerkoopOffertesPage() {
   const fetchKlanten = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/verkoop/klanten`, {
+      // Gebruik debiteuren als klanten (gekoppeld met boekhouding)
+      const res = await fetch(`${API_URL}/api/boekhouding/debiteuren`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -68,7 +69,7 @@ export default function VerkoopOffertesPage() {
         setKlanten(data);
       }
     } catch (error) {
-      console.error('Fout bij ophalen klanten');
+      console.error('Fout bij ophalen debiteuren');
     }
   };
 
