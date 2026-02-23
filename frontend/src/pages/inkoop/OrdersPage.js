@@ -493,7 +493,7 @@ export default function InkoopOrdersPage() {
             <div className="flex justify-end pt-4 border-t">
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Totaal (incl. BTW)</p>
-                <p className="text-2xl sm:text-3xl font-bold text-purple-600">{form.valuta} {calculateTotal().toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</p>
+                <p className="text-2xl sm:text-3xl font-bold text-emerald-600">{form.valuta} {calculateTotal().toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</p>
               </div>
             </div>
           </div>
