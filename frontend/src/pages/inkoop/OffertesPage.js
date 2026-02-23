@@ -59,7 +59,8 @@ export default function InkoopOffertesPage() {
   const fetchLeveranciers = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/inkoop/leveranciers`, {
+      // Gebruik crediteuren als leveranciers (gekoppeld met boekhouding)
+      const res = await fetch(`${API_URL}/api/boekhouding/crediteuren`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -67,7 +68,7 @@ export default function InkoopOffertesPage() {
         setLeveranciers(data);
       }
     } catch (error) {
-      console.error('Fout bij ophalen leveranciers');
+      console.error('Fout bij ophalen crediteuren');
     }
   };
 
