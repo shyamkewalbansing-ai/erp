@@ -217,7 +217,7 @@ export default function InkoopOrdersPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-purple-500 mx-auto mb-3" />
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto mb-3" />
           <p className="text-muted-foreground">Orders laden...</p>
         </div>
       </div>
