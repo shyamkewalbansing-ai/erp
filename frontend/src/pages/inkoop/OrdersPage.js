@@ -28,7 +28,8 @@ export default function InkoopOrdersPage() {
   const [form, setForm] = useState({
     leverancier_id: '',
     valuta: 'SRD',
-    regels: [{ artikel_id: '', omschrijving: '', aantal: 1, prijs: 0, btw_percentage: 10 }]
+    orderdatum: new Date().toISOString().split('T')[0],
+    regels: [{ artikel_id: '', omschrijving: '', aantal: 1, prijs_per_stuk: 0, btw_tarief: '10' }]
   });
 
   useEffect(() => {
