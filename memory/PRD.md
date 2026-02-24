@@ -1,13 +1,13 @@
 # ERP Boekhouding - Product Requirements Document
 
 ## Oorspronkelijke Probleemstelling
-Een uitgebreide ERP-applicatie voor boekhoudkundige modules met ondersteuning voor:
-- **Inkoop Module**: Offertes, Orders, Goederenontvangst, Crediteurenbeheer
-- **Verkoop Module**: Offertes, Orders, Facturatie, Debiteurenbeheer, Prijslijsten
-- **Voorraad Module**: Artikelenbeheer, Magazijnen, Voorraadmutaties, Inventarisatie
-- **Projecten Module**: Projectenbeheer, Urenregistratie
-- **Bank/Kas Module**: Transacties, Factuurkoppelingen
-- **Boekhouding Core**: Debiteuren, Crediteuren, Vaste Activa, Kostenplaatsen
+Een uitgebreide ERP-applicatie met volledig geïntegreerde boekhoudkundige modules:
+- **Boekhouding Core**: Grootboek, Debiteuren, Crediteuren, Bank/Kas, Vaste Activa, Kostenplaatsen
+- **Inkoop Module**: Offertes, Orders, Goederenontvangst, Inkoopfacturen → Grootboek
+- **Verkoop Module**: Offertes, Orders, Verkoopfacturen → Grootboek, Prijslijsten
+- **Voorraad Module**: Artikelenbeheer, Magazijnen, Voorraadmutaties → Grootboek
+- **Projecten Module**: Projectenbeheer, Urenregistratie → Grootboek
+- **Rapportages**: Balans, Winst & Verlies, BTW Aangifte, etc.
 
 ## Technische Stack
 - **Frontend**: React met TailwindCSS, Shadcn/UI componenten
@@ -17,134 +17,154 @@ Een uitgebreide ERP-applicatie voor boekhoudkundige modules met ondersteuning vo
 
 ## Voltooide Functies
 
-### 23 februari 2026 - UI/UX Overhaul
-- ✅ **Alle modulepagina's bijgewerkt** met consistent emerald-green design
-- ✅ Hero headers met gradient (from-slate-900 via-slate-800 to-emerald-900)
-- ✅ Stats grids met emerald/blue/purple/amber accenten
-- ✅ Responsive layouts voor mobile/tablet/desktop
-- ✅ Nederlandse taal consistent toegepast
+### 24 februari 2026 - GROOTBOEK INTEGRATIE (VOLTOOID)
+Volledige integratie van alle modules met het grootboek:
 
-### Bijgewerkte pagina's:
-- `/app/frontend/src/pages/inkoop/DashboardPage.js`
-- `/app/frontend/src/pages/verkoop/DashboardPage.js`
-- `/app/frontend/src/pages/voorraad/DashboardPage.js`
-- `/app/frontend/src/pages/voorraad/ArtikelenPage.js`
-- `/app/frontend/src/pages/voorraad/MagazijnenPage.js`
-- `/app/frontend/src/pages/voorraad/MutatiesPage.js`
-- `/app/frontend/src/pages/voorraad/InventarisatiePage.js`
-- `/app/frontend/src/pages/projecten/DashboardPage.js`
-- `/app/frontend/src/pages/projecten/OverzichtPage.js`
-- `/app/frontend/src/pages/projecten/UrenPage.js`
-- `/app/frontend/src/pages/verkoop/PrijslijstenPage.js`
-- `/app/frontend/src/pages/inkoop/OntvangstenPage.js`
+#### 1. Automatische Journaalposten
+- ✅ **Verkoopfactuur → Grootboek** (bij status "verstuurd")
+  - Debet: Debiteuren (1200)
+  - Credit: Omzet Verkoop (8000) + BTW Af te dragen (2100)
+  
+- ✅ **Verkoopfactuur Betaling → Grootboek**
+  - Debet: Bank/Kas (1100/1000)
+  - Credit: Debiteuren (1200)
 
-### 23 februari 2026 - Factuur Generatie
-- ✅ **Factuur maken vanuit Verkooporders** - volledig werkend
-- ✅ Backend endpoint: `POST /api/verkoop/orders/{order_id}/naar-factuur`
-- ✅ Frontend knop toont voor bevestigde/geleverde orders
-- ✅ Order status wordt automatisch naar "gefactureerd" gezet
-- ✅ Factuur wordt correct aangemaakt met alle ordergegevens
+- ✅ **Inkoopfactuur → Grootboek**
+  - Debet: Inkoopkosten/Voorraad (4000/1300) + BTW Voorbelasting (2200)
+  - Credit: Crediteuren (2000)
+
+- ✅ **Inkoopfactuur Betaling → Grootboek**
+  - Debet: Crediteuren (2000)
+  - Credit: Bank/Kas (1100/1000)
+
+- ✅ **Voorraadmutaties → Grootboek**
+  - Inkoop: Debet Voorraad, Credit Voorraadkosten
+  - Verkoop: Debet Voorraadkosten, Credit Voorraad
+
+- ✅ **Project Uren → Grootboek**
+  - Debet: Projectkosten (4500)
+  - Credit: Personeelskosten (4200)
+
+- ✅ **Afschrijvingen → Grootboek**
+  - Debet: Afschrijvingskosten (4300)
+  - Credit: Cum. Afschrijving Vaste Activa (1410)
+
+#### 2. Standaard Rekeningschema
+Automatisch aangemaakt bij eerste gebruik:
+- 1000: Kas
+- 1100: Bank
+- 1200: Debiteuren
+- 1300: Voorraad
+- 1400: Vaste Activa
+- 2000: Crediteuren
+- 2100: BTW Af te dragen
+- 2200: BTW Voorbelasting
+- 4000: Inkoopkosten
+- 4300: Afschrijvingskosten
+- 4500: Projectkosten
+- 8000: Omzet Verkoop
+
+#### 3. Rapportages Module
+- ✅ **Balans** - Activa en Passiva overzicht
+- ✅ **Winst & Verlies** - Opbrengsten en Kosten
+- ✅ **Journaalposten** - Alle boekingen
+- ✅ **Openstaande Debiteuren** - Per klant
+- ✅ **Openstaande Crediteuren** - Per leverancier
+- ✅ **Voorraadwaarde** - Per artikel
+- ✅ **Projecten Overzicht** - Uren en kosten
+- ✅ **BTW Aangifte** - Per periode
 
 ### 24 februari 2026 - PDF Factuur Download
-- ✅ **Professionele PDF factuur generatie** met ReportLab
-- ✅ Backend endpoints:
-  - `GET /api/pdf/verkoopfactuur/{id}` - Download PDF
-  - `GET /api/pdf/verkoopfactuur/{id}/preview` - Preview in browser
-- ✅ PDF bevat:
-  - Bedrijfsgegevens en logo placeholder
-  - Klantgegevens (uit Debiteuren)
-  - Factuurnummer, datum, vervaldatum
-  - Factuurregels met BTW berekening
-  - Subtotaal, BTW, Totaal
-  - Betalingsstatus
-- ✅ Frontend Download knop op Verkoopfacturen pagina
-- ✅ VerkoopfacturenPage.js bijgewerkt met emerald-green UI
+- ✅ Professionele PDF generatie met ReportLab
+- ✅ Download endpoint: `/api/pdf/verkoopfactuur/{id}`
+- ✅ Preview endpoint: `/api/pdf/verkoopfactuur/{id}/preview`
 
-## Bestaande Functionaliteit
+### 23 februari 2026 - UI/UX Overhaul
+- ✅ Alle modulepagina's met emerald-green design
+- ✅ Responsive layouts
+- ✅ Nederlandse taal
 
-### Debiteuren/Crediteuren
-- ✅ Centraal beheer van klanten (Debiteuren) en leveranciers (Crediteuren)
-- ✅ Gebruikt als single source of truth voor Verkoop en Inkoop modules
-- ✅ Restyled pagina's met emerald-green theme
+## Code Architectuur
 
-### Verkoop Module
-- ✅ Verkoopoffertes CRUD
-- ✅ Verkooporders CRUD
-- ✅ Offerte naar Order conversie
-- ✅ Order naar Factuur generatie
-- ✅ Prijslijsten beheer
-- ✅ Klantprijzen en kortingen
+```
+/app/backend/
+├── routers/
+│   ├── boekhouding.py    # Met grootboek integratie
+│   ├── verkoop.py        # Verkoop → Debiteuren → Grootboek
+│   ├── inkoop.py         # Inkoop → Crediteuren → Grootboek
+│   ├── voorraad.py       # Met grootboek integratie
+│   ├── projecten.py      # Met grootboek integratie
+│   ├── activa.py         # Met afschrijvingen → Grootboek
+│   ├── rapportages.py    # Nieuwe rapportages module
+│   └── pdf.py            # PDF generatie
+├── utils/
+│   └── grootboek_integration.py  # Centrale boeking utilities
+└── server.py
+```
 
-### Inkoop Module
-- ✅ Inkoopoffertes CRUD
-- ✅ Inkooporders CRUD
-- ✅ Goederenontvangst pagina (basis)
+## Database Collecties
 
-### Voorraad Module
-- ✅ Artikelenbeheer met categorieën
-- ✅ Magazijnenbeheer
-- ✅ Voorraadmutaties registratie
-- ✅ Inventarisatie functie
+### Grootboek
+| Collectie | Beschrijving |
+|-----------|--------------|
+| `boekhouding_rekeningen` | Grootboekrekeningen met saldi |
+| `boekhouding_journaalposten` | Alle journaalposten met regels |
 
-### Projecten Module
-- ✅ Projectenbeheer met status tracking
-- ✅ Urenregistratie per project
-- ✅ Budget tracking
+### Facturen & Betalingen
+| Collectie | Beschrijving |
+|-----------|--------------|
+| `boekhouding_verkoopfacturen` | Verkoopfacturen |
+| `boekhouding_inkoopfacturen` | Inkoopfacturen |
+| `boekhouding_transacties` | Betalingen |
+
+### Entiteiten
+| Collectie | Beschrijving |
+|-----------|--------------|
+| `boekhouding_debiteuren` | Klanten (single source of truth) |
+| `boekhouding_crediteuren` | Leveranciers |
+| `voorraad_artikelen` | Producten/diensten |
+| `projecten` | Projecten |
+
+## API Endpoints
+
+### Rapportages (Nieuw)
+- `GET /api/rapportages/grootboek/balans` - Balans overzicht
+- `GET /api/rapportages/grootboek/resultaat` - Winst & Verlies
+- `GET /api/rapportages/grootboek/journaalposten` - Journaalposten
+- `GET /api/rapportages/debiteuren/openstaand` - Openstaande debiteuren
+- `GET /api/rapportages/crediteuren/openstaand` - Openstaande crediteuren
+- `GET /api/rapportages/voorraad/waarde` - Voorraadwaarde
+- `GET /api/rapportages/projecten/overzicht` - Projecten overzicht
+- `GET /api/rapportages/btw/aangifte` - BTW aangifte
+
+### PDF
+- `GET /api/pdf/verkoopfactuur/{id}` - Download PDF
+- `GET /api/pdf/verkoopfactuur/{id}/preview` - Preview PDF
 
 ## Prioriteit Backlog
 
-### P0 - Kritiek
-- [x] ~~UI/UX Overhaul voor alle pagina's~~ (VOLTOOID)
-- [x] ~~Factuur generatie vanuit Verkooporders~~ (VOLTOOID)
-- [x] ~~PDF Factuur Download~~ (VOLTOOID)
+### P0 - Kritiek (VOLTOOID)
+- [x] UI/UX Overhaul
+- [x] Factuur generatie vanuit Verkooporders
+- [x] PDF Factuur Download
+- [x] **Grootboek Integratie - VOLLEDIG GEÏMPLEMENTEERD**
+- [x] **Rapportages Module - VOLLEDIG GEÏMPLEMENTEERD**
 
 ### P1 - Hoog
-- [ ] Bank/Kas module uitbreiden met factuurkoppelingen
-- [ ] Inkomsten/Uitgaven overzichten
+- [ ] Bank/Kas module uitbreiden met reconciliatie
+- [ ] Email versturen met PDF bijlage
 - [ ] Volledige CRUD voor alle entiteiten
 
 ### P2 - Medium
 - [ ] HRM integratie met kostenboekingen
 - [ ] Inkoopfacturen PDF export
 - [ ] Bulk import/export functies
+- [ ] Multi-valuta rapportages
 
 ### P3 - Laag
-- [ ] Dashboard rapportages
-- [ ] Email notificaties
-- [ ] Multi-valuta ondersteuning uitbreiden
-
-## Database Collecties
-
-| Collectie | Beschrijving |
-|-----------|--------------|
-| `boekhouding_debiteuren` | Centrale klantgegevens (single source of truth) |
-| `boekhouding_crediteuren` | Centrale leveranciergegevens |
-| `boekhouding_verkoopfacturen` | Verkoopfacturen |
-| `verkoop_orders` | Verkooporders |
-| `verkoop_offertes` | Verkoopoffertes |
-| `verkoop_prijslijsten` | Prijslijsten |
-| `inkoop_orders` | Inkooporders |
-| `inkoop_offertes` | Inkoopoffertes |
-| `voorraad_artikelen` | Producten/diensten |
-| `voorraad_magazijnen` | Magazijnen |
-| `voorraad_mutaties` | Voorraadwijzigingen |
-| `projecten` | Projecten |
-| `projecten_uren` | Urenregistraties |
-
-## API Endpoints
-
-### Belangrijkste Endpoints
-- `GET/POST /api/boekhouding/debiteuren` - Debiteurenbeheer
-- `GET/POST /api/boekhouding/crediteuren` - Crediteurenbeheer
-- `GET/POST /api/verkoop/orders` - Verkooporders
-- `POST /api/verkoop/orders/{id}/naar-factuur` - Factuur genereren
-- `GET/POST /api/inkoop/orders` - Inkooporders
-- `GET/POST /api/voorraad/artikelen` - Artikelenbeheer
-- `GET/POST /api/projecten/` - Projectenbeheer
-
-### PDF Endpoints (Nieuw)
-- `GET /api/pdf/verkoopfactuur/{id}` - Download factuur als PDF
-- `GET /api/pdf/verkoopfactuur/{id}/preview` - Preview factuur PDF in browser
+- [ ] Dashboard widgets
+- [ ] Geautomatiseerde herinneringen
+- [ ] Audit trail
 
 ## Test Credentials
 - **Email**: test@demo.com
