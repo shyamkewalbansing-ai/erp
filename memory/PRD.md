@@ -156,10 +156,10 @@ Automatisch aangemaakt bij eerste gebruik:
 - [x] PDF Factuur Download
 - [x] **Grootboek Integratie - VOLLEDIG GEÏMPLEMENTEERD**
 - [x] **Rapportages Module - VOLLEDIG GEÏMPLEMENTEERD**
+- [x] **Email versturen met PDF bijlage - VOLTOOID**
 
 ### P1 - Hoog
 - [ ] Bank/Kas module uitbreiden met reconciliatie
-- [ ] Email versturen met PDF bijlage
 - [ ] Volledige CRUD voor alle entiteiten
 
 ### P2 - Medium
