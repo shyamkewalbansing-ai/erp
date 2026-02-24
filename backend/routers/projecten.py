@@ -395,6 +395,22 @@ async def create_project_uren(
             {"$inc": {"gewerkte_uren": data.uren}}
         )
     
+    # Automatische grootboekboeking voor uren (indien factureerbaar en uurtarief)
+    try:
+        uurtarief = project.get("uurtarief", 0)
+        if data.factureerbaar and uurtarief > 0:
+            await boek_project_uren(
+                db=db,
+                user_id=user_id,
+                project=project,
+                uren=data.uren,
+                uurtarief=uurtarief,
+                medewerker_naam=medewerker_naam or "Onbekend",
+                datum=data.datum
+            )
+    except Exception as e:
+        print(f"Fout bij grootboekboeking project uren: {e}")
+    
     return clean_doc(uren_doc)
 
 @router.delete("/{project_id}/uren/{uren_id}")
