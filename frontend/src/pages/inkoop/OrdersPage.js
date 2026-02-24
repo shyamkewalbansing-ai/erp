@@ -136,8 +136,11 @@ export default function InkoopOrdersPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/inkoop/orders`, {
-        method: 'POST',
+      const url = editingId 
+        ? `${API_URL}/api/inkoop/orders/${editingId}`
+        : `${API_URL}/api/inkoop/orders`;
+      const res = await fetch(url, {
+        method: editingId ? 'PUT' : 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -145,20 +148,62 @@ export default function InkoopOrdersPage() {
         body: JSON.stringify(form)
       });
       if (res.ok) {
-        toast.success('Inkooporder aangemaakt');
+        toast.success(editingId ? 'Order bijgewerkt' : 'Inkooporder aangemaakt');
         setDialogOpen(false);
         resetForm();
         fetchOrders();
       } else {
         const error = await res.json();
-        toast.error(error.detail || 'Fout bij aanmaken order');
+        toast.error(error.detail || 'Fout bij opslaan order');
       }
     } catch (error) {
-      toast.error('Fout bij aanmaken order');
+      toast.error('Fout bij opslaan order');
+    }
+  };
+
+  const handleEdit = (order) => {
+    setEditingId(order.id);
+    setForm({
+      leverancier_id: order.leverancier_id || '',
+      valuta: order.valuta || 'SRD',
+      orderdatum: order.orderdatum || new Date().toISOString().split('T')[0],
+      verwachte_leverdatum: order.verwachte_leverdatum || '',
+      opmerkingen: order.opmerkingen || '',
+      referentie: order.referentie || '',
+      regels: order.regels?.map(r => ({
+        artikel_id: r.artikel_id || '',
+        omschrijving: r.omschrijving || '',
+        aantal: r.aantal || 1,
+        prijs_per_stuk: r.prijs_per_stuk || 0,
+        btw_tarief: r.btw_tarief || '10',
+        ontvangen_aantal: r.ontvangen_aantal || 0
+      })) || [{ artikel_id: '', omschrijving: '', aantal: 1, prijs_per_stuk: 0, btw_tarief: '10' }]
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Weet u zeker dat u deze order wilt verwijderen?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/inkoop/orders/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast.success('Order verwijderd');
+        fetchOrders();
+      } else {
+        const error = await res.json();
+        toast.error(error.detail || 'Fout bij verwijderen');
+      }
+    } catch (error) {
+      toast.error('Fout bij verwijderen');
     }
   };
 
   const resetForm = () => {
+    setEditingId(null);
     setForm({
       leverancier_id: '',
       valuta: 'SRD',
