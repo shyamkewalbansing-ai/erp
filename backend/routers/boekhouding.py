@@ -1273,15 +1273,31 @@ async def send_factuur_email(
     import aiosmtplib
     from email.mime.text import MIMEText
     from email.mime.multipart import MIMEMultipart
+    from email.mime.application import MIMEApplication
+    from .pdf import generate_invoice_pdf
     
     try:
-        message = MIMEMultipart("alternative")
+        # Generate PDF attachment
+        pdf_buffer = await generate_invoice_pdf(factuur, user, debiteur)
+        pdf_content = pdf_buffer.getvalue()
+        pdf_filename = f"Factuur_{factuur.get('factuurnummer', factuur_id)}.pdf"
+        
+        # Create multipart message (mixed for attachments)
+        message = MIMEMultipart("mixed")
         message["From"] = f"{from_name} <{customer_settings.get('from_email', customer_settings.get('smtp_user'))}>"
         message["To"] = to_email
         message["Subject"] = subject
         
+        # Create alternative part for HTML/text
+        msg_alternative = MIMEMultipart("alternative")
         html_part = MIMEText(email_html, "html")
-        message.attach(html_part)
+        msg_alternative.attach(html_part)
+        message.attach(msg_alternative)
+        
+        # Attach PDF
+        pdf_attachment = MIMEApplication(pdf_content, _subtype="pdf")
+        pdf_attachment.add_header("Content-Disposition", "attachment", filename=pdf_filename)
+        message.attach(pdf_attachment)
         
         await aiosmtplib.send(
             message,
@@ -1311,13 +1327,16 @@ async def send_factuur_email(
             "status": "sent",
             "workspace_id": f"customer_{user_id}",
             "factuur_id": factuur_id,
+            "has_attachment": True,
+            "attachment_filename": pdf_filename,
             "sent_at": datetime.now(timezone.utc).isoformat()
         })
         
         return {
             "success": True, 
-            "message": f"Factuur verzonden naar {to_email}",
-            "email_verzonden_op": datetime.now(timezone.utc).isoformat()
+            "message": f"Factuur met PDF bijlage verzonden naar {to_email}",
+            "email_verzonden_op": datetime.now(timezone.utc).isoformat(),
+            "has_pdf_attachment": True
         }
         
     except Exception as e:
