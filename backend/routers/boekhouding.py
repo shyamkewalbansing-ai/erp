@@ -11,6 +11,15 @@ from enum import Enum
 import uuid
 from .deps import db, get_current_active_user, get_current_user
 
+# Grootboek integratie utilities
+from utils.grootboek_integration import (
+    boek_verkoopfactuur,
+    boek_verkoopfactuur_betaling,
+    boek_inkoopfactuur,
+    boek_inkoopfactuur_betaling,
+    ensure_standaard_rekeningen
+)
+
 router = APIRouter(prefix="/boekhouding", tags=["Boekhouding"])
 
 # ==================== FREE TIER LIMITS ====================
