@@ -74,7 +74,14 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ **Projecten Overzicht** - Uren en kosten
 - ✅ **BTW Aangifte** - Per periode
 
-### 24 februari 2026 - PDF Factuur Download
+### 24 februari 2026 - Email met PDF Bijlage (VOLTOOID)
+- ✅ Email versturen met factuur PDF als bijlage
+- ✅ Gebruikt MIMEApplication voor PDF attachment
+- ✅ Frontend SendInvoiceEmailDialog component
+- ✅ Endpoint: `POST /api/boekhouding/verkoopfacturen/{id}/send-email`
+- ✅ Vereist SMTP configuratie in Instellingen → Email
+
+### 24 februari 2026 - PDF Factuur Download (VOLTOOID)
 - ✅ Professionele PDF generatie met ReportLab
 - ✅ Download endpoint: `/api/pdf/verkoopfactuur/{id}`
 - ✅ Preview endpoint: `/api/pdf/verkoopfactuur/{id}/preview`
