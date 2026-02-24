@@ -142,6 +142,10 @@ Een uitgebreide ERP-applicatie voor boekhoudkundige modules met ondersteuning vo
 - `GET/POST /api/voorraad/artikelen` - Artikelenbeheer
 - `GET/POST /api/projecten/` - Projectenbeheer
 
+### PDF Endpoints (Nieuw)
+- `GET /api/pdf/verkoopfactuur/{id}` - Download factuur als PDF
+- `GET /api/pdf/verkoopfactuur/{id}/preview` - Preview factuur PDF in browser
+
 ## Test Credentials
 - **Email**: test@demo.com
 - **Password**: demo123
