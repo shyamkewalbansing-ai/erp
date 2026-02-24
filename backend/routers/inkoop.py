@@ -528,13 +528,67 @@ async def update_inkoopofferte(
     if offerte.get("status") not in ["concept", "verzonden"]:
         raise HTTPException(status_code=400, detail="Alleen concept of verzonden offertes kunnen worden bewerkt")
     
-    update_data = {k: v for k, v in data.model_dump().items() if v is not None}
+    update_data = {}
+    
+    # Handle leverancier update
+    if data.leverancier_id:
+        leverancier = await db.inkoop_leveranciers.find_one({"id": data.leverancier_id, "user_id": user_id})
+        if not leverancier:
+            leverancier = await db.boekhouding_crediteuren.find_one({"id": data.leverancier_id, "user_id": user_id})
+        if leverancier:
+            update_data["leverancier_id"] = data.leverancier_id
+            update_data["leverancier_naam"] = leverancier.get("naam") or leverancier.get("bedrijfsnaam")
+    
+    # Handle simple fields
+    for field in ["offertedatum", "geldig_tot", "opmerkingen", "referentie", "levering_adres", "verwachte_leverdatum"]:
+        value = getattr(data, field, None)
+        if value is not None:
+            update_data[field] = value
+    
+    if data.valuta:
+        update_data["valuta"] = data.valuta.value
+    
+    # Handle regels update with recalculation
+    if data.regels:
+        subtotaal = 0
+        btw_bedrag = 0
+        regels_docs = []
+        
+        for regel in data.regels:
+            regel_subtotaal = regel.aantal * regel.prijs_per_stuk
+            korting = regel_subtotaal * (regel.korting_percentage / 100)
+            regel_netto = regel_subtotaal - korting
+            btw_perc = get_btw_percentage(regel.btw_tarief)
+            regel_btw = regel_netto * (btw_perc / 100)
+            
+            subtotaal += regel_netto
+            btw_bedrag += regel_btw
+            
+            regels_docs.append({
+                "artikel_id": regel.artikel_id,
+                "omschrijving": regel.omschrijving,
+                "aantal": regel.aantal,
+                "eenheid": regel.eenheid,
+                "prijs_per_stuk": regel.prijs_per_stuk,
+                "korting_percentage": regel.korting_percentage,
+                "btw_tarief": regel.btw_tarief,
+                "btw_percentage": btw_perc,
+                "subtotaal": regel_netto,
+                "btw_bedrag": regel_btw,
+                "totaal": regel_netto + regel_btw
+            })
+        
+        update_data["regels"] = regels_docs
+        update_data["subtotaal"] = round(subtotaal, 2)
+        update_data["btw_bedrag"] = round(btw_bedrag, 2)
+        update_data["totaal"] = round(subtotaal + btw_bedrag, 2)
+    
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.inkoop_offertes.update_one({"id": offerte_id}, {"$set": update_data})
     
     updated = await db.inkoop_offertes.find_one({"id": offerte_id}, {"_id": 0})
-    return updated
+    return clean_doc(updated)
 
 @router.put("/offertes/{offerte_id}/status")
 async def update_inkoopofferte_status(
