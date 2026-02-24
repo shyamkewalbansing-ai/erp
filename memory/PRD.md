@@ -148,6 +148,9 @@ Automatisch aangemaakt bij eerste gebruik:
 - `GET /api/pdf/verkoopfactuur/{id}` - Download PDF
 - `GET /api/pdf/verkoopfactuur/{id}/preview` - Preview PDF
 
+### Email
+- `POST /api/boekhouding/verkoopfacturen/{id}/send-email` - Verstuur factuur per email met PDF bijlage
+
 ## Prioriteit Backlog
 
 ### P0 - Kritiek (VOLTOOID)
