@@ -10,6 +10,9 @@ from enum import Enum
 import uuid
 from .deps import db, get_current_active_user, clean_doc
 
+# Grootboek integratie
+from utils.grootboek_integration import boek_project_uren
+
 router = APIRouter(prefix="/projecten", tags=["Projecten"])
 
 # ==================== ENUMS ====================
