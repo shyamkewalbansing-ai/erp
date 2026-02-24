@@ -45,6 +45,21 @@ Een uitgebreide ERP-applicatie voor boekhoudkundige modules met ondersteuning vo
 - ✅ Order status wordt automatisch naar "gefactureerd" gezet
 - ✅ Factuur wordt correct aangemaakt met alle ordergegevens
 
+### 24 februari 2026 - PDF Factuur Download
+- ✅ **Professionele PDF factuur generatie** met ReportLab
+- ✅ Backend endpoints:
+  - `GET /api/pdf/verkoopfactuur/{id}` - Download PDF
+  - `GET /api/pdf/verkoopfactuur/{id}/preview` - Preview in browser
+- ✅ PDF bevat:
+  - Bedrijfsgegevens en logo placeholder
+  - Klantgegevens (uit Debiteuren)
+  - Factuurnummer, datum, vervaldatum
+  - Factuurregels met BTW berekening
+  - Subtotaal, BTW, Totaal
+  - Betalingsstatus
+- ✅ Frontend Download knop op Verkoopfacturen pagina
+- ✅ VerkoopfacturenPage.js bijgewerkt met emerald-green UI
+
 ## Bestaande Functionaliteit
 
 ### Debiteuren/Crediteuren
