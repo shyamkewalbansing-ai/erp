@@ -561,6 +561,84 @@ async def update_verkoopofferte_status(
     
     return {"message": f"Status gewijzigd naar {status.value}"}
 
+@router.put("/offertes/{offerte_id}")
+async def update_verkoopofferte(
+    offerte_id: str,
+    data: VerkoopofferteUpdate,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Update een verkoopofferte"""
+    user_id = current_user["id"]
+    
+    offerte = await db.verkoop_offertes.find_one({"id": offerte_id, "user_id": user_id})
+    if not offerte:
+        raise HTTPException(status_code=404, detail="Verkoopofferte niet gevonden")
+    
+    if offerte.get("status") not in ["concept"]:
+        raise HTTPException(status_code=400, detail="Alleen concept offertes kunnen worden bewerkt")
+    
+    update_data = {}
+    
+    # Handle klant update
+    if data.klant_id:
+        klant = await db.verkoop_klanten.find_one({"id": data.klant_id, "user_id": user_id})
+        if not klant:
+            klant = await db.boekhouding_debiteuren.find_one({"id": data.klant_id, "user_id": user_id})
+        if klant:
+            update_data["klant_id"] = data.klant_id
+            update_data["klant_naam"] = klant.get("naam") or klant.get("bedrijfsnaam")
+    
+    # Handle simple fields
+    for field in ["offertedatum", "geldig_tot", "opmerkingen", "referentie", "interne_notities", "levering_adres", "verwachte_leverdatum"]:
+        value = getattr(data, field, None)
+        if value is not None:
+            update_data[field] = value
+    
+    if data.valuta:
+        update_data["valuta"] = data.valuta.value
+    
+    # Handle regels update with recalculation
+    if data.regels:
+        subtotaal = 0
+        btw_bedrag = 0
+        regels_docs = []
+        
+        for regel in data.regels:
+            regel_subtotaal = regel.aantal * regel.prijs_per_stuk
+            korting = regel_subtotaal * (regel.korting_percentage / 100)
+            regel_netto = regel_subtotaal - korting
+            btw_perc = get_btw_percentage(regel.btw_tarief)
+            regel_btw = regel_netto * (btw_perc / 100)
+            
+            subtotaal += regel_netto
+            btw_bedrag += regel_btw
+            
+            regels_docs.append({
+                "artikel_id": regel.artikel_id,
+                "omschrijving": regel.omschrijving,
+                "aantal": regel.aantal,
+                "eenheid": regel.eenheid,
+                "prijs_per_stuk": regel.prijs_per_stuk,
+                "korting_percentage": regel.korting_percentage,
+                "btw_tarief": regel.btw_tarief,
+                "btw_percentage": btw_perc,
+                "subtotaal": regel_netto,
+                "btw_bedrag": regel_btw,
+                "totaal": regel_netto + regel_btw
+            })
+        
+        update_data["regels"] = regels_docs
+        update_data["subtotaal"] = round(subtotaal, 2)
+        update_data["btw_bedrag"] = round(btw_bedrag, 2)
+        update_data["totaal"] = round(subtotaal + btw_bedrag, 2)
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.verkoop_offertes.update_one({"id": offerte_id}, {"$set": update_data})
+    
+    updated = await db.verkoop_offertes.find_one({"id": offerte_id}, {"_id": 0})
+    return clean_doc(updated)
+
 @router.post("/offertes/{offerte_id}/naar-order")
 async def offerte_naar_order(offerte_id: str, current_user: dict = Depends(get_current_active_user)):
     """Converteer een geaccepteerde offerte naar een verkooporder"""
