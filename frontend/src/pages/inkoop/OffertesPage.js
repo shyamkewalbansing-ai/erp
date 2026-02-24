@@ -395,11 +395,19 @@ export default function InkoopOffertesPage() {
                       {offerte.status}
                     </Badge>
                   </div>
-                  <div className="flex gap-2 w-full sm:w-auto">
+                  <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                     {offerte.status === 'concept' && (
-                      <Button size="sm" variant="outline" onClick={() => updateStatus(offerte.id, 'verzonden')} className="flex-1 sm:flex-none text-xs sm:text-sm">
-                        Verzenden
-                      </Button>
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => handleEdit(offerte)} className="text-xs sm:text-sm" data-testid={`edit-offerte-${offerte.id}`}>
+                          <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Bewerken
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => updateStatus(offerte.id, 'verzonden')} className="text-xs sm:text-sm">
+                          Verzenden
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleDelete(offerte.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50 text-xs sm:text-sm" data-testid={`delete-offerte-${offerte.id}`}>
+                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </Button>
+                      </>
                     )}
                     {offerte.status === 'verzonden' && (
                       <Button size="sm" variant="outline" onClick={() => updateStatus(offerte.id, 'geaccepteerd')} className="flex-1 sm:flex-none text-xs sm:text-sm">
@@ -411,6 +419,11 @@ export default function InkoopOffertesPage() {
                         <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Naar Order
                       </Button>
                     )}
+                    {(offerte.status === 'afgewezen' || offerte.status === 'verlopen') && (
+                      <Button size="sm" variant="ghost" onClick={() => handleDelete(offerte.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50 text-xs sm:text-sm" data-testid={`delete-offerte-${offerte.id}`}>
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Verwijderen
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -420,10 +433,10 @@ export default function InkoopOffertesPage() {
       </div>
 
       {/* Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+      <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
         <DialogContent className="max-w-[95vw] sm:max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Nieuwe Inkoopofferte</DialogTitle>
+            <DialogTitle className="text-lg sm:text-xl">{editingId ? 'Inkoopofferte Bewerken' : 'Nieuwe Inkoopofferte'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
