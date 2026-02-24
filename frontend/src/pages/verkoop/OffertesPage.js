@@ -28,6 +28,7 @@ export default function VerkoopOffertesPage() {
   const [artikelen, setArtikelen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({
     klant_id: '',
