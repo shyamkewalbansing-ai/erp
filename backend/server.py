@@ -73,6 +73,7 @@ from routers.verkoop import router as verkoop_router
 from routers.voorraad import router as voorraad_router
 from routers.activa import router as activa_router
 from routers.projecten import router as projecten_router
+from routers.pdf import router as pdf_router
 from services.email_service import get_email_service, EMAIL_TEMPLATES
 from services.scheduled_tasks import get_scheduled_tasks
 
