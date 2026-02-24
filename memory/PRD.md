@@ -74,6 +74,15 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ **Projecten Overzicht** - Uren en kosten
 - ✅ **BTW Aangifte** - Per periode
 
+### 24 februari 2026 - Volledige CRUD Functionaliteit (VOLTOOID)
+- ✅ **Verkoop Orders**: Create, Update (concept), Delete (concept/geannuleerd)
+- ✅ **Verkoop Offertes**: Create, Update (concept), Delete (concept/verlopen/afgewezen)
+- ✅ **Inkoop Orders**: Create, Update (concept), Delete (concept/geannuleerd)
+- ✅ **Inkoop Offertes**: Create, Update (concept/verzonden), Delete (concept/verlopen/afgewezen)
+- ✅ Frontend Edit/Delete knoppen voor juiste statussen
+- ✅ Dialog toont "Bewerken" titel bij bewerken
+- ✅ Bevestigingsdialoog bij verwijderen
+
 ### 24 februari 2026 - Email met PDF Bijlage (VOLTOOID)
 - ✅ Email versturen met factuur PDF als bijlage
 - ✅ Gebruikt MIMEApplication voor PDF attachment
