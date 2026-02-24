@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { 
   Plus, ShoppingCart, ArrowRight, Trash2, Search, Loader2,
-  Building2, Clock, CheckCircle, FileText, Calendar
+  Building2, Clock, CheckCircle, FileText, Calendar, Edit
 } from 'lucide-react';
 import { toast } from 'sonner';
 
