@@ -1418,6 +1418,19 @@ async def create_inkoopfactuur(data: InkoopfactuurCreate, current_user: dict = D
     }
     
     await db.boekhouding_inkoopfacturen.insert_one(factuur_doc)
+    
+    # Automatische grootboekboeking bij aanmaken inkoopfactuur
+    # Inkoopfacturen worden direct geboekt (geen concept status)
+    try:
+        await boek_inkoopfactuur(
+            db=db,
+            user_id=user_id,
+            factuur=factuur_doc,
+            crediteur_naam=crediteur.get("naam", "Onbekend")
+        )
+    except Exception as e:
+        print(f"Fout bij grootboekboeking inkoopfactuur: {e}")
+    
     return InkoopfactuurResponse(**factuur_doc)
 
 @router.post("/inkoopfacturen/{factuur_id}/betaling")
