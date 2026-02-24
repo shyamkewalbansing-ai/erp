@@ -750,6 +750,85 @@ async def update_inkooporder_status(
     
     return {"message": f"Status gewijzigd naar {status.value}"}
 
+@router.put("/orders/{order_id}")
+async def update_inkooporder(
+    order_id: str,
+    data: InkooporderUpdate,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Update een inkooporder"""
+    user_id = current_user["id"]
+    
+    order = await db.inkoop_orders.find_one({"id": order_id, "user_id": user_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Inkooporder niet gevonden")
+    
+    if order.get("status") not in ["concept"]:
+        raise HTTPException(status_code=400, detail="Alleen concept orders kunnen worden bewerkt")
+    
+    update_data = {}
+    
+    # Handle leverancier update
+    if data.leverancier_id:
+        leverancier = await db.inkoop_leveranciers.find_one({"id": data.leverancier_id, "user_id": user_id})
+        if not leverancier:
+            leverancier = await db.boekhouding_crediteuren.find_one({"id": data.leverancier_id, "user_id": user_id})
+        if leverancier:
+            update_data["leverancier_id"] = data.leverancier_id
+            update_data["leverancier_naam"] = leverancier.get("naam") or leverancier.get("bedrijfsnaam")
+    
+    # Handle simple fields
+    for field in ["orderdatum", "verwachte_leverdatum", "opmerkingen", "referentie", "levering_adres"]:
+        value = getattr(data, field, None)
+        if value is not None:
+            update_data[field] = value
+    
+    if data.valuta:
+        update_data["valuta"] = data.valuta.value
+    
+    # Handle regels update with recalculation
+    if data.regels:
+        subtotaal = 0
+        btw_bedrag = 0
+        regels_docs = []
+        
+        for regel in data.regels:
+            regel_subtotaal = regel.aantal * regel.prijs_per_stuk
+            korting = regel_subtotaal * (regel.korting_percentage / 100)
+            regel_netto = regel_subtotaal - korting
+            btw_perc = get_btw_percentage(regel.btw_tarief)
+            regel_btw = regel_netto * (btw_perc / 100)
+            
+            subtotaal += regel_netto
+            btw_bedrag += regel_btw
+            
+            regels_docs.append({
+                "artikel_id": regel.artikel_id,
+                "omschrijving": regel.omschrijving,
+                "aantal": regel.aantal,
+                "eenheid": regel.eenheid,
+                "prijs_per_stuk": regel.prijs_per_stuk,
+                "korting_percentage": regel.korting_percentage,
+                "btw_tarief": regel.btw_tarief,
+                "btw_percentage": btw_perc,
+                "subtotaal": regel_netto,
+                "btw_bedrag": regel_btw,
+                "totaal": regel_netto + regel_btw,
+                "ontvangen_aantal": regel.ontvangen_aantal
+            })
+        
+        update_data["regels"] = regels_docs
+        update_data["subtotaal"] = round(subtotaal, 2)
+        update_data["btw_bedrag"] = round(btw_bedrag, 2)
+        update_data["totaal"] = round(subtotaal + btw_bedrag, 2)
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.inkoop_orders.update_one({"id": order_id}, {"$set": update_data})
+    
+    updated = await db.inkoop_orders.find_one({"id": order_id}, {"_id": 0})
+    return clean_doc(updated)
+
 @router.post("/orders/{order_id}/naar-factuur")
 async def order_naar_factuur(order_id: str, current_user: dict = Depends(get_current_active_user)):
     """Maak een inkoopfactuur van een volledig ontvangen order"""
