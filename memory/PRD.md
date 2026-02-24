@@ -153,6 +153,13 @@ Automatisch aangemaakt bij eerste gebruik:
 - `GET /api/rapportages/projecten/overzicht` - Projecten overzicht
 - `GET /api/rapportages/btw/aangifte` - BTW aangifte
 
+### CRUD Endpoints (Nieuw)
+- `PUT /api/verkoop/orders/{id}` - Update verkooporder (alleen concept)
+- `PUT /api/verkoop/offertes/{id}` - Update verkoopofferte (alleen concept)
+- `PUT /api/inkoop/orders/{id}` - Update inkooporder (alleen concept)
+- `PUT /api/inkoop/offertes/{id}` - Update inkoopofferte (concept/verzonden)
+- `DELETE` endpoints voor alle bovenstaande entiteiten
+
 ### PDF
 - `GET /api/pdf/verkoopfactuur/{id}` - Download PDF
 - `GET /api/pdf/verkoopfactuur/{id}/preview` - Preview PDF
