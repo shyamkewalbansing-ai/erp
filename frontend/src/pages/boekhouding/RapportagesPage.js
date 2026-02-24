@@ -1,159 +1,427 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import React, { useState, useEffect } from 'react';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Loader2, TrendingUp, FileBarChart, Scale, Receipt } from 'lucide-react';
+import { 
+  BarChart3, TrendingUp, TrendingDown, DollarSign, Loader2, FileText,
+  Users, Building2, Package, Briefcase, Receipt
+} from 'lucide-react';
 import { toast } from 'sonner';
 import api from '../../lib/api';
 
-const formatCurrency = (amount, currency = 'SRD') => `${currency} ${amount?.toLocaleString('nl-NL', { minimumFractionDigits: 2 }) || '0,00'}`;
-
 export default function RapportagesPage() {
+  const [activeReport, setActiveReport] = useState('balans');
   const [loading, setLoading] = useState(false);
-  const [valuta, setValuta] = useState('SRD');
-  const [startDatum, setStartDatum] = useState(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]);
-  const [eindDatum, setEindDatum] = useState(new Date().toISOString().split('T')[0]);
-  const [balans, setBalans] = useState(null);
-  const [resultaat, setResultaat] = useState(null);
-  const [btw, setBtw] = useState(null);
-  const [debiteuren, setDebiteuren] = useState(null);
+  const [data, setData] = useState(null);
+  const [jaar, setJaar] = useState(new Date().getFullYear());
+  const [kwartaal, setKwartaal] = useState('');
 
-  const loadBalans = async () => {
+  useEffect(() => {
+    loadReport();
+  }, [activeReport, jaar, kwartaal]);
+
+  const loadReport = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const res = await api.get(`/boekhouding/rapportages/balans?valuta=${valuta}`);
-      setBalans(res.data);
-    } catch (err) { toast.error('Kon balans niet laden'); } finally { setLoading(false); }
+      let endpoint = '';
+      switch (activeReport) {
+        case 'balans':
+          endpoint = '/rapportages/grootboek/balans';
+          break;
+        case 'resultaat':
+          endpoint = `/rapportages/grootboek/resultaat?jaar=${jaar}`;
+          break;
+        case 'journaalposten':
+          endpoint = '/rapportages/grootboek/journaalposten?limit=50';
+          break;
+        case 'debiteuren':
+          endpoint = '/rapportages/debiteuren/openstaand';
+          break;
+        case 'crediteuren':
+          endpoint = '/rapportages/crediteuren/openstaand';
+          break;
+        case 'voorraad':
+          endpoint = '/rapportages/voorraad/waarde';
+          break;
+        case 'projecten':
+          endpoint = '/rapportages/projecten/overzicht';
+          break;
+        case 'btw':
+          endpoint = `/rapportages/btw/aangifte?jaar=${jaar}${kwartaal ? `&kwartaal=${kwartaal}` : ''}`;
+          break;
+        default:
+          endpoint = '/rapportages/grootboek/balans';
+      }
+      const res = await api.get(endpoint);
+      setData(res.data);
+    } catch (err) {
+      toast.error('Fout bij laden rapport');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const loadResultaat = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get(`/boekhouding/rapportages/resultaat?start_datum=${startDatum}&eind_datum=${eindDatum}&valuta=${valuta}`);
-      setResultaat(res.data);
-    } catch (err) { toast.error('Kon resultatenrekening niet laden'); } finally { setLoading(false); }
-  };
+  const reports = [
+    { id: 'balans', name: 'Balans', icon: BarChart3 },
+    { id: 'resultaat', name: 'Winst & Verlies', icon: TrendingUp },
+    { id: 'journaalposten', name: 'Journaalposten', icon: FileText },
+    { id: 'debiteuren', name: 'Openstaande Debiteuren', icon: Users },
+    { id: 'crediteuren', name: 'Openstaande Crediteuren', icon: Building2 },
+    { id: 'voorraad', name: 'Voorraadwaarde', icon: Package },
+    { id: 'projecten', name: 'Projecten Overzicht', icon: Briefcase },
+    { id: 'btw', name: 'BTW Aangifte', icon: Receipt },
+  ];
 
-  const loadBtw = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get(`/boekhouding/btw/aangifte?start_datum=${startDatum}&eind_datum=${eindDatum}&valuta=${valuta}`);
-      setBtw(res.data);
-    } catch (err) { toast.error('Kon BTW overzicht niet laden'); } finally { setLoading(false); }
-  };
-
-  const loadDebiteuren = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get(`/boekhouding/rapportages/openstaande-debiteuren?valuta=${valuta}`);
-      setDebiteuren(res.data);
-    } catch (err) { toast.error('Kon debiteurenoverzicht niet laden'); } finally { setLoading(false); }
-  };
+  const formatCurrency = (amount) => `SRD ${(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
 
   return (
-    <div className="space-y-6">
-      <div><h1 className="text-2xl font-bold flex items-center gap-2"><TrendingUp className="w-6 h-6" />Rapportages</h1><p className="text-muted-foreground">Financiële overzichten en analyses</p></div>
-
-      <Card>
-        <CardHeader className="pb-3"><CardTitle className="text-lg">Filters</CardTitle></CardHeader>
-        <CardContent>
-          <div className="flex gap-4 items-end flex-wrap">
-            <div><Label>Van</Label><Input type="date" value={startDatum} onChange={(e) => setStartDatum(e.target.value)} className="w-40" /></div>
-            <div><Label>Tot</Label><Input type="date" value={eindDatum} onChange={(e) => setEindDatum(e.target.value)} className="w-40" /></div>
-            <div><Label>Valuta</Label><Select value={valuta} onValueChange={setValuta}><SelectTrigger className="w-24"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="SRD">SRD</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent></Select></div>
+    <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-0" data-testid="rapportages-page">
+      {/* Hero Header */}
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 sm:p-6 lg:p-8">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:32px_32px]"></div>
+        </div>
+        <div className="hidden sm:block absolute top-0 right-0 w-48 lg:w-72 h-48 lg:h-72 bg-emerald-500/30 rounded-full blur-[80px]"></div>
+        
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-sm text-emerald-300 text-xs sm:text-sm mb-3">
+            <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4" />
+            <span>Boekhouding</span>
           </div>
-        </CardContent>
-      </Card>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-1">Rapportages</h1>
+          <p className="text-slate-400 text-sm sm:text-base">Financiële overzichten en analyses</p>
+        </div>
+      </div>
 
-      <Tabs defaultValue="balans">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="balans"><Scale className="w-4 h-4 mr-2" />Balans</TabsTrigger>
-          <TabsTrigger value="resultaat"><FileBarChart className="w-4 h-4 mr-2" />Resultaat</TabsTrigger>
-          <TabsTrigger value="btw"><Receipt className="w-4 h-4 mr-2" />BTW</TabsTrigger>
-          <TabsTrigger value="debiteuren"><TrendingUp className="w-4 h-4 mr-2" />Debiteuren</TabsTrigger>
-        </TabsList>
+      {/* Report Selector */}
+      <div className="flex flex-wrap gap-2">
+        {reports.map((report) => {
+          const Icon = report.icon;
+          return (
+            <Button
+              key={report.id}
+              variant={activeReport === report.id ? 'default' : 'outline'}
+              className={`rounded-xl ${activeReport === report.id ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
+              onClick={() => setActiveReport(report.id)}
+            >
+              <Icon className="w-4 h-4 mr-2" />
+              {report.name}
+            </Button>
+          );
+        })}
+      </div>
 
-        <TabsContent value="balans">
-          <Card>
-            <CardHeader><div className="flex justify-between items-center"><CardTitle>Balans</CardTitle><Button onClick={loadBalans} disabled={loading}>{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Genereren'}</Button></div></CardHeader>
-            <CardContent>
-              {balans ? (
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div><h3 className="font-semibold mb-2 text-blue-600">ACTIVA</h3><Table><TableBody>{balans.activa.map(a => <TableRow key={a.code}><TableCell>{a.code} - {a.naam}</TableCell><TableCell className="text-right font-mono">{formatCurrency(a.saldo, valuta)}</TableCell></TableRow>)}<TableRow className="font-bold bg-blue-50"><TableCell>Totaal Activa</TableCell><TableCell className="text-right">{formatCurrency(balans.totaal_activa, valuta)}</TableCell></TableRow></TableBody></Table></div>
-                  <div><h3 className="font-semibold mb-2 text-red-600">PASSIVA</h3><Table><TableBody>{balans.passiva.map(p => <TableRow key={p.code}><TableCell>{p.code} - {p.naam}</TableCell><TableCell className="text-right font-mono">{formatCurrency(p.saldo, valuta)}</TableCell></TableRow>)}<TableRow className="bg-red-50"><TableCell className="font-semibold">Totaal Passiva</TableCell><TableCell className="text-right font-semibold">{formatCurrency(balans.totaal_passiva, valuta)}</TableCell></TableRow></TableBody></Table><h3 className="font-semibold mb-2 mt-4 text-purple-600">EIGEN VERMOGEN</h3><Table><TableBody>{balans.eigen_vermogen.map(e => <TableRow key={e.code}><TableCell>{e.code} - {e.naam}</TableCell><TableCell className="text-right font-mono">{formatCurrency(e.saldo, valuta)}</TableCell></TableRow>)}<TableRow className="font-bold bg-purple-50"><TableCell>Totaal Passiva + EV</TableCell><TableCell className="text-right">{formatCurrency(balans.totaal_passiva_ev, valuta)}</TableCell></TableRow></TableBody></Table></div>
-                </div>
-              ) : <p className="text-center py-8 text-muted-foreground">Klik op Genereren om de balans te laden</p>}
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {/* Filters */}
+      {['resultaat', 'btw'].includes(activeReport) && (
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Jaar:</span>
+            <Select value={jaar.toString()} onValueChange={(v) => setJaar(parseInt(v))}>
+              <SelectTrigger className="w-24 rounded-lg"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {[2024, 2025, 2026].map(y => <SelectItem key={y} value={y.toString()}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          {activeReport === 'btw' && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Kwartaal:</span>
+              <Select value={kwartaal} onValueChange={setKwartaal}>
+                <SelectTrigger className="w-28 rounded-lg"><SelectValue placeholder="Heel jaar" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Heel jaar</SelectItem>
+                  <SelectItem value="1">Q1</SelectItem>
+                  <SelectItem value="2">Q2</SelectItem>
+                  <SelectItem value="3">Q3</SelectItem>
+                  <SelectItem value="4">Q4</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+        </div>
+      )}
 
-        <TabsContent value="resultaat">
-          <Card>
-            <CardHeader><div className="flex justify-between items-center"><CardTitle>Winst & Verlies</CardTitle><Button onClick={loadResultaat} disabled={loading}>{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Genereren'}</Button></div></CardHeader>
-            <CardContent>
-              {resultaat ? (
-                <div className="space-y-6">
-                  <div><h3 className="font-semibold mb-2 text-green-600">OPBRENGSTEN</h3><Table><TableBody>{resultaat.opbrengsten.map(o => <TableRow key={o.code}><TableCell>{o.code} - {o.naam}</TableCell><TableCell className="text-right font-mono">{formatCurrency(o.bedrag, valuta)}</TableCell></TableRow>)}<TableRow className="font-bold bg-green-50"><TableCell>Totaal Opbrengsten</TableCell><TableCell className="text-right">{formatCurrency(resultaat.totaal_opbrengsten, valuta)}</TableCell></TableRow></TableBody></Table></div>
-                  <div><h3 className="font-semibold mb-2 text-red-600">KOSTEN</h3><Table><TableBody>{resultaat.kosten.map(k => <TableRow key={k.code}><TableCell>{k.code} - {k.naam}</TableCell><TableCell className="text-right font-mono">{formatCurrency(k.bedrag, valuta)}</TableCell></TableRow>)}<TableRow className="font-bold bg-red-50"><TableCell>Totaal Kosten</TableCell><TableCell className="text-right">{formatCurrency(resultaat.totaal_kosten, valuta)}</TableCell></TableRow></TableBody></Table></div>
-                  <Card className={resultaat.resultaat >= 0 ? 'bg-green-50' : 'bg-red-50'}><CardContent className="py-4"><div className="flex justify-between items-center"><span className="text-lg font-semibold">{resultaat.resultaat_type === 'winst' ? 'WINST' : 'VERLIES'}</span><span className="text-2xl font-bold">{formatCurrency(Math.abs(resultaat.resultaat), valuta)}</span></div></CardContent></Card>
-                </div>
-              ) : <p className="text-center py-8 text-muted-foreground">Klik op Genereren om de resultatenrekening te laden</p>}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="btw">
-          <Card>
-            <CardHeader><div className="flex justify-between items-center"><CardTitle>BTW Aangifte</CardTitle><Button onClick={loadBtw} disabled={loading}>{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Genereren'}</Button></div></CardHeader>
-            <CardContent>
-              {btw ? (
-                <div className="space-y-4">
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Omschrijving</TableHead><TableHead className="text-right">Omzet</TableHead><TableHead className="text-right">BTW</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      <TableRow><TableCell>Hoog tarief (25%)</TableCell><TableCell className="text-right">{formatCurrency(btw.omzet_hoog_tarief, valuta)}</TableCell><TableCell className="text-right">{formatCurrency(btw.btw_hoog_tarief, valuta)}</TableCell></TableRow>
-                      <TableRow><TableCell>Laag tarief (10%)</TableCell><TableCell className="text-right">{formatCurrency(btw.omzet_laag_tarief, valuta)}</TableCell><TableCell className="text-right">{formatCurrency(btw.btw_laag_tarief, valuta)}</TableCell></TableRow>
-                      <TableRow><TableCell>Nul tarief (0%)</TableCell><TableCell className="text-right">{formatCurrency(btw.omzet_nul_tarief, valuta)}</TableCell><TableCell className="text-right">-</TableCell></TableRow>
-                      <TableRow className="font-semibold bg-blue-50"><TableCell>Totaal verschuldigde BTW</TableCell><TableCell></TableCell><TableCell className="text-right">{formatCurrency(btw.totaal_verschuldigde_btw, valuta)}</TableCell></TableRow>
-                      <TableRow><TableCell>Voorbelasting (af)</TableCell><TableCell></TableCell><TableCell className="text-right text-green-600">-{formatCurrency(btw.voorbelasting, valuta)}</TableCell></TableRow>
-                      <TableRow className="font-bold bg-yellow-50"><TableCell>TE BETALEN BTW</TableCell><TableCell></TableCell><TableCell className="text-right text-xl">{formatCurrency(btw.te_betalen_btw, valuta)}</TableCell></TableRow>
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : <p className="text-center py-8 text-muted-foreground">Klik op Genereren om het BTW overzicht te laden</p>}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="debiteuren">
-          <Card>
-            <CardHeader><div className="flex justify-between items-center"><CardTitle>Openstaande Debiteuren</CardTitle><Button onClick={loadDebiteuren} disabled={loading}>{loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Genereren'}</Button></div></CardHeader>
-            <CardContent>
-              {debiteuren ? (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-5 gap-4 text-center">
-                    <div className="p-4 bg-green-50 rounded"><p className="text-sm text-muted-foreground">0-30 dagen</p><p className="text-xl font-bold text-green-600">{formatCurrency(debiteuren.totalen['0-30'], valuta)}</p></div>
-                    <div className="p-4 bg-yellow-50 rounded"><p className="text-sm text-muted-foreground">31-60 dagen</p><p className="text-xl font-bold text-yellow-600">{formatCurrency(debiteuren.totalen['31-60'], valuta)}</p></div>
-                    <div className="p-4 bg-orange-50 rounded"><p className="text-sm text-muted-foreground">61-90 dagen</p><p className="text-xl font-bold text-orange-600">{formatCurrency(debiteuren.totalen['61-90'], valuta)}</p></div>
-                    <div className="p-4 bg-red-50 rounded"><p className="text-sm text-muted-foreground">90+ dagen</p><p className="text-xl font-bold text-red-600">{formatCurrency(debiteuren.totalen['90+'], valuta)}</p></div>
-                    <div className="p-4 bg-blue-50 rounded"><p className="text-sm text-muted-foreground">Totaal</p><p className="text-xl font-bold text-blue-600">{formatCurrency(debiteuren.totalen.totaal, valuta)}</p></div>
+      {/* Report Content */}
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto mb-3" />
+            <p className="text-muted-foreground">Rapport laden...</p>
+          </div>
+        </div>
+      ) : data && (
+        <div className="space-y-6">
+          {/* Balans */}
+          {activeReport === 'balans' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-5 lg:p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-emerald-500" />
                   </div>
-                  <Table>
-                    <TableHeader><TableRow><TableHead>Factuur</TableHead><TableHead>Debiteur</TableHead><TableHead>Vervaldatum</TableHead><TableHead>Dagen over</TableHead><TableHead className="text-right">Openstaand</TableHead></TableRow></TableHeader>
-                    <TableBody>
-                      {debiteuren.facturen.map(f => (<TableRow key={f.factuurnummer}><TableCell className="font-mono">{f.factuurnummer}</TableCell><TableCell>{f.debiteur_naam}</TableCell><TableCell>{f.vervaldatum}</TableCell><TableCell className={f.dagen_over > 30 ? 'text-red-600' : ''}>{f.dagen_over} dagen</TableCell><TableCell className="text-right font-semibold">{formatCurrency(f.openstaand, f.valuta)}</TableCell></TableRow>))}
-                    </TableBody>
-                  </Table>
+                  <div>
+                    <h3 className="font-semibold">Activa</h3>
+                    <p className="text-2xl font-bold text-emerald-600">{formatCurrency(data.totaal_activa)}</p>
+                  </div>
                 </div>
-              ) : <p className="text-center py-8 text-muted-foreground">Klik op Genereren om het debiteurenoverzicht te laden</p>}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                <div className="space-y-2">
+                  {data.activa?.map((item, i) => (
+                    <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm">{item.code} - {item.naam}</span>
+                      <span className="font-mono font-medium">{formatCurrency(item.saldo)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl sm:rounded-2xl bg-card border border-border/50 p-4 sm:p-5 lg:p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <TrendingDown className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Passiva</h3>
+                    <p className="text-2xl font-bold text-blue-600">{formatCurrency(data.totaal_passiva)}</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {data.passiva?.map((item, i) => (
+                    <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-muted/30">
+                      <span className="text-sm">{item.code} - {item.naam}</span>
+                      <span className="font-mono font-medium">{formatCurrency(item.saldo)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Resultaat */}
+          {activeReport === 'resultaat' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="rounded-xl bg-card border border-border/50 p-4">
+                  <p className="text-sm text-muted-foreground">Opbrengsten</p>
+                  <p className="text-2xl font-bold text-emerald-600">{formatCurrency(data.totaal_opbrengsten)}</p>
+                </div>
+                <div className="rounded-xl bg-card border border-border/50 p-4">
+                  <p className="text-sm text-muted-foreground">Kosten</p>
+                  <p className="text-2xl font-bold text-red-600">{formatCurrency(data.totaal_kosten)}</p>
+                </div>
+                <div className={`rounded-xl border p-4 ${data.resultaat >= 0 ? 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200' : 'bg-red-50 dark:bg-red-900/20 border-red-200'}`}>
+                  <p className="text-sm text-muted-foreground">Resultaat</p>
+                  <p className={`text-2xl font-bold ${data.resultaat >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    {formatCurrency(data.resultaat)}
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="rounded-xl bg-card border border-border/50 p-4 sm:p-5">
+                  <h3 className="font-semibold mb-3">Opbrengsten</h3>
+                  {data.opbrengsten?.length > 0 ? data.opbrengsten.map((item, i) => (
+                    <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-muted/30 mb-2">
+                      <span className="text-sm">{item.code} - {item.naam}</span>
+                      <span className="font-mono text-emerald-600">{formatCurrency(item.bedrag)}</span>
+                    </div>
+                  )) : <p className="text-muted-foreground text-sm">Geen opbrengsten</p>}
+                </div>
+                <div className="rounded-xl bg-card border border-border/50 p-4 sm:p-5">
+                  <h3 className="font-semibold mb-3">Kosten</h3>
+                  {data.kosten?.length > 0 ? data.kosten.map((item, i) => (
+                    <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-muted/30 mb-2">
+                      <span className="text-sm">{item.code} - {item.naam}</span>
+                      <span className="font-mono text-red-600">{formatCurrency(item.bedrag)}</span>
+                    </div>
+                  )) : <p className="text-muted-foreground text-sm">Geen kosten</p>}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Journaalposten */}
+          {activeReport === 'journaalposten' && (
+            <div className="rounded-xl bg-card border border-border/50 overflow-hidden">
+              <div className="divide-y divide-border">
+                {data?.length > 0 ? data.map((post) => (
+                  <div key={post.id} className="p-4 hover:bg-muted/50">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-mono font-semibold">{post.post_nummer}</p>
+                        <p className="text-sm text-muted-foreground">{post.datum}</p>
+                      </div>
+                      <span className="text-xs px-2 py-1 rounded-lg bg-emerald-100 text-emerald-700">
+                        {post.referentie_type || 'Handmatig'}
+                      </span>
+                    </div>
+                    <p className="text-sm mb-2">{post.omschrijving}</p>
+                    <div className="space-y-1">
+                      {post.regels?.map((regel, i) => (
+                        <div key={i} className="flex justify-between text-xs p-2 rounded bg-muted/30">
+                          <span>{regel.rekening_code} - {regel.rekening_naam}</span>
+                          <div className="flex gap-4">
+                            <span className={regel.debet > 0 ? 'text-blue-600' : 'text-muted-foreground'}>
+                              D: {formatCurrency(regel.debet)}
+                            </span>
+                            <span className={regel.credit > 0 ? 'text-emerald-600' : 'text-muted-foreground'}>
+                              C: {formatCurrency(regel.credit)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )) : <p className="p-8 text-center text-muted-foreground">Geen journaalposten gevonden</p>}
+              </div>
+            </div>
+          )}
+
+          {/* Openstaande Debiteuren */}
+          {activeReport === 'debiteuren' && (
+            <div className="space-y-4">
+              <div className="rounded-xl bg-card border border-border/50 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-muted-foreground">Totaal Openstaand</p>
+                  <p className="text-2xl font-bold text-amber-600">{formatCurrency(data.totaal_openstaand)}</p>
+                </div>
+              </div>
+              {data.per_debiteur?.map((deb, i) => (
+                <div key={i} className="rounded-xl bg-card border border-border/50 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold">{deb.naam}</h3>
+                    <span className="font-bold text-amber-600">{formatCurrency(deb.totaal_openstaand)}</span>
+                  </div>
+                  <div className="space-y-2">
+                    {deb.facturen?.map((f, j) => (
+                      <div key={j} className="flex justify-between items-center text-sm p-2 rounded-lg bg-muted/30">
+                        <span className="font-mono">{f.factuurnummer}</span>
+                        <span>{f.factuurdatum}</span>
+                        <span className="text-amber-600 font-medium">{formatCurrency(f.openstaand)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Openstaande Crediteuren */}
+          {activeReport === 'crediteuren' && (
+            <div className="space-y-4">
+              <div className="rounded-xl bg-card border border-border/50 p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-muted-foreground">Totaal Openstaand</p>
+                  <p className="text-2xl font-bold text-red-600">{formatCurrency(data.totaal_openstaand)}</p>
+                </div>
+              </div>
+              {data.per_crediteur?.length > 0 ? data.per_crediteur.map((cred, i) => (
+                <div key={i} className="rounded-xl bg-card border border-border/50 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold">{cred.naam}</h3>
+                    <span className="font-bold text-red-600">{formatCurrency(cred.totaal_openstaand)}</span>
+                  </div>
+                </div>
+              )) : <p className="text-center text-muted-foreground p-8">Geen openstaande crediteuren</p>}
+            </div>
+          )}
+
+          {/* Voorraadwaarde */}
+          {activeReport === 'voorraad' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="rounded-xl bg-card border border-border/50 p-4">
+                  <p className="text-sm text-muted-foreground">Totale Waarde</p>
+                  <p className="text-2xl font-bold text-emerald-600">{formatCurrency(data.totaal_waarde)}</p>
+                </div>
+                <div className="rounded-xl bg-card border border-border/50 p-4">
+                  <p className="text-sm text-muted-foreground">Artikelen</p>
+                  <p className="text-2xl font-bold">{data.totaal_artikelen}</p>
+                </div>
+                <div className={`rounded-xl border p-4 ${data.onder_minimum > 0 ? 'bg-amber-50 border-amber-200' : 'bg-card border-border/50'}`}>
+                  <p className="text-sm text-muted-foreground">Onder Minimum</p>
+                  <p className={`text-2xl font-bold ${data.onder_minimum > 0 ? 'text-amber-600' : ''}`}>{data.onder_minimum}</p>
+                </div>
+              </div>
+              <div className="rounded-xl bg-card border border-border/50 overflow-hidden">
+                <div className="divide-y divide-border">
+                  {data.artikelen?.slice(0, 10).map((art, i) => (
+                    <div key={i} className="flex justify-between items-center p-4 hover:bg-muted/50">
+                      <div>
+                        <p className="font-medium">{art.naam}</p>
+                        <p className="text-sm text-muted-foreground">{art.artikelcode} • {art.aantal} {art.eenheid}</p>
+                      </div>
+                      <span className="font-bold">{formatCurrency(art.waarde)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* BTW Aangifte */}
+          {activeReport === 'btw' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="rounded-xl bg-card border border-border/50 p-4">
+                  <p className="text-sm text-muted-foreground">Omzet</p>
+                  <p className="text-xl font-bold">{formatCurrency(data.omzet_totaal)}</p>
+                </div>
+                <div className="rounded-xl bg-card border border-border/50 p-4">
+                  <p className="text-sm text-muted-foreground">BTW Verkoop</p>
+                  <p className="text-xl font-bold text-blue-600">{formatCurrency(data.btw_verkoop)}</p>
+                </div>
+                <div className="rounded-xl bg-card border border-border/50 p-4">
+                  <p className="text-sm text-muted-foreground">BTW Voorbelasting</p>
+                  <p className="text-xl font-bold text-emerald-600">{formatCurrency(data.btw_voorbelasting)}</p>
+                </div>
+                <div className={`rounded-xl border p-4 ${data.btw_af_te_dragen > 0 ? 'bg-amber-50 border-amber-200' : 'bg-emerald-50 border-emerald-200'}`}>
+                  <p className="text-sm text-muted-foreground">Af te Dragen</p>
+                  <p className={`text-xl font-bold ${data.btw_af_te_dragen > 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    {formatCurrency(data.btw_af_te_dragen)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Projecten */}
+          {activeReport === 'projecten' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="rounded-xl bg-card border border-border/50 p-4">
+                  <p className="text-sm text-muted-foreground">Totaal Uren</p>
+                  <p className="text-2xl font-bold">{data.totaal_uren?.toFixed(1)}</p>
+                </div>
+                <div className="rounded-xl bg-card border border-border/50 p-4">
+                  <p className="text-sm text-muted-foreground">Totaal Kosten</p>
+                  <p className="text-2xl font-bold text-blue-600">{formatCurrency(data.totaal_kosten)}</p>
+                </div>
+                <div className="rounded-xl bg-card border border-border/50 p-4">
+                  <p className="text-sm text-muted-foreground">Projecten</p>
+                  <p className="text-2xl font-bold">{data.aantal_projecten}</p>
+                </div>
+              </div>
+              <div className="rounded-xl bg-card border border-border/50 overflow-hidden">
+                <div className="divide-y divide-border">
+                  {data.projecten?.map((p, i) => (
+                    <div key={i} className="flex justify-between items-center p-4 hover:bg-muted/50">
+                      <div>
+                        <p className="font-medium">{p.naam}</p>
+                        <p className="text-sm text-muted-foreground">{p.code} • {p.totaal_uren?.toFixed(1)} uren</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">{formatCurrency(p.kosten)}</p>
+                        {p.budget > 0 && (
+                          <p className={`text-xs ${p.budget_verbruik > 100 ? 'text-red-600' : 'text-muted-foreground'}`}>
+                            {p.budget_verbruik}% budget
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
