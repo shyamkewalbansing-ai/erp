@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { 
   Plus, ShoppingCart, FileText, Trash2, Package, Building2, 
   ArrowRight, Search, Loader2, Calendar, Users, TrendingUp,
-  Clock, CheckCircle, AlertCircle
+  Clock, CheckCircle, AlertCircle, Edit
 } from 'lucide-react';
 import { toast } from 'sonner';
 
