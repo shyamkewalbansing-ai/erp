@@ -983,6 +983,10 @@ async def create_verkoopfactuur(data: VerkoopfactuurCreate, current_user: dict =
     }
     
     await db.boekhouding_verkoopfacturen.insert_one(factuur_doc)
+    
+    # Automatische journaalpost aanmaken bij bevestiging
+    # Facturen in concept status worden pas geboekt bij status wijziging
+    
     return VerkoopfactuurResponse(**factuur_doc)
 
 @router.get("/verkoopfacturen/{factuur_id}", response_model=VerkoopfactuurResponse)
