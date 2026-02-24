@@ -96,6 +96,7 @@ Een uitgebreide ERP-applicatie voor boekhoudkundige modules met ondersteuning vo
 ### P0 - Kritiek
 - [x] ~~UI/UX Overhaul voor alle pagina's~~ (VOLTOOID)
 - [x] ~~Factuur generatie vanuit Verkooporders~~ (VOLTOOID)
+- [x] ~~PDF Factuur Download~~ (VOLTOOID)
 
 ### P1 - Hoog
 - [ ] Bank/Kas module uitbreiden met factuurkoppelingen
