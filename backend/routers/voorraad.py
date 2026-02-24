@@ -643,6 +643,30 @@ async def create_voorraad_mutatie(data: VoorraadMutatieCreate, current_user: dic
                 upsert=True
             )
     
+    # Automatische grootboekboeking
+    try:
+        kostprijs = data.kostprijs or artikel.get("inkoopprijs", 0) or nieuwe_kostprijs
+        if data.type.value == "inkoop" and kostprijs > 0:
+            await boek_voorraad_ontvangst(
+                db=db,
+                user_id=user_id,
+                artikel=artikel,
+                aantal=abs(data.aantal),
+                kostprijs=kostprijs,
+                referentie=data.omschrijving or "Handmatige ontvangst"
+            )
+        elif data.type.value == "verkoop" and kostprijs > 0:
+            await boek_voorraad_verkoop(
+                db=db,
+                user_id=user_id,
+                artikel=artikel,
+                aantal=abs(data.aantal),
+                kostprijs=kostprijs,
+                referentie=data.omschrijving or "Handmatige verkoop"
+            )
+    except Exception as e:
+        print(f"Fout bij grootboekboeking voorraad: {e}")
+    
     return clean_doc(mutatie_doc)
 
 # ==================== INVENTARISATIE ENDPOINTS ====================
