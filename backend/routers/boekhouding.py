@@ -1087,6 +1087,23 @@ async def register_betaling_verkoopfactuur(
             {"$inc": {"huidig_saldo": data.bedrag}}
         )
     
+    # Automatische grootboekboeking voor betaling
+    try:
+        betaling_data = {
+            "bedrag": data.bedrag,
+            "betaaldatum": data.betaaldatum,
+            "betaalmethode": data.betaalmethode
+        }
+        await boek_verkoopfactuur_betaling(
+            db=db,
+            user_id=user_id,
+            factuur=factuur,
+            betaling=betaling_data,
+            debiteur_naam=factuur.get("debiteur_naam", "Onbekend")
+        )
+    except Exception as e:
+        print(f"Fout bij grootboekboeking betaling: {e}")
+    
     return {"message": "Betaling geregistreerd", "nieuwe_status": nieuwe_status}
 
 @router.delete("/verkoopfacturen/{factuur_id}")
