@@ -169,10 +169,12 @@ Automatisch aangemaakt bij eerste gebruik:
 - [x] **Grootboek Integratie - VOLLEDIG GEÏMPLEMENTEERD**
 - [x] **Rapportages Module - VOLLEDIG GEÏMPLEMENTEERD**
 - [x] **Email versturen met PDF bijlage - VOLTOOID**
+- [x] **Volledige CRUD voor Orders & Offertes - VOLTOOID**
 
 ### P1 - Hoog
 - [ ] Bank/Kas module uitbreiden met reconciliatie
-- [ ] Volledige CRUD voor alle entiteiten
+- [ ] Goederenontvangst → Voorraadmutaties automatisch
+- [ ] Verkooporders → Voorraadreservering
 
 ### P2 - Medium
 - [ ] HRM integratie met kostenboekingen
