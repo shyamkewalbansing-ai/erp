@@ -394,15 +394,28 @@ export default function InkoopOrdersPage() {
                       {order.status?.replace(/_/g, ' ')}
                     </Badge>
                   </div>
-                  <div className="flex gap-2 w-full sm:w-auto">
+                  <div className="flex gap-2 w-full sm:w-auto flex-wrap">
                     {order.status === 'concept' && (
-                      <Button size="sm" variant="outline" onClick={() => updateStatus(order.id, 'bevestigd')} className="flex-1 sm:flex-none text-xs sm:text-sm">
-                        Bevestigen
-                      </Button>
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => handleEdit(order)} className="text-xs sm:text-sm" data-testid={`edit-order-${order.id}`}>
+                          <Edit className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Bewerken
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => updateStatus(order.id, 'bevestigd')} className="text-xs sm:text-sm">
+                          Bevestigen
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleDelete(order.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50 text-xs sm:text-sm" data-testid={`delete-order-${order.id}`}>
+                          <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                        </Button>
+                      </>
                     )}
                     {(order.status === 'gedeeltelijk_ontvangen' || order.status === 'volledig_ontvangen') && !order.factuur_id && (
                       <Button size="sm" onClick={() => createFactuur(order.id)} className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-xs sm:text-sm">
                         <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Factuur
+                      </Button>
+                    )}
+                    {(order.status === 'geannuleerd') && (
+                      <Button size="sm" variant="ghost" onClick={() => handleDelete(order.id)} className="text-red-500 hover:text-red-600 hover:bg-red-50 text-xs sm:text-sm" data-testid={`delete-order-${order.id}`}>
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Verwijderen
                       </Button>
                     )}
                   </div>
