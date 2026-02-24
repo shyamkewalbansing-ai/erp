@@ -104,7 +104,11 @@ class InkoopofferteCreate(BaseModel):
     verwachte_leverdatum: Optional[str] = None
 
 class InkoopofferteUpdate(BaseModel):
+    leverancier_id: Optional[str] = None
+    offertedatum: Optional[str] = None
     geldig_tot: Optional[str] = None
+    valuta: Optional[Currency] = None
+    regels: Optional[List[InkoopofferteRegelCreate]] = None
     opmerkingen: Optional[str] = None
     referentie: Optional[str] = None
     levering_adres: Optional[str] = None
@@ -129,6 +133,16 @@ class InkooporderCreate(BaseModel):
     verwachte_leverdatum: Optional[str] = None
     valuta: Currency = Currency.SRD
     regels: List[InkooporderRegelCreate]
+    opmerkingen: Optional[str] = None
+    referentie: Optional[str] = None
+    levering_adres: Optional[str] = None
+
+class InkooporderUpdate(BaseModel):
+    leverancier_id: Optional[str] = None
+    orderdatum: Optional[str] = None
+    verwachte_leverdatum: Optional[str] = None
+    valuta: Optional[Currency] = None
+    regels: Optional[List[InkooporderRegelCreate]] = None
     opmerkingen: Optional[str] = None
     referentie: Optional[str] = None
     levering_adres: Optional[str] = None
