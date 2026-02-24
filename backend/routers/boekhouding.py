@@ -1004,12 +1004,34 @@ async def update_verkoopfactuur_status(factuur_id: str, status: str, current_use
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail=f"Ongeldige status. Kies uit: {valid_statuses}")
     
+    # Haal factuur op voor boekingscontrole
+    factuur = await db.boekhouding_verkoopfacturen.find_one({"id": factuur_id, "user_id": user_id}, {"_id": 0})
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    oude_status = factuur.get("status", "concept")
+    
     result = await db.boekhouding_verkoopfacturen.update_one(
         {"id": factuur_id, "user_id": user_id},
         {"$set": {"status": status}}
     )
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Automatische grootboekboeking bij eerste keer verstuurd
+    if oude_status == "concept" and status == "verstuurd":
+        try:
+            factuur["status"] = status  # Update status in dict
+            await boek_verkoopfactuur(
+                db=db,
+                user_id=user_id,
+                factuur=factuur,
+                debiteur_naam=factuur.get("debiteur_naam", "Onbekend")
+            )
+        except Exception as e:
+            print(f"Fout bij grootboekboeking: {e}")
+            # Log maar ga door - boeking kan later handmatig
+    
     return {"message": f"Status gewijzigd naar {status}"}
 
 @router.post("/verkoopfacturen/{factuur_id}/betaling")
