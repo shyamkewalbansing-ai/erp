@@ -30,6 +30,7 @@ export default function VerkoopOrdersPage() {
   const [artikelen, setArtikelen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [form, setForm] = useState({
     klant_id: '',
@@ -138,8 +139,11 @@ export default function VerkoopOrdersPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/verkoop/orders`, {
-        method: 'POST',
+      const url = editingId 
+        ? `${API_URL}/api/verkoop/orders/${editingId}`
+        : `${API_URL}/api/verkoop/orders`;
+      const res = await fetch(url, {
+        method: editingId ? 'PUT' : 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -147,20 +151,62 @@ export default function VerkoopOrdersPage() {
         body: JSON.stringify(form)
       });
       if (res.ok) {
-        toast.success('Verkooporder aangemaakt');
+        toast.success(editingId ? 'Order bijgewerkt' : 'Verkooporder aangemaakt');
         setDialogOpen(false);
         resetForm();
         fetchOrders();
       } else {
         const error = await res.json();
-        toast.error(error.detail || 'Fout bij aanmaken order');
+        toast.error(error.detail || 'Fout bij opslaan order');
       }
     } catch (error) {
-      toast.error('Fout bij aanmaken order');
+      toast.error('Fout bij opslaan order');
+    }
+  };
+
+  const handleEdit = (order) => {
+    setEditingId(order.id);
+    setForm({
+      klant_id: order.klant_id || '',
+      valuta: order.valuta || 'SRD',
+      orderdatum: order.orderdatum || new Date().toISOString().split('T')[0],
+      verwachte_leverdatum: order.verwachte_leverdatum || '',
+      opmerkingen: order.opmerkingen || '',
+      referentie: order.referentie || '',
+      regels: order.regels?.map(r => ({
+        artikel_id: r.artikel_id || '',
+        omschrijving: r.omschrijving || '',
+        aantal: r.aantal || 1,
+        prijs_per_stuk: r.prijs_per_stuk || 0,
+        btw_tarief: r.btw_tarief || '10',
+        geleverd_aantal: r.geleverd_aantal || 0
+      })) || [{ artikel_id: '', omschrijving: '', aantal: 1, prijs_per_stuk: 0, btw_tarief: '10' }]
+    });
+    setDialogOpen(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Weet u zeker dat u deze order wilt verwijderen?')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/verkoop/orders/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast.success('Order verwijderd');
+        fetchOrders();
+      } else {
+        const error = await res.json();
+        toast.error(error.detail || 'Fout bij verwijderen');
+      }
+    } catch (error) {
+      toast.error('Fout bij verwijderen');
     }
   };
 
   const resetForm = () => {
+    setEditingId(null);
     setForm({
       klant_id: '',
       valuta: 'SRD',
