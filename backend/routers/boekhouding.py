@@ -1486,6 +1486,23 @@ async def register_betaling_inkoopfactuur(
             {"$inc": {"huidig_saldo": -data.bedrag}}
         )
     
+    # Automatische grootboekboeking voor betaling
+    try:
+        betaling_data = {
+            "bedrag": data.bedrag,
+            "betaaldatum": data.betaaldatum,
+            "betaalmethode": data.betaalmethode
+        }
+        await boek_inkoopfactuur_betaling(
+            db=db,
+            user_id=user_id,
+            factuur=factuur,
+            betaling=betaling_data,
+            crediteur_naam=factuur.get("crediteur_naam", "Onbekend")
+        )
+    except Exception as e:
+        print(f"Fout bij grootboekboeking inkoopfactuur betaling: {e}")
+    
     return {"message": "Betaling geregistreerd", "nieuwe_status": nieuwe_status}
 
 # ==================== BANKREKENINGEN ====================
