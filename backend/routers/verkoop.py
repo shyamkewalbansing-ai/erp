@@ -125,6 +125,28 @@ class VerkooporderCreate(BaseModel):
     referentie: Optional[str] = None
     levering_adres: Optional[str] = None
 
+class VerkooporderUpdate(BaseModel):
+    klant_id: Optional[str] = None
+    orderdatum: Optional[str] = None
+    verwachte_leverdatum: Optional[str] = None
+    valuta: Optional[Currency] = None
+    regels: Optional[List[VerkooporderRegelCreate]] = None
+    opmerkingen: Optional[str] = None
+    referentie: Optional[str] = None
+    levering_adres: Optional[str] = None
+
+class VerkoopofferteUpdate(BaseModel):
+    klant_id: Optional[str] = None
+    offertedatum: Optional[str] = None
+    geldig_tot: Optional[str] = None
+    valuta: Optional[Currency] = None
+    regels: Optional[List[VerkoopofferteRegelCreate]] = None
+    opmerkingen: Optional[str] = None
+    referentie: Optional[str] = None
+    interne_notities: Optional[str] = None
+    levering_adres: Optional[str] = None
+    verwachte_leverdatum: Optional[str] = None
+
 # ==================== MODELS - PRIJSLIJSTEN ====================
 
 class PrijslijstCreate(BaseModel):
