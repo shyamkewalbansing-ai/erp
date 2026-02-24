@@ -105,7 +105,7 @@ Een uitgebreide ERP-applicatie voor boekhoudkundige modules met ondersteuning vo
 
 ### P2 - Medium
 - [ ] HRM integratie met kostenboekingen
-- [ ] PDF export voor facturen
+- [ ] Inkoopfacturen PDF export
 - [ ] Bulk import/export functies
 
 ### P3 - Laag
