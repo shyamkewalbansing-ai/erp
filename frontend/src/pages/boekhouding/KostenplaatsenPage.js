@@ -139,45 +139,44 @@ export default function KostenplaatsenPage() {
                         <p className="text-sm text-muted-foreground">{kp.code}</p>
                       </div>
                     </div>
-                <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
-                  {kp.type}
-                </span>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground mb-4">{kp.omschrijving || 'Geen omschrijving'}</p>
-                
-                {kp.budget && (
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Budget</span>
-                      <span className="font-medium">SRD {kp.budget?.toLocaleString()}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${kp.budget_verbruik_percentage > 100 ? 'bg-red-500' : kp.budget_verbruik_percentage > 75 ? 'bg-yellow-500' : 'bg-green-500'}`}
-                        style={{ width: `${Math.min(kp.budget_verbruik_percentage || 0, 100)}%` }}
-                      ></div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Verbruikt: SRD {kp.werkelijke_kosten?.toLocaleString() || 0} ({kp.budget_verbruik_percentage || 0}%)
-                    </p>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
+                      {kp.type}
+                    </span>
                   </div>
-                )}
-                
-                <div className="flex justify-between items-center mt-4">
-                  {kp.verantwoordelijke && (
-                    <span className="text-sm text-muted-foreground">{kp.verantwoordelijke}</span>
+                  <p className="text-sm text-muted-foreground mb-4">{kp.omschrijving || 'Geen omschrijving'}</p>
+                  
+                  {kp.budget && (
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Budget</span>
+                        <span className="font-medium">SRD {kp.budget?.toLocaleString()}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full ${kp.budget_verbruik_percentage > 100 ? 'bg-red-500' : kp.budget_verbruik_percentage > 75 ? 'bg-yellow-500' : 'bg-green-500'}`}
+                          style={{ width: `${Math.min(kp.budget_verbruik_percentage || 0, 100)}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Verbruikt: SRD {kp.werkelijke_kosten?.toLocaleString() || 0} ({kp.budget_verbruik_percentage || 0}%)
+                      </p>
+                    </div>
                   )}
-                  <div className="flex gap-2 ml-auto">
-                    <Button variant="ghost" size="icon" onClick={() => {
-                      setEditingId(kp.id);
-                      setForm({
-                        code: kp.code,
-                        naam: kp.naam,
-                        omschrijving: kp.omschrijving || '',
-                        type: kp.type,
-                        verantwoordelijke: kp.verantwoordelijke || '',
-                        budget: kp.budget || ''
+                  
+                  <div className="flex justify-between items-center mt-4">
+                    {kp.verantwoordelijke && (
+                      <span className="text-sm text-muted-foreground">{kp.verantwoordelijke}</span>
+                    )}
+                    <div className="flex gap-2 ml-auto">
+                      <Button variant="ghost" size="icon" onClick={() => {
+                        setEditingId(kp.id);
+                        setForm({
+                          code: kp.code,
+                          naam: kp.naam,
+                          omschrijving: kp.omschrijving || '',
+                          type: kp.type,
+                          verantwoordelijke: kp.verantwoordelijke || '',
+                          budget: kp.budget || ''
                       });
                       setDialogOpen(true);
                     }}>
