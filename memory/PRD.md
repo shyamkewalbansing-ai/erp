@@ -3,11 +3,15 @@
 ## Oorspronkelijke Probleemstelling
 Een uitgebreide ERP-applicatie met volledig geïntegreerde boekhoudkundige modules:
 - **Boekhouding Core**: Grootboek, Debiteuren, Crediteuren, Bank/Kas, Vaste Activa, Kostenplaatsen
-- **Inkoop Module**: Offertes, Orders, Goederenontvangst, Inkoopfacturen → Grootboek
-- **Verkoop Module**: Offertes, Orders, Verkoopfacturen → Grootboek, Prijslijsten
+- **Inkoop Module**: Offertes, Goederenontvangst, Inkoopfacturen → Grootboek
+- **Verkoop Module**: Offertes, Verkoopfacturen → Grootboek, Prijslijsten
 - **Voorraad Module**: Artikelenbeheer, Magazijnen, Voorraadmutaties → Grootboek
 - **Projecten Module**: Projectenbeheer, Urenregistratie → Grootboek
 - **Rapportages**: Balans, Winst & Verlies, BTW Aangifte, etc.
+
+**Vereenvoudigde Workflow (25 feb 2026):**
+- Inkoop/Verkoop Orders zijn VERWIJDERD uit de workflow
+- Offertes gaan nu direct naar Facturen (zonder tussenstap)
 
 ## Technische Stack
 - **Frontend**: React met TailwindCSS, Shadcn/UI componenten
