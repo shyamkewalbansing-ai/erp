@@ -97,6 +97,18 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ Backend: `/app/backend/routers/bankreconciliatie.py`
 - ✅ Frontend: `/app/boekhouding/bankreconciliatie`
 
+### 25 februari 2026 - Bank & Kas Pagina Verbeterd (VOLTOOID)
+- ✅ **Volledige Bank & Kas Module**
+  - Hero header met `ModulePageLayout` component
+  - Stats cards: SRD/USD/EUR saldo + aantal rekeningen
+  - Bankrekeningen grid met kaarten
+  - Per rekening: naam, bank, rekeningnummer, saldo, transactie knop
+  - **Nieuwe Rekening dialog**: naam, rekeningnummer, bank, valuta, beginsaldo
+  - **Nieuwe Transactie dialog**: type (inkomst/uitgave), bedrag, categorie, omschrijving
+  - Recente Transacties overzicht met zoekfunctie
+  - Delete functionaliteit voor rekeningen en transacties
+  - Kleurcodering: groen voor inkomsten, rood voor uitgaven
+
 ### 25 februari 2026 - Dashboard Valuta Exposure Widget (VOLTOOID)
 - ✅ **Valuta Exposure Warning Widget** op Boekhouding Dashboard
   - Automatisch laden van exposure data via `/api/rapportages/valuta/exposure`
