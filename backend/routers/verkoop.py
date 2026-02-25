@@ -874,6 +874,62 @@ async def update_verkooporder_status(
                 detail=f"Onvoldoende voorraad: {'; '.join(reservering_errors)}"
             )
     
+    # Voorraad afschrijven bij levering (bevestigd -> geleverd)
+    if status.value == "geleverd" and oude_status in ["bevestigd", "in_behandeling"]:
+        for regel in order.get("regels", []):
+            if regel.get("artikel_id"):
+                artikel = await db.voorraad_artikelen.find_one(
+                    {"id": regel["artikel_id"], "user_id": user_id}
+                )
+                if artikel:
+                    aantal = regel.get("aantal", 0)
+                    kostprijs = artikel.get("kostprijs", 0) or artikel.get("gemiddelde_kostprijs", 0)
+                    
+                    # Verminder voorraad en reservering
+                    await db.voorraad_artikelen.update_one(
+                        {"id": regel["artikel_id"]},
+                        {"$inc": {
+                            "voorraad_aantal": -aantal,
+                            "gereserveerd_aantal": -aantal
+                        }}
+                    )
+                    
+                    # Update reservering status
+                    await db.voorraad_reserveringen.update_one(
+                        {"order_id": order_id, "artikel_id": regel["artikel_id"], "status": "actief"},
+                        {"$set": {"status": "geleverd", "updated_at": now}}
+                    )
+                    
+                    # Maak voorraadmutatie aan
+                    mutatie_doc = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": user_id,
+                        "artikel_id": regel["artikel_id"],
+                        "type": "verkoop",
+                        "aantal": -aantal,
+                        "referentie_type": "verkooporder",
+                        "referentie_id": order_id,
+                        "datum": now.split("T")[0],
+                        "omschrijving": f"Levering {order.get('ordernummer', '')}",
+                        "created_at": now
+                    }
+                    await db.voorraad_mutaties.insert_one(mutatie_doc)
+                    
+                    # Boek naar grootboek (kostprijs verkochte goederen)
+                    if kostprijs > 0:
+                        from utils.grootboek_integration import boek_voorraad_verkoop
+                        try:
+                            await boek_voorraad_verkoop(
+                                db=db,
+                                user_id=user_id,
+                                artikel=artikel,
+                                aantal=aantal,
+                                kostprijs=kostprijs,
+                                referentie=order.get("ordernummer", "")
+                            )
+                        except Exception as e:
+                            print(f"Waarschuwing: Grootboek boeking mislukt: {e}")
+    
     # Voorraad vrijgeven bij annuleren (als er reserveringen waren)
     if status.value == "geannuleerd" and oude_status in ["bevestigd", "in_behandeling"]:
         for regel in order.get("regels", []):
