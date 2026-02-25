@@ -97,6 +97,39 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ Backend: `/app/backend/routers/bankreconciliatie.py`
 - ✅ Frontend: `/app/boekhouding/bankreconciliatie`
 
+### 25 februari 2026 - P2 Modules: Vaste Activa, Kostenplaatsen, Wisselkoersen (VOLTOOID)
+- ✅ **Vaste Activa Module**
+  - Volledige CRUD voor vaste activa beheer
+  - Categorieën: Gebouwen, Machines, Inventaris, Transportmiddelen, Computers, Software, Overig
+  - Afschrijvingsmethoden: Lineair, Degressief, Annuïteit
+  - Statistieken: Totaal Activa, Aanschafwaarde, Boekwaarde
+  - Backend: `/app/backend/routers/vaste_activa.py`
+  - Frontend: `/app/frontend/src/pages/boekhouding/ActivaPage.js`
+  - Route: `/app/boekhouding/activa`
+
+- ✅ **Kostenplaatsen Module**
+  - Volledige CRUD voor kostenplaatsen/afdelingen
+  - Types: Afdeling, Project, Product, etc.
+  - Budget beheer met voortgangsbalken
+  - Verantwoordelijke toewijzen
+  - Backend: `/app/backend/routers/kostenplaatsen.py`
+  - Frontend: `/app/frontend/src/pages/boekhouding/KostenplaatsenPage.js`
+  - Route: `/app/boekhouding/kostenplaatsen`
+
+- ✅ **Wisselkoersen Module**
+  - Volledige CRUD voor wisselkoersen
+  - Ondersteunde valuta: USD, EUR, GYD, BRL
+  - Basis valuta: SRD (Surinaamse Dollar)
+  - **Valuta Converter**: Realtime conversie tussen valuta
+  - Bron tracking (bijv. CBvS)
+  - Backend: `/app/backend/routers/wisselkoersen.py`
+  - Frontend: `/app/frontend/src/pages/boekhouding/WisselkoersenPage.js`
+  - Route: `/app/boekhouding/wisselkoersen`
+
+- ✅ **Test resultaten** (25 feb 2026)
+  - Backend: 38/38 tests geslaagd (100%)
+  - Frontend: Alle navigatie en CRUD operaties werken correct
+
 ### 24 februari 2026 - Volledige CRUD Functionaliteit (VOLTOOID)
 - ✅ **Verkoop Orders**: Create, Update (concept), Delete (concept/geannuleerd)
 - ✅ **Verkoop Offertes**: Create, Update (concept), Delete (concept/verlopen/afgewezen)
