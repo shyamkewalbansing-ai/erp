@@ -26,7 +26,7 @@ export default function KostenplaatsenPage() {
   const fetchKostenplaatsen = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/activa/kostenplaatsen`, {
+      const res = await fetch(`${API_URL}/api/kostenplaatsen/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -44,8 +44,8 @@ export default function KostenplaatsenPage() {
     try {
       const token = localStorage.getItem('token');
       const url = editingId 
-        ? `${API_URL}/api/activa/kostenplaatsen/${editingId}`
-        : `${API_URL}/api/activa/kostenplaatsen`;
+        ? `${API_URL}/api/kostenplaatsen/${editingId}`
+        : `${API_URL}/api/kostenplaatsen/`;
       const res = await fetch(url, {
         method: editingId ? 'PUT' : 'POST',
         headers: { 
@@ -54,7 +54,7 @@ export default function KostenplaatsenPage() {
         },
         body: JSON.stringify({
           ...form,
-          budget: form.budget ? parseFloat(form.budget) : null
+          budget_jaar: form.budget ? parseFloat(form.budget) : null
         })
       });
       if (res.ok) {
@@ -75,7 +75,7 @@ export default function KostenplaatsenPage() {
     if (!window.confirm('Weet u zeker dat u deze kostenplaats wilt verwijderen?')) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/activa/kostenplaatsen/${id}`, {
+      const res = await fetch(`${API_URL}/api/kostenplaatsen/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
