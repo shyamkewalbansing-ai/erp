@@ -138,8 +138,12 @@ def parse_csv_transactions(content: str, user_id: str) -> List[dict]:
                          row.get('Reference') or row.get('Transactie ID') or
                          row.get('Volgnummer') or '')
                 
-            referentie = row.get('Referentie') or row.get('Kenmerk') or row.get('Reference') or ''
-            tegenrekening = row.get('Tegenrekening') or row.get('IBAN') or row.get('Rekening') or ''
+            # Valuta detectie
+            valuta = row.get('Valuta') or row.get('Currency') or row.get('Munt') or 'SRD'
+            if 'USD' in str(bedrag_str).upper() or 'USD' in str(row).upper():
+                valuta = 'USD'
+            elif 'EUR' in str(bedrag_str).upper() or 'EUR' in str(row).upper():
+                valuta = 'EUR'
             
             transactions.append({
                 "id": str(uuid.uuid4()),
@@ -147,6 +151,7 @@ def parse_csv_transactions(content: str, user_id: str) -> List[dict]:
                 "datum": datum,
                 "omschrijving": omschrijving or '',
                 "bedrag": bedrag,
+                "valuta": valuta,
                 "type": trans_type.value,
                 "referentie": referentie,
                 "tegenrekening": tegenrekening,
