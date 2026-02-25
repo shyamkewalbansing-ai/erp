@@ -1,0 +1,129 @@
+{
+  "summary": "Comprehensive backend testing of P2 Modules: Vaste Activa (Fixed Assets), Kostenplaatsen (Cost Centers), and Wisselkoersen (Exchange Rates). All 38 tests passed after fixing 1 bug in kostenplaatsen rapportage endpoint.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/kostenplaatsen/rapportage/overzicht",
+        "issue": "KeyError: 'status' - some kostenplaatsen documents missing status field",
+        "priority": "LOW",
+        "status": "FIXED - changed kp['status'] to kp.get('status', 'actief')"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_p2_modules.py",
+    "/app/test_reports/pytest/pytest_p2_modules.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Vaste Activa: Linear depreciation calculation correct: (aanschafwaarde - restwaarde) / levensduur_jaren",
+    "Vaste Activa: Degressief depreciation calculation correct: boekwaarde * (percentage / 100)",
+    "Vaste Activa: Monthly depreciation booking creates grootboek journaalpost with correct debit/credit entries",
+    "Vaste Activa: Proper validation prevents deletion of assets with existing afschrijvingen",
+    "Kostenplaatsen: Budget tracking correctly calculates actuele_kosten and budget_resterend",
+    "Kostenplaatsen: Proper validation prevents deletion of kostenplaatsen with existing boekingen",
+    "Wisselkoersen: SRD correctly used as base currency - cannot create SRD exchange rate",
+    "Wisselkoersen: Cross-rate conversion (USD to EUR) correctly goes via SRD",
+    "Wisselkoersen: Bulk import correctly handles both new and existing rates",
+    "All endpoints properly require authentication (401/403 for unauthenticated requests)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_p2_modules.py",
+    "/app/backend/routers/kostenplaatsen.py"
+  ],
+  "success_rate": {
+    "backend": "100% (38/38 tests passed)",
+    "frontend": "N/A (backend only testing requested)"
+  },
+  "test_credentials": {
+    "email": "demo@facturatie.sr",
+    "password": "demo2024"
+  },
+  "seed_data_creation": "Test data created with TEST_ prefix during tests. Vaste activa and kostenplaatsen with boekingen/afschrijvingen preserved for audit trail.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "P2 modules fully tested. Key endpoints: /api/vaste-activa/ (CRUD, afschrijving, maandelijkse-afschrijvingen, stats), /api/kostenplaatsen/ (CRUD, boeking, boekingen, stats, rapportage/overzicht), /api/wisselkoersen/ (CRUD, historie, actueel, converteer, bulk-import, standaard-koersen). All GET list endpoints require trailing slash. Token key is 'access_token'.",
+  "features_tested": {
+    "vaste_activa": {
+      "crud_operations": "PASS - Create, Read, Update, Delete (with validation)",
+      "linear_depreciation": "PASS - (aanschafwaarde - restwaarde) / levensduur_jaren",
+      "declining_depreciation": "PASS - boekwaarde * percentage",
+      "no_depreciation": "PASS - for grond/land assets",
+      "monthly_depreciation_booking": "PASS - books to grootboek with journaalpost",
+      "depreciation_history": "PASS - tracks all afschrijvingen per activum",
+      "statistics": "PASS - totaal_activa, aanschafwaarde, afgeschreven, boekwaarde, per_categorie",
+      "filtering": "PASS - by categorie and status"
+    },
+    "kostenplaatsen": {
+      "crud_operations": "PASS - Create, Read, Update, Delete (with validation)",
+      "cost_bookings": "PASS - create and list boekingen per kostenplaats",
+      "budget_tracking": "PASS - actuele_kosten, budget_resterend calculated correctly",
+      "statistics": "PASS - totaal_budget, totaal_kosten, benutting_percentage",
+      "rapportage": "PASS - overzicht with all kostenplaatsen and totalen"
+    },
+    "wisselkoersen": {
+      "crud_operations": "PASS - Create, Read, Update, Delete",
+      "srd_base_currency": "PASS - cannot create SRD rate (400 error)",
+      "current_rate": "PASS - GET /actueel/{valuta}",
+      "rate_history": "PASS - GET /historie/{valuta}",
+      "conversion_srd_to_foreign": "PASS - divide by koers",
+      "conversion_foreign_to_srd": "PASS - multiply by koers",
+      "cross_rate_conversion": "PASS - via SRD intermediate",
+      "same_currency_conversion": "PASS - returns same amount with koers=1",
+      "bulk_import": "PASS - handles new and existing rates",
+      "standaard_koersen": "PASS - no auth required, returns indicative rates"
+    }
+  },
+  "api_endpoints_tested": {
+    "authentication": {
+      "GET /api/vaste-activa/ without auth": "PASS - Returns 401/403",
+      "GET /api/kostenplaatsen/ without auth": "PASS - Returns 401/403",
+      "GET /api/wisselkoersen/ without auth": "PASS - Returns 401/403"
+    },
+    "vaste_activa": {
+      "GET /api/vaste-activa/": "PASS - List all assets with boekwaarde",
+      "GET /api/vaste-activa/{id}": "PASS - Single asset with afschrijvingen",
+      "GET /api/vaste-activa/stats": "PASS - Statistics",
+      "POST /api/vaste-activa/": "PASS - Create asset (lineair/degressief/geen)",
+      "PUT /api/vaste-activa/{id}": "PASS - Update asset",
+      "DELETE /api/vaste-activa/{id}": "PASS - Delete (400 if has afschrijvingen)",
+      "POST /api/vaste-activa/{id}/afschrijving": "PASS - Book depreciation",
+      "GET /api/vaste-activa/{id}/afschrijvingen": "PASS - Depreciation history",
+      "POST /api/vaste-activa/maandelijkse-afschrijvingen": "PASS - Batch monthly depreciation"
+    },
+    "kostenplaatsen": {
+      "GET /api/kostenplaatsen/": "PASS - List all with actuele_kosten",
+      "GET /api/kostenplaatsen/{id}": "PASS - Single with kosten_per_maand",
+      "GET /api/kostenplaatsen/stats": "PASS - Statistics",
+      "GET /api/kostenplaatsen/rapportage/overzicht": "PASS - Report (after fix)",
+      "POST /api/kostenplaatsen/": "PASS - Create (400 if duplicate code)",
+      "PUT /api/kostenplaatsen/{id}": "PASS - Update",
+      "DELETE /api/kostenplaatsen/{id}": "PASS - Delete (400 if has boekingen)",
+      "POST /api/kostenplaatsen/{id}/boeking": "PASS - Create cost booking",
+      "GET /api/kostenplaatsen/{id}/boekingen": "PASS - List bookings"
+    },
+    "wisselkoersen": {
+      "GET /api/wisselkoersen/": "PASS - List current rates per valuta",
+      "GET /api/wisselkoersen/actueel/{valuta}": "PASS - Current rate",
+      "GET /api/wisselkoersen/historie/{valuta}": "PASS - Rate history",
+      "GET /api/wisselkoersen/standaard-koersen": "PASS - No auth required",
+      "POST /api/wisselkoersen/": "PASS - Create rate (400 for SRD)",
+      "PUT /api/wisselkoersen/{id}": "PASS - Update rate",
+      "DELETE /api/wisselkoersen/{id}": "PASS - Delete rate",
+      "POST /api/wisselkoersen/converteer": "PASS - Currency conversion",
+      "POST /api/wisselkoersen/bulk-import": "PASS - Bulk import rates"
+    }
+  },
+  "bug_fixed": {
+    "file": "/app/backend/routers/kostenplaatsen.py",
+    "line": 367,
+    "issue": "KeyError: 'status' when some kostenplaatsen documents don't have status field",
+    "fix": "Changed kp['status'] to kp.get('status', 'actief') and kp['type'] to kp.get('type', 'overig')"
+  }
+}
