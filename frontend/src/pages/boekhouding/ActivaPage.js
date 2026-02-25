@@ -166,7 +166,7 @@ export default function ActivaPage() {
           ) : (
             <div className="space-y-4">
               {activa.map((item) => (
-                <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
+                <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50" data-testid={`activum-${item.id}`}>
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-amber-100 dark:bg-amber-900 rounded-lg">
                       <Building2 className="h-6 w-6 text-amber-600" />
@@ -223,8 +223,8 @@ export default function ActivaPage() {
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </PageCard>
+      </ContentSection>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl">
