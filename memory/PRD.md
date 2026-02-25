@@ -97,6 +97,31 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ Backend: `/app/backend/routers/bankreconciliatie.py`
 - ✅ Frontend: `/app/boekhouding/bankreconciliatie`
 
+### 25 februari 2026 - Inkoopfacturen PDF & Multi-Valuta Rapportages (VOLTOOID)
+- ✅ **Inkoopfacturen PDF Export**
+  - Endpoints: `GET /api/pdf/inkoopfactuur/{id}` en `GET /api/pdf/inkoopfactuur/{id}/preview`
+  - Rode thema (vs groene voor verkoop) om onderscheid te maken
+  - Toont SRD equivalent en kostenplaats informatie
+  - Professionele PDF layout met leverancier details
+
+- ✅ **Multi-Valuta Rapportages Module**
+  - Nieuwe pagina: `/app/boekhouding/valuta-rapportages`
+  - **Valuta Overzicht**: `GET /api/rapportages/valuta/overzicht?jaar=YYYY`
+    - Verkoop/inkoop per valuta met SRD equivalenten
+    - Totalen en saldo berekening
+  - **Valuta Exposure**: `GET /api/rapportages/valuta/exposure`
+    - Openstaande posities in vreemde valuta
+    - Te ontvangen vs te betalen per valuta
+    - Netto exposure in SRD
+  - **Koers Historie**: `GET /api/rapportages/valuta/koershistorie?valuta=USD&dagen=30`
+    - Historische koersen met trend analyse
+
+- ✅ **Frontend pagina** met:
+  - StatsGrid met totalen
+  - Omzet per valuta tabel
+  - Exposure cards met details
+  - Huidige wisselkoersen overzicht
+
 ### 25 februari 2026 - Grootboek Integraties (VOLTOOID)
 - ✅ **Automatische Afschrijvingen**
   - Endpoint: `POST /api/vaste-activa/maandelijkse-afschrijvingen?maand=YYYY-MM`
