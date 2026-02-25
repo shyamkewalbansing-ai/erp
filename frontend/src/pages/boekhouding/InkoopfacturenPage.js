@@ -3,13 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Button } from '../../components/ui/button';
 import { Badge } from '../../components/ui/badge';
 import { Input } from '../../components/ui/input';
-import { FileText, Search, Download, DollarSign, Clock, CheckCircle } from 'lucide-react';
+import { Label } from '../../components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { FileText, Search, Download, DollarSign, Clock, CheckCircle, CreditCard, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const statusColors = {
   concept: 'bg-gray-100 text-gray-800',
+  ontvangen: 'bg-blue-100 text-blue-800',
   open: 'bg-blue-100 text-blue-800',
   gedeeltelijk_betaald: 'bg-yellow-100 text-yellow-800',
   betaald: 'bg-green-100 text-green-800',
@@ -18,8 +22,18 @@ const statusColors = {
 
 export default function InkoopfacturenPage() {
   const [facturen, setFacturen] = useState([]);
+  const [bankrekeningen, setBankrekeningen] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [paymentDialog, setPaymentDialog] = useState(false);
+  const [selectedFactuur, setSelectedFactuur] = useState(null);
+  const [paymentForm, setPaymentForm] = useState({
+    bedrag: 0,
+    betaaldatum: new Date().toISOString().split('T')[0],
+    betaalmethode: 'bank',
+    rekening_id: '',
+    referentie: ''
+  });
   const [stats, setStats] = useState({
     totaal_open: 0,
     totaal_betaald: 0,
@@ -28,6 +42,7 @@ export default function InkoopfacturenPage() {
 
   useEffect(() => {
     fetchFacturen();
+    fetchBankrekeningen();
   }, []);
 
   const fetchFacturen = async () => {
@@ -48,11 +63,12 @@ export default function InkoopfacturenPage() {
         data.forEach(f => {
           if (f.status === 'betaald') {
             totaalBetaald += f.totaal || 0;
-          } else if (f.status === 'open' || f.status === 'gedeeltelijk_betaald') {
+          } else if (f.status === 'open' || f.status === 'ontvangen' || f.status === 'gedeeltelijk_betaald') {
             totaalOpen += (f.totaal || 0) - (f.betaald_bedrag || 0);
           }
           if (f.status === 'vervallen') {
             aantalVervallen++;
+            totaalOpen += (f.totaal || 0) - (f.betaald_bedrag || 0);
           }
         });
         
@@ -69,6 +85,91 @@ export default function InkoopfacturenPage() {
     }
   };
 
+  const fetchBankrekeningen = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/boekhouding/bankrekeningen`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBankrekeningen(data);
+      }
+    } catch (error) {
+      console.error('Fout bij ophalen bankrekeningen');
+    }
+  };
+
+  const openPaymentDialog = (factuur) => {
+    setSelectedFactuur(factuur);
+    const openstaand = (factuur.totaal || 0) - (factuur.betaald_bedrag || 0);
+    setPaymentForm({
+      bedrag: openstaand,
+      betaaldatum: new Date().toISOString().split('T')[0],
+      betaalmethode: 'bank',
+      rekening_id: bankrekeningen.find(b => b.valuta === factuur.valuta)?.id || '',
+      referentie: `Betaling ${factuur.factuurnummer}`
+    });
+    setPaymentDialog(true);
+  };
+
+  const handlePayment = async () => {
+    if (!selectedFactuur) return;
+    
+    if (paymentForm.bedrag <= 0) {
+      toast.error('Voer een geldig bedrag in');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/boekhouding/inkoopfacturen/${selectedFactuur.id}/betaling`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(paymentForm)
+      });
+      
+      if (res.ok) {
+        toast.success('Betaling geregistreerd');
+        setPaymentDialog(false);
+        setSelectedFactuur(null);
+        fetchFacturen();
+      } else {
+        const error = await res.json();
+        toast.error(error.detail || 'Fout bij registreren betaling');
+      }
+    } catch (error) {
+      toast.error('Fout bij registreren betaling');
+    }
+  };
+
+  const updateStatus = async (factuurId, newStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/boekhouding/inkoopfacturen/${factuurId}/status`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+      
+      if (res.ok) {
+        toast.success('Status bijgewerkt');
+        fetchFacturen();
+      } else {
+        const error = await res.json();
+        toast.error(error.detail || 'Fout bij bijwerken status');
+      }
+    } catch (error) {
+      toast.error('Fout bij bijwerken status');
+    }
+  };
+
   const filteredFacturen = facturen.filter(f => 
     f.factuurnummer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     f.crediteur_naam?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -77,6 +178,17 @@ export default function InkoopfacturenPage() {
   const formatCurrency = (amount, currency = 'SRD') => {
     return `${currency} ${(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <Loader2 className="w-10 h-10 animate-spin text-emerald-500 mx-auto mb-3" />
+          <p className="text-muted-foreground">Inkoopfacturen laden...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
