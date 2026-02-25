@@ -254,12 +254,32 @@ export default function ArtikelenPage() {
                 </div>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 ml-13 sm:ml-0">
                   <div className="text-left sm:text-right">
-                    <p className="text-sm">Voorraad: <span className="font-bold">{artikel.voorraad_aantal || 0}</span> {artikel.eenheid}</p>
-                    <p className="text-xs text-muted-foreground">Min: {artikel.min_voorraad}</p>
+                    <p className="text-sm font-bold">
+                      Voorraad: <span className={`${(artikel.voorraad_aantal || 0) < artikel.min_voorraad ? 'text-orange-600' : 'text-emerald-600'}`}>
+                        {artikel.voorraad_aantal || 0}
+                      </span> {artikel.eenheid}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Min: {artikel.min_voorraad} | Waarde: SRD {((artikel.voorraad_aantal || 0) * (artikel.inkoopprijs_srd || artikel.inkoopprijs || 0)).toLocaleString()}</p>
                   </div>
                   <div className="text-left sm:text-right">
-                    <p className="text-sm">Inkoop: <span className="font-medium">SRD {artikel.inkoopprijs}</span></p>
-                    <p className="text-sm">Verkoop: <span className="font-bold text-emerald-600">SRD {artikel.verkoopprijs}</span></p>
+                    <p className="text-xs text-muted-foreground">Verkoopprijzen:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {(artikel.verkoopprijs_srd || artikel.verkoopprijs) > 0 && (
+                        <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
+                          SRD {artikel.verkoopprijs_srd || artikel.verkoopprijs}
+                        </span>
+                      )}
+                      {artikel.verkoopprijs_usd > 0 && (
+                        <span className="text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/30 px-1.5 py-0.5 rounded">
+                          ${artikel.verkoopprijs_usd}
+                        </span>
+                      )}
+                      {artikel.verkoopprijs_eur > 0 && (
+                        <span className="text-xs font-bold text-purple-600 bg-purple-50 dark:bg-purple-900/30 px-1.5 py-0.5 rounded">
+                          €{artikel.verkoopprijs_eur}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="icon" className="rounded-lg" onClick={() => {
@@ -271,8 +291,12 @@ export default function ArtikelenPage() {
                         type: artikel.type,
                         categorie: artikel.categorie || '',
                         eenheid: artikel.eenheid,
-                        inkoopprijs: artikel.inkoopprijs,
-                        verkoopprijs: artikel.verkoopprijs,
+                        inkoopprijs_srd: artikel.inkoopprijs_srd || artikel.inkoopprijs || 0,
+                        inkoopprijs_usd: artikel.inkoopprijs_usd || 0,
+                        inkoopprijs_eur: artikel.inkoopprijs_eur || 0,
+                        verkoopprijs_srd: artikel.verkoopprijs_srd || artikel.verkoopprijs || 0,
+                        verkoopprijs_usd: artikel.verkoopprijs_usd || 0,
+                        verkoopprijs_eur: artikel.verkoopprijs_eur || 0,
                         min_voorraad: artikel.min_voorraad,
                         max_voorraad: artikel.max_voorraad || '',
                         btw_tarief: artikel.btw_tarief,
