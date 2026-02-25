@@ -1716,6 +1716,201 @@ async def delete_transactie(transactie_id: str, current_user: dict = Depends(get
     await db.boekhouding_transacties.delete_one({"id": transactie_id})
     return {"message": "Transactie verwijderd"}
 
+
+# ==================== OVERBOEKINGEN ====================
+
+class OverboekingCreate(BaseModel):
+    van_rekening_id: str
+    naar_rekening_id: str
+    bedrag: float
+    omschrijving: Optional[str] = "Overboeking"
+    datum: Optional[str] = None
+    wisselkoers: Optional[float] = None  # Optioneel voor multi-valuta
+
+class OverboekingResponse(BaseModel):
+    id: str
+    van_rekening_id: str
+    van_rekening_naam: str
+    van_valuta: str
+    naar_rekening_id: str
+    naar_rekening_naam: str
+    naar_valuta: str
+    bedrag_van: float
+    bedrag_naar: float
+    wisselkoers: Optional[float] = None
+    omschrijving: str
+    datum: str
+    created_at: str
+
+@router.post("/overboekingen", response_model=OverboekingResponse)
+async def create_overboeking(data: OverboekingCreate, current_user: dict = Depends(get_current_active_user)):
+    """
+    Maak een overboeking tussen twee bankrekeningen.
+    Bij verschillende valuta wordt automatisch de wisselkoers toegepast.
+    """
+    user_id = current_user["id"]
+    
+    # Haal beide rekeningen op
+    van_rekening = await db.boekhouding_bankrekeningen.find_one(
+        {"id": data.van_rekening_id, "user_id": user_id}, {"_id": 0}
+    )
+    if not van_rekening:
+        raise HTTPException(status_code=404, detail="Van-rekening niet gevonden")
+    
+    naar_rekening = await db.boekhouding_bankrekeningen.find_one(
+        {"id": data.naar_rekening_id, "user_id": user_id}, {"_id": 0}
+    )
+    if not naar_rekening:
+        raise HTTPException(status_code=404, detail="Naar-rekening niet gevonden")
+    
+    if data.van_rekening_id == data.naar_rekening_id:
+        raise HTTPException(status_code=400, detail="Kan niet naar dezelfde rekening overboeken")
+    
+    # Check saldo
+    if van_rekening.get("huidig_saldo", 0) < data.bedrag:
+        raise HTTPException(status_code=400, detail="Onvoldoende saldo op van-rekening")
+    
+    van_valuta = van_rekening.get("valuta", "SRD")
+    naar_valuta = naar_rekening.get("valuta", "SRD")
+    
+    # Bereken bedrag naar (met wisselkoers indien nodig)
+    bedrag_naar = data.bedrag
+    wisselkoers_gebruikt = None
+    
+    if van_valuta != naar_valuta:
+        # Zoek wisselkoers
+        if data.wisselkoers:
+            wisselkoers_gebruikt = data.wisselkoers
+        else:
+            # Probeer wisselkoers uit database te halen
+            from utils.grootboek_integration import get_wisselkoers
+            
+            # Converteer via SRD als tussenvaluta
+            if van_valuta == "SRD":
+                # Van SRD naar andere valuta: deel door koers
+                koers = await get_wisselkoers(db, user_id, naar_valuta)
+                if koers:
+                    wisselkoers_gebruikt = 1 / koers
+                    bedrag_naar = round(data.bedrag * wisselkoers_gebruikt, 2)
+            elif naar_valuta == "SRD":
+                # Van andere valuta naar SRD: vermenigvuldig met koers
+                koers = await get_wisselkoers(db, user_id, van_valuta)
+                if koers:
+                    wisselkoers_gebruikt = koers
+                    bedrag_naar = round(data.bedrag * wisselkoers_gebruikt, 2)
+            else:
+                # Beide vreemde valuta: via SRD
+                koers_van = await get_wisselkoers(db, user_id, van_valuta)
+                koers_naar = await get_wisselkoers(db, user_id, naar_valuta)
+                if koers_van and koers_naar:
+                    wisselkoers_gebruikt = koers_van / koers_naar
+                    bedrag_naar = round(data.bedrag * wisselkoers_gebruikt, 2)
+            
+            if not wisselkoers_gebruikt:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Geen wisselkoers gevonden voor {van_valuta} naar {naar_valuta}. Geef handmatig een koers op."
+                )
+    
+    overboeking_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    datum = data.datum or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Maak twee transacties
+    transactie_uit_id = str(uuid.uuid4())
+    transactie_in_id = str(uuid.uuid4())
+    
+    omschrijving_uit = f"{data.omschrijving} naar {naar_rekening.get('naam')}"
+    omschrijving_in = f"{data.omschrijving} van {van_rekening.get('naam')}"
+    
+    if wisselkoers_gebruikt:
+        omschrijving_uit += f" (koers: {wisselkoers_gebruikt:.4f})"
+        omschrijving_in += f" (koers: {wisselkoers_gebruikt:.4f})"
+    
+    # Uitgaande transactie
+    transactie_uit = {
+        "id": transactie_uit_id,
+        "user_id": user_id,
+        "rekening_id": data.van_rekening_id,
+        "datum": datum,
+        "type": "uitgave",
+        "bedrag": data.bedrag,
+        "valuta": van_valuta,
+        "omschrijving": omschrijving_uit,
+        "categorie": "overboeking",
+        "referentie": f"OVB-{overboeking_id[:8]}",
+        "overboeking_id": overboeking_id,
+        "created_at": now
+    }
+    
+    # Inkomende transactie
+    transactie_in = {
+        "id": transactie_in_id,
+        "user_id": user_id,
+        "rekening_id": data.naar_rekening_id,
+        "datum": datum,
+        "type": "inkomst",
+        "bedrag": bedrag_naar,
+        "valuta": naar_valuta,
+        "omschrijving": omschrijving_in,
+        "categorie": "overboeking",
+        "referentie": f"OVB-{overboeking_id[:8]}",
+        "overboeking_id": overboeking_id,
+        "created_at": now
+    }
+    
+    # Overboeking record
+    overboeking_doc = {
+        "id": overboeking_id,
+        "user_id": user_id,
+        "van_rekening_id": data.van_rekening_id,
+        "van_rekening_naam": van_rekening.get("naam"),
+        "van_valuta": van_valuta,
+        "naar_rekening_id": data.naar_rekening_id,
+        "naar_rekening_naam": naar_rekening.get("naam"),
+        "naar_valuta": naar_valuta,
+        "bedrag_van": data.bedrag,
+        "bedrag_naar": bedrag_naar,
+        "wisselkoers": wisselkoers_gebruikt,
+        "omschrijving": data.omschrijving,
+        "datum": datum,
+        "transactie_uit_id": transactie_uit_id,
+        "transactie_in_id": transactie_in_id,
+        "created_at": now
+    }
+    
+    # Insert alles
+    await db.boekhouding_transacties.insert_one(transactie_uit)
+    await db.boekhouding_transacties.insert_one(transactie_in)
+    await db.boekhouding_overboekingen.insert_one(overboeking_doc)
+    
+    # Update saldi
+    await db.boekhouding_bankrekeningen.update_one(
+        {"id": data.van_rekening_id},
+        {"$inc": {"huidig_saldo": -data.bedrag}}
+    )
+    await db.boekhouding_bankrekeningen.update_one(
+        {"id": data.naar_rekening_id},
+        {"$inc": {"huidig_saldo": bedrag_naar}}
+    )
+    
+    return OverboekingResponse(**overboeking_doc)
+
+
+@router.get("/overboekingen", response_model=List[OverboekingResponse])
+async def get_overboekingen(
+    limit: int = 50,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Haal alle overboekingen op"""
+    user_id = current_user["id"]
+    overboekingen = await db.boekhouding_overboekingen.find(
+        {"user_id": user_id}, {"_id": 0}
+    ).sort("created_at", -1).to_list(limit)
+    return [OverboekingResponse(**o) for o in overboekingen]
+
+
+
 # ==================== WISSELKOERSEN ====================
 
 @router.get("/wisselkoersen", response_model=List[WisselkoersResponse])
