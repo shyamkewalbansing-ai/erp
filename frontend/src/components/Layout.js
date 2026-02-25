@@ -390,6 +390,22 @@ export default function Layout() {
     }
   }, [location.pathname]);
 
+  // Auto-expand boekhouding dropdowns based on current path
+  useEffect(() => {
+    if (location.pathname.includes('/boekhouding/inkoop')) {
+      setInkoopOpen(true);
+    }
+    if (location.pathname.includes('/boekhouding/verkoop')) {
+      setVerkoopOpen(true);
+    }
+    if (location.pathname.includes('/boekhouding/voorraad')) {
+      setVoorraadOpen(true);
+    }
+    if (location.pathname.includes('/boekhouding/projecten')) {
+      setProjectenOpen(true);
+    }
+  }, [location.pathname]);
+
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark');
