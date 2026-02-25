@@ -22,6 +22,13 @@ from utils.grootboek_integration import (
 
 router = APIRouter(prefix="/bank", tags=["Bank Reconciliatie"])
 
+# Helper function to clean MongoDB documents
+def clean_doc(doc):
+    """Remove MongoDB _id field from document"""
+    if doc and "_id" in doc:
+        doc.pop("_id", None)
+    return doc
+
 # ==================== ENUMS ====================
 
 class TransactionType(str, Enum):
