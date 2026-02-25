@@ -124,55 +124,41 @@ export default function ActivaPage() {
 
   const totaalAanschaf = activa.filter(a => a.status === 'actief').reduce((sum, a) => sum + (a.aanschafwaarde || 0), 0);
   const totaalBoekwaarde = activa.filter(a => a.status === 'actief').reduce((sum, a) => sum + (a.boekwaarde || 0), 0);
+  const totaalActiva = activa.filter(a => a.status === 'actief').length;
+
+  // Header action buttons
+  const headerActions = (
+    <Button 
+      onClick={() => { resetForm(); setDialogOpen(true); }}
+      className="bg-white text-emerald-600 hover:bg-emerald-50"
+      data-testid="nieuw-activum-btn"
+    >
+      <Plus className="mr-2 h-4 w-4" /> Nieuw Activum
+    </Button>
+  );
+
+  // Stats data for StatsGrid
+  const statsData = [
+    { icon: Boxes, label: 'Totaal Activa', value: totaalActiva, color: 'emerald' },
+    { icon: Banknote, label: 'Aanschafwaarde', value: `SRD ${totaalAanschaf.toLocaleString()}`, color: 'blue' },
+    { icon: Building2, label: 'Boekwaarde', value: `SRD ${totaalBoekwaarde.toLocaleString()}`, color: 'emerald' }
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Vaste Activa</h1>
-          <p className="text-muted-foreground">Beheer uw vaste activa en afschrijvingen</p>
-        </div>
-        <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
-          <Plus className="mr-2 h-4 w-4" /> Nieuw Activum
-        </Button>
-      </div>
+    <ModulePageLayout
+      title="Vaste Activa"
+      subtitle="Beheer uw vaste activa en afschrijvingen"
+      actions={headerActions}
+      loading={loading}
+      loadingText="Activa laden..."
+      testId="activa-page"
+    >
+      {/* Stats Cards */}
+      <StatsGrid stats={statsData} columns={3} overlapping={true} />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Totaal Activa</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activa.filter(a => a.status === 'actief').length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Aanschafwaarde</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">SRD {totaalAanschaf.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Boekwaarde</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">SRD {totaalBoekwaarde.toLocaleString()}</div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Activa Overzicht</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-            </div>
+      {/* Activa Overzicht */}
+      <ContentSection>
+        <PageCard title="Activa Overzicht">
           ) : activa.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Geen vaste activa gevonden
