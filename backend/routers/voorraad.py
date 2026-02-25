@@ -97,6 +97,12 @@ class ArtikelUpdate(BaseModel):
     eenheid: Optional[str] = None
     inkoopprijs: Optional[float] = None
     verkoopprijs: Optional[float] = None
+    inkoopprijs_srd: Optional[float] = None
+    inkoopprijs_usd: Optional[float] = None
+    inkoopprijs_eur: Optional[float] = None
+    verkoopprijs_srd: Optional[float] = None
+    verkoopprijs_usd: Optional[float] = None
+    verkoopprijs_eur: Optional[float] = None
     btw_tarief: Optional[str] = None
     min_voorraad: Optional[float] = None
     max_voorraad: Optional[float] = None
