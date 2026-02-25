@@ -97,6 +97,16 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ Backend: `/app/backend/routers/bankreconciliatie.py`
 - ✅ Frontend: `/app/boekhouding/bankreconciliatie`
 
+### 25 februari 2026 - Dashboard Valuta Exposure Widget (VOLTOOID)
+- ✅ **Valuta Exposure Warning Widget** op Boekhouding Dashboard
+  - Automatisch laden van exposure data via `/api/rapportages/valuta/exposure`
+  - Waarschuwingsdrempel: SRD 10.000
+  - **Normale status** (blauw): "Uw openstaande valutaposities zijn binnen normale limieten"
+  - **Waarschuwing status** (amber): "U heeft een significante valutapositie. Overweeg hedging maatregelen"
+  - Toont per valuta: symbool, valutacode, netto positie (+/-)
+  - Totaal SRD equivalent met kleurcodering (groen/rood)
+  - "Details" knop navigeert naar `/app/boekhouding/valuta-rapportages`
+
 ### 25 februari 2026 - Inkoopfacturen PDF & Multi-Valuta Rapportages (VOLTOOID)
 - ✅ **Inkoopfacturen PDF Export**
   - Endpoints: `GET /api/pdf/inkoopfactuur/{id}` en `GET /api/pdf/inkoopfactuur/{id}/preview`
