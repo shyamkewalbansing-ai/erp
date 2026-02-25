@@ -370,6 +370,15 @@ export default function BankReconciliatiePage() {
               <Button onClick={() => fileInputRef.current?.click()} className="bg-emerald-500 hover:bg-emerald-600">
                 <Upload className="w-4 h-4 mr-2" /> CSV Uploaden
               </Button>
+              <div className="mt-6 text-left max-w-md mx-auto bg-slate-50 dark:bg-slate-900 rounded-lg p-4">
+                <p className="text-sm font-medium mb-2">Ondersteunde formaten:</p>
+                <ul className="text-xs text-muted-foreground space-y-1">
+                  <li>• <strong>Surinaamse banken:</strong> DSB, Hakrinbank, Finabank, Republic Bank, SPSB</li>
+                  <li>• <strong>Internationale banken:</strong> IBAN formaat (NL, US, etc.)</li>
+                  <li>• <strong>Valuta:</strong> SRD, USD, EUR</li>
+                  <li>• <strong>CSV kolommen:</strong> Datum, Omschrijving, Bedrag (of Credit/Debit), Referentie</li>
+                </ul>
+              </div>
             </div>
           ) : (
             <div className="divide-y divide-border">
