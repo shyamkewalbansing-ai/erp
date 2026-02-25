@@ -27,6 +27,7 @@ const getValutaIcon = (valuta) => {
 export default function BankrekeningenPage() {
   const [rekeningen, setRekeningen] = useState([]);
   const [transacties, setTransacties] = useState([]);
+  const [grootboekOpties, setGrootboekOpties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [transactieDialogOpen, setTransactieDialogOpen] = useState(false);
@@ -40,7 +41,8 @@ export default function BankrekeningenPage() {
     rekeningnummer: '', 
     bank_naam: '', 
     valuta: 'SRD', 
-    beginsaldo: 0 
+    beginsaldo: 0,
+    grootboek_rekening_code: ''
   });
   
   const [transactieForm, setTransactieForm] = useState({
