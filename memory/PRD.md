@@ -402,6 +402,28 @@ Automatisch aangemaakt bij eerste gebruik:
 - [x] **Goederenontvangst → Voorraadmutaties - VOLTOOID**
 - [x] **Verkooporders → Voorraadreservering - VOLTOOID**
 
+### 25 februari 2026 - Automatische Valuta Conversie bij Artikelen (VOLTOOID)
+Op verzoek van de gebruiker is automatische valuta conversie toegevoegd bij het aanmaken/bewerken van artikelen.
+
+#### Functionaliteit
+- ✅ **Auto-conversie toggle**: Aan/uit schakelaar voor automatische prijsconversie
+- ✅ **Huidige koersen weergave**: Toont actuele koersen (bijv. "1 USD = SRD 36.50 | 1 EUR = SRD 38.50")
+- ✅ **Bi-directionele conversie**: Werkt in alle richtingen (SRD↔USD↔EUR)
+- ✅ **Bron indicator**: Toont welke valuta als bron werd gebruikt (●)
+- ✅ **Nieuw API endpoint**: GET /api/boekhouding/wisselkoersen/huidige
+
+#### Hoe het werkt
+1. Vul een prijs in bij SRD, USD of EUR
+2. De andere twee valuta's worden automatisch berekend
+3. Koersen worden opgehaald uit de Wisselkoersen module
+4. Auto-conversie kan worden uitgeschakeld indien gewenst
+
+#### Koersen beheren
+Koersen kunnen worden aangepast via Boekhouding → Wisselkoersen → "Nieuwe Koers"
+De koersen van CME.sr kunnen handmatig worden ingevoerd.
+
+---
+
 ### 25 februari 2026 - Bugfixes en Verbeteringen (VOLTOOID)
 Op basis van gebruikersfeedback zijn de volgende problemen opgelost:
 
