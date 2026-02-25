@@ -283,7 +283,7 @@ Automatisch aangemaakt bij eerste gebruik:
 ### P1 - Hoog (Alle P1 taken voltooid!)
 - [x] Goederenontvangst → Voorraadmutaties automatisch
 - [x] Verkooporders → Voorraadreservering
-- [ ] UI Refactoring: `ModulePageLayout` component (herbruikbare hero headers en stats grids)
+- [x] UI Refactoring: `ModulePageLayout` component (herbruikbare hero headers en stats grids) - VOLTOOID
 
 ### P2 - Medium
 - [x] Vaste Activa Module met CRUD - VOLTOOID
