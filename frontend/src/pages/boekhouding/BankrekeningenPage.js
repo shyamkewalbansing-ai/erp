@@ -54,6 +54,15 @@ export default function BankrekeningenPage() {
     referentie: ''
   });
 
+  const [overboekingForm, setOverboekingForm] = useState({
+    van_rekening_id: '',
+    naar_rekening_id: '',
+    bedrag: 0,
+    omschrijving: 'Overboeking',
+    datum: new Date().toISOString().split('T')[0],
+    wisselkoers: null
+  });
+
   useEffect(() => { 
     loadData(); 
   }, []);
@@ -61,12 +70,24 @@ export default function BankrekeningenPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [rekRes, transRes] = await Promise.all([
+      const [rekRes, transRes, koersRes] = await Promise.all([
         api.get('/boekhouding/bankrekeningen'),
-        api.get('/boekhouding/transacties?limit=50')
+        api.get('/boekhouding/transacties?limit=50'),
+        api.get('/wisselkoersen/').catch(() => ({ data: [] }))
       ]);
       setRekeningen(rekRes.data);
       setTransacties(transRes.data);
+      
+      // Bouw wisselkoersen lookup
+      const koersen = {};
+      koersRes.data?.forEach(k => {
+        if (!koersen[k.valuta]) koersen[k.valuta] = k.koers;
+      });
+      // Standaard fallback koersen
+      if (!koersen['USD']) koersen['USD'] = 36.50;
+      if (!koersen['EUR']) koersen['EUR'] = 39.00;
+      koersen['SRD'] = 1;
+      setWisselkoersen(koersen);
     } catch (err) { 
       toast.error('Kon data niet laden'); 
     } finally { 
