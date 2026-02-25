@@ -440,21 +440,66 @@ export default function ArtikelenPage() {
               </Select>
             </div>
             
-            {/* Prijzen sectie */}
+            {/* Prijzen sectie met automatische conversie */}
             <div className="col-span-1 sm:col-span-2 border-t pt-4 mt-2">
-              <Label className="text-sm font-semibold block mb-3">Inkoopprijzen per valuta</Label>
+              <div className="flex items-center justify-between mb-3">
+                <Label className="text-sm font-semibold">Inkoopprijzen per valuta</Label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setAutoConvert(!autoConvert)}
+                    className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg transition-colors ${
+                      autoConvert 
+                        ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' 
+                        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+                    }`}
+                  >
+                    <RefreshCw className={`w-3 h-3 ${autoConvert ? 'animate-spin' : ''}`} style={{ animationDuration: '3s' }} />
+                    Auto-conversie {autoConvert ? 'AAN' : 'UIT'}
+                  </button>
+                </div>
+              </div>
+              {wisselkoersen && (
+                <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-xs text-blue-700 dark:text-blue-300">
+                  <span className="font-medium">Huidige koersen:</span> 1 USD = SRD {wisselkoersen.USD_SRD?.toFixed(2)} | 1 EUR = SRD {wisselkoersen.EUR_SRD?.toFixed(2)}
+                </div>
+              )}
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">SRD</Label>
-                  <Input className="rounded-lg" type="number" step="0.01" value={form.inkoopprijs_srd} onChange={(e) => setForm({...form, inkoopprijs_srd: parseFloat(e.target.value) || 0})} />
+                  <Label className={`text-xs ${lastEdited === 'SRD' ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}`}>
+                    SRD {lastEdited === 'SRD' && '●'}
+                  </Label>
+                  <Input 
+                    className="rounded-lg" 
+                    type="number" 
+                    step="0.01" 
+                    value={form.inkoopprijs_srd} 
+                    onChange={(e) => handlePrijsChange('inkoopprijs_srd', e.target.value, 'inkoop')} 
+                  />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">USD ($)</Label>
-                  <Input className="rounded-lg" type="number" step="0.01" value={form.inkoopprijs_usd} onChange={(e) => setForm({...form, inkoopprijs_usd: parseFloat(e.target.value) || 0})} />
+                  <Label className={`text-xs ${lastEdited === 'USD' ? 'text-blue-600 font-medium' : 'text-muted-foreground'}`}>
+                    USD ($) {lastEdited === 'USD' && '●'}
+                  </Label>
+                  <Input 
+                    className="rounded-lg" 
+                    type="number" 
+                    step="0.01" 
+                    value={form.inkoopprijs_usd} 
+                    onChange={(e) => handlePrijsChange('inkoopprijs_usd', e.target.value, 'inkoop')} 
+                  />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">EUR (€)</Label>
-                  <Input className="rounded-lg" type="number" step="0.01" value={form.inkoopprijs_eur} onChange={(e) => setForm({...form, inkoopprijs_eur: parseFloat(e.target.value) || 0})} />
+                  <Label className={`text-xs ${lastEdited === 'EUR' ? 'text-purple-600 font-medium' : 'text-muted-foreground'}`}>
+                    EUR (€) {lastEdited === 'EUR' && '●'}
+                  </Label>
+                  <Input 
+                    className="rounded-lg" 
+                    type="number" 
+                    step="0.01" 
+                    value={form.inkoopprijs_eur} 
+                    onChange={(e) => handlePrijsChange('inkoopprijs_eur', e.target.value, 'inkoop')} 
+                  />
                 </div>
               </div>
             </div>
@@ -463,16 +508,40 @@ export default function ArtikelenPage() {
               <Label className="text-sm font-semibold block mb-3">Verkoopprijzen per valuta</Label>
               <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">SRD</Label>
-                  <Input className="rounded-lg" type="number" step="0.01" value={form.verkoopprijs_srd} onChange={(e) => setForm({...form, verkoopprijs_srd: parseFloat(e.target.value) || 0})} />
+                  <Label className={`text-xs ${lastEdited === 'SRD' ? 'text-emerald-600 font-medium' : 'text-muted-foreground'}`}>
+                    SRD {lastEdited === 'SRD' && '●'}
+                  </Label>
+                  <Input 
+                    className="rounded-lg" 
+                    type="number" 
+                    step="0.01" 
+                    value={form.verkoopprijs_srd} 
+                    onChange={(e) => handlePrijsChange('verkoopprijs_srd', e.target.value, 'verkoop')} 
+                  />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">USD ($)</Label>
-                  <Input className="rounded-lg" type="number" step="0.01" value={form.verkoopprijs_usd} onChange={(e) => setForm({...form, verkoopprijs_usd: parseFloat(e.target.value) || 0})} />
+                  <Label className={`text-xs ${lastEdited === 'USD' ? 'text-blue-600 font-medium' : 'text-muted-foreground'}`}>
+                    USD ($) {lastEdited === 'USD' && '●'}
+                  </Label>
+                  <Input 
+                    className="rounded-lg" 
+                    type="number" 
+                    step="0.01" 
+                    value={form.verkoopprijs_usd} 
+                    onChange={(e) => handlePrijsChange('verkoopprijs_usd', e.target.value, 'verkoop')} 
+                  />
                 </div>
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">EUR (€)</Label>
-                  <Input className="rounded-lg" type="number" step="0.01" value={form.verkoopprijs_eur} onChange={(e) => setForm({...form, verkoopprijs_eur: parseFloat(e.target.value) || 0})} />
+                  <Label className={`text-xs ${lastEdited === 'EUR' ? 'text-purple-600 font-medium' : 'text-muted-foreground'}`}>
+                    EUR (€) {lastEdited === 'EUR' && '●'}
+                  </Label>
+                  <Input 
+                    className="rounded-lg" 
+                    type="number" 
+                    step="0.01" 
+                    value={form.verkoopprijs_eur} 
+                    onChange={(e) => handlePrijsChange('verkoopprijs_eur', e.target.value, 'verkoop')} 
+                  />
                 </div>
               </div>
             </div>
