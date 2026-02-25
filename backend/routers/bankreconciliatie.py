@@ -247,11 +247,14 @@ async def upload_bank_statement(
     # Sla transacties op
     await db.bank_transacties.insert_many(transactions)
     
+    # Clean the transactions before returning (remove _id added by insert_many)
+    cleaned_transactions = [clean_doc(t) for t in transactions]
+    
     return {
         "message": f"{len(transactions)} transacties geïmporteerd",
         "totaal": len(transactions),
         "met_suggesties": len([t for t in transactions if t["match_suggesties"]]),
-        "transacties": transactions
+        "transacties": cleaned_transactions
     }
 
 
