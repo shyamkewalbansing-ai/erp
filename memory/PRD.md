@@ -402,40 +402,34 @@ Automatisch aangemaakt bij eerste gebruik:
 - [x] **Goederenontvangst → Voorraadmutaties - VOLTOOID**
 - [x] **Verkooporders → Voorraadreservering - VOLTOOID**
 
-### 25 februari 2026 - Navigatie & Workflow Herstructurering (VOLTOOID)
-Grote herstructurering van de applicatie op verzoek van de gebruiker:
+### 25 februari 2026 - Bugfixes en Verbeteringen (VOLTOOID)
+Op basis van gebruikersfeedback zijn de volgende problemen opgelost:
 
-#### 1. Navigatie met Dropdown Menu's
-De navigatie is nu georganiseerd met echte dropdown menu's:
+#### 1. Artikelen - Voorraad Zichtbaarheid (OPGELOST)
+- ✅ **Voorraad aantallen** worden nu duidelijk getoond per artikel ("Voorraad: X stuk")
+- ✅ **Minimum voorraad** zichtbaar met waarschuwing als voorraad te laag
+- ✅ **Voorraadwaarde** berekend en getoond ("Waarde: SRD X")
 
-- ✅ **Boekhouding Hoofditems**: Dashboard, Grootboek, Debiteuren, Crediteuren, Bank/Kas, Bank Reconciliatie, Vaste Activa, Kostenplaatsen, Wisselkoersen
-- ✅ **Inkoop Dropdown**: Inkoopoffertes, Goederenontvangst, Inkoopfacturen
-- ✅ **Verkoop Dropdown**: Verkoopoffertes, Verkoopfacturen, Prijslijsten
-- ✅ **Voorraad Dropdown**: Artikelen, Magazijnen, Voorraadmutaties, Inventarisatie
-- ✅ **Projecten Dropdown**: Alle Projecten, Urenregistratie
-- ✅ **Footer**: Rapportages, Handleiding
+#### 2. Multi-Currency Prijzen (NIEUW)
+- ✅ **Inkoopprijzen** per valuta: SRD, USD ($), EUR (€)
+- ✅ **Verkoopprijzen** per valuta: SRD, USD ($), EUR (€)
+- ✅ Prijzen worden met kleurgecodeerde badges getoond
 
-#### 2. Verwijderde Items
-- ✅ **Valuta Rapportages** - Link en pagina volledig verwijderd
-- ✅ **Inkooporders** - Link en pagina volledig verwijderd  
-- ✅ **Verkooporders** - Link en pagina volledig verwijderd
+#### 3. Inkoopfacturen - Betalingen (OPGELOST)
+- ✅ **"Betalen" knop** bij openstaande facturen
+- ✅ **Betaling dialog** met bedrag, datum, methode, bankrekening selectie
+- ✅ **"Rest Betalen" knop** bij gedeeltelijk betaalde facturen
+- ✅ **Status update** endpoint toegevoegd
 
-#### 3. Workflow Vereenvoudiging: Offerte → Factuur Direct
-Voorheen: Offerte → Order → Factuur
-Nu: Offerte → Factuur (zonder tussenstap)
+#### 4. Grootboek - Code Mapping (NIEUW)
+- ✅ **"Koppelingen" knop** met badge voor ontbrekende mappings
+- ✅ **Mapping dialog** om eigen codes te koppelen aan systeemfuncties
+- ✅ **16 systeemfuncties**: Kas, Bank SRD/USD/EUR, Debiteuren, Crediteuren, BTW, Kapitaal, Omzet, Inkoop, etc.
+- ✅ **Backend endpoints**: GET/POST /api/boekhouding/rekeningen/mapping
 
-- ✅ **Verkoop Workflow**
-  - Nieuwe endpoint: `POST /api/verkoop/offertes/{id}/naar-factuur`
-  - Frontend knop: "Naar Factuur" in plaats van "Naar Order"
-  
-- ✅ **Inkoop Workflow**
-  - Nieuwe endpoint: `POST /api/inkoop/offertes/{id}/naar-factuur`
-  - Frontend knop: "Naar Factuur" in plaats van "Naar Order"
-
-#### 4. Verwijderde Bestanden
-- `/app/frontend/src/pages/verkoop/OrdersPage.js` - VERWIJDERD
-- `/app/frontend/src/pages/inkoop/OrdersPage.js` - VERWIJDERD
-- `/app/frontend/src/pages/boekhouding/ValutaRapportagesPage.js` - VERWIJDERD
+#### 5. Verwijderde Features
+- ✅ **Prijslijsten** volledig verwijderd uit navigatie en routes
+- ✅ **Valuta Exposure widget** verwijderd van boekhouding dashboard
 
 ### P1 - Hoog (Alle P1 taken voltooid!)
 - [x] Goederenontvangst → Voorraadmutaties automatisch
