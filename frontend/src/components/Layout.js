@@ -143,13 +143,12 @@ const pompstationNavItems = [
 ];
 
 // Boekhouding module navigation - GRATIS voor alle klanten
-// Nu met alle submodules geïntegreerd: Inkoop, Verkoop, Voorraad, Projecten
+// Nu met dropdown submodules: Inkoop, Verkoop, Voorraad, Projecten
 // Workflow vereenvoudigd: Offerte → Factuur (zonder Orders tussenstap)
-const boekhoudingNavItems = [
-  // Hoofddashboard
+
+// Hoofditems (geen dropdown)
+const boekhoudingMainItems = [
   { to: '/app/boekhouding', icon: LayoutDashboard, label: 'Dashboard', addon: 'boekhouding' },
-  
-  // Basis boekhouding
   { to: '/app/boekhouding/grootboek', icon: FileText, label: 'Grootboek', addon: 'boekhouding' },
   { to: '/app/boekhouding/debiteuren', icon: Users, label: 'Debiteuren', addon: 'boekhouding' },
   { to: '/app/boekhouding/crediteuren', icon: Building2, label: 'Crediteuren', addon: 'boekhouding' },
@@ -158,34 +157,58 @@ const boekhoudingNavItems = [
   { to: '/app/boekhouding/activa', icon: Building2, label: 'Vaste Activa', addon: 'boekhouding' },
   { to: '/app/boekhouding/kostenplaatsen', icon: Target, label: 'Kostenplaatsen', addon: 'boekhouding' },
   { to: '/app/boekhouding/wisselkoersen', icon: ArrowRightLeft, label: 'Wisselkoersen', addon: 'boekhouding' },
-  
-  // Inkoop (submodule) - Crediteuren = Leveranciers (zonder Orders)
-  { to: '/app/boekhouding/inkoop', icon: ShoppingCart, label: 'Inkoop', addon: 'boekhouding', isSubmenu: true },
-  { to: '/app/boekhouding/inkoop/offertes', icon: FileText, label: '• Inkoopoffertes', addon: 'boekhouding' },
-  { to: '/app/boekhouding/inkoop/ontvangsten', icon: Package, label: '• Goederenontvangst', addon: 'boekhouding' },
-  { to: '/app/boekhouding/inkoop/facturen', icon: FileText, label: '• Inkoopfacturen', addon: 'boekhouding' },
-  
-  // Verkoop (submodule) - Debiteuren = Klanten (zonder Orders)
-  { to: '/app/boekhouding/verkoop', icon: Banknote, label: 'Verkoop', addon: 'boekhouding', isSubmenu: true },
-  { to: '/app/boekhouding/verkoop/offertes', icon: FileText, label: '• Verkoopoffertes', addon: 'boekhouding' },
-  { to: '/app/boekhouding/verkoop/facturen', icon: FileText, label: '• Verkoopfacturen', addon: 'boekhouding' },
-  { to: '/app/boekhouding/verkoop/prijslijsten', icon: Banknote, label: '• Prijslijsten', addon: 'boekhouding' },
-  
-  // Voorraad (submodule)
-  { to: '/app/boekhouding/voorraad', icon: Package, label: 'Voorraad', addon: 'boekhouding', isSubmenu: true },
-  { to: '/app/boekhouding/voorraad/artikelen', icon: Package, label: '• Artikelen', addon: 'boekhouding' },
-  { to: '/app/boekhouding/voorraad/magazijnen', icon: Building2, label: '• Magazijnen', addon: 'boekhouding' },
-  { to: '/app/boekhouding/voorraad/mutaties', icon: Zap, label: '• Voorraadmutaties', addon: 'boekhouding' },
-  { to: '/app/boekhouding/voorraad/inventarisatie', icon: Target, label: '• Inventarisatie', addon: 'boekhouding' },
-  
-  // Projecten (submodule)
-  { to: '/app/boekhouding/projecten', icon: Briefcase, label: 'Projecten', addon: 'boekhouding', isSubmenu: true },
-  { to: '/app/boekhouding/projecten/overzicht', icon: Briefcase, label: '• Alle Projecten', addon: 'boekhouding' },
-  { to: '/app/boekhouding/projecten/uren', icon: Clock, label: '• Urenregistratie', addon: 'boekhouding' },
-  
-  // Rapportages en handleiding
+];
+
+// Dropdown submodules
+const boekhoudingDropdowns = {
+  inkoop: {
+    label: 'Inkoop',
+    icon: ShoppingCart,
+    items: [
+      { to: '/app/boekhouding/inkoop/offertes', icon: FileText, label: 'Inkoopoffertes' },
+      { to: '/app/boekhouding/inkoop/ontvangsten', icon: Package, label: 'Goederenontvangst' },
+      { to: '/app/boekhouding/inkoop/facturen', icon: FileText, label: 'Inkoopfacturen' },
+    ]
+  },
+  verkoop: {
+    label: 'Verkoop',
+    icon: Banknote,
+    items: [
+      { to: '/app/boekhouding/verkoop/offertes', icon: FileText, label: 'Verkoopoffertes' },
+      { to: '/app/boekhouding/verkoop/facturen', icon: FileText, label: 'Verkoopfacturen' },
+      { to: '/app/boekhouding/verkoop/prijslijsten', icon: Banknote, label: 'Prijslijsten' },
+    ]
+  },
+  voorraad: {
+    label: 'Voorraad',
+    icon: Package,
+    items: [
+      { to: '/app/boekhouding/voorraad/artikelen', icon: Package, label: 'Artikelen' },
+      { to: '/app/boekhouding/voorraad/magazijnen', icon: Building2, label: 'Magazijnen' },
+      { to: '/app/boekhouding/voorraad/mutaties', icon: Zap, label: 'Voorraadmutaties' },
+      { to: '/app/boekhouding/voorraad/inventarisatie', icon: Target, label: 'Inventarisatie' },
+    ]
+  },
+  projecten: {
+    label: 'Projecten',
+    icon: Briefcase,
+    items: [
+      { to: '/app/boekhouding/projecten/overzicht', icon: Briefcase, label: 'Alle Projecten' },
+      { to: '/app/boekhouding/projecten/uren', icon: Clock, label: 'Urenregistratie' },
+    ]
+  }
+};
+
+// Footer items (geen dropdown)
+const boekhoudingFooterItems = [
   { to: '/app/boekhouding/rapportages', icon: BarChart3, label: 'Rapportages', addon: 'boekhouding' },
   { to: '/app/boekhouding/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'boekhouding' },
+];
+
+// Combined for backward compatibility
+const boekhoudingNavItems = [
+  ...boekhoudingMainItems,
+  ...boekhoudingFooterItems,
 ];
 
 // Suribet Retailer Management module navigation
