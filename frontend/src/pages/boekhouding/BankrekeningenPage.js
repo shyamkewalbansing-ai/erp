@@ -304,13 +304,20 @@ export default function BankrekeningenPage() {
                       <p className="text-sm text-muted-foreground">{r.bank_naam}</p>
                     </div>
                   </div>
-                  <Badge className={`${
-                    r.valuta === 'SRD' ? 'bg-emerald-100 text-emerald-700' :
-                    r.valuta === 'USD' ? 'bg-blue-100 text-blue-700' :
-                    'bg-purple-100 text-purple-700'
-                  }`}>
-                    {r.valuta}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1">
+                    <Badge className={`${
+                      r.valuta === 'SRD' ? 'bg-emerald-100 text-emerald-700' :
+                      r.valuta === 'USD' ? 'bg-blue-100 text-blue-700' :
+                      'bg-purple-100 text-purple-700'
+                    }`}>
+                      {r.valuta}
+                    </Badge>
+                    {r.grootboek_rekening_code && (
+                      <span className="text-xs text-muted-foreground font-mono">
+                        {r.grootboek_rekening_code}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
