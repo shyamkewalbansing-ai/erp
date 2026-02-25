@@ -70,6 +70,7 @@ class ArtikelCreate(BaseModel):
     max_voorraad: Optional[float] = None
     bestel_aantal: Optional[float] = None
     voorraad_methode: VoorraadBeheerMethode = VoorraadBeheerMethode.GEMIDDELD
+    begin_voorraad: float = 0  # Beginvoorraad bij aanmaken
     
     # Extra
     leverancier_id: Optional[str] = None
