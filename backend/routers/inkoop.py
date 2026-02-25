@@ -1074,6 +1074,12 @@ async def create_goederenontvangst(data: GoederenontvangstCreate, current_user: 
     # Update voorraad als artikelen zijn gekoppeld
     for regel in data.regels:
         if regel.artikel_id and regel.ontvangen_aantal > 0:
+            # Haal artikel info op voor kostprijs
+            artikel = await db.voorraad_artikelen.find_one({"id": regel.artikel_id, "user_id": user_id})
+            kostprijs = 0
+            if artikel:
+                kostprijs = artikel.get("kostprijs", 0)
+            
             # Maak voorraadmutatie aan
             mutatie_doc = {
                 "id": str(uuid.uuid4()),
@@ -1098,6 +1104,21 @@ async def create_goederenontvangst(data: GoederenontvangstCreate, current_user: 
                 {"id": regel.artikel_id, "user_id": user_id},
                 {"$inc": {"voorraad_aantal": regel.ontvangen_aantal}}
             )
+            
+            # Boek naar grootboek als er een kostprijs is
+            if artikel and kostprijs > 0:
+                from utils.grootboek_integration import boek_voorraad_ontvangst
+                try:
+                    await boek_voorraad_ontvangst(
+                        db=db,
+                        user_id=user_id,
+                        artikel=artikel,
+                        aantal=regel.ontvangen_aantal,
+                        kostprijs=kostprijs,
+                        referentie=ontvangstnummer
+                    )
+                except Exception as e:
+                    print(f"Waarschuwing: Grootboek boeking mislukt: {e}")
     
     return clean_doc(ontvangst_doc)
 
