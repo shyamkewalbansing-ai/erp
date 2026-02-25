@@ -29,7 +29,7 @@ export default function WisselkoersenPage() {
     valuta: 'USD',
     koers: '',
     datum: new Date().toISOString().split('T')[0],
-    bron: 'CBvS'
+    bron: 'CME.sr'
   });
   const [convertForm, setConvertForm] = useState({
     bedrag: '',
