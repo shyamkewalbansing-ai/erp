@@ -107,22 +107,22 @@ export default function VerkoopOffertesPage() {
     }
   };
 
-  const convertToOrder = async (id) => {
+  const convertToFactuur = async (id) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/verkoop/offertes/${id}/naar-order`, {
+      const res = await fetch(`${API_URL}/api/verkoop/offertes/${id}/naar-factuur`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
-        toast.success('Offerte omgezet naar order');
+        toast.success('Offerte omgezet naar factuur');
         fetchOffertes();
       } else {
         const error = await res.json();
         toast.error(error.detail || 'Fout bij omzetten');
       }
     } catch (error) {
-      toast.error('Fout bij omzetten naar order');
+      toast.error('Fout bij omzetten naar factuur');
     }
   };
 
