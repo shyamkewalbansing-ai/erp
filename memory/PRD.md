@@ -97,6 +97,24 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ Backend: `/app/backend/routers/bankreconciliatie.py`
 - ✅ Frontend: `/app/boekhouding/bankreconciliatie`
 
+### 25 februari 2026 - UI Refactoring: ModulePageLayout Component (VOLTOOID)
+- ✅ **Nieuwe herbruikbare component**: `/app/frontend/src/components/ModulePageLayout.js`
+  - `ModulePageLayout`: Wrapper met hero header (emerald of dark variant)
+  - `StatsGrid`: Flexibele stats kaarten grid (2-5 kolommen)
+  - `StatCard`: Individuele statistiek kaart met icon en kleuren
+  - `ContentSection`: Max-width content wrapper
+  - `PageCard`: Standaard kaart voor pagina secties
+- ✅ **Gerefactorde pagina's**:
+  - `WisselkoersenPage.js` - Nu met herbruikbare componenten
+  - `BankReconciliatiePage.js` - Nu met StatsGrid component
+  - `ActivaPage.js` - Nu met hero header en StatsGrid
+  - `KostenplaatsenPage.js` - Nu met hero header
+- ✅ **Voordelen**:
+  - Consistente UI styling over alle module pagina's
+  - Minder code duplicatie (DRY principe)
+  - Makkelijker onderhoud en uitbreidbaarheid
+  - Automatische loading states
+
 ### 25 februari 2026 - P2 Modules: Vaste Activa, Kostenplaatsen, Wisselkoersen (VOLTOOID)
 - ✅ **Vaste Activa Module**
   - Volledige CRUD voor vaste activa beheer
