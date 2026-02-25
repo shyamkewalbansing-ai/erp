@@ -53,7 +53,8 @@ import {
   MapPin,
   Lock,
   Gamepad2,
-  Link
+  Link,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
