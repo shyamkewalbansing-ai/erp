@@ -176,7 +176,6 @@ const boekhoudingDropdowns = {
     items: [
       { to: '/app/boekhouding/verkoop/offertes', icon: FileText, label: 'Verkoopoffertes' },
       { to: '/app/boekhouding/verkoop/facturen', icon: FileText, label: 'Verkoopfacturen' },
-      { to: '/app/boekhouding/verkoop/prijslijsten', icon: Banknote, label: 'Prijslijsten' },
     ]
   },
   voorraad: {
