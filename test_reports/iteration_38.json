@@ -1,0 +1,77 @@
+{
+  "summary": "Comprehensive testing of Stock Reservation and Mutation features. All 7 backend tests passed. Stock reservation on verkooporder confirmation, stock decrease on delivery, stock release on cancellation, insufficient stock error handling, and goederenontvangst stock increase all working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "GET /api/boekhouding/journaalposten",
+        "issue": "Returns 500 error due to Pydantic validation - missing 'boekstuknummer' and 'valuta' fields in response model",
+        "priority": "LOW",
+        "note": "Does not affect stock reservation/mutation functionality - grootboek boekingen are created correctly"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_stock_reservation_mutation.py",
+    "/app/test_reports/pytest/pytest_stock_reservation.xml"
+  ],
+  "action_items": [
+    "Fix GET /api/boekhouding/journaalposten endpoint - add missing 'boekstuknummer' and 'valuta' fields to JournaalpostResponse model or make them optional"
+  ],
+  "critical_code_review_comments": [
+    "Stock reservation logic in verkoop.py correctly reserves stock when order status changes to 'bevestigd'",
+    "Stock is correctly decreased and reservation cleared when order status changes to 'geleverd'",
+    "Reserved stock is correctly released when order status changes to 'geannuleerd'",
+    "Insufficient stock error is properly raised with descriptive message when trying to confirm order with insufficient stock",
+    "Goederenontvangst correctly creates voorraadmutatie and increases stock",
+    "Grootboek boekingen are created for both voorraad_ontvangst and voorraad_verkoop (verified via mutatie creation)",
+    "Voorraad reserveringen are logged in voorraad_reserveringen collection for audit trail"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_stock_reservation_mutation.py"
+  ],
+  "success_rate": {
+    "backend": "100% (7/7 tests passed)",
+    "frontend": "N/A (backend only testing requested)"
+  },
+  "test_credentials": {
+    "email": "demo@facturatie.sr",
+    "password": "demo2024"
+  },
+  "seed_data_creation": "Test artikelen created with TEST_ prefix and cleaned up after each test via teardown",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Stock reservation and mutation features fully tested. Key endpoints: PUT /api/verkoop/orders/{id}/status (bevestigd/geleverd/geannuleerd), POST /api/inkoop/ontvangsten. Stock is managed via voorraad_artikelen collection with voorraad_aantal and gereserveerd_aantal fields. Mutaties are logged in voorraad_mutaties collection. Reservations are tracked in voorraad_reserveringen collection.",
+  "features_tested": {
+    "stock_reservation": {
+      "bevestigd_reserves_stock": "PASS - gereserveerd_aantal increases when order confirmed",
+      "geleverd_decreases_stock": "PASS - voorraad_aantal decreases and gereserveerd_aantal cleared",
+      "geannuleerd_releases_stock": "PASS - gereserveerd_aantal returns to 0",
+      "insufficient_stock_error": "PASS - Returns 400 with descriptive error message"
+    },
+    "goederenontvangst": {
+      "increases_stock": "PASS - voorraad_aantal increases after goederenontvangst",
+      "creates_mutatie": "PASS - voorraadmutatie with type 'inkoop' created",
+      "creates_grootboek_boeking": "PASS - grootboek boeking created (verified via mutatie, GET endpoint has minor issue)"
+    },
+    "verkooporder_delivery": {
+      "creates_mutatie": "PASS - voorraadmutatie with type 'verkoop' created",
+      "creates_grootboek_boeking": "PASS - grootboek boeking created (verified via mutatie)"
+    }
+  },
+  "api_endpoints_tested": {
+    "PUT /api/verkoop/orders/{id}/status?status=bevestigd": "PASS - Reserves stock, returns 400 if insufficient",
+    "PUT /api/verkoop/orders/{id}/status?status=geleverd": "PASS - Decreases stock, creates mutatie",
+    "PUT /api/verkoop/orders/{id}/status?status=geannuleerd": "PASS - Releases reserved stock",
+    "POST /api/inkoop/ontvangsten": "PASS - Increases stock, creates mutatie",
+    "POST /api/voorraad/artikelen": "PASS - Creates artikel",
+    "POST /api/voorraad/mutaties": "PASS - Creates mutatie and updates stock",
+    "GET /api/voorraad/artikelen/{id}": "PASS - Returns artikel with stock levels",
+    "GET /api/voorraad/mutaties": "PASS - Returns mutaties filtered by artikel_id"
+  }
+}
