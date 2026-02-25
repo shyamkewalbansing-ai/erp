@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from '../../components/ui/badge';
 import { 
   Plus, Search, Edit, Trash2, Package, AlertTriangle, Loader2,
-  ShoppingBag, Archive
+  ShoppingBag, Archive, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -19,6 +19,9 @@ export default function ArtikelenPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [search, setSearch] = useState('');
+  const [wisselkoersen, setWisselkoersen] = useState(null);
+  const [autoConvert, setAutoConvert] = useState(true);
+  const [lastEdited, setLastEdited] = useState(null); // Track which field was last edited
   const [form, setForm] = useState({
     artikelcode: '', naam: '', omschrijving: '', type: 'product',
     categorie: '', eenheid: 'stuk', 
@@ -30,7 +33,80 @@ export default function ArtikelenPage() {
 
   useEffect(() => {
     fetchArtikelen();
+    fetchWisselkoersen();
   }, [search]);
+
+  const fetchWisselkoersen = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/boekhouding/wisselkoersen/huidige`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setWisselkoersen(data);
+      }
+    } catch (error) {
+      console.error('Fout bij ophalen wisselkoersen');
+    }
+  };
+
+  // Automatische valuta conversie
+  const convertPrijs = useCallback((bedrag, vanValuta, naarValuta) => {
+    if (!wisselkoersen || bedrag === 0) return 0;
+    
+    if (vanValuta === naarValuta) return bedrag;
+    
+    const key = `${vanValuta}_${naarValuta}`;
+    const koers = wisselkoersen[key];
+    
+    if (koers) {
+      return Math.round(bedrag * koers * 100) / 100;
+    }
+    
+    // Fallback: converteer via SRD
+    if (vanValuta === 'SRD') {
+      const toKey = `SRD_${naarValuta}`;
+      return wisselkoersen[toKey] ? Math.round(bedrag * wisselkoersen[toKey] * 100) / 100 : 0;
+    } else if (naarValuta === 'SRD') {
+      const fromKey = `${vanValuta}_SRD`;
+      return wisselkoersen[fromKey] ? Math.round(bedrag * wisselkoersen[fromKey] * 100) / 100 : 0;
+    }
+    
+    return 0;
+  }, [wisselkoersen]);
+
+  // Handle prijs change met auto-conversie
+  const handlePrijsChange = (field, value, prijsType) => {
+    const newValue = parseFloat(value) || 0;
+    const updates = { [field]: newValue };
+    
+    if (autoConvert && wisselkoersen && newValue > 0) {
+      // Bepaal bron valuta
+      let bronValuta = 'SRD';
+      if (field.includes('_usd')) bronValuta = 'USD';
+      if (field.includes('_eur')) bronValuta = 'EUR';
+      
+      // Prefix voor inkoop/verkoop
+      const prefix = prijsType === 'inkoop' ? 'inkoopprijs' : 'verkoopprijs';
+      
+      // Converteer naar andere valuta's
+      if (bronValuta === 'SRD') {
+        updates[`${prefix}_usd`] = convertPrijs(newValue, 'SRD', 'USD');
+        updates[`${prefix}_eur`] = convertPrijs(newValue, 'SRD', 'EUR');
+      } else if (bronValuta === 'USD') {
+        updates[`${prefix}_srd`] = convertPrijs(newValue, 'USD', 'SRD');
+        updates[`${prefix}_eur`] = convertPrijs(newValue, 'USD', 'EUR');
+      } else if (bronValuta === 'EUR') {
+        updates[`${prefix}_srd`] = convertPrijs(newValue, 'EUR', 'SRD');
+        updates[`${prefix}_usd`] = convertPrijs(newValue, 'EUR', 'USD');
+      }
+      
+      setLastEdited(bronValuta);
+    }
+    
+    setForm(prev => ({ ...prev, ...updates }));
+  };
 
   const fetchArtikelen = async () => {
     try {
