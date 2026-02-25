@@ -9162,7 +9162,7 @@ async def test_mope_payment(amount: float = 10.0, description: str = "Test betal
                 json={
                     "amount": amount,
                     "description": description,
-                    "redirect_url": "https://erp-suriname.preview.emergentagent.com/betaling-voltooid"
+                    "redirect_url": "https://suriname-erp.preview.emergentagent.com/betaling-voltooid"
                 },
                 timeout=30.0
             )
