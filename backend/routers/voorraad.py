@@ -276,13 +276,16 @@ async def create_artikel(data: ArtikelCreate, current_user: dict = Depends(get_c
         "type": data.type.value,
         "standaard_valuta": data.standaard_valuta.value,
         "voorraad_methode": data.voorraad_methode.value,
-        "voorraad_aantal": 0,
+        "voorraad_aantal": data.begin_voorraad,  # Gebruik beginvoorraad
         "gereserveerd_aantal": 0,
-        "beschikbaar_aantal": 0,
-        "gemiddelde_kostprijs": data.inkoopprijs,
+        "beschikbaar_aantal": data.begin_voorraad,  # Ook beschikbaar
+        "gemiddelde_kostprijs": data.inkoopprijs_srd or data.inkoopprijs,
         "created_at": now,
         "updated_at": now
     }
+    
+    # Verwijder begin_voorraad uit de doc (is alleen voor initialisatie)
+    artikel_doc.pop("begin_voorraad", None)
     
     await db.voorraad_artikelen.insert_one(artikel_doc)
     artikel_doc.pop("_id", None)
