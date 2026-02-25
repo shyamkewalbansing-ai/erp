@@ -156,6 +156,7 @@ const boekhoudingNavItems = [
   { to: '/app/boekhouding/activa', icon: Building2, label: 'Vaste Activa', addon: 'boekhouding' },
   { to: '/app/boekhouding/kostenplaatsen', icon: Target, label: 'Kostenplaatsen', addon: 'boekhouding' },
   { to: '/app/boekhouding/wisselkoersen', icon: ArrowRightLeft, label: 'Wisselkoersen', addon: 'boekhouding' },
+  { to: '/app/boekhouding/valuta-rapportages', icon: TrendingUp, label: 'Valuta Rapportages', addon: 'boekhouding' },
   
   // Inkoop (submodule) - Crediteuren = Leveranciers
   { to: '/app/boekhouding/inkoop', icon: ShoppingCart, label: 'Inkoop', addon: 'boekhouding', isSubmenu: true },
