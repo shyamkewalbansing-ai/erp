@@ -200,10 +200,12 @@ Automatisch aangemaakt bij eerste gebruik:
 - [x] **Email versturen met PDF bijlage - VOLTOOID**
 - [x] **Volledige CRUD voor Orders & Offertes - VOLTOOID**
 - [x] **Bank Reconciliatie - VOLTOOID**
+- [x] **Goederenontvangst → Voorraadmutaties - VOLTOOID**
+- [x] **Verkooporders → Voorraadreservering - VOLTOOID**
 
-### P1 - Hoog
-- [ ] Goederenontvangst → Voorraadmutaties automatisch
-- [ ] Verkooporders → Voorraadreservering
+### P1 - Hoog (Alle P1 taken voltooid!)
+- [x] Goederenontvangst → Voorraadmutaties automatisch
+- [x] Verkooporders → Voorraadreservering
 
 ### P2 - Medium
 - [ ] HRM integratie met kostenboekingen
