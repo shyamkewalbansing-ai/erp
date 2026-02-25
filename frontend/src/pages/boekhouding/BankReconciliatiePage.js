@@ -478,8 +478,11 @@ export default function BankReconciliatiePage() {
               <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4">
                 <p className="font-semibold">{selectedTransactie.omschrijving}</p>
                 <p className="text-sm text-muted-foreground mt-1">{selectedTransactie.datum}</p>
+                {selectedTransactie.tegenrekening && (
+                  <p className="text-xs text-muted-foreground">Rekening: {selectedTransactie.tegenrekening}</p>
+                )}
                 <p className={`text-lg font-bold mt-2 ${selectedTransactie.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
-                  {selectedTransactie.type === 'credit' ? '+' : '-'} SRD {selectedTransactie.bedrag?.toLocaleString()}
+                  {selectedTransactie.type === 'credit' ? '+' : '-'} {selectedTransactie.valuta || 'SRD'} {selectedTransactie.bedrag?.toLocaleString()}
                 </p>
               </div>
 
