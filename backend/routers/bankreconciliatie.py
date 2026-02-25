@@ -64,32 +64,61 @@ class ManualBooking(BaseModel):
     grootboekrekening_id: str
     omschrijving: str
 
+# Surinaamse en internationale bank codes
+SURINAME_BANKS = {
+    "DSB": "De Surinaamsche Bank",
+    "HAKRIN": "Hakrinbank",
+    "FINA": "Finabank",
+    "SPSB": "Surinaamse Postspaarbank",
+    "RBS": "Republic Bank Suriname",
+    "VOLKS": "Volkscredietbank",
+    "GODO": "Godo Bank"
+}
+
 # ==================== HELPER FUNCTIONS ====================
 
 def parse_csv_transactions(content: str, user_id: str) -> List[dict]:
-    """Parse CSV bestand met banktransacties"""
+    """Parse CSV bestand met banktransacties - ondersteunt Surinaamse en internationale formaten"""
     transactions = []
-    reader = csv.DictReader(io.StringIO(content), delimiter=';')
     
-    for row in reader:
+    # Try semicolon first, then comma delimiter
+    try:
+        reader = csv.DictReader(io.StringIO(content), delimiter=';')
+        rows = list(reader)
+        if not rows or not rows[0]:
+            reader = csv.DictReader(io.StringIO(content), delimiter=',')
+            rows = list(reader)
+    except:
+        reader = csv.DictReader(io.StringIO(content), delimiter=',')
+        rows = list(reader)
+    
+    for row in rows:
         try:
-            # Probeer verschillende CSV formaten te ondersteunen
-            datum = row.get('Datum') or row.get('datum') or row.get('Date') or row.get('Boekdatum')
-            omschrijving = row.get('Omschrijving') or row.get('omschrijving') or row.get('Description') or row.get('Naam / Omschrijving')
+            # Probeer verschillende CSV formaten te ondersteunen (NL, EN, SR)
+            datum = (row.get('Datum') or row.get('datum') or row.get('Date') or 
+                    row.get('Boekdatum') or row.get('Transactiedatum') or row.get('ValueDate') or '')
+            
+            omschrijving = (row.get('Omschrijving') or row.get('omschrijving') or 
+                          row.get('Description') or row.get('Naam / Omschrijving') or
+                          row.get('Narrative') or row.get('Details') or '')
             
             # Bedrag parsing - kan positief/negatief zijn of apart Credit/Debit kolom
-            bedrag_str = row.get('Bedrag') or row.get('bedrag') or row.get('Amount') or '0'
-            bedrag_str = bedrag_str.replace(',', '.').replace(' ', '').replace('€', '').replace('$', '')
+            bedrag_str = row.get('Bedrag') or row.get('bedrag') or row.get('Amount') or row.get('Transactiebedrag') or '0'
+            # Remove currency symbols (SRD, USD, EUR, $, €)
+            bedrag_str = bedrag_str.replace(',', '.').replace(' ', '')
+            bedrag_str = bedrag_str.replace('€', '').replace('$', '').replace('SRD', '').replace('USD', '').replace('EUR', '')
             
             # Check voor aparte credit/debit kolommen
-            credit = row.get('Credit') or row.get('Bij') or ''
-            debit = row.get('Debit') or row.get('Af') or ''
+            credit = row.get('Credit') or row.get('Bij') or row.get('Ontvangen') or row.get('CR') or ''
+            debit = row.get('Debit') or row.get('Af') or row.get('Betaald') or row.get('DR') or ''
             
             if credit and credit.strip():
-                bedrag = abs(float(credit.replace(',', '.').replace(' ', '')))
+                credit_val = credit.replace(',', '.').replace(' ', '').replace('SRD', '').replace('USD', '').replace('EUR', '')
+                bedrag = abs(float(credit_val))
                 trans_type = TransactionType.CREDIT
             elif debit and debit.strip():
-                bedrag = abs(float(debit.replace(',', '.').replace(' ', '')))
+                debit_val = debit.replace(',', '.').replace(' ', '').replace('SRD', '').replace('USD', '').replace('EUR', '')
+                bedrag = abs(float(debit_val))
                 trans_type = TransactionType.DEBIT
             else:
                 bedrag = float(bedrag_str) if bedrag_str else 0
@@ -98,6 +127,16 @@ def parse_csv_transactions(content: str, user_id: str) -> List[dict]:
             
             if bedrag == 0:
                 continue
+            
+            # Tegenrekening - Surinaamse banken gebruiken andere formaten
+            tegenrekening = (row.get('Tegenrekening') or row.get('Rekening') or 
+                           row.get('Account') or row.get('IBAN') or 
+                           row.get('Rekeningnummer') or row.get('Beneficiary Account') or '')
+            
+            # Referentie/kenmerk
+            referentie = (row.get('Referentie') or row.get('Kenmerk') or 
+                         row.get('Reference') or row.get('Transactie ID') or
+                         row.get('Volgnummer') or '')
                 
             referentie = row.get('Referentie') or row.get('Kenmerk') or row.get('Reference') or ''
             tegenrekening = row.get('Tegenrekening') or row.get('IBAN') or row.get('Rekening') or ''
