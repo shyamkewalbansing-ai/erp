@@ -21,7 +21,11 @@ export default function BoekhoudingDashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [exposure, setExposure] = useState(null);
   const [error, setError] = useState(null);
+
+  // Exposure drempel voor waarschuwing (SRD)
+  const EXPOSURE_WARNING_THRESHOLD = 10000;
 
   const currentDate = new Date().toLocaleDateString('nl-NL', { 
     weekday: 'long', 
@@ -37,8 +41,12 @@ export default function BoekhoudingDashboard() {
   const loadDashboard = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/boekhouding/dashboard');
-      setData(res.data);
+      const [dashboardRes, exposureRes] = await Promise.all([
+        api.get('/boekhouding/dashboard'),
+        api.get('/rapportages/valuta/exposure').catch(() => ({ data: null }))
+      ]);
+      setData(dashboardRes.data);
+      setExposure(exposureRes.data);
     } catch (err) {
       console.error('Error loading dashboard:', err);
       setError('Kon dashboard niet laden');
