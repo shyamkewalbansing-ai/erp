@@ -493,6 +493,35 @@ async def get_rekeningen(
     rekeningen = await db.boekhouding_rekeningen.find(query, {"_id": 0}).sort("code", 1).to_list(500)
     return [RekeningResponse(**r) for r in rekeningen]
 
+
+@router.get("/rekeningen/mapping")
+async def get_rekeningen_mapping(current_user: dict = Depends(get_current_active_user)):
+    """Haal de grootboek mapping op voor systeemfuncties"""
+    user_id = current_user["id"]
+    mapping_doc = await db.boekhouding_mapping.find_one({"user_id": user_id}, {"_id": 0})
+    if mapping_doc:
+        return mapping_doc.get("mapping", {})
+    return {}
+
+
+@router.post("/rekeningen/mapping")
+async def save_rekeningen_mapping(
+    mapping: dict,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Sla de grootboek mapping op voor systeemfuncties"""
+    user_id = current_user["id"]
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.boekhouding_mapping.update_one(
+        {"user_id": user_id},
+        {"$set": {"mapping": mapping, "updated_at": now}},
+        upsert=True
+    )
+    
+    return {"message": "Koppelingen opgeslagen"}
+
+
 @router.post("/rekeningen", response_model=RekeningResponse)
 async def create_rekening(data: RekeningCreate, current_user: dict = Depends(get_current_active_user)):
     user_id = current_user["id"]
