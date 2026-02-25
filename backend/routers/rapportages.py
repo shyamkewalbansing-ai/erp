@@ -403,3 +403,229 @@ async def get_btw_aangifte(
         "aantal_verkoopfacturen": len(verkoopfacturen),
         "aantal_inkoopfacturen": len(inkoopfacturen)
     }
+
+
+# ==================== MULTI-VALUTA RAPPORTAGES ====================
+
+@router.get("/valuta/overzicht")
+async def get_valuta_overzicht(
+    jaar: Optional[int] = None,
+    current_user: dict = Depends(get_current_active_user)
+) -> Dict[str, Any]:
+    """
+    Multi-valuta overzicht - Alle transacties per valuta met SRD equivalenten
+    """
+    user_id = current_user["id"]
+    jaar = jaar or datetime.now().year
+    start_datum = f"{jaar}-01-01"
+    eind_datum = f"{jaar}-12-31"
+    
+    # Haal alle facturen op
+    verkoop = await db.boekhouding_verkoopfacturen.find(
+        {"user_id": user_id, "factuurdatum": {"$gte": start_datum, "$lte": eind_datum}, "status": {"$ne": "concept"}},
+        {"_id": 0, "valuta": 1, "totaal": 1, "srd_equivalent": 1}
+    ).to_list(1000)
+    
+    inkoop = await db.boekhouding_inkoopfacturen.find(
+        {"user_id": user_id, "factuurdatum": {"$gte": start_datum, "$lte": eind_datum}},
+        {"_id": 0, "valuta": 1, "totaal": 1, "srd_equivalent": 1}
+    ).to_list(1000)
+    
+    # Groepeer per valuta
+    valuta_stats = {}
+    
+    for f in verkoop:
+        valuta = f.get("valuta", "SRD")
+        if valuta not in valuta_stats:
+            valuta_stats[valuta] = {
+                "valuta": valuta,
+                "verkoop_origineel": 0,
+                "verkoop_srd": 0,
+                "verkoop_aantal": 0,
+                "inkoop_origineel": 0,
+                "inkoop_srd": 0,
+                "inkoop_aantal": 0
+            }
+        valuta_stats[valuta]["verkoop_origineel"] += f.get("totaal", 0)
+        valuta_stats[valuta]["verkoop_srd"] += f.get("srd_equivalent") or f.get("totaal", 0)
+        valuta_stats[valuta]["verkoop_aantal"] += 1
+    
+    for f in inkoop:
+        valuta = f.get("valuta", "SRD")
+        if valuta not in valuta_stats:
+            valuta_stats[valuta] = {
+                "valuta": valuta,
+                "verkoop_origineel": 0,
+                "verkoop_srd": 0,
+                "verkoop_aantal": 0,
+                "inkoop_origineel": 0,
+                "inkoop_srd": 0,
+                "inkoop_aantal": 0
+            }
+        valuta_stats[valuta]["inkoop_origineel"] += f.get("totaal", 0)
+        valuta_stats[valuta]["inkoop_srd"] += f.get("srd_equivalent") or f.get("totaal", 0)
+        valuta_stats[valuta]["inkoop_aantal"] += 1
+    
+    # Bereken totalen
+    totaal_verkoop_srd = sum(v["verkoop_srd"] for v in valuta_stats.values())
+    totaal_inkoop_srd = sum(v["inkoop_srd"] for v in valuta_stats.values())
+    
+    # Haal huidige wisselkoersen op
+    koersen = await db.wisselkoersen.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("datum", -1).to_list(10)
+    
+    koersen_dict = {}
+    for k in koersen:
+        if k["valuta"] not in koersen_dict:
+            koersen_dict[k["valuta"]] = k["koers"]
+    
+    return {
+        "jaar": jaar,
+        "per_valuta": list(valuta_stats.values()),
+        "totalen": {
+            "verkoop_srd": round(totaal_verkoop_srd, 2),
+            "inkoop_srd": round(totaal_inkoop_srd, 2),
+            "saldo_srd": round(totaal_verkoop_srd - totaal_inkoop_srd, 2)
+        },
+        "huidige_koersen": koersen_dict
+    }
+
+
+@router.get("/valuta/exposure")
+async def get_valuta_exposure(
+    current_user: dict = Depends(get_current_active_user)
+) -> Dict[str, Any]:
+    """
+    Valuta exposure rapport - Openstaande posities in vreemde valuta
+    """
+    user_id = current_user["id"]
+    
+    # Openstaande verkoopfacturen per valuta
+    verkoop_open = await db.boekhouding_verkoopfacturen.find(
+        {"user_id": user_id, "status": {"$nin": ["betaald", "concept"]}},
+        {"_id": 0, "factuurnummer": 1, "valuta": 1, "totaal": 1, "betaald_bedrag": 1, "debiteur_naam": 1}
+    ).to_list(500)
+    
+    # Openstaande inkoopfacturen per valuta
+    inkoop_open = await db.boekhouding_inkoopfacturen.find(
+        {"user_id": user_id, "status": {"$ne": "betaald"}},
+        {"_id": 0, "factuurnummer": 1, "valuta": 1, "totaal": 1, "betaald_bedrag": 1, "crediteur_naam": 1}
+    ).to_list(500)
+    
+    # Groepeer per valuta
+    exposure = {}
+    
+    for f in verkoop_open:
+        valuta = f.get("valuta", "SRD")
+        openstaand = f.get("totaal", 0) - f.get("betaald_bedrag", 0)
+        if openstaand <= 0:
+            continue
+        if valuta not in exposure:
+            exposure[valuta] = {"valuta": valuta, "te_ontvangen": 0, "te_betalen": 0, "netto": 0, "details_te_ontvangen": [], "details_te_betalen": []}
+        exposure[valuta]["te_ontvangen"] += openstaand
+        exposure[valuta]["details_te_ontvangen"].append({
+            "factuurnummer": f.get("factuurnummer"),
+            "relatie": f.get("debiteur_naam"),
+            "bedrag": openstaand
+        })
+    
+    for f in inkoop_open:
+        valuta = f.get("valuta", "SRD")
+        openstaand = f.get("totaal", 0) - f.get("betaald_bedrag", 0)
+        if openstaand <= 0:
+            continue
+        if valuta not in exposure:
+            exposure[valuta] = {"valuta": valuta, "te_ontvangen": 0, "te_betalen": 0, "netto": 0, "details_te_ontvangen": [], "details_te_betalen": []}
+        exposure[valuta]["te_betalen"] += openstaand
+        exposure[valuta]["details_te_betalen"].append({
+            "factuurnummer": f.get("factuurnummer"),
+            "relatie": f.get("crediteur_naam"),
+            "bedrag": openstaand
+        })
+    
+    # Bereken netto exposure en converteer naar SRD
+    koersen = await db.wisselkoersen.find(
+        {"user_id": user_id},
+        {"_id": 0}
+    ).sort("datum", -1).to_list(10)
+    
+    koersen_dict = {"SRD": 1.0, "USD": 36.50, "EUR": 39.00}  # Fallback koersen
+    for k in koersen:
+        if k["valuta"] not in koersen_dict:
+            koersen_dict[k["valuta"]] = k["koers"]
+    
+    totaal_exposure_srd = 0
+    for valuta, data in exposure.items():
+        data["netto"] = round(data["te_ontvangen"] - data["te_betalen"], 2)
+        data["te_ontvangen"] = round(data["te_ontvangen"], 2)
+        data["te_betalen"] = round(data["te_betalen"], 2)
+        koers = koersen_dict.get(valuta, 1.0)
+        data["netto_srd"] = round(data["netto"] * koers, 2)
+        totaal_exposure_srd += data["netto_srd"]
+    
+    return {
+        "datum": datetime.now().strftime("%Y-%m-%d"),
+        "per_valuta": list(exposure.values()),
+        "totaal_netto_exposure_srd": round(totaal_exposure_srd, 2),
+        "koersen_gebruikt": koersen_dict
+    }
+
+
+@router.get("/valuta/koershistorie")
+async def get_koers_historie(
+    valuta: str = "USD",
+    dagen: int = 30,
+    current_user: dict = Depends(get_current_active_user)
+) -> Dict[str, Any]:
+    """
+    Wisselkoers historie voor een specifieke valuta
+    """
+    user_id = current_user["id"]
+    start_datum = (datetime.now() - timedelta(days=dagen)).strftime("%Y-%m-%d")
+    
+    koersen = await db.wisselkoersen.find(
+        {"user_id": user_id, "valuta": valuta, "datum": {"$gte": start_datum}},
+        {"_id": 0}
+    ).sort("datum", 1).to_list(dagen)
+    
+    if not koersen:
+        # Geen data, return placeholder
+        return {
+            "valuta": valuta,
+            "periode_dagen": dagen,
+            "data": [],
+            "gemiddelde": None,
+            "minimum": None,
+            "maximum": None,
+            "trend": "geen_data"
+        }
+    
+    koers_values = [k["koers"] for k in koersen]
+    
+    # Bereken trend
+    if len(koers_values) >= 2:
+        eerste = koers_values[0]
+        laatste = koers_values[-1]
+        verschil_perc = ((laatste - eerste) / eerste) * 100
+        if verschil_perc > 1:
+            trend = "stijgend"
+        elif verschil_perc < -1:
+            trend = "dalend"
+        else:
+            trend = "stabiel"
+    else:
+        trend = "onvoldoende_data"
+    
+    return {
+        "valuta": valuta,
+        "periode_dagen": dagen,
+        "data": koersen,
+        "gemiddelde": round(sum(koers_values) / len(koers_values), 4),
+        "minimum": min(koers_values),
+        "maximum": max(koers_values),
+        "laatste_koers": koers_values[-1] if koers_values else None,
+        "trend": trend
+    }
+
