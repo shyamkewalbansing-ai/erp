@@ -97,6 +97,22 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ Backend: `/app/backend/routers/bankreconciliatie.py`
 - ✅ Frontend: `/app/boekhouding/bankreconciliatie`
 
+### 25 februari 2026 - Overboekingen tussen Bankrekeningen (VOLTOOID)
+- ✅ **Backend: `/api/boekhouding/overboekingen`**
+  - POST: Maak overboeking tussen twee rekeningen
+  - GET: Lijst alle overboekingen
+  - Automatische wisselkoers conversie bij verschillende valuta
+  - Validatie: saldo check, zelfde rekening check
+  - Maakt 2 transacties aan (uitgave + inkomst)
+  - Update saldi automatisch
+
+- ✅ **Frontend: Overboeking Dialog**
+  - Van/Naar rekening selectie met saldo weergave
+  - Bedrag en datum invoer
+  - **Valuta Conversie Preview**: toont verwachte bedrag bij verschillende valuta
+  - Optionele aangepaste wisselkoers
+  - Transacties verschijnen direct in "Recente Transacties"
+
 ### 25 februari 2026 - Bank & Kas Pagina Verbeterd (VOLTOOID)
 - ✅ **Volledige Bank & Kas Module**
   - Hero header met `ModulePageLayout` component
