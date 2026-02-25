@@ -74,6 +74,15 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ **Projecten Overzicht** - Uren en kosten
 - ✅ **BTW Aangifte** - Per periode
 
+### 25 februari 2026 - Bank Reconciliatie (VOLTOOID)
+- ✅ **CSV Upload**: Parse banktransacties uit CSV bestanden
+- ✅ **Automatisch Matchen**: Suggesties op basis van bedrag en factuurnummer/klantnaam
+- ✅ **Handmatig Matchen**: Transactie aan specifieke factuur koppelen
+- ✅ **Status Beheer**: Niet gematcht, Suggestie, Gematcht, Genegeerd
+- ✅ **Grootboek Integratie**: Matching registreert betaling en boekt naar grootboek
+- ✅ Backend: `/app/backend/routers/bankreconciliatie.py`
+- ✅ Frontend: `/app/boekhouding/bankreconciliatie`
+
 ### 24 februari 2026 - Volledige CRUD Functionaliteit (VOLTOOID)
 - ✅ **Verkoop Orders**: Create, Update (concept), Delete (concept/geannuleerd)
 - ✅ **Verkoop Offertes**: Create, Update (concept), Delete (concept/verlopen/afgewezen)
