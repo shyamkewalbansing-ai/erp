@@ -97,6 +97,30 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ Backend: `/app/backend/routers/bankreconciliatie.py`
 - ✅ Frontend: `/app/boekhouding/bankreconciliatie`
 
+### 25 februari 2026 - Grootboek Integraties (VOLTOOID)
+- ✅ **Automatische Afschrijvingen**
+  - Endpoint: `POST /api/vaste-activa/maandelijkse-afschrijvingen?maand=YYYY-MM`
+  - Boekt automatisch alle maandelijkse afschrijvingen naar grootboek
+  - Rekening 4300 (Afschrijvingskosten) ↔ 1410 (Cum. Afschrijving)
+  - Test: 12 activa succesvol afgeschreven in één batch
+
+- ✅ **Kostenplaats Koppeling aan Inkoopfacturen**
+  - Nieuw veld `kostenplaats_id` in inkoopfacturen
+  - Automatische boeking naar kostenplaats bij factuur aanmaak
+  - Budget tracking met voortgangspercentage
+  - SRD equivalent voor multi-valuta facturen
+
+- ✅ **Wisselkoers Integratie**
+  - Automatische conversie naar SRD bij multi-valuta transacties
+  - Fallback naar standaard koersen indien geen specifieke koers
+  - Nieuwe grootboekrekeningen: 8900 (Koersverschillen), 4600 (Koersverliezen)
+  - Helper functies: `get_wisselkoers()`, `converteer_naar_srd()`, `boek_koersverschil()`
+
+- ✅ **Gewijzigde bestanden**:
+  - `/app/backend/utils/grootboek_integration.py` - Wisselkoers & kostenplaats functies
+  - `/app/backend/routers/boekhouding.py` - Kostenplaats_id in inkoopfacturen
+  - `/app/backend/routers/vaste_activa.py` - Maandelijkse afschrijvingen batch endpoint
+
 ### 25 februari 2026 - UI Refactoring: ModulePageLayout Component (VOLTOOID)
 - ✅ **Nieuwe herbruikbare component**: `/app/frontend/src/components/ModulePageLayout.js`
   - `ModulePageLayout`: Wrapper met hero header (emerald of dark variant)
