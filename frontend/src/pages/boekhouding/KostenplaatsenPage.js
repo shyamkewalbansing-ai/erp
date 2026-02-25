@@ -187,11 +187,12 @@ export default function KostenplaatsenPage() {
                     </Button>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))
         )}
-      </div>
+        </div>
+      </ContentSection>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
