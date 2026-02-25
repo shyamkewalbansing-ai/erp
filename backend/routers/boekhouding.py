@@ -2047,6 +2047,43 @@ async def convert_currency(
         "koers": koers
     }
 
+
+@router.get("/wisselkoersen/huidige")
+async def get_huidige_wisselkoersen(current_user: dict = Depends(get_current_active_user)):
+    """
+    Haal de huidige wisselkoersen op voor alle valuta combinaties.
+    Retourneert koersen voor USD->SRD en EUR->SRD.
+    Deze koersen worden gebruikt voor automatische prijsconversie bij artikelen.
+    """
+    user_id = current_user["id"]
+    
+    # Haal de meest recente koersen op
+    usd_srd = await db.boekhouding_wisselkoersen.find_one(
+        {"user_id": user_id, "van_valuta": "USD", "naar_valuta": "SRD"},
+        {"_id": 0},
+        sort=[("datum", -1)]
+    )
+    
+    eur_srd = await db.boekhouding_wisselkoersen.find_one(
+        {"user_id": user_id, "van_valuta": "EUR", "naar_valuta": "SRD"},
+        {"_id": 0},
+        sort=[("datum", -1)]
+    )
+    
+    # Standaard koersen als fallback (ongeveer actuele koersen)
+    koersen = {
+        "USD_SRD": usd_srd.get("koers", 36.50) if usd_srd else 36.50,
+        "EUR_SRD": eur_srd.get("koers", 38.50) if eur_srd else 38.50,
+        "SRD_USD": 1 / (usd_srd.get("koers", 36.50) if usd_srd else 36.50),
+        "SRD_EUR": 1 / (eur_srd.get("koers", 38.50) if eur_srd else 38.50),
+        "USD_EUR": (eur_srd.get("koers", 38.50) if eur_srd else 38.50) / (usd_srd.get("koers", 36.50) if usd_srd else 36.50) if usd_srd and eur_srd else 1.055,
+        "EUR_USD": (usd_srd.get("koers", 36.50) if usd_srd else 36.50) / (eur_srd.get("koers", 38.50) if eur_srd else 38.50) if usd_srd and eur_srd else 0.948,
+        "datum_usd": usd_srd.get("datum") if usd_srd else None,
+        "datum_eur": eur_srd.get("datum") if eur_srd else None
+    }
+    
+    return koersen
+
 # ==================== BTW RAPPORTAGE ====================
 
 @router.get("/btw/aangifte")
