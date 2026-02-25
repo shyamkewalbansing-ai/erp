@@ -411,7 +411,7 @@ export default function BankReconciliatiePage() {
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 ml-14 lg:ml-0">
                       <div className="text-left sm:text-right">
                         <p className={`font-bold text-lg ${trans.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
-                          {trans.type === 'credit' ? '+' : '-'} SRD {trans.bedrag?.toLocaleString()}
+                          {trans.type === 'credit' ? '+' : '-'} {trans.valuta || 'SRD'} {trans.bedrag?.toLocaleString()}
                         </p>
                         <Badge className={`${statusColors[trans.status]} text-xs`}>
                           {statusLabels[trans.status]}
