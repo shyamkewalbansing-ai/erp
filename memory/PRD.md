@@ -252,10 +252,16 @@ Automatisch aangemaakt bij eerste gebruik:
 - [x] Verkooporders → Voorraadreservering
 
 ### P2 - Medium
+- [x] Vaste Activa Module met CRUD - VOLTOOID
+- [x] Kostenplaatsen Module met CRUD - VOLTOOID  
+- [x] Wisselkoersen Module met Converter - VOLTOOID
 - [ ] HRM integratie met kostenboekingen
 - [ ] Inkoopfacturen PDF export
 - [ ] Bulk import/export functies
 - [ ] Multi-valuta rapportages
+- [ ] Automatische periodieke afschrijvingen (Vaste Activa → Grootboek)
+- [ ] Kostenplaats koppelingen aan inkoopfacturen
+- [ ] Wisselkoers integratie in financiële transacties
 
 ### P3 - Laag
 - [ ] Dashboard widgets
