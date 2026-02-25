@@ -616,3 +616,245 @@ async def boek_project_uren(
         referentie_nummer=project.get("project_nummer"),
         project_id=project.get("id")
     )
+
+
+
+# ==================== WISSELKOERS INTEGRATIE ====================
+
+async def get_wisselkoers(db, user_id: str, valuta: str, datum: str = None) -> Optional[float]:
+    """
+    Haal de wisselkoers op voor een valuta t.o.v. SRD.
+    Returns koers of None als niet gevonden.
+    """
+    if valuta == "SRD":
+        return 1.0
+    
+    if not datum:
+        datum = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    koers_doc = await db.wisselkoersen.find_one(
+        {"user_id": user_id, "valuta": valuta, "datum": {"$lte": datum}},
+        {"_id": 0},
+        sort=[("datum", -1)]
+    )
+    
+    return koers_doc.get("koers") if koers_doc else None
+
+
+async def converteer_naar_srd(db, user_id: str, bedrag: float, valuta: str, datum: str = None) -> Dict[str, Any]:
+    """
+    Converteer een bedrag naar SRD.
+    Returns dict met origineel, geconverteerd bedrag en gebruikte koers.
+    """
+    if valuta == "SRD":
+        return {
+            "origineel_bedrag": bedrag,
+            "origineel_valuta": valuta,
+            "srd_bedrag": bedrag,
+            "koers": 1.0
+        }
+    
+    koers = await get_wisselkoers(db, user_id, valuta, datum)
+    
+    if not koers:
+        # Fallback naar standaard koersen als geen specifieke koers is ingesteld
+        standaard_koersen = {"USD": 36.50, "EUR": 39.00, "GYD": 0.17, "BRL": 7.30}
+        koers = standaard_koersen.get(valuta)
+        
+    if not koers:
+        raise ValueError(f"Geen wisselkoers gevonden voor {valuta}")
+    
+    srd_bedrag = round(bedrag * koers, 2)
+    
+    return {
+        "origineel_bedrag": bedrag,
+        "origineel_valuta": valuta,
+        "srd_bedrag": srd_bedrag,
+        "koers": koers
+    }
+
+
+async def boek_valuta_transactie(
+    db,
+    user_id: str,
+    bedrag_origineel: float,
+    valuta_origineel: str,
+    omschrijving: str,
+    rekening_debet_id: str,
+    rekening_credit_id: str,
+    datum: str = None,
+    referentie_type: str = None,
+    referentie_id: str = None,
+    kostenplaats_id: str = None
+) -> Dict[str, Any]:
+    """
+    Boek een transactie in vreemde valuta met automatische conversie naar SRD.
+    Boekt ook eventuele koersverschillen.
+    """
+    await ensure_standaard_rekeningen(db, user_id)
+    
+    if not datum:
+        datum = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Converteer naar SRD
+    conversie = await converteer_naar_srd(db, user_id, bedrag_origineel, valuta_origineel, datum)
+    srd_bedrag = conversie["srd_bedrag"]
+    
+    regels = [
+        {
+            "rekening_id": rekening_debet_id,
+            "debet": srd_bedrag,
+            "credit": 0,
+            "omschrijving": f"{omschrijving} ({bedrag_origineel} {valuta_origineel} @ {conversie['koers']})"
+        },
+        {
+            "rekening_id": rekening_credit_id,
+            "debet": 0,
+            "credit": srd_bedrag,
+            "omschrijving": f"{omschrijving}"
+        }
+    ]
+    
+    return await create_journaalpost(
+        db=db,
+        user_id=user_id,
+        omschrijving=f"{omschrijving} - {bedrag_origineel} {valuta_origineel}",
+        regels=regels,
+        datum=datum,
+        referentie_type=referentie_type,
+        referentie_id=referentie_id,
+        kostenplaats_id=kostenplaats_id
+    )
+
+
+async def boek_koersverschil(
+    db,
+    user_id: str,
+    bedrag_verschil: float,
+    omschrijving: str,
+    referentie_type: str = None,
+    referentie_id: str = None,
+    datum: str = None
+) -> Dict[str, Any]:
+    """
+    Boek een koersverschil (winst of verlies).
+    Positief verschil = koerswinst, negatief = koersverlies.
+    """
+    await ensure_standaard_rekeningen(db, user_id)
+    
+    if bedrag_verschil == 0:
+        return None
+    
+    rekening_bank = await get_rekening_by_code(db, user_id, "1100")
+    
+    if bedrag_verschil > 0:
+        # Koerswinst
+        rekening_koers = await get_rekening_by_code(db, user_id, "8900")  # Koersverschillen (opbrengst)
+        regels = [
+            {
+                "rekening_id": rekening_bank,
+                "debet": bedrag_verschil,
+                "credit": 0,
+                "omschrijving": f"Koerswinst {omschrijving}"
+            },
+            {
+                "rekening_id": rekening_koers,
+                "debet": 0,
+                "credit": bedrag_verschil,
+                "omschrijving": f"Koerswinst {omschrijving}"
+            }
+        ]
+    else:
+        # Koersverlies
+        rekening_koers = await get_rekening_by_code(db, user_id, "4600")  # Koersverliezen (kosten)
+        abs_verschil = abs(bedrag_verschil)
+        regels = [
+            {
+                "rekening_id": rekening_koers,
+                "debet": abs_verschil,
+                "credit": 0,
+                "omschrijving": f"Koersverlies {omschrijving}"
+            },
+            {
+                "rekening_id": rekening_bank,
+                "debet": 0,
+                "credit": abs_verschil,
+                "omschrijving": f"Koersverlies {omschrijving}"
+            }
+        ]
+    
+    return await create_journaalpost(
+        db=db,
+        user_id=user_id,
+        omschrijving=f"Koersverschil {omschrijving}",
+        regels=regels,
+        datum=datum,
+        referentie_type=referentie_type,
+        referentie_id=referentie_id
+    )
+
+
+# ==================== KOSTENPLAATS INTEGRATIE ====================
+
+async def boek_naar_kostenplaats(
+    db,
+    user_id: str,
+    kostenplaats_id: str,
+    bedrag: float,
+    omschrijving: str,
+    referentie_type: str = None,
+    referentie_id: str = None,
+    datum: str = None
+) -> Dict[str, Any]:
+    """
+    Registreer kosten bij een kostenplaats.
+    Updates het werkelijke kosten veld van de kostenplaats.
+    """
+    if not kostenplaats_id:
+        return None
+    
+    kostenplaats = await db.kostenplaatsen.find_one(
+        {"id": kostenplaats_id, "user_id": user_id},
+        {"_id": 0}
+    )
+    
+    if not kostenplaats:
+        return None
+    
+    # Update werkelijke kosten
+    nieuwe_kosten = kostenplaats.get("werkelijke_kosten", 0) + bedrag
+    budget = kostenplaats.get("budget", 0)
+    budget_percentage = round((nieuwe_kosten / budget * 100), 2) if budget > 0 else 0
+    
+    await db.kostenplaatsen.update_one(
+        {"id": kostenplaats_id},
+        {"$set": {
+            "werkelijke_kosten": round(nieuwe_kosten, 2),
+            "budget_verbruik_percentage": budget_percentage,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Maak kostenplaats boeking record
+    boeking_id = str(uuid.uuid4())
+    boeking_doc = {
+        "id": boeking_id,
+        "user_id": user_id,
+        "kostenplaats_id": kostenplaats_id,
+        "bedrag": bedrag,
+        "omschrijving": omschrijving,
+        "referentie_type": referentie_type,
+        "referentie_id": referentie_id,
+        "datum": datum or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.kostenplaats_boekingen.insert_one(boeking_doc)
+    
+    return {
+        "boeking_id": boeking_id,
+        "kostenplaats": kostenplaats.get("naam"),
+        "bedrag": bedrag,
+        "nieuw_totaal": nieuwe_kosten,
+        "budget_percentage": budget_percentage
+    }
