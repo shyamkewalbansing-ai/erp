@@ -596,6 +596,124 @@ export default function BankrekeningenPage() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Overboeking Dialog */}
+      <Dialog open={overboekingDialogOpen} onOpenChange={setOverboekingDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ArrowRightLeft className="w-5 h-5 text-blue-500" />
+              Overboeking tussen Rekeningen
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleOverboekingSubmit} className="space-y-4">
+            <div>
+              <Label>Van Rekening *</Label>
+              <Select 
+                value={overboekingForm.van_rekening_id} 
+                onValueChange={(v) => setOverboekingForm({...overboekingForm, van_rekening_id: v})}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecteer rekening" /></SelectTrigger>
+                <SelectContent>
+                  {rekeningen.map(r => (
+                    <SelectItem key={r.id} value={r.id} disabled={r.id === overboekingForm.naar_rekening_id}>
+                      {r.naam} ({r.valuta}) - {formatCurrency(r.huidig_saldo, r.valuta)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Naar Rekening *</Label>
+              <Select 
+                value={overboekingForm.naar_rekening_id} 
+                onValueChange={(v) => setOverboekingForm({...overboekingForm, naar_rekening_id: v})}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecteer rekening" /></SelectTrigger>
+                <SelectContent>
+                  {rekeningen.map(r => (
+                    <SelectItem key={r.id} value={r.id} disabled={r.id === overboekingForm.van_rekening_id}>
+                      {r.naam} ({r.valuta}) - {formatCurrency(r.huidig_saldo, r.valuta)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Bedrag *</Label>
+                <Input 
+                  type="number" 
+                  step="0.01"
+                  min="0.01"
+                  value={overboekingForm.bedrag} 
+                  onChange={(e) => setOverboekingForm({...overboekingForm, bedrag: parseFloat(e.target.value) || 0})} 
+                  required 
+                />
+              </div>
+              <div>
+                <Label>Datum</Label>
+                <Input 
+                  type="date" 
+                  value={overboekingForm.datum} 
+                  onChange={(e) => setOverboekingForm({...overboekingForm, datum: e.target.value})} 
+                />
+              </div>
+            </div>
+            
+            {/* Preview bij verschillende valuta */}
+            {(() => {
+              const preview = getOverboekingPreview();
+              const vanRek = rekeningen.find(r => r.id === overboekingForm.van_rekening_id);
+              const naarRek = rekeningen.find(r => r.id === overboekingForm.naar_rekening_id);
+              if (preview && vanRek && naarRek && vanRek.valuta !== naarRek.valuta) {
+                return (
+                  <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">
+                      Valuta Conversie
+                    </p>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span>{formatCurrency(overboekingForm.bedrag, vanRek.valuta)}</span>
+                      <ArrowRightLeft className="w-4 h-4 text-blue-500" />
+                      <span className="font-bold">{formatCurrency(preview.bedragNaar, naarRek.valuta)}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Koers: 1 {vanRek.valuta} = {preview.koers?.toFixed(4)} {naarRek.valuta}
+                    </p>
+                    <div className="mt-2">
+                      <Label className="text-xs">Aangepaste koers (optioneel)</Label>
+                      <Input 
+                        type="number" 
+                        step="0.0001"
+                        placeholder="Automatisch"
+                        value={overboekingForm.wisselkoers || ''} 
+                        onChange={(e) => setOverboekingForm({...overboekingForm, wisselkoers: parseFloat(e.target.value) || null})} 
+                        className="h-8 text-sm"
+                      />
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
+            <div>
+              <Label>Omschrijving</Label>
+              <Input 
+                value={overboekingForm.omschrijving} 
+                onChange={(e) => setOverboekingForm({...overboekingForm, omschrijving: e.target.value})} 
+                placeholder="Overboeking" 
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setOverboekingDialogOpen(false)}>Annuleren</Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                <ArrowRightLeft className="w-4 h-4 mr-2" /> Overboeken
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </ModulePageLayout>
   );
 }
