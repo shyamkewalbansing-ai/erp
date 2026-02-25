@@ -1378,9 +1378,20 @@ async def get_inkoopfacturen(
 async def create_inkoopfactuur(data: InkoopfactuurCreate, current_user: dict = Depends(get_current_active_user)):
     user_id = current_user["id"]
     
+    # Import wisselkoers conversie
+    from utils.grootboek_integration import converteer_naar_srd, boek_naar_kostenplaats
+    
     crediteur = await db.boekhouding_crediteuren.find_one({"id": data.crediteur_id, "user_id": user_id}, {"_id": 0})
     if not crediteur:
         raise HTTPException(status_code=404, detail="Crediteur niet gevonden")
+    
+    # Valideer kostenplaats indien opgegeven
+    kostenplaats_naam = None
+    if data.kostenplaats_id:
+        kostenplaats = await db.kostenplaatsen.find_one({"id": data.kostenplaats_id, "user_id": user_id}, {"_id": 0})
+        if not kostenplaats:
+            raise HTTPException(status_code=404, detail="Kostenplaats niet gevonden")
+        kostenplaats_naam = kostenplaats.get("naam")
     
     factuur_id = str(uuid.uuid4())
     factuurnummer = await genereer_factuurnummer(user_id, "IF")
@@ -1420,6 +1431,16 @@ async def create_inkoopfactuur(data: InkoopfactuurCreate, current_user: dict = D
     
     totaal = subtotaal + btw_bedrag
     
+    # Bereken SRD equivalent voor multi-valuta
+    srd_equivalent = None
+    if data.valuta.value != "SRD":
+        try:
+            conversie = await converteer_naar_srd(db, user_id, totaal, data.valuta.value, data.factuurdatum)
+            srd_equivalent = conversie["srd_bedrag"]
+        except Exception as e:
+            print(f"Wisselkoers conversie niet mogelijk: {e}")
+            srd_equivalent = None
+    
     factuur_doc = {
         "id": factuur_id,
         "user_id": user_id,
@@ -1434,16 +1455,18 @@ async def create_inkoopfactuur(data: InkoopfactuurCreate, current_user: dict = D
         "subtotaal": round(subtotaal, 2),
         "btw_bedrag": round(btw_bedrag, 2),
         "totaal": round(totaal, 2),
+        "srd_equivalent": srd_equivalent,
         "betaald_bedrag": 0,
         "status": "ontvangen",
         "opmerkingen": data.opmerkingen,
+        "kostenplaats_id": data.kostenplaats_id,
+        "kostenplaats_naam": kostenplaats_naam,
         "created_at": now
     }
     
     await db.boekhouding_inkoopfacturen.insert_one(factuur_doc)
     
     # Automatische grootboekboeking bij aanmaken inkoopfactuur
-    # Inkoopfacturen worden direct geboekt (geen concept status)
     try:
         await boek_inkoopfactuur(
             db=db,
@@ -1453,6 +1476,24 @@ async def create_inkoopfactuur(data: InkoopfactuurCreate, current_user: dict = D
         )
     except Exception as e:
         print(f"Fout bij grootboekboeking inkoopfactuur: {e}")
+    
+    # Boek naar kostenplaats indien gekoppeld
+    if data.kostenplaats_id:
+        try:
+            # Gebruik SRD equivalent voor kostenplaats boeking
+            boek_bedrag = srd_equivalent if srd_equivalent else totaal
+            await boek_naar_kostenplaats(
+                db=db,
+                user_id=user_id,
+                kostenplaats_id=data.kostenplaats_id,
+                bedrag=boek_bedrag,
+                omschrijving=f"Inkoopfactuur {factuurnummer} - {crediteur.get('naam')}",
+                referentie_type="inkoopfactuur",
+                referentie_id=factuur_id,
+                datum=data.factuurdatum
+            )
+        except Exception as e:
+            print(f"Fout bij kostenplaats boeking: {e}")
     
     return InkoopfactuurResponse(**factuur_doc)
 
