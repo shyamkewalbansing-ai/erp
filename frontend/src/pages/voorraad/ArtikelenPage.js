@@ -363,14 +363,44 @@ export default function ArtikelenPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm">Inkoopprijs</Label>
-              <Input className="rounded-lg" type="number" value={form.inkoopprijs} onChange={(e) => setForm({...form, inkoopprijs: parseFloat(e.target.value)})} />
+            
+            {/* Prijzen sectie */}
+            <div className="col-span-1 sm:col-span-2 border-t pt-4 mt-2">
+              <Label className="text-sm font-semibold block mb-3">Inkoopprijzen per valuta</Label>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">SRD</Label>
+                  <Input className="rounded-lg" type="number" step="0.01" value={form.inkoopprijs_srd} onChange={(e) => setForm({...form, inkoopprijs_srd: parseFloat(e.target.value) || 0})} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">USD ($)</Label>
+                  <Input className="rounded-lg" type="number" step="0.01" value={form.inkoopprijs_usd} onChange={(e) => setForm({...form, inkoopprijs_usd: parseFloat(e.target.value) || 0})} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">EUR (€)</Label>
+                  <Input className="rounded-lg" type="number" step="0.01" value={form.inkoopprijs_eur} onChange={(e) => setForm({...form, inkoopprijs_eur: parseFloat(e.target.value) || 0})} />
+                </div>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label className="text-sm">Verkoopprijs</Label>
-              <Input className="rounded-lg" type="number" value={form.verkoopprijs} onChange={(e) => setForm({...form, verkoopprijs: parseFloat(e.target.value)})} />
+            
+            <div className="col-span-1 sm:col-span-2">
+              <Label className="text-sm font-semibold block mb-3">Verkoopprijzen per valuta</Label>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">SRD</Label>
+                  <Input className="rounded-lg" type="number" step="0.01" value={form.verkoopprijs_srd} onChange={(e) => setForm({...form, verkoopprijs_srd: parseFloat(e.target.value) || 0})} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">USD ($)</Label>
+                  <Input className="rounded-lg" type="number" step="0.01" value={form.verkoopprijs_usd} onChange={(e) => setForm({...form, verkoopprijs_usd: parseFloat(e.target.value) || 0})} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">EUR (€)</Label>
+                  <Input className="rounded-lg" type="number" step="0.01" value={form.verkoopprijs_eur} onChange={(e) => setForm({...form, verkoopprijs_eur: parseFloat(e.target.value) || 0})} />
+                </div>
+              </div>
             </div>
+
             <div className="space-y-2">
               <Label className="text-sm">Minimum Voorraad</Label>
               <Input className="rounded-lg" type="number" value={form.min_voorraad} onChange={(e) => setForm({...form, min_voorraad: parseFloat(e.target.value)})} />
