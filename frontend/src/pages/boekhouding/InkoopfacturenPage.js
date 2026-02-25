@@ -261,37 +261,155 @@ export default function InkoopfacturenPage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredFacturen.map((factuur) => (
-                <div key={factuur.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50">
-                  <div className="flex items-center gap-4">
-                    <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                      <FileText className="h-6 w-6 text-purple-600" />
+              {filteredFacturen.map((factuur) => {
+                const openstaand = (factuur.totaal || 0) - (factuur.betaald_bedrag || 0);
+                return (
+                  <div key={factuur.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg hover:bg-muted/50 gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                        <FileText className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">{factuur.factuurnummer}</p>
+                        <p className="text-sm text-muted-foreground">{factuur.crediteur_naam}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Datum: {factuur.factuurdatum} | Vervalt: {factuur.vervaldatum}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{factuur.factuurnummer}</p>
-                      <p className="text-sm text-muted-foreground">{factuur.crediteur_naam}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Datum: {factuur.factuurdatum} | Vervalt: {factuur.vervaldatum}
-                      </p>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+                      <div className="text-left sm:text-right">
+                        <p className="font-bold">{formatCurrency(factuur.totaal, factuur.valuta)}</p>
+                        {factuur.betaald_bedrag > 0 && factuur.status !== 'betaald' && (
+                          <p className="text-xs text-green-600">Betaald: {formatCurrency(factuur.betaald_bedrag, factuur.valuta)}</p>
+                        )}
+                        {openstaand > 0 && factuur.status !== 'betaald' && (
+                          <p className="text-xs text-orange-600">Openstaand: {formatCurrency(openstaand, factuur.valuta)}</p>
+                        )}
+                        <Badge className={statusColors[factuur.status] || 'bg-gray-100'}>
+                          {factuur.status?.replace('_', ' ')}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        {(factuur.status === 'ontvangen' || factuur.status === 'open') && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => openPaymentDialog(factuur)}
+                            className="bg-emerald-500 hover:bg-emerald-600"
+                          >
+                            <CreditCard className="w-4 h-4 mr-1" /> Betalen
+                          </Button>
+                        )}
+                        {factuur.status === 'gedeeltelijk_betaald' && (
+                          <Button 
+                            size="sm" 
+                            onClick={() => openPaymentDialog(factuur)}
+                            className="bg-amber-500 hover:bg-amber-600"
+                          >
+                            <CreditCard className="w-4 h-4 mr-1" /> Rest Betalen
+                          </Button>
+                        )}
+                        {factuur.status === 'concept' && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => updateStatus(factuur.id, 'ontvangen')}
+                          >
+                            Markeer Ontvangen
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-bold">{formatCurrency(factuur.totaal, factuur.valuta)}</p>
-                      {factuur.betaald_bedrag > 0 && factuur.status !== 'betaald' && (
-                        <p className="text-xs text-green-600">Betaald: {formatCurrency(factuur.betaald_bedrag, factuur.valuta)}</p>
-                      )}
-                      <Badge className={statusColors[factuur.status] || 'bg-gray-100'}>
-                        {factuur.status?.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Betaling Dialog */}
+      <Dialog open={paymentDialog} onOpenChange={setPaymentDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Betaling Registreren</DialogTitle>
+          </DialogHeader>
+          {selectedFactuur && (
+            <div className="space-y-4 py-4">
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="font-medium">{selectedFactuur.factuurnummer}</p>
+                <p className="text-sm text-muted-foreground">{selectedFactuur.crediteur_naam}</p>
+                <p className="text-sm">
+                  Totaal: <span className="font-bold">{formatCurrency(selectedFactuur.totaal, selectedFactuur.valuta)}</span>
+                </p>
+                <p className="text-sm text-orange-600">
+                  Openstaand: <span className="font-bold">{formatCurrency((selectedFactuur.totaal || 0) - (selectedFactuur.betaald_bedrag || 0), selectedFactuur.valuta)}</span>
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Bedrag ({selectedFactuur.valuta})</Label>
+                <Input 
+                  type="number" 
+                  step="0.01"
+                  value={paymentForm.bedrag}
+                  onChange={(e) => setPaymentForm({...paymentForm, bedrag: parseFloat(e.target.value) || 0})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Betaaldatum</Label>
+                <Input 
+                  type="date"
+                  value={paymentForm.betaaldatum}
+                  onChange={(e) => setPaymentForm({...paymentForm, betaaldatum: e.target.value})}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Betaalmethode</Label>
+                <Select value={paymentForm.betaalmethode} onValueChange={(v) => setPaymentForm({...paymentForm, betaalmethode: v})}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bank">Bank</SelectItem>
+                    <SelectItem value="kas">Kas</SelectItem>
+                    <SelectItem value="cheque">Cheque</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Bankrekening</Label>
+                <Select value={paymentForm.rekening_id} onValueChange={(v) => setPaymentForm({...paymentForm, rekening_id: v})}>
+                  <SelectTrigger><SelectValue placeholder="Selecteer rekening" /></SelectTrigger>
+                  <SelectContent>
+                    {bankrekeningen.filter(b => b.valuta === selectedFactuur.valuta).map((rek) => (
+                      <SelectItem key={rek.id} value={rek.id}>
+                        {rek.naam} ({rek.valuta})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Referentie</Label>
+                <Input 
+                  value={paymentForm.referentie}
+                  onChange={(e) => setPaymentForm({...paymentForm, referentie: e.target.value})}
+                  placeholder="Betalingsreferentie"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPaymentDialog(false)}>Annuleren</Button>
+            <Button onClick={handlePayment} className="bg-emerald-500 hover:bg-emerald-600">
+              <CreditCard className="w-4 h-4 mr-2" /> Betaling Registreren
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
