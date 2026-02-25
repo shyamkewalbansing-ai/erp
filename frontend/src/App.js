@@ -148,21 +148,18 @@ const BoekhoudingActiva = lazy(() => import("./pages/boekhouding/ActivaPage"));
 const BoekhoudingKostenplaatsen = lazy(() => import("./pages/boekhouding/KostenplaatsenPage"));
 const BoekhoudingBankReconciliatie = lazy(() => import("./pages/boekhouding/BankReconciliatiePage"));
 const BoekhoudingWisselkoersen = lazy(() => import("./pages/boekhouding/WisselkoersenPage"));
-const BoekhoudingValutaRapportages = lazy(() => import("./pages/boekhouding/ValutaRapportagesPage"));
 
-// Inkoop Module
+// Inkoop Module (Orders verwijderd - workflow: Offerte → Factuur)
 const InkoopDashboard = lazy(() => import("./pages/inkoop/DashboardPage"));
 const InkoopLeveranciers = lazy(() => import("./pages/inkoop/LeveranciersPage"));
 const InkoopOffertes = lazy(() => import("./pages/inkoop/OffertesPage"));
-const InkoopOrders = lazy(() => import("./pages/inkoop/OrdersPage"));
 const InkoopOntvangsten = lazy(() => import("./pages/inkoop/OntvangstenPage"));
 const InkoopFacturen = lazy(() => import("./pages/boekhouding/InkoopfacturenPage"));
 
-// Verkoop Module
+// Verkoop Module (Orders verwijderd - workflow: Offerte → Factuur)
 const VerkoopDashboard = lazy(() => import("./pages/verkoop/DashboardPage"));
 const VerkoopKlanten = lazy(() => import("./pages/verkoop/KlantenPage"));
 const VerkoopOffertes = lazy(() => import("./pages/verkoop/OffertesPage"));
-const VerkoopOrders = lazy(() => import("./pages/verkoop/OrdersPage"));
 const VerkoopPrijslijsten = lazy(() => import("./pages/verkoop/PrijslijstenPage"));
 const VerkoopFacturen = lazy(() => import("./pages/boekhouding/VerkoopfacturenPage"));
 
