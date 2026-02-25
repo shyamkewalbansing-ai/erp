@@ -402,6 +402,27 @@ Automatisch aangemaakt bij eerste gebruik:
 - [x] **Goederenontvangst → Voorraadmutaties - VOLTOOID**
 - [x] **Verkooporders → Voorraadreservering - VOLTOOID**
 
+### 25 februari 2026 - CME.sr Wisselkoersen Integratie (VOLTOOID)
+Automatisch ophalen van wisselkoersen van Central Money Exchange Suriname (CME.sr).
+
+#### Functionaliteit
+- ✅ **"CME.sr Koersen" knop** op de Wisselkoersen pagina
+- ✅ **Live API integratie** met https://www.cme.sr/Home/GetTodaysExchangeRates
+- ✅ **Automatische opslag** van opgehaalde koersen in database
+- ✅ **Koop en verkoop koersen** worden beide opgeslagen (gemiddelde als standaard)
+- ✅ **Toast notificatie** met details van opgehaalde koersen
+
+#### Opgehaalde Data
+- USD koop/verkoop koersen
+- EUR koop/verkoop koersen
+- Datum en tijd van update
+- Bron: "CME.sr"
+
+#### Integratie met Artikelen
+De opgehaalde koersen worden automatisch gebruikt bij het aanmaken van artikelen voor de auto-conversie functie.
+
+---
+
 ### 25 februari 2026 - Automatische Valuta Conversie bij Artikelen (VOLTOOID)
 Op verzoek van de gebruiker is automatische valuta conversie toegevoegd bij het aanmaken/bewerken van artikelen.
 
