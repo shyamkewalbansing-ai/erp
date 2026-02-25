@@ -75,18 +75,19 @@ class TestStockReservation:
                 headers=self.headers
             )
     
-    def create_test_artikel(self, voorraad_aantal=100, kostprijs=50.0):
-        """Create a test artikel with stock"""
+    def create_test_artikel_with_stock(self, voorraad_aantal=100, kostprijs=50.0):
+        """Create a test artikel and add stock via mutatie"""
+        # First create the artikel
         artikel_data = {
             "artikelcode": f"TEST_ART_{uuid.uuid4().hex[:8]}",
             "naam": "TEST_Stock Reservation Artikel",
             "omschrijving": "Test artikel for stock reservation testing",
+            "type": "product",
             "categorie": "Test",
             "eenheid": "stuk",
-            "voorraad_aantal": voorraad_aantal,
-            "gereserveerd_aantal": 0,
+            "voorraad_beheer": True,
             "min_voorraad": 5,
-            "kostprijs": kostprijs,
+            "inkoopprijs": kostprijs,
             "verkoopprijs": 100.0,
             "btw_tarief": "25"
         }
@@ -97,11 +98,42 @@ class TestStockReservation:
             json=artikel_data
         )
         
+        if response.status_code != 200:
+            print(f"Failed to create artikel: {response.text}")
+            return None
+        
+        artikel = response.json()
+        self.created_artikel_id = artikel["id"]
+        
+        # Now add stock via mutatie
+        if voorraad_aantal > 0:
+            mutatie_data = {
+                "artikel_id": artikel["id"],
+                "type": "inkoop",
+                "aantal": voorraad_aantal,
+                "kostprijs": kostprijs,
+                "omschrijving": "TEST_Initial stock"
+            }
+            
+            mutatie_response = requests.post(
+                f"{BASE_URL}/api/voorraad/mutaties",
+                headers=self.headers,
+                json=mutatie_data
+            )
+            
+            if mutatie_response.status_code != 200:
+                print(f"Failed to add stock: {mutatie_response.text}")
+                return None
+        
+        # Get updated artikel with stock
+        response = requests.get(
+            f"{BASE_URL}/api/voorraad/artikelen/{artikel['id']}",
+            headers=self.headers
+        )
+        
         if response.status_code == 200:
-            data = response.json()
-            self.created_artikel_id = data["id"]
-            return data
-        return None
+            return response.json()
+        return artikel
     
     def create_verkooporder_with_artikel(self, artikel_id, aantal=10):
         """Create a verkooporder with the given artikel"""
@@ -132,6 +164,7 @@ class TestStockReservation:
             data = response.json()
             self.created_order_id = data["id"]
             return data
+        print(f"Failed to create order: {response.text}")
         return None
     
     def get_artikel_stock(self, artikel_id):
@@ -154,14 +187,14 @@ class TestStockReservation:
             pytest.skip("No debiteur available for testing")
         
         # Create artikel with 100 stock
-        artikel = self.create_test_artikel(voorraad_aantal=100)
+        artikel = self.create_test_artikel_with_stock(voorraad_aantal=100)
         assert artikel, "Failed to create test artikel"
         artikel_id = artikel["id"]
         
         # Get initial stock
         initial_stock = self.get_artikel_stock(artikel_id)
         assert initial_stock, "Failed to get initial stock"
-        assert initial_stock["voorraad_aantal"] == 100
+        assert initial_stock["voorraad_aantal"] == 100, f"Expected 100 stock, got {initial_stock['voorraad_aantal']}"
         assert initial_stock["gereserveerd_aantal"] == 0
         print(f"Initial stock: {initial_stock}")
         
@@ -199,7 +232,7 @@ class TestStockReservation:
             pytest.skip("No debiteur available for testing")
         
         # Create artikel with 100 stock
-        artikel = self.create_test_artikel(voorraad_aantal=100, kostprijs=50.0)
+        artikel = self.create_test_artikel_with_stock(voorraad_aantal=100, kostprijs=50.0)
         assert artikel, "Failed to create test artikel"
         artikel_id = artikel["id"]
         
@@ -212,7 +245,7 @@ class TestStockReservation:
             f"{BASE_URL}/api/verkoop/orders/{order['id']}/status?status=bevestigd",
             headers=self.headers
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Failed to confirm order: {response.text}"
         print(f"Order {order['ordernummer']} confirmed")
         
         # Verify reservation
@@ -259,7 +292,7 @@ class TestStockReservation:
             pytest.skip("No debiteur available for testing")
         
         # Create artikel with 100 stock
-        artikel = self.create_test_artikel(voorraad_aantal=100)
+        artikel = self.create_test_artikel_with_stock(voorraad_aantal=100)
         assert artikel, "Failed to create test artikel"
         artikel_id = artikel["id"]
         
@@ -272,7 +305,7 @@ class TestStockReservation:
             f"{BASE_URL}/api/verkoop/orders/{order['id']}/status?status=bevestigd",
             headers=self.headers
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Failed to confirm order: {response.text}"
         print(f"Order {order['ordernummer']} confirmed")
         
         # Verify reservation
@@ -304,9 +337,13 @@ class TestStockReservation:
             pytest.skip("No debiteur available for testing")
         
         # Create artikel with only 5 stock
-        artikel = self.create_test_artikel(voorraad_aantal=5)
+        artikel = self.create_test_artikel_with_stock(voorraad_aantal=5)
         assert artikel, "Failed to create test artikel"
         artikel_id = artikel["id"]
+        
+        # Verify stock
+        stock = self.get_artikel_stock(artikel_id)
+        assert stock["voorraad_aantal"] == 5, f"Expected 5 stock, got {stock['voorraad_aantal']}"
         print(f"Created artikel with 5 stock")
         
         # Create order for 10 items (more than available)
@@ -376,18 +413,18 @@ class TestGoederenontvangst:
                 headers=self.headers
             )
     
-    def create_test_artikel(self, voorraad_aantal=0, kostprijs=50.0):
-        """Create a test artikel"""
+    def create_test_artikel(self, kostprijs=50.0):
+        """Create a test artikel (without initial stock)"""
         artikel_data = {
             "artikelcode": f"TEST_ART_{uuid.uuid4().hex[:8]}",
             "naam": "TEST_Goederenontvangst Artikel",
             "omschrijving": "Test artikel for goederenontvangst testing",
+            "type": "product",
             "categorie": "Test",
             "eenheid": "stuk",
-            "voorraad_aantal": voorraad_aantal,
-            "gereserveerd_aantal": 0,
+            "voorraad_beheer": True,
             "min_voorraad": 5,
-            "kostprijs": kostprijs,
+            "inkoopprijs": kostprijs,
             "verkoopprijs": 100.0,
             "btw_tarief": "25"
         }
@@ -454,8 +491,8 @@ class TestGoederenontvangst:
         if not self.crediteur_id:
             pytest.skip("No crediteur available for testing")
         
-        # Create artikel with 0 stock
-        artikel = self.create_test_artikel(voorraad_aantal=0, kostprijs=50.0)
+        # Create artikel (starts with 0 stock)
+        artikel = self.create_test_artikel(kostprijs=50.0)
         assert artikel, "Failed to create test artikel"
         artikel_id = artikel["id"]
         print(f"Created artikel with 0 stock")
@@ -532,7 +569,7 @@ class TestGoederenontvangst:
             pytest.skip("No crediteur available for testing")
         
         # Create artikel with kostprijs
-        artikel = self.create_test_artikel(voorraad_aantal=0, kostprijs=75.0)
+        artikel = self.create_test_artikel(kostprijs=75.0)
         assert artikel, "Failed to create test artikel"
         artikel_id = artikel["id"]
         print(f"Created artikel with kostprijs 75.0")
@@ -651,22 +688,18 @@ class TestVerkooporderDeliveryGrootboek:
                 headers=self.headers
             )
     
-    def test_delivery_creates_grootboek_boeking(self):
-        """Test: Verkooporder delivery creates grootboek boeking for kostprijs verkochte goederen"""
-        if not self.debiteur_id:
-            pytest.skip("No debiteur available for testing")
-        
-        # Create artikel with kostprijs
+    def create_test_artikel_with_stock(self, voorraad_aantal=50, kostprijs=40.0):
+        """Create a test artikel and add stock via mutatie"""
         artikel_data = {
             "artikelcode": f"TEST_ART_{uuid.uuid4().hex[:8]}",
             "naam": "TEST_Delivery Grootboek Artikel",
             "omschrijving": "Test artikel for delivery grootboek testing",
+            "type": "product",
             "categorie": "Test",
             "eenheid": "stuk",
-            "voorraad_aantal": 50,
-            "gereserveerd_aantal": 0,
+            "voorraad_beheer": True,
             "min_voorraad": 5,
-            "kostprijs": 40.0,
+            "inkoopprijs": kostprijs,
             "verkoopprijs": 100.0,
             "btw_tarief": "25"
         }
@@ -676,10 +709,54 @@ class TestVerkooporderDeliveryGrootboek:
             headers=self.headers,
             json=artikel_data
         )
-        assert response.status_code == 200
+        
+        if response.status_code != 200:
+            print(f"Failed to create artikel: {response.text}")
+            return None
+        
         artikel = response.json()
         self.created_artikel_id = artikel["id"]
-        print(f"Created artikel with kostprijs 40.0")
+        
+        # Add stock via mutatie
+        if voorraad_aantal > 0:
+            mutatie_data = {
+                "artikel_id": artikel["id"],
+                "type": "inkoop",
+                "aantal": voorraad_aantal,
+                "kostprijs": kostprijs,
+                "omschrijving": "TEST_Initial stock"
+            }
+            
+            mutatie_response = requests.post(
+                f"{BASE_URL}/api/voorraad/mutaties",
+                headers=self.headers,
+                json=mutatie_data
+            )
+            
+            if mutatie_response.status_code != 200:
+                print(f"Failed to add stock: {mutatie_response.text}")
+                return None
+        
+        # Get updated artikel
+        response = requests.get(
+            f"{BASE_URL}/api/voorraad/artikelen/{artikel['id']}",
+            headers=self.headers
+        )
+        
+        if response.status_code == 200:
+            return response.json()
+        return artikel
+    
+    def test_delivery_creates_grootboek_boeking(self):
+        """Test: Verkooporder delivery creates grootboek boeking for kostprijs verkochte goederen"""
+        if not self.debiteur_id:
+            pytest.skip("No debiteur available for testing")
+        
+        # Create artikel with kostprijs and stock
+        artikel = self.create_test_artikel_with_stock(voorraad_aantal=50, kostprijs=40.0)
+        assert artikel, "Failed to create test artikel"
+        artikel_id = artikel["id"]
+        print(f"Created artikel with kostprijs 40.0 and 50 stock")
         
         # Create verkooporder
         order_data = {
@@ -687,7 +764,7 @@ class TestVerkooporderDeliveryGrootboek:
             "orderdatum": datetime.now().strftime("%Y-%m-%d"),
             "valuta": "SRD",
             "regels": [{
-                "artikel_id": artikel["id"],
+                "artikel_id": artikel_id,
                 "omschrijving": "TEST_Delivery Grootboek Item",
                 "aantal": 5,
                 "eenheid": "stuk",
@@ -711,7 +788,7 @@ class TestVerkooporderDeliveryGrootboek:
             f"{BASE_URL}/api/verkoop/orders/{order['id']}/status?status=bevestigd",
             headers=self.headers
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Failed to confirm order: {response.text}"
         print("Order confirmed")
         
         # Deliver order
@@ -719,7 +796,7 @@ class TestVerkooporderDeliveryGrootboek:
             f"{BASE_URL}/api/verkoop/orders/{order['id']}/status?status=geleverd",
             headers=self.headers
         )
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Failed to deliver order: {response.text}"
         print("Order delivered")
         
         # Check grootboek boeking was created
