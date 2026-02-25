@@ -159,7 +159,7 @@ export default function ActivaPage() {
       {/* Activa Overzicht */}
       <ContentSection>
         <PageCard title="Activa Overzicht">
-          ) : activa.length === 0 ? (
+          {activa.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               Geen vaste activa gevonden
             </div>
