@@ -6,7 +6,7 @@ import {
   Loader2, Calculator, Users, Building2, Wallet, AlertCircle, 
   ArrowUpRight, ArrowDownRight, TrendingUp, FileText, Receipt,
   Plus, BarChart3, CreditCard, BookOpen, Calendar, Activity,
-  DollarSign, Euro, Banknote
+  DollarSign, Euro, Banknote, AlertTriangle, RefreshCw
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useNavigate } from 'react-router-dom';
