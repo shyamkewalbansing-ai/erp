@@ -185,7 +185,8 @@ export default function ArtikelenPage() {
       inkoopprijs_srd: 0, inkoopprijs_usd: 0, inkoopprijs_eur: 0,
       verkoopprijs_srd: 0, verkoopprijs_usd: 0, verkoopprijs_eur: 0,
       min_voorraad: 0, max_voorraad: '', btw_tarief: '25',
-      voorraad_beheer: true, heeft_serienummers: false
+      voorraad_beheer: true, heeft_serienummers: false,
+      begin_voorraad: 0
     });
   };
 
