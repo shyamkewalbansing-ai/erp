@@ -312,7 +312,7 @@ class TransactieCreate(BaseModel):
 
 class TransactieResponse(BaseModel):
     id: str
-    rekening_id: str
+    rekening_id: Optional[str] = None
     rekening_naam: Optional[str] = None
     datum: str
     type: str
