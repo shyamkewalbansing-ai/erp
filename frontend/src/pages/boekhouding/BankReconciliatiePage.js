@@ -415,7 +415,7 @@ export default function BankReconciliatiePage() {
             </div>
           )}
         </div>
-      </div>
+      </ContentSection>
 
       {/* Match Dialog */}
       <Dialog open={matchDialogOpen} onOpenChange={setMatchDialogOpen}>
