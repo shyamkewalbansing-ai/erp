@@ -486,6 +486,6 @@ export default function BankReconciliatiePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </ModulePageLayout>
   );
 }
