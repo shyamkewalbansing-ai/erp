@@ -140,44 +140,35 @@ export default function WisselkoersenPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-      </div>
-    );
-  }
+  // Header action buttons
+  const headerActions = (
+    <>
+      <Button 
+        onClick={() => setConvertDialogOpen(true)}
+        className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+        data-testid="converter-btn"
+      >
+        <ArrowRightLeft className="w-4 h-4 mr-2" /> Converter
+      </Button>
+      <Button 
+        onClick={() => setDialogOpen(true)}
+        className="bg-white text-emerald-600 hover:bg-emerald-50"
+        data-testid="nieuwe-koers-btn"
+      >
+        <Plus className="w-4 h-4 mr-2" /> Nieuwe Koers
+      </Button>
+    </>
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Wisselkoersen</h1>
-              <p className="mt-2 text-emerald-100 text-sm sm:text-base">
-                Beheer wisselkoersen voor multi-valuta transacties
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button 
-                onClick={() => setConvertDialogOpen(true)}
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-              >
-                <ArrowRightLeft className="w-4 h-4 mr-2" /> Converter
-              </Button>
-              <Button 
-                onClick={() => setDialogOpen(true)}
-                className="bg-white text-emerald-600 hover:bg-emerald-50"
-              >
-                <Plus className="w-4 h-4 mr-2" /> Nieuwe Koers
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <ModulePageLayout
+      title="Wisselkoersen"
+      subtitle="Beheer wisselkoersen voor multi-valuta transacties"
+      actions={headerActions}
+      loading={loading}
+      loadingText="Wisselkoersen laden..."
+      testId="wisselkoersen-page"
+    >
       {/* Stats Cards */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
@@ -199,6 +190,7 @@ export default function WisselkoersenPage() {
                     variant="ghost" 
                     onClick={() => handleDelete(koers.id)}
                     className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    data-testid={`delete-${koers.valuta}`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -225,9 +217,8 @@ export default function WisselkoersenPage() {
       </div>
 
       {/* Info sectie */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
-        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-6 border border-slate-200/50 dark:border-slate-700/50">
-          <h3 className="font-semibold mb-4">Wisselkoers Informatie</h3>
+      <ContentSection>
+        <PageCard title="Wisselkoers Informatie">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground mb-2">SRD is de basis valuta. Alle koersen zijn uitgedrukt als:</p>
@@ -244,8 +235,8 @@ export default function WisselkoersenPage() {
               </ul>
             </div>
           </div>
-        </div>
-      </div>
+        </PageCard>
+      </ContentSection>
 
       {/* Nieuwe Koers Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
