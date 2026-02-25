@@ -307,13 +307,13 @@ Automatisch aangemaakt bij eerste gebruik:
 - [x] Vaste Activa Module met CRUD - VOLTOOID
 - [x] Kostenplaatsen Module met CRUD - VOLTOOID  
 - [x] Wisselkoersen Module met Converter - VOLTOOID
+- [x] Automatische periodieke afschrijvingen (Vaste Activa → Grootboek) - VOLTOOID
+- [x] Kostenplaats koppelingen aan inkoopfacturen - VOLTOOID
+- [x] Wisselkoers integratie in financiële transacties - VOLTOOID
 - [ ] HRM integratie met kostenboekingen
 - [ ] Inkoopfacturen PDF export
 - [ ] Bulk import/export functies
 - [ ] Multi-valuta rapportages
-- [ ] Automatische periodieke afschrijvingen (Vaste Activa → Grootboek)
-- [ ] Kostenplaats koppelingen aan inkoopfacturen
-- [ ] Wisselkoers integratie in financiële transacties
 
 ### P3 - Laag
 - [ ] Dashboard widgets
