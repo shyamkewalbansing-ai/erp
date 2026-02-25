@@ -235,6 +235,6 @@ export default function KostenplaatsenPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </ModulePageLayout>
   );
 }
