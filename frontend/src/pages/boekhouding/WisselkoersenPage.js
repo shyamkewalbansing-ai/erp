@@ -114,7 +114,7 @@ export default function WisselkoersenPage() {
       if (res.ok) {
         toast.success('Wisselkoers opgeslagen');
         setDialogOpen(false);
-        setForm({ valuta: 'USD', koers: '', datum: new Date().toISOString().split('T')[0], bron: 'CBvS' });
+        setForm({ valuta: 'USD', koers: '', datum: new Date().toISOString().split('T')[0], bron: 'CME.sr' });
         fetchKoersen();
       } else {
         const error = await res.json();
