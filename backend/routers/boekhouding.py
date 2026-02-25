@@ -249,6 +249,7 @@ class InkoopfactuurCreate(BaseModel):
     valuta: Currency = Currency.SRD
     regels: List[FactuurRegelCreate]
     opmerkingen: Optional[str] = None
+    kostenplaats_id: Optional[str] = None  # Koppeling naar kostenplaats
 
 class InkoopfactuurResponse(BaseModel):
     id: str
@@ -266,6 +267,9 @@ class InkoopfactuurResponse(BaseModel):
     betaald_bedrag: float = 0
     status: str
     opmerkingen: Optional[str] = None
+    kostenplaats_id: Optional[str] = None
+    kostenplaats_naam: Optional[str] = None
+    srd_equivalent: Optional[float] = None  # SRD equivalent voor multi-valuta
     created_at: str
     user_id: str
 
