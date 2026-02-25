@@ -21,7 +21,9 @@ export default function ArtikelenPage() {
   const [search, setSearch] = useState('');
   const [form, setForm] = useState({
     artikelcode: '', naam: '', omschrijving: '', type: 'product',
-    categorie: '', eenheid: 'stuk', inkoopprijs: 0, verkoopprijs: 0,
+    categorie: '', eenheid: 'stuk', 
+    inkoopprijs_srd: 0, inkoopprijs_usd: 0, inkoopprijs_eur: 0,
+    verkoopprijs_srd: 0, verkoopprijs_usd: 0, verkoopprijs_eur: 0,
     min_voorraad: 0, max_voorraad: '', btw_tarief: '25',
     voorraad_beheer: true, heeft_serienummers: false
   });
