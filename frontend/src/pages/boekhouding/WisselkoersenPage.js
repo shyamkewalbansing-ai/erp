@@ -274,12 +274,16 @@ export default function WisselkoersenPage() {
                 <li>• 1 EUR = X SRD</li>
               </ul>
             </div>
-            <div>
-              <p className="text-muted-foreground mb-2">Actuele indicatieve koersen (pas aan naar werkelijke koersen):</p>
-              <ul className="space-y-1">
-                <li>• USD: ~36.50 SRD</li>
-                <li>• EUR: ~39.00 SRD</li>
-              </ul>
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="font-semibold text-blue-700 dark:text-blue-300 mb-2 flex items-center gap-2">
+                <Download className="w-4 h-4" /> CME.sr Integratie
+              </p>
+              <p className="text-blue-600 dark:text-blue-400 mb-2">
+                Klik op "CME.sr Koersen" om automatisch de actuele wisselkoersen op te halen van Central Money Exchange Suriname.
+              </p>
+              <p className="text-xs text-blue-500 dark:text-blue-500">
+                Bron: <a href="https://www.cme.sr" target="_blank" rel="noopener noreferrer" className="underline hover:no-underline">www.cme.sr</a>
+              </p>
             </div>
           </div>
         </PageCard>
