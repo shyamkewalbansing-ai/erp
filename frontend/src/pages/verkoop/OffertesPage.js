@@ -415,9 +415,9 @@ export default function VerkoopOffertesPage() {
                         Accepteren
                       </Button>
                     )}
-                    {offerte.status === 'geaccepteerd' && (
-                      <Button size="sm" onClick={() => convertToOrder(offerte.id)} className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-xs sm:text-sm">
-                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Naar Order
+                    {offerte.status === 'geaccepteerd' && !offerte.factuur_id && (
+                      <Button size="sm" onClick={() => convertToFactuur(offerte.id)} className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-xs sm:text-sm">
+                        <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4 mr-1" /> Naar Factuur
                       </Button>
                     )}
                     {(offerte.status === 'afgewezen' || offerte.status === 'verlopen') && (
