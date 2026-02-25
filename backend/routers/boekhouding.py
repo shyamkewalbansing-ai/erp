@@ -1575,6 +1575,17 @@ async def register_betaling_inkoopfactuur(
 
 # ==================== BANKREKENINGEN ====================
 
+@router.get("/bankrekeningen/grootboek-opties")
+async def get_grootboek_opties_voor_bank(current_user: dict = Depends(get_current_active_user)):
+    """Haal grootboekrekeningen op die geschikt zijn voor bank/kas koppeling (codes 1000-1199)"""
+    user_id = current_user["id"]
+    rekeningen = await db.boekhouding_rekeningen.find(
+        {"user_id": user_id, "code": {"$regex": "^1[01][0-9]{2}$"}},
+        {"_id": 0, "code": 1, "naam": 1, "standaard_valuta": 1}
+    ).sort("code", 1).to_list(50)
+    
+    return [{"code": r["code"], "naam": r["naam"], "valuta": r.get("standaard_valuta", "SRD")} for r in rekeningen]
+
 @router.get("/bankrekeningen", response_model=List[BankrekeningResponse])
 async def get_bankrekeningen(current_user: dict = Depends(get_current_active_user)):
     user_id = current_user["id"]
