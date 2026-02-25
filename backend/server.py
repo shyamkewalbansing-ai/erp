@@ -76,6 +76,9 @@ from routers.projecten import router as projecten_router
 from routers.pdf import router as pdf_router
 from routers.rapportages import router as rapportages_router
 from routers.bankreconciliatie import router as bankreconciliatie_router
+from routers.vaste_activa import router as vaste_activa_router
+from routers.kostenplaatsen import router as kostenplaatsen_router
+from routers.wisselkoersen import router as wisselkoersen_router
 from services.email_service import get_email_service, EMAIL_TEMPLATES
 from services.scheduled_tasks import get_scheduled_tasks
 
