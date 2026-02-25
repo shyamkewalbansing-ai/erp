@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { ModulePageLayout, StatsGrid, ContentSection, PageCard } from '../../components/ModulePageLayout';
 import { 
-  Plus, DollarSign, Euro, ArrowRightLeft, Calendar, Trash2
+  Plus, DollarSign, Euro, ArrowRightLeft, Calendar, Trash2, RefreshCw, Download, CheckCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -22,6 +22,7 @@ const valutaInfo = {
 export default function WisselkoersenPage() {
   const [koersen, setKoersen] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [fetchingCme, setFetchingCme] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [form, setForm] = useState({
@@ -55,6 +56,39 @@ export default function WisselkoersenPage() {
       toast.error('Fout bij ophalen wisselkoersen');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchFromCme = async () => {
+    setFetchingCme(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_URL}/api/boekhouding/wisselkoersen/ophalen-cme`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">Koersen opgehaald van CME.sr</span>
+            {data.koersen?.map((k) => (
+              <span key={k.valuta} className="text-sm">
+                {k.valuta}: SRD {k.koers} (koop: {k.koop}, verkoop: {k.verkoop})
+              </span>
+            ))}
+          </div>
+        );
+        fetchKoersen();
+      } else {
+        const error = await res.json();
+        toast.error(error.detail || 'Fout bij ophalen koersen van CME.sr');
+      }
+    } catch (error) {
+      toast.error('Fout bij verbinden met CME.sr');
+    } finally {
+      setFetchingCme(false);
     }
   };
 
