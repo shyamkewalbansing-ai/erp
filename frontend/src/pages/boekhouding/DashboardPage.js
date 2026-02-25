@@ -6,7 +6,7 @@ import {
   Loader2, Calculator, Users, Building2, Wallet, AlertCircle, 
   ArrowUpRight, ArrowDownRight, TrendingUp, FileText, Receipt,
   Plus, BarChart3, CreditCard, BookOpen, Calendar, Activity,
-  DollarSign, Euro, Banknote, AlertTriangle, RefreshCw
+  DollarSign, Euro, Banknote
 } from 'lucide-react';
 import api from '../../lib/api';
 import { useNavigate } from 'react-router-dom';
@@ -21,11 +21,7 @@ export default function BoekhoudingDashboard() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
-  const [exposure, setExposure] = useState(null);
   const [error, setError] = useState(null);
-
-  // Exposure drempel voor waarschuwing (SRD)
-  const EXPOSURE_WARNING_THRESHOLD = 10000;
 
   const currentDate = new Date().toLocaleDateString('nl-NL', { 
     weekday: 'long', 
