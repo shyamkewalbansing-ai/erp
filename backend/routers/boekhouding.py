@@ -2085,6 +2085,109 @@ async def get_huidige_wisselkoersen(current_user: dict = Depends(get_current_act
     
     return koersen
 
+
+@router.post("/wisselkoersen/ophalen-cme")
+async def ophalen_wisselkoersen_cme(current_user: dict = Depends(get_current_active_user)):
+    """
+    Haal de actuele wisselkoersen op van CME.sr (Central Money Exchange).
+    Slaat de koersen automatisch op in de database.
+    """
+    user_id = current_user["id"]
+    now = datetime.now(timezone.utc)
+    datum = now.strftime("%Y-%m-%d")
+    
+    try:
+        # Roep CME API aan
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                f"https://www.cme.sr/Home/GetTodaysExchangeRates/?BusinessDate={datum}",
+                headers={"Content-Type": "application/json", "Content-Length": "0"},
+                content=""
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=502, detail="CME.sr is niet bereikbaar")
+            
+            data = response.json()
+            
+            if not data or len(data) == 0:
+                raise HTTPException(status_code=502, detail="Geen koersen ontvangen van CME.sr")
+            
+            rates = data[0]
+            
+            # Haal de koersen uit de response
+            # CME geeft Buy rate (voor klanten die willen kopen) en Sale rate (voor klanten die willen verkopen)
+            # Wij gebruiken de gemiddelde als standaard
+            usd_buy = rates.get("BuyUsdExchangeRate", 0)
+            usd_sale = rates.get("SaleUsdExchangeRate", 0)
+            eur_buy = rates.get("BuyEuroExchangeRate", 0)
+            eur_sale = rates.get("SaleEuroExchangeRate", 0)
+            
+            # Bereken gemiddelde koersen
+            usd_avg = round((usd_buy + usd_sale) / 2, 2) if usd_buy and usd_sale else usd_buy or usd_sale
+            eur_avg = round((eur_buy + eur_sale) / 2, 2) if eur_buy and eur_sale else eur_buy or eur_sale
+            
+            opgeslagen_koersen = []
+            
+            # Sla USD koers op
+            if usd_avg > 0:
+                usd_id = str(uuid.uuid4())
+                usd_doc = {
+                    "id": usd_id,
+                    "user_id": user_id,
+                    "van_valuta": "USD",
+                    "naar_valuta": "SRD",
+                    "koers": usd_avg,
+                    "koers_koop": usd_buy,
+                    "koers_verkoop": usd_sale,
+                    "datum": datum,
+                    "bron": "CME.sr",
+                    "created_at": now.isoformat()
+                }
+                await db.boekhouding_wisselkoersen.insert_one(usd_doc)
+                opgeslagen_koersen.append({
+                    "valuta": "USD",
+                    "koers": usd_avg,
+                    "koop": usd_buy,
+                    "verkoop": usd_sale
+                })
+            
+            # Sla EUR koers op
+            if eur_avg > 0:
+                eur_id = str(uuid.uuid4())
+                eur_doc = {
+                    "id": eur_id,
+                    "user_id": user_id,
+                    "van_valuta": "EUR",
+                    "naar_valuta": "SRD",
+                    "koers": eur_avg,
+                    "koers_koop": eur_buy,
+                    "koers_verkoop": eur_sale,
+                    "datum": datum,
+                    "bron": "CME.sr",
+                    "created_at": now.isoformat()
+                }
+                await db.boekhouding_wisselkoersen.insert_one(eur_doc)
+                opgeslagen_koersen.append({
+                    "valuta": "EUR",
+                    "koers": eur_avg,
+                    "koop": eur_buy,
+                    "verkoop": eur_sale
+                })
+            
+            return {
+                "success": True,
+                "message": "Koersen succesvol opgehaald van CME.sr",
+                "datum": datum,
+                "bijgewerkt_om": rates.get("UpdatedTime", ""),
+                "koersen": opgeslagen_koersen
+            }
+            
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=502, detail=f"Fout bij verbinden met CME.sr: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fout bij ophalen koersen: {str(e)}")
+
 # ==================== BTW RAPPORTAGE ====================
 
 @router.get("/btw/aangifte")
