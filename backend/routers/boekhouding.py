@@ -9,6 +9,7 @@ from typing import List, Optional, Any
 from datetime import datetime, timezone, timedelta
 from enum import Enum
 import uuid
+import httpx
 from .deps import db, get_current_active_user, get_current_user
 
 # Grootboek integratie utilities
