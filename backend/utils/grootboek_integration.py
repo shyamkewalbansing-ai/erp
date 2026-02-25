@@ -26,6 +26,7 @@ STANDAARD_REKENINGEN = {
     # Resultaat - Opbrengsten
     "8000": {"naam": "Omzet Verkoop", "type": "opbrengsten", "beschrijving": "Omzet uit verkopen"},
     "8100": {"naam": "Omzet Diensten", "type": "opbrengsten", "beschrijving": "Omzet uit dienstverlening"},
+    "8900": {"naam": "Koersverschillen", "type": "opbrengsten", "beschrijving": "Valuta koersverschillen"},
     
     # Resultaat - Kosten
     "4000": {"naam": "Inkoopkosten", "type": "kosten", "beschrijving": "Kosten van inkoop"},
@@ -34,6 +35,7 @@ STANDAARD_REKENINGEN = {
     "4300": {"naam": "Afschrijvingskosten", "type": "kosten", "beschrijving": "Afschrijvingen vaste activa"},
     "4400": {"naam": "Overige Kosten", "type": "kosten", "beschrijving": "Diverse bedrijfskosten"},
     "4500": {"naam": "Projectkosten", "type": "kosten", "beschrijving": "Kosten toegewezen aan projecten"},
+    "4600": {"naam": "Koersverliezen", "type": "kosten", "beschrijving": "Valuta koersverliezen"},
 }
 
 
