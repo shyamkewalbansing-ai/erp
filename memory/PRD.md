@@ -97,6 +97,19 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ Backend: `/app/backend/routers/bankreconciliatie.py`
 - ✅ Frontend: `/app/boekhouding/bankreconciliatie`
 
+### 25 februari 2026 - Bank/Kas Grootboekrekening Koppeling & Debiteuren Betalingen (VOLTOOID)
+- ✅ **Grootboekrekening Koppeling bij Bankrekeningen**
+  - Nieuw veld `grootboek_rekening_code` in bankrekeningen
+  - Endpoint: `GET /api/boekhouding/bankrekeningen/grootboek-opties` 
+  - Dropdown met codes 1000-Kas, 1100-Bank SRD, 1110-Bank USD, 1120-Bank EUR
+  - Valuta wordt automatisch ingesteld op basis van geselecteerde grootboekrekening
+  - Code wordt getoond op bankrekening kaart
+
+- ✅ **Debiteuren Betalingen in Transacties Overzicht**
+  - Alle factuurbetalingen (SRD, USD, EUR) nu zichtbaar in "Recente Transacties"
+  - Categorisatie: "Debiteuren • debiteuren" voor betalingen zonder specifieke bankrekening
+  - Multi-valuta weergave met juiste valutasymbolen (SRD, $, €)
+
 ### 25 februari 2026 - Overboekingen tussen Bankrekeningen (VOLTOOID)
 - ✅ **Backend: `/api/boekhouding/overboekingen`**
   - POST: Maak overboeking tussen twee rekeningen
