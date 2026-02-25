@@ -361,6 +361,6 @@ export default function WisselkoersenPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </ModulePageLayout>
   );
 }
