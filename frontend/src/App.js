@@ -146,6 +146,7 @@ const BoekhoudingBankrekeningen = lazy(() => import("./pages/boekhouding/Bankrek
 const BoekhoudingRapportages = lazy(() => import("./pages/boekhouding/RapportagesPage"));
 const BoekhoudingActiva = lazy(() => import("./pages/boekhouding/ActivaPage"));
 const BoekhoudingKostenplaatsen = lazy(() => import("./pages/boekhouding/KostenplaatsenPage"));
+const BoekhoudingBankReconciliatie = lazy(() => import("./pages/boekhouding/BankReconciliatiePage"));
 
 // Inkoop Module
 const InkoopDashboard = lazy(() => import("./pages/inkoop/DashboardPage"));
