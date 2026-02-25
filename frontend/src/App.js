@@ -847,19 +847,13 @@ function MainAppRoutes() {
           <Route path="boekhouding/wisselkoersen" element={
             <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingWisselkoersen /></SubscriptionRoute>
           } />
-          <Route path="boekhouding/valuta-rapportages" element={
-            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingValutaRapportages /></SubscriptionRoute>
-          } />
           
-          {/* Inkoop Routes - Onderdeel van Boekhouding */}
+          {/* Inkoop Routes - Onderdeel van Boekhouding (Orders verwijderd) */}
           <Route path="boekhouding/inkoop" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopDashboard /></SubscriptionRoute>
           } />
           <Route path="boekhouding/inkoop/offertes" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopOffertes /></SubscriptionRoute>
-          } />
-          <Route path="boekhouding/inkoop/orders" element={
-            <SubscriptionRoute requiredAddon="boekhouding"><InkoopOrders /></SubscriptionRoute>
           } />
           <Route path="boekhouding/inkoop/ontvangsten" element={
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopOntvangsten /></SubscriptionRoute>
@@ -868,15 +862,12 @@ function MainAppRoutes() {
             <SubscriptionRoute requiredAddon="boekhouding"><InkoopFacturen /></SubscriptionRoute>
           } />
           
-          {/* Verkoop Routes - Onderdeel van Boekhouding */}
+          {/* Verkoop Routes - Onderdeel van Boekhouding (Orders verwijderd) */}
           <Route path="boekhouding/verkoop" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopDashboard /></SubscriptionRoute>
           } />
           <Route path="boekhouding/verkoop/offertes" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopOffertes /></SubscriptionRoute>
-          } />
-          <Route path="boekhouding/verkoop/orders" element={
-            <SubscriptionRoute requiredAddon="boekhouding"><VerkoopOrders /></SubscriptionRoute>
           } />
           <Route path="boekhouding/verkoop/facturen" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopFacturen /></SubscriptionRoute>
