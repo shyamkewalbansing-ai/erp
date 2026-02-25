@@ -358,13 +358,13 @@ async def get_kostenplaatsen_rapportage(
             "kostenplaats_id": kp["id"],
             "code": kp["code"],
             "naam": kp["naam"],
-            "type": kp["type"],
+            "type": kp.get("type", "overig"),
             "budget": budget,
             "actuele_kosten": round(actuele_kosten, 2),
             "budget_resterend": round(budget - actuele_kosten, 2),
             "benutting_percentage": round((actuele_kosten / budget * 100) if budget > 0 else 0, 1),
             "aantal_boekingen": aantal_boekingen,
-            "status": kp["status"]
+            "status": kp.get("status", "actief")
         })
     
     # Sorteer op benutting percentage (hoogste eerst)
