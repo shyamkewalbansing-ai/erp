@@ -101,8 +101,8 @@ class RekeningResponse(BaseModel):
     naam: str
     type: str
     beschrijving: Optional[str] = None
-    standaard_valuta: str
-    is_actief: bool
+    standaard_valuta: str = "SRD"
+    is_actief: bool = True
     saldo: float = 0
     saldo_valuta: str = "SRD"
     created_at: str
