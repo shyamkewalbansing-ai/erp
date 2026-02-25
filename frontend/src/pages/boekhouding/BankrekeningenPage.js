@@ -173,6 +173,17 @@ export default function BankrekeningenPage() {
     });
   };
 
+  const resetOverboekingForm = () => {
+    setOverboekingForm({
+      van_rekening_id: '',
+      naar_rekening_id: '',
+      bedrag: 0,
+      omschrijving: 'Overboeking',
+      datum: new Date().toISOString().split('T')[0],
+      wisselkoers: null
+    });
+  };
+
   const openTransactieDialog = (rekening = null) => {
     setSelectedRekening(rekening);
     setTransactieForm({
@@ -186,6 +197,22 @@ export default function BankrekeningenPage() {
       referentie: ''
     });
     setTransactieDialogOpen(true);
+  };
+
+  const openOverboekingDialog = () => {
+    resetOverboekingForm();
+    setOverboekingDialogOpen(true);
+  };
+
+  const getOverboekingPreview = () => {
+    const vanRek = rekeningen.find(r => r.id === overboekingForm.van_rekening_id);
+    const naarRek = rekeningen.find(r => r.id === overboekingForm.naar_rekening_id);
+    if (!vanRek || !naarRek || !overboekingForm.bedrag) return null;
+    if (vanRek.valuta === naarRek.valuta) return { bedragNaar: overboekingForm.bedrag, koers: null };
+    const koersVan = wisselkoersen[vanRek.valuta] || 1;
+    const koersNaar = wisselkoersen[naarRek.valuta] || 1;
+    const effectieveKoers = overboekingForm.wisselkoers || (koersVan / koersNaar);
+    return { bedragNaar: Math.round(overboekingForm.bedrag * effectieveKoers * 100) / 100, koers: effectieveKoers };
   };
 
   // Calculate totals per currency
