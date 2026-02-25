@@ -52,9 +52,15 @@ class ArtikelCreate(BaseModel):
     categorie: Optional[str] = None
     eenheid: str = "stuk"
     
-    # Prijzen
-    inkoopprijs: float = 0
-    verkoopprijs: float = 0
+    # Prijzen per valuta
+    inkoopprijs: float = 0  # Legacy field voor backward compatibility
+    verkoopprijs: float = 0  # Legacy field voor backward compatibility
+    inkoopprijs_srd: float = 0
+    inkoopprijs_usd: float = 0
+    inkoopprijs_eur: float = 0
+    verkoopprijs_srd: float = 0
+    verkoopprijs_usd: float = 0
+    verkoopprijs_eur: float = 0
     standaard_valuta: Currency = Currency.SRD
     btw_tarief: str = "25"
     
