@@ -824,9 +824,81 @@ async def update_verkooporder_status(
     """Update de status van een verkooporder"""
     user_id = current_user["id"]
     
+    # Haal order op voor voorraadreservering
+    order = await db.verkoop_orders.find_one({"id": order_id, "user_id": user_id})
+    if not order:
+        raise HTTPException(status_code=404, detail="Verkooporder niet gevonden")
+    
+    oude_status = order.get("status")
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Voorraadreservering bij bevestiging (concept -> bevestigd)
+    if status.value == "bevestigd" and oude_status == "concept":
+        reservering_errors = []
+        for idx, regel in enumerate(order.get("regels", [])):
+            if regel.get("artikel_id"):
+                artikel = await db.voorraad_artikelen.find_one(
+                    {"id": regel["artikel_id"], "user_id": user_id}
+                )
+                if artikel:
+                    beschikbaar = artikel.get("voorraad_aantal", 0) - artikel.get("gereserveerd_aantal", 0)
+                    benodigde_aantal = regel.get("aantal", 0)
+                    
+                    if beschikbaar < benodigde_aantal:
+                        reservering_errors.append(
+                            f"{artikel.get('naam', 'Artikel')}: {beschikbaar} beschikbaar, {benodigde_aantal} nodig"
+                        )
+                    else:
+                        # Reserveer voorraad
+                        await db.voorraad_artikelen.update_one(
+                            {"id": regel["artikel_id"]},
+                            {"$inc": {"gereserveerd_aantal": benodigde_aantal}}
+                        )
+                        
+                        # Log de reservering
+                        await db.voorraad_reserveringen.insert_one({
+                            "id": str(uuid.uuid4()),
+                            "user_id": user_id,
+                            "artikel_id": regel["artikel_id"],
+                            "order_type": "verkooporder",
+                            "order_id": order_id,
+                            "ordernummer": order.get("ordernummer"),
+                            "aantal": benodigde_aantal,
+                            "status": "actief",
+                            "created_at": now
+                        })
+        
+        if reservering_errors:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Onvoldoende voorraad: {'; '.join(reservering_errors)}"
+            )
+    
+    # Voorraad vrijgeven bij annuleren (als er reserveringen waren)
+    if status.value == "geannuleerd" and oude_status in ["bevestigd", "in_behandeling"]:
+        for regel in order.get("regels", []):
+            if regel.get("artikel_id"):
+                # Geef gereserveerde voorraad vrij
+                reserveringen = await db.voorraad_reserveringen.find({
+                    "order_id": order_id,
+                    "artikel_id": regel["artikel_id"],
+                    "status": "actief"
+                }).to_list(10)
+                
+                for res in reserveringen:
+                    await db.voorraad_artikelen.update_one(
+                        {"id": regel["artikel_id"]},
+                        {"$inc": {"gereserveerd_aantal": -res.get("aantal", 0)}}
+                    )
+                    await db.voorraad_reserveringen.update_one(
+                        {"id": res["id"]},
+                        {"$set": {"status": "geannuleerd", "updated_at": now}}
+                    )
+    
+    # Update order status
     result = await db.verkoop_orders.update_one(
         {"id": order_id, "user_id": user_id},
-        {"$set": {"status": status.value, "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"status": status.value, "updated_at": now}}
     )
     
     if result.modified_count == 0:
