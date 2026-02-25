@@ -405,33 +405,37 @@ Automatisch aangemaakt bij eerste gebruik:
 ### 25 februari 2026 - Navigatie & Workflow Herstructurering (VOLTOOID)
 Grote herstructurering van de applicatie op verzoek van de gebruiker:
 
-#### 1. Navigatie Vereenvoudiging
-- ✅ **Valuta Rapportages verwijderd** - Link en pagina volledig verwijderd
-- ✅ **Inkooporders verwijderd** - Link en pagina volledig verwijderd  
-- ✅ **Verkooporders verwijderd** - Link en pagina volledig verwijderd
-- ✅ **Routes opgeschoond** - App.js bijgewerkt zonder oude routes
+#### 1. Navigatie met Dropdown Menu's
+De navigatie is nu georganiseerd met echte dropdown menu's:
 
-#### 2. Workflow Vereenvoudiging: Offerte → Factuur Direct
+- ✅ **Boekhouding Hoofditems**: Dashboard, Grootboek, Debiteuren, Crediteuren, Bank/Kas, Bank Reconciliatie, Vaste Activa, Kostenplaatsen, Wisselkoersen
+- ✅ **Inkoop Dropdown**: Inkoopoffertes, Goederenontvangst, Inkoopfacturen
+- ✅ **Verkoop Dropdown**: Verkoopoffertes, Verkoopfacturen, Prijslijsten
+- ✅ **Voorraad Dropdown**: Artikelen, Magazijnen, Voorraadmutaties, Inventarisatie
+- ✅ **Projecten Dropdown**: Alle Projecten, Urenregistratie
+- ✅ **Footer**: Rapportages, Handleiding
+
+#### 2. Verwijderde Items
+- ✅ **Valuta Rapportages** - Link en pagina volledig verwijderd
+- ✅ **Inkooporders** - Link en pagina volledig verwijderd  
+- ✅ **Verkooporders** - Link en pagina volledig verwijderd
+
+#### 3. Workflow Vereenvoudiging: Offerte → Factuur Direct
 Voorheen: Offerte → Order → Factuur
 Nu: Offerte → Factuur (zonder tussenstap)
 
 - ✅ **Verkoop Workflow**
   - Nieuwe endpoint: `POST /api/verkoop/offertes/{id}/naar-factuur`
   - Frontend knop: "Naar Factuur" in plaats van "Naar Order"
-  - Geaccepteerde offerte direct omzetten naar verkoopfactuur
   
 - ✅ **Inkoop Workflow**
   - Nieuwe endpoint: `POST /api/inkoop/offertes/{id}/naar-factuur`
   - Frontend knop: "Naar Factuur" in plaats van "Naar Order"
-  - Geaccepteerde offerte direct omzetten naar inkoopfactuur
 
-#### 3. Verwijderde Bestanden
+#### 4. Verwijderde Bestanden
 - `/app/frontend/src/pages/verkoop/OrdersPage.js` - VERWIJDERD
 - `/app/frontend/src/pages/inkoop/OrdersPage.js` - VERWIJDERD
 - `/app/frontend/src/pages/boekhouding/ValutaRapportagesPage.js` - VERWIJDERD
-
-#### 4. Legacy Endpoints (Backward Compatibility)
-De oude `naar-order` endpoints blijven beschikbaar voor eventuele externe integraties.
 
 ### P1 - Hoog (Alle P1 taken voltooid!)
 - [x] Goederenontvangst → Voorraadmutaties automatisch
