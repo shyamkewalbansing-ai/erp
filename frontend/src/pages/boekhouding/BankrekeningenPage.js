@@ -30,8 +30,10 @@ export default function BankrekeningenPage() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [transactieDialogOpen, setTransactieDialogOpen] = useState(false);
+  const [overboekingDialogOpen, setOverboekingDialogOpen] = useState(false);
   const [selectedRekening, setSelectedRekening] = useState(null);
   const [searchFilter, setSearchFilter] = useState('');
+  const [wisselkoersen, setWisselkoersen] = useState({});
   
   const [form, setForm] = useState({ 
     naam: '', 
