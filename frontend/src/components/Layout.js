@@ -55,7 +55,8 @@ import {
   Gamepad2,
   Link,
   RefreshCw,
-  ArrowRightLeft
+  ArrowRightLeft,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
