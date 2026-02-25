@@ -1573,6 +1573,32 @@ async def register_betaling_inkoopfactuur(
     
     return {"message": "Betaling geregistreerd", "nieuwe_status": nieuwe_status}
 
+
+@router.put("/inkoopfacturen/{factuur_id}/status")
+async def update_inkoopfactuur_status(
+    factuur_id: str,
+    data: dict,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Update de status van een inkoopfactuur"""
+    user_id = current_user["id"]
+    factuur = await db.boekhouding_inkoopfacturen.find_one({"id": factuur_id, "user_id": user_id})
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    new_status = data.get("status")
+    valid_statuses = ["concept", "ontvangen", "open", "gedeeltelijk_betaald", "betaald", "vervallen"]
+    
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Ongeldige status. Kies uit: {', '.join(valid_statuses)}")
+    
+    await db.boekhouding_inkoopfacturen.update_one(
+        {"id": factuur_id},
+        {"$set": {"status": new_status, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    return {"message": "Status bijgewerkt", "status": new_status}
+
 # ==================== BANKREKENINGEN ====================
 
 @router.get("/bankrekeningen/grootboek-opties")
