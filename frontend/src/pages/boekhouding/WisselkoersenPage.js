@@ -331,7 +331,7 @@ export default function WisselkoersenPage() {
             <div className="space-y-2">
               <Label>Bron</Label>
               <Input 
-                placeholder="bijv. CBvS, Bank"
+                placeholder="bijv. CME.sr, Bank"
                 value={form.bron}
                 onChange={(e) => setForm({...form, bron: e.target.value})}
               />
