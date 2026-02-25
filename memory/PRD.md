@@ -186,9 +186,9 @@ Automatisch aangemaakt bij eerste gebruik:
 - [x] **Rapportages Module - VOLLEDIG GEÏMPLEMENTEERD**
 - [x] **Email versturen met PDF bijlage - VOLTOOID**
 - [x] **Volledige CRUD voor Orders & Offertes - VOLTOOID**
+- [x] **Bank Reconciliatie - VOLTOOID**
 
 ### P1 - Hoog
-- [ ] Bank/Kas module uitbreiden met reconciliatie
 - [ ] Goederenontvangst → Voorraadmutaties automatisch
 - [ ] Verkooporders → Voorraadreservering
 
