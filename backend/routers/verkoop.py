@@ -641,7 +641,7 @@ async def update_verkoopofferte(
 
 @router.post("/offertes/{offerte_id}/naar-order")
 async def offerte_naar_order(offerte_id: str, current_user: dict = Depends(get_current_active_user)):
-    """Converteer een geaccepteerde offerte naar een verkooporder"""
+    """Converteer een geaccepteerde offerte naar een verkooporder (legacy endpoint)"""
     user_id = current_user["id"]
     
     offerte = await db.verkoop_offertes.find_one({"id": offerte_id, "user_id": user_id}, {"_id": 0})
@@ -692,6 +692,76 @@ async def offerte_naar_order(offerte_id: str, current_user: dict = Depends(get_c
     )
     
     return clean_doc(order_doc)
+
+@router.post("/offertes/{offerte_id}/naar-factuur")
+async def offerte_naar_factuur(offerte_id: str, current_user: dict = Depends(get_current_active_user)):
+    """Converteer een geaccepteerde offerte direct naar een verkoopfactuur (vereenvoudigde workflow)"""
+    user_id = current_user["id"]
+    
+    offerte = await db.verkoop_offertes.find_one({"id": offerte_id, "user_id": user_id}, {"_id": 0})
+    if not offerte:
+        raise HTTPException(status_code=404, detail="Verkoopofferte niet gevonden")
+    
+    if offerte.get("status") != "geaccepteerd":
+        raise HTTPException(status_code=400, detail="Alleen geaccepteerde offertes kunnen worden omgezet naar facturen")
+    
+    # Check of er al een factuur is
+    existing_factuur = await db.boekhouding_verkoopfacturen.find_one({
+        "user_id": user_id,
+        "offerte_id": offerte_id
+    })
+    if existing_factuur:
+        raise HTTPException(status_code=400, detail="Er bestaat al een factuur voor deze offerte")
+    
+    factuur_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Genereer factuurnummer
+    year = datetime.now().year
+    count = await db.boekhouding_verkoopfacturen.count_documents({
+        "user_id": user_id,
+        "factuurnummer": {"$regex": f"^VF{year}-"}
+    })
+    factuurnummer = f"VF{year}-{str(count + 1).zfill(5)}"
+    
+    # Bepaal vervaldatum
+    klant = await db.verkoop_klanten.find_one({"id": offerte.get("klant_id")})
+    if not klant:
+        klant = await db.boekhouding_debiteuren.find_one({"id": offerte.get("klant_id")})
+    betalingstermijn = klant.get("betalingstermijn", 30) if klant else 30
+    vervaldatum = (datetime.now() + timedelta(days=betalingstermijn)).strftime("%Y-%m-%d")
+    
+    factuur_doc = {
+        "id": factuur_id,
+        "user_id": user_id,
+        "factuurnummer": factuurnummer,
+        "offerte_id": offerte_id,
+        "debiteur_id": offerte.get("klant_id"),
+        "debiteur_naam": offerte.get("klant_naam"),
+        "factuurdatum": datetime.now().strftime("%Y-%m-%d"),
+        "vervaldatum": vervaldatum,
+        "valuta": offerte.get("valuta"),
+        "regels": offerte.get("regels", []),
+        "subtotaal": offerte.get("subtotaal"),
+        "btw_bedrag": offerte.get("btw_bedrag"),
+        "totaal": offerte.get("totaal"),
+        "betaald_bedrag": 0,
+        "status": "concept",
+        "opmerkingen": offerte.get("opmerkingen"),
+        "referentie": offerte.get("referentie"),
+        "created_at": now
+    }
+    
+    await db.boekhouding_verkoopfacturen.insert_one(factuur_doc)
+    factuur_doc.pop("_id", None)
+    
+    # Update offerte status
+    await db.verkoop_offertes.update_one(
+        {"id": offerte_id},
+        {"$set": {"status": "omgezet_naar_factuur", "factuur_id": factuur_id, "updated_at": now}}
+    )
+    
+    return clean_doc(factuur_doc)
 
 @router.delete("/offertes/{offerte_id}")
 async def delete_verkoopofferte(offerte_id: str, current_user: dict = Depends(get_current_active_user)):
