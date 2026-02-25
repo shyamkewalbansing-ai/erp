@@ -245,6 +245,13 @@ export default function Layout() {
     return true;
   });
   const [settingsOpen, setSettingsOpen] = useState(false);
+  
+  // Boekhouding dropdown states
+  const [inkoopOpen, setInkoopOpen] = useState(false);
+  const [verkoopOpen, setVerkoopOpen] = useState(false);
+  const [voorraadOpen, setVoorraadOpen] = useState(false);
+  const [projectenOpen, setProjectenOpen] = useState(false);
+  
   const [activeAddons, setActiveAddons] = useState([]);
   const [addonsLoaded, setAddonsLoaded] = useState(false);
   const [moduleOrder, setModuleOrder] = useState([]);
