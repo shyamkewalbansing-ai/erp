@@ -121,6 +121,19 @@ export default function BankrekeningenPage() {
     }
   };
 
+  const handleOverboekingSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await api.post('/boekhouding/overboekingen', overboekingForm);
+      toast.success('Overboeking succesvol uitgevoerd');
+      setOverboekingDialogOpen(false);
+      resetOverboekingForm();
+      loadData();
+    } catch (err) { 
+      toast.error(err.response?.data?.detail || 'Fout bij overboeking'); 
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!window.confirm('Weet u zeker dat u deze rekening wilt verwijderen?')) return;
     try {
