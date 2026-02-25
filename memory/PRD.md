@@ -162,6 +162,16 @@ Automatisch aangemaakt bij eerste gebruik:
 - `GET /api/rapportages/projecten/overzicht` - Projecten overzicht
 - `GET /api/rapportages/btw/aangifte` - BTW aangifte
 
+### Bank Reconciliatie (Nieuw)
+- `POST /api/bank/transacties/upload` - Upload CSV met banktransacties
+- `GET /api/bank/transacties` - Haal transacties op met stats
+- `GET /api/bank/transacties/{id}` - Haal specifieke transactie op
+- `POST /api/bank/transacties/{id}/match` - Match transactie aan factuur
+- `POST /api/bank/transacties/{id}/ignore` - Negeer transactie
+- `DELETE /api/bank/transacties/{id}` - Verwijder transactie
+- `POST /api/bank/transacties/auto-match` - Automatisch matchen
+- `GET /api/bank/stats` - Reconciliatie statistieken
+
 ### CRUD Endpoints (Nieuw)
 - `PUT /api/verkoop/orders/{id}` - Update verkooporder (alleen concept)
 - `PUT /api/verkoop/offertes/{id}` - Update verkoopofferte (alleen concept)
