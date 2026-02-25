@@ -160,7 +160,6 @@ const InkoopFacturen = lazy(() => import("./pages/boekhouding/InkoopfacturenPage
 const VerkoopDashboard = lazy(() => import("./pages/verkoop/DashboardPage"));
 const VerkoopKlanten = lazy(() => import("./pages/verkoop/KlantenPage"));
 const VerkoopOffertes = lazy(() => import("./pages/verkoop/OffertesPage"));
-const VerkoopPrijslijsten = lazy(() => import("./pages/verkoop/PrijslijstenPage"));
 const VerkoopFacturen = lazy(() => import("./pages/boekhouding/VerkoopfacturenPage"));
 
 // Voorraad Module
