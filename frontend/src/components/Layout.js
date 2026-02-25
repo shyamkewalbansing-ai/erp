@@ -150,6 +150,7 @@ const boekhoudingNavItems = [
   { to: '/app/boekhouding/debiteuren', icon: Users, label: 'Debiteuren', addon: 'boekhouding' },
   { to: '/app/boekhouding/crediteuren', icon: Building2, label: 'Crediteuren', addon: 'boekhouding' },
   { to: '/app/boekhouding/bankrekeningen', icon: CreditCard, label: 'Bank/Kas', addon: 'boekhouding' },
+  { to: '/app/boekhouding/bankreconciliatie', icon: RefreshCw, label: 'Bank Reconciliatie', addon: 'boekhouding' },
   { to: '/app/boekhouding/activa', icon: Building2, label: 'Vaste Activa', addon: 'boekhouding' },
   { to: '/app/boekhouding/kostenplaatsen', icon: Target, label: 'Kostenplaatsen', addon: 'boekhouding' },
   
