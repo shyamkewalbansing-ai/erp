@@ -37,12 +37,8 @@ export default function BoekhoudingDashboard() {
   const loadDashboard = async () => {
     try {
       setLoading(true);
-      const [dashboardRes, exposureRes] = await Promise.all([
-        api.get('/boekhouding/dashboard'),
-        api.get('/rapportages/valuta/exposure').catch(() => ({ data: null }))
-      ]);
+      const dashboardRes = await api.get('/boekhouding/dashboard');
       setData(dashboardRes.data);
-      setExposure(exposureRes.data);
     } catch (err) {
       console.error('Error loading dashboard:', err);
       setError('Kon dashboard niet laden');
