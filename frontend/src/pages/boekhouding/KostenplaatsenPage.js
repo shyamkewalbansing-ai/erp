@@ -99,40 +99,46 @@ export default function KostenplaatsenPage() {
     });
   };
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Kostenplaatsen</h1>
-          <p className="text-muted-foreground">Beheer kostenplaatsen voor kostentoewijzing</p>
-        </div>
-        <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
-          <Plus className="mr-2 h-4 w-4" /> Nieuwe Kostenplaats
-        </Button>
-      </div>
+  // Header action buttons
+  const headerActions = (
+    <Button 
+      onClick={() => { resetForm(); setDialogOpen(true); }}
+      className="bg-white text-emerald-600 hover:bg-emerald-50"
+      data-testid="nieuwe-kostenplaats-btn"
+    >
+      <Plus className="mr-2 h-4 w-4" /> Nieuwe Kostenplaats
+    </Button>
+  );
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {loading ? (
-          <div className="col-span-full flex justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
-          </div>
-        ) : kostenplaatsen.length === 0 ? (
-          <div className="col-span-full text-center py-8 text-muted-foreground">
-            Geen kostenplaatsen gevonden
-          </div>
-        ) : (
-          kostenplaatsen.map((kp) => (
-            <Card key={kp.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-start justify-between pb-2">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
-                    <Target className="h-6 w-6 text-purple-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">{kp.naam}</CardTitle>
-                    <p className="text-sm text-muted-foreground">{kp.code}</p>
-                  </div>
-                </div>
+  return (
+    <ModulePageLayout
+      title="Kostenplaatsen"
+      subtitle="Beheer kostenplaatsen voor kostentoewijzing"
+      actions={headerActions}
+      loading={loading}
+      loadingText="Kostenplaatsen laden..."
+      testId="kostenplaatsen-page"
+    >
+      <ContentSection>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {kostenplaatsen.length === 0 ? (
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              Geen kostenplaatsen gevonden
+            </div>
+          ) : (
+            kostenplaatsen.map((kp) => (
+              <div key={kp.id} className="bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200/50 dark:border-slate-700/50 hover:shadow-xl transition-shadow" data-testid={`kostenplaats-${kp.id}`}>
+                <div className="p-4 sm:p-5">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-purple-100 dark:bg-purple-900 rounded-lg">
+                        <Target className="h-6 w-6 text-purple-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold">{kp.naam}</h3>
+                        <p className="text-sm text-muted-foreground">{kp.code}</p>
+                      </div>
+                    </div>
                 <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs">
                   {kp.type}
                 </span>
