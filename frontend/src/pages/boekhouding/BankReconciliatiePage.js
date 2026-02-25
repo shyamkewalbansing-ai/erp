@@ -217,122 +217,62 @@ export default function BankReconciliatiePage() {
     return true;
   });
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-      </div>
-    );
-  }
+  // Header action buttons
+  const headerActions = (
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        onChange={handleFileUpload}
+        className="hidden"
+      />
+      <Button 
+        onClick={() => fileInputRef.current?.click()}
+        disabled={uploading}
+        className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+        data-testid="upload-csv-btn"
+      >
+        {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
+        CSV Uploaden
+      </Button>
+      <Button 
+        onClick={handleAutoMatch}
+        disabled={autoMatching}
+        className="bg-white text-emerald-600 hover:bg-emerald-50"
+        data-testid="auto-match-btn"
+      >
+        {autoMatching ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+        Auto Match
+      </Button>
+    </>
+  );
+
+  // Stats data for StatsGrid
+  const statsData = stats ? [
+    { icon: Clock, label: 'Niet Gematcht', value: stats.transacties?.niet_gematcht?.count || 0, color: 'amber' },
+    { icon: AlertCircle, label: 'Suggesties', value: stats.transacties?.suggestie?.count || 0, color: 'blue' },
+    { icon: CheckCircle, label: 'Gematcht', value: stats.transacties?.gematcht?.count || 0, color: 'emerald' },
+    { icon: TrendingUp, label: 'Open Verkoop', value: stats.openstaande_verkoopfacturen || 0, color: 'emerald' },
+    { icon: TrendingDown, label: 'Open Inkoop', value: stats.openstaande_inkoopfacturen || 0, color: 'red' }
+  ] : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
-      {/* Hero Header */}
-      <div className="bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold">Bank Reconciliatie</h1>
-              <p className="mt-2 text-emerald-100 text-sm sm:text-base">
-                Match banktransacties met openstaande facturen
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv"
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <Button 
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-                data-testid="upload-csv-btn"
-              >
-                {uploading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
-                CSV Uploaden
-              </Button>
-              <Button 
-                onClick={handleAutoMatch}
-                disabled={autoMatching}
-                className="bg-white text-emerald-600 hover:bg-emerald-50"
-                data-testid="auto-match-btn"
-              >
-                {autoMatching ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                Auto Match
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <ModulePageLayout
+      title="Bank Reconciliatie"
+      subtitle="Match banktransacties met openstaande facturen"
+      actions={headerActions}
+      loading={loading}
+      loadingText="Transacties laden..."
+      testId="bank-reconciliatie-page"
+    >
       {/* Stats Cards */}
       {stats && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 sm:p-5 border border-slate-200/50 dark:border-slate-700/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-amber-500" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Niet Gematcht</p>
-                  <p className="text-xl font-bold">{stats.transacties?.niet_gematcht?.count || 0}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 sm:p-5 border border-slate-200/50 dark:border-slate-700/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Suggesties</p>
-                  <p className="text-xl font-bold">{stats.transacties?.suggestie?.count || 0}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 sm:p-5 border border-slate-200/50 dark:border-slate-700/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-emerald-500" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Gematcht</p>
-                  <p className="text-xl font-bold">{stats.transacties?.gematcht?.count || 0}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 sm:p-5 border border-slate-200/50 dark:border-slate-700/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Open Verkoop</p>
-                  <p className="text-xl font-bold">{stats.openstaande_verkoopfacturen || 0}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 sm:p-5 border border-slate-200/50 dark:border-slate-700/50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center">
-                  <TrendingDown className="w-5 h-5 text-red-500" />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Open Inkoop</p>
-                  <p className="text-xl font-bold">{stats.openstaande_inkoopfacturen || 0}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <StatsGrid stats={statsData} columns={5} overlapping={true} />
       )}
 
       {/* Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+      <ContentSection>
         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-4 border border-slate-200/50 dark:border-slate-700/50">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1 relative">
