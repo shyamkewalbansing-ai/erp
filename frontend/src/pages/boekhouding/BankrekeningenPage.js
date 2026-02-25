@@ -437,6 +437,30 @@ export default function BankrekeningenPage() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
+              <Label>Grootboekrekening *</Label>
+              <Select 
+                value={form.grootboek_rekening_code} 
+                onValueChange={(v) => {
+                  const selected = grootboekOpties.find(g => g.code === v);
+                  setForm({
+                    ...form, 
+                    grootboek_rekening_code: v,
+                    valuta: selected?.valuta || form.valuta
+                  });
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Selecteer grootboekrekening" /></SelectTrigger>
+                <SelectContent>
+                  {grootboekOpties.map(g => (
+                    <SelectItem key={g.code} value={g.code}>
+                      {g.code} - {g.naam}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">Koppel aan een grootboekrekening (1000-Kas, 1100-Bank, etc.)</p>
+            </div>
+            <div>
               <Label>Naam *</Label>
               <Input 
                 value={form.naam} 
