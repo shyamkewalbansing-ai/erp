@@ -1587,6 +1587,16 @@ async def create_bankrekening(data: BankrekeningCreate, current_user: dict = Dep
     rekening_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     
+    # Haal grootboekrekening naam op indien code is opgegeven
+    grootboek_rekening_naam = None
+    if data.grootboek_rekening_code:
+        grootboek = await db.boekhouding_rekeningen.find_one(
+            {"user_id": user_id, "code": data.grootboek_rekening_code},
+            {"_id": 0, "naam": 1}
+        )
+        if grootboek:
+            grootboek_rekening_naam = grootboek.get("naam")
+    
     rekening_doc = {
         "id": rekening_id,
         "user_id": user_id,
@@ -1597,6 +1607,8 @@ async def create_bankrekening(data: BankrekeningCreate, current_user: dict = Dep
         "huidig_saldo": data.beginsaldo,
         "beginsaldo": data.beginsaldo,
         "is_actief": data.is_actief,
+        "grootboek_rekening_code": data.grootboek_rekening_code,
+        "grootboek_rekening_naam": grootboek_rekening_naam,
         "created_at": now
     }
     
