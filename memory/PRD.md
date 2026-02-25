@@ -76,6 +76,9 @@ Automatisch aangemaakt bij eerste gebruik:
 
 ### 25 februari 2026 - Bank Reconciliatie (VOLTOOID)
 - ✅ **CSV Upload**: Parse banktransacties uit CSV bestanden
+- ✅ **Multi-valuta**: Ondersteunt SRD, USD, EUR
+- ✅ **Surinaamse banken**: DSB, Hakrinbank, Finabank, Republic Bank, SPSB, Volkscredietbank
+- ✅ **Internationale banken**: IBAN formaat, US banks, etc.
 - ✅ **Automatisch Matchen**: Suggesties op basis van bedrag en factuurnummer/klantnaam
 - ✅ **Handmatig Matchen**: Transactie aan specifieke factuur koppelen
 - ✅ **Status Beheer**: Niet gematcht, Suggestie, Gematcht, Genegeerd
