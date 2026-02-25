@@ -280,11 +280,13 @@ class BankrekeningCreate(BaseModel):
     valuta: Currency = Currency.SRD
     beginsaldo: float = 0
     is_actief: bool = True
+    grootboek_rekening_code: Optional[str] = None  # Koppeling met grootboekrekening (1000, 1100, etc.)
 
 class BankrekeningUpdate(BaseModel):
     naam: Optional[str] = None
     bank_naam: Optional[str] = None
     is_actief: Optional[bool] = None
+    grootboek_rekening_code: Optional[str] = None
 
 class BankrekeningResponse(BaseModel):
     id: str
@@ -294,6 +296,8 @@ class BankrekeningResponse(BaseModel):
     valuta: str
     huidig_saldo: float
     is_actief: bool
+    grootboek_rekening_code: Optional[str] = None
+    grootboek_rekening_naam: Optional[str] = None
     created_at: str
     user_id: str
 
