@@ -551,12 +551,25 @@ export default function ArtikelenPage() {
 
             <div className="space-y-2">
               <Label className="text-sm">Minimum Voorraad</Label>
-              <Input className="rounded-lg" type="number" value={form.min_voorraad} onChange={(e) => setForm({...form, min_voorraad: parseFloat(e.target.value)})} />
+              <Input className="rounded-lg" type="number" value={form.min_voorraad} onChange={(e) => setForm({...form, min_voorraad: parseFloat(e.target.value) || 0})} />
             </div>
             <div className="space-y-2">
               <Label className="text-sm">Maximum Voorraad</Label>
               <Input className="rounded-lg" type="number" value={form.max_voorraad} onChange={(e) => setForm({...form, max_voorraad: e.target.value})} />
             </div>
+            {!editingId && (
+              <div className="col-span-1 sm:col-span-2 space-y-2 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-800">
+                <Label className="text-sm font-semibold text-emerald-700 dark:text-emerald-300">Beginvoorraad *</Label>
+                <Input 
+                  className="rounded-lg" 
+                  type="number" 
+                  value={form.begin_voorraad} 
+                  onChange={(e) => setForm({...form, begin_voorraad: parseFloat(e.target.value) || 0})} 
+                  placeholder="Aantal stuks in voorraad"
+                />
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">Voer het huidige aantal in voorraad in</p>
+              </div>
+            )}
             <div className="col-span-1 sm:col-span-2 space-y-2">
               <Label className="text-sm">Omschrijving</Label>
               <Input className="rounded-lg" value={form.omschrijving} onChange={(e) => setForm({...form, omschrijving: e.target.value})} />
