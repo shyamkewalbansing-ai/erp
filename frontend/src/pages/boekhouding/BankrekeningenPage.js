@@ -240,7 +240,15 @@ export default function BankrekeningenPage() {
 
   // Header actions
   const headerActions = (
-    <div className="flex gap-3">
+    <div className="flex flex-wrap gap-2 sm:gap-3">
+      <Button 
+        onClick={openOverboekingDialog}
+        variant="outline"
+        className="bg-white/10 hover:bg-white/20 text-white border-white/30"
+        data-testid="overboeking-btn"
+      >
+        <ArrowRightLeft className="w-4 h-4 mr-2" /> Overboeking
+      </Button>
       <Button 
         onClick={() => openTransactieDialog()}
         className="bg-white/20 hover:bg-white/30 text-white border-white/30"
