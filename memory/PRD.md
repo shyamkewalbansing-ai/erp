@@ -233,6 +233,39 @@ Automatisch aangemaakt bij eerste gebruik:
 ### Email
 - `POST /api/boekhouding/verkoopfacturen/{id}/send-email` - Verstuur factuur per email met PDF bijlage
 
+### Vaste Activa (Nieuw)
+- `GET /api/vaste-activa/` - Lijst alle activa
+- `GET /api/vaste-activa/{id}` - Haal specifiek activum op
+- `GET /api/vaste-activa/stats` - Statistieken
+- `POST /api/vaste-activa/` - Nieuw activum aanmaken
+- `PUT /api/vaste-activa/{id}` - Activum bijwerken
+- `DELETE /api/vaste-activa/{id}` - Activum verwijderen
+- `POST /api/vaste-activa/{id}/afschrijving` - Afschrijving boeken
+- `GET /api/vaste-activa/{id}/afschrijvingen` - Afschrijvingshistorie
+- `POST /api/vaste-activa/maandelijkse-afschrijvingen` - Batch afschrijvingen
+
+### Kostenplaatsen (Nieuw)
+- `GET /api/kostenplaatsen/` - Lijst alle kostenplaatsen
+- `GET /api/kostenplaatsen/{id}` - Haal specifieke kostenplaats op
+- `GET /api/kostenplaatsen/stats` - Statistieken
+- `GET /api/kostenplaatsen/rapportage/overzicht` - Rapportage overzicht
+- `POST /api/kostenplaatsen/` - Nieuwe kostenplaats aanmaken
+- `PUT /api/kostenplaatsen/{id}` - Kostenplaats bijwerken
+- `DELETE /api/kostenplaatsen/{id}` - Kostenplaats verwijderen
+- `POST /api/kostenplaatsen/{id}/boeking` - Kosten boeken
+- `GET /api/kostenplaatsen/{id}/boekingen` - Boekingshistorie
+
+### Wisselkoersen (Nieuw)
+- `GET /api/wisselkoersen/` - Lijst alle wisselkoersen
+- `GET /api/wisselkoersen/actueel/{valuta}` - Actuele koers voor valuta
+- `GET /api/wisselkoersen/historie/{valuta}` - Historische koersen
+- `GET /api/wisselkoersen/standaard-koersen` - Standaard koersen
+- `POST /api/wisselkoersen/` - Nieuwe wisselkoers aanmaken
+- `PUT /api/wisselkoersen/{id}` - Wisselkoers bijwerken
+- `DELETE /api/wisselkoersen/{id}` - Wisselkoers verwijderen
+- `POST /api/wisselkoersen/converteer` - Valuta converter
+- `POST /api/wisselkoersen/bulk-import` - Bulk import koersen
+
 ## Prioriteit Backlog
 
 ### P0 - Kritiek (VOLTOOID)
