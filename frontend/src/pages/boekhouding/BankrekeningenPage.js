@@ -161,7 +161,7 @@ export default function BankrekeningenPage() {
   };
 
   const resetForm = () => {
-    setForm({ naam: '', rekeningnummer: '', bank_naam: '', valuta: 'SRD', beginsaldo: 0 });
+    setForm({ naam: '', rekeningnummer: '', bank_naam: '', valuta: 'SRD', beginsaldo: 0, grootboek_rekening_code: '' });
   };
 
   const resetTransactieForm = () => {
