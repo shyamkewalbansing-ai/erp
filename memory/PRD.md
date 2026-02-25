@@ -74,6 +74,17 @@ Automatisch aangemaakt bij eerste gebruik:
 - ✅ **Projecten Overzicht** - Uren en kosten
 - ✅ **BTW Aangifte** - Per periode
 
+### 25 februari 2026 - Voorraad Integraties (VOLTOOID)
+- ✅ **Verkooporders → Voorraadreservering**
+  - Stock wordt gereserveerd bij bevestigen order
+  - Stock wordt afgeschreven bij levering
+  - Stock wordt vrijgegeven bij annuleren
+  - Error bij onvoldoende voorraad
+- ✅ **Goederenontvangst → Voorraadmutaties**
+  - Automatische stock-in bij ontvangst
+  - Grootboek boeking (Voorraad + / Voorraadkosten -)
+- ✅ **Audit Trail**: Reserveringen en mutaties worden gelogd
+
 ### 25 februari 2026 - Bank Reconciliatie (VOLTOOID)
 - ✅ **CSV Upload**: Parse banktransacties uit CSV bestanden
 - ✅ **Multi-valuta**: Ondersteunt SRD, USD, EUR
