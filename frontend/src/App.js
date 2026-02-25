@@ -846,6 +846,9 @@ function MainAppRoutes() {
           <Route path="boekhouding/bankreconciliatie" element={
             <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingBankReconciliatie /></SubscriptionRoute>
           } />
+          <Route path="boekhouding/wisselkoersen" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingWisselkoersen /></SubscriptionRoute>
+          } />
           
           {/* Inkoop Routes - Onderdeel van Boekhouding */}
           <Route path="boekhouding/inkoop" element={
