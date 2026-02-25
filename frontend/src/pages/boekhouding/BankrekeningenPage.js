@@ -72,13 +72,15 @@ export default function BankrekeningenPage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [rekRes, transRes, koersRes] = await Promise.all([
+      const [rekRes, transRes, koersRes, grootboekRes] = await Promise.all([
         api.get('/boekhouding/bankrekeningen'),
         api.get('/boekhouding/transacties?limit=50'),
-        api.get('/wisselkoersen/').catch(() => ({ data: [] }))
+        api.get('/wisselkoersen/').catch(() => ({ data: [] })),
+        api.get('/boekhouding/bankrekeningen/grootboek-opties').catch(() => ({ data: [] }))
       ]);
       setRekeningen(rekRes.data);
       setTransacties(transRes.data);
+      setGrootboekOpties(grootboekRes.data || []);
       
       // Bouw wisselkoersen lookup
       const koersen = {};
