@@ -46,7 +46,7 @@ export default function ActivaPage() {
   const fetchActiva = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/activa/`, {
+      const res = await fetch(`${API_URL}/api/vaste-activa/`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -64,8 +64,8 @@ export default function ActivaPage() {
     try {
       const token = localStorage.getItem('token');
       const url = editingId 
-        ? `${API_URL}/api/activa/${editingId}`
-        : `${API_URL}/api/activa/`;
+        ? `${API_URL}/api/vaste-activa/${editingId}`
+        : `${API_URL}/api/vaste-activa/`;
       const res = await fetch(url, {
         method: editingId ? 'PUT' : 'POST',
         headers: { 
@@ -76,7 +76,7 @@ export default function ActivaPage() {
           ...form,
           aanschafwaarde: parseFloat(form.aanschafwaarde),
           restwaarde: parseFloat(form.restwaarde),
-          verwachte_levensduur: parseInt(form.verwachte_levensduur)
+          levensduur_jaren: parseInt(form.verwachte_levensduur)
         })
       });
       if (res.ok) {
@@ -97,13 +97,16 @@ export default function ActivaPage() {
     if (!window.confirm('Weet u zeker dat u dit activum wilt verwijderen?')) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/activa/${id}`, {
+      const res = await fetch(`${API_URL}/api/vaste-activa/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         toast.success('Activum verwijderd');
         fetchActiva();
+      } else {
+        const error = await res.json();
+        toast.error(error.detail || 'Kan niet verwijderen (heeft afschrijvingen)');
       }
     } catch (error) {
       toast.error('Fout bij verwijderen');
