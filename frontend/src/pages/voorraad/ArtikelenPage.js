@@ -177,6 +177,7 @@ export default function ArtikelenPage() {
 
   const resetForm = () => {
     setEditingId(null);
+    setLastEdited(null);
     setForm({
       artikelcode: '', naam: '', omschrijving: '', type: 'product',
       categorie: '', eenheid: 'stuk', 
