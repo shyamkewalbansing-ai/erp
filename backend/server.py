@@ -15017,6 +15017,9 @@ api_router.include_router(projecten_router)
 api_router.include_router(pdf_router)
 api_router.include_router(rapportages_router)
 api_router.include_router(bankreconciliatie_router)
+api_router.include_router(vaste_activa_router)
+api_router.include_router(kostenplaatsen_router)
+api_router.include_router(wisselkoersen_router)
 
 # =============================================================================
 # GITHUB WEBHOOK AUTO-DEPLOY
