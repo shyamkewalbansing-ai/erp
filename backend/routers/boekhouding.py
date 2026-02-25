@@ -1660,6 +1660,7 @@ async def get_transacties(
     type: Optional[str] = None,
     start_datum: Optional[str] = None,
     eind_datum: Optional[str] = None,
+    limit: int = 100,
     current_user: dict = Depends(get_current_active_user)
 ):
     user_id = current_user["id"]
@@ -1676,7 +1677,7 @@ async def get_transacties(
         else:
             query["datum"] = {"$lte": eind_datum}
     
-    transacties = await db.boekhouding_transacties.find(query, {"_id": 0}).sort("datum", -1).to_list(500)
+    transacties = await db.boekhouding_transacties.find(query, {"_id": 0}).sort("created_at", -1).to_list(limit)
     
     result = []
     for t in transacties:
@@ -1689,6 +1690,9 @@ async def get_transacties(
         if t.get("rekening_id"):
             rekening = await db.boekhouding_bankrekeningen.find_one({"id": t["rekening_id"]}, {"naam": 1})
             t["rekening_naam"] = rekening.get("naam") if rekening else None
+        else:
+            # Voor transacties zonder rekening_id (zoals debiteuren betalingen), toon categorie
+            t["rekening_naam"] = t.get("categorie", "Algemeen").capitalize()
         result.append(TransactieResponse(**t))
     
     return result
