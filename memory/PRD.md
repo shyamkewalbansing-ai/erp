@@ -334,10 +334,10 @@ Automatisch aangemaakt bij eerste gebruik:
 - [x] Automatische periodieke afschrijvingen (Vaste Activa → Grootboek) - VOLTOOID
 - [x] Kostenplaats koppelingen aan inkoopfacturen - VOLTOOID
 - [x] Wisselkoers integratie in financiële transacties - VOLTOOID
+- [x] Inkoopfacturen PDF export - VOLTOOID
+- [x] Multi-valuta rapportages - VOLTOOID
 - [ ] HRM integratie met kostenboekingen
-- [ ] Inkoopfacturen PDF export
 - [ ] Bulk import/export functies
-- [ ] Multi-valuta rapportages
 
 ### P3 - Laag
 - [ ] Dashboard widgets
