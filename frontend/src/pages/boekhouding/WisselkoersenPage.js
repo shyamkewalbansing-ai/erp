@@ -178,6 +178,19 @@ export default function WisselkoersenPage() {
   const headerActions = (
     <>
       <Button 
+        onClick={fetchFromCme}
+        disabled={fetchingCme}
+        className="bg-blue-500 hover:bg-blue-600 text-white"
+        data-testid="ophalen-cme-btn"
+      >
+        {fetchingCme ? (
+          <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+        ) : (
+          <Download className="w-4 h-4 mr-2" />
+        )}
+        {fetchingCme ? 'Ophalen...' : 'CME.sr Koersen'}
+      </Button>
+      <Button 
         onClick={() => setConvertDialogOpen(true)}
         className="bg-white/20 hover:bg-white/30 text-white border-white/30"
         data-testid="converter-btn"
