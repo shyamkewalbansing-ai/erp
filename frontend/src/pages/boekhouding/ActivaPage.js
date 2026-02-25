@@ -293,6 +293,6 @@ export default function ActivaPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </ModulePageLayout>
   );
 }
