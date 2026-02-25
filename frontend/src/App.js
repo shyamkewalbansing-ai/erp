@@ -850,6 +850,9 @@ function MainAppRoutes() {
           <Route path="boekhouding/wisselkoersen" element={
             <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingWisselkoersen /></SubscriptionRoute>
           } />
+          <Route path="boekhouding/valuta-rapportages" element={
+            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingValutaRapportages /></SubscriptionRoute>
+          } />
           
           {/* Inkoop Routes - Onderdeel van Boekhouding */}
           <Route path="boekhouding/inkoop" element={
