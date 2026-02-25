@@ -871,9 +871,6 @@ function MainAppRoutes() {
           <Route path="boekhouding/verkoop/facturen" element={
             <SubscriptionRoute requiredAddon="boekhouding"><VerkoopFacturen /></SubscriptionRoute>
           } />
-          <Route path="boekhouding/verkoop/prijslijsten" element={
-            <SubscriptionRoute requiredAddon="boekhouding"><VerkoopPrijslijsten /></SubscriptionRoute>
-          } />
           
           {/* Voorraad Routes - Onderdeel van Boekhouding */}
           <Route path="boekhouding/voorraad" element={
