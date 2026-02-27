@@ -425,7 +425,18 @@ export default function Layout() {
       )}
 
       {/* White Sidebar - Connected to Header */}
-      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <aside className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''} ${isCollapsed ? 'sidebar-collapsed' : ''} relative`}>
+        {/* Sidebar collapse toggle button - positioned at right edge of sidebar */}
+        <button
+          onClick={toggleSidebarCollapse}
+          className="hidden lg:flex absolute top-1/2 -right-3 z-50 w-6 h-6 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-md items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-700 transition-all hover:scale-110"
+          style={{ transform: 'translateY(-50%)' }}
+          data-testid="sidebar-collapse-toggle"
+          title={isCollapsed ? "Sidebar uitklappen" : "Sidebar inklappen"}
+        >
+          <ChevronRight className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${isCollapsed ? '' : 'rotate-180'}`} />
+        </button>
+        
         {/* Logo Area - Same height as header */}
         <div className="sidebar-logo">
           <div className="sidebar-logo-inner">
