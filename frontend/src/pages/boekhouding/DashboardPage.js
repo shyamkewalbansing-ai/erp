@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { dashboardAPI, exchangeRatesAPI } from '../../lib/boekhoudingApi';
 import { formatCurrency, formatDate, formatNumber } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -9,13 +9,17 @@ import {
   Users,
   Truck,
   Receipt,
+  AlertTriangle,
   ArrowUpRight,
   ArrowDownRight,
   Wallet,
   Building2,
   Calculator,
-  RefreshCw
+  RefreshCw,
+  FileText,
+  Clock
 } from 'lucide-react';
+import { Button } from '../../components/ui/button';
 import {
   LineChart,
   Line,
@@ -25,24 +29,24 @@ import {
   Tooltip,
   ResponsiveContainer,
   BarChart,
-  Bar
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  AreaChart,
+  Area
 } from 'recharts';
+import axios from 'axios';
 
-// Color classes for icons
-const colorClasses = {
-  primary: "bg-primary/10 text-primary",
-  green: "bg-green-100 text-green-600",
-  red: "bg-red-100 text-red-600",
-  amber: "bg-amber-100 text-amber-600",
-  blue: "bg-blue-100 text-blue-600"
-};
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Metric Card component - matching reference design exactly
-const MetricCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, loading, color = "primary" }) => {
+// Metric Card component with Finance OS style
+const MetricCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, loading, iconBg = "bg-blue-50", iconColor = "text-blue-500" }) => {
   if (loading) {
     return (
-      <Card className="border-slate-200">
-        <CardContent className="p-6">
+      <Card className="bg-white border border-slate-100 shadow-sm">
+        <CardContent className="p-5">
           <Skeleton className="h-4 w-24 mb-3" />
           <Skeleton className="h-8 w-32 mb-2" />
           <Skeleton className="h-3 w-20" />
@@ -52,42 +56,118 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, loa
   }
 
   return (
-    <Card className="border-slate-200 hover:shadow-md transition-shadow duration-200" data-testid={`metric-${title.toLowerCase().replace(/\s/g, '-')}`}>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm font-medium text-slate-500">{title}</span>
-          <div className={`w-10 h-10 rounded-lg ${colorClasses[color] || colorClasses.primary} flex items-center justify-center`}>
-            <Icon className="w-5 h-5" strokeWidth={1.5} />
+    <Card className="bg-white border border-slate-100 shadow-sm" data-testid={`metric-${title.toLowerCase().replace(/\s/g, '-')}`}>
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <p className="text-sm text-slate-500 mb-2">{title}</p>
+            <p className="text-2xl font-semibold text-slate-900 tracking-tight">
+              {value}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              {trend && (
+                <span className={`flex items-center text-xs font-medium ${trend === 'up' ? 'text-green-600' : 'text-red-500'}`}>
+                  {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                  {trendValue}
+                </span>
+              )}
+              <span className="text-xs text-slate-400">{subtitle}</span>
+            </div>
           </div>
-        </div>
-        <div className="font-mono text-2xl font-semibold text-slate-900 mb-1">
-          {value}
-        </div>
-        <div className="flex items-center gap-2">
-          {trend && (
-            <span className={`flex items-center text-xs font-medium ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-              {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-              {trendValue}
-            </span>
-          )}
-          <span className="text-xs text-slate-400">{subtitle}</span>
+          <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 ${iconColor}`} />
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 };
 
+// Small stat card for the second row
+const SmallStatCard = ({ title, value, icon: Icon, iconBg = "bg-blue-50", iconColor = "text-blue-500", subtitle, loading }) => {
+  if (loading) {
+    return (
+      <Card className="bg-white border border-slate-100 shadow-sm">
+        <CardContent className="p-5">
+          <Skeleton className="h-4 w-20 mb-3" />
+          <Skeleton className="h-7 w-28" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-white border border-slate-100 shadow-sm">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-sm font-medium text-slate-500 mb-2">{title}</p>
+            <p className="font-mono text-xl font-semibold text-slate-900">{value}</p>
+            {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
+          </div>
+          <div className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={1.5} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Bank card component
+const BankCard = ({ title, currency, value, loading }) => {
+  if (loading) {
+    return (
+      <Card className="border-slate-200">
+        <CardContent className="p-6">
+          <Skeleton className="h-4 w-20 mb-3" />
+          <Skeleton className="h-7 w-28" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const symbol = currency === 'USD' ? '$' : currency === 'EUR' ? '€' : 'SRD';
+  const formattedValue = new Intl.NumberFormat('nl-NL', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value || 0);
+
+  return (
+    <Card className="border-slate-200 hover:shadow-md transition-shadow duration-200">
+      <CardContent className="p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Building2 className="w-4 h-4 text-slate-400" />
+          <p className="text-sm font-medium text-slate-500">{title}</p>
+        </div>
+        <p className="font-mono text-xl font-semibold text-slate-900">
+          {symbol === 'SRD' ? `SRD ${formattedValue}` : `${symbol} ${formattedValue}`}
+        </p>
+      </CardContent>
+    </Card>
+  );
+};
+
+const COLORS = ['#3b82f6', '#f59e0b', '#f97316', '#dc2626'];
+
 const DashboardPage = () => {
   const [summary, setSummary] = useState(null);
   const [rates, setRates] = useState(null);
+  const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [chartsLoading, setChartsLoading] = useState(true);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = async () => {
     try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
       const [summaryRes, ratesRes] = await Promise.all([
-        dashboardAPI.getSummary(),
-        exchangeRatesAPI.getLatest()
+        axios.get(`${API_URL}/api/boekhouding/dashboard`, { headers }),
+        axios.get(`${API_URL}/api/boekhouding/wisselkoersen/latest`, { headers })
       ]);
+      
       setSummary(summaryRes.data);
       setRates(ratesRes.data);
     } catch (error) {
@@ -95,29 +175,48 @@ const DashboardPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
+
+  const fetchChartData = async () => {
+    try {
+      setChartsLoading(true);
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const response = await axios.get(`${API_URL}/api/boekhouding/dashboard/charts`, { headers });
+      setChartData(response.data);
+    } catch (error) {
+      console.error('Error fetching chart data:', error);
+    } finally {
+      setChartsLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+    fetchChartData();
+  }, []);
 
-  // Mock chart data
-  const cashflowData = [
-    { month: 'Jan', inkomsten: 45000, uitgaven: 32000 },
-    { month: 'Feb', inkomsten: 52000, uitgaven: 38000 },
-    { month: 'Mrt', inkomsten: 48000, uitgaven: 35000 },
-    { month: 'Apr', inkomsten: 61000, uitgaven: 42000 },
-    { month: 'Mei', inkomsten: 55000, uitgaven: 39000 },
-    { month: 'Jun', inkomsten: 67000, uitgaven: 45000 },
-  ];
+  // Format number with Dutch locale (1.925,00)
+  const formatAmount = (amount, currency = 'SRD') => {
+    const formatted = new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount || 0));
+    
+    if (currency === 'USD') return `$ ${formatted}`;
+    if (currency === 'EUR') return `€ ${formatted}`;
+    return `SRD ${formatted}`;
+  };
 
-  const agingData = [
-    { name: 'Huidig', value: 25000 },
-    { name: '30 dagen', value: 15000 },
-    { name: '60 dagen', value: 8000 },
-    { name: '90 dagen', value: 5000 },
-    { name: '90+ dagen', value: 2000 },
-  ];
+  const omzet = summary?.omzet?.deze_maand || 0;
+  const kosten = summary?.kosten?.deze_maand || 0;
+  const winst = summary?.winst?.deze_maand || 0;
+  const debiteuren = summary?.openstaand?.debiteuren || 0;
+  const crediteuren = summary?.openstaand?.crediteuren || 0;
+  const btwBetalen = summary?.btw?.te_betalen || 0;
+  const btwVorderen = summary?.btw?.te_vorderen || 0;
+  const openstaandeFacturen = summary?.openstaande_facturen || 0;
 
   return (
     <div className="space-y-6" data-testid="dashboard-page">
@@ -139,215 +238,246 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* Key Metrics */}
+      {/* Top Row - Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Omzet"
-          value={formatCurrency(summary?.revenue || 0)}
+          value={formatAmount(omzet)}
           subtitle="Deze periode"
           icon={TrendingUp}
-          trend="up"
-          trendValue="+12%"
+          trend={omzet > 0 ? "up" : null}
+          trendValue={omzet > 0 ? "+12%" : ""}
           loading={loading}
-          color="green"
+          iconBg="bg-green-50"
+          iconColor="text-green-500"
         />
         <MetricCard
           title="Kosten"
-          value={formatCurrency(summary?.expenses || 0)}
+          value={formatAmount(kosten)}
           subtitle="Deze periode"
           icon={TrendingDown}
           loading={loading}
-          color="red"
+          iconBg="bg-red-50"
+          iconColor="text-red-400"
         />
         <MetricCard
           title="Winst"
-          value={formatCurrency(summary?.profit || 0)}
+          value={formatAmount(winst)}
           subtitle="Netto resultaat"
           icon={Wallet}
-          trend={summary?.profit > 0 ? "up" : "down"}
-          trendValue={summary?.profit > 0 ? "Positief" : "Negatief"}
+          trend={winst > 0 ? "up" : winst < 0 ? "down" : null}
+          trendValue={winst < 0 ? "Negatief" : ""}
           loading={loading}
-          color={summary?.profit > 0 ? "green" : "red"}
+          iconBg={winst >= 0 ? "bg-green-50" : "bg-red-50"}
+          iconColor={winst >= 0 ? "text-green-500" : "text-red-400"}
         />
         <MetricCard
           title="Openstaande Facturen"
-          value={summary?.open_invoices || 0}
-          subtitle={`${summary?.overdue_invoices || 0} vervallen`}
-          icon={Receipt}
+          value={openstaandeFacturen.toString()}
+          subtitle={`${summary?.vervallen_facturen || 0} vervallen`}
+          icon={FileText}
           loading={loading}
-          color={summary?.overdue_invoices > 0 ? "amber" : "blue"}
+          iconBg="bg-blue-50"
+          iconColor="text-blue-500"
         />
       </div>
 
-      {/* Secondary Metrics */}
+      {/* Second Row - Debiteuren, Crediteuren, BTW */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard
+        <SmallStatCard
           title="Debiteuren"
-          value={formatCurrency(summary?.outstanding_receivables || 0)}
-          subtitle={`${summary?.customer_count || 0} klanten`}
+          value={formatAmount(debiteuren)}
+          subtitle={`${summary?.aantal_debiteuren || 0} klanten`}
           icon={Users}
+          iconBg="bg-blue-50"
+          iconColor="text-blue-500"
           loading={loading}
-          color="blue"
         />
-        <MetricCard
+        <SmallStatCard
           title="Crediteuren"
-          value={formatCurrency(summary?.outstanding_payables || 0)}
-          subtitle={`${summary?.supplier_count || 0} leveranciers`}
+          value={formatAmount(crediteuren)}
+          subtitle={`${summary?.aantal_crediteuren || 0} leveranciers`}
           icon={Truck}
+          iconBg="bg-amber-50"
+          iconColor="text-amber-500"
           loading={loading}
-          color="amber"
         />
-        <MetricCard
+        <SmallStatCard
           title="BTW te betalen"
-          value={formatCurrency(summary?.btw_balance > 0 ? summary?.btw_balance : 0)}
+          value={formatAmount(btwBetalen)}
           subtitle="Huidige periode"
           icon={Calculator}
+          iconBg="bg-emerald-50"
+          iconColor="text-emerald-500"
           loading={loading}
-          color={summary?.btw_balance > 0 ? "red" : "green"}
         />
-        <MetricCard
+        <SmallStatCard
           title="BTW te vorderen"
-          value={formatCurrency(summary?.btw_balance < 0 ? Math.abs(summary?.btw_balance) : 0)}
+          value={formatAmount(btwVorderen)}
           subtitle="Huidige periode"
           icon={Calculator}
+          iconBg="bg-teal-50"
+          iconColor="text-teal-500"
           loading={loading}
-          color="green"
         />
       </div>
 
-      {/* Bank Balances */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="border-slate-200" data-testid="bank-srd">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
-              Bank SRD
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8 w-32" />
-            ) : (
-              <div className="font-mono text-2xl font-semibold text-slate-900">
-                {formatCurrency(summary?.bank_balances?.SRD || 0)}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200" data-testid="bank-usd">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
-              Bank USD
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8 w-32" />
-            ) : (
-              <div className="font-mono text-2xl font-semibold text-slate-900">
-                $ {formatNumber(summary?.bank_balances?.USD || 0, 2)}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200" data-testid="bank-eur">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-500 flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
-              Bank EUR
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <Skeleton className="h-8 w-32" />
-            ) : (
-              <div className="font-mono text-2xl font-semibold text-slate-900">
-                € {formatNumber(summary?.bank_balances?.EUR || 0, 2)}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Third Row - Bank Accounts */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <BankCard
+          title="Bank SRD"
+          currency="SRD"
+          value={summary?.liquiditeit?.bank_srd || 0}
+          loading={loading}
+        />
+        <BankCard
+          title="Bank USD"
+          currency="USD"
+          value={summary?.liquiditeit?.bank_usd || 0}
+          loading={loading}
+        />
+        <BankCard
+          title="Bank EUR"
+          currency="EUR"
+          value={summary?.liquiditeit?.bank_eur || 0}
+          loading={loading}
+        />
       </div>
 
-      {/* Charts */}
+      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cashflow Chart */}
-        <Card className="border-slate-200" data-testid="cashflow-chart">
-          <CardHeader>
-            <CardTitle className="text-lg font-heading">Cashflow Overzicht</CardTitle>
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold text-slate-900">Cashflow Overzicht</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={cashflowData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="#94a3b8" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" tickFormatter={(v) => `${v/1000}k`} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                    }}
-                    formatter={(value) => formatCurrency(value)}
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="inkomsten" 
-                    stroke="#22c55e" 
-                    strokeWidth={2}
-                    dot={{ fill: '#22c55e', strokeWidth: 2 }}
-                    name="Inkomsten"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="uitgaven" 
-                    stroke="#ef4444" 
-                    strokeWidth={2}
-                    dot={{ fill: '#ef4444', strokeWidth: 2 }}
-                    name="Uitgaven"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="h-[280px]">
+              {chartsLoading ? (
+                <div className="h-full flex items-center justify-center">
+                  <Skeleton className="h-full w-full" />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData?.cashflow || []}>
+                    <defs>
+                      <linearGradient id="colorInkomsten" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.2}/>
+                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                    <XAxis 
+                      dataKey="maand" 
+                      tick={{ fontSize: 11, fill: '#94a3b8' }} 
+                      axisLine={{ stroke: '#e2e8f0' }}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 11, fill: '#94a3b8' }} 
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} 
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                        fontSize: '12px'
+                      }}
+                      formatter={(value) => formatAmount(value)}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="inkomsten" 
+                      stroke="#22c55e" 
+                      strokeWidth={2}
+                      fillOpacity={1} 
+                      fill="url(#colorInkomsten)" 
+                      dot={{ fill: '#22c55e', strokeWidth: 0, r: 4 }}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Aging Chart */}
-        <Card className="border-slate-200" data-testid="aging-chart">
-          <CardHeader>
-            <CardTitle className="text-lg font-heading">Debiteurenanalyse</CardTitle>
+        {/* Ouderdom Debiteuren Chart */}
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold text-slate-900">Ouderdomsanalyse Debiteuren</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={agingData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke="#94a3b8" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" tickFormatter={(v) => `${v/1000}k`} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'white', 
-                      border: '1px solid #e2e8f0',
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-                    }}
-                    formatter={(value) => formatCurrency(value)}
-                  />
-                  <Bar 
-                    dataKey="value" 
-                    fill="#3b82f6" 
-                    radius={[4, 4, 0, 0]}
-                    name="Openstaand"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="h-[280px]">
+              {chartsLoading ? (
+                <div className="h-full flex items-center justify-center">
+                  <Skeleton className="h-64 w-64 rounded-full" />
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData?.ouderdom || []} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
+                    <XAxis 
+                      type="number"
+                      tick={{ fontSize: 11, fill: '#94a3b8' }} 
+                      axisLine={{ stroke: '#e2e8f0' }}
+                      tickLine={false}
+                      tickFormatter={(v) => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v}
+                    />
+                    <YAxis 
+                      type="category"
+                      dataKey="name"
+                      tick={{ fontSize: 11, fill: '#64748b' }} 
+                      axisLine={false}
+                      tickLine={false}
+                      width={80}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'white', 
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '8px',
+                        fontSize: '12px'
+                      }}
+                      formatter={(value) => formatAmount(value)}
+                    />
+                    <Bar 
+                      dataKey="value" 
+                      fill="#3b82f6" 
+                      radius={[0, 4, 4, 0]}
+                      barSize={24}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Alerts */}
+      {debiteuren > 10000 && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <p className="font-medium text-amber-800">
+                  Openstaande debiteuren: {formatAmount(debiteuren)}
+                </p>
+                <p className="text-sm text-amber-600">
+                  Bekijk uw debiteuren en stuur herinneringen indien nodig.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
