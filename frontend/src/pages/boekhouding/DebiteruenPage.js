@@ -76,12 +76,12 @@ const DebiterenPage = () => {
   };
 
   const filteredCustomers = customers.filter(c =>
-    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.code.toLowerCase().includes(searchTerm.toLowerCase())
+    (c.naam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.nummer || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalOutstanding = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
-  const overdueInvoices = invoices.filter(i => i.status === 'overdue').length;
+  const totalOutstanding = customers.reduce((sum, c) => sum + (c.openstaand_bedrag || 0), 0);
+  const overdueInvoices = invoices.filter(i => i.status === 'vervallen' || i.status === 'herinnering').length;
 
   return (
     <div className="space-y-6" data-testid="debiteuren-page">
