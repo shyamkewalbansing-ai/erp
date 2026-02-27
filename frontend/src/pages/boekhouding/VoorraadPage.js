@@ -71,7 +71,18 @@ const VoorraadPage = () => {
     }
     setSaving(true);
     try {
-      await productsAPI.create(newProduct);
+      // Map frontend fields to backend Dutch field names
+      const productData = {
+        code: newProduct.code,
+        naam: newProduct.name,
+        omschrijving: newProduct.description,
+        type: newProduct.type,
+        eenheid: newProduct.unit,
+        inkoopprijs: newProduct.purchase_price,
+        verkoopprijs: newProduct.sales_price,
+        minimum_voorraad: newProduct.min_stock
+      };
+      await productsAPI.create(productData);
       toast.success('Product aangemaakt');
       setShowProductDialog(false);
       setNewProduct({
