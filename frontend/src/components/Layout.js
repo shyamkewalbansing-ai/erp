@@ -57,7 +57,12 @@ import {
   RefreshCw,
   ArrowRightLeft,
   TrendingUp,
-  Calculator
+  Calculator,
+  Landmark,
+  Receipt,
+  ShoppingBag,
+  Archive,
+  FolderKanban
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
