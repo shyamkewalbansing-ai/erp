@@ -3100,3 +3100,883 @@ async def delete_document(document_id: str, authorization: str = Header(None)):
         raise HTTPException(status_code=404, detail="Document niet gevonden")
     
     return {"message": "Document verwijderd"}
+
+
+
+# ============================================
+# MT940 BANK IMPORT FUNCTIONALITEIT
+# ============================================
+
+import re
+from datetime import timezone
+
+def parse_mt940(content: str) -> List[Dict]:
+    """
+    Parse MT940 bank statement format
+    MT940 is de standaard voor banktransacties in Nederland/Suriname
+    """
+    transactions = []
+    current_statement = {}
+    current_transaction = {}
+    
+    lines = content.strip().split('\n')
+    i = 0
+    
+    while i < len(lines):
+        line = lines[i].strip()
+        
+        # Tag :20: Transaction Reference Number
+        if line.startswith(':20:'):
+            current_statement['reference'] = line[4:]
+        
+        # Tag :25: Account Identification
+        elif line.startswith(':25:'):
+            current_statement['account'] = line[4:]
+        
+        # Tag :28C: Statement Number/Sequence Number
+        elif line.startswith(':28C:'):
+            current_statement['statement_number'] = line[5:]
+        
+        # Tag :60F: Opening Balance
+        elif line.startswith(':60F:') or line.startswith(':60M:'):
+            balance_data = line[5:]
+            current_statement['opening_balance'] = parse_mt940_balance(balance_data)
+        
+        # Tag :61: Statement Line (Transaction)
+        elif line.startswith(':61:'):
+            if current_transaction:
+                transactions.append(current_transaction)
+            
+            current_transaction = parse_mt940_transaction_line(line[4:])
+            current_transaction['statement_ref'] = current_statement.get('reference', '')
+            current_transaction['account'] = current_statement.get('account', '')
+        
+        # Tag :86: Information to Account Owner (Transaction Details)
+        elif line.startswith(':86:'):
+            if current_transaction:
+                description = line[4:]
+                # Collect multi-line description
+                while i + 1 < len(lines) and not lines[i + 1].strip().startswith(':'):
+                    i += 1
+                    description += ' ' + lines[i].strip()
+                current_transaction['description'] = description
+                current_transaction['parsed_details'] = parse_mt940_description(description)
+        
+        # Tag :62F: Closing Balance
+        elif line.startswith(':62F:') or line.startswith(':62M:'):
+            balance_data = line[5:]
+            current_statement['closing_balance'] = parse_mt940_balance(balance_data)
+        
+        i += 1
+    
+    # Add last transaction
+    if current_transaction:
+        transactions.append(current_transaction)
+    
+    return transactions
+
+def parse_mt940_balance(balance_str: str) -> Dict:
+    """Parse MT940 balance field"""
+    # Format: C/D YYMMDD Currency Amount
+    # Example: C261215SRD1234,56
+    try:
+        credit_debit = balance_str[0]  # C or D
+        date_str = balance_str[1:7]    # YYMMDD
+        currency = balance_str[7:10]   # Currency code
+        amount_str = balance_str[10:].replace(',', '.')
+        
+        return {
+            'type': 'credit' if credit_debit == 'C' else 'debit',
+            'date': f"20{date_str[:2]}-{date_str[2:4]}-{date_str[4:6]}",
+            'currency': currency,
+            'amount': float(amount_str)
+        }
+    except:
+        return {'raw': balance_str}
+
+def parse_mt940_transaction_line(line: str) -> Dict:
+    """
+    Parse MT940 :61: transaction line
+    Format: YYMMDD[MMDD]DC[R]Amount[F]TypeRef[//RefOwner][Additional]
+    """
+    try:
+        # Date YYMMDD
+        value_date = f"20{line[:2]}-{line[2:4]}-{line[4:6]}"
+        
+        pos = 6
+        # Optional entry date MMDD
+        entry_date = None
+        if line[pos:pos+4].isdigit():
+            entry_date = f"20{line[:2]}-{line[pos:pos+2]}-{line[pos+2:pos+4]}"
+            pos += 4
+        
+        # Credit/Debit indicator
+        cd = line[pos]
+        is_credit = cd == 'C'
+        pos += 1
+        
+        # Optional 'R' for reversal
+        if line[pos] == 'R':
+            pos += 1
+        
+        # Amount (find the end by looking for letters)
+        amount_start = pos
+        while pos < len(line) and (line[pos].isdigit() or line[pos] in ',.'):
+            pos += 1
+        amount_str = line[amount_start:pos].replace(',', '.')
+        amount = float(amount_str) if amount_str else 0
+        
+        # Make amount negative for debits
+        if not is_credit:
+            amount = -amount
+        
+        # Transaction type (3 characters)
+        trans_type = line[pos:pos+3] if pos + 3 <= len(line) else ''
+        pos += 3
+        
+        # Reference
+        ref = line[pos:pos+16] if pos + 16 <= len(line) else line[pos:]
+        
+        return {
+            'value_date': value_date,
+            'entry_date': entry_date or value_date,
+            'amount': amount,
+            'is_credit': is_credit,
+            'transaction_type': trans_type,
+            'reference': ref.strip(),
+            'raw_line': line
+        }
+    except Exception as e:
+        return {
+            'value_date': datetime.now().strftime('%Y-%m-%d'),
+            'entry_date': datetime.now().strftime('%Y-%m-%d'),
+            'amount': 0,
+            'is_credit': True,
+            'transaction_type': '',
+            'reference': '',
+            'raw_line': line,
+            'parse_error': str(e)
+        }
+
+def parse_mt940_description(description: str) -> Dict:
+    """Parse MT940 :86: description field to extract structured data"""
+    result = {
+        'raw': description,
+        'counterparty_name': None,
+        'counterparty_account': None,
+        'payment_reference': None
+    }
+    
+    # Common patterns for Surinamese banks
+    # /NAME/ or /NAAM/ for counterparty name
+    name_match = re.search(r'/(?:NAME|NAAM)/([^/]+)', description, re.IGNORECASE)
+    if name_match:
+        result['counterparty_name'] = name_match.group(1).strip()
+    
+    # /REMI/ for remittance info (often contains invoice numbers)
+    remi_match = re.search(r'/REMI/([^/]+)', description, re.IGNORECASE)
+    if remi_match:
+        result['payment_reference'] = remi_match.group(1).strip()
+    
+    # /ORDP/ or /BENM/ for counterparty
+    ordp_match = re.search(r'/(?:ORDP|BENM)/([^/]+)', description, re.IGNORECASE)
+    if ordp_match and not result['counterparty_name']:
+        result['counterparty_name'] = ordp_match.group(1).strip()
+    
+    # /IBAN/ for account
+    iban_match = re.search(r'/IBAN/([A-Z0-9]+)', description)
+    if iban_match:
+        result['counterparty_account'] = iban_match.group(1)
+    
+    # Look for invoice-like patterns
+    invoice_match = re.search(r'(?:VF|INV|FACT)[- ]?(\d{4}[-/]?\d+)', description, re.IGNORECASE)
+    if invoice_match:
+        result['invoice_reference'] = invoice_match.group(0)
+    
+    return result
+
+
+@router.post("/bank/import/mt940")
+async def import_mt940(
+    bank_id: str,
+    file: UploadFile = File(...),
+    authorization: str = Header(None)
+):
+    """
+    Importeer banktransacties uit MT940 bestand
+    Ondersteunt Surinaamse banken: DSB, Hakrinbank, Finabank, Republic Bank
+    """
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Verify bank account exists
+    bank_account = await db.bankrekeningen.find_one({"id": bank_id, "user_id": user_id})
+    if not bank_account:
+        raise HTTPException(status_code=404, detail="Bankrekening niet gevonden")
+    
+    # Read file content
+    content = await file.read()
+    try:
+        content_str = content.decode('utf-8')
+    except:
+        content_str = content.decode('latin-1')
+    
+    # Parse MT940
+    transactions = parse_mt940(content_str)
+    
+    if not transactions:
+        raise HTTPException(status_code=400, detail="Geen transacties gevonden in bestand")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    imported_count = 0
+    skipped_count = 0
+    
+    for tx in transactions:
+        # Check for duplicates based on date, amount and reference
+        existing = await db.bankmutaties.find_one({
+            "user_id": user_id,
+            "bankrekening_id": bank_id,
+            "datum": tx.get('value_date'),
+            "bedrag": tx.get('amount'),
+            "referentie": tx.get('reference', '')[:50]
+        })
+        
+        if existing:
+            skipped_count += 1
+            continue
+        
+        # Parse description for counterparty info
+        parsed = tx.get('parsed_details', {})
+        
+        mutatie = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "bankrekening_id": bank_id,
+            "datum": tx.get('value_date'),
+            "boekdatum": tx.get('entry_date'),
+            "bedrag": tx.get('amount'),
+            "omschrijving": tx.get('description', ''),
+            "tegenrekening": parsed.get('counterparty_account', ''),
+            "tegenpartij": parsed.get('counterparty_name', ''),
+            "referentie": tx.get('reference', '')[:50],
+            "betalingskenmerk": parsed.get('payment_reference', ''),
+            "transactietype": tx.get('transaction_type', ''),
+            "status": "nieuw",
+            "import_bron": "mt940",
+            "import_bestand": file.filename,
+            "gematched_factuur_id": None,
+            "gematched_type": None,
+            "created_at": now,
+            "updated_at": now
+        }
+        
+        await db.bankmutaties.insert_one(mutatie)
+        imported_count += 1
+    
+    # Update bank account balance
+    latest_balance = await db.bankmutaties.aggregate([
+        {"$match": {"user_id": user_id, "bankrekening_id": bank_id}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$bedrag"}}}
+    ]).to_list(1)
+    
+    if latest_balance:
+        new_balance = bank_account.get('beginsaldo', 0) + latest_balance[0].get('totaal', 0)
+        await db.bankrekeningen.update_one(
+            {"id": bank_id, "user_id": user_id},
+            {"$set": {"huidig_saldo": new_balance, "updated_at": now}}
+        )
+    
+    # Log to audit trail
+    await db.audit_trail.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user.get("email"),
+        "action": "import",
+        "module": "bank",
+        "entity_type": "mt940",
+        "entity_id": bank_id,
+        "details": {
+            "bestand": file.filename,
+            "geimporteerd": imported_count,
+            "overgeslagen": skipped_count
+        },
+        "timestamp": now
+    })
+    
+    return {
+        "message": f"MT940 import voltooid",
+        "imported": imported_count,
+        "skipped": skipped_count,
+        "total_in_file": len(transactions)
+    }
+
+
+@router.post("/bank/import/csv")
+async def import_bank_csv(
+    bank_id: str,
+    file: UploadFile = File(...),
+    delimiter: str = ";",
+    date_format: str = "%Y-%m-%d",
+    authorization: str = Header(None)
+):
+    """
+    Importeer banktransacties uit CSV bestand
+    Verwacht kolommen: datum, omschrijving, bedrag (of: datum;omschrijving;bedrag)
+    """
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Verify bank account exists
+    bank_account = await db.bankrekeningen.find_one({"id": bank_id, "user_id": user_id})
+    if not bank_account:
+        raise HTTPException(status_code=404, detail="Bankrekening niet gevonden")
+    
+    # Read file content
+    content = await file.read()
+    try:
+        content_str = content.decode('utf-8')
+    except:
+        content_str = content.decode('latin-1')
+    
+    lines = content_str.strip().split('\n')
+    if len(lines) < 2:
+        raise HTTPException(status_code=400, detail="CSV bestand heeft geen data")
+    
+    # Skip header
+    now = datetime.now(timezone.utc).isoformat()
+    imported_count = 0
+    errors = []
+    
+    for i, line in enumerate(lines[1:], start=2):
+        try:
+            parts = line.split(delimiter)
+            if len(parts) < 3:
+                errors.append(f"Regel {i}: onvoldoende kolommen")
+                continue
+            
+            datum = parts[0].strip()
+            omschrijving = parts[1].strip()
+            bedrag_str = parts[2].strip().replace(',', '.').replace('"', '')
+            bedrag = float(bedrag_str)
+            
+            # Optional columns
+            tegenrekening = parts[3].strip() if len(parts) > 3 else ''
+            tegenpartij = parts[4].strip() if len(parts) > 4 else ''
+            
+            mutatie = {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "bankrekening_id": bank_id,
+                "datum": datum,
+                "boekdatum": datum,
+                "bedrag": bedrag,
+                "omschrijving": omschrijving,
+                "tegenrekening": tegenrekening,
+                "tegenpartij": tegenpartij,
+                "referentie": "",
+                "status": "nieuw",
+                "import_bron": "csv",
+                "import_bestand": file.filename,
+                "gematched_factuur_id": None,
+                "created_at": now,
+                "updated_at": now
+            }
+            
+            await db.bankmutaties.insert_one(mutatie)
+            imported_count += 1
+            
+        except Exception as e:
+            errors.append(f"Regel {i}: {str(e)}")
+    
+    return {
+        "message": f"CSV import voltooid",
+        "imported": imported_count,
+        "errors": errors[:10],  # Max 10 errors
+        "total_errors": len(errors)
+    }
+
+
+# ============================================
+# AUTOMATISCHE BANK RECONCILIATIE
+# ============================================
+
+@router.post("/reconciliatie/auto-match/{bank_id}")
+async def auto_match_transactions(bank_id: str, authorization: str = Header(None)):
+    """
+    Automatisch banktransacties matchen met openstaande facturen
+    Matching criteria:
+    1. Exact bedrag match
+    2. Factuurnummer in omschrijving
+    3. Klant/leverancier naam match
+    """
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Get unmatched bank mutations
+    unmatched = await db.bankmutaties.find({
+        "user_id": user_id,
+        "bankrekening_id": bank_id,
+        "status": "nieuw",
+        "gematched_factuur_id": None
+    }).to_list(1000)
+    
+    if not unmatched:
+        return {"message": "Geen ongematchte transacties", "matched": 0}
+    
+    # Get all open invoices
+    open_sales = await db.verkoopfacturen.find({
+        "user_id": user_id,
+        "status": {"$in": ["verzonden", "openstaand", "gedeeltelijk_betaald"]}
+    }).to_list(1000)
+    
+    open_purchases = await db.inkoopfacturen.find({
+        "user_id": user_id,
+        "status": {"$in": ["geboekt", "openstaand", "gedeeltelijk_betaald"]}
+    }).to_list(1000)
+    
+    # Build lookup dictionaries
+    sales_by_amount = {}
+    sales_by_number = {}
+    for inv in open_sales:
+        amount = round(inv.get('openstaand_bedrag') or inv.get('totaal_incl_btw', 0), 2)
+        if amount not in sales_by_amount:
+            sales_by_amount[amount] = []
+        sales_by_amount[amount].append(inv)
+        
+        number = inv.get('factuurnummer', '').upper()
+        if number:
+            sales_by_number[number] = inv
+    
+    purchases_by_amount = {}
+    purchases_by_number = {}
+    for inv in open_purchases:
+        amount = round(inv.get('openstaand_bedrag') or inv.get('totaal_incl_btw', 0), 2)
+        if amount not in purchases_by_amount:
+            purchases_by_amount[amount] = []
+        purchases_by_amount[amount].append(inv)
+        
+        number = inv.get('extern_factuurnummer', '').upper()
+        intern = inv.get('intern_nummer', '').upper()
+        if number:
+            purchases_by_number[number] = inv
+        if intern:
+            purchases_by_number[intern] = inv
+    
+    now = datetime.now(timezone.utc).isoformat()
+    matched_count = 0
+    
+    for mutatie in unmatched:
+        bedrag = round(mutatie.get('bedrag', 0), 2)
+        omschrijving = (mutatie.get('omschrijving', '') + ' ' + mutatie.get('betalingskenmerk', '')).upper()
+        tegenpartij = mutatie.get('tegenpartij', '').upper()
+        
+        matched_invoice = None
+        match_type = None
+        confidence = 0
+        
+        # Strategy 1: Invoice number in description (highest confidence)
+        for inv_number, inv in {**sales_by_number, **purchases_by_number}.items():
+            if inv_number in omschrijving:
+                matched_invoice = inv
+                match_type = 'verkoopfactuur' if inv in open_sales else 'inkoopfactuur'
+                confidence = 95
+                break
+        
+        # Strategy 2: Exact amount match for incoming (sales) payments
+        if not matched_invoice and bedrag > 0:
+            candidates = sales_by_amount.get(bedrag, [])
+            if len(candidates) == 1:
+                matched_invoice = candidates[0]
+                match_type = 'verkoopfactuur'
+                confidence = 80
+            elif len(candidates) > 1:
+                # Try to narrow down by counterparty name
+                for inv in candidates:
+                    debiteur = await db.debiteuren.find_one({"id": inv.get('debiteur_id'), "user_id": user_id})
+                    if debiteur:
+                        deb_naam = debiteur.get('naam', '').upper()
+                        if deb_naam and (deb_naam in tegenpartij or tegenpartij in deb_naam):
+                            matched_invoice = inv
+                            match_type = 'verkoopfactuur'
+                            confidence = 85
+                            break
+        
+        # Strategy 3: Exact amount match for outgoing (purchase) payments
+        if not matched_invoice and bedrag < 0:
+            candidates = purchases_by_amount.get(abs(bedrag), [])
+            if len(candidates) == 1:
+                matched_invoice = candidates[0]
+                match_type = 'inkoopfactuur'
+                confidence = 80
+            elif len(candidates) > 1:
+                # Try to narrow down by counterparty name
+                for inv in candidates:
+                    crediteur = await db.crediteuren.find_one({"id": inv.get('crediteur_id'), "user_id": user_id})
+                    if crediteur:
+                        cred_naam = crediteur.get('naam', '').upper()
+                        if cred_naam and (cred_naam in tegenpartij or tegenpartij in cred_naam):
+                            matched_invoice = inv
+                            match_type = 'inkoopfactuur'
+                            confidence = 85
+                            break
+        
+        # Update mutation if matched
+        if matched_invoice and confidence >= 80:
+            await db.bankmutaties.update_one(
+                {"id": mutatie['id'], "user_id": user_id},
+                {"$set": {
+                    "gematched_factuur_id": matched_invoice.get('id'),
+                    "gematched_type": match_type,
+                    "match_confidence": confidence,
+                    "status": "gematched",
+                    "updated_at": now
+                }}
+            )
+            matched_count += 1
+    
+    # Log to audit trail
+    await db.audit_trail.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user.get("email"),
+        "action": "auto_match",
+        "module": "reconciliatie",
+        "entity_type": "bankmutaties",
+        "entity_id": bank_id,
+        "details": {
+            "verwerkt": len(unmatched),
+            "gematched": matched_count
+        },
+        "timestamp": now
+    })
+    
+    return {
+        "message": f"Auto-match voltooid",
+        "processed": len(unmatched),
+        "matched": matched_count,
+        "unmatched": len(unmatched) - matched_count
+    }
+
+
+@router.post("/reconciliatie/manual-match")
+async def manual_match_transaction(
+    mutatie_id: str,
+    factuur_id: str,
+    factuur_type: str,  # 'verkoopfactuur' of 'inkoopfactuur'
+    authorization: str = Header(None)
+):
+    """Handmatig een banktransactie koppelen aan een factuur"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Verify mutation exists
+    mutatie = await db.bankmutaties.find_one({"id": mutatie_id, "user_id": user_id})
+    if not mutatie:
+        raise HTTPException(status_code=404, detail="Bankmutatie niet gevonden")
+    
+    # Verify invoice exists
+    collection = db.verkoopfacturen if factuur_type == 'verkoopfactuur' else db.inkoopfacturen
+    factuur = await collection.find_one({"id": factuur_id, "user_id": user_id})
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    await db.bankmutaties.update_one(
+        {"id": mutatie_id, "user_id": user_id},
+        {"$set": {
+            "gematched_factuur_id": factuur_id,
+            "gematched_type": factuur_type,
+            "match_confidence": 100,
+            "status": "gematched",
+            "updated_at": now
+        }}
+    )
+    
+    return {"message": "Handmatige match succesvol", "mutatie_id": mutatie_id, "factuur_id": factuur_id}
+
+
+@router.post("/reconciliatie/book-payment")
+async def book_matched_payment(
+    mutatie_id: str,
+    authorization: str = Header(None)
+):
+    """Boek een gematchte banktransactie als betaling op de factuur"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Get mutation
+    mutatie = await db.bankmutaties.find_one({"id": mutatie_id, "user_id": user_id})
+    if not mutatie:
+        raise HTTPException(status_code=404, detail="Bankmutatie niet gevonden")
+    
+    if mutatie.get('status') != 'gematched':
+        raise HTTPException(status_code=400, detail="Transactie is niet gematched")
+    
+    factuur_id = mutatie.get('gematched_factuur_id')
+    factuur_type = mutatie.get('gematched_type')
+    
+    if not factuur_id or not factuur_type:
+        raise HTTPException(status_code=400, detail="Geen gekoppelde factuur")
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get invoice
+    collection = db.verkoopfacturen if factuur_type == 'verkoopfactuur' else db.inkoopfacturen
+    factuur = await collection.find_one({"id": factuur_id, "user_id": user_id})
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Calculate payment
+    betaald_bedrag = abs(mutatie.get('bedrag', 0))
+    huidig_openstaand = factuur.get('openstaand_bedrag') or factuur.get('totaal_incl_btw', 0)
+    nieuw_openstaand = max(0, huidig_openstaand - betaald_bedrag)
+    
+    # Determine new status
+    if nieuw_openstaand == 0:
+        nieuwe_status = 'betaald'
+    elif nieuw_openstaand < huidig_openstaand:
+        nieuwe_status = 'gedeeltelijk_betaald'
+    else:
+        nieuwe_status = factuur.get('status')
+    
+    # Update invoice
+    await collection.update_one(
+        {"id": factuur_id, "user_id": user_id},
+        {"$set": {
+            "openstaand_bedrag": nieuw_openstaand,
+            "status": nieuwe_status,
+            "laatste_betaling_datum": mutatie.get('datum'),
+            "updated_at": now
+        }}
+    )
+    
+    # Create payment record
+    betaling = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "factuur_id": factuur_id,
+        "factuur_type": factuur_type,
+        "bankmutatie_id": mutatie_id,
+        "bedrag": betaald_bedrag,
+        "datum": mutatie.get('datum'),
+        "omschrijving": f"Automatisch geboekt van bankmutatie",
+        "created_at": now
+    }
+    await db.factuur_betalingen.insert_one(betaling)
+    
+    # Update mutation status
+    await db.bankmutaties.update_one(
+        {"id": mutatie_id, "user_id": user_id},
+        {"$set": {
+            "status": "geboekt",
+            "updated_at": now
+        }}
+    )
+    
+    return {
+        "message": "Betaling geboekt",
+        "factuur_id": factuur_id,
+        "betaald_bedrag": betaald_bedrag,
+        "nieuw_openstaand": nieuw_openstaand,
+        "nieuwe_status": nieuwe_status
+    }
+
+
+@router.get("/reconciliatie/overzicht/{bank_id}")
+async def get_reconciliation_overview(bank_id: str, authorization: str = Header(None)):
+    """Haal reconciliatie overzicht op voor een bankrekening"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Get unmatched bank mutations
+    bankmutaties = await db.bankmutaties.find({
+        "user_id": user_id,
+        "bankrekening_id": bank_id,
+        "status": {"$in": ["nieuw", "gematched"]}
+    }).sort("datum", -1).to_list(100)
+    
+    # Get open sales invoices
+    verkoopfacturen = await db.verkoopfacturen.find({
+        "user_id": user_id,
+        "status": {"$in": ["verzonden", "openstaand", "gedeeltelijk_betaald"]}
+    }).sort("vervaldatum", 1).to_list(100)
+    
+    # Get open purchase invoices
+    inkoopfacturen = await db.inkoopfacturen.find({
+        "user_id": user_id,
+        "status": {"$in": ["geboekt", "openstaand", "gedeeltelijk_betaald"]}
+    }).sort("vervaldatum", 1).to_list(100)
+    
+    # Add customer/supplier names
+    for f in verkoopfacturen:
+        debiteur = await db.debiteuren.find_one({"id": f.get('debiteur_id'), "user_id": user_id})
+        f['debiteur_naam'] = debiteur.get('naam') if debiteur else 'Onbekend'
+    
+    for f in inkoopfacturen:
+        crediteur = await db.crediteuren.find_one({"id": f.get('crediteur_id'), "user_id": user_id})
+        f['crediteur_naam'] = crediteur.get('naam') if crediteur else 'Onbekend'
+    
+    return {
+        "bankmutaties": [clean_doc(m) for m in bankmutaties],
+        "verkoopfacturen": [clean_doc(f) for f in verkoopfacturen],
+        "inkoopfacturen": [clean_doc(f) for f in inkoopfacturen]
+    }
+
+
+# ============================================
+# FILE UPLOAD VOOR DOCUMENTEN
+# ============================================
+
+import base64
+import hashlib
+
+UPLOAD_DIR = "/app/uploads/documenten"
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_EXTENSIONS = {'.pdf', '.jpg', '.jpeg', '.png', '.gif', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.txt'}
+
+@router.post("/documenten/upload")
+async def upload_document(
+    file: UploadFile = File(...),
+    naam: str = None,
+    type: str = "overig",
+    gekoppeld_aan_type: str = None,
+    gekoppeld_aan_id: str = None,
+    authorization: str = Header(None)
+):
+    """
+    Upload een document bestand
+    Ondersteunde formaten: PDF, afbeeldingen, Office documenten
+    Max grootte: 10MB
+    """
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Validate file extension
+    filename = file.filename
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Bestandstype niet toegestaan. Toegestaan: {', '.join(ALLOWED_EXTENSIONS)}"
+        )
+    
+    # Read file content
+    content = await file.read()
+    
+    # Check file size
+    if len(content) > MAX_FILE_SIZE:
+        raise HTTPException(status_code=400, detail=f"Bestand te groot. Maximum: {MAX_FILE_SIZE // (1024*1024)}MB")
+    
+    # Create upload directory if not exists
+    user_upload_dir = os.path.join(UPLOAD_DIR, user_id)
+    os.makedirs(user_upload_dir, exist_ok=True)
+    
+    # Generate unique filename
+    file_hash = hashlib.md5(content).hexdigest()[:8]
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    safe_filename = f"{timestamp}_{file_hash}{ext}"
+    file_path = os.path.join(user_upload_dir, safe_filename)
+    
+    # Save file
+    with open(file_path, 'wb') as f:
+        f.write(content)
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Create document record
+    document = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "naam": naam or filename,
+        "originele_bestandsnaam": filename,
+        "bestandsnaam": safe_filename,
+        "bestandspad": file_path,
+        "type": type,
+        "grootte": len(content),
+        "mime_type": file.content_type,
+        "extensie": ext,
+        "gekoppeld_aan_type": gekoppeld_aan_type,
+        "gekoppeld_aan_id": gekoppeld_aan_id,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.documenten.insert_one(document)
+    
+    # Log to audit trail
+    await db.audit_trail.insert_one({
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user.get("email"),
+        "action": "upload",
+        "module": "documenten",
+        "entity_type": "document",
+        "entity_id": document['id'],
+        "details": {
+            "bestandsnaam": filename,
+            "grootte": len(content),
+            "type": type
+        },
+        "timestamp": now
+    })
+    
+    return clean_doc(document)
+
+
+@router.get("/documenten/{document_id}/download")
+async def download_document(document_id: str, authorization: str = Header(None)):
+    """Download een document"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    document = await db.documenten.find_one({"id": document_id, "user_id": user_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document niet gevonden")
+    
+    file_path = document.get('bestandspad')
+    if not file_path or not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Bestand niet gevonden op server")
+    
+    # Read file and return as base64
+    with open(file_path, 'rb') as f:
+        content = f.read()
+    
+    return {
+        "filename": document.get('originele_bestandsnaam') or document.get('bestandsnaam'),
+        "mime_type": document.get('mime_type'),
+        "content": base64.b64encode(content).decode('utf-8')
+    }
+
+
+@router.get("/documenten/{document_id}/preview")
+async def preview_document(document_id: str, authorization: str = Header(None)):
+    """Haal document preview info op (voor afbeeldingen en PDFs)"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    document = await db.documenten.find_one({"id": document_id, "user_id": user_id})
+    if not document:
+        raise HTTPException(status_code=404, detail="Document niet gevonden")
+    
+    ext = document.get('extensie', '').lower()
+    can_preview = ext in {'.pdf', '.jpg', '.jpeg', '.png', '.gif'}
+    
+    result = {
+        "id": document.get('id'),
+        "naam": document.get('naam'),
+        "type": document.get('type'),
+        "mime_type": document.get('mime_type'),
+        "grootte": document.get('grootte'),
+        "can_preview": can_preview
+    }
+    
+    # For images, include base64 thumbnail
+    if ext in {'.jpg', '.jpeg', '.png', '.gif'}:
+        file_path = document.get('bestandspad')
+        if file_path and os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                content = f.read()
+            result['preview_data'] = base64.b64encode(content).decode('utf-8')
+    
+    return result
