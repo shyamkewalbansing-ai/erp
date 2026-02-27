@@ -230,14 +230,13 @@ class BoekhoudingTester:
     def test_create_crediteur(self):
         """Test creating a crediteur (supplier)"""
         crediteur_data = {
-            "naam": "Suriname Office Supplies B.V.",
+            "bedrijfsnaam": "Suriname Office Supplies B.V.",
             "email": "sales@sos.sr",
             "telefoon": "+597 987 6543",
             "adres": "Industrieweg 25, Paramaribo",
             "btw_nummer": "SR987654321",
-            "standaard_valuta": "USD",
-            "betalingstermijn": 14,
-            "notities": "Leverancier kantoorbenodigdheden"
+            "valuta": "USD",
+            "betaalconditie_dagen": 14
         }
         
         success, response = self.run_test(
