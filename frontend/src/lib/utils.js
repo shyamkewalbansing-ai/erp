@@ -170,17 +170,17 @@ export const getStatusLabel = (status) => {
 };
 
 export const accountTypes = {
-  asset: 'Activa',
-  liability: 'Passiva',
-  equity: 'Eigen Vermogen',
-  revenue: 'Omzet',
-  expense: 'Kosten',
+  activa: 'Activa',
+  passiva: 'Passiva',
+  eigen_vermogen: 'Eigen Vermogen',
+  omzet: 'Omzet',
+  kosten: 'Kosten',
 };
 
 export const journalTypes = {
-  bank: 'Bank',
-  cash: 'Kas',
-  sales: 'Verkoop',
-  purchase: 'Inkoop',
-  memorial: 'Memoriaal',
+  BK: 'Bank',
+  KS: 'Kas',
+  VK: 'Verkoop',
+  IK: 'Inkoop',
+  MM: 'Memoriaal',
 };
