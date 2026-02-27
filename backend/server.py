@@ -14995,6 +14995,7 @@ api_router.include_router(domain_management_router)
 api_router.include_router(beautyspa_router)
 api_router.include_router(spa_booking_router)
 api_router.include_router(suribet_router)
+api_router.include_router(boekhouding_router)
 
 # =============================================================================
 # GITHUB WEBHOOK AUTO-DEPLOY
