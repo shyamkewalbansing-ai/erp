@@ -60,7 +60,7 @@ const GrootboekPage = () => {
   };
 
   const handleCreateAccount = async () => {
-    if (!newAccount.code || !newAccount.name || !newAccount.category) {
+    if (!newAccount.code || !newAccount.naam || !newAccount.categorie) {
       toast.error('Vul alle verplichte velden in');
       return;
     }
@@ -69,7 +69,7 @@ const GrootboekPage = () => {
       await accountsAPI.create(newAccount);
       toast.success('Rekening aangemaakt');
       setShowAccountDialog(false);
-      setNewAccount({ code: '', name: '', type: 'asset', category: '', currency: 'SRD' });
+      setNewAccount({ code: '', naam: '', type: 'activa', categorie: '', valuta: 'SRD' });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
