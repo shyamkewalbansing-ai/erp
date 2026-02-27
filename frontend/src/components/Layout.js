@@ -557,12 +557,27 @@ export default function Layout() {
                 const ModuleIcon = config.icon;
                 const isFirst = index === 0;
                 
+                // Filter items based on search
+                const searchLower = sidebarSearch.toLowerCase();
+                const filteredItems = config.items.filter(item => {
+                  if (!config.alwaysShow && !hasAddon(item.addon)) return false;
+                  if (!sidebarSearch) return true;
+                  
+                  const isDashboard = item.label === 'Dashboard' || item.label === 'Spa Dashboard';
+                  const displayLabel = isDashboard ? config.name : item.label;
+                  return displayLabel.toLowerCase().includes(searchLower) || 
+                         config.name.toLowerCase().includes(searchLower);
+                });
+                
+                // Don't render module if no items match search
+                if (filteredItems.length === 0) return null;
+                
                 // Default rendering for modules - Dashboard shows module name
                 return (
                   <div key={moduleSlug} className="mb-2">
                     {isCollapsed && !isFirst && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
-                    {!isCollapsed && !isFirst && <div className="mt-3 mb-2 mx-3 border-t border-slate-200 dark:border-slate-700" />}
-                    {config.items.filter(item => config.alwaysShow || hasAddon(item.addon)).map((item) => {
+                    {!isCollapsed && !isFirst && !sidebarSearch && <div className="mt-3 mb-2 mx-3 border-t border-slate-200 dark:border-slate-700" />}
+                    {filteredItems.map((item) => {
                       // Check if this is a Dashboard item - show module name instead
                       const isDashboard = item.label === 'Dashboard' || item.label === 'Spa Dashboard';
                       const displayLabel = isDashboard ? config.name : item.label;
