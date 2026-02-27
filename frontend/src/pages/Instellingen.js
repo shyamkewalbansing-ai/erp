@@ -563,7 +563,7 @@ export default function Instellingen() {
     try {
       // Superadmin has access to all modules
       if (isSuperAdmin) {
-        setActiveAddons(['vastgoed_beheer', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding']);
+        setActiveAddons(['vastgoed_beheer', 'hrm', 'autodealer', 'beauty', 'pompstation']);
         return;
       }
       
