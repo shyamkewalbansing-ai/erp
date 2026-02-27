@@ -73,7 +73,19 @@ const ProjectenPage = () => {
     }
     setSaving(true);
     try {
-      await projectsAPI.create(newProject);
+      // Map frontend fields to backend Dutch field names
+      const projectData = {
+        code: newProject.code,
+        naam: newProject.name,
+        omschrijving: newProject.description,
+        klant_id: newProject.customer_id,
+        startdatum: newProject.start_date,
+        einddatum: newProject.end_date,
+        budget: newProject.budget,
+        valuta: newProject.currency,
+        uren_budget: newProject.hours_budget
+      };
+      await projectsAPI.create(projectData);
       toast.success('Project aangemaakt');
       setShowProjectDialog(false);
       setNewProject({
