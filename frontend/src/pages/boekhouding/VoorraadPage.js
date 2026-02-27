@@ -31,8 +31,11 @@ const VoorraadPage = () => {
     unit: 'stuk',
     purchase_price: 0,
     sales_price: 0,
-    min_stock: 0
+    min_stock: 0,
+    image_url: ''
   });
+
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const [newMovement, setNewMovement] = useState({
     product_id: '',
