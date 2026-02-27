@@ -1,20 +1,14 @@
-/**
- * Boekhouding API Client
- * Complete API wrapper for the Boekhouding (Accounting) module
- * Uses the existing /api/boekhouding/* endpoints
- */
+// Boekhouding API Client - matches reference repository structure
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API_BASE = `${BACKEND_URL}/api`;
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
-
-// Helper to get auth token
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-// Generic fetch wrapper
 const apiFetch = async (endpoint, options = {}) => {
-  const response = await fetch(`${API_URL}/api/boekhouding${endpoint}`, {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -24,344 +18,313 @@ const apiFetch = async (endpoint, options = {}) => {
   });
   
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Request failed' }));
-    throw new Error(error.detail || 'Request failed');
+    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw { response: { data: error, status: response.status } };
   }
   
-  return response.json();
+  return { data: await response.json() };
 };
 
-// ==================== INITIALIZATION ====================
-
-export const initBoekhouding = () => apiFetch('/init/volledig', { method: 'POST' });
-
-// ==================== DASHBOARD ====================
-
+// Dashboard
 export const dashboardAPI = {
-  getSummary: () => apiFetch('/dashboard'),
-  getActielijst: () => apiFetch('/dashboard/actielijst'),
+  getSummary: () => apiFetch('/boekhouding/dashboard'),
 };
 
-// ==================== WISSELKOERSEN ====================
-
+// Exchange Rates
 export const exchangeRatesAPI = {
-  getAll: () => apiFetch('/wisselkoersen'),
-  getLatest: () => apiFetch('/wisselkoersen/latest'),
-  create: (data) => apiFetch('/wisselkoersen', { method: 'POST', body: JSON.stringify(data) }),
+  getAll: () => apiFetch('/boekhouding/wisselkoersen'),
+  getLatest: () => apiFetch('/boekhouding/wisselkoersen/latest'),
+  create: (data) => apiFetch('/boekhouding/wisselkoersen', { method: 'POST', body: JSON.stringify(data) }),
 };
 
-// ==================== BTW CODES ====================
-
+// BTW Codes
 export const btwAPI = {
-  getAll: () => apiFetch('/btw-codes'),
-  create: (data) => apiFetch('/btw-codes', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/btw-codes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => apiFetch(`/btw-codes/${id}`, { method: 'DELETE' }),
+  getAll: () => apiFetch('/boekhouding/btw-codes'),
+  create: (data) => apiFetch('/boekhouding/btw-codes', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/btw-codes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/boekhouding/btw-codes/${id}`, { method: 'DELETE' }),
 };
 
-// ==================== GROOTBOEK (CHART OF ACCOUNTS) ====================
-
+// Accounts (Chart of Accounts)
 export const accountsAPI = {
-  getAll: (type = null) => apiFetch(`/rekeningen${type ? `?type=${type}` : ''}`),
-  create: (data) => apiFetch('/rekeningen', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/rekeningen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => apiFetch(`/rekeningen/${id}`, { method: 'DELETE' }),
+  getAll: () => apiFetch('/boekhouding/rekeningen'),
+  create: (data) => apiFetch('/boekhouding/rekeningen', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/rekeningen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/boekhouding/rekeningen/${id}`, { method: 'DELETE' }),
 };
 
-export const dagboekenAPI = {
-  getAll: () => apiFetch('/dagboeken'),
-  create: (data) => apiFetch('/dagboeken', { method: 'POST', body: JSON.stringify(data) }),
-};
-
+// Journal Entries
 export const journalAPI = {
   getAll: (params = {}) => {
     const query = new URLSearchParams(params).toString();
-    return apiFetch(`/journaalposten${query ? `?${query}` : ''}`);
+    return apiFetch(`/boekhouding/journaalposten${query ? `?${query}` : ''}`);
   },
-  create: (data) => apiFetch('/journaalposten', { method: 'POST', body: JSON.stringify(data) }),
+  create: (data) => apiFetch('/boekhouding/journaalposten', { method: 'POST', body: JSON.stringify(data) }),
+  post: (id) => apiFetch(`/boekhouding/journaalposten/${id}/boeken`, { method: 'PUT' }),
 };
 
-// ==================== DEBITEUREN (CUSTOMERS) ====================
-
+// Customers
 export const customersAPI = {
-  getAll: () => apiFetch('/debiteuren'),
-  getOne: (id) => apiFetch(`/debiteuren/${id}`),
-  create: (data) => apiFetch('/debiteuren', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/debiteuren/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => apiFetch(`/debiteuren/${id}`, { method: 'DELETE' }),
-  getOpenstaand: (id) => apiFetch(`/debiteuren/${id}/openstaand`),
-  getOuderdomAnalyse: () => apiFetch('/debiteuren/ouderdom/analyse'),
+  getAll: () => apiFetch('/boekhouding/debiteuren'),
+  getOne: (id) => apiFetch(`/boekhouding/debiteuren/${id}`),
+  create: (data) => apiFetch('/boekhouding/debiteuren', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/debiteuren/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/boekhouding/debiteuren/${id}`, { method: 'DELETE' }),
 };
 
-// ==================== CREDITEUREN (SUPPLIERS) ====================
-
+// Suppliers
 export const suppliersAPI = {
-  getAll: () => apiFetch('/crediteuren'),
-  getOne: (id) => apiFetch(`/crediteuren/${id}`),
-  create: (data) => apiFetch('/crediteuren', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/crediteuren/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => apiFetch(`/crediteuren/${id}`, { method: 'DELETE' }),
-  getBetaaladvies: () => apiFetch('/crediteuren/betaaladvies'),
+  getAll: () => apiFetch('/boekhouding/crediteuren'),
+  getOne: (id) => apiFetch(`/boekhouding/crediteuren/${id}`),
+  create: (data) => apiFetch('/boekhouding/crediteuren', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/crediteuren/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/boekhouding/crediteuren/${id}`, { method: 'DELETE' }),
 };
 
-// ==================== VERKOOPFACTUREN (SALES INVOICES) ====================
-
-export const salesInvoicesAPI = {
-  getAll: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return apiFetch(`/verkoopfacturen${query ? `?${query}` : ''}`);
-  },
-  getOne: (id) => apiFetch(`/verkoopfacturen/${id}`),
-  create: (data) => apiFetch('/verkoopfacturen', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/verkoopfacturen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  verzenden: (id) => apiFetch(`/verkoopfacturen/${id}/verzenden`, { method: 'POST' }),
-  registreerBetaling: (id, bedrag, datum) => apiFetch(`/verkoopfacturen/${id}/betaling?bedrag=${bedrag}${datum ? `&datum=${datum}` : ''}`, { method: 'POST' }),
-};
-
-// ==================== INKOOPFACTUREN (PURCHASE INVOICES) ====================
-
-export const purchaseInvoicesAPI = {
-  getAll: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return apiFetch(`/inkoopfacturen${query ? `?${query}` : ''}`);
-  },
-  getOne: (id) => apiFetch(`/inkoopfacturen/${id}`),
-  create: (data) => apiFetch('/inkoopfacturen', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/inkoopfacturen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  boeken: (id) => apiFetch(`/inkoopfacturen/${id}/boeken`, { method: 'POST' }),
-  registreerBetaling: (id, bedrag, datum) => apiFetch(`/inkoopfacturen/${id}/betaling?bedrag=${bedrag}${datum ? `&datum=${datum}` : ''}`, { method: 'POST' }),
-};
-
-// ==================== BANKREKENINGEN ====================
-
+// Bank Accounts
 export const bankAccountsAPI = {
-  getAll: () => apiFetch('/bankrekeningen'),
-  create: (data) => apiFetch('/bankrekeningen', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/bankrekeningen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  getMutaties: (id, params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return apiFetch(`/bankrekeningen/${id}/mutaties${query ? `?${query}` : ''}`);
-  },
-  createMutatie: (id, data) => {
-    const params = new URLSearchParams(data).toString();
-    return apiFetch(`/bankrekeningen/${id}/mutaties?${params}`, { method: 'POST' });
-  },
-  importMutaties: (id, mutaties) => apiFetch(`/bankrekeningen/${id}/import`, { method: 'POST', body: JSON.stringify({ bankrekening_id: id, mutaties }) }),
-  // MT940 Import
-  importMT940: async (bankId, file) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await fetch(`${API_URL}/api/boekhouding/bank/import/mt940?bank_id=${bankId}`, {
-      method: 'POST',
-      headers: getAuthHeader(),
-      body: formData
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Import failed');
-    }
-    return response.json();
-  },
-  // CSV Import
-  importCSV: async (bankId, file, delimiter = ';') => {
-    const formData = new FormData();
-    formData.append('file', file);
-    const response = await fetch(`${API_URL}/api/boekhouding/bank/import/csv?bank_id=${bankId}&delimiter=${delimiter}`, {
-      method: 'POST',
-      headers: getAuthHeader(),
-      body: formData
-    });
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Import failed');
-    }
-    return response.json();
-  },
+  getAll: () => apiFetch('/boekhouding/bankrekeningen'),
+  create: (data) => apiFetch('/boekhouding/bankrekeningen', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/bankrekeningen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
 };
 
-// ==================== KASBOEK ====================
-
-export const kasboekAPI = {
+// Bank Transactions
+export const bankTransactionsAPI = {
   getAll: (params = {}) => {
     const query = new URLSearchParams(params).toString();
-    return apiFetch(`/kasboek${query ? `?${query}` : ''}`);
+    return apiFetch(`/boekhouding/banktransacties${query ? `?${query}` : ''}`);
   },
-  create: (data) => apiFetch('/kasboek', { method: 'POST', body: JSON.stringify(data) }),
-  getSaldo: () => apiFetch('/kasboek/saldo'),
+  create: (data) => apiFetch('/boekhouding/banktransacties', { method: 'POST', body: JSON.stringify(data) }),
 };
 
-// ==================== RECONCILIATIE ====================
-
-export const reconciliatieAPI = {
-  getOverzicht: (bankrekeningId) => apiFetch(`/reconciliatie/overzicht/${bankrekeningId}`),
-  autoMatch: (bankrekeningId) => apiFetch(`/reconciliatie/auto-match/${bankrekeningId}`, { method: 'POST' }),
-  manualMatch: (mutatieId, factuurId, factuurType) => apiFetch('/reconciliatie/manual-match', { 
-    method: 'POST', 
-    body: JSON.stringify({ mutatie_id: mutatieId, factuur_id: factuurId, factuur_type: factuurType }) 
-  }),
-  bookPayment: (mutatieId) => apiFetch(`/reconciliatie/book-payment?mutatie_id=${mutatieId}`, { method: 'POST' }),
-};
-
-// ==================== VASTE ACTIVA ====================
-
-export const fixedAssetsAPI = {
-  getAll: () => apiFetch('/vaste-activa'),
-  getOne: (id) => apiFetch(`/vaste-activa/${id}`),
-  create: (data) => apiFetch('/vaste-activa', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/vaste-activa/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => apiFetch(`/vaste-activa/${id}`, { method: 'DELETE' }),
-  afschrijven: (id) => apiFetch(`/vaste-activa/${id}/afschrijven`, { method: 'POST' }),
-  getAfschrijvingen: (id) => apiFetch(`/vaste-activa/${id}/afschrijvingen`),
-};
-
-// ==================== KOSTENPLAATSEN ====================
-
-export const costCentersAPI = {
-  getAll: () => apiFetch('/kostenplaatsen'),
-  create: (data) => apiFetch('/kostenplaatsen', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/kostenplaatsen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-};
-
-// ==================== ARTIKELEN (PRODUCTS) ====================
-
-export const productsAPI = {
-  getAll: () => apiFetch('/artikelen'),
-  getOne: (id) => apiFetch(`/artikelen/${id}`),
-  create: (data) => apiFetch('/artikelen', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/artikelen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => apiFetch(`/artikelen/${id}`, { method: 'DELETE' }),
-};
-
-// ==================== MAGAZIJNEN ====================
-
-export const warehousesAPI = {
-  getAll: () => apiFetch('/magazijnen'),
-  create: (data) => apiFetch('/magazijnen', { method: 'POST', body: JSON.stringify(data) }),
-};
-
-// ==================== VOORRAAD ====================
-
-export const stockAPI = {
-  getMutaties: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return apiFetch(`/voorraad/mutaties${query ? `?${query}` : ''}`);
-  },
-  createMutatie: (data) => apiFetch('/voorraad/mutaties', { method: 'POST', body: JSON.stringify(data) }),
-  getNiveaus: () => apiFetch('/voorraad/niveaus'),
-  getLaagVoorraad: () => apiFetch('/voorraad/laag'),
-};
-
-// ==================== PROJECTEN ====================
-
-export const projectsAPI = {
-  getAll: () => apiFetch('/projecten'),
-  getOne: (id) => apiFetch(`/projecten/${id}`),
-  create: (data) => apiFetch('/projecten', { method: 'POST', body: JSON.stringify(data) }),
-  update: (id, data) => apiFetch(`/projecten/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  delete: (id) => apiFetch(`/projecten/${id}`, { method: 'DELETE' }),
-  getUren: (id) => apiFetch(`/projecten/${id}/uren`),
-  createUren: (data) => apiFetch('/projecten/uren', { method: 'POST', body: JSON.stringify(data) }),
-  getKosten: (id) => apiFetch(`/projecten/${id}/kosten`),
-  createKosten: (data) => apiFetch('/projecten/kosten', { method: 'POST', body: JSON.stringify(data) }),
-};
-
-// ==================== RAPPORTAGES ====================
-
-export const reportsAPI = {
-  balans: (datum = null) => apiFetch(`/rapportages/balans${datum ? `?datum=${datum}` : ''}`),
-  winstVerlies: (van = null, tot = null) => {
-    const params = new URLSearchParams();
-    if (van) params.append('van', van);
-    if (tot) params.append('tot', tot);
-    const query = params.toString();
-    return apiFetch(`/rapportages/winst-verlies${query ? `?${query}` : ''}`);
-  },
-  btw: (periode = null) => apiFetch(`/rapportages/btw${periode ? `?periode=${periode}` : ''}`),
-  grootboekkaart: (rekeningCode, van = null, tot = null) => {
-    const params = new URLSearchParams();
-    if (van) params.append('van', van);
-    if (tot) params.append('tot', tot);
-    const query = params.toString();
-    return apiFetch(`/rapportages/grootboekkaart/${rekeningCode}${query ? `?${query}` : ''}`);
-  },
-  proefbalans: (datum = null) => apiFetch(`/rapportages/proefbalans${datum ? `?datum=${datum}` : ''}`),
-};
-
-// ==================== HERINNERINGEN ====================
-
-export const remindersAPI = {
-  getAll: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return apiFetch(`/herinneringen${query ? `?${query}` : ''}`);
-  },
-  create: (data) => apiFetch('/herinneringen', { method: 'POST', body: JSON.stringify(data) }),
-  markSent: (id) => apiFetch(`/herinneringen/${id}/verzonden`, { method: 'PUT' }),
-  getFacturenVoorHerinnering: () => apiFetch('/herinneringen/facturen'),
-};
-
-// ==================== DOCUMENTEN ====================
-
-export const documentsAPI = {
-  getAll: (params = {}) => {
-    const query = new URLSearchParams(params).toString();
-    return apiFetch(`/documenten${query ? `?${query}` : ''}`);
-  },
-  getOne: (id) => apiFetch(`/documenten/${id}`),
-  upload: async (file, metadata) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    Object.entries(metadata).forEach(([key, value]) => {
-      if (value) formData.append(key, value);
-    });
-    
-    const response = await fetch(`${API_URL}/api/boekhouding/documenten/upload`, {
+// Bank Import
+export const bankImportAPI = {
+  importCSV: async (accountId, formData) => {
+    const response = await fetch(`${API_BASE}/boekhouding/bank/import/csv?bank_id=${accountId}`, {
       method: 'POST',
       headers: getAuthHeader(),
       body: formData,
     });
-    
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: 'Upload failed' }));
-      throw new Error(error.detail || 'Upload failed');
+      const error = await response.json();
+      throw { response: { data: error } };
     }
-    
-    return response.json();
+    return { data: await response.json() };
   },
-  delete: (id) => apiFetch(`/documenten/${id}`, { method: 'DELETE' }),
+  importMT940: async (accountId, formData) => {
+    const response = await fetch(`${API_BASE}/boekhouding/bank/import/mt940?bank_id=${accountId}`, {
+      method: 'POST',
+      headers: getAuthHeader(),
+      body: formData,
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw { response: { data: error } };
+    }
+    return { data: await response.json() };
+  },
 };
 
-// ==================== INSTELLINGEN ====================
+// Invoices (Sales)
+export const invoicesAPI = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/boekhouding/verkoopfacturen${query ? `?${query}` : ''}`);
+  },
+  getOne: (id) => apiFetch(`/boekhouding/verkoopfacturen/${id}`),
+  create: (data) => apiFetch('/boekhouding/verkoopfacturen', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/verkoopfacturen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  updateStatus: (id, status) => apiFetch(`/boekhouding/verkoopfacturen/${id}/status?status=${status}`, { method: 'PUT' }),
+};
 
+// Purchase Invoices
+export const purchaseInvoicesAPI = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/boekhouding/inkoopfacturen${query ? `?${query}` : ''}`);
+  },
+  getOne: (id) => apiFetch(`/boekhouding/inkoopfacturen/${id}`),
+  create: (data) => apiFetch('/boekhouding/inkoopfacturen', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/inkoopfacturen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  updateStatus: (id, status) => apiFetch(`/boekhouding/inkoopfacturen/${id}/status?status=${status}`, { method: 'PUT' }),
+};
+
+// Products
+export const productsAPI = {
+  getAll: () => apiFetch('/boekhouding/artikelen'),
+  create: (data) => apiFetch('/boekhouding/artikelen', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/artikelen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/boekhouding/artikelen/${id}`, { method: 'DELETE' }),
+};
+
+// Fixed Assets
+export const fixedAssetsAPI = {
+  getAll: () => apiFetch('/boekhouding/vaste-activa'),
+  create: (data) => apiFetch('/boekhouding/vaste-activa', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/vaste-activa/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  depreciate: (id) => apiFetch(`/boekhouding/vaste-activa/${id}/afschrijven`, { method: 'POST' }),
+};
+
+// Projects
+export const projectsAPI = {
+  getAll: () => apiFetch('/boekhouding/projecten'),
+  getOne: (id) => apiFetch(`/boekhouding/projecten/${id}`),
+  create: (data) => apiFetch('/boekhouding/projecten', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/projecten/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+};
+
+// Time Entries
+export const timeEntriesAPI = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/boekhouding/uren${query ? `?${query}` : ''}`);
+  },
+  create: (data) => apiFetch('/boekhouding/uren', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// Cost Centers
+export const costCentersAPI = {
+  getAll: () => apiFetch('/boekhouding/kostenplaatsen'),
+  create: (data) => apiFetch('/boekhouding/kostenplaatsen', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// Warehouses
+export const warehousesAPI = {
+  getAll: () => apiFetch('/boekhouding/magazijnen'),
+  create: (data) => apiFetch('/boekhouding/magazijnen', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// Stock Movements
+export const stockMovementsAPI = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/boekhouding/voorraadmutaties${query ? `?${query}` : ''}`);
+  },
+  create: (data) => apiFetch('/boekhouding/voorraadmutaties', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// Purchase Orders
+export const purchaseOrdersAPI = {
+  getAll: () => apiFetch('/boekhouding/inkooporders'),
+  create: (data) => apiFetch('/boekhouding/inkooporders', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// Quotes
+export const quotesAPI = {
+  getAll: () => apiFetch('/boekhouding/offertes'),
+  create: (data) => apiFetch('/boekhouding/offertes', { method: 'POST', body: JSON.stringify(data) }),
+  updateStatus: (id, status) => apiFetch(`/boekhouding/offertes/${id}/status?status=${status}`, { method: 'PUT' }),
+};
+
+// Sales Orders
+export const salesOrdersAPI = {
+  getAll: () => apiFetch('/boekhouding/verkooporders'),
+  create: (data) => apiFetch('/boekhouding/verkooporders', { method: 'POST', body: JSON.stringify(data) }),
+};
+
+// Reports
+export const reportsAPI = {
+  profitLoss: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/boekhouding/rapportages/winst-verlies${query ? `?${query}` : ''}`);
+  },
+  balanceSheet: () => apiFetch('/boekhouding/rapportages/balans'),
+  btw: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/boekhouding/rapportages/btw${query ? `?${query}` : ''}`);
+  },
+  aging: (type) => apiFetch(`/boekhouding/rapportages/ouderdom?type=${type}`),
+};
+
+// Company Settings
 export const settingsAPI = {
-  getBedrijf: () => apiFetch('/instellingen/bedrijf'),
-  updateBedrijf: (data) => apiFetch('/instellingen/bedrijf', { method: 'PUT', body: JSON.stringify(data) }),
-  getNummering: () => apiFetch('/instellingen/nummering'),
-  updateNummering: (data) => apiFetch('/instellingen/nummering', { method: 'PUT', body: JSON.stringify(data) }),
+  getCompany: () => apiFetch('/boekhouding/instellingen'),
+  updateCompany: (data) => apiFetch('/boekhouding/instellingen', { method: 'PUT', body: JSON.stringify(data) }),
 };
 
+// PDF Invoice
+export const pdfAPI = {
+  getInvoicePdf: async (invoiceId) => {
+    const response = await fetch(`${API_BASE}/boekhouding/verkoopfacturen/${invoiceId}/pdf`, {
+      headers: getAuthHeader(),
+    });
+    if (!response.ok) throw new Error('PDF download failed');
+    return { data: await response.blob() };
+  },
+};
+
+// Payment Reminders
+export const remindersAPI = {
+  getAll: () => apiFetch('/boekhouding/herinneringen'),
+  generate: () => apiFetch('/boekhouding/herinneringen/genereren', { method: 'POST' }),
+  markSent: (id) => apiFetch(`/boekhouding/herinneringen/${id}/verzonden`, { method: 'PUT' }),
+  acknowledge: (id) => apiFetch(`/boekhouding/herinneringen/${id}/bevestigen`, { method: 'PUT' }),
+  getLetter: async (id) => {
+    const response = await fetch(`${API_BASE}/boekhouding/herinneringen/${id}/brief`, {
+      headers: getAuthHeader(),
+    });
+    if (!response.ok) throw new Error('Letter download failed');
+    return { data: await response.blob() };
+  },
+};
+
+// Documents
+export const documentsAPI = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/boekhouding/documenten${query ? `?${query}` : ''}`);
+  },
+  getOne: (id) => apiFetch(`/boekhouding/documenten/${id}`),
+  upload: async (formData) => {
+    const response = await fetch(`${API_BASE}/boekhouding/documenten/upload`, {
+      method: 'POST',
+      headers: getAuthHeader(),
+      body: formData,
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw { response: { data: error } };
+    }
+    return { data: await response.json() };
+  },
+  download: async (id) => {
+    const response = await fetch(`${API_BASE}/boekhouding/documenten/${id}/download`, {
+      headers: getAuthHeader(),
+    });
+    if (!response.ok) throw new Error('Download failed');
+    return { data: await response.blob() };
+  },
+  delete: (id) => apiFetch(`/boekhouding/documenten/${id}`, { method: 'DELETE' }),
+  link: (id, entityType, entityId) => apiFetch(`/boekhouding/documenten/${id}/link?entity_type=${entityType}&entity_id=${entityId}`, { method: 'PUT' }),
+};
+
+// Default export for backward compatibility
 export default {
-  init: initBoekhouding,
   dashboard: dashboardAPI,
   exchangeRates: exchangeRatesAPI,
   btw: btwAPI,
   accounts: accountsAPI,
-  dagboeken: dagboekenAPI,
   journal: journalAPI,
   customers: customersAPI,
   suppliers: suppliersAPI,
-  salesInvoices: salesInvoicesAPI,
-  purchaseInvoices: purchaseInvoicesAPI,
   bankAccounts: bankAccountsAPI,
-  kasboek: kasboekAPI,
-  reconciliatie: reconciliatieAPI,
-  fixedAssets: fixedAssetsAPI,
-  costCenters: costCentersAPI,
+  bankTransactions: bankTransactionsAPI,
+  bankImport: bankImportAPI,
+  invoices: invoicesAPI,
+  purchaseInvoices: purchaseInvoicesAPI,
   products: productsAPI,
-  warehouses: warehousesAPI,
-  stock: stockAPI,
+  fixedAssets: fixedAssetsAPI,
   projects: projectsAPI,
+  timeEntries: timeEntriesAPI,
+  costCenters: costCentersAPI,
+  warehouses: warehousesAPI,
+  stockMovements: stockMovementsAPI,
+  purchaseOrders: purchaseOrdersAPI,
+  quotes: quotesAPI,
+  salesOrders: salesOrdersAPI,
   reports: reportsAPI,
+  settings: settingsAPI,
+  pdf: pdfAPI,
   reminders: remindersAPI,
   documents: documentsAPI,
-  settings: settingsAPI,
 };
