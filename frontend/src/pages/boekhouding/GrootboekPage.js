@@ -280,7 +280,7 @@ const GrootboekPage = () => {
                               </SelectTrigger>
                               <SelectContent>
                                 {accounts.map(a => (
-                                  <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>
+                                  <SelectItem key={a.id} value={a.id}>{a.code} - {a.naam}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
