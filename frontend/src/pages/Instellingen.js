@@ -1138,11 +1138,6 @@ export default function Instellingen() {
           {activeSection === 'pompstation' && hasAddon('pompstation') && (
             <PompstationSettingsForm />
           )}
-
-          {/* Boekhouding Settings */}
-          {activeSection === 'boekhouding' && (
-            <BoekhoudingSettingsForm />
-          )}
         </div>
       </div>
     </div>
