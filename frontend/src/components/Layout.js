@@ -259,27 +259,24 @@ export default function Layout() {
   };
 
   // Module configurations for dynamic sidebar rendering
-  // Inkoop, Verkoop, Voorraad, Projecten zijn nu onderdeel van Boekhouding
   const moduleConfigs = {
     vastgoed_beheer: { name: 'Vastgoed Beheer', items: vastgoedNavItems, icon: Building2 },
     hrm: { name: 'HRM Module', items: hrmNavItems, icon: Users },
     autodealer: { name: 'Auto Dealer', items: autoDealerNavItems, icon: Car },
     beauty: { name: 'Beauty Spa', items: beautySpaItems, icon: Sparkles },
-    pompstation: { name: 'Pompstation', items: pompstationNavItems, icon: Zap },
-    boekhouding: { name: 'Boekhouding', items: boekhoudingNavItems, icon: FileText, alwaysShow: true },
     suribet: { name: 'Suribet', items: suribetNavItems, icon: Gamepad2 },
   };
 
   // Get modules in the correct order based on user preference
   const getOrderedModules = () => {
-    const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding'];
+    const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty'];
     
     if (moduleOrder.length === 0) {
       return defaultOrder;
     }
     
-    // Start with user's saved order
-    const ordered = [...moduleOrder];
+    // Start with user's saved order (filter out removed modules)
+    const ordered = moduleOrder.filter(slug => defaultOrder.includes(slug));
     
     // Add any modules not in the saved order (new modules)
     defaultOrder.forEach(slug => {
