@@ -29,7 +29,6 @@ const ALL_MODULES = [
   { addon_slug: 'autodealer', addon_name: 'Auto Dealer', status: 'active' },
   { addon_slug: 'beauty', addon_name: 'Beauty Spa', status: 'active' },
   { addon_slug: 'pompstation', addon_name: 'Pompstation', status: 'active' },
-  { addon_slug: 'boekhouding', addon_name: 'Boekhouding (Gratis)', status: 'active' },
 ];
 
 export default function SidebarOrderSettings() {
@@ -59,22 +58,6 @@ export default function SidebarOrderSettings() {
         activeModules = addonsRes.data.filter(a => 
           a.status === 'active' || a.status === 'trial'
         );
-
-        // Always add boekhouding as it's free for everyone
-        const hasBoekhouding = activeModules.some(m => m.addon_slug === 'boekhouding');
-        if (!hasBoekhouding) {
-          activeModules.push({
-            addon_slug: 'boekhouding',
-            addon_name: 'Boekhouding (Gratis)',
-            status: 'active'
-          });
-        } else {
-          // Update name to include (Gratis)
-          const boekhoudingModule = activeModules.find(m => m.addon_slug === 'boekhouding');
-          if (boekhoudingModule && !boekhoudingModule.addon_name.includes('Gratis')) {
-            boekhoudingModule.addon_name = 'Boekhouding (Gratis)';
-          }
-        }
       }
 
       // Get saved order and default dashboard
