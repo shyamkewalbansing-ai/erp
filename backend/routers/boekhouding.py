@@ -2119,6 +2119,266 @@ async def get_ouderdom_rapport(type: str = "debiteuren", authorization: str = He
     
     return analyse
 
+# ==================== EXCEL EXPORT ====================
+
+@router.get("/export/grootboek")
+async def export_grootboek(authorization: str = Header(None)):
+    """Export grootboek naar Excel"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    if not EXCEL_ENABLED:
+        raise HTTPException(status_code=501, detail="Excel export niet beschikbaar")
+    
+    rekeningen = await db.boekhouding_rekeningen.find({"user_id": user_id}).sort("code", 1).to_list(500)
+    journaalposten = await db.boekhouding_journaalposten.find({"user_id": user_id}).sort("datum", -1).to_list(500)
+    
+    excel_bytes = export_grootboek_excel(
+        [clean_doc(r) for r in rekeningen],
+        [clean_doc(j) for j in journaalposten]
+    )
+    
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=grootboek_{datetime.now().strftime('%Y%m%d')}.xlsx"}
+    )
+
+
+@router.get("/export/debiteuren")
+async def export_debiteuren(authorization: str = Header(None)):
+    """Export debiteuren en facturen naar Excel"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    if not EXCEL_ENABLED:
+        raise HTTPException(status_code=501, detail="Excel export niet beschikbaar")
+    
+    debiteuren = await db.boekhouding_debiteuren.find({"user_id": user_id}).sort("naam", 1).to_list(500)
+    facturen = await db.boekhouding_verkoopfacturen.find({"user_id": user_id}).sort("factuurdatum", -1).to_list(500)
+    
+    excel_bytes = export_debiteuren_excel(
+        [clean_doc(d) for d in debiteuren],
+        [clean_doc(f) for f in facturen]
+    )
+    
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=debiteuren_{datetime.now().strftime('%Y%m%d')}.xlsx"}
+    )
+
+
+@router.get("/export/crediteuren")
+async def export_crediteuren(authorization: str = Header(None)):
+    """Export crediteuren en facturen naar Excel"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    if not EXCEL_ENABLED:
+        raise HTTPException(status_code=501, detail="Excel export niet beschikbaar")
+    
+    crediteuren = await db.boekhouding_crediteuren.find({"user_id": user_id}).sort("naam", 1).to_list(500)
+    facturen = await db.boekhouding_inkoopfacturen.find({"user_id": user_id}).sort("factuurdatum", -1).to_list(500)
+    
+    excel_bytes = export_crediteuren_excel(
+        [clean_doc(c) for c in crediteuren],
+        [clean_doc(f) for f in facturen]
+    )
+    
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=crediteuren_{datetime.now().strftime('%Y%m%d')}.xlsx"}
+    )
+
+
+@router.get("/export/btw-aangifte")
+async def export_btw_aangifte(jaar: int = None, kwartaal: int = 1, authorization: str = Header(None)):
+    """Export BTW aangifte naar Excel"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    if not EXCEL_ENABLED:
+        raise HTTPException(status_code=501, detail="Excel export niet beschikbaar")
+    
+    jaar = jaar or datetime.now().year
+    
+    # BTW verkoop
+    btw_verkoop = await db.boekhouding_verkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "concept"}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$btw_bedrag"}}}
+    ]).to_list(1)
+    
+    # BTW inkoop
+    btw_inkoop = await db.boekhouding_inkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "nieuw"}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$btw_bedrag"}}}
+    ]).to_list(1)
+    
+    rapport = {
+        "periode": {"jaar": jaar, "kwartaal": kwartaal},
+        "btw_verkoop": btw_verkoop[0]["totaal"] if btw_verkoop else 0,
+        "btw_inkoop": btw_inkoop[0]["totaal"] if btw_inkoop else 0,
+        "btw_te_betalen": (btw_verkoop[0]["totaal"] if btw_verkoop else 0) - (btw_inkoop[0]["totaal"] if btw_inkoop else 0)
+    }
+    
+    excel_bytes = export_btw_aangifte_excel(rapport)
+    
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=btw_aangifte_{jaar}_Q{kwartaal}.xlsx"}
+    )
+
+
+@router.get("/export/winst-verlies")
+async def export_winst_verlies(jaar: int = None, authorization: str = Header(None)):
+    """Export Winst & Verlies naar Excel"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    if not EXCEL_ENABLED:
+        raise HTTPException(status_code=501, detail="Excel export niet beschikbaar")
+    
+    jaar = jaar or datetime.now().year
+    
+    omzet = await db.boekhouding_verkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "concept"}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$subtotaal"}}}
+    ]).to_list(1)
+    
+    kosten = await db.boekhouding_inkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "nieuw"}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$subtotaal"}}}
+    ]).to_list(1)
+    
+    totaal_omzet = omzet[0]["totaal"] if omzet else 0
+    totaal_kosten = kosten[0]["totaal"] if kosten else 0
+    
+    rapport = {
+        "jaar": jaar,
+        "omzet": [{"naam": "Totale omzet", "bedrag": totaal_omzet}],
+        "kosten": [{"naam": "Totale kosten", "bedrag": totaal_kosten}],
+        "totaal_omzet": totaal_omzet,
+        "totaal_kosten": totaal_kosten,
+        "netto_winst": totaal_omzet - totaal_kosten
+    }
+    
+    excel_bytes = export_winst_verlies_excel(rapport)
+    
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=winst_verlies_{jaar}.xlsx"}
+    )
+
+
+@router.get("/export/balans")
+async def export_balans(authorization: str = Header(None)):
+    """Export Balans naar Excel"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    if not EXCEL_ENABLED:
+        raise HTTPException(status_code=501, detail="Excel export niet beschikbaar")
+    
+    # Bank saldi
+    bank_saldo = await db.boekhouding_bankrekeningen.aggregate([
+        {"$match": {"user_id": user_id}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$huidig_saldo"}}}
+    ]).to_list(1)
+    
+    # Debiteuren
+    debiteuren = await db.boekhouding_verkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$in": ["verzonden", "herinnering"]}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$openstaand_bedrag"}}}
+    ]).to_list(1)
+    
+    # Crediteuren
+    crediteuren = await db.boekhouding_inkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$in": ["geboekt", "gedeeltelijk_betaald"]}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$openstaand_bedrag"}}}
+    ]).to_list(1)
+    
+    activa = [
+        {"naam": "Liquide middelen", "saldo": bank_saldo[0]["totaal"] if bank_saldo else 0},
+        {"naam": "Debiteuren", "saldo": debiteuren[0]["totaal"] if debiteuren else 0}
+    ]
+    
+    passiva = [
+        {"naam": "Crediteuren", "saldo": crediteuren[0]["totaal"] if crediteuren else 0}
+    ]
+    
+    rapport = {
+        "datum": datetime.now().strftime('%d-%m-%Y'),
+        "activa": activa,
+        "passiva": passiva,
+        "totaal_activa": sum(a["saldo"] for a in activa),
+        "totaal_passiva": sum(p["saldo"] for p in passiva)
+    }
+    
+    excel_bytes = export_balans_excel(rapport)
+    
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=balans_{datetime.now().strftime('%Y%m%d')}.xlsx"}
+    )
+
+
+@router.get("/export/ouderdom")
+async def export_ouderdom(type: str = "debiteuren", authorization: str = Header(None)):
+    """Export Ouderdomsanalyse naar Excel"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    if not EXCEL_ENABLED:
+        raise HTTPException(status_code=501, detail="Excel export niet beschikbaar")
+    
+    today = datetime.now().date()
+    
+    if type == "debiteuren":
+        facturen = await db.boekhouding_verkoopfacturen.find({
+            "user_id": user_id,
+            "status": {"$in": ["verzonden", "herinnering", "gedeeltelijk_betaald"]}
+        }).to_list(1000)
+    else:
+        facturen = await db.boekhouding_inkoopfacturen.find({
+            "user_id": user_id,
+            "status": {"$in": ["geboekt", "gedeeltelijk_betaald"]}
+        }).to_list(1000)
+    
+    analyse = {"0_30": 0, "31_60": 0, "61_90": 0, "90_plus": 0, "totaal": 0}
+    
+    for f in facturen:
+        try:
+            verval = datetime.fromisoformat(f["vervaldatum"]).date()
+            dagen = (today - verval).days
+            bedrag = f.get("openstaand_bedrag", 0)
+            
+            if dagen <= 30:
+                analyse["0_30"] += bedrag
+            elif dagen <= 60:
+                analyse["31_60"] += bedrag
+            elif dagen <= 90:
+                analyse["61_90"] += bedrag
+            else:
+                analyse["90_plus"] += bedrag
+            
+            analyse["totaal"] += bedrag
+        except:
+            pass
+    
+    type_label = "Debiteuren" if type == "debiteuren" else "Crediteuren"
+    excel_bytes = export_ouderdom_excel(analyse, type_label)
+    
+    return Response(
+        content=excel_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=ouderdom_{type}_{datetime.now().strftime('%Y%m%d')}.xlsx"}
+    )
+
 # ==================== INSTELLINGEN ====================
 
 @router.get("/instellingen")
