@@ -130,7 +130,16 @@ const BankPage = () => {
     }
     setSaving(true);
     try {
-      await bankTransactionsAPI.create(newTransaction);
+      // Map frontend fields to backend Dutch field names
+      const transactionData = {
+        bankrekening_id: newTransaction.bank_account_id,
+        datum: newTransaction.date,
+        omschrijving: newTransaction.description,
+        referentie: newTransaction.reference,
+        bedrag: newTransaction.amount,
+        type: newTransaction.type
+      };
+      await bankTransactionsAPI.create(transactionData);
       toast.success('Transactie aangemaakt');
       setShowTransactionDialog(false);
       setNewTransaction({
