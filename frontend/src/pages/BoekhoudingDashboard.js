@@ -336,7 +336,8 @@ const BoekhoudingDashboard = () => {
             {modules.map((module) => (
               <button
                 key={module.id}
-                onClick={() => setActiveModule(module.id)}
+                onClick={() => handleModuleClick(module)}
+                data-testid={`nav-${module.id}`}
                 className={`w-full flex items-center px-3 py-2.5 rounded-lg text-left transition-colors ${
                   activeModule === module.id
                     ? 'bg-blue-50 text-blue-600 font-medium'
