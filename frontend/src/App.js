@@ -122,6 +122,9 @@ const HRMHandleiding = lazy(() => import("./pages/handleiding/HRMHandleidingPage
 const AutoDealerHandleiding = lazy(() => import("./pages/handleiding/AutoDealerHandleidingPage"));
 const BeautySpaHandleiding = lazy(() => import("./pages/handleiding/BeautySpaHandleidingPage"));
 
+// Boekhouding Module
+const BoekhoudingDashboard = lazy(() => import("./pages/BoekhoudingDashboard"));
+
 // Suribet Module
 const SuribetDashboard = lazy(() => import("./pages/suribet/DashboardPage"));
 const SuribetMachines = lazy(() => import("./pages/suribet/MachinesPage"));
