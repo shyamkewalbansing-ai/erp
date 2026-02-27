@@ -99,6 +99,27 @@ const VerkoopPage = () => {
     setNewInvoice({ ...newInvoice, lines });
   };
 
+  const selectProduct = (index, productId) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      const lines = [...newInvoice.lines];
+      lines[index] = {
+        ...lines[index],
+        product_id: productId,
+        description: product.naam || product.name || '',
+        unit_price: product.verkoopprijs || product.sales_price || 0,
+      };
+      // Recalculate BTW and total
+      const qty = lines[index].quantity || 1;
+      const price = lines[index].unit_price || 0;
+      const btwPct = lines[index].btw_percentage || 0;
+      const subtotal = qty * price;
+      lines[index].btw_amount = subtotal * (btwPct / 100);
+      lines[index].total = subtotal + lines[index].btw_amount;
+      setNewInvoice({ ...newInvoice, lines });
+    }
+  };
+
   const handleDownloadPdf = async (invoiceId, invoiceNumber) => {
     try {
       const response = await pdfAPI.getInvoicePdf(invoiceId);
