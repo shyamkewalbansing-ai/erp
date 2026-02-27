@@ -410,6 +410,238 @@ async def get_dashboard(authorization: str = Header(None)):
         }
     }
 
+
+@router.get("/dashboard/charts")
+async def get_dashboard_charts(authorization: str = Header(None)):
+    """Haal dashboard grafiek data op - omzet/kosten per maand"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    now = datetime.now(timezone.utc)
+    year = now.year
+    
+    # Omzet per maand (laatste 12 maanden)
+    maanden = ["Jan", "Feb", "Mrt", "Apr", "Mei", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"]
+    omzet_per_maand = []
+    kosten_per_maand = []
+    
+    for month in range(1, 13):
+        start_date = f"{year}-{month:02d}-01"
+        if month == 12:
+            end_date = f"{year + 1}-01-01"
+        else:
+            end_date = f"{year}-{month + 1:02d}-01"
+        
+        # Omzet
+        omzet = await db.boekhouding_verkoopfacturen.aggregate([
+            {"$match": {
+                "user_id": user_id,
+                "status": {"$ne": "concept"},
+                "factuurdatum": {"$gte": start_date, "$lt": end_date}
+            }},
+            {"$group": {"_id": None, "totaal": {"$sum": "$totaal_incl_btw"}}}
+        ]).to_list(1)
+        
+        # Kosten
+        kosten = await db.boekhouding_inkoopfacturen.aggregate([
+            {"$match": {
+                "user_id": user_id,
+                "status": {"$ne": "nieuw"},
+                "factuurdatum": {"$gte": start_date, "$lt": end_date}
+            }},
+            {"$group": {"_id": None, "totaal": {"$sum": "$totaal_incl_btw"}}}
+        ]).to_list(1)
+        
+        omzet_per_maand.append({
+            "maand": maanden[month - 1],
+            "omzet": omzet[0]["totaal"] if omzet else 0,
+            "kosten": kosten[0]["totaal"] if kosten else 0
+        })
+    
+    # Ouderdomsanalyse voor donut chart
+    today = datetime.now().date()
+    facturen = await db.boekhouding_verkoopfacturen.find({
+        "user_id": user_id,
+        "status": {"$in": ["verzonden", "herinnering", "gedeeltelijk_betaald"]}
+    }).to_list(1000)
+    
+    ouderdom = {"0_30": 0, "31_60": 0, "61_90": 0, "90_plus": 0}
+    for f in facturen:
+        try:
+            verval = datetime.fromisoformat(f["vervaldatum"]).date()
+            dagen = (today - verval).days
+            bedrag = f.get("openstaand_bedrag", 0)
+            
+            if dagen <= 30:
+                ouderdom["0_30"] += bedrag
+            elif dagen <= 60:
+                ouderdom["31_60"] += bedrag
+            elif dagen <= 90:
+                ouderdom["61_90"] += bedrag
+            else:
+                ouderdom["90_plus"] += bedrag
+        except:
+            pass
+    
+    ouderdom_data = [
+        {"name": "0-30 dagen", "value": ouderdom["0_30"], "color": "#22c55e"},
+        {"name": "31-60 dagen", "value": ouderdom["31_60"], "color": "#f59e0b"},
+        {"name": "61-90 dagen", "value": ouderdom["61_90"], "color": "#f97316"},
+        {"name": ">90 dagen", "value": ouderdom["90_plus"], "color": "#dc2626"}
+    ]
+    
+    # Cashflow (inkomsten - uitgaven per maand)
+    cashflow_data = [
+        {
+            "maand": item["maand"],
+            "inkomsten": item["omzet"],
+            "uitgaven": item["kosten"],
+            "netto": item["omzet"] - item["kosten"]
+        }
+        for item in omzet_per_maand
+    ]
+    
+    # Top 5 klanten
+    top_klanten = await db.boekhouding_verkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "concept"}}},
+        {"$group": {
+            "_id": "$debiteur_naam",
+            "totaal": {"$sum": "$totaal_incl_btw"},
+            "aantal": {"$sum": 1}
+        }},
+        {"$sort": {"totaal": -1}},
+        {"$limit": 5}
+    ]).to_list(5)
+    
+    return {
+        "omzet_kosten": omzet_per_maand,
+        "ouderdom": ouderdom_data,
+        "cashflow": cashflow_data,
+        "top_klanten": [{"naam": k["_id"] or "Onbekend", "omzet": k["totaal"], "facturen": k["aantal"]} for k in top_klanten],
+        "jaar": year
+    }
+
+# ==================== MULTI-TENANT / BEDRIJVEN ====================
+
+@router.get("/bedrijven")
+async def get_bedrijven(authorization: str = Header(None)):
+    """Haal alle bedrijven van de gebruiker op"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    bedrijven = await db.boekhouding_bedrijven.find({"user_id": user_id}).sort("naam", 1).to_list(50)
+    
+    # Als geen bedrijven, maak default bedrijf
+    if not bedrijven:
+        default_bedrijf = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "naam": user.get('company_name', 'Mijn Bedrijf'),
+            "is_actief": True,
+            "is_default": True,
+            "created_at": datetime.now(timezone.utc)
+        }
+        await db.boekhouding_bedrijven.insert_one(default_bedrijf)
+        bedrijven = [default_bedrijf]
+    
+    return [clean_doc(b) for b in bedrijven]
+
+
+@router.get("/bedrijven/actief")
+async def get_actief_bedrijf(authorization: str = Header(None)):
+    """Haal het actieve bedrijf op"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Zoek actief bedrijf
+    bedrijf = await db.boekhouding_bedrijven.find_one({"user_id": user_id, "is_actief": True})
+    
+    if not bedrijf:
+        # Zoek of maak default
+        bedrijf = await db.boekhouding_bedrijven.find_one({"user_id": user_id})
+        if not bedrijf:
+            bedrijf = {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "naam": user.get('company_name', 'Mijn Bedrijf'),
+                "is_actief": True,
+                "is_default": True,
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.boekhouding_bedrijven.insert_one(bedrijf)
+        else:
+            await db.boekhouding_bedrijven.update_one(
+                {"id": bedrijf["id"]},
+                {"$set": {"is_actief": True}}
+            )
+    
+    return clean_doc(bedrijf)
+
+
+@router.post("/bedrijven")
+async def create_bedrijf(data: BedrijfCreate, authorization: str = Header(None)):
+    """Maak nieuw bedrijf"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    bedrijf = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        **data.dict(),
+        "is_actief": False,
+        "is_default": False,
+        "created_at": datetime.now(timezone.utc)
+    }
+    await db.boekhouding_bedrijven.insert_one(bedrijf)
+    return clean_doc(bedrijf)
+
+
+@router.put("/bedrijven/{bedrijf_id}/activeer")
+async def activeer_bedrijf(bedrijf_id: str, authorization: str = Header(None)):
+    """Activeer een bedrijf (schakel naar dit bedrijf)"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Deactiveer alle andere bedrijven
+    await db.boekhouding_bedrijven.update_many(
+        {"user_id": user_id},
+        {"$set": {"is_actief": False}}
+    )
+    
+    # Activeer dit bedrijf
+    result = await db.boekhouding_bedrijven.update_one(
+        {"id": bedrijf_id, "user_id": user_id},
+        {"$set": {"is_actief": True}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    return {"message": "Bedrijf geactiveerd", "bedrijf_id": bedrijf_id}
+
+
+@router.delete("/bedrijven/{bedrijf_id}")
+async def delete_bedrijf(bedrijf_id: str, authorization: str = Header(None)):
+    """Verwijder bedrijf"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Check of het niet het enige bedrijf is
+    count = await db.boekhouding_bedrijven.count_documents({"user_id": user_id})
+    if count <= 1:
+        raise HTTPException(status_code=400, detail="Kan het enige bedrijf niet verwijderen")
+    
+    # Check of het niet actief is
+    bedrijf = await db.boekhouding_bedrijven.find_one({"id": bedrijf_id, "user_id": user_id})
+    if bedrijf and bedrijf.get("is_actief"):
+        raise HTTPException(status_code=400, detail="Kan actief bedrijf niet verwijderen. Activeer eerst een ander bedrijf.")
+    
+    result = await db.boekhouding_bedrijven.delete_one({"id": bedrijf_id, "user_id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    return {"message": "Bedrijf verwijderd"}
+
 # ==================== WISSELKOERSEN ====================
 
 @router.get("/wisselkoersen")
