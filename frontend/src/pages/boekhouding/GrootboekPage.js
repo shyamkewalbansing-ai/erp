@@ -110,25 +110,25 @@ const GrootboekPage = () => {
   };
 
   const updateJournalLine = (index, field, value) => {
-    const lines = [...newJournal.lines];
-    if (field === 'account_id') {
+    const regels = [...newJournal.regels];
+    if (field === 'rekening_id') {
       const account = accounts.find(a => a.id === value);
-      lines[index] = {
-        ...lines[index],
-        account_id: value,
-        account_code: account?.code || '',
-        account_name: account?.naam || ''
+      regels[index] = {
+        ...regels[index],
+        rekening_id: value,
+        rekening_code: account?.code || '',
+        rekening_naam: account?.naam || ''
       };
     } else {
-      lines[index][field] = field === 'debit' || field === 'credit' ? parseFloat(value) || 0 : value;
+      regels[index][field] = field === 'debet' || field === 'credit' ? parseFloat(value) || 0 : value;
     }
-    setNewJournal({ ...newJournal, lines });
+    setNewJournal({ ...newJournal, regels });
   };
 
   const addJournalLine = () => {
     setNewJournal({
       ...newJournal,
-      lines: [...newJournal.lines, { account_id: '', account_code: '', account_name: '', debit: 0, credit: 0, description: '' }]
+      regels: [...newJournal.regels, { rekening_id: '', rekening_code: '', rekening_naam: '', debet: 0, credit: 0 }]
     });
   };
 
