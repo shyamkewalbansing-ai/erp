@@ -1061,7 +1061,7 @@ async def update_verkoopfactuur_status(factuur_id: str, status: str, authorizati
 
 @router.get("/verkoopfacturen/{factuur_id}/pdf")
 async def get_verkoopfactuur_pdf(factuur_id: str, authorization: str = Header(None)):
-    """Download factuur als PDF"""
+    """Download factuur als professionele PDF"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
     
@@ -1069,20 +1069,91 @@ async def get_verkoopfactuur_pdf(factuur_id: str, authorization: str = Header(No
     if not factuur:
         raise HTTPException(status_code=404, detail="Factuur niet gevonden")
     
-    # Simple HTML to PDF (basic implementation)
+    # Haal bedrijfsinstellingen
+    instellingen = await db.boekhouding_instellingen.find_one({"user_id": user_id})
+    if not instellingen:
+        instellingen = {
+            "bedrijfsnaam": user.get('company_name', 'Uw Bedrijf'),
+            "adres": user.get('address', ''),
+            "email": user.get('email', ''),
+            "telefoon": user.get('phone', '')
+        }
+    
+    # Haal debiteur
+    debiteur = None
+    if factuur.get('debiteur_id'):
+        debiteur = await db.boekhouding_debiteuren.find_one({"id": factuur['debiteur_id'], "user_id": user_id})
+        if debiteur:
+            debiteur = clean_doc(debiteur)
+    
+    # Genereer PDF
+    if PDF_ENABLED:
+        try:
+            pdf_bytes = generate_invoice_pdf(
+                factuur=clean_doc(factuur),
+                bedrijf=clean_doc(instellingen) if instellingen else {},
+                debiteur=debiteur
+            )
+            
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename=factuur_{factuur.get('factuurnummer', 'CONCEPT')}.pdf"
+                }
+            )
+        except Exception as e:
+            # Fallback naar HTML als PDF generatie faalt
+            pass
+    
+    # Fallback: Simple HTML
     html_content = f"""
+    <!DOCTYPE html>
     <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Factuur {factuur.get('factuurnummer')}</title>
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 40px; color: #333; }}
+            h1 {{ color: #1e293b; }}
+            .header {{ margin-bottom: 30px; }}
+            .info {{ margin-bottom: 20px; }}
+            table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+            th, td {{ padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }}
+            th {{ background: #f1f5f9; }}
+            .totaal {{ font-weight: bold; font-size: 1.2em; }}
+            .right {{ text-align: right; }}
+        </style>
+    </head>
     <body>
-    <h1>Factuur {factuur.get('factuurnummer')}</h1>
-    <p>Klant: {factuur.get('debiteur_naam')}</p>
-    <p>Datum: {factuur.get('factuurdatum')}</p>
-    <p>Totaal: {factuur.get('valuta', 'SRD')} {factuur.get('totaal_incl_btw', 0):.2f}</p>
+        <div class="header">
+            <h1>{instellingen.get('bedrijfsnaam', 'Uw Bedrijf')}</h1>
+            <p>{instellingen.get('adres', '')}</p>
+        </div>
+        
+        <h2>FACTUUR</h2>
+        
+        <div class="info">
+            <p><strong>Factuurnummer:</strong> {factuur.get('factuurnummer')}</p>
+            <p><strong>Klant:</strong> {factuur.get('debiteur_naam')}</p>
+            <p><strong>Datum:</strong> {factuur.get('factuurdatum')}</p>
+            <p><strong>Vervaldatum:</strong> {factuur.get('vervaldatum')}</p>
+        </div>
+        
+        <table>
+            <tr><th>Omschrijving</th><th class="right">Aantal</th><th class="right">Prijs</th><th class="right">Bedrag</th></tr>
+            {''.join(f"<tr><td>{r.get('omschrijving', '')}</td><td class='right'>{r.get('aantal', 1)}</td><td class='right'>{factuur.get('valuta', 'SRD')} {r.get('eenheidsprijs', 0):.2f}</td><td class='right'>{factuur.get('valuta', 'SRD')} {r.get('bedrag_incl', 0):.2f}</td></tr>" for r in factuur.get('regels', []))}
+        </table>
+        
+        <p><strong>Subtotaal:</strong> {factuur.get('valuta', 'SRD')} {factuur.get('subtotaal', 0):.2f}</p>
+        <p><strong>BTW:</strong> {factuur.get('valuta', 'SRD')} {factuur.get('btw_bedrag', 0):.2f}</p>
+        <p class="totaal"><strong>Totaal:</strong> {factuur.get('valuta', 'SRD')} {factuur.get('totaal_incl_btw', 0):.2f}</p>
     </body>
     </html>
     """
     
-    return StreamingResponse(
-        io.BytesIO(html_content.encode()),
+    return Response(
+        content=html_content.encode(),
         media_type="text/html",
         headers={"Content-Disposition": f"attachment; filename=factuur_{factuur.get('factuurnummer')}.html"}
     )
