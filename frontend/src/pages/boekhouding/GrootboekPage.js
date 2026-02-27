@@ -79,8 +79,8 @@ const GrootboekPage = () => {
   };
 
   const handleCreateJournal = async () => {
-    const totalDebit = newJournal.lines.reduce((sum, l) => sum + (parseFloat(l.debit) || 0), 0);
-    const totalCredit = newJournal.lines.reduce((sum, l) => sum + (parseFloat(l.credit) || 0), 0);
+    const totalDebit = newJournal.regels.reduce((sum, l) => sum + (parseFloat(l.debet) || 0), 0);
+    const totalCredit = newJournal.regels.reduce((sum, l) => sum + (parseFloat(l.credit) || 0), 0);
     
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
       toast.error('Debet en credit moeten gelijk zijn');
@@ -89,7 +89,16 @@ const GrootboekPage = () => {
 
     setSaving(true);
     try {
-      await journalAPI.create(newJournal);
+      await journalAPI.create({
+        dagboek_code: newJournal.dagboek_code,
+        datum: newJournal.datum,
+        omschrijving: newJournal.omschrijving,
+        regels: newJournal.regels.map(r => ({
+          rekening_code: r.rekening_code,
+          debet: r.debet,
+          credit: r.credit
+        }))
+      });
       toast.success('Journaalpost aangemaakt');
       setShowJournalDialog(false);
       fetchData();
