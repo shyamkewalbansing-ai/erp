@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, Users, Building2, Landmark, RefreshCcw,
   Package, Warehouse, DollarSign, Receipt, ShoppingCart, Truck,
