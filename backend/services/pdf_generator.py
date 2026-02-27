@@ -268,7 +268,15 @@ def generate_invoice_pdf(
                         filename = foto_url.split('/')[-1]
                         local_path = f"/app/backend/uploads/{filename}"
                         if os.path.exists(local_path):
-                            foto_cell = Image(local_path, width=12*mm, height=12*mm)
+                            # Verify the image is valid before adding
+                            try:
+                                from PIL import Image as PILImage
+                                with PILImage.open(local_path) as img:
+                                    # Check minimum dimensions
+                                    if img.width >= 10 and img.height >= 10:
+                                        foto_cell = Image(local_path, width=12*mm, height=12*mm)
+                            except Exception:
+                                foto_cell = ""
                 except Exception:
                     foto_cell = ""
             
