@@ -690,16 +690,6 @@ export default function Dashboard() {
                 className="h-12 sm:h-16 lg:h-20 w-auto object-contain bg-white/10 backdrop-blur-sm rounded-xl sm:rounded-2xl p-2 sm:p-3"
               />
             )}
-            <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-              <Button 
-                onClick={() => navigate('/app/boekhouding')}
-                size="sm"
-                className="flex-1 sm:flex-none bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm"
-              >
-                <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                Boekhouding
-              </Button>
-            </div>
           </div>
         </div>
       </div>
