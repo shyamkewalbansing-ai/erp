@@ -825,8 +825,7 @@ async def get_db():
 
 async def get_current_user(request):
     """Get current authenticated user"""
-    from server import get_current_user as main_get_current_user, security
-    from fastapi import Request
+    from server import get_current_user as main_get_current_user
     # This will be injected by the main app
     return await main_get_current_user(request)
 
@@ -837,22 +836,29 @@ def generate_nummer(prefix: str, count: int) -> str:
     jaar = datetime.now().year
     return f"{prefix}{jaar}-{count:05d}"
 
-async def get_next_nummer(db, collection: str, prefix: str, user_id: str) -> str:
-    """Get next sequential number for a collection"""
-    jaar = datetime.now().year
-    pattern = f"^{prefix}{jaar}-"
+def calculate_btw(bedrag: float, percentage: float) -> float:
+    """Calculate BTW amount"""
+    return round(bedrag * (percentage / 100), 2)
+
+def calculate_factuur_totalen(regels: List[dict]) -> dict:
+    """Calculate invoice totals"""
+    subtotaal = 0.0
+    btw_totaal = 0.0
     
-    last_doc = await db[collection].find_one(
-        {"user_id": user_id, "$or": [
-            {"factuurnummer": {"$regex": pattern}},
-            {"ordernummer": {"$regex": pattern}},
-            {"offertenummer": {"$regex": pattern}},
-            {"projectnummer": {"$regex": pattern}},
-            {"activum_nummer": {"$regex": pattern}},
-            {"boekstuknummer": {"$regex": pattern}},
-            {"mutatie_nummer": {"$regex": pattern}},
-            {"kasmutatie_nummer": {"$regex": pattern}},
-        ]},
+    for regel in regels:
+        regel_subtotaal = regel.get("aantal", 1) * regel.get("prijs_per_eenheid", 0)
+        korting = regel_subtotaal * (regel.get("korting_percentage", 0) / 100)
+        regel_netto = regel_subtotaal - korting
+        btw = calculate_btw(regel_netto, regel.get("btw_percentage", 0))
+        
+        subtotaal += regel_netto
+        btw_totaal += btw
+    
+    return {
+        "subtotaal": round(subtotaal, 2),
+        "btw_totaal": round(btw_totaal, 2),
+        "totaal": round(subtotaal + btw_totaal, 2)
+    }
 
 # ==================== INITIALIZATION ENDPOINTS ====================
 
