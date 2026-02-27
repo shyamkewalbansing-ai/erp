@@ -56,7 +56,7 @@ const WisselkoersenPage = () => {
   };
 
   const handleCreateRate = async () => {
-    if (!newRate.rate || newRate.rate <= 0) {
+    if (!newRate.koers || newRate.koers <= 0) {
       toast.error('Voer een geldige koers in');
       return;
     }
@@ -66,10 +66,11 @@ const WisselkoersenPage = () => {
       toast.success('Wisselkoers toegevoegd');
       setShowRateDialog(false);
       setNewRate({
-        date: new Date().toISOString().split('T')[0],
-        currency_from: 'USD',
-        rate: 0,
-        source: 'manual'
+        datum: new Date().toISOString().split('T')[0],
+        valuta_van: 'USD',
+        valuta_naar: 'SRD',
+        koers: 0,
+        bron: 'handmatig'
       });
       fetchData();
     } catch (error) {
