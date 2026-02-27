@@ -181,8 +181,8 @@ const ProtectedRoute = ({ children }) => {
 const SubscriptionRoute = ({ children, requiredAddon }) => {
   const { user, loading, hasActiveSubscription, isSuperAdmin } = useAuth();
   
-  // Free modules that are always accessible
-  const freeModules = ['boekhouding'];
+  // Free modules (no subscription needed)
+  const freeModules = [];
   
   if (loading) {
     return (
