@@ -147,6 +147,36 @@ export const bankAccountsAPI = {
     return apiFetch(`/bankrekeningen/${id}/mutaties?${params}`, { method: 'POST' });
   },
   importMutaties: (id, mutaties) => apiFetch(`/bankrekeningen/${id}/import`, { method: 'POST', body: JSON.stringify({ bankrekening_id: id, mutaties }) }),
+  // MT940 Import
+  importMT940: async (bankId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_URL}/api/boekhouding/bank/import/mt940?bank_id=${bankId}`, {
+      method: 'POST',
+      headers: getAuthHeader(),
+      body: formData
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Import failed');
+    }
+    return response.json();
+  },
+  // CSV Import
+  importCSV: async (bankId, file, delimiter = ';') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_URL}/api/boekhouding/bank/import/csv?bank_id=${bankId}&delimiter=${delimiter}`, {
+      method: 'POST',
+      headers: getAuthHeader(),
+      body: formData
+    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || 'Import failed');
+    }
+    return response.json();
+  },
 };
 
 // ==================== KASBOEK ====================
@@ -163,9 +193,13 @@ export const kasboekAPI = {
 // ==================== RECONCILIATIE ====================
 
 export const reconciliatieAPI = {
-  getOverzicht: (bankrekeningId) => apiFetch(`/reconciliatie/${bankrekeningId}`),
-  autoMatch: (bankrekeningId) => apiFetch(`/reconciliatie/auto-match?bankrekening_id=${bankrekeningId}`, { method: 'POST' }),
-  match: (data) => apiFetch('/reconciliatie/match', { method: 'POST', body: JSON.stringify(data) }),
+  getOverzicht: (bankrekeningId) => apiFetch(`/reconciliatie/overzicht/${bankrekeningId}`),
+  autoMatch: (bankrekeningId) => apiFetch(`/reconciliatie/auto-match/${bankrekeningId}`, { method: 'POST' }),
+  manualMatch: (mutatieId, factuurId, factuurType) => apiFetch('/reconciliatie/manual-match', { 
+    method: 'POST', 
+    body: JSON.stringify({ mutatie_id: mutatieId, factuur_id: factuurId, factuur_type: factuurType }) 
+  }),
+  bookPayment: (mutatieId) => apiFetch(`/reconciliatie/book-payment?mutatie_id=${mutatieId}`, { method: 'POST' }),
 };
 
 // ==================== VASTE ACTIVA ====================
