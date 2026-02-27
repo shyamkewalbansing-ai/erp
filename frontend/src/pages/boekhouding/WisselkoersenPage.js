@@ -276,63 +276,64 @@ const WisselkoersenPage = () => {
               </Button>
             </DialogTrigger>
             <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Wisselkoers Toevoegen</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
+              <DialogHeader>
+                <DialogTitle>Wisselkoers Toevoegen</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Datum</Label>
+                    <Input
+                      type="date"
+                      value={newRate.datum}
+                      onChange={(e) => setNewRate({...newRate, datum: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Valuta</Label>
+                    <Select value={newRate.valuta_van} onValueChange={(v) => setNewRate({...newRate, valuta_van: v})}>
+                      <SelectTrigger data-testid="rate-currency-select">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                        <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label>Datum</Label>
+                  <Label>Koers (1 {newRate.valuta_van} = ? SRD)</Label>
                   <Input
-                    type="date"
-                    value={newRate.datum}
-                    onChange={(e) => setNewRate({...newRate, datum: e.target.value})}
+                    type="number"
+                    step="0.0001"
+                    value={newRate.koers}
+                    onChange={(e) => setNewRate({...newRate, koers: parseFloat(e.target.value) || 0})}
+                    placeholder="35.50"
+                    data-testid="rate-value-input"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Valuta</Label>
-                  <Select value={newRate.valuta_van} onValueChange={(v) => setNewRate({...newRate, valuta_van: v})}>
-                    <SelectTrigger data-testid="rate-currency-select">
+                  <Label>Bron</Label>
+                  <Select value={newRate.bron} onValueChange={(v) => setNewRate({...newRate, bron: v})}>
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="USD">USD (US Dollar)</SelectItem>
-                      <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                      <SelectItem value="central_bank">Centrale Bank Suriname</SelectItem>
+                      <SelectItem value="bank">Commerciële Bank</SelectItem>
+                      <SelectItem value="handmatig">Handmatig</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+                <Button onClick={handleCreateRate} className="w-full" disabled={saving} data-testid="save-rate-btn">
+                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Opslaan
+                </Button>
               </div>
-              <div className="space-y-2">
-                <Label>Koers (1 {newRate.valuta_van} = ? SRD)</Label>
-                <Input
-                  type="number"
-                  step="0.0001"
-                  value={newRate.koers}
-                  onChange={(e) => setNewRate({...newRate, koers: parseFloat(e.target.value) || 0})}
-                  placeholder="35.50"
-                  data-testid="rate-value-input"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Bron</Label>
-                <Select value={newRate.bron} onValueChange={(v) => setNewRate({...newRate, bron: v})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="central_bank">Centrale Bank Suriname</SelectItem>
-                    <SelectItem value="bank">Commerciële Bank</SelectItem>
-                    <SelectItem value="handmatig">Handmatig</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleCreateRate} className="w-full" disabled={saving} data-testid="save-rate-btn">
-                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                Opslaan
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Current Rates */}
