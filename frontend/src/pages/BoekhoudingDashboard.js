@@ -140,12 +140,24 @@ const ActionItem = ({ type, message, action, priority, onClick }) => {
 
 const BoekhoudingDashboard = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
   const [activeModule, setActiveModule] = useState('dashboard');
   const [dashboardData, setDashboardData] = useState(null);
   const [actielijst, setActielijst] = useState([]);
   const [error, setError] = useState(null);
+
+  // Handle URL-based module selection
+  useEffect(() => {
+    const path = location.pathname;
+    if (path.includes('/boekhouding/')) {
+      const module = path.split('/boekhouding/')[1];
+      if (module) setActiveModule(module);
+    } else {
+      setActiveModule('dashboard');
+    }
+  }, [location]);
 
   // Check if system is initialized
   const checkInitialization = async () => {
