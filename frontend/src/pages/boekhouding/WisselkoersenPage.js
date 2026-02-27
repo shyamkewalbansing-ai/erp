@@ -427,6 +427,9 @@ const WisselkoersenPage = () => {
       <Card className="border-slate-200">
         <CardHeader>
           <CardTitle className="text-lg">Koershistorie</CardTitle>
+          <CardDescription>
+            Koersen worden automatisch gesynchroniseerd bij openen van de boekhouding module
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -434,6 +437,7 @@ const WisselkoersenPage = () => {
               <TableRow className="bg-slate-50">
                 <TableHead className="w-28">Datum</TableHead>
                 <TableHead className="w-20">Valuta</TableHead>
+                <TableHead className="w-24">Type</TableHead>
                 <TableHead className="text-right w-32">Koers</TableHead>
                 <TableHead>Bron</TableHead>
               </TableRow>
@@ -444,27 +448,43 @@ const WisselkoersenPage = () => {
                   <TableCell>{formatDate(rate.datum)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-mono">
-                      {rate.valuta_van}/SRD
+                      {rate.valuta_van}/{rate.valuta_naar || 'SRD'}
                     </Badge>
+                  </TableCell>
+                  <TableCell>
+                    {rate.koers_type ? (
+                      <Badge variant="secondary" className={
+                        rate.koers_type === 'inkoop' ? 'bg-orange-100 text-orange-700' :
+                        rate.koers_type === 'verkoop' ? 'bg-purple-100 text-purple-700' :
+                        'bg-slate-100 text-slate-700'
+                      }>
+                        {rate.koers_type === 'inkoop' ? 'Inkoop' : rate.koers_type === 'verkoop' ? 'Verkoop' : rate.koers_type}
+                      </Badge>
+                    ) : (
+                      <span className="text-slate-400">-</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right font-mono font-medium">
                     {formatNumber(rate.koers, 4)}
                   </TableCell>
                   <TableCell>
                     <Badge className={
+                      rate.bron === 'CME.sr' ? 'bg-green-100 text-green-700' :
                       rate.bron === 'central_bank' ? 'bg-blue-100 text-blue-700' :
-                      rate.bron === 'bank' ? 'bg-green-100 text-green-700' :
+                      rate.bron === 'bank' ? 'bg-cyan-100 text-cyan-700' :
                       'bg-slate-100 text-slate-700'
                     }>
-                      {rate.bron === 'central_bank' ? 'Centrale Bank' : rate.bron === 'bank' ? 'Bank' : 'Handmatig'}
+                      {rate.bron === 'CME.sr' ? 'CME.sr' :
+                       rate.bron === 'central_bank' ? 'Centrale Bank' : 
+                       rate.bron === 'bank' ? 'Bank' : 'Handmatig'}
                     </Badge>
                   </TableCell>
                 </TableRow>
               ))}
               {rates.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8 text-slate-500">
-                    Geen wisselkoersen gevonden. Voeg uw eerste koers toe.
+                  <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                    Geen wisselkoersen gevonden. Klik op "Sync CME.sr" om actuele koersen op te halen.
                   </TableCell>
                 </TableRow>
               )}
