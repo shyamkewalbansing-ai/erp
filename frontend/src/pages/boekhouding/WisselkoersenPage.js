@@ -163,6 +163,13 @@ const WisselkoersenPage = () => {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Wisselkoersen</h1>
           <p className="text-slate-500 mt-1">Beheer valutakoersen voor SRD</p>
+          {/* Scheduler Status */}
+          {schedulerStatus?.scheduler?.running && (
+            <div className="flex items-center gap-2 mt-2 text-xs text-green-600">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              Auto-sync actief: {schedulerStatus.sync_times?.join(', ')}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           {/* CME.sr Sync Button */}
