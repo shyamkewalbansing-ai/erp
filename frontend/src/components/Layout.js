@@ -127,18 +127,6 @@ const beautySpaItems = [
   { to: '/app/beautyspa/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'beauty' },
 ];
 
-// Footer items (geen dropdown)
-const boekhoudingFooterItems = [
-  { to: '/app/boekhouding/rapportages', icon: BarChart3, label: 'Rapportages', addon: 'boekhouding' },
-  { to: '/app/boekhouding/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'boekhouding' },
-];
-
-// Combined for backward compatibility
-const boekhoudingNavItems = [
-  ...boekhoudingMainItems,
-  ...boekhoudingFooterItems,
-];
-
 // Suribet Retailer Management module navigation
 const suribetNavItems = [
   { to: '/app/suribet', icon: LayoutDashboard, label: 'Dashboard', addon: 'suribet' },
