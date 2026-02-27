@@ -62,7 +62,10 @@ import {
   Receipt,
   ShoppingBag,
   Archive,
-  FolderKanban
+  FolderKanban,
+  Bell,
+  FileUp,
+  History
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
