@@ -319,6 +319,8 @@ Aangepaste pagina's:
 | `/api/boekhouding/verkoopfacturen` | GET/POST | Verkoopfacturen |
 | `/api/boekhouding/inkoopfacturen` | GET/POST | Inkoopfacturen |
 | `/api/boekhouding/artikelen` | GET/POST | Producten/Diensten |
+| `/api/boekhouding/upload-image` | POST | Product afbeelding uploaden |
+| `/api/boekhouding/images/{filename}` | GET | Geüploade afbeelding ophalen |
 | `/api/boekhouding/vaste-activa` | GET/POST | Vaste activa |
 | `/api/boekhouding/projecten` | GET/POST | Projecten |
 | `/api/boekhouding/rapportages/*` | GET | Diverse rapporten |
