@@ -29,10 +29,11 @@ const WisselkoersenPage = () => {
   const [saving, setSaving] = useState(false);
 
   const [newRate, setNewRate] = useState({
-    date: new Date().toISOString().split('T')[0],
-    currency_from: 'USD',
-    rate: 0,
-    source: 'manual'
+    datum: new Date().toISOString().split('T')[0],
+    valuta_van: 'USD',
+    valuta_naar: 'SRD',
+    koers: 0,
+    bron: 'handmatig'
   });
 
   useEffect(() => {
