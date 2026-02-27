@@ -503,13 +503,6 @@ const moduleSettingsConfig = {
     label: 'Pompstation Instellingen',
     description: 'Brandstofprijzen en tankinstellingen',
     addon_slug: 'pompstation'
-  },
-  boekhouding: {
-    id: 'boekhouding',
-    icon: Calculator,
-    label: 'Boekhouding Instellingen',
-    description: 'BTW-tarieven en valuta-instellingen',
-    addon_slug: 'boekhouding'
   }
 };
 
