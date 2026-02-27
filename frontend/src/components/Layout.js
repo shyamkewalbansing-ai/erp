@@ -501,12 +501,6 @@ export default function Layout() {
                 // Default rendering for modules
                 return (
                   <div key={moduleSlug} className="mb-1">
-                    {!isCollapsed && (
-                      <div className={`module-group-header ${isFirst ? 'mt-2' : ''}`}>
-                        <ModuleIcon className="w-3.5 h-3.5" />
-                        {config.name}
-                      </div>
-                    )}
                     {isCollapsed && !isFirst && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
                     {config.items.filter(item => config.alwaysShow || hasAddon(item.addon)).map((item) => (
                       item.external ? (
