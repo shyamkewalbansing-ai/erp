@@ -9790,6 +9790,10 @@ async def startup_event():
         from services.wisselkoers_scheduler import start_scheduler as start_wisselkoers_scheduler
         start_wisselkoers_scheduler()
         
+        # Start herinnering scheduler for automatic payment reminders
+        from services.herinnering_scheduler import start_reminder_scheduler
+        await start_reminder_scheduler(db)
+        
         logger.info("Startup tasks completed (including schedulers)")
     except Exception as e:
         logger.error(f"Startup error: {e}")
