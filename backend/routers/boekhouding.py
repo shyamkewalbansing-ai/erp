@@ -1741,10 +1741,19 @@ async def get_verkoopfactuur_pdf(factuur_id: str, authorization: str = Header(No
     # Genereer PDF
     if PDF_ENABLED:
         try:
+            # Extract template settings from instellingen
+            template_settings = {
+                'factuur_primaire_kleur': instellingen.get('factuur_primaire_kleur', '#1e293b'),
+                'factuur_secundaire_kleur': instellingen.get('factuur_secundaire_kleur', '#f1f5f9'),
+                'factuur_template': instellingen.get('factuur_template', 'standaard'),
+                'factuur_voorwaarden': instellingen.get('factuur_voorwaarden', '')
+            }
+            
             pdf_bytes = generate_invoice_pdf(
                 factuur=clean_doc(factuur),
                 bedrijf=clean_doc(instellingen) if instellingen else {},
-                debiteur=debiteur
+                debiteur=debiteur,
+                template_settings=template_settings
             )
             
             return Response(
