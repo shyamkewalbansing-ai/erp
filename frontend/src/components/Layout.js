@@ -139,6 +139,11 @@ const suribetNavItems = [
   { to: '/app/suribet/portaal', icon: Link, label: 'Suribet', addon: 'suribet', isPortalLink: true },
 ];
 
+// Boekhouding Module navigation
+const boekhoudingNavItems = [
+  { to: '/app/boekhouding', icon: LayoutDashboard, label: 'Dashboard' },
+];
+
 export default function Layout() {
   const { user, logout, hasActiveSubscription, isSuperAdmin, workspace, branding } = useAuth();
   const navigate = useNavigate();
