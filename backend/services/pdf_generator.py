@@ -248,31 +248,52 @@ def generate_invoice_pdf(
             Paragraph(format_currency(bedrag, valuta), ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT))
         ])
     
-    # Maak tabel
+    # Maak tabel met template-specifieke styling
     regels_table = Table(regels_data, colWidths=[70*mm, 20*mm, 30*mm, 20*mm, 30*mm])
-    regels_table.setStyle(TableStyle([
-        # Header - use template secondary color
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(secondary_color)),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(primary_color)),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        
-        # Body
+    
+    # Template-specific table styles
+    table_style_commands = [
+        # Body defaults
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#334155')),
-        
-        # Borders
-        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#e2e8f0')),
-        ('LINEBELOW', (0, 1), (-1, -2), 0.5, colors.HexColor(secondary_color)),
-        
         # Padding
         ('TOPPADDING', (0, 0), (-1, -1), 8),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
         ('LEFTPADDING', (0, 0), (-1, -1), 5),
         ('RIGHTPADDING', (0, 0), (-1, -1), 5),
-        
         # Alignment
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ]))
+    ]
+    
+    if template_type == 'modern':
+        # Modern: Bold header with dark background
+        table_style_commands.extend([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(primary_color)),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor(accent_color)),
+            ('LINEBELOW', (0, 1), (-1, -2), 0.5, colors.HexColor('#e2e8f0')),
+        ])
+    elif template_type == 'kleurrijk':
+        # Kleurrijk: Colorful with gradient-like alternating rows
+        table_style_commands.extend([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(primary_color)),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('LINEBELOW', (0, 0), (-1, 0), 2, colors.HexColor(accent_color)),
+            ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor(secondary_color)]),
+        ])
+    else:
+        # Standaard: Classic professional
+        table_style_commands.extend([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(secondary_color)),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(primary_color)),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#e2e8f0')),
+            ('LINEBELOW', (0, 1), (-1, -2), 0.5, colors.HexColor(secondary_color)),
+        ])
+    
+    regels_table.setStyle(TableStyle(table_style_commands))
     content.append(regels_table)
     
     content.append(Spacer(1, 5*mm))
