@@ -116,63 +116,11 @@ const BeautySpaQueue = lazy(() => import("./pages/beautyspa/QueuePage"));
 const BeautySpaReports = lazy(() => import("./pages/beautyspa/ReportsPage"));
 const BeautySpaVouchers = lazy(() => import("./pages/beautyspa/VouchersPage"));
 
-// Pompstation (Gas Station) Module
-const PompstationDashboard = lazy(() => import("./pages/pompstation/DashboardPage"));
-const PompstationTanks = lazy(() => import("./pages/pompstation/TanksPage"));
-const PompstationLeveringen = lazy(() => import("./pages/pompstation/LeveringenPage"));
-const PompstationPompen = lazy(() => import("./pages/pompstation/PompenPage"));
-const PompstationPOS = lazy(() => import("./pages/pompstation/POSPage"));
-const PompstationWinkel = lazy(() => import("./pages/pompstation/WinkelPage"));
-const PompstationDiensten = lazy(() => import("./pages/pompstation/DienstenPage"));
-const PompstationPersoneel = lazy(() => import("./pages/pompstation/PersoneelPage"));
-const PompstationVeiligheid = lazy(() => import("./pages/pompstation/VeiligheidPage"));
-const PompstationRapportages = lazy(() => import("./pages/pompstation/RapportagesPage"));
-
 // Handleiding Pages
 const VastgoedHandleiding = lazy(() => import("./pages/handleiding/VastgoedHandleidingPage"));
 const HRMHandleiding = lazy(() => import("./pages/handleiding/HRMHandleidingPage"));
 const AutoDealerHandleiding = lazy(() => import("./pages/handleiding/AutoDealerHandleidingPage"));
 const BeautySpaHandleiding = lazy(() => import("./pages/handleiding/BeautySpaHandleidingPage"));
-const PompstationHandleiding = lazy(() => import("./pages/handleiding/PompstationHandleidingPage"));
-const BoekhoudingHandleiding = lazy(() => import("./pages/handleiding/BoekhoudingHandleidingPage"));
-
-// Boekhouding Module
-const BoekhoudingDashboard = lazy(() => import("./pages/boekhouding/DashboardPage"));
-const BoekhoudingGrootboek = lazy(() => import("./pages/boekhouding/GrootboekPage"));
-const BoekhoudingDebiteuren = lazy(() => import("./pages/boekhouding/DebiterenPage"));
-const BoekhoudingCrediteuren = lazy(() => import("./pages/boekhouding/CrediterenPage"));
-const BoekhoudingVerkoopfacturen = lazy(() => import("./pages/boekhouding/VerkoopfacturenPage"));
-const BoekhoudingBankrekeningen = lazy(() => import("./pages/boekhouding/BankrekeningenPage"));
-const BoekhoudingRapportages = lazy(() => import("./pages/boekhouding/RapportagesPage"));
-const BoekhoudingActiva = lazy(() => import("./pages/boekhouding/ActivaPage"));
-const BoekhoudingKostenplaatsen = lazy(() => import("./pages/boekhouding/KostenplaatsenPage"));
-const BoekhoudingBankReconciliatie = lazy(() => import("./pages/boekhouding/BankReconciliatiePage"));
-const BoekhoudingWisselkoersen = lazy(() => import("./pages/boekhouding/WisselkoersenPage"));
-
-// Inkoop Module (Orders verwijderd - workflow: Offerte → Factuur)
-const InkoopDashboard = lazy(() => import("./pages/inkoop/DashboardPage"));
-const InkoopLeveranciers = lazy(() => import("./pages/inkoop/LeveranciersPage"));
-const InkoopOffertes = lazy(() => import("./pages/inkoop/OffertesPage"));
-const InkoopOntvangsten = lazy(() => import("./pages/inkoop/OntvangstenPage"));
-const InkoopFacturen = lazy(() => import("./pages/boekhouding/InkoopfacturenPage"));
-
-// Verkoop Module (Orders verwijderd - workflow: Offerte → Factuur)
-const VerkoopDashboard = lazy(() => import("./pages/verkoop/DashboardPage"));
-const VerkoopKlanten = lazy(() => import("./pages/verkoop/KlantenPage"));
-const VerkoopOffertes = lazy(() => import("./pages/verkoop/OffertesPage"));
-const VerkoopFacturen = lazy(() => import("./pages/boekhouding/VerkoopfacturenPage"));
-
-// Voorraad Module
-const VoorraadDashboard = lazy(() => import("./pages/voorraad/DashboardPage"));
-const VoorraadArtikelen = lazy(() => import("./pages/voorraad/ArtikelenPage"));
-const VoorraadMagazijnen = lazy(() => import("./pages/voorraad/MagazijnenPage"));
-const VoorraadMutaties = lazy(() => import("./pages/voorraad/MutatiesPage"));
-const VoorraadInventarisatie = lazy(() => import("./pages/voorraad/InventarisatiePage"));
-
-// Projecten Module
-const ProjectenDashboard = lazy(() => import("./pages/projecten/DashboardPage"));
-const ProjectenOverzicht = lazy(() => import("./pages/projecten/OverzichtPage"));
-const ProjectenUren = lazy(() => import("./pages/projecten/UrenPage"));
 
 // Suribet Module
 const SuribetDashboard = lazy(() => import("./pages/suribet/DashboardPage"));
