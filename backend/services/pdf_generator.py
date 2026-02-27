@@ -35,20 +35,29 @@ def format_date(date_str: str) -> str:
 def generate_invoice_pdf(
     factuur: Dict[str, Any],
     bedrijf: Dict[str, Any],
-    debiteur: Optional[Dict[str, Any]] = None
+    debiteur: Optional[Dict[str, Any]] = None,
+    template_settings: Optional[Dict[str, Any]] = None
 ) -> bytes:
     """
-    Genereer professionele factuur PDF
+    Genereer professionele factuur PDF met aanpasbare templates
     
     Args:
         factuur: Factuur data
         bedrijf: Bedrijfsgegevens
         debiteur: Klantgegevens (optioneel, kan ook in factuur zitten)
+        template_settings: Template instellingen (kleuren, stijl)
         
     Returns:
         PDF als bytes
     """
     buffer = io.BytesIO()
+    
+    # Get template settings with defaults
+    settings = template_settings or {}
+    primary_color = settings.get('factuur_primaire_kleur', '#1e293b')
+    secondary_color = settings.get('factuur_secundaire_kleur', '#f1f5f9')
+    template_type = settings.get('factuur_template', 'standaard')
+    footer_text = settings.get('factuur_voorwaarden', '')
     
     # Setup document
     doc = SimpleDocTemplate(
@@ -63,12 +72,12 @@ def generate_invoice_pdf(
     # Styles
     styles = getSampleStyleSheet()
     
-    # Custom styles
+    # Custom styles using template colors
     title_style = ParagraphStyle(
         'Title',
         parent=styles['Heading1'],
         fontSize=24,
-        textColor=colors.HexColor('#1e293b'),
+        textColor=colors.HexColor(primary_color),
         spaceAfter=10
     )
     
@@ -83,7 +92,7 @@ def generate_invoice_pdf(
         'CustomHeading',
         parent=styles['Heading2'],
         fontSize=12,
-        textColor=colors.HexColor('#1e293b'),
+        textColor=colors.HexColor(primary_color),
         spaceBefore=15,
         spaceAfter=5
     )
