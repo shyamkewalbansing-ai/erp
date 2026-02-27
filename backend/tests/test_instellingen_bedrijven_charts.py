@@ -96,14 +96,18 @@ class TestInstellingenAPI:
         )
         
         assert response.status_code == 200, f"Failed to update settings: {response.text}"
-        data = response.json()
+        
+        # GET the settings to verify they were saved
+        get_response = requests.get(f"{BASE_URL}/api/boekhouding/instellingen", headers=headers)
+        assert get_response.status_code == 200, f"Failed to get settings after update: {get_response.text}"
+        data = get_response.json()
         
         # Verify SMTP fields are saved
-        assert data.get("smtp_host") == "smtp.test.com", "SMTP host not saved"
-        assert data.get("smtp_port") == 587, "SMTP port not saved"
-        assert data.get("smtp_user") == "smtp_user@test.com", "SMTP user not saved"
-        assert data.get("factuur_primaire_kleur") == "#1e293b", "Primary color not saved"
-        assert data.get("factuur_template") == "standaard", "Template not saved"
+        assert data.get("smtp_host") == "smtp.test.com", f"SMTP host not saved, got: {data.get('smtp_host')}"
+        assert data.get("smtp_port") == 587, f"SMTP port not saved, got: {data.get('smtp_port')}"
+        assert data.get("smtp_user") == "smtp_user@test.com", f"SMTP user not saved, got: {data.get('smtp_user')}"
+        assert data.get("factuur_primaire_kleur") == "#1e293b", f"Primary color not saved, got: {data.get('factuur_primaire_kleur')}"
+        assert data.get("factuur_template") == "standaard", f"Template not saved, got: {data.get('factuur_template')}"
         
         print("Settings updated successfully with SMTP configuration")
 
