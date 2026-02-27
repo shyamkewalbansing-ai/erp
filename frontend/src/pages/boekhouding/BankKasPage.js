@@ -51,6 +51,9 @@ const BankKasPage = () => {
   });
 
   const [importData, setImportData] = useState('');
+  const [importFile, setImportFile] = useState(null);
+  const [importFormat, setImportFormat] = useState('csv');
+  const fileInputRef = React.useRef(null);
 
   useEffect(() => {
     fetchData();
