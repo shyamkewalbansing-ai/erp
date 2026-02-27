@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="14" skipped="0" tests="14" time="6.322" timestamp="2026-02-27T17:18:30.642576+00:00" hostname="agent-env-e1a5a9fc-f63b-4565-81e5-9b9ca11d49d0"><testcase classname="backend.tests.test_boekhouding_api.TestAuthentication" name="test_login_success" time="0.480"><failure message="AssertionError: assert 'token' in {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWIxNzhlMGEtM2MzNy00N2RmLTgxZWYtMjUyMDJkMzA4Zjk3IiwiZW1haWwiOiJkZW1vQGZhY3R1cmF0aWUuc3IiLCJleHAiOjE3NzIyOTkxMTF9.f1OWw00nwZ5WJFVlf8DbNwBL93Rqe9_JZUAjJgKXHWM', 'token_type': 'bearer', 'user': {'address': None, 'company_name': 'Demo Bedrijf N.V.', 'created_at': '2026-02-27T11:39:35.286378+00:00', 'email': 'demo@facturatie.sr', ...}}">backend/tests/test_boekhouding_api.py:39: in test_login_success
+    assert "token" in data
+E   AssertionError: assert 'token' in {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWIxNzhlMGEtM2MzNy00N2RmLTgxZWYtMjUyMDJkMzA4Zjk3IiwiZW1haWwiOiJkZW1vQGZhY3R1cmF0aWUuc3IiLCJleHAiOjE3NzIyOTkxMTF9.f1OWw00nwZ5WJFVlf8DbNwBL93Rqe9_JZUAjJgKXHWM', 'token_type': 'bearer', 'user': {'address': None, 'company_name': 'Demo Bedrijf N.V.', 'created_at': '2026-02-27T11:39:35.286378+00:00', 'email': 'demo@facturatie.sr', ...}}</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestDashboard" name="test_get_dashboard" time="0.462"><failure message="AssertionError: Dashboard failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:61: in test_get_dashboard
+    assert response.status_code == 200, f"Dashboard failed: {response.text}"
+E   AssertionError: Dashboard failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestRekeningen" name="test_get_rekeningen" time="0.532"><failure message="AssertionError: Rekeningen failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:92: in test_get_rekeningen
+    assert response.status_code == 200, f"Rekeningen failed: {response.text}"
+E   AssertionError: Rekeningen failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestDebiteuren" name="test_get_debiteuren" time="0.512"><failure message="AssertionError: Debiteuren failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:126: in test_get_debiteuren
+    assert response.status_code == 200, f"Debiteuren failed: {response.text}"
+E   AssertionError: Debiteuren failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestCrediteuren" name="test_get_crediteuren" time="0.503"><failure message="AssertionError: Crediteuren failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:159: in test_get_crediteuren
+    assert response.status_code == 200, f"Crediteuren failed: {response.text}"
+E   AssertionError: Crediteuren failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestBTWCodes" name="test_get_btw_codes" time="0.483"><failure message="AssertionError: BTW codes failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:190: in test_get_btw_codes
+    assert response.status_code == 200, f"BTW codes failed: {response.text}"
+E   AssertionError: BTW codes failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestBankrekeningen" name="test_get_bankrekeningen" time="0.452"><failure message="AssertionError: Bankrekeningen failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:222: in test_get_bankrekeningen
+    assert response.status_code == 200, f"Bankrekeningen failed: {response.text}"
+E   AssertionError: Bankrekeningen failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestVerkoopfacturen" name="test_get_verkoopfacturen" time="0.502"><failure message="AssertionError: Verkoopfacturen failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:254: in test_get_verkoopfacturen
+    assert response.status_code == 200, f"Verkoopfacturen failed: {response.text}"
+E   AssertionError: Verkoopfacturen failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestInkoopfacturen" name="test_get_inkoopfacturen" time="0.479"><failure message="AssertionError: Inkoopfacturen failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:285: in test_get_inkoopfacturen
+    assert response.status_code == 200, f"Inkoopfacturen failed: {response.text}"
+E   AssertionError: Inkoopfacturen failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestWisselkoersen" name="test_get_wisselkoersen" time="0.450"><failure message="AssertionError: Wisselkoersen failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:309: in test_get_wisselkoersen
+    assert response.status_code == 200, f"Wisselkoersen failed: {response.text}"
+E   AssertionError: Wisselkoersen failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestWisselkoersen" name="test_get_latest_wisselkoersen" time="0.127"><failure message="AssertionError: Latest wisselkoersen failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:329: in test_get_latest_wisselkoersen
+    assert response.status_code == 200, f"Latest wisselkoersen failed: {response.text}"
+E   AssertionError: Latest wisselkoersen failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestJournaalposten" name="test_get_journaalposten" time="0.559"><failure message="AssertionError: Journaalposten failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:353: in test_get_journaalposten
+    assert response.status_code == 200, f"Journaalposten failed: {response.text}"
+E   AssertionError: Journaalposten failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestRapportages" name="test_get_balans" time="0.461"><failure message="AssertionError: Balans failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:377: in test_get_balans
+    assert response.status_code == 200, f"Balans failed: {response.text}"
+E   AssertionError: Balans failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_boekhouding_api.TestRapportages" name="test_get_winst_verlies" time="0.115"><failure message="AssertionError: Winst-verlies failed: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_boekhouding_api.py:390: in test_get_winst_verlies
+    assert response.status_code == 200, f"Winst-verlies failed: {response.text}"
+E   AssertionError: Winst-verlies failed: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase></testsuite></testsuites>
