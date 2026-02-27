@@ -153,14 +153,129 @@ const WisselkoersenPage = () => {
           <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Wisselkoersen</h1>
           <p className="text-slate-500 mt-1">Beheer valutakoersen voor SRD</p>
         </div>
-        <Dialog open={showRateDialog} onOpenChange={setShowRateDialog}>
-          <DialogTrigger asChild>
-            <Button data-testid="add-rate-btn">
-              <Plus className="w-4 h-4 mr-2" />
-              Koers Toevoegen
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
+        <div className="flex flex-wrap gap-2">
+          {/* CME.sr Sync Button */}
+          <Dialog open={showCMEDialog} onOpenChange={(open) => { setShowCMEDialog(open); if (open) handlePreviewCME(); }}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2" data-testid="sync-cme-btn">
+                <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+                Sync CME.sr
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-green-600" />
+                  CME.sr Wisselkoersen
+                </DialogTitle>
+              </DialogHeader>
+              <div className="py-4">
+                {loadingPreview ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                    <span className="ml-2 text-slate-500">Koersen ophalen van CME.sr...</span>
+                  </div>
+                ) : cmePreview ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between text-sm text-slate-500">
+                      <span>Bron: Central Money Exchange</span>
+                      <a 
+                        href="https://www.cme.sr" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-blue-600 hover:underline"
+                      >
+                        cme.sr <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                    
+                    {cmePreview.cme_last_updated && (
+                      <p className="text-xs text-slate-400">
+                        CME laatste update: {cmePreview.cme_last_updated}
+                      </p>
+                    )}
+                    
+                    <div className="space-y-3">
+                      {/* USD Koersen */}
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <DollarSign className="w-5 h-5 text-green-600" />
+                          <span className="font-medium text-green-900">USD → SRD</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-xs text-green-600 uppercase">Inkoop (CME koopt)</span>
+                            <p className="text-xl font-bold text-green-900">
+                              {cmePreview.rates?.USD_SRD?.inkoop?.toFixed(2) || '-'} SRD
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-green-600 uppercase">Verkoop (CME verkoopt)</span>
+                            <p className="text-xl font-bold text-green-900">
+                              {cmePreview.rates?.USD_SRD?.verkoop?.toFixed(2) || '-'} SRD
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* EUR Koersen */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Euro className="w-5 h-5 text-blue-600" />
+                          <span className="font-medium text-blue-900">EUR → SRD</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <span className="text-xs text-blue-600 uppercase">Inkoop</span>
+                            <p className="text-xl font-bold text-blue-900">
+                              {cmePreview.rates?.EUR_SRD?.inkoop?.toFixed(2) || '-'} SRD
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs text-blue-600 uppercase">Verkoop</span>
+                            <p className="text-xl font-bold text-blue-900">
+                              {cmePreview.rates?.EUR_SRD?.verkoop?.toFixed(2) || '-'} SRD
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-center text-slate-500 py-4">
+                    Kon koersen niet ophalen
+                  </p>
+                )}
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowCMEDialog(false)}>
+                  Annuleren
+                </Button>
+                <Button 
+                  onClick={() => handleSyncCME(false)} 
+                  disabled={syncing || !cmePreview}
+                  data-testid="confirm-sync-cme-btn"
+                >
+                  {syncing ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                  )}
+                  Koersen Opslaan
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+          
+          {/* Handmatig Toevoegen */}
+          <Dialog open={showRateDialog} onOpenChange={setShowRateDialog}>
+            <DialogTrigger asChild>
+              <Button data-testid="add-rate-btn">
+                <Plus className="w-4 h-4 mr-2" />
+                Handmatig
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
             <DialogHeader>
               <DialogTitle>Wisselkoers Toevoegen</DialogTitle>
             </DialogHeader>
