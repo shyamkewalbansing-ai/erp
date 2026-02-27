@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { customersAPI, invoicesAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
+import { formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -77,6 +77,18 @@ const DebiterenPage = () => {
     }
   };
 
+  // Format number with Dutch locale (1.925,00)
+  const formatAmount = (amount, currency = 'SRD') => {
+    const formatted = new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount || 0));
+    
+    if (currency === 'USD') return `$ ${formatted}`;
+    if (currency === 'EUR') return `€ ${formatted}`;
+    return `SRD ${formatted}`;
+  };
+
   const filteredCustomers = customers.filter(c =>
     (c.naam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (c.nummer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -94,11 +106,12 @@ const DebiterenPage = () => {
   }
 
   return (
-    <div className="space-y-6" data-testid="debiteuren-page">
+    <div className="space-y-6 max-w-7xl" data-testid="debiteuren-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Debiteuren</h1>
-          <p className="text-slate-500 mt-1">Beheer uw klanten en verkoopfacturen</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Debiteuren</h1>
+          <p className="text-slate-500 mt-0.5">Beheer uw klanten en verkoopfacturen</p>
         </div>
         <Dialog open={showCustomerDialog} onOpenChange={setShowCustomerDialog}>
           <DialogTrigger asChild>
@@ -236,28 +249,28 @@ const DebiterenPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Totaal Debiteuren</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{customers.length}</p>
+                <p className="text-sm text-slate-500 mb-2">Totaal Debiteuren</p>
+                <p className="text-2xl font-semibold text-slate-900">{customers.length}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
-                <Users className="w-6 h-6 text-emerald-600" />
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                <Users className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Openstaand</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{formatCurrency(totalOutstanding)}</p>
+                <p className="text-sm text-slate-500 mb-2">Openstaand</p>
+                <p className="text-2xl font-semibold text-slate-900">{formatAmount(totalOutstanding)}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                <Receipt className="w-6 h-6 text-amber-600" />
+              <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                <Receipt className="w-5 h-5 text-amber-500" />
               </div>
             </div>
           </CardContent>
@@ -277,10 +290,10 @@ const DebiterenPage = () => {
         </TabsList>
 
         <TabsContent value="customers" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Klantenlijst</CardTitle>
+                <CardTitle className="text-base font-semibold text-slate-900">Klantenlijst</CardTitle>
                 <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
@@ -297,28 +310,28 @@ const DebiterenPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-24">Nr.</TableHead>
-                    <TableHead>Naam</TableHead>
-                    <TableHead>Plaats</TableHead>
-                    <TableHead>Telefoon</TableHead>
-                    <TableHead>E-mail</TableHead>
-                    <TableHead className="w-20">Valuta</TableHead>
-                    <TableHead className="text-right w-32">Saldo</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Nr.</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Plaats</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Telefoon</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">E-mail</TableHead>
+                    <TableHead className="w-20 text-xs font-medium text-slate-500">Valuta</TableHead>
+                    <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Saldo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredCustomers.map(customer => (
                     <TableRow key={customer.id} data-testid={`customer-row-${customer.nummer}`}>
-                      <TableCell className="font-mono">{customer.nummer}</TableCell>
-                      <TableCell className="font-medium">{customer.naam}</TableCell>
-                      <TableCell className="text-slate-500">{customer.plaats || '-'}</TableCell>
-                      <TableCell className="text-slate-500">{customer.telefoon || '-'}</TableCell>
-                      <TableCell className="text-slate-500">{customer.email || '-'}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{customer.nummer}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{customer.naam}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{customer.plaats || '-'}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{customer.telefoon || '-'}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{customer.email || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{customer.valuta}</Badge>
+                        <Badge variant="outline" className="text-xs">{customer.valuta}</Badge>
                       </TableCell>
-                      <TableCell className={`text-right font-mono ${(customer.openstaand_bedrag || 0) > 0 ? 'text-amber-600' : ''}`}>
-                        {formatCurrency(customer.openstaand_bedrag || 0, customer.valuta)}
+                      <TableCell className={`text-right text-sm font-medium ${(customer.openstaand_bedrag || 0) > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+                        {formatAmount(customer.openstaand_bedrag || 0, customer.valuta)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -336,34 +349,34 @@ const DebiterenPage = () => {
         </TabsContent>
 
         <TabsContent value="invoices" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">Verkoopfacturen</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-900">Verkoopfacturen</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-28">Nummer</TableHead>
-                    <TableHead className="w-28">Datum</TableHead>
-                    <TableHead>Debiteur</TableHead>
-                    <TableHead className="w-28">Vervaldatum</TableHead>
-                    <TableHead className="text-right w-32">Bedrag</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Nummer</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Debiteur</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Vervaldatum</TableHead>
+                    <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Bedrag</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {invoices.map(invoice => (
                     <TableRow key={invoice.id} data-testid={`invoice-row-${invoice.factuurnummer}`}>
-                      <TableCell className="font-mono">{invoice.factuurnummer}</TableCell>
-                      <TableCell>{formatDate(invoice.factuurdatum)}</TableCell>
-                      <TableCell className="font-medium">{invoice.debiteur_naam || '-'}</TableCell>
-                      <TableCell>{formatDate(invoice.vervaldatum)}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(invoice.totaal_incl_btw, invoice.valuta)}
+                      <TableCell className="text-sm text-slate-600">{invoice.factuurnummer}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatDate(invoice.factuurdatum)}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{invoice.debiteur_naam || '-'}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatDate(invoice.vervaldatum)}</TableCell>
+                      <TableCell className="text-right text-sm font-medium text-slate-900">
+                        {formatAmount(invoice.totaal_incl_btw, invoice.valuta)}
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(invoice.status)}>
+                        <Badge className={`text-xs ${getStatusColor(invoice.status)}`}>
                           {getStatusLabel(invoice.status)}
                         </Badge>
                       </TableCell>
