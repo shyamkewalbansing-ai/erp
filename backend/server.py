@@ -2010,7 +2010,7 @@ async def register(user_data: UserCreate):
         )
         user_doc["workspace_id"] = workspace["id"]
         
-        # Automatisch gratis boekhouding module activeren
+        # Automatisch gratis modules activeren
         await activate_free_addons_for_user(user_id)
     
     token = create_token(user_id, user_data.email)
