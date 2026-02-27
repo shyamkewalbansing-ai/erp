@@ -205,9 +205,9 @@ class BoekhoudingTester:
         if success and 'id' in response:
             self.created_resources['debiteuren'].append(response['id'])
             print(f"   Created debiteur ID: {response['id']}")
-            print(f"   Name: {response.get('naam')}")
-            print(f"   Currency: {response.get('standaard_valuta')}")
-            print(f"   Payment term: {response.get('betalingstermijn')} days")
+            print(f"   Name: {response.get('bedrijfsnaam')}")
+            print(f"   Currency: {response.get('valuta')}")
+            print(f"   Payment term: {response.get('betaalconditie_dagen')} days")
             return True
         return False
     
