@@ -3259,7 +3259,7 @@ async def send_herinnering_email(herinnering_id: str, authorization: str = Heade
 
 
 @router.post("/instellingen/test-email")
-async def test_email(to_email: str, authorization: str = Header(None)):
+async def test_email(to_email: str = None, authorization: str = Header(None)):
     """Test email configuratie"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -3278,6 +3278,14 @@ async def test_email(to_email: str, authorization: str = Header(None)):
             "error": "SMTP niet geconfigureerd. Vul SMTP Host, Gebruikersnaam en Wachtwoord in."
         }
     
+    # Use provided email, user email from settings, or current user email
+    recipient_email = to_email or instellingen.get('email') or user.get('email')
+    if not recipient_email:
+        return {
+            "success": False,
+            "error": "Geen e-mailadres beschikbaar. Vul een e-mailadres in bij bedrijfsinstellingen."
+        }
+    
     try:
         import aiosmtplib
         from email.mime.text import MIMEText
@@ -3286,7 +3294,7 @@ async def test_email(to_email: str, authorization: str = Header(None)):
         msg = MIMEMultipart('alternative')
         msg['Subject'] = "Test Email - Facturatie.sr"
         msg['From'] = f"{instellingen.get('smtp_from_name', 'Facturatie')} <{instellingen.get('smtp_from_email', smtp_user)}>"
-        msg['To'] = to_email
+        msg['To'] = recipient_email
         
         html = f"""
         <div style="font-family: Arial, sans-serif; padding: 20px;">
@@ -3308,7 +3316,7 @@ async def test_email(to_email: str, authorization: str = Header(None)):
             start_tls=True
         )
         
-        return {"success": True, "message": f"Test email verzonden naar {to_email}"}
+        return {"success": True, "message": f"Test email verzonden naar {recipient_email}"}
         
     except Exception as e:
         return {"success": False, "error": str(e)}
