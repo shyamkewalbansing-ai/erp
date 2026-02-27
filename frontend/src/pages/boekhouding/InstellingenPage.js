@@ -183,10 +183,17 @@ const InstellingenPage = () => {
       // Eerst opslaan, dan testen
       await settingsAPI.updateCompany(settings);
       const response = await settingsAPI.testEmail();
-      setEmailTestResult({ success: true, message: response.data?.message || 'Test e-mail verzonden!' });
-      toast.success('Test e-mail succesvol verzonden!');
+      
+      // Check response for success/error from backend
+      if (response.data?.success === false) {
+        setEmailTestResult({ success: false, message: response.data?.error || 'Test e-mail mislukt' });
+        toast.error(response.data?.error || 'Test e-mail mislukt');
+      } else {
+        setEmailTestResult({ success: true, message: response.data?.message || 'Test e-mail verzonden!' });
+        toast.success(response.data?.message || 'Test e-mail succesvol verzonden!');
+      }
     } catch (error) {
-      const message = error?.response?.data?.detail || 'Test e-mail mislukt';
+      const message = error?.response?.data?.error || error?.response?.data?.detail || 'Test e-mail mislukt';
       setEmailTestResult({ success: false, message });
       toast.error(message);
     } finally {
