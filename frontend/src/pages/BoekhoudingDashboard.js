@@ -148,33 +148,19 @@ const BoekhoudingDashboard = () => {
   const [actielijst, setActielijst] = useState([]);
   const [error, setError] = useState(null);
 
-  // Handle URL-based module selection - runs on every location change
+  // Handle URL-based module selection - use location.pathname from react-router
   useEffect(() => {
-    // Use a small delay to ensure URL is updated
-    const timer = setTimeout(() => {
-      const path = window.location.pathname;
-      console.log('Checking path:', path);
-      
-      const match = path.match(/\/boekhouding\/([^/]+)/);
-      if (match && match[1]) {
-        console.log('Setting active module to:', match[1]);
-        setActiveModule(match[1]);
-      } else {
-        setActiveModule('dashboard');
-      }
-    }, 50);
+    const path = location.pathname;
+    console.log('React Router path:', path);
     
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
-
-  // Also check on initial mount
-  useEffect(() => {
-    const path = window.location.pathname;
     const match = path.match(/\/boekhouding\/([^/]+)/);
     if (match && match[1]) {
+      console.log('Setting active module to:', match[1]);
       setActiveModule(match[1]);
+    } else {
+      setActiveModule('dashboard');
     }
-  }, []);
+  }, [location.pathname]);
 
   // Check if system is initialized
   const checkInitialization = async () => {
