@@ -41,12 +41,12 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Metric Card component with Finance OS style
+// Metric Card component matching reference design
 const MetricCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, loading, iconBg = "bg-blue-50", iconColor = "text-blue-500" }) => {
   if (loading) {
     return (
-      <Card className="bg-white border border-slate-100 shadow-sm">
-        <CardContent className="p-5">
+      <Card className="border-slate-200">
+        <CardContent className="p-6">
           <Skeleton className="h-4 w-24 mb-3" />
           <Skeleton className="h-8 w-32 mb-2" />
           <Skeleton className="h-3 w-20" />
@@ -56,27 +56,25 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, loa
   }
 
   return (
-    <Card className="bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow" data-testid={`metric-${title.toLowerCase().replace(/\s/g, '-')}`}>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <p className="text-sm text-slate-500 mb-2">{title}</p>
-            <p className="text-2xl font-semibold text-slate-900 tracking-tight">
-              {value}
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              {trend && (
-                <span className={`flex items-center text-xs font-medium ${trend === 'up' ? 'text-green-600' : 'text-red-500'}`}>
-                  {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                  {trendValue}
-                </span>
-              )}
-              <span className="text-xs text-slate-400">{subtitle}</span>
-            </div>
+    <Card className="border-slate-200 hover:shadow-md transition-shadow duration-200" data-testid={`metric-${title.toLowerCase().replace(/\s/g, '-')}`}>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-sm font-medium text-slate-500">{title}</span>
+          <div className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={1.5} />
           </div>
-          <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center`}>
-            <Icon className={`w-5 h-5 ${iconColor}`} />
-          </div>
+        </div>
+        <div className="font-mono text-2xl font-semibold text-slate-900 mb-1">
+          {value}
+        </div>
+        <div className="flex items-center gap-2">
+          {trend && (
+            <span className={`flex items-center text-xs font-medium ${trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+              {trend === 'up' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              {trendValue}
+            </span>
+          )}
+          <span className="text-xs text-slate-400">{subtitle}</span>
         </div>
       </CardContent>
     </Card>
