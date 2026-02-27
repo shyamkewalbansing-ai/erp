@@ -262,15 +262,15 @@ const InstellingenPage = () => {
         <TabsContent value="bedrijf" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Algemene Info */}
-            <Card className="border-slate-200">
+            <Card className="bg-white border border-slate-100 shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                    <Building2 className="w-5 h-5 text-blue-600" />
+                  <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">Bedrijfsgegevens</CardTitle>
-                    <CardDescription>Algemene informatie over uw bedrijf</CardDescription>
+                    <CardTitle className="text-base font-semibold text-slate-900">Bedrijfsgegevens</CardTitle>
+                    <CardDescription className="text-sm text-slate-500">Algemene informatie over uw bedrijf</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -333,15 +333,15 @@ const InstellingenPage = () => {
             </Card>
 
             {/* Registratie & Bank */}
-            <Card className="border-slate-200">
+            <Card className="bg-white border border-slate-100 shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                    <Settings className="w-5 h-5 text-green-600" />
+                  <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-green-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">Registratie & Bank</CardTitle>
-                    <CardDescription>Fiscale en bankgegevens</CardDescription>
+                    <CardTitle className="text-base font-semibold text-slate-900">Registratie & Bank</CardTitle>
+                    <CardDescription className="text-sm text-slate-500">Fiscale en bankgegevens</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -397,17 +397,16 @@ const InstellingenPage = () => {
 
         {/* E-mail (SMTP) Tab */}
         <TabsContent value="email" className="space-y-6">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-purple-600" />
+                <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-purple-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">E-mail Server Instellingen (SMTP)</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base font-semibold text-slate-900">E-mail Server Instellingen (SMTP)</CardTitle>
+                  <CardDescription className="text-sm text-slate-500">
                     Configureer uw eigen SMTP-server om facturen en herinneringen te versturen.
-                    Als u geen eigen server heeft, worden de standaard systeeminstellingen gebruikt.
                   </CardDescription>
                 </div>
               </div>
@@ -559,15 +558,15 @@ const InstellingenPage = () => {
         <TabsContent value="factuur" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Template Keuze */}
-            <Card className="border-slate-200">
+            <Card className="bg-white border border-slate-100 shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <FileText className="w-5 h-5 text-amber-600" />
+                  <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">Factuur Template</CardTitle>
-                    <CardDescription>Kies het uiterlijk van uw facturen</CardDescription>
+                    <CardTitle className="text-base font-semibold text-slate-900">Factuur Template</CardTitle>
+                    <CardDescription className="text-sm text-slate-500">Kies het uiterlijk van uw facturen</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -601,15 +600,15 @@ const InstellingenPage = () => {
             </Card>
 
             {/* Kleuren */}
-            <Card className="border-slate-200">
+            <Card className="bg-white border border-slate-100 shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center">
-                    <Palette className="w-5 h-5 text-pink-600" />
+                  <div className="w-11 h-11 rounded-xl bg-pink-50 flex items-center justify-center">
+                    <Palette className="w-5 h-5 text-pink-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">Kleuren</CardTitle>
-                    <CardDescription>Pas de kleuren van uw facturen aan</CardDescription>
+                    <CardTitle className="text-base font-semibold text-slate-900">Kleuren</CardTitle>
+                    <CardDescription className="text-sm text-slate-500">Pas de kleuren van uw facturen aan</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -679,10 +678,10 @@ const InstellingenPage = () => {
             </Card>
 
             {/* Factuur Voorwaarden */}
-            <Card className="border-slate-200 lg:col-span-2">
+            <Card className="bg-white border border-slate-100 shadow-sm lg:col-span-2">
               <CardHeader>
-                <CardTitle className="text-lg">Factuur Voorwaarden</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-base font-semibold text-slate-900">Factuur Voorwaarden</CardTitle>
+                <CardDescription className="text-sm text-slate-500">
                   Standaard tekst die onderaan elke factuur wordt getoond
                 </CardDescription>
               </CardHeader>
@@ -700,17 +699,17 @@ const InstellingenPage = () => {
 
         {/* Multi-Tenant / Bedrijven Tab */}
         <TabsContent value="multi-tenant" className="space-y-6">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
-                    <Building className="w-5 h-5 text-indigo-600" />
+                  <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center">
+                    <Building className="w-5 h-5 text-indigo-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-lg">Bedrijven Beheer</CardTitle>
-                    <CardDescription>
-                      Beheer meerdere bedrijven vanuit één account. Elke bedrijf heeft gescheiden data.
+                    <CardTitle className="text-base font-semibold text-slate-900">Bedrijven Beheer</CardTitle>
+                    <CardDescription className="text-sm text-slate-500">
+                      Beheer meerdere bedrijven vanuit één account.
                     </CardDescription>
                   </div>
                 </div>
