@@ -45,7 +45,7 @@
   
   "test_credentials": {
     "demo_spa_workspace_id": "demo-spa",
-    "api_base_url": "https://suriname-ledger.preview.emergentagent.com"
+    "api_base_url": "https://multibook-finance.preview.emergentagent.com"
   },
   
   "seed_data_creation": "Demo spa with treatments, staff, and availability already seeded",
