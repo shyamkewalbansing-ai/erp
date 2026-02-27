@@ -181,8 +181,8 @@ const GrootboekPage = () => {
                 <div className="space-y-2">
                   <Label>Naam *</Label>
                   <Input
-                    value={newAccount.name}
-                    onChange={(e) => setNewAccount({...newAccount, name: e.target.value})}
+                    value={newAccount.naam}
+                    onChange={(e) => setNewAccount({...newAccount, naam: e.target.value})}
                     placeholder="Kas"
                     data-testid="account-name-input"
                   />
@@ -190,15 +190,15 @@ const GrootboekPage = () => {
                 <div className="space-y-2">
                   <Label>Categorie *</Label>
                   <Input
-                    value={newAccount.category}
-                    onChange={(e) => setNewAccount({...newAccount, category: e.target.value})}
+                    value={newAccount.categorie}
+                    onChange={(e) => setNewAccount({...newAccount, categorie: e.target.value})}
                     placeholder="Liquide middelen"
                     data-testid="account-category-input"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Valuta</Label>
-                  <Select value={newAccount.currency} onValueChange={(v) => setNewAccount({...newAccount, currency: v})}>
+                  <Select value={newAccount.valuta} onValueChange={(v) => setNewAccount({...newAccount, valuta: v})}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
