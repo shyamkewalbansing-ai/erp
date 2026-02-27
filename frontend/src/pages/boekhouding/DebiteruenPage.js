@@ -22,16 +22,16 @@ const DebiterenPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const [newCustomer, setNewCustomer] = useState({
-    code: '',
-    name: '',
-    address: '',
-    city: '',
-    phone: '',
+    naam: '',
+    adres: '',
+    plaats: '',
+    land: 'Suriname',
+    telefoon: '',
     email: '',
-    btw_number: '',
-    payment_terms: 30,
-    credit_limit: 0,
-    currency: 'SRD'
+    btw_nummer: '',
+    betalingstermijn: 30,
+    kredietlimiet: 0,
+    valuta: 'SRD'
   });
 
   useEffect(() => {
