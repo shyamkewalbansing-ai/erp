@@ -7,6 +7,70 @@ const getAuthHeader = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+// Field name translations: English <-> Dutch
+// This helps maintain consistency between frontend (English) and backend (Dutch)
+const fieldMappings = {
+  // Common fields
+  name: 'naam',
+  address: 'adres',
+  city: 'plaats',
+  country: 'land',
+  phone: 'telefoon',
+  description: 'omschrijving',
+  currency: 'valuta',
+  
+  // Bank/Account fields
+  bank_name: 'bank',
+  account_number: 'rekeningnummer',
+  
+  // Customer/Supplier fields
+  btw_number: 'btw_nummer',
+  payment_terms: 'betalingstermijn',
+  
+  // Project fields
+  customer_id: 'klant_id',
+  start_date: 'startdatum',
+  end_date: 'einddatum',
+  hours_budget: 'uren_budget',
+  
+  // Invoice fields
+  invoice_date: 'factuur_datum',
+  due_date: 'vervaldatum',
+  
+  // Time entry fields
+  project_id: 'project_id',
+  hourly_rate: 'uurtarief',
+};
+
+// Convert English field names to Dutch for backend
+export const toBackendFormat = (data) => {
+  if (!data || typeof data !== 'object') return data;
+  
+  const converted = {};
+  for (const [key, value] of Object.entries(data)) {
+    const dutchKey = fieldMappings[key] || key;
+    converted[dutchKey] = value;
+  }
+  return converted;
+};
+
+// Convert Dutch field names to English for frontend
+export const toFrontendFormat = (data) => {
+  if (!data || typeof data !== 'object') return data;
+  
+  const reverseMappings = {};
+  for (const [eng, nl] of Object.entries(fieldMappings)) {
+    reverseMappings[nl] = eng;
+  }
+  
+  const converted = {};
+  for (const [key, value] of Object.entries(data)) {
+    const englishKey = reverseMappings[key] || key;
+    converted[englishKey] = value;
+  }
+  return converted;
+};
+
 const apiFetch = async (endpoint, options = {}) => {
   const response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
