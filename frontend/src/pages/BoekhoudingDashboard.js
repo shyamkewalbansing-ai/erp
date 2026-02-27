@@ -141,30 +141,31 @@ const ActionItem = ({ type, message, action, priority, onClick }) => {
 const BoekhoudingDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const params = useParams();
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
-  const [activeModule, setActiveModule] = useState('dashboard');
+  const [activeModule, setActiveModule] = useState(() => {
+    // Initialize from URL on mount
+    const path = window.location.pathname;
+    const match = path.match(/\/boekhouding\/([^/]+)/);
+    return match ? match[1] : 'dashboard';
+  });
   const [dashboardData, setDashboardData] = useState(null);
   const [actielijst, setActielijst] = useState([]);
   const [error, setError] = useState(null);
 
-  // Handle URL-based module selection
+  // Handle URL-based module selection on navigation
   useEffect(() => {
-    // Get wildcard params from react-router
-    const wildcardPath = params['*'] || '';
-    console.log('Wildcard path:', wildcardPath);
-    console.log('Location pathname:', location.pathname);
+    const path = window.location.pathname;
+    console.log('Path on effect:', path);
     
-    if (wildcardPath) {
-      // Extract first segment like "verkoop" from "verkoop" or "verkoop/something"
-      const module = wildcardPath.split('/')[0];
-      console.log('Setting module:', module);
-      setActiveModule(module);
-    } else {
+    const match = path.match(/\/boekhouding\/([^/]+)/);
+    if (match && match[1]) {
+      console.log('Setting active module to:', match[1]);
+      setActiveModule(match[1]);
+    } else if (path.includes('/boekhouding') && !path.match(/\/boekhouding\/.+/)) {
       setActiveModule('dashboard');
     }
-  }, [params, location.pathname]);
+  }, [location]);
 
   // Check if system is initialized
   const checkInitialization = async () => {
