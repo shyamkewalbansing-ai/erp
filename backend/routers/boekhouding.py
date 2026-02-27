@@ -1989,3 +1989,1240 @@ STANDAARD_DAGBOEKEN = [
 ]
 
 # ==================== API ENDPOINTS ====================
+
+
+# ==================== VERKOOPFACTUREN ENDPOINTS ====================
+
+@router.get("/verkoopfacturen")
+async def list_verkoopfacturen(
+    status: Optional[str] = None,
+    debiteur_id: Optional[str] = None,
+    periode_van: Optional[str] = None,
+    periode_tot: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """List sales invoices"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id}
+    if status:
+        query["status"] = status
+    if debiteur_id:
+        query["debiteur_id"] = debiteur_id
+    if periode_van:
+        query["factuurdatum"] = {"$gte": periode_van}
+    if periode_tot:
+        if "factuurdatum" in query:
+            query["factuurdatum"]["$lte"] = periode_tot
+        else:
+            query["factuurdatum"] = {"$lte": periode_tot}
+    
+    facturen = []
+    async for fac in db.boekhouding_verkoopfacturen.find(query).sort("factuurdatum", -1).skip(offset).limit(limit):
+        fac.pop("_id", None)
+        
+        # Get debiteur naam
+        debiteur = await db.boekhouding_debiteuren.find_one({"id": fac.get("debiteur_id")})
+        if debiteur:
+            fac["debiteur_naam"] = debiteur.get("bedrijfsnaam")
+        
+        facturen.append(fac)
+    
+    total = await db.boekhouding_verkoopfacturen.count_documents(query)
+    return {"items": facturen, "total": total}
+
+@router.post("/verkoopfacturen")
+async def create_verkoopfactuur(data: VerkoopfactuurCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create a sales invoice"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Validate debiteur
+    debiteur = await db.boekhouding_debiteuren.find_one({
+        "user_id": user_id,
+        "id": data.debiteur_id
+    })
+    if not debiteur:
+        raise HTTPException(status_code=404, detail="Debiteur niet gevonden")
+    
+    # Generate factuurnummer
+    jaar = datetime.now().year
+    count = await db.boekhouding_verkoopfacturen.count_documents({
+        "user_id": user_id,
+        "factuurnummer": {"$regex": f"^VF{jaar}-"}
+    })
+    factuurnummer = f"VF{jaar}-{count + 1:05d}"
+    
+    # Calculate totals
+    regels_dict = [r.model_dump() for r in data.regels]
+    totalen = calculate_factuur_totalen(regels_dict)
+    
+    # Set vervaldatum if not provided
+    vervaldatum = data.vervaldatum
+    if not vervaldatum:
+        fac_date = datetime.fromisoformat(data.factuurdatum)
+        vervaldatum = (fac_date + timedelta(days=debiteur.get("betaalconditie_dagen", 30))).strftime("%Y-%m-%d")
+    
+    factuur = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "factuurnummer": factuurnummer,
+        "debiteur_id": data.debiteur_id,
+        "factuurdatum": data.factuurdatum,
+        "vervaldatum": vervaldatum,
+        "valuta": data.valuta.value,
+        "koers": data.koers,
+        "regels": regels_dict,
+        "opmerkingen": data.opmerkingen,
+        "betaalreferentie": data.betaalreferentie or factuurnummer,
+        "subtotaal": totalen["subtotaal"],
+        "btw_totaal": totalen["btw_totaal"],
+        "totaal": totalen["totaal"],
+        "openstaand_bedrag": totalen["totaal"],
+        "status": "concept",
+        "created_at": now
+    }
+    
+    await db.boekhouding_verkoopfacturen.insert_one(factuur)
+    factuur.pop("_id", None)
+    return factuur
+
+@router.get("/verkoopfacturen/{factuur_id}")
+async def get_verkoopfactuur(factuur_id: str, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Get sales invoice details"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    factuur = await db.boekhouding_verkoopfacturen.find_one({
+        "user_id": user_id,
+        "id": factuur_id
+    })
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Get debiteur info
+    debiteur = await db.boekhouding_debiteuren.find_one({"id": factuur.get("debiteur_id")})
+    if debiteur:
+        debiteur.pop("_id", None)
+        factuur["debiteur"] = debiteur
+    
+    factuur.pop("_id", None)
+    return factuur
+
+@router.put("/verkoopfacturen/{factuur_id}")
+async def update_verkoopfactuur(factuur_id: str, data: VerkoopfactuurCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Update a sales invoice (only if concept)"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    existing = await db.boekhouding_verkoopfacturen.find_one({
+        "user_id": user_id,
+        "id": factuur_id
+    })
+    if not existing:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    if existing.get("status") != "concept":
+        raise HTTPException(status_code=400, detail="Kan alleen concept facturen wijzigen")
+    
+    # Recalculate totals
+    regels_dict = [r.model_dump() for r in data.regels]
+    totalen = calculate_factuur_totalen(regels_dict)
+    
+    await db.boekhouding_verkoopfacturen.update_one(
+        {"id": factuur_id, "user_id": user_id},
+        {"$set": {
+            "debiteur_id": data.debiteur_id,
+            "factuurdatum": data.factuurdatum,
+            "vervaldatum": data.vervaldatum,
+            "valuta": data.valuta.value,
+            "koers": data.koers,
+            "regels": regels_dict,
+            "opmerkingen": data.opmerkingen,
+            "subtotaal": totalen["subtotaal"],
+            "btw_totaal": totalen["btw_totaal"],
+            "totaal": totalen["totaal"],
+            "openstaand_bedrag": totalen["totaal"],
+            "updated_at": now
+        }}
+    )
+    
+    factuur = await db.boekhouding_verkoopfacturen.find_one({"id": factuur_id})
+    factuur.pop("_id", None)
+    return factuur
+
+@router.post("/verkoopfacturen/{factuur_id}/verzenden")
+async def verzend_verkoopfactuur(factuur_id: str, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Mark invoice as sent and create journal entry"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    factuur = await db.boekhouding_verkoopfacturen.find_one({
+        "user_id": user_id,
+        "id": factuur_id
+    })
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    if factuur.get("status") != "concept":
+        raise HTTPException(status_code=400, detail="Factuur is al verzonden")
+    
+    # Create journal entry
+    # Debit: Debiteuren (1210)
+    # Credit: Omzet (4010) + Te betalen BTW (2020)
+    
+    dagboek = await db.boekhouding_dagboeken.find_one({
+        "user_id": user_id,
+        "type": "verkoop"
+    })
+    if not dagboek:
+        raise HTTPException(status_code=400, detail="Verkoopdagboek niet gevonden. Initialiseer eerst het systeem.")
+    
+    nieuw_nummer = dagboek.get("laatst_gebruikt_nummer", 0) + 1
+    await db.boekhouding_dagboeken.update_one(
+        {"id": dagboek["id"]},
+        {"$set": {"laatst_gebruikt_nummer": nieuw_nummer}}
+    )
+    
+    jaar = datetime.now().year
+    boekstuknummer = f"{dagboek['code']}{jaar}-{nieuw_nummer:05d}"
+    
+    regels = [
+        {
+            "rekening_nummer": "1210",  # Debiteuren
+            "omschrijving": f"Factuur {factuur['factuurnummer']}",
+            "debet": factuur["totaal"],
+            "credit": 0.0,
+            "valuta": factuur["valuta"],
+            "koers": factuur["koers"]
+        },
+        {
+            "rekening_nummer": "4010",  # Omzet
+            "omschrijving": f"Omzet factuur {factuur['factuurnummer']}",
+            "debet": 0.0,
+            "credit": factuur["subtotaal"],
+            "valuta": factuur["valuta"],
+            "koers": factuur["koers"]
+        }
+    ]
+    
+    if factuur["btw_totaal"] > 0:
+        regels.append({
+            "rekening_nummer": "2020",  # Te betalen BTW
+            "omschrijving": f"BTW factuur {factuur['factuurnummer']}",
+            "debet": 0.0,
+            "credit": factuur["btw_totaal"],
+            "valuta": factuur["valuta"],
+            "koers": factuur["koers"]
+        })
+    
+    journaalpost = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "dagboek_code": dagboek["code"],
+        "boekstuknummer": boekstuknummer,
+        "datum": factuur["factuurdatum"],
+        "omschrijving": f"Verkoopfactuur {factuur['factuurnummer']}",
+        "periode": f"{jaar}-{datetime.now().month:02d}",
+        "regels": regels,
+        "relatie_id": factuur["debiteur_id"],
+        "relatie_type": "debiteur",
+        "document_id": factuur_id,
+        "status": "geboekt",
+        "created_at": now,
+        "created_by": user_id
+    }
+    
+    await db.boekhouding_journaalposten.insert_one(journaalpost)
+    
+    # Update rekening saldi
+    for regel in regels:
+        await db.boekhouding_rekeningen.update_one(
+            {"user_id": user_id, "nummer": regel["rekening_nummer"]},
+            {"$inc": {"saldo": regel["debet"] - regel["credit"]}}
+        )
+    
+    # Update factuur status
+    await db.boekhouding_verkoopfacturen.update_one(
+        {"id": factuur_id},
+        {"$set": {
+            "status": "verzonden",
+            "journaalpost_id": journaalpost["id"],
+            "updated_at": now
+        }}
+    )
+    
+    # Update debiteur openstaand saldo
+    await db.boekhouding_debiteuren.update_one(
+        {"id": factuur["debiteur_id"]},
+        {"$inc": {"openstaand_saldo": factuur["totaal"]}}
+    )
+    
+    return {"message": "Factuur verzonden", "journaalpost_id": journaalpost["id"]}
+
+@router.post("/verkoopfacturen/{factuur_id}/betaling")
+async def registreer_betaling(
+    factuur_id: str,
+    bedrag: float = Query(...),
+    datum: str = Query(...),
+    betaalwijze: str = Query("bank"),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Register payment for an invoice"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    factuur = await db.boekhouding_verkoopfacturen.find_one({
+        "user_id": user_id,
+        "id": factuur_id
+    })
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    if factuur.get("status") in ["concept", "betaald", "geannuleerd"]:
+        raise HTTPException(status_code=400, detail=f"Kan geen betaling registreren voor status: {factuur.get('status')}")
+    
+    openstaand = factuur.get("openstaand_bedrag", 0)
+    if bedrag > openstaand:
+        raise HTTPException(status_code=400, detail=f"Bedrag ({bedrag}) is hoger dan openstaand ({openstaand})")
+    
+    nieuw_openstaand = openstaand - bedrag
+    nieuwe_status = "betaald" if nieuw_openstaand <= 0 else "gedeeltelijk_betaald"
+    
+    # Update factuur
+    await db.boekhouding_verkoopfacturen.update_one(
+        {"id": factuur_id},
+        {"$set": {
+            "openstaand_bedrag": nieuw_openstaand,
+            "status": nieuwe_status,
+            "updated_at": now
+        }}
+    )
+    
+    # Update debiteur saldo
+    await db.boekhouding_debiteuren.update_one(
+        {"id": factuur["debiteur_id"]},
+        {"$inc": {"openstaand_saldo": -bedrag}}
+    )
+    
+    # Create journal entry for payment
+    dagboek_type = "bank" if betaalwijze == "bank" else "kas"
+    dagboek = await db.boekhouding_dagboeken.find_one({
+        "user_id": user_id,
+        "type": dagboek_type
+    })
+    
+    if dagboek:
+        nieuw_nummer = dagboek.get("laatst_gebruikt_nummer", 0) + 1
+        await db.boekhouding_dagboeken.update_one(
+            {"id": dagboek["id"]},
+            {"$set": {"laatst_gebruikt_nummer": nieuw_nummer}}
+        )
+        
+        jaar = datetime.now().year
+        boekstuknummer = f"{dagboek['code']}{jaar}-{nieuw_nummer:05d}"
+        bank_rekening = "1120" if betaalwijze == "bank" else "1110"
+        
+        journaalpost = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "dagboek_code": dagboek["code"],
+            "boekstuknummer": boekstuknummer,
+            "datum": datum,
+            "omschrijving": f"Betaling factuur {factuur['factuurnummer']}",
+            "periode": f"{jaar}-{datetime.now().month:02d}",
+            "regels": [
+                {
+                    "rekening_nummer": bank_rekening,
+                    "omschrijving": f"Ontvangst {factuur['factuurnummer']}",
+                    "debet": bedrag,
+                    "credit": 0.0
+                },
+                {
+                    "rekening_nummer": "1210",  # Debiteuren
+                    "omschrijving": f"Betaling {factuur['factuurnummer']}",
+                    "debet": 0.0,
+                    "credit": bedrag
+                }
+            ],
+            "relatie_id": factuur["debiteur_id"],
+            "relatie_type": "debiteur",
+            "status": "geboekt",
+            "created_at": now,
+            "created_by": user_id
+        }
+        
+        await db.boekhouding_journaalposten.insert_one(journaalpost)
+        
+        # Update rekening saldi
+        await db.boekhouding_rekeningen.update_one(
+            {"user_id": user_id, "nummer": bank_rekening},
+            {"$inc": {"saldo": bedrag}}
+        )
+        await db.boekhouding_rekeningen.update_one(
+            {"user_id": user_id, "nummer": "1210"},
+            {"$inc": {"saldo": -bedrag}}
+        )
+    
+    return {
+        "message": "Betaling geregistreerd",
+        "nieuw_openstaand": nieuw_openstaand,
+        "status": nieuwe_status
+    }
+
+# ==================== INKOOPFACTUREN ENDPOINTS ====================
+
+@router.get("/inkoopfacturen")
+async def list_inkoopfacturen(
+    status: Optional[str] = None,
+    crediteur_id: Optional[str] = None,
+    periode_van: Optional[str] = None,
+    periode_tot: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """List purchase invoices"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id}
+    if status:
+        query["status"] = status
+    if crediteur_id:
+        query["crediteur_id"] = crediteur_id
+    if periode_van:
+        query["factuurdatum"] = {"$gte": periode_van}
+    if periode_tot:
+        if "factuurdatum" in query:
+            query["factuurdatum"]["$lte"] = periode_tot
+        else:
+            query["factuurdatum"] = {"$lte": periode_tot}
+    
+    facturen = []
+    async for fac in db.boekhouding_inkoopfacturen.find(query).sort("factuurdatum", -1).skip(offset).limit(limit):
+        fac.pop("_id", None)
+        
+        crediteur = await db.boekhouding_crediteuren.find_one({"id": fac.get("crediteur_id")})
+        if crediteur:
+            fac["crediteur_naam"] = crediteur.get("bedrijfsnaam")
+        
+        facturen.append(fac)
+    
+    total = await db.boekhouding_inkoopfacturen.count_documents(query)
+    return {"items": facturen, "total": total}
+
+@router.post("/inkoopfacturen")
+async def create_inkoopfactuur(data: InkoopfactuurCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create a purchase invoice"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Validate crediteur
+    crediteur = await db.boekhouding_crediteuren.find_one({
+        "user_id": user_id,
+        "id": data.crediteur_id
+    })
+    if not crediteur:
+        raise HTTPException(status_code=404, detail="Crediteur niet gevonden")
+    
+    # Generate intern factuurnummer
+    jaar = datetime.now().year
+    count = await db.boekhouding_inkoopfacturen.count_documents({
+        "user_id": user_id,
+        "intern_factuurnummer": {"$regex": f"^IF{jaar}-"}
+    })
+    intern_factuurnummer = f"IF{jaar}-{count + 1:05d}"
+    
+    # Calculate totals
+    regels_dict = [r.model_dump() for r in data.regels]
+    totalen = calculate_factuur_totalen(regels_dict)
+    
+    # Set vervaldatum
+    vervaldatum = data.vervaldatum
+    if not vervaldatum:
+        fac_date = datetime.fromisoformat(data.factuurdatum)
+        vervaldatum = (fac_date + timedelta(days=crediteur.get("betaalconditie_dagen", 30))).strftime("%Y-%m-%d")
+    
+    factuur = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "intern_factuurnummer": intern_factuurnummer,
+        "extern_factuurnummer": data.extern_factuurnummer,
+        "crediteur_id": data.crediteur_id,
+        "factuurdatum": data.factuurdatum,
+        "vervaldatum": vervaldatum,
+        "valuta": data.valuta.value,
+        "koers": data.koers,
+        "regels": regels_dict,
+        "opmerkingen": data.opmerkingen,
+        "subtotaal": totalen["subtotaal"],
+        "btw_totaal": totalen["btw_totaal"],
+        "totaal": totalen["totaal"],
+        "openstaand_bedrag": totalen["totaal"],
+        "status": "concept",
+        "created_at": now
+    }
+    
+    await db.boekhouding_inkoopfacturen.insert_one(factuur)
+    factuur.pop("_id", None)
+    return factuur
+
+@router.post("/inkoopfacturen/{factuur_id}/boeken")
+async def boek_inkoopfactuur(factuur_id: str, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Book a purchase invoice and create journal entry"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    factuur = await db.boekhouding_inkoopfacturen.find_one({
+        "user_id": user_id,
+        "id": factuur_id
+    })
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    if factuur.get("status") != "concept":
+        raise HTTPException(status_code=400, detail="Factuur is al geboekt")
+    
+    # Get inkoopdagboek
+    dagboek = await db.boekhouding_dagboeken.find_one({
+        "user_id": user_id,
+        "type": "inkoop"
+    })
+    if not dagboek:
+        raise HTTPException(status_code=400, detail="Inkoopdagboek niet gevonden")
+    
+    nieuw_nummer = dagboek.get("laatst_gebruikt_nummer", 0) + 1
+    await db.boekhouding_dagboeken.update_one(
+        {"id": dagboek["id"]},
+        {"$set": {"laatst_gebruikt_nummer": nieuw_nummer}}
+    )
+    
+    jaar = datetime.now().year
+    boekstuknummer = f"{dagboek['code']}{jaar}-{nieuw_nummer:05d}"
+    
+    # Journal entry:
+    # Debit: Kosten (9040) + Te vorderen BTW (1220)
+    # Credit: Crediteuren (2010)
+    
+    regels = [
+        {
+            "rekening_nummer": "9040",  # Algemene kosten
+            "omschrijving": f"Inkoopfactuur {factuur['extern_factuurnummer']}",
+            "debet": factuur["subtotaal"],
+            "credit": 0.0,
+            "valuta": factuur["valuta"],
+            "koers": factuur["koers"]
+        }
+    ]
+    
+    if factuur["btw_totaal"] > 0:
+        regels.append({
+            "rekening_nummer": "1220",  # Te vorderen BTW
+            "omschrijving": f"BTW {factuur['extern_factuurnummer']}",
+            "debet": factuur["btw_totaal"],
+            "credit": 0.0
+        })
+    
+    regels.append({
+        "rekening_nummer": "2010",  # Crediteuren
+        "omschrijving": f"Factuur {factuur['extern_factuurnummer']}",
+        "debet": 0.0,
+        "credit": factuur["totaal"]
+    })
+    
+    journaalpost = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "dagboek_code": dagboek["code"],
+        "boekstuknummer": boekstuknummer,
+        "datum": factuur["factuurdatum"],
+        "omschrijving": f"Inkoopfactuur {factuur['extern_factuurnummer']}",
+        "periode": f"{jaar}-{datetime.now().month:02d}",
+        "regels": regels,
+        "relatie_id": factuur["crediteur_id"],
+        "relatie_type": "crediteur",
+        "document_id": factuur_id,
+        "status": "geboekt",
+        "created_at": now,
+        "created_by": user_id
+    }
+    
+    await db.boekhouding_journaalposten.insert_one(journaalpost)
+    
+    # Update rekening saldi
+    for regel in regels:
+        await db.boekhouding_rekeningen.update_one(
+            {"user_id": user_id, "nummer": regel["rekening_nummer"]},
+            {"$inc": {"saldo": regel["debet"] - regel["credit"]}}
+        )
+    
+    # Update factuur
+    await db.boekhouding_inkoopfacturen.update_one(
+        {"id": factuur_id},
+        {"$set": {
+            "status": "verzonden",
+            "journaalpost_id": journaalpost["id"],
+            "updated_at": now
+        }}
+    )
+    
+    # Update crediteur saldo
+    await db.boekhouding_crediteuren.update_one(
+        {"id": factuur["crediteur_id"]},
+        {"$inc": {"openstaand_saldo": factuur["totaal"]}}
+    )
+    
+    return {"message": "Factuur geboekt", "journaalpost_id": journaalpost["id"]}
+
+# ==================== BANK ENDPOINTS ====================
+
+@router.get("/bankrekeningen")
+async def list_bankrekeningen(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """List bank accounts"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    rekeningen = []
+    async for rek in db.boekhouding_bankrekeningen.find({"user_id": user_id}).sort("naam", 1):
+        rek.pop("_id", None)
+        rekeningen.append(rek)
+    
+    return rekeningen
+
+@router.post("/bankrekeningen")
+async def create_bankrekening(data: BankrekeningCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create a bank account"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    rekening = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        **data.model_dump(),
+        "bank": data.bank.value,
+        "valuta": data.valuta.value,
+        "huidig_saldo": data.beginsaldo,
+        "created_at": now
+    }
+    
+    await db.boekhouding_bankrekeningen.insert_one(rekening)
+    rekening.pop("_id", None)
+    return rekening
+
+@router.get("/bankrekeningen/{rekening_id}/mutaties")
+async def get_bankmutaties(
+    rekening_id: str,
+    status: Optional[str] = None,
+    periode_van: Optional[str] = None,
+    periode_tot: Optional[str] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Get bank mutations for an account"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id, "bankrekening_id": rekening_id}
+    if status:
+        query["status"] = status
+    if periode_van:
+        query["datum"] = {"$gte": periode_van}
+    if periode_tot:
+        if "datum" in query:
+            query["datum"]["$lte"] = periode_tot
+        else:
+            query["datum"] = {"$lte": periode_tot}
+    
+    mutaties = []
+    async for mut in db.boekhouding_bankmutaties.find(query).sort("datum", -1):
+        mut.pop("_id", None)
+        mutaties.append(mut)
+    
+    return mutaties
+
+@router.post("/bankrekeningen/{rekening_id}/import")
+async def import_bankmutaties(
+    rekening_id: str,
+    file: UploadFile = File(...),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Import bank mutations from CSV file"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Verify bank account exists
+    bankrekening = await db.boekhouding_bankrekeningen.find_one({
+        "user_id": user_id,
+        "id": rekening_id
+    })
+    if not bankrekening:
+        raise HTTPException(status_code=404, detail="Bankrekening niet gevonden")
+    
+    # Read CSV file
+    content = await file.read()
+    decoded = content.decode('utf-8')
+    
+    reader = csv.DictReader(io.StringIO(decoded), delimiter=';')
+    
+    imported = 0
+    duplicates = 0
+    
+    for row in reader:
+        # Parse row based on common Surinamese bank CSV formats
+        # Expected columns: datum, bedrag, omschrijving, tegenrekening
+        
+        datum = row.get('datum', row.get('Datum', row.get('Date', '')))
+        bedrag_str = row.get('bedrag', row.get('Bedrag', row.get('Amount', '0')))
+        omschrijving = row.get('omschrijving', row.get('Omschrijving', row.get('Description', '')))
+        tegenrekening = row.get('tegenrekening', row.get('Tegenrekening', ''))
+        naam = row.get('naam', row.get('Naam', row.get('Name', '')))
+        
+        # Clean bedrag
+        try:
+            bedrag = float(bedrag_str.replace(',', '.').replace(' ', ''))
+        except:
+            continue
+        
+        # Generate transaction reference
+        trans_ref = f"{datum}-{abs(bedrag)}-{omschrijving[:20]}"
+        
+        # Check for duplicate
+        existing = await db.boekhouding_bankmutaties.find_one({
+            "user_id": user_id,
+            "bankrekening_id": rekening_id,
+            "transactie_ref": trans_ref
+        })
+        
+        if existing:
+            duplicates += 1
+            continue
+        
+        mutatie = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "bankrekening_id": rekening_id,
+            "datum": datum,
+            "valutadatum": datum,
+            "bedrag": bedrag,
+            "omschrijving": omschrijving,
+            "tegenrekening": tegenrekening,
+            "naam_tegenpartij": naam,
+            "transactie_ref": trans_ref,
+            "status": "te_verwerken",
+            "created_at": now
+        }
+        
+        await db.boekhouding_bankmutaties.insert_one(mutatie)
+        imported += 1
+    
+    return {
+        "message": f"{imported} mutaties geïmporteerd, {duplicates} duplicaten overgeslagen",
+        "imported": imported,
+        "duplicates": duplicates
+    }
+
+# ==================== BANK RECONCILIATIE ENDPOINTS ====================
+
+@router.get("/reconciliatie/te-verwerken")
+async def get_te_verwerken_mutaties(
+    bankrekening_id: Optional[str] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Get unprocessed bank mutations for reconciliation"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id, "status": "te_verwerken"}
+    if bankrekening_id:
+        query["bankrekening_id"] = bankrekening_id
+    
+    mutaties = []
+    async for mut in db.boekhouding_bankmutaties.find(query).sort("datum", -1):
+        mut.pop("_id", None)
+        
+        # Try to find matching invoices
+        matches = []
+        
+        if mut.get("bedrag", 0) > 0:
+            # Incoming payment - look for sales invoices
+            async for fac in db.boekhouding_verkoopfacturen.find({
+                "user_id": user_id,
+                "status": {"$in": ["verzonden", "gedeeltelijk_betaald"]},
+                "openstaand_bedrag": {"$gte": mut["bedrag"] * 0.95, "$lte": mut["bedrag"] * 1.05}
+            }).limit(5):
+                fac.pop("_id", None)
+                debiteur = await db.boekhouding_debiteuren.find_one({"id": fac.get("debiteur_id")})
+                matches.append({
+                    "type": "verkoopfactuur",
+                    "id": fac["id"],
+                    "nummer": fac.get("factuurnummer"),
+                    "bedrag": fac.get("openstaand_bedrag"),
+                    "klant": debiteur.get("bedrijfsnaam") if debiteur else None,
+                    "score": 0.8 if abs(fac.get("openstaand_bedrag", 0) - mut["bedrag"]) < 0.01 else 0.5
+                })
+        else:
+            # Outgoing payment - look for purchase invoices
+            async for fac in db.boekhouding_inkoopfacturen.find({
+                "user_id": user_id,
+                "status": {"$in": ["verzonden", "gedeeltelijk_betaald"]},
+                "openstaand_bedrag": {"$gte": abs(mut["bedrag"]) * 0.95, "$lte": abs(mut["bedrag"]) * 1.05}
+            }).limit(5):
+                fac.pop("_id", None)
+                crediteur = await db.boekhouding_crediteuren.find_one({"id": fac.get("crediteur_id")})
+                matches.append({
+                    "type": "inkoopfactuur",
+                    "id": fac["id"],
+                    "nummer": fac.get("intern_factuurnummer"),
+                    "bedrag": fac.get("openstaand_bedrag"),
+                    "leverancier": crediteur.get("bedrijfsnaam") if crediteur else None,
+                    "score": 0.8 if abs(fac.get("openstaand_bedrag", 0) - abs(mut["bedrag"])) < 0.01 else 0.5
+                })
+        
+        mut["mogelijke_matches"] = matches
+        mutaties.append(mut)
+    
+    return mutaties
+
+@router.post("/reconciliatie/match")
+async def match_mutatie(
+    mutatie_id: str = Query(...),
+    factuur_id: str = Query(...),
+    factuur_type: str = Query(..., description="verkoopfactuur of inkoopfactuur"),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Match a bank mutation with an invoice"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get mutation
+    mutatie = await db.boekhouding_bankmutaties.find_one({
+        "user_id": user_id,
+        "id": mutatie_id
+    })
+    if not mutatie:
+        raise HTTPException(status_code=404, detail="Mutatie niet gevonden")
+    
+    # Get invoice
+    collection = db.boekhouding_verkoopfacturen if factuur_type == "verkoopfactuur" else db.boekhouding_inkoopfacturen
+    factuur = await collection.find_one({
+        "user_id": user_id,
+        "id": factuur_id
+    })
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Update mutation
+    await db.boekhouding_bankmutaties.update_one(
+        {"id": mutatie_id},
+        {"$set": {
+            "status": "gematcht",
+            "gekoppelde_factuur_id": factuur_id,
+            "gekoppelde_factuur_type": factuur_type,
+            "updated_at": now
+        }}
+    )
+    
+    # Process payment on invoice
+    bedrag = abs(mutatie.get("bedrag", 0))
+    openstaand = factuur.get("openstaand_bedrag", 0)
+    nieuw_openstaand = max(0, openstaand - bedrag)
+    nieuwe_status = "betaald" if nieuw_openstaand <= 0 else "gedeeltelijk_betaald"
+    
+    await collection.update_one(
+        {"id": factuur_id},
+        {"$set": {
+            "openstaand_bedrag": nieuw_openstaand,
+            "status": nieuwe_status,
+            "updated_at": now
+        }}
+    )
+    
+    # Update debtor/creditor balance
+    if factuur_type == "verkoopfactuur":
+        await db.boekhouding_debiteuren.update_one(
+            {"id": factuur.get("debiteur_id")},
+            {"$inc": {"openstaand_saldo": -bedrag}}
+        )
+    else:
+        await db.boekhouding_crediteuren.update_one(
+            {"id": factuur.get("crediteur_id")},
+            {"$inc": {"openstaand_saldo": -bedrag}}
+        )
+    
+    return {"message": "Mutatie gekoppeld aan factuur", "nieuwe_status": nieuwe_status}
+
+@router.post("/reconciliatie/boek-overig")
+async def boek_overige_mutatie(
+    mutatie_id: str = Query(...),
+    grootboekrekening: str = Query(...),
+    omschrijving: Optional[str] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Book a bank mutation to a ledger account (e.g., bank fees, interest)"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    mutatie = await db.boekhouding_bankmutaties.find_one({
+        "user_id": user_id,
+        "id": mutatie_id
+    })
+    if not mutatie:
+        raise HTTPException(status_code=404, detail="Mutatie niet gevonden")
+    
+    # Get bank account
+    bankrekening = await db.boekhouding_bankrekeningen.find_one({
+        "id": mutatie.get("bankrekening_id")
+    })
+    if not bankrekening:
+        raise HTTPException(status_code=404, detail="Bankrekening niet gevonden")
+    
+    # Create journal entry
+    dagboek = await db.boekhouding_dagboeken.find_one({
+        "user_id": user_id,
+        "type": "bank"
+    })
+    if not dagboek:
+        raise HTTPException(status_code=400, detail="Bankdagboek niet gevonden")
+    
+    nieuw_nummer = dagboek.get("laatst_gebruikt_nummer", 0) + 1
+    await db.boekhouding_dagboeken.update_one(
+        {"id": dagboek["id"]},
+        {"$set": {"laatst_gebruikt_nummer": nieuw_nummer}}
+    )
+    
+    jaar = datetime.now().year
+    boekstuknummer = f"{dagboek['code']}{jaar}-{nieuw_nummer:05d}"
+    bedrag = mutatie.get("bedrag", 0)
+    bank_gb = bankrekening.get("grootboekrekening", "1120")
+    
+    regels = []
+    if bedrag > 0:
+        # Incoming
+        regels = [
+            {"rekening_nummer": bank_gb, "omschrijving": mutatie.get("omschrijving", ""), "debet": bedrag, "credit": 0.0},
+            {"rekening_nummer": grootboekrekening, "omschrijving": omschrijving or mutatie.get("omschrijving", ""), "debet": 0.0, "credit": bedrag}
+        ]
+    else:
+        # Outgoing
+        regels = [
+            {"rekening_nummer": grootboekrekening, "omschrijving": omschrijving or mutatie.get("omschrijving", ""), "debet": abs(bedrag), "credit": 0.0},
+            {"rekening_nummer": bank_gb, "omschrijving": mutatie.get("omschrijving", ""), "debet": 0.0, "credit": abs(bedrag)}
+        ]
+    
+    journaalpost = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "dagboek_code": dagboek["code"],
+        "boekstuknummer": boekstuknummer,
+        "datum": mutatie.get("datum"),
+        "omschrijving": omschrijving or mutatie.get("omschrijving", "Bankmutatie"),
+        "periode": f"{jaar}-{datetime.now().month:02d}",
+        "regels": regels,
+        "status": "geboekt",
+        "created_at": now,
+        "created_by": user_id
+    }
+    
+    await db.boekhouding_journaalposten.insert_one(journaalpost)
+    
+    # Update rekening saldi
+    for regel in regels:
+        await db.boekhouding_rekeningen.update_one(
+            {"user_id": user_id, "nummer": regel["rekening_nummer"]},
+            {"$inc": {"saldo": regel["debet"] - regel["credit"]}}
+        )
+    
+    # Update bank saldo
+    await db.boekhouding_bankrekeningen.update_one(
+        {"id": bankrekening["id"]},
+        {"$inc": {"huidig_saldo": bedrag}}
+    )
+    
+    # Mark mutation as processed
+    await db.boekhouding_bankmutaties.update_one(
+        {"id": mutatie_id},
+        {"$set": {
+            "status": "geboekt",
+            "journaalpost_id": journaalpost["id"],
+            "updated_at": now
+        }}
+    )
+    
+    return {"message": "Mutatie geboekt", "journaalpost_id": journaalpost["id"]}
+
+# ==================== KAS ENDPOINTS ====================
+
+@router.get("/kas")
+async def get_kas_overzicht(
+    periode_van: Optional[str] = None,
+    periode_tot: Optional[str] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Get cash book overview"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id}
+    if periode_van:
+        query["datum"] = {"$gte": periode_van}
+    if periode_tot:
+        if "datum" in query:
+            query["datum"]["$lte"] = periode_tot
+        else:
+            query["datum"] = {"$lte": periode_tot}
+    
+    mutaties = []
+    async for mut in db.boekhouding_kasmutaties.find(query).sort("datum", -1):
+        mut.pop("_id", None)
+        mutaties.append(mut)
+    
+    # Calculate totals
+    totaal_in = sum(m.get("bedrag_in", 0) for m in mutaties)
+    totaal_uit = sum(m.get("bedrag_uit", 0) for m in mutaties)
+    saldo = totaal_in - totaal_uit
+    
+    return {
+        "mutaties": mutaties,
+        "totaal_in": totaal_in,
+        "totaal_uit": totaal_uit,
+        "saldo": saldo
+    }
+
+@router.post("/kas")
+async def create_kasmutatie(data: KasmutatieCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create a cash book entry"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get current kas saldo
+    saldo_result = await db.boekhouding_kasmutaties.aggregate([
+        {"$match": {"user_id": user_id}},
+        {"$group": {"_id": None, "in": {"$sum": "$bedrag_in"}, "uit": {"$sum": "$bedrag_uit"}}}
+    ]).to_list(1)
+    
+    huidig_saldo = 0.0
+    if saldo_result:
+        huidig_saldo = saldo_result[0].get("in", 0) - saldo_result[0].get("uit", 0)
+    
+    nieuw_saldo = huidig_saldo + data.bedrag_in - data.bedrag_uit
+    
+    # Generate kasmutatie nummer
+    jaar = datetime.now().year
+    count = await db.boekhouding_kasmutaties.count_documents({
+        "user_id": user_id,
+        "kasmutatie_nummer": {"$regex": f"^KAS{jaar}-"}
+    })
+    kasmutatie_nummer = f"KAS{jaar}-{count + 1:05d}"
+    
+    mutatie = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "kasmutatie_nummer": kasmutatie_nummer,
+        **data.model_dump(),
+        "saldo_na": nieuw_saldo,
+        "created_at": now,
+        "created_by": user_id
+    }
+    
+    await db.boekhouding_kasmutaties.insert_one(mutatie)
+    
+    # Create journal entry
+    dagboek = await db.boekhouding_dagboeken.find_one({
+        "user_id": user_id,
+        "type": "kas"
+    })
+    
+    if dagboek:
+        nieuw_nummer = dagboek.get("laatst_gebruikt_nummer", 0) + 1
+        await db.boekhouding_dagboeken.update_one(
+            {"id": dagboek["id"]},
+            {"$set": {"laatst_gebruikt_nummer": nieuw_nummer}}
+        )
+        
+        boekstuknummer = f"{dagboek['code']}{jaar}-{nieuw_nummer:05d}"
+        
+        regels = []
+        if data.bedrag_in > 0:
+            regels = [
+                {"rekening_nummer": "1110", "omschrijving": data.omschrijving, "debet": data.bedrag_in, "credit": 0.0},
+                {"rekening_nummer": data.grootboekrekening, "omschrijving": data.omschrijving, "debet": 0.0, "credit": data.bedrag_in}
+            ]
+        else:
+            regels = [
+                {"rekening_nummer": data.grootboekrekening, "omschrijving": data.omschrijving, "debet": data.bedrag_uit, "credit": 0.0},
+                {"rekening_nummer": "1110", "omschrijving": data.omschrijving, "debet": 0.0, "credit": data.bedrag_uit}
+            ]
+        
+        journaalpost = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "dagboek_code": dagboek["code"],
+            "boekstuknummer": boekstuknummer,
+            "datum": data.datum,
+            "omschrijving": data.omschrijving,
+            "periode": f"{jaar}-{datetime.now().month:02d}",
+            "regels": regels,
+            "status": "geboekt",
+            "created_at": now,
+            "created_by": user_id
+        }
+        
+        await db.boekhouding_journaalposten.insert_one(journaalpost)
+        
+        # Update rekening saldi
+        for regel in regels:
+            await db.boekhouding_rekeningen.update_one(
+                {"user_id": user_id, "nummer": regel["rekening_nummer"]},
+                {"$inc": {"saldo": regel["debet"] - regel["credit"]}}
+            )
+        
+        mutatie["journaalpost_id"] = journaalpost["id"]
+    
+    mutatie.pop("_id", None)
+    return mutatie
+
+# ==================== WISSELKOERSEN ENDPOINTS ====================
+
+@router.get("/wisselkoersen")
+async def list_wisselkoersen(
+    datum: Optional[str] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """List exchange rates"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id}
+    if datum:
+        query["datum"] = datum
+    
+    koersen = []
+    async for koers in db.boekhouding_wisselkoersen.find(query).sort("datum", -1).limit(100):
+        koers.pop("_id", None)
+        koersen.append(koers)
+    
+    return koersen
+
+@router.post("/wisselkoersen")
+async def create_wisselkoers(data: WisselkoersCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create/update exchange rate"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Check for existing rate on same date
+    existing = await db.boekhouding_wisselkoersen.find_one({
+        "user_id": user_id,
+        "datum": data.datum,
+        "van_valuta": data.van_valuta.value,
+        "naar_valuta": data.naar_valuta.value
+    })
+    
+    if existing:
+        await db.boekhouding_wisselkoersen.update_one(
+            {"id": existing["id"]},
+            {"$set": {"koers": data.koers, "bron": data.bron, "updated_at": now}}
+        )
+        existing["koers"] = data.koers
+        existing.pop("_id", None)
+        return existing
+    
+    koers = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        **data.model_dump(),
+        "van_valuta": data.van_valuta.value,
+        "naar_valuta": data.naar_valuta.value,
+        "created_at": now
+    }
+    
+    await db.boekhouding_wisselkoersen.insert_one(koers)
+    koers.pop("_id", None)
+    return koers
+
+@router.get("/wisselkoersen/haal-centrale-bank")
+async def haal_centrale_bank_koersen(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Fetch exchange rates from Central Bank of Suriname"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    # Note: This is a placeholder. In production, you would connect to the actual CBvS API
+    # For now, we'll use mock data based on typical SRD exchange rates
+    
+    # Mock data - in production replace with actual API call
+    mock_rates = [
+        {"van": "USD", "naar": "SRD", "koers": 36.50},
+        {"van": "EUR", "naar": "SRD", "koers": 39.75},
+        {"van": "SRD", "naar": "USD", "koers": 0.0274},
+        {"van": "SRD", "naar": "EUR", "koers": 0.0252},
+    ]
+    
+    saved_rates = []
+    for rate in mock_rates:
+        koers_data = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "datum": today,
+            "van_valuta": rate["van"],
+            "naar_valuta": rate["naar"],
+            "koers": rate["koers"],
+            "bron": "centrale_bank",
+            "created_at": now
+        }
+        
+        # Upsert
+        await db.boekhouding_wisselkoersen.update_one(
+            {
+                "user_id": user_id,
+                "datum": today,
+                "van_valuta": rate["van"],
+                "naar_valuta": rate["naar"]
+            },
+            {"$set": koers_data},
+            upsert=True
+        )
+        saved_rates.append(koers_data)
+    
+    return {
+        "message": f"{len(saved_rates)} koersen opgehaald van Centrale Bank",
+        "datum": today,
+        "koersen": saved_rates
+    }
+
+@router.get("/wisselkoersen/actueel")
+async def get_actuele_koersen(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Get most recent exchange rates"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    # Get latest rates per currency pair
+    pipeline = [
+        {"$match": {"user_id": user_id}},
+        {"$sort": {"datum": -1}},
+        {"$group": {
+            "_id": {"van": "$van_valuta", "naar": "$naar_valuta"},
+            "koers": {"$first": "$koers"},
+            "datum": {"$first": "$datum"},
+            "bron": {"$first": "$bron"}
+        }}
+    ]
+    
+    result = await db.boekhouding_wisselkoersen.aggregate(pipeline).to_list(20)
+    
+    koersen = {}
+    for item in result:
+        key = f"{item['_id']['van']}_to_{item['_id']['naar']}"
+        koersen[key] = {
+            "van": item["_id"]["van"],
+            "naar": item["_id"]["naar"],
+            "koers": item["koers"],
+            "datum": item["datum"],
+            "bron": item["bron"]
+        }
+    
+    return koersen
+
