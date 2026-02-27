@@ -8304,7 +8304,6 @@ def get_default_module_settings(module_slug: str) -> dict:
         "autodealer": AutoDealerSettings().model_dump(),
         "beauty": BeautySpaSettings().model_dump(),
         "pompstation": PompstationSettings().model_dump(),
-        "boekhouding": BoekhoudingSettings().model_dump(),
     }
     return defaults.get(module_slug, {})
 
