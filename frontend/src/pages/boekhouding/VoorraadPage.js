@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { productsAPI, warehousesAPI, stockMovementsAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, formatNumber, formatDate } from '../../lib/utils';
+import { formatDate } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -43,6 +43,25 @@ const VoorraadPage = () => {
     description: ''
   });
 
+  // Format number with Dutch locale
+  const formatAmount = (amount, currency = 'SRD') => {
+    const formatted = new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount || 0));
+    
+    if (currency === 'USD') return `$ ${formatted}`;
+    if (currency === 'EUR') return `€ ${formatted}`;
+    return `SRD ${formatted}`;
+  };
+
+  const formatNumber = (num, decimals = 0) => {
+    return new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(num || 0);
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -71,7 +90,6 @@ const VoorraadPage = () => {
     }
     setSaving(true);
     try {
-      // Map frontend fields to backend Dutch field names
       const productData = {
         code: newProduct.code,
         naam: newProduct.name,
@@ -132,12 +150,21 @@ const VoorraadPage = () => {
     return stock <= minStock && minStock > 0;
   });
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96" data-testid="voorraad-page">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6" data-testid="voorraad-page">
+    <div className="space-y-6 max-w-7xl" data-testid="voorraad-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Voorraad</h1>
-          <p className="text-slate-500 mt-1">Beheer producten en voorraadniveaus</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Voorraad</h1>
+          <p className="text-slate-500 mt-0.5">Beheer producten en voorraadniveaus</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
@@ -321,43 +348,43 @@ const VoorraadPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Totaal Producten</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{products.length}</p>
+                <p className="text-sm text-slate-500 mb-2">Totaal Producten</p>
+                <p className="text-2xl font-semibold text-slate-900">{products.length}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Package className="w-6 h-6 text-blue-600" />
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                <Package className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Voorraadwaarde</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{formatCurrency(totalValue)}</p>
+                <p className="text-sm text-slate-500 mb-2">Voorraadwaarde</p>
+                <p className="text-2xl font-semibold text-slate-900">{formatAmount(totalValue)}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <Warehouse className="w-6 h-6 text-green-600" />
+              <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+                <Warehouse className="w-5 h-5 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className={`border-slate-200 ${lowStockProducts.length > 0 ? 'bg-amber-50' : ''}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className={`bg-white border border-slate-100 shadow-sm ${lowStockProducts.length > 0 ? 'bg-amber-50' : ''}`}>
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Lage Voorraad</p>
-                <p className={`text-2xl font-bold font-mono ${lowStockProducts.length > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+                <p className="text-sm text-slate-500 mb-2">Lage Voorraad</p>
+                <p className={`text-2xl font-semibold ${lowStockProducts.length > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
                   {lowStockProducts.length}
                 </p>
               </div>
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${lowStockProducts.length > 0 ? 'bg-amber-100' : 'bg-slate-100'}`}>
-                <AlertTriangle className={`w-6 h-6 ${lowStockProducts.length > 0 ? 'text-amber-600' : 'text-slate-400'}`} />
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${lowStockProducts.length > 0 ? 'bg-amber-100' : 'bg-slate-100'}`}>
+                <AlertTriangle className={`w-5 h-5 ${lowStockProducts.length > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
               </div>
             </div>
           </CardContent>
@@ -377,10 +404,10 @@ const VoorraadPage = () => {
         </TabsList>
 
         <TabsContent value="products" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Producten</CardTitle>
+                <CardTitle className="text-base font-semibold text-slate-900">Producten</CardTitle>
                 <div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
@@ -397,13 +424,13 @@ const VoorraadPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-24">Code</TableHead>
-                    <TableHead>Naam</TableHead>
-                    <TableHead className="w-20">Eenheid</TableHead>
-                    <TableHead className="text-right w-24">Voorraad</TableHead>
-                    <TableHead className="text-right w-28">Inkoopprijs</TableHead>
-                    <TableHead className="text-right w-28">Verkoopprijs</TableHead>
-                    <TableHead className="text-right w-28">Waarde</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
+                    <TableHead className="w-20 text-xs font-medium text-slate-500">Eenheid</TableHead>
+                    <TableHead className="text-right w-24 text-xs font-medium text-slate-500">Voorraad</TableHead>
+                    <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Inkoopprijs</TableHead>
+                    <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Verkoopprijs</TableHead>
+                    <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Waarde</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -418,21 +445,21 @@ const VoorraadPage = () => {
                     
                     return (
                     <TableRow key={product.id} data-testid={`product-row-${product.code}`}>
-                      <TableCell className="font-mono">{product.code}</TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="text-sm text-slate-600">{product.code}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">
                         {productName}
                         {isLowStock && (
-                          <Badge className="ml-2 bg-amber-100 text-amber-700">Laag</Badge>
+                          <Badge className="ml-2 text-xs bg-amber-100 text-amber-700">Laag</Badge>
                         )}
                       </TableCell>
-                      <TableCell>{unit}</TableCell>
-                      <TableCell className={`text-right font-mono ${isLowStock ? 'text-amber-600' : ''}`}>
+                      <TableCell className="text-sm text-slate-500">{unit}</TableCell>
+                      <TableCell className={`text-right text-sm font-medium ${isLowStock ? 'text-amber-600' : 'text-slate-900'}`}>
                         {formatNumber(stockQty, 0)}
                       </TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency(purchasePrice)}</TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency(salesPrice)}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(stockQty * purchasePrice)}
+                      <TableCell className="text-right text-sm text-slate-600">{formatAmount(purchasePrice)}</TableCell>
+                      <TableCell className="text-right text-sm text-slate-600">{formatAmount(salesPrice)}</TableCell>
+                      <TableCell className="text-right text-sm font-medium text-slate-900">
+                        {formatAmount(stockQty * purchasePrice)}
                       </TableCell>
                     </TableRow>
                   )})}
@@ -450,19 +477,19 @@ const VoorraadPage = () => {
         </TabsContent>
 
         <TabsContent value="movements" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">Voorraadmutaties</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-900">Voorraadmutaties</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-28">Datum</TableHead>
-                    <TableHead>Product</TableHead>
-                    <TableHead className="w-28">Type</TableHead>
-                    <TableHead className="text-right w-24">Aantal</TableHead>
-                    <TableHead>Omschrijving</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Product</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Type</TableHead>
+                    <TableHead className="text-right w-24 text-xs font-medium text-slate-500">Aantal</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Omschrijving</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -470,21 +497,21 @@ const VoorraadPage = () => {
                     const product = products.find(p => p.id === movement.product_id);
                     return (
                       <TableRow key={movement.id}>
-                        <TableCell>{formatDate(movement.date)}</TableCell>
-                        <TableCell className="font-medium">{product?.name || '-'}</TableCell>
+                        <TableCell className="text-sm text-slate-600">{formatDate(movement.date)}</TableCell>
+                        <TableCell className="text-sm font-medium text-slate-900">{product?.naam || product?.name || '-'}</TableCell>
                         <TableCell>
-                          <Badge className={
+                          <Badge className={`text-xs ${
                             movement.type === 'in' ? 'bg-green-100 text-green-700' :
                             movement.type === 'out' ? 'bg-red-100 text-red-700' :
                             'bg-blue-100 text-blue-700'
-                          }>
+                          }`}>
                             {movement.type === 'in' ? 'Inkomend' : movement.type === 'out' ? 'Uitgaand' : 'Correctie'}
                           </Badge>
                         </TableCell>
-                        <TableCell className={`text-right font-mono ${movement.type === 'in' ? 'text-green-600' : movement.type === 'out' ? 'text-red-600' : ''}`}>
+                        <TableCell className={`text-right text-sm font-medium ${movement.type === 'in' ? 'text-green-600' : movement.type === 'out' ? 'text-red-600' : 'text-slate-900'}`}>
                           {movement.type === 'in' ? '+' : movement.type === 'out' ? '-' : ''}{formatNumber(movement.quantity, 0)}
                         </TableCell>
-                        <TableCell className="text-slate-500">{movement.description || '-'}</TableCell>
+                        <TableCell className="text-sm text-slate-500">{movement.description || '-'}</TableCell>
                       </TableRow>
                     );
                   })}
