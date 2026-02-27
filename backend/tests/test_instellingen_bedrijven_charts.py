@@ -21,8 +21,10 @@ class TestAuthentication:
         })
         assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()
-        assert "token" in data, "Token not in response"
-        return data["token"]
+        # API returns access_token instead of token
+        token = data.get("access_token") or data.get("token")
+        assert token is not None, "Token not in response"
+        return token
     
     def test_login_success(self, auth_token):
         """Test login returns valid token"""
@@ -42,7 +44,8 @@ class TestInstellingenAPI:
             "password": "demo2024"
         })
         assert response.status_code == 200
-        return response.json()["token"]
+        data = response.json()
+        return data.get("access_token") or data.get("token")
     
     def test_get_instellingen(self, auth_token):
         """Test GET /boekhouding/instellingen returns company settings"""
@@ -116,7 +119,8 @@ class TestBedrijvenAPI:
             "password": "demo2024"
         })
         assert response.status_code == 200
-        return response.json()["token"]
+        data = response.json()
+        return data.get("access_token") or data.get("token")
     
     def test_get_bedrijven_list(self, auth_token):
         """Test GET /boekhouding/bedrijven returns list of companies"""
@@ -230,7 +234,8 @@ class TestDashboardChartsAPI:
             "password": "demo2024"
         })
         assert response.status_code == 200
-        return response.json()["token"]
+        data = response.json()
+        return data.get("access_token") or data.get("token")
     
     def test_get_dashboard(self, auth_token):
         """Test GET /boekhouding/dashboard returns KPIs"""
@@ -324,7 +329,8 @@ class TestCleanup:
             "password": "demo2024"
         })
         assert response.status_code == 200
-        return response.json()["token"]
+        data = response.json()
+        return data.get("access_token") or data.get("token")
     
     def test_cleanup_test_bedrijven(self, auth_token):
         """Clean up TEST_ prefixed bedrijven"""
