@@ -299,6 +299,20 @@ export const documentsAPI = {
   link: (id, entityType, entityId) => apiFetch(`/boekhouding/documenten/${id}/link?entity_type=${entityType}&entity_id=${entityId}`, { method: 'PUT' }),
 };
 
+// Multi-tenant / Bedrijven
+export const bedrijvenAPI = {
+  getAll: () => apiFetch('/boekhouding/bedrijven'),
+  getActief: () => apiFetch('/boekhouding/bedrijven/actief'),
+  create: (data) => apiFetch('/boekhouding/bedrijven', { method: 'POST', body: JSON.stringify(data) }),
+  activeer: (id) => apiFetch(`/boekhouding/bedrijven/${id}/activeer`, { method: 'PUT' }),
+  delete: (id) => apiFetch(`/boekhouding/bedrijven/${id}`, { method: 'DELETE' }),
+};
+
+// Dashboard Charts
+export const chartsAPI = {
+  getChartData: () => apiFetch('/boekhouding/dashboard/charts'),
+};
+
 // Default export for backward compatibility
 export default {
   dashboard: dashboardAPI,
