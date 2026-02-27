@@ -760,23 +760,21 @@ function MainAppRoutes() {
             <SubscriptionRoute requiredAddon="suribet"><SuribetPortaalLink /></SubscriptionRoute>
           } />
           
-          {/* Boekhouding Module Routes */}
-          <Route path="boekhouding" element={<BoekhoudingLayout />}>
-            <Route index element={<BoekhoudingDashboard />} />
-            <Route path="grootboek" element={<BoekhoudingGrootboek />} />
-            <Route path="debiteuren" element={<BoekhoudingDebiteuren />} />
-            <Route path="crediteuren" element={<BoekhoudingCrediteuren />} />
-            <Route path="bank-kas" element={<BoekhoudingBankKas />} />
-            <Route path="btw" element={<BoekhoudingBTW />} />
-            <Route path="verkoop" element={<BoekhoudingVerkoop />} />
-            <Route path="inkoop" element={<BoekhoudingInkoop />} />
-            <Route path="voorraad" element={<BoekhoudingVoorraad />} />
-            <Route path="vaste-activa" element={<BoekhoudingVasteActiva />} />
-            <Route path="projecten" element={<BoekhoudingProjecten />} />
-            <Route path="rapportages" element={<BoekhoudingRapportages />} />
-            <Route path="wisselkoersen" element={<BoekhoudingWisselkoersen />} />
-            <Route path="instellingen" element={<BoekhoudingInstellingen />} />
-          </Route>
+          {/* Boekhouding Module Routes - binnen bestaande Layout */}
+          <Route path="boekhouding" element={<BoekhoudingDashboard />} />
+          <Route path="boekhouding/grootboek" element={<BoekhoudingGrootboek />} />
+          <Route path="boekhouding/debiteuren" element={<BoekhoudingDebiteuren />} />
+          <Route path="boekhouding/crediteuren" element={<BoekhoudingCrediteuren />} />
+          <Route path="boekhouding/bank-kas" element={<BoekhoudingBankKas />} />
+          <Route path="boekhouding/btw" element={<BoekhoudingBTW />} />
+          <Route path="boekhouding/verkoop" element={<BoekhoudingVerkoop />} />
+          <Route path="boekhouding/inkoop" element={<BoekhoudingInkoop />} />
+          <Route path="boekhouding/voorraad" element={<BoekhoudingVoorraad />} />
+          <Route path="boekhouding/vaste-activa" element={<BoekhoudingVasteActiva />} />
+          <Route path="boekhouding/projecten" element={<BoekhoudingProjecten />} />
+          <Route path="boekhouding/rapportages" element={<BoekhoudingRapportages />} />
+          <Route path="boekhouding/wisselkoersen" element={<BoekhoudingWisselkoersen />} />
+          <Route path="boekhouding/instellingen" element={<BoekhoudingInstellingen />} />
         </Route>
         
         {/* Redirect old routes to new app routes */}
