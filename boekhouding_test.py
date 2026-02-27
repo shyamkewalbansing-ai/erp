@@ -639,10 +639,10 @@ class BoekhoudingTester:
             "naam": "ERP Implementation Project",
             "omschrijving": "Complete ERP system implementation",
             "klant_id": self.created_resources['debiteuren'][0] if self.created_resources['debiteuren'] else None,
-            "start_datum": "2026-02-01",
-            "eind_datum": "2026-12-31",
-            "budget": 75000,
-            "status": "open"
+            "startdatum": "2026-02-01",
+            "einddatum_gepland": "2026-12-31",
+            "budget_kosten": 75000,
+            "categorie": "klant"
         }
         
         success, response = self.run_test(
