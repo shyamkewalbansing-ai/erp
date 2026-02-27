@@ -133,6 +133,20 @@ Dutch (Nederlands)
 - P2/P3 Feature tests: 11/11 backend + all frontend passed (100%) - iteration 51
 - Test credentials: demo@facturatie.sr / demo2024
 
+### ✅ Automatische Herinneringen Scheduler (Voltooid - December 2025)
+- Nieuwe `HerinneringScheduler` in `/app/backend/services/herinnering_scheduler.py`
+- Dagelijkse controle om 08:00 SRT (Suriname tijd) op vervallen facturen
+- Escalatie: eerste herinnering → tweede herinnering → aanmaning
+- Configureerbaar per gebruiker:
+  - Dagen voor eerste herinnering (standaard: 7)
+  - Dagen tussen herinneringen (standaard: 7)
+  - Maximum aantal herinneringen (standaard: 3)
+- Automatisch e-mail versturen als SMTP geconfigureerd is
+- Frontend UI in Instellingen > Herinneringen tab
+- API endpoints:
+  - `GET /api/boekhouding/herinneringen/scheduler-status`
+  - `POST /api/boekhouding/herinneringen/trigger-check`
+
 ### ✅ E-mail Services Samenvoegen (Voltooid - December 2025)
 - Nieuwe `UnifiedEmailService` in `/app/backend/services/unified_email_service.py`
 - Combineert functionaliteit van `email_service.py` en `boekhouding_email.py`
