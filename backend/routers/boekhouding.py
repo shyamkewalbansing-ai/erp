@@ -2237,6 +2237,81 @@ async def mark_herinnering_verzonden(herinnering_id: str, authorization: str = H
         raise HTTPException(status_code=404, detail="Herinnering niet gevonden")
     return {"message": "Herinnering gemarkeerd als verzonden"}
 
+
+@router.post("/herinneringen/{herinnering_id}/email")
+async def send_herinnering_email(herinnering_id: str, authorization: str = Header(None)):
+    """Verzend herinnering per email"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    if not EMAIL_ENABLED:
+        raise HTTPException(status_code=501, detail="Email service niet beschikbaar")
+    
+    # Haal herinnering
+    herinnering = await db.boekhouding_herinneringen.find_one({"id": herinnering_id, "user_id": user_id})
+    if not herinnering:
+        raise HTTPException(status_code=404, detail="Herinnering niet gevonden")
+    
+    # Haal factuur
+    factuur = await db.boekhouding_verkoopfacturen.find_one({"id": herinnering.get('factuur_id'), "user_id": user_id})
+    factuur = clean_doc(factuur) if factuur else {}
+    
+    # Haal debiteur
+    debiteur = None
+    if herinnering.get('debiteur_id'):
+        debiteur = await db.boekhouding_debiteuren.find_one({"id": herinnering['debiteur_id'], "user_id": user_id})
+        debiteur = clean_doc(debiteur) if debiteur else None
+    
+    if not debiteur or not debiteur.get('email'):
+        raise HTTPException(status_code=400, detail="Debiteur heeft geen email adres")
+    
+    # Haal bedrijfsinstellingen
+    instellingen = await db.boekhouding_instellingen.find_one({"user_id": user_id})
+    instellingen = clean_doc(instellingen) if instellingen else {
+        "bedrijfsnaam": user.get('company_name', 'Uw Bedrijf'),
+        "email": user.get('email', '')
+    }
+    
+    # Genereer email HTML
+    html = email_service.generate_reminder_html(
+        herinnering=clean_doc(herinnering),
+        bedrijf=instellingen,
+        factuur=factuur
+    )
+    
+    # Type labels
+    type_labels = {
+        'eerste': 'Betalingsherinnering',
+        'tweede': 'Tweede Betalingsherinnering',
+        'aanmaning': 'Aanmaning'
+    }
+    subject = f"{type_labels.get(herinnering.get('type', 'eerste'), 'Herinnering')} - Factuur {herinnering.get('factuurnummer', '')}"
+    
+    # Verzend email
+    result = await email_service.send_email(
+        to_email=debiteur['email'],
+        subject=subject,
+        body_html=html
+    )
+    
+    if result.get('success'):
+        # Update herinnering status
+        await db.boekhouding_herinneringen.update_one(
+            {"id": herinnering_id},
+            {"$set": {
+                "verzonden": True,
+                "verzonden_op": datetime.now(timezone.utc),
+                "verzonden_naar": debiteur['email']
+            }}
+        )
+        
+        await log_audit(user_id, "email_verzonden", "herinneringen", "herinnering", herinnering_id, {
+            "email": debiteur['email'],
+            "type": herinnering.get('type')
+        })
+    
+    return result
+
 @router.put("/herinneringen/{herinnering_id}/bevestigen")
 async def bevestig_herinnering(herinnering_id: str, authorization: str = Header(None)):
     """Bevestig herinnering (klant heeft gereageerd)"""
