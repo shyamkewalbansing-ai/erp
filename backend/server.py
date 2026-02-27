@@ -9508,6 +9508,23 @@ async def seed_default_addons():
         await db.addons.insert_one(autodealer_doc)
         logger.info("Default 'Auto Dealer' add-on created")
     
+    # Beauty Spa Module
+    existing_beauty = await db.addons.find_one({"slug": "beauty"}, {"_id": 0})
+    if not existing_beauty:
+        beauty_doc = {
+            "id": str(uuid.uuid4()),
+            "name": "Beauty Spa",
+            "slug": "beauty",
+            "description": "Complete beauty salon en spa management. Afspraken, klanten, diensten, producten, vouchers en wachtrij beheer.",
+            "price": 2000.0,
+            "is_active": True,
+            "category": "diensten",
+            "icon_name": "Sparkles",
+            "created_at": now
+        }
+        await db.addons.insert_one(beauty_doc)
+        logger.info("Default 'Beauty Spa' add-on created")
+    
     # Suribet Retailer Management Module
     existing_suribet = await db.addons.find_one({"slug": "suribet"}, {"_id": 0})
     if not existing_suribet:
