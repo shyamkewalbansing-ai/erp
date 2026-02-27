@@ -1473,6 +1473,23 @@ class SuriRentalsAPITester:
 
     # ==================== BOEKHOUDING MODULE TESTING ====================
     
+    def test_boekhouding_init_volledig(self):
+        """Test complete system initialization (76 accounts, 10 BTW codes, 5 journals)"""
+        success, response = self.run_test(
+            "Initialize Complete Boekhouding System",
+            "POST",
+            "boekhouding/init/volledig",
+            200
+        )
+        
+        if success:
+            print(f"   {response.get('message', 'System initialized')}")
+            print(f"   Rekeningen: {response.get('rekeningen_count', 0)}")
+            print(f"   BTW codes: {response.get('btw_codes_count', 0)}")
+            print(f"   Dagboeken: {response.get('dagboeken_count', 0)}")
+            return True
+        return False
+    
     def test_boekhouding_dashboard(self):
         """Test boekhouding dashboard endpoint"""
         success, response = self.run_test(
@@ -1486,7 +1503,21 @@ class SuriRentalsAPITester:
             print(f"   Debiteuren count: {response.get('debiteuren_count', 0)}")
             print(f"   Crediteuren count: {response.get('crediteuren_count', 0)}")
             print(f"   Bank saldi: {response.get('bank_saldi', {})}")
-            print(f"   Omzet maand: {response.get('omzet_maand', {})}")
+            print(f"   BTW positie: {response.get('btw_positie', {})}")
+            return True
+        return False
+    
+    def test_boekhouding_dashboard_actielijst(self):
+        """Test dashboard action items"""
+        success, response = self.run_test(
+            "Boekhouding Dashboard Actielijst",
+            "GET",
+            "boekhouding/dashboard/actielijst",
+            200
+        )
+        
+        if success:
+            print(f"   Action items: {len(response.get('items', []))}")
             return True
         return False
 
