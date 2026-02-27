@@ -151,13 +151,15 @@ const BoekhoudingDashboard = () => {
   // Handle URL-based module selection
   useEffect(() => {
     const path = location.pathname;
+    console.log('Current path:', path);
     if (path.includes('/boekhouding/')) {
       const module = path.split('/boekhouding/')[1];
+      console.log('Module from URL:', module);
       if (module) setActiveModule(module);
-    } else {
+    } else if (path === '/app/boekhouding') {
       setActiveModule('dashboard');
     }
-  }, [location]);
+  }, [location.pathname]);
 
   // Check if system is initialized
   const checkInitialization = async () => {
