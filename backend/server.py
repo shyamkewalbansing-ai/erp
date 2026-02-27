@@ -8257,20 +8257,6 @@ class PompstationSettings(ModuleSettingsBase):
     pos_receipt_header: str = ""
     pos_receipt_footer: str = ""
 
-class BoekhoudingSettings(ModuleSettingsBase):
-    default_currency: str = "SRD"
-    fiscal_year_start_month: int = 1
-    btw_tarief_hoog: float = 25.0
-    btw_tarief_laag: float = 10.0
-    btw_aangifte_periode: str = "quarterly"
-    auto_btw_calculation: bool = True
-    invoice_prefix: str = "VF"
-    invoice_number_length: int = 5
-    default_payment_terms_days: int = 30
-    show_btw_on_invoices: bool = True
-    enable_multi_currency: bool = True
-    exchange_rate_source: str = "manual"
-
 # Generic endpoint to get module settings
 @api_router.get("/module-settings/{module_slug}")
 async def get_module_settings(
