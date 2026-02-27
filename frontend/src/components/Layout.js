@@ -487,9 +487,15 @@ export default function Layout() {
           {!isSuperAdmin() && addonsLoaded && (
             <>
               {/* Dynamic Module Sections - rendered in user's preferred order */}
+              {/* When on boekhouding pages, only show boekhouding items */}
               {getOrderedModules().map((moduleSlug, index) => {
                 const config = moduleConfigs[moduleSlug];
                 if (!config) return null;
+                
+                // If on boekhouding pages, only show boekhouding module
+                const isOnBoekhouding = location.pathname.startsWith('/app/boekhouding');
+                if (isOnBoekhouding && moduleSlug !== 'boekhouding') return null;
+                if (!isOnBoekhouding && moduleSlug === 'boekhouding') return null;
                 
                 // Check if module should be shown
                 const shouldShow = config.alwaysShow || hasAddon(moduleSlug);
