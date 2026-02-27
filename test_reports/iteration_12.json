@@ -128,7 +128,7 @@
   
   "should_main_agent_self_test": false,
   
-  "context_for_next_testing_agent": "Contract Generation and Digital Signature feature has been fully tested. Key findings: 1) Contracten page shows list with summary cards and all CRUD operations work. 2) Create contract modal has all required fields including payment deadline settings. 3) Signing link modal shows copyable URL. 4) Public signing page at /onderteken/{token} shows all contract details without authentication. 5) Signature canvas uses react-signature-canvas and allows drawing. 6) PDF download returns valid PDF file. Test signing link: https://srd-financials.preview.emergentagent.com/onderteken/5783391c-de87-4e3a-a562-84f4b515b676",
+  "context_for_next_testing_agent": "Contract Generation and Digital Signature feature has been fully tested. Key findings: 1) Contracten page shows list with summary cards and all CRUD operations work. 2) Create contract modal has all required fields including payment deadline settings. 3) Signing link modal shows copyable URL. 4) Public signing page at /onderteken/{token} shows all contract details without authentication. 5) Signature canvas uses react-signature-canvas and allows drawing. 6) PDF download returns valid PDF file. Test signing link: https://boekhouding-app-1.preview.emergentagent.com/onderteken/5783391c-de87-4e3a-a562-84f4b515b676",
   
   "api_verification": {
     "contracts_api": {
