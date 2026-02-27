@@ -31,6 +31,7 @@ const WisselkoersenPage = () => {
   const [showCMEDialog, setShowCMEDialog] = useState(false);
   const [cmePreview, setCmePreview] = useState(null);
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [schedulerStatus, setSchedulerStatus] = useState(null);
 
   const [newRate, setNewRate] = useState({
     datum: new Date().toISOString().split('T')[0],
@@ -42,9 +43,19 @@ const WisselkoersenPage = () => {
 
   useEffect(() => {
     fetchData();
+    fetchSchedulerStatus();
     // Auto-sync CME koersen bij openen van de pagina
     handleAutoSync();
   }, []);
+
+  const fetchSchedulerStatus = async () => {
+    try {
+      const res = await exchangeRatesAPI.getSchedulerStatus();
+      setSchedulerStatus(res.data);
+    } catch (error) {
+      console.log('Could not fetch scheduler status');
+    }
+  };
 
   const fetchData = async () => {
     try {
