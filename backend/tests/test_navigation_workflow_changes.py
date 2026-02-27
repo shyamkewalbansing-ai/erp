@@ -11,7 +11,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://multibook-finance.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://accounting-suite-19.preview.emergentagent.com')
 
 class TestNavigationWorkflowChanges:
     """Test navigation and workflow changes for P0 task"""

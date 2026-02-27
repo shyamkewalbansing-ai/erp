@@ -11,7 +11,7 @@ import os
 import uuid
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://multibook-finance.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://accounting-suite-19.preview.emergentagent.com').rstrip('/')
 
 class TestAuthentication:
     """Test authentication for P2 modules"""
