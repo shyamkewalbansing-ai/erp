@@ -412,7 +412,7 @@ class BoekhoudingTester:
         bank_data = {
             "naam": "DSB Zakelijk Rekening",
             "rekeningnummer": "123456789012",
-            "bank": "DSB",
+            "bank": "De Surinaamsche Bank N.V.",
             "valuta": "SRD",
             "grootboekrekening": "1100",
             "beginsaldo": 25000,
