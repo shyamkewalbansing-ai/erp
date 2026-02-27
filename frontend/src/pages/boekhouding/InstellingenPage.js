@@ -4,23 +4,55 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../..
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { toast } from 'sonner';
-import { Settings, Building2, Loader2, Save } from 'lucide-react';
+import { 
+  Settings, 
+  Building2, 
+  Loader2, 
+  Save, 
+  Mail, 
+  Send, 
+  CheckCircle, 
+  AlertCircle,
+  FileText,
+  Palette,
+  Eye
+} from 'lucide-react';
 
 const InstellingenPage = () => {
   const [settings, setSettings] = useState({
-    id: '',
-    name: '',
-    address: '',
-    phone: '',
+    bedrijfsnaam: '',
+    adres: '',
+    plaats: '',
+    land: 'Suriname',
+    telefoon: '',
     email: '',
-    btw_number: '',
-    default_currency: 'SRD',
-    fiscal_year_start: 1
+    btw_nummer: '',
+    kvk_nummer: '',
+    bank_naam: '',
+    bank_rekening: '',
+    logo_url: '',
+    factuur_voorwaarden: '',
+    standaard_betalingstermijn: 30,
+    // SMTP instellingen
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_user: '',
+    smtp_password: '',
+    smtp_from_email: '',
+    smtp_from_name: '',
+    // Factuur template instellingen
+    factuur_primaire_kleur: '#1e293b',
+    factuur_secundaire_kleur: '#f1f5f9',
+    factuur_template: 'standaard'
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [emailTestResult, setEmailTestResult] = useState(null);
 
   useEffect(() => {
     fetchSettings();
@@ -29,8 +61,11 @@ const InstellingenPage = () => {
   const fetchSettings = async () => {
     try {
       const response = await settingsAPI.getCompany();
-      setSettings(response.data);
+      if (response.data) {
+        setSettings(prev => ({ ...prev, ...response.data }));
+      }
     } catch (error) {
+      console.error('Error loading settings:', error);
       toast.error('Fout bij laden instellingen');
     } finally {
       setLoading(false);
@@ -41,11 +76,37 @@ const InstellingenPage = () => {
     setSaving(true);
     try {
       await settingsAPI.updateCompany(settings);
-      toast.success('Instellingen opgeslagen');
+      toast.success('Instellingen succesvol opgeslagen');
     } catch (error) {
-      toast.error('Fout bij opslaan');
+      console.error('Error saving settings:', error);
+      toast.error('Fout bij opslaan instellingen');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    // Valideer SMTP-velden
+    if (!settings.smtp_host || !settings.smtp_user || !settings.smtp_password) {
+      toast.error('Vul eerst alle SMTP-velden in');
+      return;
+    }
+
+    setTestingEmail(true);
+    setEmailTestResult(null);
+    
+    try {
+      // Eerst opslaan, dan testen
+      await settingsAPI.updateCompany(settings);
+      const response = await settingsAPI.testEmail();
+      setEmailTestResult({ success: true, message: response.data?.message || 'Test e-mail verzonden!' });
+      toast.success('Test e-mail succesvol verzonden!');
+    } catch (error) {
+      const message = error?.response?.data?.detail || 'Test e-mail mislukt';
+      setEmailTestResult({ success: false, message });
+      toast.error(message);
+    } finally {
+      setTestingEmail(false);
     }
   };
 
@@ -64,152 +125,517 @@ const InstellingenPage = () => {
     { value: 12, label: 'December' }
   ];
 
+  const templates = [
+    { value: 'standaard', label: 'Standaard', description: 'Klassiek professioneel ontwerp' },
+    { value: 'modern', label: 'Modern', description: 'Strak en minimalistisch' },
+    { value: 'kleurrijk', label: 'Kleurrijk', description: 'Met accent kleuren' }
+  ];
+
+  if (loading) {
+    return (
+      <div className="space-y-6" data-testid="instellingen-page">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6" data-testid="instellingen-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Instellingen</h1>
-          <p className="text-slate-500 mt-1">Beheer uw bedrijfsgegevens en voorkeuren</p>
+          <p className="text-slate-500 mt-1">Beheer uw bedrijfsgegevens, e-mail en factuurinstellingen</p>
         </div>
+        <Button 
+          onClick={handleSave} 
+          disabled={saving}
+          data-testid="save-settings-btn"
+        >
+          {saving ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="w-4 h-4 mr-2" />
+          )}
+          Alle Instellingen Opslaan
+        </Button>
       </div>
 
-      {loading ? (
-        <Card className="border-slate-200">
-          <CardContent className="p-8 text-center text-slate-500">
-            Laden...
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Company Info */}
-          <Card className="border-slate-200">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-blue-600" />
+      <Tabs defaultValue="bedrijf" className="space-y-6">
+        <TabsList className="bg-slate-100">
+          <TabsTrigger value="bedrijf" className="gap-2">
+            <Building2 className="w-4 h-4" />
+            Bedrijf
+          </TabsTrigger>
+          <TabsTrigger value="email" className="gap-2">
+            <Mail className="w-4 h-4" />
+            E-mail (SMTP)
+          </TabsTrigger>
+          <TabsTrigger value="factuur" className="gap-2">
+            <FileText className="w-4 h-4" />
+            Factuur
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Bedrijfsgegevens Tab */}
+        <TabsContent value="bedrijf" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Algemene Info */}
+            <Card className="border-slate-200">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <Building2 className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Bedrijfsgegevens</CardTitle>
+                    <CardDescription>Algemene informatie over uw bedrijf</CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-lg">Bedrijfsgegevens</CardTitle>
-                  <CardDescription>Algemene informatie over uw bedrijf</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Bedrijfsnaam</Label>
-                <Input
-                  value={settings.name}
-                  onChange={(e) => setSettings({...settings, name: e.target.value})}
-                  placeholder="Uw bedrijfsnaam"
-                  data-testid="company-name-input"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Adres</Label>
-                <Input
-                  value={settings.address || ''}
-                  onChange={(e) => setSettings({...settings, address: e.target.value})}
-                  placeholder="Straat en nummer, Stad"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Telefoon</Label>
+                  <Label>Bedrijfsnaam *</Label>
                   <Input
-                    value={settings.phone || ''}
-                    onChange={(e) => setSettings({...settings, phone: e.target.value})}
-                    placeholder="+597 123 4567"
+                    value={settings.bedrijfsnaam || ''}
+                    onChange={(e) => setSettings({...settings, bedrijfsnaam: e.target.value})}
+                    placeholder="Uw bedrijfsnaam"
+                    data-testid="company-name-input"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>E-mail</Label>
+                  <Label>Adres</Label>
                   <Input
-                    type="email"
-                    value={settings.email || ''}
-                    onChange={(e) => setSettings({...settings, email: e.target.value})}
-                    placeholder="info@bedrijf.sr"
+                    value={settings.adres || ''}
+                    onChange={(e) => setSettings({...settings, adres: e.target.value})}
+                    placeholder="Straat en nummer"
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>BTW-nummer</Label>
-                <Input
-                  value={settings.btw_number || ''}
-                  onChange={(e) => setSettings({...settings, btw_number: e.target.value})}
-                  placeholder="BTW123456789"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Financial Settings */}
-          <Card className="border-slate-200">
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-green-600" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Plaats</Label>
+                    <Input
+                      value={settings.plaats || ''}
+                      onChange={(e) => setSettings({...settings, plaats: e.target.value})}
+                      placeholder="Paramaribo"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Land</Label>
+                    <Input
+                      value={settings.land || 'Suriname'}
+                      onChange={(e) => setSettings({...settings, land: e.target.value})}
+                      placeholder="Suriname"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="text-lg">Financiële Instellingen</CardTitle>
-                  <CardDescription>Valuta en boekjaar voorkeuren</CardDescription>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Telefoon</Label>
+                    <Input
+                      value={settings.telefoon || ''}
+                      onChange={(e) => setSettings({...settings, telefoon: e.target.value})}
+                      placeholder="+597 123 4567"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>E-mail</Label>
+                    <Input
+                      type="email"
+                      value={settings.email || ''}
+                      onChange={(e) => setSettings({...settings, email: e.target.value})}
+                      placeholder="info@bedrijf.sr"
+                    />
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label>Standaard Valuta</Label>
-                <Select 
-                  value={settings.default_currency} 
-                  onValueChange={(v) => setSettings({...settings, default_currency: v})}
-                >
-                  <SelectTrigger data-testid="default-currency-select">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="SRD">SRD - Surinaamse Dollar</SelectItem>
-                    <SelectItem value="USD">USD - US Dollar</SelectItem>
-                    <SelectItem value="EUR">EUR - Euro</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Start Boekjaar</Label>
-                <Select 
-                  value={String(settings.fiscal_year_start)} 
-                  onValueChange={(v) => setSettings({...settings, fiscal_year_start: parseInt(v)})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {months.map(m => (
-                      <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="text-xs text-slate-500">De maand waarin uw boekjaar begint</p>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Save Button */}
-          <div className="lg:col-span-2">
-            <Button 
-              onClick={handleSave} 
-              className="w-full md:w-auto"
-              disabled={saving}
-              data-testid="save-settings-btn"
-            >
-              {saving ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              Instellingen Opslaan
-            </Button>
+            {/* Registratie & Bank */}
+            <Card className="border-slate-200">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Registratie & Bank</CardTitle>
+                    <CardDescription>Fiscale en bankgegevens</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>BTW-nummer</Label>
+                    <Input
+                      value={settings.btw_nummer || ''}
+                      onChange={(e) => setSettings({...settings, btw_nummer: e.target.value})}
+                      placeholder="BTW123456789"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>KvK-nummer</Label>
+                    <Input
+                      value={settings.kvk_nummer || ''}
+                      onChange={(e) => setSettings({...settings, kvk_nummer: e.target.value})}
+                      placeholder="12345678"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Bank</Label>
+                  <Input
+                    value={settings.bank_naam || ''}
+                    onChange={(e) => setSettings({...settings, bank_naam: e.target.value})}
+                    placeholder="Bijv. Hakrinbank, DSB"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Rekeningnummer</Label>
+                  <Input
+                    value={settings.bank_rekening || ''}
+                    onChange={(e) => setSettings({...settings, bank_rekening: e.target.value})}
+                    placeholder="SR00HAKR0000000000"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Standaard Betalingstermijn (dagen)</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="365"
+                    value={settings.standaard_betalingstermijn || 30}
+                    onChange={(e) => setSettings({...settings, standaard_betalingstermijn: parseInt(e.target.value) || 30})}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      )}
+        </TabsContent>
+
+        {/* E-mail (SMTP) Tab */}
+        <TabsContent value="email" className="space-y-6">
+          <Card className="border-slate-200">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <Mail className="w-5 h-5 text-purple-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">E-mail Server Instellingen (SMTP)</CardTitle>
+                  <CardDescription>
+                    Configureer uw eigen SMTP-server om facturen en herinneringen te versturen.
+                    Als u geen eigen server heeft, worden de standaard systeeminstellingen gebruikt.
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>SMTP Server *</Label>
+                    <Input
+                      value={settings.smtp_host || ''}
+                      onChange={(e) => setSettings({...settings, smtp_host: e.target.value})}
+                      placeholder="smtp.gmail.com"
+                      data-testid="smtp-host-input"
+                    />
+                    <p className="text-xs text-slate-500">
+                      Gmail: smtp.gmail.com | Outlook: smtp.office365.com
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>SMTP Poort</Label>
+                    <Input
+                      type="number"
+                      value={settings.smtp_port || 587}
+                      onChange={(e) => setSettings({...settings, smtp_port: parseInt(e.target.value) || 587})}
+                      placeholder="587"
+                      data-testid="smtp-port-input"
+                    />
+                    <p className="text-xs text-slate-500">
+                      TLS: 587 (aanbevolen) | SSL: 465
+                    </p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>SMTP Gebruikersnaam *</Label>
+                    <Input
+                      value={settings.smtp_user || ''}
+                      onChange={(e) => setSettings({...settings, smtp_user: e.target.value})}
+                      placeholder="uw.email@gmail.com"
+                      data-testid="smtp-user-input"
+                    />
+                    <p className="text-xs text-slate-500">
+                      Meestal uw volledige e-mailadres
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>SMTP Wachtwoord *</Label>
+                    <Input
+                      type="password"
+                      value={settings.smtp_password || ''}
+                      onChange={(e) => setSettings({...settings, smtp_password: e.target.value})}
+                      placeholder="••••••••"
+                      data-testid="smtp-password-input"
+                    />
+                    <p className="text-xs text-slate-500">
+                      Voor Gmail: gebruik een App-wachtwoord
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-slate-200 pt-6">
+                <h4 className="font-medium text-slate-900 mb-4">Afzender Gegevens</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Afzender E-mail</Label>
+                    <Input
+                      type="email"
+                      value={settings.smtp_from_email || ''}
+                      onChange={(e) => setSettings({...settings, smtp_from_email: e.target.value})}
+                      placeholder="facturen@uwbedrijf.sr"
+                    />
+                    <p className="text-xs text-slate-500">
+                      Laat leeg om SMTP gebruikersnaam te gebruiken
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Afzender Naam</Label>
+                    <Input
+                      value={settings.smtp_from_name || ''}
+                      onChange={(e) => setSettings({...settings, smtp_from_name: e.target.value})}
+                      placeholder="Uw Bedrijf"
+                    />
+                    <p className="text-xs text-slate-500">
+                      Naam die ontvangers zien
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Test E-mail Section */}
+              <div className="border-t border-slate-200 pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="font-medium text-slate-900">Test E-mail Versturen</h4>
+                    <p className="text-sm text-slate-500">
+                      Verstuur een test e-mail naar uw eigen adres om de configuratie te verifiëren
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    onClick={handleTestEmail}
+                    disabled={testingEmail || !settings.smtp_host || !settings.smtp_user || !settings.smtp_password}
+                    data-testid="test-email-btn"
+                  >
+                    {testingEmail ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4 mr-2" />
+                    )}
+                    Test Versturen
+                  </Button>
+                </div>
+
+                {emailTestResult && (
+                  <div className={`flex items-center gap-3 p-4 rounded-lg ${
+                    emailTestResult.success 
+                      ? 'bg-green-50 border border-green-200' 
+                      : 'bg-red-50 border border-red-200'
+                  }`}>
+                    {emailTestResult.success ? (
+                      <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    )}
+                    <span className={emailTestResult.success ? 'text-green-800' : 'text-red-800'}>
+                      {emailTestResult.message}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Gmail Help */}
+              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
+                <h5 className="font-medium text-slate-900 mb-2">Gmail Configuratie Hulp</h5>
+                <ol className="text-sm text-slate-600 space-y-1 list-decimal list-inside">
+                  <li>Ga naar uw Google Account Instellingen</li>
+                  <li>Zoek naar "App-wachtwoorden" onder Beveiliging</li>
+                  <li>Genereer een nieuw wachtwoord voor "Mail"</li>
+                  <li>Gebruik dit wachtwoord als SMTP wachtwoord</li>
+                </ol>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Factuur Template Tab */}
+        <TabsContent value="factuur" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Template Keuze */}
+            <Card className="border-slate-200">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Factuur Template</CardTitle>
+                    <CardDescription>Kies het uiterlijk van uw facturen</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  {templates.map(template => (
+                    <label 
+                      key={template.value}
+                      className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        settings.factuur_template === template.value 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="template"
+                        value={template.value}
+                        checked={settings.factuur_template === template.value}
+                        onChange={(e) => setSettings({...settings, factuur_template: e.target.value})}
+                        className="w-4 h-4 text-primary"
+                      />
+                      <div>
+                        <span className="font-medium text-slate-900">{template.label}</span>
+                        <p className="text-sm text-slate-500">{template.description}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Kleuren */}
+            <Card className="border-slate-200">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-pink-100 flex items-center justify-center">
+                    <Palette className="w-5 h-5 text-pink-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Kleuren</CardTitle>
+                    <CardDescription>Pas de kleuren van uw facturen aan</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Primaire Kleur</Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={settings.factuur_primaire_kleur || '#1e293b'}
+                      onChange={(e) => setSettings({...settings, factuur_primaire_kleur: e.target.value})}
+                      className="w-12 h-10 rounded border border-slate-200 cursor-pointer"
+                    />
+                    <Input
+                      value={settings.factuur_primaire_kleur || '#1e293b'}
+                      onChange={(e) => setSettings({...settings, factuur_primaire_kleur: e.target.value})}
+                      placeholder="#1e293b"
+                      className="flex-1"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500">Voor kopteksten en accenten</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Secundaire Kleur</Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={settings.factuur_secundaire_kleur || '#f1f5f9'}
+                      onChange={(e) => setSettings({...settings, factuur_secundaire_kleur: e.target.value})}
+                      className="w-12 h-10 rounded border border-slate-200 cursor-pointer"
+                    />
+                    <Input
+                      value={settings.factuur_secundaire_kleur || '#f1f5f9'}
+                      onChange={(e) => setSettings({...settings, factuur_secundaire_kleur: e.target.value})}
+                      placeholder="#f1f5f9"
+                      className="flex-1"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500">Voor achtergronden en subtiele elementen</p>
+                </div>
+
+                {/* Voorbeeld */}
+                <div className="mt-6 pt-4 border-t border-slate-200">
+                  <Label className="mb-3 block">Voorbeeld</Label>
+                  <div 
+                    className="rounded-lg p-4 border"
+                    style={{ backgroundColor: settings.factuur_secundaire_kleur || '#f1f5f9' }}
+                  >
+                    <div 
+                      className="text-lg font-bold mb-2"
+                      style={{ color: settings.factuur_primaire_kleur || '#1e293b' }}
+                    >
+                      FACTUUR #VF2024-00001
+                    </div>
+                    <div className="text-sm text-slate-600">
+                      {settings.bedrijfsnaam || 'Uw Bedrijf'}
+                    </div>
+                    <div 
+                      className="mt-3 py-2 px-3 rounded text-white text-sm font-medium inline-block"
+                      style={{ backgroundColor: settings.factuur_primaire_kleur || '#1e293b' }}
+                    >
+                      Totaal: SRD 1.250,00
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Factuur Voorwaarden */}
+            <Card className="border-slate-200 lg:col-span-2">
+              <CardHeader>
+                <CardTitle className="text-lg">Factuur Voorwaarden</CardTitle>
+                <CardDescription>
+                  Standaard tekst die onderaan elke factuur wordt getoond
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={settings.factuur_voorwaarden || ''}
+                  onChange={(e) => setSettings({...settings, factuur_voorwaarden: e.target.value})}
+                  placeholder="Bijv. Betaling binnen 30 dagen. Bij te late betaling wordt wettelijke rente in rekening gebracht."
+                  rows={4}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Bottom Save Button */}
+      <div className="flex justify-end pt-4 border-t border-slate-200">
+        <Button 
+          onClick={handleSave} 
+          disabled={saving}
+          size="lg"
+          data-testid="save-all-settings-btn"
+        >
+          {saving ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Save className="w-4 h-4 mr-2" />
+          )}
+          Alle Instellingen Opslaan
+        </Button>
+      </div>
     </div>
   );
 };
