@@ -85,8 +85,8 @@ const MetricCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, loa
 const SmallStatCard = ({ title, value, icon: Icon, iconBg = "bg-blue-50", iconColor = "text-blue-500", subtitle, loading }) => {
   if (loading) {
     return (
-      <Card className="bg-white border border-slate-100 shadow-sm">
-        <CardContent className="p-5">
+      <Card className="border-slate-200">
+        <CardContent className="p-6">
           <Skeleton className="h-4 w-20 mb-3" />
           <Skeleton className="h-7 w-28" />
         </CardContent>
@@ -95,7 +95,7 @@ const SmallStatCard = ({ title, value, icon: Icon, iconBg = "bg-blue-50", iconCo
   }
 
   return (
-    <Card className="bg-white border border-slate-100 shadow-sm">
+    <Card className="border-slate-200 hover:shadow-md transition-shadow duration-200">
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
