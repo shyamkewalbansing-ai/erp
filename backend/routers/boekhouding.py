@@ -312,6 +312,11 @@ class InstellingenUpdate(BaseModel):
     factuur_primaire_kleur: Optional[str] = "#1e293b"
     factuur_secundaire_kleur: Optional[str] = "#f1f5f9"
     factuur_template: Optional[str] = "standaard"
+    # Automatische herinneringen instellingen
+    auto_herinneringen_enabled: Optional[bool] = False
+    dagen_voor_eerste_herinnering: Optional[int] = 7
+    dagen_tussen_herinneringen: Optional[int] = 7
+    max_herinneringen: Optional[int] = 3
 
 
 class BedrijfCreate(BaseModel):
