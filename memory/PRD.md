@@ -130,7 +130,26 @@ Dutch (Nederlands)
 - Backend API tests: 10/10 passed (100%) - iteration 48
 - Frontend UI tests: 11/11 pages passed (100%) - iteration 49
 - P0/P1 Feature tests: 7/7 backend + all frontend passed (100%) - iteration 50
+- P2/P3 Feature tests: 11/11 backend + all frontend passed (100%) - iteration 51
 - Test credentials: demo@facturatie.sr / demo2024
+
+### ✅ E-mail Services Samenvoegen (Voltooid - December 2025)
+- Nieuwe `UnifiedEmailService` in `/app/backend/services/unified_email_service.py`
+- Combineert functionaliteit van `email_service.py` en `boekhouding_email.py`
+- Ondersteunt gebruiker-specifieke SMTP-instellingen uit `boekhouding_instellingen`
+- Methoden: `send_email`, `generate_reminder_html`, `generate_invoice_html`
+- System templates: welcome, password_reset, module_expiring, module_expired
+
+### ✅ Vastgoed Dashboard 500-Error Fix (Voltooid - December 2025)
+- Probleem: `KeyError: 'apartment_id'` door ontbrekende velden in payments
+- Oplossing: `.get()` met fallbacks voor `apartment_id` en `tenant_id`
+- Dashboard laadt nu correct met alle statistieken
+
+### ✅ Factuur Template Ontwerpen (Voltooid - December 2025)
+Drie template stijlen beschikbaar in PDF generator:
+1. **Standaard:** Klassiek professioneel ontwerp, lichte kleuren
+2. **Modern:** Strak en minimalistisch, donkere header met blauw accent
+3. **Kleurrijk:** Levendige kleuren, paars met amber accent, alternerende rijen
 
 ### ✅ Finance OS UI Refactoring (Voltooid - December 2025)
 Complete visuele herziening van alle boekhouding pagina's naar "Finance OS" stijl:
