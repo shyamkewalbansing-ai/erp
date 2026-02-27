@@ -1521,20 +1521,35 @@ class SuriRentalsAPITester:
             return True
         return False
 
-    def test_init_standaard_rekeningen(self):
-        """Test initializing standard Surinamese chart of accounts (only once)"""
+    def test_get_rekeningen(self):
+        """Test getting all chart of accounts"""
         success, response = self.run_test(
-            "Initialize Standard Chart of Accounts",
-            "POST",
-            "boekhouding/rekeningen/init-standaard",
+            "Get Chart of Accounts",
+            "GET",
+            "boekhouding/rekeningen",
             200
         )
         
         if success:
-            print(f"   {response.get('message', 'Standard accounts initialized')}")
+            print(f"   Found {len(response)} accounts")
+            if response:
+                print(f"   Sample accounts: {response[0].get('nummer')} - {response[0].get('naam')}")
             return True
-        elif response.get('detail') == 'Rekeningschema bestaat al':
-            print("   ⚠️  Chart of accounts already exists - skipping initialization")
+        return False
+    
+    def test_get_dagboeken(self):
+        """Test getting all journals"""
+        success, response = self.run_test(
+            "Get Journals (Dagboeken)",
+            "GET",
+            "boekhouding/dagboeken",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} journals")
+            for journal in response:
+                print(f"   - {journal.get('code')}: {journal.get('naam')} ({journal.get('type')})")
             return True
         return False
 
