@@ -83,7 +83,48 @@ const InstellingenPage = () => {
   useEffect(() => {
     fetchSettings();
     fetchBedrijven();
+    fetchSchedulerStatus();
   }, []);
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  const fetchSchedulerStatus = async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/boekhouding/herinneringen/scheduler-status`, {
+        headers: { ...getAuthHeader() }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setSchedulerStatus(data);
+      }
+    } catch (error) {
+      console.error('Error fetching scheduler status:', error);
+    }
+  };
+
+  const triggerReminderCheck = async () => {
+    setTriggeringCheck(true);
+    try {
+      const response = await fetch(`${API_URL}/api/boekhouding/herinneringen/trigger-check`, {
+        method: 'POST',
+        headers: { ...getAuthHeader() }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        toast.success(`Controle uitgevoerd: ${data.reminders_created} herinneringen aangemaakt, ${data.emails_sent} e-mails verzonden`);
+        fetchSchedulerStatus();
+      } else {
+        toast.error('Fout bij uitvoeren controle');
+      }
+    } catch (error) {
+      toast.error('Fout bij uitvoeren controle');
+    } finally {
+      setTriggeringCheck(false);
+    }
+  };
 
   const fetchBedrijven = async () => {
     setBedrijvenLoading(true);
