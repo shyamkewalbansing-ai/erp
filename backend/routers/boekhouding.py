@@ -3226,3 +3226,1166 @@ async def get_actuele_koersen(db=Depends(get_db), current_user=Depends(get_curre
     
     return koersen
 
+
+
+# ==================== VASTE ACTIVA ENDPOINTS ====================
+
+@router.get("/vaste-activa")
+async def list_vaste_activa(
+    categorie: Optional[str] = None,
+    status: Optional[str] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """List fixed assets"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id}
+    if categorie:
+        query["categorie"] = categorie
+    if status:
+        query["status"] = status
+    
+    activa = []
+    async for activum in db.boekhouding_vaste_activa.find(query).sort("activum_nummer", 1):
+        activum.pop("_id", None)
+        activa.append(activum)
+    
+    return activa
+
+@router.post("/vaste-activa")
+async def create_vast_activum(data: VastActivumCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create a fixed asset"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Generate activum nummer
+    jaar = datetime.now().year
+    count = await db.boekhouding_vaste_activa.count_documents({
+        "user_id": user_id,
+        "activum_nummer": {"$regex": f"^ACT{jaar}-"}
+    })
+    activum_nummer = f"ACT{jaar}-{count + 1:05d}"
+    
+    # Calculate afschrijving per maand
+    af_te_schrijven = data.aanschafwaarde - data.restwaarde
+    maandelijkse_afschrijving = af_te_schrijven / data.afschrijvingsduur_maanden if data.afschrijvingsduur_maanden > 0 else 0
+    
+    activum = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "activum_nummer": activum_nummer,
+        **data.model_dump(),
+        "categorie": data.categorie.value,
+        "afschrijvingsmethode": data.afschrijvingsmethode.value,
+        "valuta": data.valuta.value,
+        "cumulatieve_afschrijving": 0.0,
+        "boekwaarde": data.aanschafwaarde,
+        "maandelijkse_afschrijving": maandelijkse_afschrijving,
+        "status": "in_gebruik",
+        "created_at": now
+    }
+    
+    await db.boekhouding_vaste_activa.insert_one(activum)
+    activum.pop("_id", None)
+    return activum
+
+@router.get("/vaste-activa/{activum_id}")
+async def get_vast_activum(activum_id: str, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Get fixed asset details"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    activum = await db.boekhouding_vaste_activa.find_one({
+        "user_id": user_id,
+        "id": activum_id
+    })
+    if not activum:
+        raise HTTPException(status_code=404, detail="Activum niet gevonden")
+    
+    # Get afschrijvingshistorie
+    afschrijvingen = []
+    async for afs in db.boekhouding_afschrijvingen.find({
+        "user_id": user_id,
+        "activum_id": activum_id
+    }).sort("datum", -1):
+        afs.pop("_id", None)
+        afschrijvingen.append(afs)
+    
+    activum.pop("_id", None)
+    activum["afschrijvingen"] = afschrijvingen
+    return activum
+
+@router.post("/vaste-activa/afschrijven")
+async def run_afschrijvingen(
+    periode: str = Query(..., description="YYYY-MM formaat"),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Run monthly depreciation for all active assets"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get all active assets
+    activa = []
+    async for activum in db.boekhouding_vaste_activa.find({
+        "user_id": user_id,
+        "status": "in_gebruik"
+    }):
+        activa.append(activum)
+    
+    if not activa:
+        return {"message": "Geen actieve activa gevonden", "verwerkt": 0}
+    
+    # Get memoriaal dagboek
+    dagboek = await db.boekhouding_dagboeken.find_one({
+        "user_id": user_id,
+        "type": "memoriaal"
+    })
+    if not dagboek:
+        raise HTTPException(status_code=400, detail="Memoriaaldagboek niet gevonden")
+    
+    verwerkt = 0
+    totaal_afschrijving = 0.0
+    
+    for activum in activa:
+        # Check if already depreciated this period
+        existing = await db.boekhouding_afschrijvingen.find_one({
+            "user_id": user_id,
+            "activum_id": activum["id"],
+            "periode": periode
+        })
+        if existing:
+            continue
+        
+        maand_afschrijving = activum.get("maandelijkse_afschrijving", 0)
+        if maand_afschrijving <= 0:
+            continue
+        
+        # Check if fully depreciated
+        boekwaarde = activum.get("boekwaarde", 0)
+        restwaarde = activum.get("restwaarde", 0)
+        
+        if boekwaarde <= restwaarde:
+            await db.boekhouding_vaste_activa.update_one(
+                {"id": activum["id"]},
+                {"$set": {"status": "afgeschreven"}}
+            )
+            continue
+        
+        # Adjust if would go below restwaarde
+        if boekwaarde - maand_afschrijving < restwaarde:
+            maand_afschrijving = boekwaarde - restwaarde
+        
+        # Create afschrijving record
+        afschrijving = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "activum_id": activum["id"],
+            "periode": periode,
+            "bedrag": maand_afschrijving,
+            "boekwaarde_voor": boekwaarde,
+            "boekwaarde_na": boekwaarde - maand_afschrijving,
+            "created_at": now
+        }
+        await db.boekhouding_afschrijvingen.insert_one(afschrijving)
+        
+        # Update activum
+        await db.boekhouding_vaste_activa.update_one(
+            {"id": activum["id"]},
+            {"$inc": {
+                "cumulatieve_afschrijving": maand_afschrijving,
+                "boekwaarde": -maand_afschrijving
+            }}
+        )
+        
+        totaal_afschrijving += maand_afschrijving
+        verwerkt += 1
+    
+    # Create single journal entry for all depreciations
+    if totaal_afschrijving > 0:
+        nieuw_nummer = dagboek.get("laatst_gebruikt_nummer", 0) + 1
+        await db.boekhouding_dagboeken.update_one(
+            {"id": dagboek["id"]},
+            {"$set": {"laatst_gebruikt_nummer": nieuw_nummer}}
+        )
+        
+        jaar = int(periode.split("-")[0])
+        boekstuknummer = f"{dagboek['code']}{jaar}-{nieuw_nummer:05d}"
+        
+        journaalpost = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "dagboek_code": dagboek["code"],
+            "boekstuknummer": boekstuknummer,
+            "datum": f"{periode}-01",
+            "omschrijving": f"Afschrijvingen periode {periode}",
+            "periode": periode,
+            "regels": [
+                {"rekening_nummer": "8030", "omschrijving": f"Afschrijvingen {periode}", "debet": totaal_afschrijving, "credit": 0.0},
+                {"rekening_nummer": "1031", "omschrijving": f"Cum. afschrijving {periode}", "debet": 0.0, "credit": totaal_afschrijving}
+            ],
+            "status": "geboekt",
+            "created_at": now,
+            "created_by": user_id
+        }
+        
+        await db.boekhouding_journaalposten.insert_one(journaalpost)
+        
+        # Update rekening saldi
+        await db.boekhouding_rekeningen.update_one(
+            {"user_id": user_id, "nummer": "8030"},
+            {"$inc": {"saldo": totaal_afschrijving}}
+        )
+        await db.boekhouding_rekeningen.update_one(
+            {"user_id": user_id, "nummer": "1031"},
+            {"$inc": {"saldo": -totaal_afschrijving}}
+        )
+    
+    return {
+        "message": f"{verwerkt} activa afgeschreven",
+        "verwerkt": verwerkt,
+        "totaal_afschrijving": totaal_afschrijving
+    }
+
+# ==================== KOSTENPLAATSEN ENDPOINTS ====================
+
+@router.get("/kostenplaatsen")
+async def list_kostenplaatsen(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """List cost centers"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    kostenplaatsen = []
+    async for kp in db.boekhouding_kostenplaatsen.find({"user_id": user_id}).sort("code", 1):
+        kp.pop("_id", None)
+        kostenplaatsen.append(kp)
+    
+    return kostenplaatsen
+
+@router.post("/kostenplaatsen")
+async def create_kostenplaats(data: KostenplaatsCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create a cost center"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    existing = await db.boekhouding_kostenplaatsen.find_one({
+        "user_id": user_id,
+        "code": data.code
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Kostenplaatscode bestaat al")
+    
+    kostenplaats = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        **data.model_dump(),
+        "gerealiseerd": 0.0,
+        "created_at": now
+    }
+    
+    await db.boekhouding_kostenplaatsen.insert_one(kostenplaats)
+    kostenplaats.pop("_id", None)
+    return kostenplaats
+
+@router.get("/kostenplaatsen/{kostenplaats_id}/boekingen")
+async def get_kostenplaats_boekingen(
+    kostenplaats_id: str,
+    periode_van: Optional[str] = None,
+    periode_tot: Optional[str] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Get bookings for a cost center"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id, "regels.kostenplaats_id": kostenplaats_id}
+    if periode_van:
+        query["datum"] = {"$gte": periode_van}
+    if periode_tot:
+        if "datum" in query:
+            query["datum"]["$lte"] = periode_tot
+        else:
+            query["datum"] = {"$lte": periode_tot}
+    
+    boekingen = []
+    async for post in db.boekhouding_journaalposten.find(query).sort("datum", -1):
+        for regel in post.get("regels", []):
+            if regel.get("kostenplaats_id") == kostenplaats_id:
+                boekingen.append({
+                    "datum": post.get("datum"),
+                    "boekstuknummer": post.get("boekstuknummer"),
+                    "omschrijving": regel.get("omschrijving"),
+                    "bedrag": regel.get("debet", 0) - regel.get("credit", 0)
+                })
+    
+    return boekingen
+
+# ==================== BTW ENDPOINTS ====================
+
+@router.get("/btw/codes")
+async def list_btw_codes(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """List BTW codes"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    codes = []
+    async for code in db.boekhouding_btw_codes.find({"user_id": user_id}).sort("code", 1):
+        code.pop("_id", None)
+        codes.append(code)
+    
+    return codes
+
+@router.post("/btw/codes")
+async def create_btw_code(data: BTWCodeCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create a BTW code"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    existing = await db.boekhouding_btw_codes.find_one({
+        "user_id": user_id,
+        "code": data.code
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="BTW code bestaat al")
+    
+    btw_code = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        **data.model_dump(),
+        "created_at": now
+    }
+    
+    await db.boekhouding_btw_codes.insert_one(btw_code)
+    btw_code.pop("_id", None)
+    return btw_code
+
+@router.get("/btw/aangifte")
+async def get_btw_aangifte(
+    periode_van: str = Query(...),
+    periode_tot: str = Query(...),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Generate BTW declaration report"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    # Get verkoop facturen
+    verkoop_pipeline = [
+        {"$match": {
+            "user_id": user_id,
+            "factuurdatum": {"$gte": periode_van, "$lte": periode_tot},
+            "status": {"$ne": "geannuleerd"}
+        }},
+        {"$unwind": "$regels"},
+        {"$group": {
+            "_id": "$regels.btw_percentage",
+            "omzet": {"$sum": {"$multiply": ["$regels.aantal", "$regels.prijs_per_eenheid"]}},
+            "btw": {"$sum": {"$multiply": [
+                {"$multiply": ["$regels.aantal", "$regels.prijs_per_eenheid"]},
+                {"$divide": ["$regels.btw_percentage", 100]}
+            ]}}
+        }}
+    ]
+    
+    verkoop_result = await db.boekhouding_verkoopfacturen.aggregate(verkoop_pipeline).to_list(10)
+    
+    # Get inkoop facturen
+    inkoop_pipeline = [
+        {"$match": {
+            "user_id": user_id,
+            "factuurdatum": {"$gte": periode_van, "$lte": periode_tot},
+            "status": {"$ne": "geannuleerd"}
+        }},
+        {"$unwind": "$regels"},
+        {"$group": {
+            "_id": "$regels.btw_percentage",
+            "inkoop": {"$sum": {"$multiply": ["$regels.aantal", "$regels.prijs_per_eenheid"]}},
+            "btw_aftrek": {"$sum": {"$multiply": [
+                {"$multiply": ["$regels.aantal", "$regels.prijs_per_eenheid"]},
+                {"$divide": ["$regels.btw_percentage", 100]}
+            ]}}
+        }}
+    ]
+    
+    inkoop_result = await db.boekhouding_inkoopfacturen.aggregate(inkoop_pipeline).to_list(10)
+    
+    # Process results
+    omzet_hoog = sum(r.get("omzet", 0) for r in verkoop_result if r.get("_id") == 25)
+    omzet_laag = sum(r.get("omzet", 0) for r in verkoop_result if r.get("_id") == 10)
+    omzet_nul = sum(r.get("omzet", 0) for r in verkoop_result if r.get("_id") == 0)
+    omzet_vrijgesteld = 0  # Would need separate tracking
+    
+    btw_hoog = sum(r.get("btw", 0) for r in verkoop_result if r.get("_id") == 25)
+    btw_laag = sum(r.get("btw", 0) for r in verkoop_result if r.get("_id") == 10)
+    
+    totaal_btw_verkoop = btw_hoog + btw_laag
+    
+    inkoop_btw_aftrekbaar = sum(r.get("btw_aftrek", 0) for r in inkoop_result)
+    
+    btw_te_betalen = totaal_btw_verkoop - inkoop_btw_aftrekbaar
+    
+    return {
+        "periode_van": periode_van,
+        "periode_tot": periode_tot,
+        "verkoop": {
+            "omzet_hoog_tarief": round(omzet_hoog, 2),
+            "omzet_laag_tarief": round(omzet_laag, 2),
+            "omzet_nul_tarief": round(omzet_nul, 2),
+            "omzet_vrijgesteld": round(omzet_vrijgesteld, 2),
+            "btw_hoog_tarief": round(btw_hoog, 2),
+            "btw_laag_tarief": round(btw_laag, 2),
+            "totaal_btw": round(totaal_btw_verkoop, 2)
+        },
+        "inkoop": {
+            "btw_aftrekbaar": round(inkoop_btw_aftrekbaar, 2)
+        },
+        "saldo": {
+            "te_betalen": round(btw_te_betalen, 2) if btw_te_betalen > 0 else 0,
+            "te_vorderen": round(abs(btw_te_betalen), 2) if btw_te_betalen < 0 else 0
+        }
+    }
+
+@router.get("/btw/controlelijst")
+async def get_btw_controlelijst(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Get BTW validation list - invoices with missing or incorrect BTW"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    problemen = []
+    
+    # Check verkoopfacturen without BTW
+    async for fac in db.boekhouding_verkoopfacturen.find({
+        "user_id": user_id,
+        "status": {"$ne": "geannuleerd"},
+        "btw_totaal": 0
+    }).limit(50):
+        fac.pop("_id", None)
+        problemen.append({
+            "type": "verkoopfactuur",
+            "nummer": fac.get("factuurnummer"),
+            "probleem": "Geen BTW berekend",
+            "datum": fac.get("factuurdatum"),
+            "bedrag": fac.get("totaal")
+        })
+    
+    # Check inkoopfacturen without BTW
+    async for fac in db.boekhouding_inkoopfacturen.find({
+        "user_id": user_id,
+        "status": {"$ne": "geannuleerd"},
+        "btw_totaal": 0
+    }).limit(50):
+        fac.pop("_id", None)
+        problemen.append({
+            "type": "inkoopfactuur",
+            "nummer": fac.get("intern_factuurnummer"),
+            "probleem": "Geen BTW berekend",
+            "datum": fac.get("factuurdatum"),
+            "bedrag": fac.get("totaal")
+        })
+    
+    return {"problemen": problemen, "aantal": len(problemen)}
+
+# ==================== RAPPORTAGES ENDPOINTS ====================
+
+@router.get("/rapportages/balans")
+async def get_balans(
+    datum: str = Query(..., description="Balansdatum YYYY-MM-DD"),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Generate balance sheet"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    # Get all accounts with their balances
+    activa = {"totaal": 0.0, "details": []}
+    passiva = {"totaal": 0.0, "details": []}
+    eigen_vermogen = {"totaal": 0.0, "details": []}
+    
+    async for rek in db.boekhouding_rekeningen.find({"user_id": user_id, "actief": True}).sort("nummer", 1):
+        item = {
+            "nummer": rek.get("nummer"),
+            "naam": rek.get("naam"),
+            "saldo": rek.get("saldo", 0)
+        }
+        
+        rek_type = rek.get("type")
+        if rek_type == "activa":
+            activa["details"].append(item)
+            activa["totaal"] += item["saldo"]
+        elif rek_type == "passiva":
+            passiva["details"].append(item)
+            passiva["totaal"] += abs(item["saldo"])
+        elif rek_type == "eigen_vermogen":
+            eigen_vermogen["details"].append(item)
+            eigen_vermogen["totaal"] += abs(item["saldo"])
+    
+    return {
+        "datum": datum,
+        "activa": activa,
+        "passiva": passiva,
+        "eigen_vermogen": eigen_vermogen,
+        "totaal_activa": activa["totaal"],
+        "totaal_passiva_ev": passiva["totaal"] + eigen_vermogen["totaal"],
+        "in_balans": abs(activa["totaal"] - (passiva["totaal"] + eigen_vermogen["totaal"])) < 0.01
+    }
+
+@router.get("/rapportages/winst-verlies")
+async def get_winst_verlies(
+    periode_van: str = Query(...),
+    periode_tot: str = Query(...),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Generate profit & loss statement"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    omzet = {"totaal": 0.0, "details": []}
+    kosten = {"totaal": 0.0, "details": []}
+    
+    # Get journaalposten in periode
+    async for post in db.boekhouding_journaalposten.find({
+        "user_id": user_id,
+        "datum": {"$gte": periode_van, "$lte": periode_tot}
+    }):
+        for regel in post.get("regels", []):
+            rek_nummer = regel.get("rekening_nummer", "")
+            bedrag = regel.get("credit", 0) - regel.get("debet", 0)
+            
+            # Omzet rekeningen (4xxx)
+            if rek_nummer.startswith("4"):
+                omzet["totaal"] += bedrag
+            # Kosten rekeningen (5xxx - 9xxx)
+            elif rek_nummer[0] in ["5", "6", "7", "8", "9"]:
+                kosten["totaal"] += abs(bedrag)
+    
+    # Get rekening details
+    async for rek in db.boekhouding_rekeningen.find({"user_id": user_id}).sort("nummer", 1):
+        nummer = rek.get("nummer", "")
+        if nummer.startswith("4"):
+            omzet["details"].append({
+                "nummer": nummer,
+                "naam": rek.get("naam"),
+                "saldo": rek.get("saldo", 0)
+            })
+        elif nummer[0] in ["5", "6", "7", "8", "9"]:
+            kosten["details"].append({
+                "nummer": nummer,
+                "naam": rek.get("naam"),
+                "saldo": rek.get("saldo", 0)
+            })
+    
+    bruto_winst = omzet["totaal"] - kosten["totaal"]
+    
+    return {
+        "periode_van": periode_van,
+        "periode_tot": periode_tot,
+        "omzet": omzet,
+        "kosten": kosten,
+        "bruto_winst": bruto_winst,
+        "netto_winst": bruto_winst  # Simplified - would need tax calculation
+    }
+
+@router.get("/rapportages/openstaande-debiteuren")
+async def get_openstaande_debiteuren_rapport(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Get outstanding debtors report"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    rapport = []
+    
+    async for deb in db.boekhouding_debiteuren.find({"user_id": user_id, "openstaand_saldo": {"$gt": 0}}):
+        facturen = []
+        async for fac in db.boekhouding_verkoopfacturen.find({
+            "user_id": user_id,
+            "debiteur_id": deb["id"],
+            "status": {"$in": ["verzonden", "gedeeltelijk_betaald", "vervallen"]}
+        }).sort("factuurdatum", 1):
+            fac.pop("_id", None)
+            facturen.append({
+                "factuurnummer": fac.get("factuurnummer"),
+                "datum": fac.get("factuurdatum"),
+                "vervaldatum": fac.get("vervaldatum"),
+                "totaal": fac.get("totaal"),
+                "openstaand": fac.get("openstaand_bedrag"),
+                "valuta": fac.get("valuta")
+            })
+        
+        rapport.append({
+            "debiteur": {
+                "klantnummer": deb.get("klantnummer"),
+                "bedrijfsnaam": deb.get("bedrijfsnaam"),
+                "openstaand_saldo": deb.get("openstaand_saldo")
+            },
+            "facturen": facturen
+        })
+    
+    return rapport
+
+@router.get("/rapportages/openstaande-crediteuren")
+async def get_openstaande_crediteuren_rapport(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Get outstanding creditors report"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    rapport = []
+    
+    async for cred in db.boekhouding_crediteuren.find({"user_id": user_id, "openstaand_saldo": {"$gt": 0}}):
+        facturen = []
+        async for fac in db.boekhouding_inkoopfacturen.find({
+            "user_id": user_id,
+            "crediteur_id": cred["id"],
+            "status": {"$in": ["verzonden", "gedeeltelijk_betaald", "vervallen"]}
+        }).sort("factuurdatum", 1):
+            fac.pop("_id", None)
+            facturen.append({
+                "factuurnummer": fac.get("extern_factuurnummer"),
+                "datum": fac.get("factuurdatum"),
+                "vervaldatum": fac.get("vervaldatum"),
+                "totaal": fac.get("totaal"),
+                "openstaand": fac.get("openstaand_bedrag"),
+                "valuta": fac.get("valuta")
+            })
+        
+        rapport.append({
+            "crediteur": {
+                "leveranciersnummer": cred.get("leveranciersnummer"),
+                "bedrijfsnaam": cred.get("bedrijfsnaam"),
+                "openstaand_saldo": cred.get("openstaand_saldo")
+            },
+            "facturen": facturen
+        })
+    
+    return rapport
+
+@router.get("/rapportages/proef-saldibalans")
+async def get_proef_saldibalans(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Get trial balance"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    rekeningen = []
+    totaal_debet = 0.0
+    totaal_credit = 0.0
+    
+    async for rek in db.boekhouding_rekeningen.find({"user_id": user_id, "actief": True}).sort("nummer", 1):
+        saldo = rek.get("saldo", 0)
+        debet = saldo if saldo > 0 else 0
+        credit = abs(saldo) if saldo < 0 else 0
+        
+        rekeningen.append({
+            "nummer": rek.get("nummer"),
+            "naam": rek.get("naam"),
+            "debet": debet,
+            "credit": credit
+        })
+        
+        totaal_debet += debet
+        totaal_credit += credit
+    
+    return {
+        "rekeningen": rekeningen,
+        "totaal_debet": totaal_debet,
+        "totaal_credit": totaal_credit,
+        "in_balans": abs(totaal_debet - totaal_credit) < 0.01
+    }
+
+# ==================== VOORRAAD ENDPOINTS ====================
+
+@router.get("/artikelen")
+async def list_artikelen(
+    categorie: Optional[str] = None,
+    voorraad_artikel: Optional[bool] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """List articles/products"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id}
+    if categorie:
+        query["categorie"] = categorie
+    if voorraad_artikel is not None:
+        query["voorraad_artikel"] = voorraad_artikel
+    
+    artikelen = []
+    async for art in db.boekhouding_artikelen.find(query).sort("artikelcode", 1):
+        art.pop("_id", None)
+        artikelen.append(art)
+    
+    return artikelen
+
+@router.post("/artikelen")
+async def create_artikel(data: ArtikelCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create an article"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    existing = await db.boekhouding_artikelen.find_one({
+        "user_id": user_id,
+        "artikelcode": data.artikelcode
+    })
+    if existing:
+        raise HTTPException(status_code=400, detail="Artikelcode bestaat al")
+    
+    artikel = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        **data.model_dump(),
+        "valuta": data.valuta.value,
+        "huidige_voorraad": 0.0,
+        "gemiddelde_kostprijs": data.inkoopprijs,
+        "voorraadwaarde": 0.0,
+        "created_at": now
+    }
+    
+    await db.boekhouding_artikelen.insert_one(artikel)
+    artikel.pop("_id", None)
+    return artikel
+
+@router.get("/magazijnen")
+async def list_magazijnen(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """List warehouses"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    magazijnen = []
+    async for mag in db.boekhouding_magazijnen.find({"user_id": user_id}).sort("code", 1):
+        mag.pop("_id", None)
+        magazijnen.append(mag)
+    
+    return magazijnen
+
+@router.post("/magazijnen")
+async def create_magazijn(data: MagazijnCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create a warehouse"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    magazijn = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        **data.model_dump(),
+        "created_at": now
+    }
+    
+    await db.boekhouding_magazijnen.insert_one(magazijn)
+    magazijn.pop("_id", None)
+    return magazijn
+
+@router.post("/voorraad/mutatie")
+async def create_voorraad_mutatie(data: VoorraadMutatieCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create a stock mutation"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Get artikel
+    artikel = await db.boekhouding_artikelen.find_one({
+        "user_id": user_id,
+        "id": data.artikel_id
+    })
+    if not artikel:
+        raise HTTPException(status_code=404, detail="Artikel niet gevonden")
+    
+    voorraad_voor = artikel.get("huidige_voorraad", 0)
+    
+    # Calculate new voorraad
+    if data.type in [MutatieTypeEnum.INKOOP, MutatieTypeEnum.RETOUR, MutatieTypeEnum.PRODUCTIE]:
+        voorraad_na = voorraad_voor + data.aantal
+    else:
+        voorraad_na = voorraad_voor - data.aantal
+    
+    if voorraad_na < 0:
+        raise HTTPException(status_code=400, detail="Onvoldoende voorraad")
+    
+    # Generate mutatie nummer
+    jaar = datetime.now().year
+    count = await db.boekhouding_voorraad_mutaties.count_documents({
+        "user_id": user_id,
+        "mutatie_nummer": {"$regex": f"^VM{jaar}-"}
+    })
+    mutatie_nummer = f"VM{jaar}-{count + 1:05d}"
+    
+    # Update gemiddelde kostprijs if inkoop
+    nieuwe_kostprijs = artikel.get("gemiddelde_kostprijs", 0)
+    if data.type == MutatieTypeEnum.INKOOP and data.kostprijs:
+        totale_waarde = voorraad_voor * artikel.get("gemiddelde_kostprijs", 0)
+        nieuwe_waarde = data.aantal * data.kostprijs
+        nieuwe_kostprijs = (totale_waarde + nieuwe_waarde) / voorraad_na if voorraad_na > 0 else data.kostprijs
+    
+    mutatie = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "mutatie_nummer": mutatie_nummer,
+        **data.model_dump(),
+        "type": data.type.value,
+        "voorraad_voor": voorraad_voor,
+        "voorraad_na": voorraad_na,
+        "created_at": now,
+        "created_by": user_id
+    }
+    
+    await db.boekhouding_voorraad_mutaties.insert_one(mutatie)
+    
+    # Update artikel voorraad
+    await db.boekhouding_artikelen.update_one(
+        {"id": data.artikel_id},
+        {"$set": {
+            "huidige_voorraad": voorraad_na,
+            "gemiddelde_kostprijs": nieuwe_kostprijs,
+            "voorraadwaarde": voorraad_na * nieuwe_kostprijs,
+            "updated_at": now
+        }}
+    )
+    
+    mutatie.pop("_id", None)
+    return mutatie
+
+@router.get("/voorraad/waardering")
+async def get_voorraad_waardering(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Get stock valuation report"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    artikelen = []
+    totaal_waarde = 0.0
+    
+    async for art in db.boekhouding_artikelen.find({
+        "user_id": user_id,
+        "voorraad_artikel": True,
+        "actief": True
+    }).sort("artikelcode", 1):
+        art.pop("_id", None)
+        voorraad = art.get("huidige_voorraad", 0)
+        kostprijs = art.get("gemiddelde_kostprijs", 0)
+        waarde = voorraad * kostprijs
+        
+        artikelen.append({
+            "artikelcode": art.get("artikelcode"),
+            "naam": art.get("naam"),
+            "voorraad": voorraad,
+            "eenheid": art.get("eenheid"),
+            "kostprijs": kostprijs,
+            "waarde": waarde
+        })
+        totaal_waarde += waarde
+    
+    return {
+        "artikelen": artikelen,
+        "totaal_waarde": totaal_waarde
+    }
+
+# ==================== PROJECTEN ENDPOINTS ====================
+
+@router.get("/projecten")
+async def list_projecten(
+    status: Optional[str] = None,
+    klant_id: Optional[str] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """List projects"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id}
+    if status:
+        query["status"] = status
+    if klant_id:
+        query["klant_id"] = klant_id
+    
+    projecten = []
+    async for proj in db.boekhouding_projecten.find(query).sort("projectnummer", -1):
+        proj.pop("_id", None)
+        projecten.append(proj)
+    
+    return projecten
+
+@router.post("/projecten")
+async def create_project(data: ProjectCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Create a project"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Generate projectnummer
+    jaar = datetime.now().year
+    count = await db.boekhouding_projecten.count_documents({
+        "user_id": user_id,
+        "projectnummer": {"$regex": f"^PRJ{jaar}-"}
+    })
+    projectnummer = f"PRJ{jaar}-{count + 1:05d}"
+    
+    project = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "projectnummer": projectnummer,
+        **data.model_dump(),
+        "valuta": data.valuta.value,
+        "status": "open",
+        "gerealiseerde_uren": 0.0,
+        "gerealiseerde_kosten": 0.0,
+        "gerealiseerde_materialen": 0.0,
+        "gefactureerd_bedrag": 0.0,
+        "created_at": now
+    }
+    
+    await db.boekhouding_projecten.insert_one(project)
+    project.pop("_id", None)
+    return project
+
+@router.get("/projecten/{project_id}")
+async def get_project(project_id: str, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Get project details with hours and costs"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    project = await db.boekhouding_projecten.find_one({
+        "user_id": user_id,
+        "id": project_id
+    })
+    if not project:
+        raise HTTPException(status_code=404, detail="Project niet gevonden")
+    
+    # Get uren
+    uren = []
+    async for uur in db.boekhouding_uren.find({"user_id": user_id, "project_id": project_id}).sort("datum", -1):
+        uur.pop("_id", None)
+        uren.append(uur)
+    
+    # Get klant info if applicable
+    klant = None
+    if project.get("klant_id"):
+        klant = await db.boekhouding_debiteuren.find_one({"id": project["klant_id"]})
+        if klant:
+            klant.pop("_id", None)
+    
+    project.pop("_id", None)
+    project["uren"] = uren
+    project["klant"] = klant
+    
+    return project
+
+@router.post("/projecten/{project_id}/uren")
+async def registreer_uren(project_id: str, data: UrenRegistratieCreate, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Register hours on a project"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Verify project exists
+    project = await db.boekhouding_projecten.find_one({
+        "user_id": user_id,
+        "id": project_id
+    })
+    if not project:
+        raise HTTPException(status_code=404, detail="Project niet gevonden")
+    
+    uren = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "project_id": project_id,
+        **data.model_dump(),
+        "status": "ingevoerd",
+        "created_at": now
+    }
+    
+    await db.boekhouding_uren.insert_one(uren)
+    
+    # Update project totals
+    await db.boekhouding_projecten.update_one(
+        {"id": project_id},
+        {"$inc": {"gerealiseerde_uren": data.aantal_uren}}
+    )
+    
+    uren.pop("_id", None)
+    return uren
+
+@router.get("/projecten/{project_id}/resultaat")
+async def get_project_resultaat(project_id: str, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Get project financial result"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    project = await db.boekhouding_projecten.find_one({
+        "user_id": user_id,
+        "id": project_id
+    })
+    if not project:
+        raise HTTPException(status_code=404, detail="Project niet gevonden")
+    
+    # Calculate totals
+    uren_pipeline = [
+        {"$match": {"user_id": user_id, "project_id": project_id}},
+        {"$group": {
+            "_id": None,
+            "totaal_uren": {"$sum": "$aantal_uren"},
+            "totaal_intern": {"$sum": {"$multiply": ["$aantal_uren", "$intern_tarief"]}},
+            "totaal_extern": {"$sum": {"$multiply": ["$aantal_uren", "$extern_tarief"]}}
+        }}
+    ]
+    
+    uren_result = await db.boekhouding_uren.aggregate(uren_pipeline).to_list(1)
+    
+    totaal_uren = uren_result[0].get("totaal_uren", 0) if uren_result else 0
+    kosten_uren = uren_result[0].get("totaal_intern", 0) if uren_result else 0
+    omzet_uren = uren_result[0].get("totaal_extern", 0) if uren_result else 0
+    
+    budget_uren = project.get("budget_uren", 0)
+    budget_kosten = project.get("budget_kosten", 0)
+    
+    return {
+        "project": {
+            "projectnummer": project.get("projectnummer"),
+            "naam": project.get("naam"),
+            "status": project.get("status")
+        },
+        "budget": {
+            "uren": budget_uren,
+            "kosten": budget_kosten
+        },
+        "gerealiseerd": {
+            "uren": totaal_uren,
+            "kosten": kosten_uren,
+            "omzet": omzet_uren
+        },
+        "afwijking": {
+            "uren": totaal_uren - budget_uren,
+            "kosten": kosten_uren - budget_kosten
+        },
+        "resultaat": omzet_uren - kosten_uren
+    }
+
+# ==================== DOCUMENTEN ENDPOINTS ====================
+
+@router.post("/documenten/upload")
+async def upload_document(
+    file: UploadFile = File(...),
+    type: str = Query("overig"),
+    referentie_type: Optional[str] = None,
+    referentie_id: Optional[str] = None,
+    omschrijving: Optional[str] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Upload a document"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    content = await file.read()
+    
+    document = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "naam": file.filename,
+        "type": type,
+        "referentie_type": referentie_type,
+        "referentie_id": referentie_id,
+        "omschrijving": omschrijving,
+        "bestandsnaam": file.filename,
+        "bestandsgrootte": len(content),
+        "mime_type": file.content_type,
+        "content": content,  # In production, store in file storage
+        "upload_datum": now,
+        "geupload_door": user_id
+    }
+    
+    await db.boekhouding_documenten.insert_one(document)
+    
+    # Remove content from response
+    document.pop("content", None)
+    document.pop("_id", None)
+    return document
+
+@router.get("/documenten")
+async def list_documenten(
+    type: Optional[str] = None,
+    referentie_type: Optional[str] = None,
+    referentie_id: Optional[str] = None,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """List documents"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    query = {"user_id": user_id}
+    if type:
+        query["type"] = type
+    if referentie_type:
+        query["referentie_type"] = referentie_type
+    if referentie_id:
+        query["referentie_id"] = referentie_id
+    
+    documenten = []
+    async for doc in db.boekhouding_documenten.find(query, {"content": 0}).sort("upload_datum", -1):
+        doc.pop("_id", None)
+        documenten.append(doc)
+    
+    return documenten
+
+@router.get("/documenten/{document_id}/download")
+async def download_document(document_id: str, db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Download a document"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    document = await db.boekhouding_documenten.find_one({
+        "user_id": user_id,
+        "id": document_id
+    })
+    if not document:
+        raise HTTPException(status_code=404, detail="Document niet gevonden")
+    
+    return StreamingResponse(
+        io.BytesIO(document.get("content", b"")),
+        media_type=document.get("mime_type", "application/octet-stream"),
+        headers={
+            "Content-Disposition": f"attachment; filename={document.get('bestandsnaam', 'document')}"
+        }
+    )
+
+# ==================== PERIODE BEHEER ENDPOINTS ====================
+
+@router.get("/periodes")
+async def list_periodes(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """List accounting periods"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    periodes = []
+    async for periode in db.boekhouding_periodes.find({"user_id": user_id}).sort([("jaar", -1), ("maand", -1)]):
+        periode.pop("_id", None)
+        periodes.append(periode)
+    
+    return periodes
+
+@router.post("/periodes/afsluiten")
+async def sluit_periode_af(
+    jaar: int = Query(...),
+    maand: int = Query(...),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Close an accounting period"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    periode_naam = f"{jaar}-{maand:02d}"
+    
+    # Check if already closed
+    existing = await db.boekhouding_periodes.find_one({
+        "user_id": user_id,
+        "jaar": jaar,
+        "maand": maand
+    })
+    
+    if existing and existing.get("status") == "gesloten":
+        raise HTTPException(status_code=400, detail="Periode is al gesloten")
+    
+    # Create or update periode
+    periode = {
+        "id": str(uuid.uuid4()) if not existing else existing["id"],
+        "user_id": user_id,
+        "jaar": jaar,
+        "maand": maand,
+        "naam": periode_naam,
+        "status": "gesloten",
+        "afgesloten_op": now,
+        "afgesloten_door": user_id
+    }
+    
+    if existing:
+        await db.boekhouding_periodes.update_one(
+            {"id": existing["id"]},
+            {"$set": periode}
+        )
+    else:
+        await db.boekhouding_periodes.insert_one(periode)
+    
+    periode.pop("_id", None)
+    return {"message": f"Periode {periode_naam} afgesloten", "periode": periode}
+
