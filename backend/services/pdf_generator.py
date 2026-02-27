@@ -309,10 +309,12 @@ def generate_invoice_pdf(
         content.append(Spacer(1, 10*mm))
     
     # === VOORWAARDEN ===
-    if bedrijf.get('factuur_voorwaarden'):
+    # Use footer_text from template settings, or fallback to bedrijf settings
+    voorwaarden_tekst = footer_text or bedrijf.get('factuur_voorwaarden', '')
+    if voorwaarden_tekst:
         content.append(Spacer(1, 10*mm))
         content.append(Paragraph("VOORWAARDEN", heading_style))
-        for line in bedrijf['factuur_voorwaarden'].split('\n'):
+        for line in voorwaarden_tekst.split('\n'):
             content.append(Paragraph(line, small_style))
     
     # Build PDF
