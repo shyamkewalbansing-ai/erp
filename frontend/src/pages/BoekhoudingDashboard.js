@@ -150,13 +150,15 @@ const BoekhoudingDashboard = () => {
 
   // Handle URL-based module selection
   useEffect(() => {
-    const path = location.pathname;
-    console.log('Current path:', path);
-    if (path.includes('/boekhouding/')) {
-      const module = path.split('/boekhouding/')[1];
-      console.log('Module from URL:', module);
-      if (module) setActiveModule(module);
-    } else if (path === '/app/boekhouding') {
+    const path = window.location.pathname;
+    console.log('Full path:', path);
+    
+    // Extract module from URL like /app/boekhouding/verkoop -> verkoop
+    const match = path.match(/\/boekhouding\/([^/]+)/);
+    if (match && match[1]) {
+      console.log('Module from URL:', match[1]);
+      setActiveModule(match[1]);
+    } else if (path.endsWith('/boekhouding') || path.endsWith('/boekhouding/')) {
       setActiveModule('dashboard');
     }
   }, [location.pathname]);
