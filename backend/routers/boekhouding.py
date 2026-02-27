@@ -2234,8 +2234,8 @@ async def bevestig_herinnering(herinnering_id: str, authorization: str = Header(
     return {"message": "Herinnering bevestigd"}
 
 @router.get("/herinneringen/{herinnering_id}/brief")
-async def get_herinnering_brief(herinnering_id: str, authorization: str = Header(None)):
-    """Download herinnering als brief"""
+async def get_herinnering_brief(herinnering_id: str, format: str = "pdf", authorization: str = Header(None)):
+    """Download herinnering als brief (PDF of tekst)"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
     
@@ -2243,23 +2243,90 @@ async def get_herinnering_brief(herinnering_id: str, authorization: str = Header
     if not herinnering:
         raise HTTPException(status_code=404, detail="Herinnering niet gevonden")
     
+    # Haal factuur
+    factuur = await db.boekhouding_verkoopfacturen.find_one({"id": herinnering.get('factuur_id'), "user_id": user_id})
+    factuur = clean_doc(factuur) if factuur else {}
+    
+    # Haal bedrijfsinstellingen
+    instellingen = await db.boekhouding_instellingen.find_one({"user_id": user_id})
+    if not instellingen:
+        instellingen = {
+            "bedrijfsnaam": user.get('company_name', 'Uw Bedrijf'),
+            "adres": user.get('address', ''),
+            "email": user.get('email', ''),
+            "telefoon": user.get('phone', '')
+        }
+    
+    # Haal debiteur
+    debiteur = None
+    if herinnering.get('debiteur_id'):
+        debiteur = await db.boekhouding_debiteuren.find_one({"id": herinnering['debiteur_id'], "user_id": user_id})
+        if debiteur:
+            debiteur = clean_doc(debiteur)
+    
+    # Genereer PDF indien mogelijk en gewenst
+    if format == "pdf" and PDF_ENABLED:
+        try:
+            pdf_bytes = generate_reminder_pdf(
+                herinnering=clean_doc(herinnering),
+                factuur=factuur,
+                bedrijf=clean_doc(instellingen) if instellingen else {},
+                debiteur=debiteur
+            )
+            
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f"attachment; filename=herinnering_{herinnering.get('factuurnummer', herinnering_id)}.pdf"
+                }
+            )
+        except Exception as e:
+            pass
+    
+    # Fallback: tekst brief
+    type_labels = {
+        'eerste': 'EERSTE BETALINGSHERINNERING',
+        'tweede': 'TWEEDE BETALINGSHERINNERING',
+        'aanmaning': 'AANMANING'
+    }
+    
+    herinnering_type = herinnering.get('type', 'eerste')
+    
     brief = f"""
-BETALINGSHERINNERING
+{type_labels.get(herinnering_type, 'BETALINGSHERINNERING')}
+
+{instellingen.get('bedrijfsnaam', 'Uw Bedrijf')}
+{instellingen.get('adres', '')}
+{instellingen.get('plaats', '')}
+
+Datum: {datetime.now().strftime('%d-%m-%Y')}
 
 Aan: {herinnering.get('debiteur_naam', 'Klant')}
-Factuurnummer: {herinnering.get('factuurnummer', '')}
+
+Betreft: Factuurnummer {herinnering.get('factuurnummer', '')}
 Openstaand bedrag: SRD {herinnering.get('openstaand_bedrag', 0):.2f}
 
 Geachte heer/mevrouw,
 
-Wij verzoeken u vriendelijk bovenstaand bedrag zo spoedig mogelijk over te maken.
+Bij controle van onze administratie is ons gebleken dat de betaling van bovengenoemde 
+factuur nog niet door ons is ontvangen. Wij verzoeken u vriendelijk het openstaande 
+bedrag zo spoedig mogelijk over te maken.
+
+Betalingsgegevens:
+Bank: {instellingen.get('bank_naam', '')}
+Rekeningnummer: {instellingen.get('bank_rekening', '')}
+Onder vermelding van: {herinnering.get('factuurnummer', '')}
+
+Mocht u reeds betaald hebben, dan kunt u deze herinnering als niet verzonden beschouwen.
 
 Met vriendelijke groet,
-{user.get('company_name', '')}
+
+{instellingen.get('bedrijfsnaam', '')}
 """
     
-    return StreamingResponse(
-        io.BytesIO(brief.encode()),
+    return Response(
+        content=brief.encode(),
         media_type="text/plain",
         headers={"Content-Disposition": f"attachment; filename=herinnering_{herinnering_id}.txt"}
     )
