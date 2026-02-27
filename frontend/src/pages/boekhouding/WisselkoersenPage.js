@@ -267,22 +267,22 @@ const WisselkoersenPage = () => {
             <TableBody>
               {rates.map(rate => (
                 <TableRow key={rate.id}>
-                  <TableCell>{formatDate(rate.date)}</TableCell>
+                  <TableCell>{formatDate(rate.datum)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="font-mono">
-                      {rate.currency_from}/SRD
+                      {rate.valuta_van}/SRD
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right font-mono font-medium">
-                    {formatNumber(rate.rate, 4)}
+                    {formatNumber(rate.koers, 4)}
                   </TableCell>
                   <TableCell>
                     <Badge className={
-                      rate.source === 'central_bank' ? 'bg-blue-100 text-blue-700' :
-                      rate.source === 'bank' ? 'bg-green-100 text-green-700' :
+                      rate.bron === 'central_bank' ? 'bg-blue-100 text-blue-700' :
+                      rate.bron === 'bank' ? 'bg-green-100 text-green-700' :
                       'bg-slate-100 text-slate-700'
                     }>
-                      {rate.source === 'central_bank' ? 'Centrale Bank' : rate.source === 'bank' ? 'Bank' : 'Handmatig'}
+                      {rate.bron === 'central_bank' ? 'Centrale Bank' : rate.bron === 'bank' ? 'Bank' : 'Handmatig'}
                     </Badge>
                   </TableCell>
                 </TableRow>
