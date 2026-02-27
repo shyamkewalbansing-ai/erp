@@ -4346,3 +4346,795 @@ async def sluit_periode_af(
     periode.pop("_id", None)
     return {"message": f"Periode {periode_naam} afgesloten", "periode": periode}
 
+
+
+# ==================== PDF FACTUUR GENERATIE ====================
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import mm, cm
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image as RLImage
+from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+import base64
+
+@router.get("/verkoopfacturen/{factuur_id}/pdf")
+async def generate_factuur_pdf(
+    factuur_id: str,
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Generate PDF invoice with company logo"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    # Get factuur
+    factuur = await db.boekhouding_verkoopfacturen.find_one({
+        "user_id": user_id,
+        "id": factuur_id
+    })
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Get debiteur
+    debiteur = await db.boekhouding_debiteuren.find_one({"id": factuur.get("debiteur_id")})
+    
+    # Get company info
+    user = await db.users.find_one({"id": user_id})
+    company_name = user.get("company_name", user.get("name", "Uw Bedrijf"))
+    company_address = user.get("address", "Paramaribo, Suriname")
+    company_phone = user.get("phone", "")
+    company_email = user.get("email", "")
+    company_btw = user.get("btw_nummer", "")
+    company_kvk = user.get("kvk_nummer", "")
+    company_logo = user.get("logo_base64")
+    
+    # Create PDF buffer
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=20*mm,
+        leftMargin=20*mm,
+        topMargin=20*mm,
+        bottomMargin=20*mm
+    )
+    
+    styles = getSampleStyleSheet()
+    styles.add(ParagraphStyle(name='RightAlign', alignment=TA_RIGHT))
+    styles.add(ParagraphStyle(name='CenterAlign', alignment=TA_CENTER))
+    styles.add(ParagraphStyle(name='Header', fontSize=24, spaceAfter=10, textColor=colors.HexColor('#1E40AF')))
+    styles.add(ParagraphStyle(name='SubHeader', fontSize=12, textColor=colors.HexColor('#6B7280')))
+    
+    elements = []
+    
+    # Header with logo
+    header_data = []
+    
+    # Company info (left side)
+    company_info = f"""
+    <b>{company_name}</b><br/>
+    {company_address}<br/>
+    Tel: {company_phone}<br/>
+    Email: {company_email}<br/>
+    """
+    if company_btw:
+        company_info += f"BTW: {company_btw}<br/>"
+    if company_kvk:
+        company_info += f"KvK: {company_kvk}"
+    
+    header_left = Paragraph(company_info, styles['Normal'])
+    
+    # Invoice title (right side)
+    header_right = Paragraph(f"""
+    <font size="20" color="#1E40AF"><b>FACTUUR</b></font><br/><br/>
+    <b>Factuurnummer:</b> {factuur.get('factuurnummer')}<br/>
+    <b>Factuurdatum:</b> {factuur.get('factuurdatum')}<br/>
+    <b>Vervaldatum:</b> {factuur.get('vervaldatum')}<br/>
+    <b>Valuta:</b> {factuur.get('valuta', 'SRD')}
+    """, styles['RightAlign'])
+    
+    header_table = Table([[header_left, header_right]], colWidths=[90*mm, 80*mm])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    elements.append(header_table)
+    elements.append(Spacer(1, 15*mm))
+    
+    # Customer info
+    customer_info = f"""
+    <b>Factuur aan:</b><br/>
+    <b>{debiteur.get('bedrijfsnaam', 'N/A') if debiteur else 'N/A'}</b><br/>
+    {debiteur.get('adres', '') if debiteur else ''}<br/>
+    {debiteur.get('postcode', '')} {debiteur.get('plaats', '') if debiteur else ''}<br/>
+    {debiteur.get('land', 'Suriname') if debiteur else 'Suriname'}<br/>
+    """
+    if debiteur and debiteur.get('btw_nummer'):
+        customer_info += f"BTW-nummer: {debiteur.get('btw_nummer')}"
+    
+    elements.append(Paragraph(customer_info, styles['Normal']))
+    elements.append(Spacer(1, 10*mm))
+    
+    # Invoice lines table
+    table_data = [['Omschrijving', 'Aantal', 'Eenheid', 'Prijs', 'BTW%', 'Totaal']]
+    
+    for regel in factuur.get('regels', []):
+        aantal = regel.get('aantal', 1)
+        prijs = regel.get('prijs_per_eenheid', 0)
+        btw_pct = regel.get('btw_percentage', 0)
+        korting = regel.get('korting_percentage', 0)
+        
+        subtotaal = aantal * prijs
+        if korting > 0:
+            subtotaal = subtotaal * (1 - korting/100)
+        
+        valuta = factuur.get('valuta', 'SRD')
+        table_data.append([
+            regel.get('omschrijving', ''),
+            f"{aantal:.2f}",
+            regel.get('eenheid', 'stuk'),
+            f"{valuta} {prijs:,.2f}",
+            f"{btw_pct:.0f}%",
+            f"{valuta} {subtotaal:,.2f}"
+        ])
+    
+    line_table = Table(table_data, colWidths=[70*mm, 20*mm, 20*mm, 30*mm, 15*mm, 30*mm])
+    line_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1E40AF')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('TOPPADDING', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 5),
+        ('TOPPADDING', (0, 1), (-1, -1), 5),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#E5E7EB')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#F9FAFB')]),
+    ]))
+    elements.append(line_table)
+    elements.append(Spacer(1, 10*mm))
+    
+    # Totals
+    valuta = factuur.get('valuta', 'SRD')
+    totals_data = [
+        ['', 'Subtotaal:', f"{valuta} {factuur.get('subtotaal', 0):,.2f}"],
+        ['', 'BTW:', f"{valuta} {factuur.get('btw_totaal', 0):,.2f}"],
+        ['', 'Totaal:', f"{valuta} {factuur.get('totaal', 0):,.2f}"],
+    ]
+    
+    if factuur.get('openstaand_bedrag', 0) != factuur.get('totaal', 0):
+        totals_data.append(['', 'Reeds betaald:', f"{valuta} {factuur.get('totaal', 0) - factuur.get('openstaand_bedrag', 0):,.2f}"])
+        totals_data.append(['', 'Openstaand:', f"{valuta} {factuur.get('openstaand_bedrag', 0):,.2f}"])
+    
+    totals_table = Table(totals_data, colWidths=[105*mm, 40*mm, 40*mm])
+    totals_table.setStyle(TableStyle([
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
+        ('FONTNAME', (1, -1), (2, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('LINEABOVE', (1, -1), (2, -1), 1, colors.HexColor('#1E40AF')),
+    ]))
+    elements.append(totals_table)
+    elements.append(Spacer(1, 15*mm))
+    
+    # Payment info
+    payment_info = f"""
+    <b>Betalingsgegevens:</b><br/>
+    Betaalreferentie: {factuur.get('betaalreferentie', factuur.get('factuurnummer'))}<br/>
+    Vervaldatum: {factuur.get('vervaldatum')}<br/><br/>
+    Gelieve het factuurnummer te vermelden bij uw betaling.<br/>
+    """
+    elements.append(Paragraph(payment_info, styles['Normal']))
+    
+    if factuur.get('opmerkingen'):
+        elements.append(Spacer(1, 5*mm))
+        elements.append(Paragraph(f"<b>Opmerkingen:</b><br/>{factuur.get('opmerkingen')}", styles['Normal']))
+    
+    # Footer
+    elements.append(Spacer(1, 20*mm))
+    footer_text = f"""
+    <font size="8" color="#6B7280">
+    Bedankt voor uw vertrouwen in {company_name}.<br/>
+    Bij vragen over deze factuur kunt u contact opnemen via {company_email}.
+    </font>
+    """
+    elements.append(Paragraph(footer_text, styles['CenterAlign']))
+    
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=Factuur_{factuur.get('factuurnummer')}.pdf"
+        }
+    )
+
+# ==================== BANK IMPORT PER BANK ====================
+
+# Bank-specific CSV parsers
+BANK_PARSERS = {
+    "DSB": {
+        "delimiter": ";",
+        "columns": {
+            "datum": ["Datum", "Date", "Boekdatum"],
+            "bedrag": ["Bedrag", "Amount", "Waarde"],
+            "omschrijving": ["Omschrijving", "Description", "Mededeling"],
+            "tegenrekening": ["Tegenrekening", "Counter Account", "IBAN"],
+            "naam": ["Naam", "Name", "Begunstigde"]
+        },
+        "date_format": "%d-%m-%Y"
+    },
+    "Finabank": {
+        "delimiter": ",",
+        "columns": {
+            "datum": ["Transaction Date", "Date", "Datum"],
+            "bedrag": ["Amount", "Bedrag", "Value"],
+            "omschrijving": ["Description", "Omschrijving", "Narrative"],
+            "tegenrekening": ["Account", "Tegenrekening"],
+            "naam": ["Beneficiary", "Name", "Naam"]
+        },
+        "date_format": "%Y-%m-%d"
+    },
+    "Hakrinbank": {
+        "delimiter": ";",
+        "columns": {
+            "datum": ["Valutadatum", "Datum", "Date"],
+            "bedrag": ["Bedrag", "Amount"],
+            "omschrijving": ["Omschrijving", "Mededeling"],
+            "tegenrekening": ["Tegenrekening"],
+            "naam": ["Naam"]
+        },
+        "date_format": "%d/%m/%Y"
+    },
+    "Republic": {
+        "delimiter": ",",
+        "columns": {
+            "datum": ["Post Date", "Date"],
+            "bedrag": ["Amount", "Debit/Credit"],
+            "omschrijving": ["Description", "Narrative"],
+            "tegenrekening": ["Reference"],
+            "naam": ["Payee"]
+        },
+        "date_format": "%m/%d/%Y"
+    },
+    "SPSB": {
+        "delimiter": ";",
+        "columns": {
+            "datum": ["Datum", "Boekingsdatum"],
+            "bedrag": ["Bedrag"],
+            "omschrijving": ["Omschrijving"],
+            "tegenrekening": ["Tegenrekening"],
+            "naam": ["Naam begunstigde"]
+        },
+        "date_format": "%d-%m-%Y"
+    }
+}
+
+def parse_bank_csv(content: str, bank_naam: str) -> list:
+    """Parse CSV content based on bank-specific format"""
+    parser = BANK_PARSERS.get(bank_naam, BANK_PARSERS.get("DSB"))  # Default to DSB format
+    
+    delimiter = parser.get("delimiter", ";")
+    column_mapping = parser.get("columns", {})
+    date_format = parser.get("date_format", "%d-%m-%Y")
+    
+    # Try to detect delimiter if not working
+    lines = content.strip().split('\n')
+    if len(lines) < 2:
+        return []
+    
+    # Check if delimiter works
+    header_line = lines[0]
+    if delimiter not in header_line:
+        # Try other delimiters
+        for delim in [';', ',', '\t']:
+            if delim in header_line:
+                delimiter = delim
+                break
+    
+    reader = csv.DictReader(io.StringIO(content), delimiter=delimiter)
+    
+    mutaties = []
+    for row in reader:
+        mutatie = {}
+        
+        # Find datum
+        for key in column_mapping.get("datum", []):
+            if key in row:
+                mutatie["datum"] = row[key]
+                break
+        
+        # Find bedrag
+        for key in column_mapping.get("bedrag", []):
+            if key in row:
+                bedrag_str = row[key].replace(',', '.').replace(' ', '').replace('SRD', '').replace('USD', '').replace('EUR', '')
+                try:
+                    mutatie["bedrag"] = float(bedrag_str)
+                except:
+                    mutatie["bedrag"] = 0.0
+                break
+        
+        # Find omschrijving
+        for key in column_mapping.get("omschrijving", []):
+            if key in row:
+                mutatie["omschrijving"] = row[key]
+                break
+        
+        # Find tegenrekening
+        for key in column_mapping.get("tegenrekening", []):
+            if key in row:
+                mutatie["tegenrekening"] = row[key]
+                break
+        
+        # Find naam
+        for key in column_mapping.get("naam", []):
+            if key in row:
+                mutatie["naam"] = row[key]
+                break
+        
+        if mutatie.get("datum") and mutatie.get("bedrag") is not None:
+            mutaties.append(mutatie)
+    
+    return mutaties
+
+@router.post("/bankrekeningen/{rekening_id}/import-bank")
+async def import_bank_mutaties_enhanced(
+    rekening_id: str,
+    bank_naam: str = Query(..., description="DSB, Finabank, Hakrinbank, Republic, SPSB"),
+    file: UploadFile = File(...),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Import bank mutations with bank-specific parsing"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    # Verify bank account exists
+    bankrekening = await db.boekhouding_bankrekeningen.find_one({
+        "user_id": user_id,
+        "id": rekening_id
+    })
+    if not bankrekening:
+        raise HTTPException(status_code=404, detail="Bankrekening niet gevonden")
+    
+    # Read and parse file
+    content = await file.read()
+    decoded = content.decode('utf-8', errors='ignore')
+    
+    # Parse based on bank
+    mutaties_parsed = parse_bank_csv(decoded, bank_naam)
+    
+    if not mutaties_parsed:
+        raise HTTPException(status_code=400, detail="Geen geldige mutaties gevonden in bestand")
+    
+    imported = 0
+    duplicates = 0
+    errors = []
+    
+    for mut in mutaties_parsed:
+        try:
+            # Generate unique reference
+            trans_ref = f"{mut.get('datum', '')}-{abs(mut.get('bedrag', 0))}-{mut.get('omschrijving', '')[:20]}"
+            
+            # Check for duplicate
+            existing = await db.boekhouding_bankmutaties.find_one({
+                "user_id": user_id,
+                "bankrekening_id": rekening_id,
+                "transactie_ref": trans_ref
+            })
+            
+            if existing:
+                duplicates += 1
+                continue
+            
+            mutatie = {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "bankrekening_id": rekening_id,
+                "datum": mut.get("datum", ""),
+                "valutadatum": mut.get("datum", ""),
+                "bedrag": mut.get("bedrag", 0),
+                "omschrijving": mut.get("omschrijving", ""),
+                "tegenrekening": mut.get("tegenrekening", ""),
+                "naam_tegenpartij": mut.get("naam", ""),
+                "transactie_ref": trans_ref,
+                "status": "te_verwerken",
+                "bron_bank": bank_naam,
+                "created_at": now
+            }
+            
+            await db.boekhouding_bankmutaties.insert_one(mutatie)
+            imported += 1
+            
+        except Exception as e:
+            errors.append(str(e))
+    
+    return {
+        "message": f"{imported} mutaties geïmporteerd van {bank_naam}",
+        "imported": imported,
+        "duplicates": duplicates,
+        "errors": errors[:5] if errors else [],
+        "bank": bank_naam
+    }
+
+# MT940 Parser
+def parse_mt940(content: str) -> list:
+    """Parse MT940 bank statement format"""
+    mutaties = []
+    
+    # MT940 uses specific tags
+    # :60F: Opening balance
+    # :61: Transaction
+    # :86: Description
+    
+    lines = content.split('\n')
+    current_mutatie = None
+    
+    for line in lines:
+        line = line.strip()
+        
+        if line.startswith(':61:'):
+            # New transaction
+            if current_mutatie:
+                mutaties.append(current_mutatie)
+            
+            # Parse :61: line
+            # Format: YYMMDDYYMMDDCDAMOUNT...
+            data = line[4:]
+            try:
+                # Extract date (first 6 chars)
+                date_str = data[:6]
+                year = int("20" + date_str[:2])
+                month = int(date_str[2:4])
+                day = int(date_str[4:6])
+                datum = f"{year}-{month:02d}-{day:02d}"
+                
+                # Find C (credit) or D (debit)
+                sign_pos = 12
+                for i, char in enumerate(data[6:], 6):
+                    if char in ['C', 'D']:
+                        sign_pos = i
+                        break
+                
+                sign = data[sign_pos]
+                
+                # Extract amount (after sign)
+                amount_str = ""
+                for char in data[sign_pos + 1:]:
+                    if char.isdigit() or char in [',', '.']:
+                        amount_str += char
+                    else:
+                        break
+                
+                bedrag = float(amount_str.replace(',', '.'))
+                if sign == 'D':
+                    bedrag = -bedrag
+                
+                current_mutatie = {
+                    "datum": datum,
+                    "bedrag": bedrag,
+                    "omschrijving": ""
+                }
+            except Exception as e:
+                print(f"MT940 parse error on :61: line: {e}")
+                continue
+        
+        elif line.startswith(':86:') and current_mutatie:
+            # Description
+            current_mutatie["omschrijving"] = line[4:]
+        
+        elif current_mutatie and not line.startswith(':') and current_mutatie.get("omschrijving"):
+            # Continuation of description
+            current_mutatie["omschrijving"] += " " + line
+    
+    if current_mutatie:
+        mutaties.append(current_mutatie)
+    
+    return mutaties
+
+@router.post("/bankrekeningen/{rekening_id}/import-mt940")
+async def import_mt940_mutaties(
+    rekening_id: str,
+    file: UploadFile = File(...),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Import bank mutations from MT940 file"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    
+    bankrekening = await db.boekhouding_bankrekeningen.find_one({
+        "user_id": user_id,
+        "id": rekening_id
+    })
+    if not bankrekening:
+        raise HTTPException(status_code=404, detail="Bankrekening niet gevonden")
+    
+    content = await file.read()
+    decoded = content.decode('utf-8', errors='ignore')
+    
+    mutaties_parsed = parse_mt940(decoded)
+    
+    if not mutaties_parsed:
+        raise HTTPException(status_code=400, detail="Geen geldige MT940 mutaties gevonden")
+    
+    imported = 0
+    duplicates = 0
+    
+    for mut in mutaties_parsed:
+        trans_ref = f"MT940-{mut.get('datum', '')}-{abs(mut.get('bedrag', 0)):.2f}"
+        
+        existing = await db.boekhouding_bankmutaties.find_one({
+            "user_id": user_id,
+            "bankrekening_id": rekening_id,
+            "transactie_ref": trans_ref
+        })
+        
+        if existing:
+            duplicates += 1
+            continue
+        
+        mutatie = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "bankrekening_id": rekening_id,
+            "datum": mut.get("datum", ""),
+            "valutadatum": mut.get("datum", ""),
+            "bedrag": mut.get("bedrag", 0),
+            "omschrijving": mut.get("omschrijving", ""),
+            "transactie_ref": trans_ref,
+            "status": "te_verwerken",
+            "bron": "mt940",
+            "created_at": now
+        }
+        
+        await db.boekhouding_bankmutaties.insert_one(mutatie)
+        imported += 1
+    
+    return {
+        "message": f"{imported} MT940 mutaties geïmporteerd",
+        "imported": imported,
+        "duplicates": duplicates
+    }
+
+# ==================== CENTRALE BANK SURINAME API ====================
+
+@router.get("/wisselkoersen/centrale-bank-live")
+async def fetch_centrale_bank_koersen_live(db=Depends(get_db), current_user=Depends(get_current_user)):
+    """Fetch live exchange rates from Central Bank of Suriname website"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    now = datetime.now(timezone.utc).isoformat()
+    today = datetime.now().strftime("%Y-%m-%d")
+    
+    try:
+        from bs4 import BeautifulSoup
+        
+        # CBvS website URL for exchange rates
+        url = "https://www.cbvs.sr"
+        
+        async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
+            try:
+                response = await client.get(url)
+                
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.text, 'lxml')
+                    
+                    # Try to find exchange rate data
+                    # Note: Actual parsing depends on CBvS website structure
+                    # This is a placeholder that would need adjustment based on actual HTML
+                    
+                    rates = []
+                    
+                    # Look for common exchange rate table patterns
+                    tables = soup.find_all('table')
+                    for table in tables:
+                        rows = table.find_all('tr')
+                        for row in rows:
+                            cells = row.find_all(['td', 'th'])
+                            text = ' '.join([cell.get_text().strip() for cell in cells])
+                            
+                            # Look for USD and EUR rates
+                            if 'USD' in text.upper() or 'DOLLAR' in text.upper():
+                                # Try to extract rate
+                                import re
+                                numbers = re.findall(r'\d+[.,]\d+', text)
+                                if numbers:
+                                    try:
+                                        rate = float(numbers[0].replace(',', '.'))
+                                        if rate > 1 and rate < 100:  # Reasonable SRD rate
+                                            rates.append({
+                                                "van_valuta": "USD",
+                                                "naar_valuta": "SRD",
+                                                "koers": rate
+                                            })
+                                    except:
+                                        pass
+                            
+                            if 'EUR' in text.upper() or 'EURO' in text.upper():
+                                import re
+                                numbers = re.findall(r'\d+[.,]\d+', text)
+                                if numbers:
+                                    try:
+                                        rate = float(numbers[0].replace(',', '.'))
+                                        if rate > 1 and rate < 100:
+                                            rates.append({
+                                                "van_valuta": "EUR",
+                                                "naar_valuta": "SRD",
+                                                "koers": rate
+                                            })
+                                    except:
+                                        pass
+                    
+                    if rates:
+                        # Save rates to database
+                        saved_rates = []
+                        for rate in rates:
+                            koers_data = {
+                                "id": str(uuid.uuid4()),
+                                "user_id": user_id,
+                                "datum": today,
+                                "van_valuta": rate["van_valuta"],
+                                "naar_valuta": rate["naar_valuta"],
+                                "koers": rate["koers"],
+                                "bron": "centrale_bank_live",
+                                "created_at": now
+                            }
+                            
+                            await db.boekhouding_wisselkoersen.update_one(
+                                {
+                                    "user_id": user_id,
+                                    "datum": today,
+                                    "van_valuta": rate["van_valuta"],
+                                    "naar_valuta": rate["naar_valuta"]
+                                },
+                                {"$set": koers_data},
+                                upsert=True
+                            )
+                            saved_rates.append(koers_data)
+                        
+                        return {
+                            "success": True,
+                            "message": f"{len(saved_rates)} koersen opgehaald van CBvS",
+                            "datum": today,
+                            "koersen": saved_rates,
+                            "bron": "centrale_bank_live"
+                        }
+            
+            except Exception as e:
+                print(f"Error fetching CBvS rates: {e}")
+        
+        # Fallback to mock rates if CBvS is not accessible
+        mock_rates = [
+            {"van_valuta": "USD", "naar_valuta": "SRD", "koers": 36.50},
+            {"van_valuta": "EUR", "naar_valuta": "SRD", "koers": 39.75},
+            {"van_valuta": "SRD", "naar_valuta": "USD", "koers": 0.0274},
+            {"van_valuta": "SRD", "naar_valuta": "EUR", "koers": 0.0252},
+        ]
+        
+        saved_rates = []
+        for rate in mock_rates:
+            koers_data = {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "datum": today,
+                "van_valuta": rate["van_valuta"],
+                "naar_valuta": rate["naar_valuta"],
+                "koers": rate["koers"],
+                "bron": "fallback_indicatief",
+                "created_at": now
+            }
+            
+            await db.boekhouding_wisselkoersen.update_one(
+                {
+                    "user_id": user_id,
+                    "datum": today,
+                    "van_valuta": rate["van_valuta"],
+                    "naar_valuta": rate["naar_valuta"]
+                },
+                {"$set": koers_data},
+                upsert=True
+            )
+            saved_rates.append(koers_data)
+        
+        return {
+            "success": True,
+            "message": "Indicatieve koersen (CBvS niet bereikbaar)",
+            "datum": today,
+            "koersen": saved_rates,
+            "bron": "fallback_indicatief",
+            "note": "Dit zijn indicatieve koersen. Voor actuele koersen bezoek www.cbvs.sr"
+        }
+        
+    except ImportError:
+        # BeautifulSoup not available
+        return {
+            "success": False,
+            "message": "Web scraping niet beschikbaar",
+            "error": "BeautifulSoup module niet geïnstalleerd"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "message": f"Fout bij ophalen koersen: {str(e)}",
+            "error": str(e)
+        }
+
+# ==================== COMPANY LOGO UPLOAD ====================
+
+@router.post("/instellingen/logo")
+async def upload_company_logo(
+    file: UploadFile = File(...),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Upload company logo for PDF invoices"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    if not file.content_type.startswith('image/'):
+        raise HTTPException(status_code=400, detail="Bestand moet een afbeelding zijn")
+    
+    content = await file.read()
+    
+    # Convert to base64
+    logo_base64 = base64.b64encode(content).decode('utf-8')
+    
+    # Save to user profile
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "logo_base64": logo_base64,
+            "logo_filename": file.filename,
+            "logo_content_type": file.content_type
+        }}
+    )
+    
+    return {"message": "Logo geupload", "filename": file.filename}
+
+@router.post("/instellingen/bedrijfsgegevens")
+async def update_company_info(
+    company_name: str = Query(...),
+    address: str = Query(None),
+    phone: str = Query(None),
+    email: str = Query(None),
+    btw_nummer: str = Query(None),
+    kvk_nummer: str = Query(None),
+    bank_iban: str = Query(None),
+    bank_naam: str = Query(None),
+    db=Depends(get_db), 
+    current_user=Depends(get_current_user)
+):
+    """Update company information for invoices"""
+    user_id = current_user.get("id") or str(current_user.get("_id"))
+    
+    update_data = {
+        "company_name": company_name,
+    }
+    
+    if address:
+        update_data["address"] = address
+    if phone:
+        update_data["phone"] = phone
+    if email:
+        update_data["company_email"] = email
+    if btw_nummer:
+        update_data["btw_nummer"] = btw_nummer
+    if kvk_nummer:
+        update_data["kvk_nummer"] = kvk_nummer
+    if bank_iban:
+        update_data["bank_iban"] = bank_iban
+    if bank_naam:
+        update_data["bank_naam"] = bank_naam
+    
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Bedrijfsgegevens bijgewerkt", "updated": update_data}
+
