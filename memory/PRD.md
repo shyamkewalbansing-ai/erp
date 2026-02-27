@@ -136,6 +136,7 @@ Dutch (Nederlands)
 ### ✅ E-mail Services Samenvoegen (Voltooid - December 2025)
 - Nieuwe `UnifiedEmailService` in `/app/backend/services/unified_email_service.py`
 - Combineert functionaliteit van `email_service.py` en `boekhouding_email.py`
+- **Oude services verwijderd:** `email_service.py` en `boekhouding_email.py` zijn nu vervangen
 - Ondersteunt gebruiker-specifieke SMTP-instellingen uit `boekhouding_instellingen`
 - Methoden: `send_email`, `generate_reminder_html`, `generate_invoice_html`
 - System templates: welcome, password_reset, module_expiring, module_expired
