@@ -65,20 +65,7 @@ from routers.admin import router as admin_router
 from routers.domain_management import router as domain_management_router
 from routers.beautyspa import router as beautyspa_router
 from routers.spa_booking import router as spa_booking_router
-from routers.pompstation import router as pompstation_router
-from routers.boekhouding import router as boekhouding_router
 from routers.suribet import router as suribet_router
-from routers.inkoop import router as inkoop_router
-from routers.verkoop import router as verkoop_router
-from routers.voorraad import router as voorraad_router
-from routers.activa import router as activa_router
-from routers.projecten import router as projecten_router
-from routers.pdf import router as pdf_router
-from routers.rapportages import router as rapportages_router
-from routers.bankreconciliatie import router as bankreconciliatie_router
-from routers.vaste_activa import router as vaste_activa_router
-from routers.kostenplaatsen import router as kostenplaatsen_router
-from routers.wisselkoersen import router as wisselkoersen_router
 from services.email_service import get_email_service, EMAIL_TEMPLATES
 from services.scheduled_tasks import get_scheduled_tasks
 
