@@ -31,12 +31,12 @@ const GrootboekPage = () => {
   });
 
   const [newJournal, setNewJournal] = useState({
-    date: new Date().toISOString().split('T')[0],
-    journal_type: 'memorial',
-    description: '',
-    lines: [
-      { account_id: '', account_code: '', account_name: '', debit: 0, credit: 0, description: '' },
-      { account_id: '', account_code: '', account_name: '', debit: 0, credit: 0, description: '' }
+    datum: new Date().toISOString().split('T')[0],
+    dagboek_code: 'MM',
+    omschrijving: '',
+    regels: [
+      { rekening_id: '', rekening_code: '', rekening_naam: '', debet: 0, credit: 0 },
+      { rekening_id: '', rekening_code: '', rekening_naam: '', debet: 0, credit: 0 }
     ]
   });
 
