@@ -339,4 +339,4 @@ Aangepaste pagina's:
 
 ---
 
-*Laatste update: 27 december 2025 - Product Foto's op PDF Facturen voltooid*
+*Laatste update: 27 december 2025 - Sidebar navigatie bugfix voltooid*
