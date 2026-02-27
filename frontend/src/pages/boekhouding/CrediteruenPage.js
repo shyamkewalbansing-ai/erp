@@ -1,132 +1,349 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { Plus, Search, Filter, Building2, Eye, Edit } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { suppliersAPI, purchaseInvoicesAPI } from '../../lib/boekhoudingApi';
+import { formatCurrency, formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Badge } from '../../components/ui/badge';
+import { toast } from 'sonner';
+import { Plus, Truck, Receipt, Search, Loader2 } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-
-const formatCurrency = (amount, currency = 'SRD') => {
-  if (amount === null || amount === undefined) return `${currency} 0,00`;
-  return `${currency} ${new Intl.NumberFormat('nl-NL', { minimumFractionDigits: 2 }).format(amount)}`;
-};
-
-export default function CrediteruenPage() {
-  const { token } = useAuth();
-  const [crediteuren, setCrediteuren] = useState([]);
+const CrediteruenPage = () => {
+  const [suppliers, setSuppliers] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({ naam: '', email: '', telefoon: '', adres: '', bank: 'DSB', rekeningnummer: '' });
+  const [showSupplierDialog, setShowSupplierDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const fetchCrediteuren = useCallback(async () => {
+  const [newSupplier, setNewSupplier] = useState({
+    code: '',
+    naam: '',
+    adres: '',
+    stad: '',
+    telefoon: '',
+    email: '',
+    btw_nummer: '',
+    betalingstermijn: 30,
+    valuta: 'SRD'
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/boekhouding/crediteuren`, { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) setCrediteuren(await res.json());
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, [token]);
-
-  useEffect(() => { fetchCrediteuren(); }, [fetchCrediteuren]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await fetch(`${API_URL}/api/boekhouding/crediteuren`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(formData)
-      });
-      if (res.ok) { setShowModal(false); fetchCrediteuren(); }
-    } catch (e) { console.error(e); }
+      const [suppliersRes, invoicesRes] = await Promise.all([
+        suppliersAPI.getAll(),
+        purchaseInvoicesAPI.getAll()
+      ]);
+      setSuppliers(Array.isArray(suppliersRes) ? suppliersRes : suppliersRes.data || []);
+      setInvoices(Array.isArray(invoicesRes) ? invoicesRes : invoicesRes.data || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Fout bij laden gegevens');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const handleCreateSupplier = async () => {
+    if (!newSupplier.code || !newSupplier.naam) {
+      toast.error('Vul code en naam in');
+      return;
+    }
+    setSaving(true);
+    try {
+      await suppliersAPI.create(newSupplier);
+      toast.success('Leverancier aangemaakt');
+      setShowSupplierDialog(false);
+      setNewSupplier({
+        code: '', naam: '', adres: '', stad: '', telefoon: '', email: '',
+        btw_nummer: '', betalingstermijn: 30, valuta: 'SRD'
+      });
+      fetchData();
+    } catch (error) {
+      toast.error(error.message || 'Fout bij aanmaken');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const filteredSuppliers = suppliers.filter(s =>
+    (s.naam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (s.code || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalOutstanding = suppliers.reduce((sum, s) => sum + (s.openstaand_saldo || 0), 0);
+
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6" data-testid="crediteuren-page">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Crediteuren</h1>
-          <p className="text-gray-500">Beheer uw leveranciers en te betalen facturen</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Crediteuren</h1>
+          <p className="text-slate-500 mt-1">Beheer uw leveranciers en inkoopfacturen</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-          <Plus className="w-4 h-4" /><span>Nieuwe Crediteur</span>
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-purple-600" />
+        <Dialog open={showSupplierDialog} onOpenChange={setShowSupplierDialog}>
+          <DialogTrigger asChild>
+            <Button data-testid="add-supplier-btn">
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuwe Leverancier
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Nieuwe Leverancier</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-2">
+                <Label>Code *</Label>
+                <Input
+                  value={newSupplier.code}
+                  onChange={(e) => setNewSupplier({...newSupplier, code: e.target.value})}
+                  placeholder="L001"
+                  data-testid="supplier-code-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Naam *</Label>
+                <Input
+                  value={newSupplier.naam}
+                  onChange={(e) => setNewSupplier({...newSupplier, naam: e.target.value})}
+                  placeholder="Leverancier naam"
+                  data-testid="supplier-name-input"
+                />
+              </div>
+              <div className="space-y-2 col-span-2">
+                <Label>Adres</Label>
+                <Input
+                  value={newSupplier.adres}
+                  onChange={(e) => setNewSupplier({...newSupplier, adres: e.target.value})}
+                  placeholder="Straat en nummer"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Stad</Label>
+                <Input
+                  value={newSupplier.stad}
+                  onChange={(e) => setNewSupplier({...newSupplier, stad: e.target.value})}
+                  placeholder="Paramaribo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Telefoon</Label>
+                <Input
+                  value={newSupplier.telefoon}
+                  onChange={(e) => setNewSupplier({...newSupplier, telefoon: e.target.value})}
+                  placeholder="+597 123 4567"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input
+                  type="email"
+                  value={newSupplier.email}
+                  onChange={(e) => setNewSupplier({...newSupplier, email: e.target.value})}
+                  placeholder="info@leverancier.sr"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>BTW-nummer</Label>
+                <Input
+                  value={newSupplier.btw_nummer}
+                  onChange={(e) => setNewSupplier({...newSupplier, btw_nummer: e.target.value})}
+                  placeholder="BTW123456"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Betalingstermijn (dagen)</Label>
+                <Input
+                  type="number"
+                  value={newSupplier.betalingstermijn}
+                  onChange={(e) => setNewSupplier({...newSupplier, betalingstermijn: parseInt(e.target.value) || 30})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Valuta</Label>
+                <Select value={newSupplier.valuta} onValueChange={(v) => setNewSupplier({...newSupplier, valuta: v})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SRD">SRD</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2">
+                <Button onClick={handleCreateSupplier} className="w-full" disabled={saving} data-testid="save-supplier-btn">
+                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  Opslaan
+                </Button>
+              </div>
             </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{crediteuren.length}</p>
-              <p className="text-sm text-gray-500">Totaal leveranciers</p>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="border-slate-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Totaal Leveranciers</p>
+                <p className="text-2xl font-bold font-mono text-slate-900">{suppliers.length}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Truck className="w-6 h-6 text-blue-600" />
+              </div>
             </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <p className="text-2xl font-bold text-gray-900">{formatCurrency(crediteuren.reduce((s, c) => s + (c.openstaand_bedrag || 0), 0))}</p>
-          <p className="text-sm text-gray-500">Te betalen</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <p className="text-2xl font-bold text-gray-900">0</p>
-          <p className="text-sm text-gray-500">Vervallen facturen</p>
-        </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Te Betalen</p>
+                <p className="text-2xl font-bold font-mono text-slate-900">{formatCurrency(totalOutstanding)}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
+                <Receipt className="w-6 h-6 text-amber-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="text-left text-sm text-gray-500 border-b border-gray-100 bg-gray-50">
-              <th className="px-6 py-4 font-medium">Nummer</th>
-              <th className="px-6 py-4 font-medium">Naam</th>
-              <th className="px-6 py-4 font-medium">Bank</th>
-              <th className="px-6 py-4 font-medium">Telefoon</th>
-              <th className="px-6 py-4 font-medium text-right">Te betalen</th>
-              <th className="px-6 py-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? <tr><td colSpan="6" className="px-6 py-12 text-center text-gray-500">Laden...</td></tr> :
-            crediteuren.length === 0 ? <tr><td colSpan="6" className="px-6 py-12 text-center text-gray-500">Geen crediteuren</td></tr> :
-            crediteuren.map((c) => (
-              <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50">
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">{c.nummer}</td>
-                <td className="px-6 py-4 text-sm text-gray-900">{c.naam}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{c.bank || '-'}</td>
-                <td className="px-6 py-4 text-sm text-gray-600">{c.telefoon || '-'}</td>
-                <td className="px-6 py-4 text-sm text-right font-medium">{formatCurrency(c.openstaand_bedrag || 0)}</td>
-                <td className="px-6 py-4"><button className="text-gray-400 hover:text-gray-600"><Eye className="w-4 h-4" /></button></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <Tabs defaultValue="suppliers">
+        <TabsList>
+          <TabsTrigger value="suppliers" data-testid="tab-suppliers">
+            <Truck className="w-4 h-4 mr-2" />
+            Leveranciers
+          </TabsTrigger>
+          <TabsTrigger value="invoices" data-testid="tab-purchase-invoices">
+            <Receipt className="w-4 h-4 mr-2" />
+            Inkoopfacturen
+          </TabsTrigger>
+        </TabsList>
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl w-full max-w-lg p-6">
-            <h2 className="text-xl font-bold mb-6">Nieuwe Crediteur</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div><label className="block text-sm font-medium mb-1">Naam *</label>
-                <input required value={formData.naam} onChange={(e) => setFormData({...formData, naam: e.target.value})} className="w-full px-4 py-2 border rounded-lg" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-sm font-medium mb-1">Bank</label>
-                  <select value={formData.bank} onChange={(e) => setFormData({...formData, bank: e.target.value})} className="w-full px-4 py-2 border rounded-lg">
-                    <option>DSB</option><option>Hakrinbank</option><option>Finabank</option><option>RBC</option>
-                  </select>
-                </div>
-                <div><label className="block text-sm font-medium mb-1">Rekeningnummer</label>
-                  <input value={formData.rekeningnummer} onChange={(e) => setFormData({...formData, rekeningnummer: e.target.value})} className="w-full px-4 py-2 border rounded-lg" />
+        <TabsContent value="suppliers" className="mt-4">
+          <Card className="border-slate-200">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Leverancierslijst</CardTitle>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="Zoeken..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                    data-testid="search-suppliers"
+                  />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-gray-600">Annuleren</button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg">Opslaan</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8 text-slate-500">Laden...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="w-24">Code</TableHead>
+                      <TableHead>Naam</TableHead>
+                      <TableHead>Stad</TableHead>
+                      <TableHead>Telefoon</TableHead>
+                      <TableHead className="w-20">Valuta</TableHead>
+                      <TableHead className="text-right w-32">Saldo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredSuppliers.map(supplier => (
+                      <TableRow key={supplier.code} data-testid={`supplier-row-${supplier.code}`}>
+                        <TableCell className="font-mono">{supplier.code}</TableCell>
+                        <TableCell className="font-medium">{supplier.naam}</TableCell>
+                        <TableCell className="text-slate-500">{supplier.stad || '-'}</TableCell>
+                        <TableCell className="text-slate-500">{supplier.telefoon || '-'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{supplier.valuta}</Badge>
+                        </TableCell>
+                        <TableCell className={`text-right font-mono ${(supplier.openstaand_saldo || 0) > 0 ? 'text-red-600' : ''}`}>
+                          {formatCurrency(supplier.openstaand_saldo || 0, supplier.valuta)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredSuppliers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                          {searchTerm ? 'Geen leveranciers gevonden' : 'Geen leveranciers. Maak uw eerste leverancier aan.'}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="invoices" className="mt-4">
+          <Card className="border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-lg">Inkoopfacturen</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="w-28">Nummer</TableHead>
+                    <TableHead className="w-28">Datum</TableHead>
+                    <TableHead>Leverancier</TableHead>
+                    <TableHead className="w-28">Vervaldatum</TableHead>
+                    <TableHead className="text-right w-32">Bedrag</TableHead>
+                    <TableHead className="w-24">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoices.map(invoice => (
+                    <TableRow key={invoice.factuurnummer} data-testid={`purchase-invoice-row-${invoice.factuurnummer}`}>
+                      <TableCell className="font-mono">{invoice.factuurnummer}</TableCell>
+                      <TableCell>{formatDate(invoice.factuurdatum)}</TableCell>
+                      <TableCell className="font-medium">{invoice.crediteur_naam}</TableCell>
+                      <TableCell>{formatDate(invoice.vervaldatum)}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatCurrency(invoice.totaal_bedrag, invoice.valuta)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(invoice.status)}>
+                          {getStatusLabel(invoice.status)}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {invoices.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                        Geen inkoopfacturen gevonden
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-}
+};
+
+export default CrediteruenPage;

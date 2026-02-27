@@ -1,298 +1,364 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import {
-  Plus,
-  Search,
-  Filter,
-  Users,
-  Mail,
-  Phone,
-  MapPin,
-  MoreVertical,
-  Eye,
-  Edit,
-  Trash2
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { customersAPI, salesInvoicesAPI } from '../../lib/boekhoudingApi';
+import { formatCurrency, formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Badge } from '../../components/ui/badge';
+import { toast } from 'sonner';
+import { Plus, Users, Receipt, Search, Loader2 } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-
-const formatCurrency = (amount, currency = 'SRD') => {
-  if (amount === null || amount === undefined) return `${currency} 0,00`;
-  const formatted = new Intl.NumberFormat('nl-NL', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount);
-  return `${currency} ${formatted}`;
-};
-
-export default function DebiteruenPage() {
-  const { token } = useAuth();
-  const [debiteuren, setDebiteuren] = useState([]);
+const DebiteruenPage = () => {
+  const [customers, setCustomers] = useState([]);
+  const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({
+  const [showCustomerDialog, setShowCustomerDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [newCustomer, setNewCustomer] = useState({
+    code: '',
     naam: '',
-    email: '',
-    telefoon: '',
     adres: '',
-    plaats: '',
+    stad: '',
+    telefoon: '',
+    email: '',
     btw_nummer: '',
     betalingstermijn: 30,
     kredietlimiet: 0,
     valuta: 'SRD'
   });
 
-  const fetchDebiteuren = useCallback(async () => {
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/boekhouding/debiteuren`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setDebiteuren(data);
-      }
-    } catch (e) {
-      console.error('Fetch error:', e);
+      const [customersRes, invoicesRes] = await Promise.all([
+        customersAPI.getAll(),
+        salesInvoicesAPI.getAll()
+      ]);
+      setCustomers(Array.isArray(customersRes) ? customersRes : customersRes.data || []);
+      setInvoices(Array.isArray(invoicesRes) ? invoicesRes : invoicesRes.data || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Fout bij laden gegevens');
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  };
 
-  useEffect(() => {
-    fetchDebiteuren();
-  }, [fetchDebiteuren]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleCreateCustomer = async () => {
+    if (!newCustomer.code || !newCustomer.naam) {
+      toast.error('Vul code en naam in');
+      return;
+    }
+    setSaving(true);
     try {
-      const res = await fetch(`${API_URL}/api/boekhouding/debiteuren`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(formData)
+      await customersAPI.create(newCustomer);
+      toast.success('Klant aangemaakt');
+      setShowCustomerDialog(false);
+      setNewCustomer({
+        code: '', naam: '', adres: '', stad: '', telefoon: '', email: '',
+        btw_nummer: '', betalingstermijn: 30, kredietlimiet: 0, valuta: 'SRD'
       });
-      if (res.ok) {
-        setShowModal(false);
-        setFormData({ naam: '', email: '', telefoon: '', adres: '', plaats: '', btw_nummer: '', betalingstermijn: 30, kredietlimiet: 0, valuta: 'SRD' });
-        fetchDebiteuren();
-      }
-    } catch (e) {
-      console.error('Submit error:', e);
+      fetchData();
+    } catch (error) {
+      toast.error(error.message || 'Fout bij aanmaken');
+    } finally {
+      setSaving(false);
     }
   };
 
+  const filteredCustomers = customers.filter(c =>
+    (c.naam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.code || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const totalOutstanding = customers.reduce((sum, c) => sum + (c.openstaand_saldo || 0), 0);
+  const overdueInvoices = invoices.filter(i => i.status === 'verlopen' || i.status === 'overdue').length;
+
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6" data-testid="debiteuren-page">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Debiteuren</h1>
-          <p className="text-gray-500">Beheer uw klanten en openstaande vorderingen</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Debiteuren</h1>
+          <p className="text-slate-500 mt-1">Beheer uw klanten en verkoopfacturen</p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Nieuwe Debiteur</span>
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{debiteuren.length}</p>
-              <p className="text-sm text-gray-500">Totaal klanten</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(debiteuren.reduce((sum, d) => sum + (d.openstaand_bedrag || 0), 0))}
-              </p>
-              <p className="text-sm text-gray-500">Openstaand bedrag</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">0</p>
-              <p className="text-sm text-gray-500">Verlopen facturen</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Search */}
-      <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4 flex gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Zoek debiteur..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-          <Filter className="w-4 h-4" />
-          <span>Filter</span>
-        </button>
-      </div>
-
-      {/* Table */}
-      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-        <table className="w-full">
-          <thead>
-            <tr className="text-left text-sm text-gray-500 border-b border-gray-100 bg-gray-50">
-              <th className="px-6 py-4 font-medium">Nummer</th>
-              <th className="px-6 py-4 font-medium">Naam</th>
-              <th className="px-6 py-4 font-medium">Email</th>
-              <th className="px-6 py-4 font-medium">Telefoon</th>
-              <th className="px-6 py-4 font-medium text-right">Openstaand</th>
-              <th className="px-6 py-4 font-medium"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                  Laden...
-                </td>
-              </tr>
-            ) : debiteuren.length === 0 ? (
-              <tr>
-                <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
-                  <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p>Geen debiteuren gevonden</p>
-                </td>
-              </tr>
-            ) : (
-              debiteuren.map((d) => (
-                <tr key={d.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="px-6 py-4 text-sm font-medium text-gray-900">{d.nummer}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{d.naam}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{d.email || '-'}</td>
-                  <td className="px-6 py-4 text-sm text-gray-600">{d.telefoon || '-'}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900 text-right font-medium">
-                    {formatCurrency(d.openstaand_bedrag || 0, d.valuta)}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <button className="p-1 text-gray-400 hover:text-gray-600">
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-1 text-gray-400 hover:text-blue-600">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl w-full max-w-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Nieuwe Debiteur</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Naam *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.naam}
-                  onChange={(e) => setFormData({ ...formData, naam: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <Dialog open={showCustomerDialog} onOpenChange={setShowCustomerDialog}>
+          <DialogTrigger asChild>
+            <Button data-testid="add-customer-btn">
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuwe Klant
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Nieuwe Klant</DialogTitle>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-2">
+                <Label>Klantcode *</Label>
+                <Input
+                  value={newCustomer.code}
+                  onChange={(e) => setNewCustomer({...newCustomer, code: e.target.value})}
+                  placeholder="K001"
+                  data-testid="customer-code-input"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Telefoon</label>
-                  <input
-                    type="text"
-                    value={formData.telefoon}
-                    onChange={(e) => setFormData({ ...formData, telefoon: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Adres</label>
-                <input
-                  type="text"
-                  value={formData.adres}
-                  onChange={(e) => setFormData({ ...formData, adres: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <div className="space-y-2">
+                <Label>Naam *</Label>
+                <Input
+                  value={newCustomer.naam}
+                  onChange={(e) => setNewCustomer({...newCustomer, naam: e.target.value})}
+                  placeholder="Bedrijfsnaam"
+                  data-testid="customer-name-input"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Plaats</label>
-                  <input
-                    type="text"
-                    value={formData.plaats}
-                    onChange={(e) => setFormData({ ...formData, plaats: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">BTW Nummer</label>
-                  <input
-                    type="text"
-                    value={formData.btw_nummer}
-                    onChange={(e) => setFormData({ ...formData, btw_nummer: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div className="space-y-2 col-span-2">
+                <Label>Adres</Label>
+                <Input
+                  value={newCustomer.adres}
+                  onChange={(e) => setNewCustomer({...newCustomer, adres: e.target.value})}
+                  placeholder="Straat en nummer"
+                />
               </div>
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
-                >
-                  Annuleren
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
+              <div className="space-y-2">
+                <Label>Stad</Label>
+                <Input
+                  value={newCustomer.stad}
+                  onChange={(e) => setNewCustomer({...newCustomer, stad: e.target.value})}
+                  placeholder="Paramaribo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Telefoon</Label>
+                <Input
+                  value={newCustomer.telefoon}
+                  onChange={(e) => setNewCustomer({...newCustomer, telefoon: e.target.value})}
+                  placeholder="+597 123 4567"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>E-mail</Label>
+                <Input
+                  type="email"
+                  value={newCustomer.email}
+                  onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})}
+                  placeholder="info@bedrijf.sr"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>BTW-nummer</Label>
+                <Input
+                  value={newCustomer.btw_nummer}
+                  onChange={(e) => setNewCustomer({...newCustomer, btw_nummer: e.target.value})}
+                  placeholder="BTW123456"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Betalingstermijn (dagen)</Label>
+                <Input
+                  type="number"
+                  value={newCustomer.betalingstermijn}
+                  onChange={(e) => setNewCustomer({...newCustomer, betalingstermijn: parseInt(e.target.value) || 30})}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Valuta</Label>
+                <Select value={newCustomer.valuta} onValueChange={(v) => setNewCustomer({...newCustomer, valuta: v})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SRD">SRD</SelectItem>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="EUR">EUR</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2">
+                <Button onClick={handleCreateCustomer} className="w-full" disabled={saving} data-testid="save-customer-btn">
+                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                   Opslaan
-                </button>
+                </Button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-slate-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Totaal Klanten</p>
+                <p className="text-2xl font-bold font-mono text-slate-900">{customers.length}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Users className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Openstaand</p>
+                <p className="text-2xl font-bold font-mono text-slate-900">{formatCurrency(totalOutstanding)}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
+                <Receipt className="w-6 h-6 text-amber-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Vervallen Facturen</p>
+                <p className="text-2xl font-bold font-mono text-red-600">{overdueInvoices}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
+                <Receipt className="w-6 h-6 text-red-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="customers">
+        <TabsList>
+          <TabsTrigger value="customers" data-testid="tab-customers">
+            <Users className="w-4 h-4 mr-2" />
+            Klanten
+          </TabsTrigger>
+          <TabsTrigger value="invoices" data-testid="tab-invoices">
+            <Receipt className="w-4 h-4 mr-2" />
+            Verkoopfacturen
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="customers" className="mt-4">
+          <Card className="border-slate-200">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-lg">Klantenlijst</CardTitle>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="Zoeken..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-9"
+                    data-testid="search-customers"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8 text-slate-500">Laden...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="w-24">Code</TableHead>
+                      <TableHead>Naam</TableHead>
+                      <TableHead>Stad</TableHead>
+                      <TableHead>Telefoon</TableHead>
+                      <TableHead className="w-20">Valuta</TableHead>
+                      <TableHead className="text-right w-32">Saldo</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredCustomers.map(customer => (
+                      <TableRow key={customer.code} data-testid={`customer-row-${customer.code}`}>
+                        <TableCell className="font-mono">{customer.code}</TableCell>
+                        <TableCell className="font-medium">{customer.naam}</TableCell>
+                        <TableCell className="text-slate-500">{customer.stad || '-'}</TableCell>
+                        <TableCell className="text-slate-500">{customer.telefoon || '-'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{customer.valuta}</Badge>
+                        </TableCell>
+                        <TableCell className={`text-right font-mono ${(customer.openstaand_saldo || 0) > 0 ? 'text-amber-600' : ''}`}>
+                          {formatCurrency(customer.openstaand_saldo || 0, customer.valuta)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {filteredCustomers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                          {searchTerm ? 'Geen klanten gevonden' : 'Geen klanten. Maak uw eerste klant aan.'}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="invoices" className="mt-4">
+          <Card className="border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-lg">Verkoopfacturen</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="w-28">Nummer</TableHead>
+                    <TableHead className="w-28">Datum</TableHead>
+                    <TableHead>Klant</TableHead>
+                    <TableHead className="w-28">Vervaldatum</TableHead>
+                    <TableHead className="text-right w-32">Bedrag</TableHead>
+                    <TableHead className="w-24">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {invoices.map(invoice => (
+                    <TableRow key={invoice.factuurnummer} data-testid={`invoice-row-${invoice.factuurnummer}`}>
+                      <TableCell className="font-mono">{invoice.factuurnummer}</TableCell>
+                      <TableCell>{formatDate(invoice.factuurdatum)}</TableCell>
+                      <TableCell className="font-medium">{invoice.debiteur_naam}</TableCell>
+                      <TableCell>{formatDate(invoice.vervaldatum)}</TableCell>
+                      <TableCell className="text-right font-mono">
+                        {formatCurrency(invoice.totaal_bedrag, invoice.valuta)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={getStatusColor(invoice.status)}>
+                          {getStatusLabel(invoice.status)}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {invoices.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                        Geen verkoopfacturen gevonden
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-}
+};
+
+export default DebiteruenPage;
