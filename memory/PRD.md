@@ -134,19 +134,16 @@ Dutch (Nederlands)
 
 ## Backlog / Toekomstige Taken
 
-### P2 - Medium Prioriteit
-- [ ] E-mailverzending voor betalingsherinneringen
-- [ ] Surinaamse belastingrapportages
-- [ ] Bestands-upload voor Documenten module (met preview)
-- [ ] Voorraad pagina (`/app/boekhouding/voorraad`)
-- [ ] Vaste Activa pagina (`/app/boekhouding/vaste-activa`)
-- [ ] Projecten pagina (`/app/boekhouding/projecten`)
+### Alle P0, P1, P2 en P3 taken zijn voltooid! 🎉
 
-### P3 - Lage Prioriteit
-- [ ] Handleiding pagina voor Boekhouding
-- [ ] Export naar Excel/CSV
-- [ ] Dashboard grafieken met echte data
-- [ ] Audit trail pagina (`/app/boekhouding/audit-trail`)
+### Mogelijke Verbeteringen (P4)
+- [ ] Dashboard grafieken met echte interactieve data (Chart.js)
+- [ ] Multi-tenant ondersteuning voor meerdere bedrijven
+- [ ] API rate limiting en caching
+- [ ] Backup en restore functionaliteit
+- [ ] Meer gedetailleerde audit logging
+- [ ] Custom factuur templates
+- [ ] Integratie met Surinaamse banken (indien API beschikbaar)
 
 ---
 
