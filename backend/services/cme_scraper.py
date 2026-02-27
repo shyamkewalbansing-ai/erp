@@ -2,10 +2,10 @@
 CME.sr Wisselkoers Scraper
 ==========================
 Haalt actuele wisselkoersen op van Central Money Exchange Suriname
+Gebruikt Playwright voor JavaScript rendering
 """
 
-import httpx
-from bs4 import BeautifulSoup
+import asyncio
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import re
@@ -15,9 +15,10 @@ logger = logging.getLogger(__name__)
 
 CME_URL = "https://www.cme.sr/"
 
+
 async def fetch_cme_exchange_rates() -> Dict:
     """
-    Haalt wisselkoersen op van CME.sr
+    Haalt wisselkoersen op van CME.sr met Playwright voor JavaScript rendering
     
     Returns:
         Dict met koersen in formaat:
@@ -34,62 +35,89 @@ async def fetch_cme_exchange_rates() -> Dict:
         }
     """
     try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            response = await client.get(CME_URL, follow_redirects=True)
-            response.raise_for_status()
-            
-        html_content = response.text
-        soup = BeautifulSoup(html_content, 'html.parser')
+        from playwright.async_api import async_playwright
         
         rates = {
             "USD_SRD": {"inkoop": None, "verkoop": None},
             "EUR_SRD": {"inkoop": None, "verkoop": None},
             "EUR_USD": {"inkoop": None, "verkoop": None}
         }
+        last_updated = None
         
-        # Zoek naar de Cash Rate sectie
-        # De structuur is: "1 USD = XX.XX SRD" in verschillende secties
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+            page = await context.new_page()
+            
+            # Navigate to CME.sr
+            await page.goto(CME_URL, wait_until="networkidle", timeout=30000)
+            
+            # Wait for JavaScript to load rates
+            await asyncio.sleep(3)
+            
+            # Get page content after JavaScript rendering
+            content = await page.content()
+            
+            # Parse the rendered HTML
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(content, 'html.parser')
+            text = soup.get_text()
+            
+            # Find all numbers that could be exchange rates
+            all_numbers = re.findall(r'(\d+\.\d+)', text)
+            
+            # Filter for reasonable exchange rates (between 30 and 60 for SRD rates)
+            valid_rates = [float(n) for n in all_numbers if 30 <= float(n) <= 60]
+            
+            # Look for patterns in the structured text
+            # "We Buy:" section for inkoop, "We Sell:" section for verkoop
+            
+            # Try to find USD rates
+            usd_pattern = re.findall(r'1\s*USD\s*=\s*(\d+\.?\d*)\s*SRD', text, re.IGNORECASE)
+            if usd_pattern:
+                valid_usd = [float(r) for r in usd_pattern if float(r) > 1]
+                if len(valid_usd) >= 2:
+                    rates["USD_SRD"]["inkoop"] = min(valid_usd[:2])  # Lower = inkoop
+                    rates["USD_SRD"]["verkoop"] = max(valid_usd[:2])  # Higher = verkoop
+                elif len(valid_usd) == 1:
+                    rates["USD_SRD"]["inkoop"] = valid_usd[0]
+                    rates["USD_SRD"]["verkoop"] = valid_usd[0]
+            
+            # Try to find EUR rates
+            eur_pattern = re.findall(r'1\s*EURO?\s*=\s*(\d+\.?\d*)\s*SRD', text, re.IGNORECASE)
+            if eur_pattern:
+                valid_eur = [float(r) for r in eur_pattern if float(r) > 1]
+                if len(valid_eur) >= 2:
+                    rates["EUR_SRD"]["inkoop"] = min(valid_eur[:2])
+                    rates["EUR_SRD"]["verkoop"] = max(valid_eur[:2])
+                elif len(valid_eur) == 1:
+                    rates["EUR_SRD"]["inkoop"] = valid_eur[0]
+                    rates["EUR_SRD"]["verkoop"] = valid_eur[0]
+            
+            # Try to find EUR/USD treasury rates
+            eur_usd_pattern = re.findall(r'EURO?\s*to\s*USD\s*=\s*(\d+\.?\d*)', text, re.IGNORECASE)
+            if eur_usd_pattern:
+                valid = [float(r) for r in eur_usd_pattern if float(r) > 0]
+                if valid:
+                    rates["EUR_USD"]["inkoop"] = valid[0]
+            
+            # Get last updated time
+            last_updated_match = re.search(r'Last updated.*?on\s*(\d{1,2}-\w{3}-\d{4}\s+\d{1,2}:\d{2}\s*[AP]M)', text, re.IGNORECASE)
+            last_updated = last_updated_match.group(1) if last_updated_match else None
+            
+            await browser.close()
         
-        # Methode 1: Zoek via tekst patterns
-        text = soup.get_text()
-        
-        # USD inkoop (We Buy sectie)
-        usd_buy_match = re.search(r'We Buy:.*?1 USD\s*=\s*(\d+\.?\d*)\s*SRD', text, re.DOTALL | re.IGNORECASE)
-        if usd_buy_match:
-            rates["USD_SRD"]["inkoop"] = float(usd_buy_match.group(1))
-        
-        # EUR inkoop
-        eur_buy_match = re.search(r'We Buy:.*?1 EURO\s*=\s*(\d+\.?\d*)\s*SRD', text, re.DOTALL | re.IGNORECASE)
-        if eur_buy_match:
-            rates["EUR_SRD"]["inkoop"] = float(eur_buy_match.group(1))
-        
-        # USD verkoop (We Sell sectie)
-        usd_sell_match = re.search(r'We Sell:.*?1 USD\s*=\s*(\d+\.?\d*)\s*SRD', text, re.DOTALL | re.IGNORECASE)
-        if usd_sell_match:
-            rates["USD_SRD"]["verkoop"] = float(usd_sell_match.group(1))
-        
-        # EUR verkoop
-        eur_sell_match = re.search(r'We Sell:.*?1 EURO\s*=\s*(\d+\.?\d*)\s*SRD', text, re.DOTALL | re.IGNORECASE)
-        if eur_sell_match:
-            rates["EUR_SRD"]["verkoop"] = float(eur_sell_match.group(1))
-        
-        # EUR/USD Treasury rates
-        eur_usd_match = re.search(r'EURO to USD\s*=\s*(\d+\.?\d*)', text, re.IGNORECASE)
-        if eur_usd_match:
-            rates["EUR_USD"]["inkoop"] = float(eur_usd_match.group(1))
-        
-        usd_eur_match = re.search(r'USD to EURO\s*=\s*(\d+\.?\d*)', text, re.IGNORECASE)
-        if usd_eur_match:
-            rates["EUR_USD"]["verkoop"] = float(usd_eur_match.group(1))
-        
-        # Zoek laatste update tijd
-        last_updated_match = re.search(r'Last updated.*?on\s*(\d{1,2}-\w{3}-\d{4}\s+\d{1,2}:\d{2}\s*[AP]M)', text, re.IGNORECASE)
-        last_updated = last_updated_match.group(1) if last_updated_match else None
-        
-        # Valideer dat we tenminste USD en EUR koersen hebben
-        if rates["USD_SRD"]["inkoop"] is None or rates["EUR_SRD"]["inkoop"] is None:
-            # Fallback: probeer alternatieve parsing
-            rates = await _parse_alternative(soup, rates)
+        # Check if we got valid rates
+        if rates["USD_SRD"]["inkoop"] is None and rates["EUR_SRD"]["inkoop"] is None:
+            # Fallback: use hardcoded typical CME rates as last resort
+            logger.warning("Could not parse CME rates, website might be blocking scraping")
+            return {
+                "success": False,
+                "error": "Kon koersen niet parsen van CME.sr - website is mogelijk tijdelijk niet beschikbaar",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
         
         return {
             "success": True,
@@ -99,61 +127,20 @@ async def fetch_cme_exchange_rates() -> Dict:
             "last_updated": last_updated
         }
         
-    except httpx.HTTPError as e:
-        logger.error(f"HTTP error fetching CME rates: {e}")
+    except ImportError:
+        logger.error("Playwright not installed")
         return {
             "success": False,
-            "error": f"Kon CME.sr niet bereiken: {str(e)}",
+            "error": "Playwright is niet geïnstalleerd. Neem contact op met support.",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
-        logger.error(f"Error parsing CME rates: {e}")
+        logger.error(f"Error fetching CME rates: {e}")
         return {
             "success": False,
-            "error": f"Fout bij verwerken koersen: {str(e)}",
+            "error": f"Fout bij ophalen koersen: {str(e)}",
             "timestamp": datetime.now(timezone.utc).isoformat()
         }
-
-
-async def _parse_alternative(soup: BeautifulSoup, rates: Dict) -> Dict:
-    """
-    Alternatieve parsing methode voor CME.sr
-    Zoekt naar specifieke HTML elementen
-    """
-    try:
-        # Zoek alle elementen met koers informatie
-        # CME gebruikt vaak spans of divs met specifieke classes
-        
-        # Zoek naar elementen die getallen bevatten na "USD" of "EURO"
-        for element in soup.find_all(['span', 'div', 'td', 'p']):
-            text = element.get_text(strip=True)
-            
-            # USD koers pattern
-            if 'USD' in text and 'SRD' in text:
-                match = re.search(r'(\d+\.?\d*)\s*SRD', text)
-                if match:
-                    value = float(match.group(1))
-                    if value > 30 and value < 50:  # Redelijke range voor USD/SRD
-                        if rates["USD_SRD"]["inkoop"] is None:
-                            rates["USD_SRD"]["inkoop"] = value
-                        elif rates["USD_SRD"]["verkoop"] is None and value != rates["USD_SRD"]["inkoop"]:
-                            rates["USD_SRD"]["verkoop"] = value
-            
-            # EUR koers pattern
-            if ('EURO' in text or 'EUR' in text) and 'SRD' in text:
-                match = re.search(r'(\d+\.?\d*)\s*SRD', text)
-                if match:
-                    value = float(match.group(1))
-                    if value > 35 and value < 60:  # Redelijke range voor EUR/SRD
-                        if rates["EUR_SRD"]["inkoop"] is None:
-                            rates["EUR_SRD"]["inkoop"] = value
-                        elif rates["EUR_SRD"]["verkoop"] is None and value != rates["EUR_SRD"]["inkoop"]:
-                            rates["EUR_SRD"]["verkoop"] = value
-    
-    except Exception as e:
-        logger.warning(f"Alternative parsing failed: {e}")
-    
-    return rates
 
 
 def format_rate_for_display(rates: Dict) -> List[Dict]:
