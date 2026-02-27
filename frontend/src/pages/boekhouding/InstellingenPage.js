@@ -612,6 +612,202 @@ const InstellingenPage = () => {
           </Card>
         </TabsContent>
 
+
+        {/* Automatische Herinneringen Tab */}
+        <TabsContent value="herinneringen" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Instellingen */}
+            <Card className="bg-white border border-slate-100 shadow-sm">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <Bell className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base font-semibold text-slate-900">Automatische Herinneringen</CardTitle>
+                    <CardDescription className="text-sm text-slate-500">Automatisch herinneringen versturen bij vervallen facturen</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                  <div>
+                    <Label className="text-sm font-medium">Automatische herinneringen inschakelen</Label>
+                    <p className="text-xs text-slate-500 mt-1">Dagelijks om 08:00 (Suriname tijd) worden vervallen facturen gecontroleerd</p>
+                  </div>
+                  <Switch
+                    checked={settings.auto_herinneringen_enabled}
+                    onCheckedChange={(checked) => setSettings({...settings, auto_herinneringen_enabled: checked})}
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="dagen_voor_eerste_herinnering">Dagen na vervaldatum voor eerste herinnering</Label>
+                    <Input
+                      id="dagen_voor_eerste_herinnering"
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={settings.dagen_voor_eerste_herinnering}
+                      onChange={(e) => setSettings({...settings, dagen_voor_eerste_herinnering: parseInt(e.target.value) || 7})}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Na hoeveel dagen over de vervaldatum de eerste herinnering wordt verzonden</p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="dagen_tussen_herinneringen">Dagen tussen herinneringen</Label>
+                    <Input
+                      id="dagen_tussen_herinneringen"
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={settings.dagen_tussen_herinneringen}
+                      onChange={(e) => setSettings({...settings, dagen_tussen_herinneringen: parseInt(e.target.value) || 7})}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Aantal dagen tussen escalatie (eerste → tweede → aanmaning)</p>
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="max_herinneringen">Maximum aantal herinneringen</Label>
+                    <Select 
+                      value={String(settings.max_herinneringen)} 
+                      onValueChange={(v) => setSettings({...settings, max_herinneringen: parseInt(v)})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">1 herinnering</SelectItem>
+                        <SelectItem value="2">2 herinneringen</SelectItem>
+                        <SelectItem value="3">3 herinneringen (incl. aanmaning)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500 mt-1">Na dit aantal stopt de automatische opvolging</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Status */}
+            <Card className="bg-white border border-slate-100 shadow-sm">
+              <CardHeader>
+                <div className="flex items-center gap-3">
+                  <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                    <Clock className="w-5 h-5 text-blue-500" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base font-semibold text-slate-900">Scheduler Status</CardTitle>
+                    <CardDescription className="text-sm text-slate-500">Huidige status en statistieken</CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {schedulerStatus ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 bg-slate-50 rounded-lg">
+                        <p className="text-xs text-slate-500">Status</p>
+                        <p className={`text-lg font-semibold ${schedulerStatus.auto_herinneringen_enabled ? 'text-green-600' : 'text-slate-400'}`}>
+                          {schedulerStatus.auto_herinneringen_enabled ? 'Actief' : 'Uitgeschakeld'}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-slate-50 rounded-lg">
+                        <p className="text-xs text-slate-500">SMTP</p>
+                        <p className={`text-lg font-semibold ${schedulerStatus.smtp_configured ? 'text-green-600' : 'text-red-500'}`}>
+                          {schedulerStatus.smtp_configured ? 'Geconfigureerd' : 'Niet geconfigureerd'}
+                        </p>
+                      </div>
+                      <div className="p-4 bg-slate-50 rounded-lg">
+                        <p className="text-xs text-slate-500">Facturen over vervaldatum</p>
+                        <p className="text-2xl font-semibold text-slate-900">{schedulerStatus.facturen_over_vervaldatum}</p>
+                      </div>
+                      <div className="p-4 bg-slate-50 rounded-lg">
+                        <p className="text-xs text-slate-500">Herinneringen vandaag</p>
+                        <p className="text-2xl font-semibold text-slate-900">{schedulerStatus.herinneringen_vandaag}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-blue-50 rounded-lg">
+                      <p className="text-xs text-blue-600 mb-1">Volgende automatische controle</p>
+                      <p className="text-sm font-medium text-blue-900">{schedulerStatus.next_run}</p>
+                    </div>
+                    
+                    <Button 
+                      onClick={triggerReminderCheck} 
+                      disabled={triggeringCheck}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      {triggeringCheck ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Play className="w-4 h-4 mr-2" />
+                      )}
+                      Nu controleren
+                    </Button>
+                    
+                    {!schedulerStatus.smtp_configured && (
+                      <div className="p-4 bg-amber-50 rounded-lg flex items-start gap-3">
+                        <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-medium text-amber-900">SMTP niet geconfigureerd</p>
+                          <p className="text-xs text-amber-700 mt-1">
+                            Herinneringen worden wel aangemaakt, maar e-mails kunnen niet worden verzonden. 
+                            Configureer SMTP in de E-mail tab.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="flex items-center justify-center h-32">
+                    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Info Card */}
+          <Card className="bg-white border border-slate-100 shadow-sm">
+            <CardContent className="p-6">
+              <h3 className="font-semibold text-slate-900 mb-3">Hoe werkt automatische herinneringen?</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-bold text-amber-600">1</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900">Eerste herinnering</p>
+                    <p className="text-sm text-slate-500">Vriendelijke herinnering na {settings.dagen_voor_eerste_herinnering} dagen over vervaldatum</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-bold text-orange-600">2</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900">Tweede herinnering</p>
+                    <p className="text-sm text-slate-500">Dringender verzoek na nog eens {settings.dagen_tussen_herinneringen} dagen</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-bold text-red-600">3</span>
+                  </div>
+                  <div>
+                    <p className="font-medium text-slate-900">Aanmaning</p>
+                    <p className="text-sm text-slate-500">Laatste waarschuwing met vermelding van incassomaatregelen</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Factuur Template Tab */}
         <TabsContent value="factuur" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
