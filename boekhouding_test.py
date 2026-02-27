@@ -695,14 +695,13 @@ class BoekhoudingTester:
     def test_create_vast_activum(self):
         """Test creating fixed asset"""
         activum_data = {
-            "naam": "Server Equipment",
+            "omschrijving": "Server Equipment",
             "categorie": "computers",
             "aanschafwaarde": 15000.00,
-            "aanschafdatum": "2026-02-01",
+            "aankoopdatum": "2026-02-01",
             "afschrijvingsmethode": "lineair",
-            "afschrijvingsperiode": 5,
-            "restwaarde": 1000.00,
-            "rekening_nummer": "1200"
+            "afschrijvingsduur_maanden": 60,
+            "restwaarde": 1000.00
         }
         
         success, response = self.run_test(
