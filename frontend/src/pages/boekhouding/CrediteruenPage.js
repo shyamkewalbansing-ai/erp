@@ -75,8 +75,8 @@ const CrediteurenPage = () => {
   };
 
   const filteredSuppliers = suppliers.filter(s =>
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.code.toLowerCase().includes(searchTerm.toLowerCase())
+    (s.naam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (s.nummer || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const totalOutstanding = suppliers.reduce((sum, s) => sum + (s.balance || 0), 0);
