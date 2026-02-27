@@ -115,7 +115,7 @@ Dutch (Nederlands)
 - API endpoints: `/api/boekhouding/rapportages/suriname/*`
 
 ### ✅ Frontend - Alle Pagina's Werkend
-1. **Dashboard** (`/app/boekhouding`) - KPI overzicht
+1. **Dashboard** (`/app/boekhouding`) - KPI overzicht + Interactieve Grafieken
 2. **Grootboek** (`/app/boekhouding/grootboek`) - Rekeningschema & Journaalposten
 3. **Debiteuren** (`/app/boekhouding/debiteuren`) - Klanten & Verkoopfacturen
 4. **Crediteuren** (`/app/boekhouding/crediteuren`) - Leveranciers & Inkoopfacturen
@@ -124,10 +124,11 @@ Dutch (Nederlands)
 7. **Verkoop** (`/app/boekhouding/verkoop`) - Offertes, Orders & Facturen
 8. **Inkoop** (`/app/boekhouding/inkoop`) - Inkooporders & Facturen
 9. **Wisselkoersen** (`/app/boekhouding/wisselkoersen`) - Koersen beheer
+10. **Instellingen** (`/app/boekhouding/instellingen`) - 4 tabs: Bedrijf, E-mail SMTP, Factuur, Bedrijven
 
 ### ✅ Testing
-- Backend API tests: 14/14 passed (100%)
-- Frontend UI tests: 9/9 pages working (100%)
+- Backend API tests: 10/10 passed (100%) - iteration 48
+- Frontend UI tests: 6/6 pages working (100%)
 - Test credentials: demo@facturatie.sr / demo2024
 
 ---
