@@ -22,7 +22,7 @@ Modules:
 18. Email Herinneringen
 """
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, BackgroundTasks, Header
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date, timedelta
@@ -64,7 +64,7 @@ async def get_user_from_token(token: str) -> dict:
     except:
         return None
 
-async def get_current_user(authorization: str = None) -> dict:
+async def get_current_user(authorization: str = Header(None)) -> dict:
     """Extract user from Authorization header"""
     if not authorization:
         raise HTTPException(status_code=401, detail="Niet geautoriseerd")
