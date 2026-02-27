@@ -9558,6 +9558,57 @@ async def seed_default_addons():
         }
         await db.addons.insert_one(suribet_doc)
         logger.info("Default 'Suribet' add-on created")
+    
+    # Boekhouding Module (GRATIS)
+    existing_boekhouding = await db.addons.find_one({"slug": "boekhouding"}, {"_id": 0})
+    if not existing_boekhouding:
+        boekhouding_doc = {
+            "id": str(uuid.uuid4()),
+            "name": "Boekhouding",
+            "slug": "boekhouding",
+            "description": "Complete Surinaamse boekhoudmodule met grootboek, debiteuren, crediteuren, facturatie, BTW aangifte, bank reconciliatie en rapportages. Multi-valuta ondersteuning (SRD, USD, EUR).",
+            "price": 0.0,
+            "is_active": True,
+            "is_free": True,
+            "auto_activate": True,
+            "category": "financieel",
+            "icon_name": "Calculator",
+            "highlights": [
+                "76+ Surinaamse grootboekrekeningen",
+                "Multi-valuta: SRD, USD, EUR",
+                "BTW berekening (25%, 10%, 0%)",
+                "Automatische factuurnummering",
+                "Bank reconciliatie met auto-matching",
+                "Rapportages: Balans, W&V, BTW aangifte",
+                "Audit trail per gebruiker",
+                "Email herinneringen voor debiteuren"
+            ],
+            "features": [
+                {
+                    "title": "Grootboek",
+                    "description": "Complete administratie",
+                    "features": ["Rekeningschema", "Dagboeken", "Journaalposten", "Periode afsluiting"]
+                },
+                {
+                    "title": "Debiteuren & Crediteuren",
+                    "description": "Relatiebeheer",
+                    "features": ["Klantbeheer", "Leveranciersbeheer", "Openstaande posten", "Ouderdomsanalyse"]
+                },
+                {
+                    "title": "Facturatie",
+                    "description": "Verkoop en inkoop",
+                    "features": ["Verkoopfacturen", "Inkoopfacturen", "BTW berekening", "Automatische nummering"]
+                },
+                {
+                    "title": "Rapportages",
+                    "description": "Financiële overzichten",
+                    "features": ["Balans", "Winst & Verlies", "BTW aangifte", "Proef-saldibalans"]
+                }
+            ],
+            "created_at": now
+        }
+        await db.addons.insert_one(boekhouding_doc)
+        logger.info("Default 'Boekhouding' add-on created")
 
 async def seed_default_cms_pages():
     """Seed default CMS pages if they don't exist"""
