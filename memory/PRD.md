@@ -184,6 +184,12 @@ Twee nieuwe features voor de Voorraad en Verkoop modules:
 - Automatische omschrijving-invulling met productnaam
 - Fallback tekstveld voor handmatige invoer ("Of typ handmatig...")
 
+**Product Foto's op PDF Facturen:**
+- PDF generator toont productafbeeldingen in de factuurregels tabel
+- Dynamische kolombreedte: foto-kolom verschijnt alleen als er foto's zijn
+- Afbeeldingsvalidatie: alleen geldige afbeeldingen (min 10x10 pixels) worden getoond
+- Graceful fallback: lege cel bij ontbrekende of ongeldige afbeeldingen
+
 Test resultaten: 100% backend (10/10 tests), 100% frontend (alle features verified)
 
 ### ✅ Finance OS UI Refactoring (Voltooid - December 2025)
