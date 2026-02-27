@@ -337,20 +337,6 @@ export default function Dashboard() {
                     </div>
                   </div>
                 ))}
-                
-                {/* Boekhouding - Gratis */}
-                <div className="p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="w-5 h-5 text-emerald-500" />
-                      <div>
-                        <h4 className="font-semibold">Boekhouding</h4>
-                        <p className="text-sm text-muted-foreground">Automatisch inbegrepen</p>
-                      </div>
-                    </div>
-                    <Badge className="bg-emerald-500 text-white">GRATIS</Badge>
-                  </div>
-                </div>
               </div>
 
               {/* Total */}
