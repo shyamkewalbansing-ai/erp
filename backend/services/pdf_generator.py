@@ -49,16 +49,38 @@ def generate_invoice_pdf(
         
     Returns:
         PDF als bytes
+    
+    Template types:
+        - 'standaard': Clean, professional look
+        - 'modern': Bold colors, contemporary design
+        - 'kleurrijk': Vibrant, colorful design
     """
     buffer = io.BytesIO()
     
     # Get template settings with defaults
     settings = template_settings or {}
-    primary_color = settings.get('factuur_primaire_kleur', '#1e293b')
-    secondary_color = settings.get('factuur_secundaire_kleur', '#f1f5f9')
-    # template_type can be used for different PDF layouts in the future
-    _ = settings.get('factuur_template', 'standaard')
+    template_type = settings.get('factuur_template', 'standaard')
     footer_text = settings.get('factuur_voorwaarden', '')
+    
+    # Template-specific color schemes
+    if template_type == 'modern':
+        # Modern: Bold dark blue with accent
+        primary_color = settings.get('factuur_primaire_kleur', '#0f172a')
+        secondary_color = settings.get('factuur_secundaire_kleur', '#e2e8f0')
+        accent_color = '#3b82f6'  # Blue accent
+        header_bg = primary_color
+    elif template_type == 'kleurrijk':
+        # Kleurrijk: Vibrant colors
+        primary_color = settings.get('factuur_primaire_kleur', '#7c3aed')
+        secondary_color = settings.get('factuur_secundaire_kleur', '#faf5ff')
+        accent_color = '#f59e0b'  # Amber accent
+        header_bg = primary_color
+    else:
+        # Standaard: Classic professional
+        primary_color = settings.get('factuur_primaire_kleur', '#1e293b')
+        secondary_color = settings.get('factuur_secundaire_kleur', '#f1f5f9')
+        accent_color = primary_color
+        header_bg = None  # No header background for standard
     
     # Setup document
     doc = SimpleDocTemplate(
@@ -77,7 +99,7 @@ def generate_invoice_pdf(
     title_style = ParagraphStyle(
         'Title',
         parent=styles['Heading1'],
-        fontSize=24,
+        fontSize=24 if template_type != 'modern' else 28,
         textColor=colors.HexColor(primary_color),
         spaceAfter=10
     )
@@ -92,8 +114,8 @@ def generate_invoice_pdf(
     heading_style = ParagraphStyle(
         'CustomHeading',
         parent=styles['Heading2'],
-        fontSize=12,
-        textColor=colors.HexColor(primary_color),
+        fontSize=12 if template_type != 'kleurrijk' else 14,
+        textColor=colors.HexColor(accent_color if template_type == 'kleurrijk' else primary_color),
         spaceBefore=15,
         spaceAfter=5
     )
