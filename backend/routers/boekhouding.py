@@ -531,18 +531,24 @@ async def get_bedrijven(authorization: str = Header(None)):
     
     bedrijven = await db.boekhouding_bedrijven.find({"user_id": user_id}).sort("naam", 1).to_list(50)
     
-    # Als geen bedrijven, maak default bedrijf
+    # Als geen bedrijven, maak default bedrijf (atomair met upsert)
     if not bedrijven:
-        default_bedrijf = {
-            "id": str(uuid.uuid4()),
-            "user_id": user_id,
-            "naam": user.get('company_name', 'Mijn Bedrijf'),
-            "is_actief": True,
-            "is_default": True,
-            "created_at": datetime.now(timezone.utc)
-        }
-        await db.boekhouding_bedrijven.insert_one(default_bedrijf)
-        bedrijven = [default_bedrijf]
+        default_id = str(uuid.uuid4())
+        # Use findOneAndUpdate with upsert to prevent race conditions
+        result = await db.boekhouding_bedrijven.find_one_and_update(
+            {"user_id": user_id, "is_default": True},
+            {"$setOnInsert": {
+                "id": default_id,
+                "user_id": user_id,
+                "naam": user.get('company_name', 'Mijn Bedrijf'),
+                "is_actief": True,
+                "is_default": True,
+                "created_at": datetime.now(timezone.utc)
+            }},
+            upsert=True,
+            return_document=True
+        )
+        bedrijven = [result] if result else []
     
     return [clean_doc(b) for b in bedrijven]
 
@@ -557,23 +563,31 @@ async def get_actief_bedrijf(authorization: str = Header(None)):
     bedrijf = await db.boekhouding_bedrijven.find_one({"user_id": user_id, "is_actief": True})
     
     if not bedrijf:
-        # Zoek of maak default
+        # Zoek bestaand bedrijf
         bedrijf = await db.boekhouding_bedrijven.find_one({"user_id": user_id})
         if not bedrijf:
-            bedrijf = {
-                "id": str(uuid.uuid4()),
-                "user_id": user_id,
-                "naam": user.get('company_name', 'Mijn Bedrijf'),
-                "is_actief": True,
-                "is_default": True,
-                "created_at": datetime.now(timezone.utc)
-            }
-            await db.boekhouding_bedrijven.insert_one(bedrijf)
+            # Atomair default aanmaken met upsert om race conditions te voorkomen
+            default_id = str(uuid.uuid4())
+            bedrijf = await db.boekhouding_bedrijven.find_one_and_update(
+                {"user_id": user_id, "is_default": True},
+                {"$setOnInsert": {
+                    "id": default_id,
+                    "user_id": user_id,
+                    "naam": user.get('company_name', 'Mijn Bedrijf'),
+                    "is_actief": True,
+                    "is_default": True,
+                    "created_at": datetime.now(timezone.utc)
+                }},
+                upsert=True,
+                return_document=True
+            )
         else:
+            # Activeer bestaand bedrijf
             await db.boekhouding_bedrijven.update_one(
                 {"id": bedrijf["id"]},
                 {"$set": {"is_actief": True}}
             )
+            bedrijf["is_actief"] = True
     
     return clean_doc(bedrijf)
 
