@@ -407,26 +407,35 @@ const VoorraadPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts.map(product => (
+                  {filteredProducts.map(product => {
+                    const productName = product.naam || product.name || '';
+                    const stockQty = product.voorraad_aantal || product.stock_quantity || 0;
+                    const minStock = product.minimum_voorraad || product.min_stock || 0;
+                    const purchasePrice = product.inkoopprijs || product.purchase_price || 0;
+                    const salesPrice = product.verkoopprijs || product.sales_price || 0;
+                    const unit = product.eenheid || product.unit || '';
+                    const isLowStock = stockQty <= minStock && minStock > 0;
+                    
+                    return (
                     <TableRow key={product.id} data-testid={`product-row-${product.code}`}>
                       <TableCell className="font-mono">{product.code}</TableCell>
                       <TableCell className="font-medium">
-                        {product.name}
-                        {product.stock_quantity <= product.min_stock && product.min_stock > 0 && (
+                        {productName}
+                        {isLowStock && (
                           <Badge className="ml-2 bg-amber-100 text-amber-700">Laag</Badge>
                         )}
                       </TableCell>
-                      <TableCell>{product.unit}</TableCell>
-                      <TableCell className={`text-right font-mono ${product.stock_quantity <= product.min_stock && product.min_stock > 0 ? 'text-amber-600' : ''}`}>
-                        {formatNumber(product.stock_quantity, 0)}
+                      <TableCell>{unit}</TableCell>
+                      <TableCell className={`text-right font-mono ${isLowStock ? 'text-amber-600' : ''}`}>
+                        {formatNumber(stockQty, 0)}
                       </TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency(product.purchase_price)}</TableCell>
-                      <TableCell className="text-right font-mono">{formatCurrency(product.sales_price)}</TableCell>
+                      <TableCell className="text-right font-mono">{formatCurrency(purchasePrice)}</TableCell>
+                      <TableCell className="text-right font-mono">{formatCurrency(salesPrice)}</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(product.stock_quantity * product.purchase_price)}
+                        {formatCurrency(stockQty * purchasePrice)}
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )})}
                   {filteredProducts.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-slate-500">
