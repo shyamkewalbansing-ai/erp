@@ -2894,3 +2894,209 @@ async def get_periode_status(authorization: str = Header(None)):
     
     periodes = await db.boekhouding_periodes.find({"user_id": user_id}).sort("periode", -1).to_list(24)
     return [clean_doc(p) for p in periodes]
+
+
+
+# ============================================
+# AUDIT TRAIL ENDPOINTS
+# ============================================
+
+@router.get("/audit-trail")
+async def get_audit_trail(
+    module: str = None,
+    action: str = None,
+    van: str = None,
+    tot: str = None,
+    limit: int = 100,
+    authorization: str = Header(None)
+):
+    """Haal audit trail logs op"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    query = {"user_id": user_id}
+    
+    if module:
+        query["module"] = module
+    if action:
+        query["action"] = action
+    if van:
+        query["timestamp"] = {"$gte": van}
+    if tot:
+        if "timestamp" in query:
+            query["timestamp"]["$lte"] = tot
+        else:
+            query["timestamp"] = {"$lte": tot}
+    
+    logs = await db.audit_trail.find(query).sort("timestamp", -1).limit(limit).to_list(limit)
+    return [clean_doc(log) for log in logs]
+
+@router.post("/audit-trail")
+async def create_audit_log(data: dict, authorization: str = Header(None)):
+    """Maak een audit log entry aan"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    log_entry = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_email": user.get("email"),
+        "user_name": user.get("name"),
+        "action": data.get("action"),
+        "module": data.get("module", "boekhouding"),
+        "entity_type": data.get("entity_type"),
+        "entity_id": data.get("entity_id"),
+        "details": data.get("details", {}),
+        "ip_address": data.get("ip_address"),
+        "timestamp": now,
+        "created_at": now
+    }
+    
+    await db.audit_trail.insert_one(log_entry)
+    return clean_doc(log_entry)
+
+
+# ============================================
+# BETALINGSHERINNERINGEN ENDPOINTS
+# ============================================
+
+@router.get("/herinneringen")
+async def get_herinneringen(authorization: str = Header(None)):
+    """Haal alle betalingsherinneringen op"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    herinneringen = await db.herinneringen.find({"user_id": user_id}).sort("created_at", -1).to_list(1000)
+    
+    # Voeg factuur en debiteur info toe
+    for h in herinneringen:
+        if h.get("factuur_id"):
+            factuur = await db.verkoopfacturen.find_one({"id": h["factuur_id"], "user_id": user_id})
+            if factuur:
+                h["factuurnummer"] = factuur.get("factuurnummer")
+                h["bedrag"] = factuur.get("openstaand_bedrag") or factuur.get("totaal_incl_btw")
+        if h.get("debiteur_id"):
+            debiteur = await db.debiteuren.find_one({"id": h["debiteur_id"], "user_id": user_id})
+            if debiteur:
+                h["debiteur_naam"] = debiteur.get("naam")
+    
+    return [clean_doc(h) for h in herinneringen]
+
+@router.get("/herinneringen/facturen")
+async def get_facturen_voor_herinnering(authorization: str = Header(None)):
+    """Haal openstaande facturen op die in aanmerking komen voor een herinnering"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Haal openstaande facturen op (niet betaald, niet gecrediteerd)
+    facturen = await db.verkoopfacturen.find({
+        "user_id": user_id,
+        "status": {"$nin": ["betaald", "gecrediteerd", "concept"]}
+    }).sort("vervaldatum", 1).to_list(1000)
+    
+    result = []
+    for f in facturen:
+        # Haal debiteur naam op
+        debiteur = await db.debiteuren.find_one({"id": f.get("debiteur_id"), "user_id": user_id})
+        f["debiteur_naam"] = debiteur.get("naam") if debiteur else "Onbekend"
+        result.append(clean_doc(f))
+    
+    return result
+
+@router.post("/herinneringen")
+async def create_herinnering(data: dict, authorization: str = Header(None)):
+    """Maak een nieuwe betalingsherinnering aan"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    herinnering = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "debiteur_id": data.get("debiteur_id"),
+        "factuur_id": data.get("factuur_id"),
+        "type": data.get("type", "eerste"),  # eerste, tweede, aanmaning
+        "verzonden": False,
+        "verzonden_datum": None,
+        "opmerkingen": data.get("opmerkingen"),
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.herinneringen.insert_one(herinnering)
+    return clean_doc(herinnering)
+
+@router.put("/herinneringen/{herinnering_id}/verzonden")
+async def mark_herinnering_verzonden(herinnering_id: str, authorization: str = Header(None)):
+    """Markeer een herinnering als verzonden"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.herinneringen.update_one(
+        {"id": herinnering_id, "user_id": user_id},
+        {"$set": {"verzonden": True, "verzonden_datum": now, "updated_at": now}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Herinnering niet gevonden")
+    
+    herinnering = await db.herinneringen.find_one({"id": herinnering_id, "user_id": user_id})
+    return clean_doc(herinnering)
+
+
+# ============================================
+# DOCUMENTEN ENDPOINTS
+# ============================================
+
+@router.get("/documenten")
+async def get_documenten(authorization: str = Header(None)):
+    """Haal alle documenten op"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    documenten = await db.documenten.find({"user_id": user_id}).sort("created_at", -1).to_list(1000)
+    return [clean_doc(d) for d in documenten]
+
+@router.post("/documenten")
+async def create_document(data: dict, authorization: str = Header(None)):
+    """Maak een nieuw document record aan"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    now = datetime.now(timezone.utc).isoformat()
+    
+    document = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "naam": data.get("naam"),
+        "type": data.get("type", "overig"),
+        "bestandsnaam": data.get("bestandsnaam"),
+        "bestandspad": data.get("bestandspad"),
+        "grootte": data.get("grootte"),
+        "mime_type": data.get("mime_type"),
+        "gekoppeld_aan_type": data.get("gekoppeld_aan_type"),
+        "gekoppeld_aan_id": data.get("gekoppeld_aan_id"),
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.documenten.insert_one(document)
+    return clean_doc(document)
+
+@router.delete("/documenten/{document_id}")
+async def delete_document(document_id: str, authorization: str = Header(None)):
+    """Verwijder een document"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    result = await db.documenten.delete_one({"id": document_id, "user_id": user_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Document niet gevonden")
+    
+    return {"message": "Document verwijderd"}
