@@ -54,8 +54,8 @@ const DebiterenPage = () => {
   };
 
   const handleCreateCustomer = async () => {
-    if (!newCustomer.code || !newCustomer.name) {
-      toast.error('Vul code en naam in');
+    if (!newCustomer.naam) {
+      toast.error('Vul naam in');
       return;
     }
     setSaving(true);
@@ -64,8 +64,8 @@ const DebiterenPage = () => {
       toast.success('Klant aangemaakt');
       setShowCustomerDialog(false);
       setNewCustomer({
-        code: '', name: '', address: '', city: '', phone: '', email: '',
-        btw_number: '', payment_terms: 30, credit_limit: 0, currency: 'SRD'
+        naam: '', adres: '', plaats: '', land: 'Suriname', telefoon: '', email: '',
+        btw_nummer: '', betalingstermijn: 30, kredietlimiet: 0, valuta: 'SRD'
       });
       fetchData();
     } catch (error) {
