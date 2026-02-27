@@ -52,7 +52,18 @@ const ActivaPage = () => {
     }
     setSaving(true);
     try {
-      await fixedAssetsAPI.create(newAsset);
+      // Map frontend fields to backend Dutch field names
+      const assetData = {
+        code: newAsset.code,
+        naam: newAsset.name,
+        omschrijving: newAsset.description,
+        aankoopdatum: newAsset.purchase_date,
+        aankoopwaarde: newAsset.purchase_value,
+        restwaarde: newAsset.residual_value,
+        levensduur_jaren: newAsset.useful_life_years,
+        afschrijvingsmethode: newAsset.depreciation_method
+      };
+      await fixedAssetsAPI.create(assetData);
       toast.success('Activum aangemaakt');
       setShowAssetDialog(false);
       setNewAsset({
