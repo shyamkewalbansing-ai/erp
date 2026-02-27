@@ -134,16 +134,45 @@ Dutch (Nederlands)
 
 ## Backlog / Toekomstige Taken
 
-### Alle P0, P1, P2 en P3 taken zijn voltooid! 🎉
+### Alle P0, P1, P2, P3 en P4 taken zijn voltooid! 🎉
 
-### Mogelijke Verbeteringen (P4)
-- [ ] Dashboard grafieken met echte interactieve data (Chart.js)
-- [ ] Multi-tenant ondersteuning voor meerdere bedrijven
+### ✅ Laatste Implementaties (P4 - December 2025)
+
+#### SMTP Instellingen (Voltooid)
+- Gebruikers kunnen eigen SMTP-server configureren
+- Velden: host, poort, gebruikersnaam, wachtwoord, afzender email/naam
+- Test e-mail versturen functionaliteit
+- Gmail configuratie hulp informatie
+
+#### Dashboard Grafieken (Voltooid)
+- Interactieve grafieken met Recharts library
+- Omzet vs Kosten per Maand (BarChart)
+- Cashflow Overzicht (AreaChart)
+- Ouderdomsanalyse Debiteuren (PieChart/Donut)
+- Top 5 Klanten sectie
+- API endpoint: `/api/boekhouding/dashboard/charts`
+
+#### Multi-Tenant Ondersteuning (Voltooid)
+- Bedrijven beheer vanuit één account
+- Nieuw bedrijf toevoegen dialoog
+- Bedrijf activeren/deactiveren
+- Data filtering per actief bedrijf
+- Race condition fix met atomaire MongoDB upsert
+- API endpoints: `/api/boekhouding/bedrijven`, `/api/boekhouding/bedrijven/actief`
+
+#### Custom Factuur Templates (Voltooid)
+- Template keuze (Standaard, Modern, Kleurrijk)
+- Primaire en secundaire kleur picker
+- Live preview van factuur styling
+- Factuur voorwaarden tekstveld
+
+### Mogelijke Toekomstige Verbeteringen (P5)
 - [ ] API rate limiting en caching
 - [ ] Backup en restore functionaliteit
 - [ ] Meer gedetailleerde audit logging
-- [ ] Custom factuur templates
 - [ ] Integratie met Surinaamse banken (indien API beschikbaar)
+- [ ] Automatische wisselkoers updates
+- [ ] Dashboard widgets drag & drop
 
 ---
 
