@@ -181,9 +181,12 @@ Dutch (Nederlands)
 - Automatische sync bij openen boekhouding module
 - Preview dialog met actuele CME koersen
 - Playwright-gebaseerde scraper voor JavaScript-gerenderde content
+- **Automatische scheduler**: Dagelijkse sync om 09:00, 10:00 en 11:00 Surinaamse tijd (UTC-3)
+- Status indicator op Wisselkoersen pagina toont actieve scheduler
 - API endpoints:
   - `POST /api/boekhouding/wisselkoersen/sync-cme`
   - `GET /api/boekhouding/wisselkoersen/cme-preview`
+  - `GET /api/boekhouding/wisselkoersen/scheduler-status`
 
 ---
 
