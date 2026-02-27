@@ -262,7 +262,7 @@ export const remindersAPI = {
   },
   create: (data) => apiFetch('/herinneringen', { method: 'POST', body: JSON.stringify(data) }),
   markSent: (id) => apiFetch(`/herinneringen/${id}/verzonden`, { method: 'PUT' }),
-  getFacturenVoorHerinnering: () => apiFetch('/herinneringen/facturen-voor-herinnering'),
+  getFacturenVoorHerinnering: () => apiFetch('/herinneringen/facturen'),
 };
 
 // ==================== DOCUMENTEN ====================
