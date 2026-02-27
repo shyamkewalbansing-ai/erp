@@ -293,13 +293,11 @@ const SmartRedirect = () => {
 
         // Module routes mapping
         const moduleRoutes = {
-          'vastgoed_beheer': '/app/dashboard',
-          'suribet': '/app/suribet',
+          'vastgoed_beheer': '/app/vastgoed',
           'hrm': '/app/hrm',
           'autodealer': '/app/autodealer',
-          'beauty': '/app/beauty',
-          'pompstation': '/app/pompstation',
-          'boekhouding': '/app/boekhouding'
+          'beauty': '/app/beautyspa',
+          'suribet': '/app/suribet'
         };
 
         // Default order - same as Layout.js sidebar
