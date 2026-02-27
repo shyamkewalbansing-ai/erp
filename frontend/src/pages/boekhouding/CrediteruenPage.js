@@ -264,16 +264,16 @@ const CrediteurenPage = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredSuppliers.map(supplier => (
-                    <TableRow key={supplier.id} data-testid={`supplier-row-${supplier.code}`}>
-                      <TableCell className="font-mono">{supplier.code}</TableCell>
-                      <TableCell className="font-medium">{supplier.name}</TableCell>
-                      <TableCell className="text-slate-500">{supplier.city || '-'}</TableCell>
-                      <TableCell className="text-slate-500">{supplier.phone || '-'}</TableCell>
+                    <TableRow key={supplier.id} data-testid={`supplier-row-${supplier.nummer}`}>
+                      <TableCell className="font-mono">{supplier.nummer}</TableCell>
+                      <TableCell className="font-medium">{supplier.naam}</TableCell>
+                      <TableCell className="text-slate-500">{supplier.plaats || '-'}</TableCell>
+                      <TableCell className="text-slate-500">{supplier.telefoon || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{supplier.currency}</Badge>
+                        <Badge variant="outline">{supplier.valuta}</Badge>
                       </TableCell>
-                      <TableCell className={`text-right font-mono ${supplier.balance > 0 ? 'text-red-600' : ''}`}>
-                        {formatCurrency(supplier.balance || 0, supplier.currency)}
+                      <TableCell className={`text-right font-mono ${supplier.openstaand_bedrag > 0 ? 'text-red-600' : ''}`}>
+                        {formatCurrency(supplier.openstaand_bedrag || 0, supplier.valuta)}
                       </TableCell>
                     </TableRow>
                   ))}
