@@ -60,7 +60,7 @@ Dutch (Nederlands)
 ## Wat is Voltooid (December 2025)
 
 ### ✅ Backend - Volledig Gerefactored
-- Complete `/api/boekhouding/*` router met 60+ endpoints
+- Complete `/api/boekhouding/*` router met 80+ endpoints
 - Alle endpoints gebruiken Nederlandse veldnamen conform referentie
 - CRUD operaties voor alle entiteiten
 - Dashboard KPIs
@@ -90,7 +90,29 @@ Dutch (Nederlands)
   - Klantnaam matching (20 punten)
 - API endpoint: `/api/boekhouding/banktransacties/{id}/reconciliatie-suggesties`
 - API endpoint: `/api/boekhouding/banktransacties/{id}/reconcilieer`
-- Automatische update van factuur status en openstaand bedrag
+
+### ✅ E-mail Verzending (P2 - Voltooid)
+- Email service module met HTML templates
+- Betalingsherinneringen per email
+- Professionele HTML templates voor eerste, tweede herinnering en aanmaning
+- API endpoint: `/api/boekhouding/herinneringen/{id}/email`
+- SMTP configureerbaar via environment variables
+
+### ✅ Excel Export (P3 - Voltooid)
+- Export grootboek naar Excel (rekeningschema + journaalposten)
+- Export debiteuren naar Excel (klanten + facturen)
+- Export crediteuren naar Excel (leveranciers + facturen)
+- Export BTW aangifte naar Excel
+- Export Winst & Verlies naar Excel
+- Export Balans naar Excel
+- Export Ouderdomsanalyse naar Excel
+- API endpoints: `/api/boekhouding/export/*`
+
+### ✅ Surinaamse Belastingrapportages (P3 - Voltooid)
+- **BTW Aangifte Suriname**: Per maand, per tarief (25%, 10%, 0%), voorbelasting
+- **Loonbelasting Overzicht**: Geschatte berekening volgens Surinaamse schijven
+- **Inkomstenbelasting Overzicht**: Jaaroverzicht met belastingschijven
+- API endpoints: `/api/boekhouding/rapportages/suriname/*`
 
 ### ✅ Frontend - Alle Pagina's Werkend
 1. **Dashboard** (`/app/boekhouding`) - KPI overzicht
