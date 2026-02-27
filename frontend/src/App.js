@@ -134,6 +134,10 @@ const SuribetWerknemerPortaal = lazy(() => import("./pages/suribet/WerknemerPort
 const SuribetPortaalLink = lazy(() => import("./pages/suribet/PortaalLinkPage"));
 const SuribetMobileUpload = lazy(() => import("./pages/suribet/MobileUploadPage"));
 
+// Boekhouding Module
+const BoekhoudingDashboard = lazy(() => import("./pages/BoekhoudingDashboard"));
+
+
 // Loading component for lazy loaded pages
 const PageLoader = memo(() => (
   <div className="min-h-screen flex items-center justify-center bg-background">
