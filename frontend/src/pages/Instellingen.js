@@ -49,9 +49,7 @@ import {
   VastgoedSettingsForm,
   HRMSettingsForm,
   AutoDealerSettingsForm,
-  BeautySpaSettingsForm,
-  PompstationSettingsForm,
-  BoekhoudingSettingsForm
+  BeautySpaSettingsForm
 } from '../components/settings';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
