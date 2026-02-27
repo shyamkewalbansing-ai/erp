@@ -37,6 +37,7 @@ export const exchangeRatesAPI = {
   create: (data) => apiFetch('/boekhouding/wisselkoersen', { method: 'POST', body: JSON.stringify(data) }),
   syncCME: () => apiFetch('/boekhouding/wisselkoersen/sync-cme', { method: 'POST' }),
   previewCME: () => apiFetch('/boekhouding/wisselkoersen/cme-preview'),
+  getSchedulerStatus: () => apiFetch('/boekhouding/wisselkoersen/scheduler-status'),
 };
 
 // BTW Codes
