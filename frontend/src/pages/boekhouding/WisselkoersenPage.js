@@ -169,11 +169,11 @@ const WisselkoersenPage = () => {
               <div>
                 <p className="text-sm text-slate-500">USD / SRD</p>
                 <p className="text-3xl font-bold font-mono text-slate-900">
-                  {latestRates?.USD ? formatNumber(latestRates.USD.rate, 4) : '-'}
+                  {latestRates?.USD_SRD ? formatNumber(latestRates.USD_SRD.koers, 4) : '-'}
                 </p>
-                {latestRates?.USD && (
+                {latestRates?.USD_SRD && (
                   <p className="text-xs text-slate-400 mt-1">
-                    {formatDate(latestRates.USD.date)} - {latestRates.USD.source === 'central_bank' ? 'Centrale Bank' : latestRates.USD.source === 'bank' ? 'Bank' : 'Handmatig'}
+                    {formatDate(latestRates.USD_SRD.datum)} - {latestRates.USD_SRD.bron === 'central_bank' ? 'Centrale Bank' : latestRates.USD_SRD.bron === 'bank' ? 'Bank' : 'Handmatig'}
                   </p>
                 )}
               </div>
@@ -189,11 +189,11 @@ const WisselkoersenPage = () => {
               <div>
                 <p className="text-sm text-slate-500">EUR / SRD</p>
                 <p className="text-3xl font-bold font-mono text-slate-900">
-                  {latestRates?.EUR ? formatNumber(latestRates.EUR.rate, 4) : '-'}
+                  {latestRates?.EUR_SRD ? formatNumber(latestRates.EUR_SRD.koers, 4) : '-'}
                 </p>
-                {latestRates?.EUR && (
+                {latestRates?.EUR_SRD && (
                   <p className="text-xs text-slate-400 mt-1">
-                    {formatDate(latestRates.EUR.date)} - {latestRates.EUR.source === 'central_bank' ? 'Centrale Bank' : latestRates.EUR.source === 'bank' ? 'Bank' : 'Handmatig'}
+                    {formatDate(latestRates.EUR_SRD.datum)} - {latestRates.EUR_SRD.bron === 'central_bank' ? 'Centrale Bank' : latestRates.EUR_SRD.bron === 'bank' ? 'Bank' : 'Handmatig'}
                   </p>
                 )}
               </div>
