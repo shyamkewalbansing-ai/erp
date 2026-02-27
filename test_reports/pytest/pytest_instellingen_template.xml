@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="7" skipped="0" tests="7" time="3.497" timestamp="2026-02-27T21:08:04.760340+00:00" hostname="agent-env-c93b23f9-2dc8-4bf4-94e8-ba6f5cc690d2"><testcase classname="backend.tests.test_instellingen_template.TestInstellingenTemplateAPI" name="test_get_instellingen_returns_template_fields" time="0.592"><failure message="AssertionError: Expected 200, got 401&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_instellingen_template.py:42: in test_get_instellingen_returns_template_fields
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+E   AssertionError: Expected 200, got 401
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_instellingen_template.TestInstellingenTemplateAPI" name="test_update_instellingen_template_fields" time="0.425"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_instellingen_template.py:76: in test_update_instellingen_template_fields
+    assert get_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_instellingen_template.TestVerkoopfacturenAPI" name="test_get_debiteuren" time="0.481"><failure message="AssertionError: Expected 200, got 401&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_instellingen_template.py:144: in test_get_debiteuren
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+E   AssertionError: Expected 200, got 401
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_instellingen_template.TestVerkoopfacturenAPI" name="test_create_verkoopfactuur" time="0.450"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_instellingen_template.py:156: in test_create_verkoopfactuur
+    assert deb_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_instellingen_template.TestVerkoopfacturenAPI" name="test_get_verkoopfacturen" time="0.495"><failure message="AssertionError: Expected 200, got 401&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_instellingen_template.py:218: in test_get_verkoopfacturen
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+E   AssertionError: Expected 200, got 401
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_instellingen_template.TestVerkoopfacturenAPI" name="test_pdf_download_endpoint" time="0.414"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_instellingen_template.py:230: in test_pdf_download_endpoint
+    assert list_response.status_code == 200
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_instellingen_template.TestFieldNameTranslation" name="test_backend_api_accepts_dutch_field_names" time="0.464"><failure message="AssertionError: Create failed: 401&#10;assert 401 in [200, 201]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_instellingen_template.py:294: in test_backend_api_accepts_dutch_field_names
+    assert response.status_code in [200, 201], f"Create failed: {response.status_code}"
+E   AssertionError: Create failed: 401
+E   assert 401 in [200, 201]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase></testsuite></testsuites>
