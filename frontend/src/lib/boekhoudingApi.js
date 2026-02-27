@@ -240,6 +240,7 @@ export const reportsAPI = {
 export const settingsAPI = {
   getCompany: () => apiFetch('/boekhouding/instellingen'),
   updateCompany: (data) => apiFetch('/boekhouding/instellingen', { method: 'PUT', body: JSON.stringify(data) }),
+  testEmail: () => apiFetch('/boekhouding/instellingen/test-email', { method: 'POST' }),
 };
 
 // PDF Invoice
