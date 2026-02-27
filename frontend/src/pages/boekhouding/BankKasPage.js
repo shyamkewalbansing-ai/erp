@@ -69,7 +69,14 @@ const BankPage = () => {
     }
     setSaving(true);
     try {
-      await bankAccountsAPI.create(newAccount);
+      // Map frontend fields to backend Dutch field names
+      const accountData = {
+        naam: newAccount.name,
+        bank: newAccount.bank_name,
+        rekeningnummer: newAccount.account_number,
+        valuta: newAccount.currency
+      };
+      await bankAccountsAPI.create(accountData);
       toast.success('Bankrekening aangemaakt');
       setShowAccountDialog(false);
       setNewAccount({ name: '', bank_name: '', account_number: '', currency: 'SRD' });
