@@ -142,7 +142,7 @@ const suribetNavItems = [
 
 // Boekhouding Module navigation
 const boekhoudingNavItems = [
-  { to: '/app/boekhouding', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/app/boekhouding', icon: LayoutDashboard, label: 'Dashboard', addon: 'boekhouding' },
 ];
 
 export default function Layout() {
