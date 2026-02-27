@@ -272,6 +272,7 @@ export default function Layout() {
 
   // Module configurations for dynamic sidebar rendering
   const moduleConfigs = {
+    boekhouding: { name: 'Finance OS', items: boekhoudingNavItems, icon: TrendingUp },
     vastgoed_beheer: { name: 'Vastgoed Beheer', items: vastgoedNavItems, icon: Building2 },
     hrm: { name: 'HRM Module', items: hrmNavItems, icon: Users },
     autodealer: { name: 'Auto Dealer', items: autoDealerNavItems, icon: Car },
@@ -281,7 +282,7 @@ export default function Layout() {
 
   // Get modules in the correct order based on user preference
   const getOrderedModules = () => {
-    const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty'];
+    const defaultOrder = ['boekhouding', 'vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty'];
     
     if (moduleOrder.length === 0) {
       return defaultOrder;
