@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -17,7 +17,6 @@ import {
   RefreshCw,
   Settings,
   LogOut,
-  ChevronLeft,
   Euro
 } from 'lucide-react';
 
@@ -26,11 +25,9 @@ const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
 export default function BoekhoudingLayout() {
   const { user, token, logout } = useAuth();
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
   const [wisselkoers, setWisselkoers] = useState(null);
 
   useEffect(() => {
-    // Fetch current exchange rate
     const fetchKoers = async () => {
       try {
         const res = await fetch(`${API_URL}/api/boekhouding/wisselkoersen/actueel`, {
@@ -70,27 +67,16 @@ export default function BoekhoudingLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className={`${collapsed ? 'w-16' : 'w-56'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300`}>
+    <div className="flex h-screen bg-slate-50">
+      {/* Sidebar - Fixed width, no collapse */}
+      <div className="w-56 bg-white border-r border-gray-200 flex flex-col">
         {/* Logo */}
         <div className="p-4 border-b border-gray-100 flex items-center gap-3">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
             FO
           </div>
-          {!collapsed && (
-            <span className="font-semibold text-gray-800">Finance OS</span>
-          )}
+          <span className="font-semibold text-gray-800">Finance OS</span>
         </div>
-
-        {/* Collapse button */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="absolute top-20 -right-3 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center hover:bg-gray-50 z-10"
-          style={{ left: collapsed ? '52px' : '212px' }}
-        >
-          <ChevronLeft className={`w-4 h-4 text-gray-500 transition-transform ${collapsed ? 'rotate-180' : ''}`} />
-        </button>
 
         {/* Navigation */}
         <nav className="flex-1 py-4 overflow-y-auto">
@@ -108,7 +94,7 @@ export default function BoekhoudingLayout() {
                 }`}
               >
                 <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-blue-600' : 'text-gray-400'}`} />
-                {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+                <span className="text-sm font-medium">{item.label}</span>
               </Link>
             );
           })}
@@ -116,29 +102,27 @@ export default function BoekhoudingLayout() {
 
         {/* User section */}
         <div className="border-t border-gray-100 p-4">
-          <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
+          <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
               <span className="text-xs font-medium text-gray-600">
                 {user?.name?.charAt(0) || 'U'}
               </span>
             </div>
-            {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {user?.name || 'Admin'}
-                </p>
-                <p className="text-xs text-gray-500 truncate">
-                  {user?.email}
-                </p>
-              </div>
-            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user?.name || 'Admin'}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {user?.email}
+              </p>
+            </div>
           </div>
           <button
             onClick={logout}
-            className={`mt-3 flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm ${collapsed ? 'justify-center w-full' : ''}`}
+            className="mt-3 flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm"
           >
             <LogOut className="w-4 h-4" />
-            {!collapsed && <span>Uitloggen</span>}
+            <span>Uitloggen</span>
           </button>
         </div>
       </div>
@@ -156,7 +140,7 @@ export default function BoekhoudingLayout() {
         </div>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-6 bg-slate-50">
+        <div className="flex-1 overflow-auto p-6">
           <Outlet />
         </div>
       </div>
