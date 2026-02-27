@@ -562,11 +562,11 @@ const BankKasPage = () => {
           <Card className="border-slate-200">
             <CardHeader>
               <CardTitle className="text-lg">Banktransacties Importeren</CardTitle>
-              <CardDescription>Importeer transacties van uw bank (CSV formaat)</CardDescription>
+              <CardDescription>Importeer transacties van uw Surinaamse bank (MT940, CSV)</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="space-y-2">
-                <Label>Selecteer Bankrekening</Label>
+                <Label>Selecteer Bankrekening *</Label>
                 <Select value={selectedBankId || ''} onValueChange={setSelectedBankId}>
                   <SelectTrigger><SelectValue placeholder="Selecteer bankrekening" /></SelectTrigger>
                   <SelectContent>
@@ -576,25 +576,89 @@ const BankKasPage = () => {
                   </SelectContent>
                 </Select>
               </div>
+              
+              {/* File Upload Section */}
+              <div className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept=".sta,.mt940,.mt9,.csv,.txt"
+                  onChange={handleFileSelect}
+                />
+                {importFile ? (
+                  <div className="space-y-3">
+                    <FileText className="w-12 h-12 mx-auto text-green-500" />
+                    <div>
+                      <p className="font-medium">{importFile.name}</p>
+                      <p className="text-sm text-slate-500">{(importFile.size / 1024).toFixed(1)} KB</p>
+                      <Badge className="mt-2">{importFormat === 'mt940' ? 'MT940 Formaat' : 'CSV Formaat'}</Badge>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => { setImportFile(null); if (fileInputRef.current) fileInputRef.current.value = ''; }}>
+                      Ander bestand selecteren
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <Upload className="w-12 h-12 mx-auto text-slate-400" />
+                    <div>
+                      <p className="text-slate-600">Sleep een bestand hierheen of</p>
+                      <Button variant="outline" className="mt-2" onClick={() => fileInputRef.current?.click()}>
+                        Bestand Selecteren
+                      </Button>
+                    </div>
+                    <p className="text-sm text-slate-400">Ondersteunde formaten: MT940 (.sta, .mt940), CSV</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Manual CSV Input */}
               <div className="space-y-2">
-                <Label>CSV Data</Label>
+                <Label>Of plak CSV data handmatig</Label>
                 <Textarea 
                   value={importData}
                   onChange={(e) => setImportData(e.target.value)}
                   placeholder="datum;omschrijving;bedrag&#10;2024-01-15;Betaling klant ABC;1500.00&#10;2024-01-16;Huur kantoor;-2500.00"
-                  className="font-mono h-48"
+                  className="font-mono h-32"
+                  disabled={!!importFile}
                 />
                 <p className="text-sm text-slate-500">Formaat: datum;omschrijving;bedrag (eerste regel is header)</p>
               </div>
+
+              {/* Import Format Selection */}
+              {importFile && (
+                <div className="space-y-2">
+                  <Label>Import Formaat</Label>
+                  <Select value={importFormat} onValueChange={setImportFormat}>
+                    <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mt940">MT940 (DSB, Hakrinbank, etc.)</SelectItem>
+                      <SelectItem value="csv">CSV (komma/puntkomma gescheiden)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
               <div className="flex gap-2">
-                <Button onClick={handleImport} disabled={!selectedBankId || !importData.trim() || saving}>
+                <Button 
+                  onClick={handleImport} 
+                  disabled={!selectedBankId || (!importFile && !importData.trim()) || saving}
+                  className="flex-1"
+                >
                   {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
-                  Importeren
+                  {importFile ? `${importFormat.toUpperCase()} Importeren` : 'CSV Importeren'}
                 </Button>
-                <Button variant="outline" disabled>
-                  <FileText className="w-4 h-4 mr-2" />
-                  MT940 Importeren (binnenkort)
-                </Button>
+              </div>
+
+              {/* Info Box */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+                <h4 className="font-medium text-blue-800 mb-2">Ondersteunde Banken</h4>
+                <ul className="text-blue-700 space-y-1">
+                  <li>• <strong>De Surinaamsche Bank (DSB)</strong> - MT940 export</li>
+                  <li>• <strong>Hakrinbank</strong> - MT940 export</li>
+                  <li>• <strong>Finabank</strong> - CSV export</li>
+                  <li>• <strong>Republic Bank</strong> - CSV export</li>
+                </ul>
               </div>
             </CardContent>
           </Card>
