@@ -89,7 +89,7 @@ const VerkoopPage = () => {
   const addLine = () => {
     setNewInvoice({
       ...newInvoice,
-      lines: [...newInvoice.lines, { description: '', quantity: 1, unit_price: 0, btw_percentage: 10, btw_amount: 0, total: 0 }]
+      lines: [...newInvoice.lines, { product_id: '', description: '', quantity: 1, unit_price: 0, btw_percentage: 10, btw_amount: 0, total: 0 }]
     });
   };
 
