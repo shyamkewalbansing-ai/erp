@@ -129,6 +129,7 @@ Dutch (Nederlands)
 ### ✅ Testing
 - Backend API tests: 10/10 passed (100%) - iteration 48
 - Frontend UI tests: 11/11 pages passed (100%) - iteration 49
+- P0/P1 Feature tests: 7/7 backend + all frontend passed (100%) - iteration 50
 - Test credentials: demo@facturatie.sr / demo2024
 
 ### ✅ Finance OS UI Refactoring (Voltooid - December 2025)
