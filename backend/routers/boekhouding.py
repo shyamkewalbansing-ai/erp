@@ -968,6 +968,157 @@ async def import_mt940(bank_id: str, file: UploadFile = File(...), authorization
     
     return {"message": f"{imported} transacties geïmporteerd", "imported": imported}
 
+# ==================== RECONCILIATIE ====================
+
+@router.get("/banktransacties/{transactie_id}/reconciliatie-suggesties")
+async def get_reconciliatie_suggesties(transactie_id: str, authorization: str = Header(None)):
+    """Haal automatische reconciliatie suggesties op voor een banktransactie"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Haal transactie
+    transactie = await db.boekhouding_banktransacties.find_one({"id": transactie_id, "user_id": user_id})
+    if not transactie:
+        raise HTTPException(status_code=404, detail="Transactie niet gevonden")
+    
+    suggesties = []
+    
+    if MT940_ENABLED:
+        # Maak MT940Transaction object
+        tx = MT940Transaction(
+            datum=datetime.fromisoformat(transactie['datum']).date() if transactie.get('datum') else date.today(),
+            valutadatum=None,
+            bedrag=transactie.get('bedrag', 0),
+            omschrijving=transactie.get('omschrijving', ''),
+            tegenrekening=transactie.get('tegenrekening'),
+            tegenpartij=transactie.get('tegenpartij'),
+            referentie=transactie.get('referentie'),
+            boekcode=None,
+            raw_data=transactie.get('raw_data', '')
+        )
+        
+        # Haal openstaande facturen afhankelijk van credit/debet
+        if transactie.get('bedrag', 0) > 0:
+            # Inkomende betaling -> match met verkoopfacturen
+            facturen = await db.boekhouding_verkoopfacturen.find({
+                "user_id": user_id,
+                "status": {"$in": ["verzonden", "herinnering", "gedeeltelijk_betaald"]},
+                "openstaand_bedrag": {"$gt": 0}
+            }).to_list(100)
+            for f in facturen:
+                f['type'] = 'verkoop'
+        else:
+            # Uitgaande betaling -> match met inkoopfacturen
+            facturen = await db.boekhouding_inkoopfacturen.find({
+                "user_id": user_id,
+                "status": {"$in": ["geboekt", "gedeeltelijk_betaald"]},
+                "openstaand_bedrag": {"$gt": 0}
+            }).to_list(100)
+            for f in facturen:
+                f['type'] = 'inkoop'
+        
+        # Genereer suggesties
+        suggesties = suggest_reconciliation(tx, [clean_doc(f) for f in facturen])
+    
+    return {
+        "transactie_id": transactie_id,
+        "suggesties": suggesties,
+        "transactie_bedrag": transactie.get('bedrag', 0),
+        "transactie_omschrijving": transactie.get('omschrijving', '')
+    }
+
+
+@router.post("/banktransacties/{transactie_id}/reconcilieer")
+async def reconcilieer_transactie(
+    transactie_id: str,
+    factuur_id: str,
+    factuur_type: str = "verkoop",
+    authorization: str = Header(None)
+):
+    """Koppel banktransactie aan factuur (reconciliatie)"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Haal transactie
+    transactie = await db.boekhouding_banktransacties.find_one({"id": transactie_id, "user_id": user_id})
+    if not transactie:
+        raise HTTPException(status_code=404, detail="Transactie niet gevonden")
+    
+    bedrag = abs(transactie.get('bedrag', 0))
+    
+    # Haal en update factuur
+    if factuur_type == "verkoop":
+        factuur = await db.boekhouding_verkoopfacturen.find_one({"id": factuur_id, "user_id": user_id})
+        if not factuur:
+            raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+        
+        nieuw_openstaand = max(0, factuur.get('openstaand_bedrag', 0) - bedrag)
+        nieuwe_status = "betaald" if nieuw_openstaand == 0 else "gedeeltelijk_betaald"
+        
+        await db.boekhouding_verkoopfacturen.update_one(
+            {"id": factuur_id},
+            {"$set": {
+                "openstaand_bedrag": nieuw_openstaand,
+                "status": nieuwe_status,
+                "laatste_betaling_datum": datetime.now(timezone.utc)
+            }}
+        )
+        
+        # Update debiteur saldo
+        if factuur.get('debiteur_id'):
+            await db.boekhouding_debiteuren.update_one(
+                {"id": factuur['debiteur_id']},
+                {"$inc": {"openstaand_bedrag": -bedrag}}
+            )
+    else:
+        factuur = await db.boekhouding_inkoopfacturen.find_one({"id": factuur_id, "user_id": user_id})
+        if not factuur:
+            raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+        
+        nieuw_openstaand = max(0, factuur.get('openstaand_bedrag', 0) - bedrag)
+        nieuwe_status = "betaald" if nieuw_openstaand == 0 else "gedeeltelijk_betaald"
+        
+        await db.boekhouding_inkoopfacturen.update_one(
+            {"id": factuur_id},
+            {"$set": {
+                "openstaand_bedrag": nieuw_openstaand,
+                "status": nieuwe_status,
+                "laatste_betaling_datum": datetime.now(timezone.utc)
+            }}
+        )
+        
+        # Update crediteur saldo
+        if factuur.get('crediteur_id'):
+            await db.boekhouding_crediteuren.update_one(
+                {"id": factuur['crediteur_id']},
+                {"$inc": {"openstaand_bedrag": -bedrag}}
+            )
+    
+    # Update transactie status
+    await db.boekhouding_banktransacties.update_one(
+        {"id": transactie_id},
+        {"$set": {
+            "status": "gereconcilieerd",
+            "gekoppeld_aan_type": factuur_type,
+            "gekoppeld_aan_id": factuur_id,
+            "gereconcilieerd_op": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Log audit
+    await log_audit(
+        user_id, "reconcilieer", "bank", "transactie", transactie_id,
+        {"factuur_id": factuur_id, "factuur_type": factuur_type, "bedrag": bedrag}
+    )
+    
+    return {
+        "message": "Transactie gereconcilieerd",
+        "transactie_id": transactie_id,
+        "factuur_id": factuur_id,
+        "factuur_nieuw_openstaand": nieuw_openstaand,
+        "factuur_nieuwe_status": nieuwe_status
+    }
+
 # ==================== VERKOOPFACTUREN ====================
 
 @router.get("/verkoopfacturen")
