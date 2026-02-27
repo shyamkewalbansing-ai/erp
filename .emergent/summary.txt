@@ -1,171 +1,147 @@
 <analysis>**original_problem_statement:**
-The user has requested to build a comprehensive accounting module for a Surinamese business. The requirements are extremely detailed and cover 18 distinct functional areas. The system must handle multiple currencies (SRD, USD, EUR), adhere to Surinamese BTW (VAT) laws, and provide a full audit trail.
+De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die specifiek is afgestemd op de Surinaamse markt. De aanvraag omvat meer dan 15 sub-modules, waaronder:
+-   Dashboard
+-   Grootboek (General Ledger)
+-   Debiteuren (Accounts Receivable)
+-   Crediteuren (Accounts Payable)
+-   Bank/Kas (Bank/Cash)
+-   Bank Reconciliatie
+-   Vaste Activa (Fixed Assets)
+-   BTW-module (VAT module)
+-   Rapportages (Financial Reports)
+-   En vele andere.
 
-**PRODUCT REQUIREMENTS (Summary of all 18 modules):**
-1.  **Dashboard:** Real-time financial health overview (revenue, costs, profit), open invoices, bank balances, VAT summary, and SRD exchange rate.
-2.  **Grootboek (General Ledger):** Core of the system with a flexible chart of accounts, journals (bank, cash, sales, purchase), and period closing.
-3.  **Debiteuren (Accounts Receivable):** Customer management, sales invoice tracking, payment reminders, and aging analysis.
-4.  **Crediteuren (Accounts Payable):** Supplier management, purchase invoice processing, and payment advice lists.
-5.  **Bank/Kas (Banking/Cash):** Bank statement imports (MT940/CSV), cashbook management, and support for multiple Surinamese banks.
-6.  **Bank Reconciliatie:** Automatic and manual matching of bank transactions with open posts.
-7.  **Vaste Activa (Fixed Assets):** Asset register with automated depreciation calculations.
-8.  **Kostenplaatsen (Cost Centers):** Allocation of costs to departments or projects.
-9.  **Wisselkoersen (Exchange Rates):** Management of daily exchange rates, with a specific need to integrate with the Central Bank of Suriname.
-10. **Inkoop (Purchasing):** Purchase orders, goods receipt, and 3-way matching of invoices.
-11. **Verkoop (Sales):** Full sales cycle from quote to order to invoice.
-12. **Voorraad (Inventory):** Stock level management, warehouse locations, and inventory valuation (FIFO, weighted average), including handling of import costs.
-13. **Projecten (Projects):** Time tracking, project budgeting vs. actuals, and project-based invoicing.
-14. **Rapportages (Reporting):** Generation of financial statements (Balance Sheet, P&L), VAT reports, and other management reports.
-15. **Handleiding (Help/Manual):** Online help center with tutorials and tooltips.
-16. **BTW-module (VAT Module):** Specific module for managing Surinamese VAT rates, codes, and generating tax filings.
-17. **Documentbeheer (Document Management):** Uploading and attaching documents (e.g., scanned invoices) to transactions.
-18. **Gebruikers & Rollen (Users & Roles):** Granular access control based on user roles.
+**PRODUCTVEREISTEN:**
+-   **Valuta:** Ondersteuning voor SRD, USD, en EUR.
+-   **Wisselkoersen:** Handmatige invoer van wisselkoersen.
+-   **Thema:** Clean/Modern (licht thema).
+-   **Structuur & UI:** De gebruiker heeft herhaaldelijk aangegeven dat de implementatie de structuur en UI van een referentieproject moet volgen. De meest recente en definitieve instructie is om de code uit een specifieke GitHub repository te gebruiken: **** (branch ).
 
 **User's preferred language**: Dutch
 
 **what currently exists?**
-A full-stack application where a massive, comprehensive backend accounting module has been newly created. This module is consolidated into a single file, , which contains all the necessary API endpoints, data models (Pydantic), and business logic for the 18 required sub-modules. The backend has been tested and is functional.
-
-On the frontend, a basic placeholder page  has been created and integrated into the application's routing. The agent just began creating separate, currently empty, component files for the various sub-modules (e.g., ).
+De applicatie is een full-stack React/FastAPI-app met een bestaand multi-tenant addon systeem. Er zijn al modules voor Vastgoed, HRM, etc. Voor de boekhouding is een backend router () aangemaakt met placeholder endpoints en zijn er frontend pagina's aangemaakt onder . De  module is als addon toegevoegd en wordt standaard geactiveerd voor de demo-account. De huidige implementatie komt echter niet overeen met de wensen van de gebruiker.
 
 **Last working item**:
-- **Last item agent was working:** The agent was in the process of building out the frontend for the new accounting module. It had just finished adding new backend endpoints for PDF generation and bank imports and proceeded to create the file structure and initial empty pages for the frontend sub-modules.
-    - **Specifically:** Created  and .
-- **Status:** IN PROGRESS
-- **Agent Testing Done:** N (The newly created frontend files are empty and have not been tested.)
-- **Which testing method agent to use?** frontend testing agent
-- **User Testing Done:** N
+-   **Last item agent was working:** De agent had zojuಮುಖ te horen gekregen dat de implementatie exact de structuur van een specifieke GitHub-repository moet volgen. De laatste actie was het voorbereiden om deze repository te inspecteren om de correcte implementatie te begrijpen.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** both
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-There are no outstanding bugs or issues. The pending items are related to feature completion.
+-   **Issue 1:** The current implementation of the Boekhouding module is incorrect and does not meet user requirements. (Priority: P0)
+
+    -   **Issues Detail:**
+        -   **Issue 1:** The user has explicitly rejected all previous implementation attempts. The entire module needs to be rebuilt according to the structure found in the user-provided GitHub repository:  (branch ).
+            -   **Attempted fixes:** De agent heeft drie eerdere implementaties geprobeerd (een simpele add-on, een aparte full-page layout, en een integratie in de bestaande sidebar), die allemaal door de gebruiker zijn afgewezen.
+            -   **Next debug checklist:**
+                1.  Inspecteer de  branch van de  repository.
+                2.  Analyseer de bestandsstructuur, componenten, routing en API-contracten van de referentiecode.
+                3.  Vervang de huidige placeholder code in , , , en  met de correcte structuur en logica uit de repository.
+            -   **Why fix this issue and what will be achieved with the fix?** Dit is de kern van de opdracht. Het oplossen hiervan levert de door de gebruiker gewenste basisstructuur op en herstelt het vertrouwen.
+            -   **Status:** IN PROGRESS
+            -   **Is recurring issue?** Y
+            -   **Should Test frontend/backend/both after fix?** both
+            -   **Blocked on other issue:** None
 
 **In progress Task List**:
-- **Task 1: Build out Frontend Sub-Module Pages (P0)**
-    - **Where to resume:** Populate the newly created files  and  with UI components. These components should interact with the corresponding backend endpoints to display data and allow user actions.
-    - **What will be achieved with this?** This will create functional user interfaces for managing customers and sales invoices, moving beyond the placeholder dashboard.
-    - **Status:** IN PROGRESS
-    - **Should Test frontend/backend/both after fix?** Frontend
-
-- **Task 2: Implement PDF Invoice Generation (P1)**
-    - **Where to resume:** A backend endpoint  has been created using . The frontend () needs a UI element (e.g., a button) to call this endpoint for a specific invoice and handle the PDF download/display.
-    - **What will be achieved with this?** Users will be able to generate and download PDF copies of their sales invoices.
-    - **Status:** IN PROGRESS
-    - **Should Test frontend/backend/both after fix?** Both
-
-- **Task 3: Implement Bank Statement Import (P1)**
-    - **Where to resume:** A backend endpoint  exists. A new frontend page/component is needed to provide a file upload interface for users to submit MT940 or CSV files.
-    - **What will be achieved with this?** Users can import their bank transactions, which is the first step in the bank reconciliation process.
-    - **Status:** IN PROGRESS
-    - **Should Test frontend/backend/both after fix?** Both
+-   **Task 1:** Re-implement the entire Boekhouding Module based on the GitHub Reference (Priority: P0)
+    -   **Task Detail:**
+        -   **Where to resume:** Begin met het grondig analyseren van de  branch in de Git-repository: .
+        -   **What will be achieved with this?** Een boekhoudingmodule die functioneel en visueel overeenkomt met het door de gebruiker opgegeven voorbeeld.
+        -   **Status:** IN PROGRESS
+        -   **Should Test frontend/backend/both after fix?** both
+        -   **Blocked on something:** None
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks:**
-    - **P0:** Create and implement the remaining frontend pages for all other accounting modules (Crediteuren, Grootboek, Voorraad, Inkoop, Projecten, etc.) inside the  directory.
-    - **P1:** Integrate with the Central Bank of Suriname API to fetch and store daily exchange rates automatically. A new endpoint and a scheduled task will be needed.
-    - **P1:** Enhance the PDF generation to include a company logo, which could be uploaded and stored in the user's settings.
-- **Future Tasks:**
-    - **P2:** Refine the bank import logic to handle format variations from different Surinamese banks (DSB, Hakrinbank, etc.).
-    - **P2:** Implement the full functional design for all 18 modules on the frontend, including dashboards, reports, and data entry forms.
-    - **P2:** Build the Handleiding (Help Center) module with documentation and tutorials.
+-   **Upcoming Tasks (P0):**
+    -   Nadat de frontend structuur correct is, implementeer de volledige backend logica voor de kernmodules: Grootboek, Debiteuren, Crediteuren, en Bank/Kas, inclusief database modellen en CRUD API-endpoints.
+-   **Future Tasks (P1):**
+    -   Implementeer de backend voor de overige modules (Vaste Activa, Projecten, Voorraad, etc.).
+    -   Bouw de rapportage-engine (Balans, Winst & Verlies).
+    -   Implementeer de BTW-module met Surinaamse specificaties.
+    -   Voeg documentbeheer (scan & herken) en een audit trail per gebruiker toe.
 
 **Completed work in this session**
-- **Backend:**
-  - Created a monolithic but functional accounting router at .
-  - Implemented all API endpoints for the 18 specified modules, including CRUD operations for customers, suppliers, invoices, journal entries, and more.
-  - Added the new router to  and resolved all dependency and authentication issues.
-  - Successfully tested core backend functionality, including creating a customer and an invoice.
-  - Added skeleton endpoints for future PDF generation and bank import features.
-- **Frontend:**
-  - Created a placeholder dashboard page at .
-  - Added the  route to the main  router, protected by authentication.
-  - Created a new directory  for sub-module components.
+-   Een placeholder backend router is aangemaakt op .
+-   Een set placeholder frontend pagina's is aangemaakt onder .
+-   De  module is als een 'addon' aan het systeem toegevoegd en wordt correct geactiveerd voor de demo-gebruiker bij het opstarten van de server ( in ).
+-   Een bug opgelost waarbij een verouderd gebruikers-ID verhinderde dat de addons correct werden geladen voor de demo-gebruiker.
 
 **Earlier issues found/mentioned but not fixed**
-None.
+-   **Issue 1:** Gebruikersfrustratie over verbruikte credits door herhaalde mislukte pogingen. Dit is een procesprobleem dat benadrukt hoe belangrijk het is om de volgende poging direct goed te doen.
 
 **Known issue recurrence from previous fork**
-None.
+-   None
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, Pydantic for data modeling, MongoDB (via ), JWT for authentication, modular routing.
--   **Frontend:** React, React Router,  for API calls.
--   **Tooling:**  for PDF generation.
+-   **Backend:** FastAPI, MongoDB (via motor)
+-   **Frontend:** React, React Router, TailwindCSS
+-   **Architecture:** Modulair addon-systeem dat de zichtbaarheid van functies per gebruiker regelt.
 
 **key DB schema**
-No formal schema files exist. Models are defined dynamically with Pydantic within . Key collections implied by the code are:
--   : {user_id, nummer, naam, type, ...}
--   : {user_id, code, naam, type, ...}
--   : {user_id, rekeningnummer, omschrijving, ...}
--   : {user_id, naam, adres, btw_nummer, ...}
--   : {user_id, naam, ...}
--   : {user_id, factuurnummer, debiteur_id, datum, regels: [...], totaal, ...}
--   : {user_id, omschrijving, aanschafwaarde, afschrijvingsmethode, ...}
--   : {user_id, naam, klant, budget, ...}
--   : {user_id, naam, inkoopprijs, verkoopprijs, ...}
+-   : Bevat gebruikersinformatie.
+-   : Bevat de definities van alle beschikbare modules.
+-   : Koppelt welke gebruiker welke module heeft geactiveerd.
 
 **changes in tech stack**
--   **Added:**  Python library for PDF generation.
+-   None
 
 **All files of reference**
--    (Created): Contains the entire backend logic for the new accounting module.
--    (Updated): To import and register the .
--    (Created): The main entry page for the accounting section on the frontend.
--    (Created): Placeholder page for Accounts Receivable.
--    (Created): Placeholder page for Sales Invoices.
--    (Updated): To add the route for .
--    (Updated): To add .
+-   **Primary Reference:**  (branch: ) - Dit is de bron van waarheid voor de volgende stappen.
+-   **Modified Files (need rework):**
+    -   
+    -   
+    -   
+    -   
+-   **Modified Files (stable):**
+    -    (addon seeding logic)
 
-**Areas that need refactoring**
-- The file  is extremely large (over 4700 lines). For better maintainability, it should be split into multiple files, each handling a specific module (e.g., , ). Pydantic models should also be moved to a separate  file.
+**Areas that need refactoring**:
+-   De gehele huidige  module implementatie moet worden verwijderd en vervangen door de code uit de referentie-repository.
+-   De bestanden  en de ongebruikte  moeten worden verwijderd om de codebase op te schonen.
 
 **key api endpoints**
-All endpoints are prefixed with . Key routes include:
--   : To set up initial accounting data (chart of accounts, journals).
--   : To get KPI data for the main dashboard.
--   : CRUD for customers.
--   : CRUD for invoices.
--   : GET to generate a PDF for an invoice.
--   , , , , , etc., for all other modules.
+-   : Haalt de actieve addons voor een gebruiker op, essentieel voor het renderen van de sidebar.
+-   Alle endpoints in  zijn placeholders en moeten volledig geïmplementeerd worden.
 
 **Critical Info for New Agent**
-- You are building upon a massive, newly created backend module. All backend logic for accounting is currently in a single file: .
-- The frontend work has just started. The created pages under  are empty placeholders that need to be built out with React components.
-- The immediate next steps are to build the UI for the Debiteuren and Verkoop pages, and then continue scaffolding the pages for the other modules.
-- The user is technically savvy and has provided a highly detailed functional specification. Refer to the original problem statement for any questions on functionality.
+-   **VOLG DE GITHUB REPOSITORY EXACT!** De gebruiker is gefrustreerd door eerdere mislukte pogingen. De enige juiste weg vooruit is het exact repliceren van de structuur en code uit  (branch ).
+-   Maak **geen** nieuwe aparte layout. De boekhouding-items moeten als sub-menu in de bestaande sidebar worden geïntegreerd, net als in het voorbeeldproject.
+-   Begin volledig opnieuw met de implementatie van de boekhouding module en negeer de vorige pogingen.
 
 **documents and test reports created in this job**
--  has been updated with the latest progress summary.
+-   None
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Provided a list of four enhancements to implement next: 1) Expand frontend pages per module, 2) PDF invoice generation, 3) Bank import refinement, 4) Central Bank API integration.
-2.  **Agent:** Acknowledged the request and began work.
-3.  **Agent:** (Installs  library)
-4.  **Agent:** (Adds new endpoints for PDF/import to )
-5.  **Agent:** (Creates  directory)
-6.  **Agent:** (Creates  and )
+1.  **User:** Geeft een GitHub link en instrueert om de module te bouwen zoals in die repository. (COMPLETION: Not Started)
+2.  **User:** Geeft URL en inloggegevens voor een live voorbeeld van hoe de sidebar en functionaliteit eruit moeten zien. (COMPLETION: Not Started)
+3.  **User:** Uit frustratie over de verkeerde implementatie en vraagt of credits worden teruggegeven. (COMPLETION: Acknowledged, not resolved)
+4.  **User:** Bekritiseert de agent voor het hergebruiken van oude code en het verspillen van credits. (COMPLETION: Acknowledged, not resolved)
+5.  **User:** Meldt dat de boekhouding niet zichtbaar is op de demo-account. (COMPLETION: Resolved, addon is now active by default)
+6.  **User:** Bevestigt dat de volledige module gebouwd moet worden. (COMPLETION: In Progress)
+7.  **User:** Geeft initiële keuzes door voor de implementatie. (COMPLETION: Acknowledged)
 
 **Project Health Check:**
--   **Functional:** The backend API for the accounting module is largely complete and functional.
--   **Broken:** The frontend is incomplete; the new pages are just placeholders and not yet functional.
--   **Mocked:** No data is being mocked; the system relies on live interaction with the MongoDB database.
+-   **Broken:** De  module is volledig disfunctioneel. De UI is verkeerd, de backend is leeg. De gebruiker kan de functie niet gebruiken.
+-   **Mocked:** De module bestaat momenteel alleen uit placeholder pagina's en API-endpoints die geen echte logica bevatten.
 
 **3rd Party Integrations**
--   : For PDF generation.
--   **Planned:** Central Bank of Suriname API for exchange rates.
+-   None
 
 **Testing status**
--   **Testing agent used after significant changes:** YES,  was used to validate the entire backend module.
+-   **Testing agent used after significant changes:** YES (on previous, incorrect implementations)
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None.
--   **Known regressions:** None.
+-   **Test files created:** []
+-   **Known regressions:** None currently active. Eerdere problemen met het activeren van addons zijn opgelost.
 
 **Credentials to test flow:**
--   **Username:** 
--   **Password:** 
-The agent registered this user and used the generated JWT token to test all protected API endpoints successfully.
+-   **Gebruikersnaam:** 
+-   **Wachtwoord:** 
 
 **What agent forgot to execute**
-The agent did not forget to execute any tasks. It was actively implementing the user's latest set of enhancement requests when the session concluded.</analysis>
+-   De agent heeft de visuele en structurele eisen van de gebruiker consequent verkeerd geïnterpreteerd, wat leidde tot meerdere onbruikbare implementaties. De agent heeft nu de expliciete instructie (de GitHub link) die het had moeten afwachten of waar het eerder om had moeten vragen.</analysis>
