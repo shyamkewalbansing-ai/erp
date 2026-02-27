@@ -59,7 +59,19 @@ const CrediteurenPage = () => {
     }
     setSaving(true);
     try {
-      await suppliersAPI.create(newSupplier);
+      // Map frontend fields to backend Dutch field names
+      const supplierData = {
+        code: newSupplier.code,
+        naam: newSupplier.name,
+        adres: newSupplier.address,
+        plaats: newSupplier.city,
+        telefoon: newSupplier.phone,
+        email: newSupplier.email,
+        btw_nummer: newSupplier.btw_number,
+        betalingstermijn: newSupplier.payment_terms,
+        valuta: newSupplier.currency
+      };
+      await suppliersAPI.create(supplierData);
       toast.success('Leverancier aangemaakt');
       setShowSupplierDialog(false);
       setNewSupplier({
