@@ -855,17 +855,65 @@ async def import_bank_csv(bank_id: str, file: UploadFile = File(...), authorizat
 
 @router.post("/bank/import/mt940")
 async def import_mt940(bank_id: str, file: UploadFile = File(...), authorization: str = Header(None)):
-    """Importeer banktransacties uit MT940 bestand"""
+    """Importeer banktransacties uit MT940 bestand met verbeterde parsing"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
     
     content = await file.read()
+    
+    # Gebruik de verbeterde MT940 parser indien beschikbaar
+    if MT940_ENABLED:
+        try:
+            statements = parse_mt940_file(content)
+            
+            imported = 0
+            for statement in statements:
+                for tx in statement.transacties:
+                    transactie = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": user_id,
+                        "bankrekening_id": bank_id,
+                        "datum": tx.datum.isoformat() if tx.datum else datetime.now().strftime('%Y-%m-%d'),
+                        "valutadatum": tx.valutadatum.isoformat() if tx.valutadatum else None,
+                        "omschrijving": tx.omschrijving,
+                        "bedrag": tx.bedrag,
+                        "tegenrekening": tx.tegenrekening,
+                        "tegenpartij": tx.tegenpartij,
+                        "referentie": tx.referentie,
+                        "status": "nieuw",
+                        "import_bron": "mt940",
+                        "raw_data": tx.raw_data,
+                        "created_at": datetime.now(timezone.utc)
+                    }
+                    await db.boekhouding_banktransacties.insert_one(transactie)
+                    imported += 1
+                
+                # Update bankrekening saldo
+                if statement.eindsaldo != 0:
+                    await db.boekhouding_bankrekeningen.update_one(
+                        {"id": bank_id, "user_id": user_id},
+                        {"$set": {
+                            "huidig_saldo": statement.eindsaldo,
+                            "laatste_import": datetime.now(timezone.utc)
+                        }}
+                    )
+            
+            return {
+                "message": f"{imported} transacties geïmporteerd",
+                "imported": imported,
+                "statements_processed": len(statements)
+            }
+            
+        except Exception as e:
+            # Fallback naar basic parsing
+            pass
+    
+    # Fallback: Basic MT940 parsing
     try:
         content_str = content.decode('utf-8')
     except:
         content_str = content.decode('latin-1')
     
-    # Basic MT940 parsing
     transactions = []
     lines = content_str.split('\n')
     current_tx = {}
@@ -879,8 +927,23 @@ async def import_mt940(bank_id: str, file: UploadFile = File(...), authorization
             try:
                 date_str = line[4:10]
                 current_tx["datum"] = f"20{date_str[:2]}-{date_str[2:4]}-{date_str[4:6]}"
+                
+                # Parse bedrag
+                tx_data = line[4:]
+                cd_pos = 6
+                if len(tx_data) > 12 and tx_data[6:12].isdigit():
+                    cd_pos = 12
+                
+                sign = 1 if tx_data[cd_pos] == 'C' else -1
+                import re
+                bedrag_match = re.search(r'[CD](\d+[,.]?\d*)', tx_data[cd_pos:])
+                if bedrag_match:
+                    current_tx["bedrag"] = sign * float(bedrag_match.group(1).replace(',', '.'))
+                else:
+                    current_tx["bedrag"] = 0
             except:
                 current_tx["datum"] = datetime.now().strftime('%Y-%m-%d')
+                current_tx["bedrag"] = 0
         elif line.startswith(':86:') and current_tx:
             current_tx["omschrijving"] = line[4:]
     
@@ -895,7 +958,7 @@ async def import_mt940(bank_id: str, file: UploadFile = File(...), authorization
             "bankrekening_id": bank_id,
             "datum": tx.get("datum", datetime.now().strftime('%Y-%m-%d')),
             "omschrijving": tx.get("omschrijving", ""),
-            "bedrag": 0,
+            "bedrag": tx.get("bedrag", 0),
             "status": "nieuw",
             "import_bron": "mt940",
             "created_at": datetime.now(timezone.utc)
