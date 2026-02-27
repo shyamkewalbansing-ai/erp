@@ -166,6 +166,26 @@ Drie template stijlen beschikbaar in PDF generator:
 2. **Modern:** Strak en minimalistisch, donkere header met blauw accent
 3. **Kleurrijk:** Levendige kleuren, paars met amber accent, alternerende rijen
 
+### ✅ Product Foto Upload & Artikel Selectie (Voltooid - December 2025)
+Twee nieuwe features voor de Voorraad en Verkoop modules:
+
+**Product Foto Upload:**
+- Nieuw `foto_url` veld in ArtikelCreate model
+- Image upload endpoint: `POST /api/boekhouding/upload-image`
+- Image serving endpoint: `GET /api/boekhouding/images/{filename}`
+- Max 5MB, ondersteunt JPG, PNG, GIF, WEBP
+- VoorraadPage toont nu een "Foto" kolom met productafbeeldingen
+- Upload UI met preview en verwijder-knop in Nieuw Product dialog
+
+**Artikel Selectie op Facturen:**
+- VerkoopPage factuur dialog heeft nu een "Artikel" dropdown
+- Dropdown toont producten met naam én verkoopprijs
+- Automatische prijs-invulling bij selectie van een artikel
+- Automatische omschrijving-invulling met productnaam
+- Fallback tekstveld voor handmatige invoer ("Of typ handmatig...")
+
+Test resultaten: 100% backend (10/10 tests), 100% frontend (alle features verified)
+
 ### ✅ Finance OS UI Refactoring (Voltooid - December 2025)
 Complete visuele herziening van alle boekhouding pagina's naar "Finance OS" stijl:
 - **Getalnotatie:** Nederlandse notatie (nl-NL) - bv. `SRD 2.500,00`
