@@ -141,6 +141,7 @@ const ActionItem = ({ type, message, action, priority, onClick }) => {
 const BoekhoudingDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
   const [activeModule, setActiveModule] = useState('dashboard');
@@ -150,18 +151,20 @@ const BoekhoudingDashboard = () => {
 
   // Handle URL-based module selection
   useEffect(() => {
-    const path = window.location.pathname;
-    console.log('Full path:', path);
+    // Get wildcard params from react-router
+    const wildcardPath = params['*'] || '';
+    console.log('Wildcard path:', wildcardPath);
+    console.log('Location pathname:', location.pathname);
     
-    // Extract module from URL like /app/boekhouding/verkoop -> verkoop
-    const match = path.match(/\/boekhouding\/([^/]+)/);
-    if (match && match[1]) {
-      console.log('Module from URL:', match[1]);
-      setActiveModule(match[1]);
-    } else if (path.endsWith('/boekhouding') || path.endsWith('/boekhouding/')) {
+    if (wildcardPath) {
+      // Extract first segment like "verkoop" from "verkoop" or "verkoop/something"
+      const module = wildcardPath.split('/')[0];
+      console.log('Setting module:', module);
+      setActiveModule(module);
+    } else {
       setActiveModule('dashboard');
     }
-  }, [location.pathname]);
+  }, [params, location.pathname]);
 
   // Check if system is initialized
   const checkInitialization = async () => {
