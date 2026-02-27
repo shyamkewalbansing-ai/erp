@@ -18,8 +18,39 @@ Een uitgebreide ERP-applicatie met volledig geïntegreerde boekhoudkundige modul
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
 - **Taal**: Nederlands (Dutch)
+- **Design**: Clean/Modern Light thema
 
 ## Voltooide Functies
+
+### 27 februari 2026 - BOEKHOUDING FRONTEND MODULE (VOLTOOID)
+Uitgebreide frontend module voor Surinaams boekhouden:
+
+#### Frontend Pagina's
+- ✅ **BoekhoudingDashboard.js** - Hoofd dashboard met sidebar navigatie, KPI cards, en snelle acties
+- ✅ **WisselkoersenPage.js** - Wisselkoersen beheer met CBvS integratie
+- ✅ **DebiteurenPage.js** - Klanten beheer met CRUD operaties
+- ✅ **CrediteurenPage.js** - Leveranciers beheer met CRUD operaties
+- ✅ **VerkoopfacturenPage.js** - Verkoopfacturen met PDF download
+- ✅ **BankPage.js** - Bankrekeningen en mutaties import
+- ✅ **GrootboekPage.js** - Rekeningschema, dagboeken, journaalposten
+- ✅ **BTWPage.js** - BTW aangifte, codes en controlelijst
+- ✅ **RapportagesPage.js** - Balans, Winst & Verlies, Proef/Saldibalans
+
+#### Centrale Bank van Suriname Integratie
+- ✅ **Live koersen ophalen** van cbvs.sr website
+- ✅ **Web scraping** met BeautifulSoup en lxml
+- ✅ **Fallback indicatieve koersen** als CBvS niet bereikbaar
+- ✅ **Multi-valuta ondersteuning**: SRD, USD, EUR
+
+#### Features Getest (100% Geslaagd)
+- Dashboard met KPI cards en navigatie
+- Sidebar navigatie naar alle 9 sub-modules
+- Wisselkoersen ophalen van Centrale Bank
+- Debiteur aanmaken en beheren
+- Factuur aanmaken, verzenden en PDF downloaden
+- Grootboek met gegroepeerde rekeningen
+- BTW aangifte berekening
+- Financiële rapportages genereren
 
 ### 24 februari 2026 - GROOTBOEK INTEGRATIE (VOLTOOID)
 Volledige integratie van alle modules met het grootboek:
