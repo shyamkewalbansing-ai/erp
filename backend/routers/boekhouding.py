@@ -1602,10 +1602,12 @@ async def create_verkoopfactuur(data: VerkoopfactuurCreate, authorization: str =
     regels_met_btw = []
     
     for regel in data.regels:
-        aantal = regel.get("aantal", 1)
-        prijs = regel.get("eenheidsprijs", 0)
+        # Support both Dutch and English field names
+        aantal = regel.get("aantal") or regel.get("quantity", 1)
+        prijs = regel.get("eenheidsprijs") or regel.get("unit_price", 0)
         btw_perc = regel.get("btw_percentage", 25)
         korting = regel.get("korting_percentage", 0)
+        omschrijving = regel.get("omschrijving") or regel.get("description", "")
         
         bedrag_excl = aantal * prijs * (1 - korting / 100)
         btw = bedrag_excl * btw_perc / 100
@@ -1614,8 +1616,11 @@ async def create_verkoopfactuur(data: VerkoopfactuurCreate, authorization: str =
         artikel_id = regel.get("product_id") or regel.get("artikel_id")
         
         regel_data = {
-            **regel,
             "artikel_id": artikel_id,
+            "omschrijving": omschrijving,
+            "aantal": aantal,
+            "eenheidsprijs": prijs,
+            "btw_percentage": btw_perc,
             "bedrag_excl": bedrag_excl,
             "btw_bedrag": btw,
             "bedrag_incl": bedrag_excl + btw
