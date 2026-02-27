@@ -267,7 +267,7 @@ const DocumentenPage = () => {
               <div>
                 <p className="text-sm text-slate-500">Totale Grootte</p>
                 <p className="text-2xl font-bold font-mono text-slate-900">
-                  {formatFileSize(documents.reduce((sum, d) => sum + d.file_size, 0))}
+                  {formatFileSize(documents.reduce((sum, d) => sum + (d.file_size || d.bestandsgrootte || 0), 0))}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
