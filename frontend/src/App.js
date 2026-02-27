@@ -761,7 +761,22 @@ function MainAppRoutes() {
           } />
           
           {/* Boekhouding Module Routes */}
-          <Route path="boekhouding" element={<BoekhoudingDashboard />} />
+          <Route path="boekhouding" element={<BoekhoudingLayout />}>
+            <Route index element={<BoekhoudingDashboard />} />
+            <Route path="grootboek" element={<BoekhoudingGrootboek />} />
+            <Route path="debiteuren" element={<BoekhoudingDebiteuren />} />
+            <Route path="crediteuren" element={<BoekhoudingCrediteuren />} />
+            <Route path="bank-kas" element={<BoekhoudingBankKas />} />
+            <Route path="btw" element={<BoekhoudingBTW />} />
+            <Route path="verkoop" element={<BoekhoudingVerkoop />} />
+            <Route path="inkoop" element={<BoekhoudingInkoop />} />
+            <Route path="voorraad" element={<BoekhoudingVoorraad />} />
+            <Route path="vaste-activa" element={<BoekhoudingVasteActiva />} />
+            <Route path="projecten" element={<BoekhoudingProjecten />} />
+            <Route path="rapportages" element={<BoekhoudingRapportages />} />
+            <Route path="wisselkoersen" element={<BoekhoudingWisselkoersen />} />
+            <Route path="instellingen" element={<BoekhoudingInstellingen />} />
+          </Route>
         </Route>
         
         {/* Redirect old routes to new app routes */}
