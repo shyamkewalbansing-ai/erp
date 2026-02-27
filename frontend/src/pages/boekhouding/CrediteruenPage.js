@@ -79,7 +79,7 @@ const CrediteurenPage = () => {
     (s.nummer || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalOutstanding = suppliers.reduce((sum, s) => sum + (s.balance || 0), 0);
+  const totalOutstanding = suppliers.reduce((sum, s) => sum + (s.openstaand_bedrag || 0), 0);
 
   return (
     <div className="space-y-6" data-testid="crediteuren-page">
