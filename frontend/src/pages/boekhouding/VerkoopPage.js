@@ -1,259 +1,391 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import {
-  Plus,
-  FileText,
-  ShoppingCart,
-  Receipt,
-  Search,
-  Filter,
-  MoreVertical,
-  Eye,
-  Send,
-  Trash2
-} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { salesInvoicesAPI, customersAPI, productsAPI } from '../../lib/boekhoudingApi';
+import { formatCurrency, formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Badge } from '../../components/ui/badge';
+import { Textarea } from '../../components/ui/textarea';
+import { toast } from 'sonner';
+import { Plus, FileText, ShoppingCart, Receipt, Loader2, Trash2 } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-
-const formatCurrency = (amount, currency = 'SRD') => {
-  if (amount === null || amount === undefined) return `${currency} 0,00`;
-  const formatted = new Intl.NumberFormat('nl-NL', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(amount);
-  return `${currency} ${formatted}`;
-};
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return '-';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-};
-
-const StatusBadge = ({ status }) => {
-  const styles = {
-    concept: 'bg-gray-100 text-gray-600',
-    verzonden: 'bg-blue-100 text-blue-600',
-    betaald: 'bg-green-100 text-green-600',
-    herinnering: 'bg-yellow-100 text-yellow-600',
-    gedeeltelijk_betaald: 'bg-orange-100 text-orange-600',
-  };
-  const labels = {
-    concept: 'Concept',
-    verzonden: 'Verzonden',
-    betaald: 'Betaald',
-    herinnering: 'Herinnering',
-    gedeeltelijk_betaald: 'Gedeeltelijk',
-  };
-
-  return (
-    <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status] || styles.concept}`}>
-      {labels[status] || status}
-    </span>
-  );
-};
-
-export default function VerkoopPage() {
-  const { token } = useAuth();
-  const [activeTab, setActiveTab] = useState('facturen');
-  const [facturen, setFacturen] = useState([]);
+const VerkoopPage = () => {
+  const [invoices, setInvoices] = useState([]);
+  const [customers, setCustomers] = useState([]);
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ offertes: 0, orders: 0, facturen: 0 });
+  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const fetchFacturen = useCallback(async () => {
+  const [newInvoice, setNewInvoice] = useState({
+    debiteur_code: '',
+    factuurdatum: new Date().toISOString().split('T')[0],
+    vervaldatum: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    valuta: 'SRD',
+    regels: [{ omschrijving: '', aantal: 1, prijs: 0, btw_percentage: 10, btw_bedrag: 0, totaal: 0 }],
+    opmerkingen: ''
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/boekhouding/verkoopfacturen`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setFacturen(data);
-        setStats(prev => ({ ...prev, facturen: data.length }));
-      }
-    } catch (e) {
-      console.error('Fetch error:', e);
+      const [invoicesRes, customersRes, productsRes] = await Promise.all([
+        salesInvoicesAPI.getAll(),
+        customersAPI.getAll(),
+        productsAPI.getAll().catch(() => [])
+      ]);
+      setInvoices(Array.isArray(invoicesRes) ? invoicesRes : invoicesRes.data || []);
+      setCustomers(Array.isArray(customersRes) ? customersRes : customersRes.data || []);
+      setProducts(Array.isArray(productsRes) ? productsRes : productsRes.data || []);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Fout bij laden gegevens');
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  };
 
-  useEffect(() => {
-    fetchFacturen();
-  }, [fetchFacturen]);
+  const updateLine = (index, field, value) => {
+    const regels = [...newInvoice.regels];
+    regels[index][field] = value;
+    
+    const aantal = parseFloat(regels[index].aantal) || 0;
+    const prijs = parseFloat(regels[index].prijs) || 0;
+    const btwPercentage = parseFloat(regels[index].btw_percentage) || 0;
+    
+    const subtotal = aantal * prijs;
+    regels[index].btw_bedrag = subtotal * (btwPercentage / 100);
+    regels[index].totaal = subtotal + regels[index].btw_bedrag;
+    
+    setNewInvoice({ ...newInvoice, regels });
+  };
 
-  const tabs = [
-    { id: 'offertes', label: 'Offertes', icon: FileText, count: stats.offertes },
-    { id: 'orders', label: 'Orders', icon: ShoppingCart, count: stats.orders },
-    { id: 'facturen', label: 'Facturen', icon: Receipt, count: stats.facturen },
-  ];
+  const addLine = () => {
+    setNewInvoice({
+      ...newInvoice,
+      regels: [...newInvoice.regels, { omschrijving: '', aantal: 1, prijs: 0, btw_percentage: 10, btw_bedrag: 0, totaal: 0 }]
+    });
+  };
+
+  const removeLine = (index) => {
+    if (newInvoice.regels.length === 1) return;
+    const regels = newInvoice.regels.filter((_, i) => i !== index);
+    setNewInvoice({ ...newInvoice, regels });
+  };
+
+  const handleCreateInvoice = async () => {
+    if (!newInvoice.debiteur_code) {
+      toast.error('Selecteer een klant');
+      return;
+    }
+    if (newInvoice.regels.some(l => !l.omschrijving || l.prijs <= 0)) {
+      toast.error('Vul alle regels correct in');
+      return;
+    }
+    setSaving(true);
+    try {
+      await salesInvoicesAPI.create(newInvoice);
+      toast.success('Factuur aangemaakt');
+      setShowInvoiceDialog(false);
+      setNewInvoice({
+        debiteur_code: '',
+        factuurdatum: new Date().toISOString().split('T')[0],
+        vervaldatum: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        valuta: 'SRD',
+        regels: [{ omschrijving: '', aantal: 1, prijs: 0, btw_percentage: 10, btw_bedrag: 0, totaal: 0 }],
+        opmerkingen: ''
+      });
+      fetchData();
+    } catch (error) {
+      toast.error(error.message || 'Fout bij aanmaken');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const subtotal = newInvoice.regels.reduce((s, l) => s + (parseFloat(l.aantal) || 0) * (parseFloat(l.prijs) || 0), 0);
+  const btwTotal = newInvoice.regels.reduce((s, l) => s + (l.btw_bedrag || 0), 0);
+  const total = subtotal + btwTotal;
+
+  const openInvoices = invoices.filter(i => i.status !== 'betaald');
+  const totalOpen = openInvoices.reduce((sum, i) => sum + (i.totaal_bedrag || 0), 0);
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6" data-testid="verkoop-page">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Verkoop</h1>
-          <p className="text-gray-500">Beheer offertes, orders en verkoopfacturen</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Verkoop</h1>
+          <p className="text-slate-500 mt-1">Beheer verkoopfacturen</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-          <Plus className="w-4 h-4" />
-          <span>Nieuwe Factuur</span>
-        </button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <div
-              key={tab.id}
-              className={`bg-white rounded-xl border p-5 cursor-pointer transition-all ${
-                activeTab === tab.id ? 'border-blue-300 ring-1 ring-blue-100' : 'border-gray-100 hover:border-gray-200'
-              }`}
-              onClick={() => setActiveTab(tab.id)}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-500">{tab.label}</p>
-                  <p className="text-3xl font-bold text-gray-900 mt-1">{tab.count}</p>
+        <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
+          <DialogTrigger asChild>
+            <Button data-testid="add-invoice-btn">
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuwe Factuur
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Nieuwe Verkoopfactuur</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label>Klant *</Label>
+                  <Select value={newInvoice.debiteur_code} onValueChange={(v) => setNewInvoice({...newInvoice, debiteur_code: v})}>
+                    <SelectTrigger data-testid="invoice-customer-select">
+                      <SelectValue placeholder="Selecteer klant" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {customers.map(c => (
+                        <SelectItem key={c.code} value={c.code}>{c.naam}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                  tab.id === 'offertes' ? 'bg-blue-50' : tab.id === 'orders' ? 'bg-green-50' : 'bg-yellow-50'
-                }`}>
-                  <Icon className={`w-6 h-6 ${
-                    tab.id === 'offertes' ? 'text-blue-500' : tab.id === 'orders' ? 'text-green-500' : 'text-yellow-500'
-                  }`} />
+                <div className="space-y-2">
+                  <Label>Factuurdatum</Label>
+                  <Input
+                    type="date"
+                    value={newInvoice.factuurdatum}
+                    onChange={(e) => setNewInvoice({...newInvoice, factuurdatum: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Vervaldatum</Label>
+                  <Input
+                    type="date"
+                    value={newInvoice.vervaldatum}
+                    onChange={(e) => setNewInvoice({...newInvoice, vervaldatum: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Valuta</Label>
+                  <Select value={newInvoice.valuta} onValueChange={(v) => setNewInvoice({...newInvoice, valuta: v})}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="SRD">SRD</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                      <SelectItem value="EUR">EUR</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="w-[300px]">Omschrijving</TableHead>
+                      <TableHead className="w-20">Aantal</TableHead>
+                      <TableHead className="w-28">Prijs</TableHead>
+                      <TableHead className="w-20">BTW %</TableHead>
+                      <TableHead className="w-28 text-right">Totaal</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {newInvoice.regels.map((line, idx) => (
+                      <TableRow key={idx}>
+                        <TableCell>
+                          <Input
+                            value={line.omschrijving}
+                            onChange={(e) => updateLine(idx, 'omschrijving', e.target.value)}
+                            placeholder="Omschrijving"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={line.aantal}
+                            onChange={(e) => updateLine(idx, 'aantal', e.target.value)}
+                            className="text-right"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={line.prijs}
+                            onChange={(e) => updateLine(idx, 'prijs', e.target.value)}
+                            className="text-right font-mono"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Select value={String(line.btw_percentage)} onValueChange={(v) => updateLine(idx, 'btw_percentage', parseFloat(v))}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">0%</SelectItem>
+                              <SelectItem value="10">10%</SelectItem>
+                              <SelectItem value="25">25%</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatCurrency(line.totaal || 0, newInvoice.valuta, false)}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeLine(idx)}
+                            disabled={newInvoice.regels.length === 1}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <Button variant="outline" onClick={addLine} className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
+                Regel toevoegen
+              </Button>
+
+              <div className="flex justify-end">
+                <div className="w-64 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Subtotaal:</span>
+                    <span className="font-mono">{formatCurrency(subtotal, newInvoice.valuta)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span>BTW:</span>
+                    <span className="font-mono">{formatCurrency(btwTotal, newInvoice.valuta)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold border-t pt-2">
+                    <span>Totaal:</span>
+                    <span className="font-mono">{formatCurrency(total, newInvoice.valuta)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Opmerkingen</Label>
+                <Textarea
+                  value={newInvoice.opmerkingen}
+                  onChange={(e) => setNewInvoice({...newInvoice, opmerkingen: e.target.value})}
+                  placeholder="Opmerkingen op de factuur"
+                />
+              </div>
+
+              <Button onClick={handleCreateInvoice} className="w-full" disabled={saving} data-testid="save-invoice-btn">
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Factuur Aanmaken
+              </Button>
             </div>
-          );
-        })}
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 mb-4 border-b border-gray-200">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.id
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-slate-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Totaal Facturen</p>
+                <p className="text-2xl font-bold font-mono text-slate-900">{invoices.length}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                <FileText className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Openstaand</p>
+                <p className="text-2xl font-bold font-mono text-slate-900">{openInvoices.length}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
+                <ShoppingCart className="w-6 h-6 text-amber-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Openstaand Bedrag</p>
+                <p className="text-2xl font-bold font-mono text-slate-900">{formatCurrency(totalOpen)}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+                <Receipt className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Content */}
-      <div className="bg-white rounded-xl border border-gray-100">
-        {/* Search bar */}
-        <div className="p-4 border-b border-gray-100 flex gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Zoeken..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50">
-            <Filter className="w-4 h-4" />
-            <span>Filter</span>
-          </button>
-        </div>
-
-        {/* Table */}
-        {activeTab === 'facturen' && (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="text-left text-sm text-gray-500 border-b border-gray-100">
-                  <th className="px-6 py-4 font-medium">Nummer</th>
-                  <th className="px-6 py-4 font-medium">Datum</th>
-                  <th className="px-6 py-4 font-medium">Klant</th>
-                  <th className="px-6 py-4 font-medium">Vervaldatum</th>
-                  <th className="px-6 py-4 font-medium text-right">Bedrag</th>
-                  <th className="px-6 py-4 font-medium">Status</th>
-                  <th className="px-6 py-4 font-medium"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
-                      Laden...
-                    </td>
-                  </tr>
-                ) : facturen.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
-                      Geen facturen gevonden
-                    </td>
-                  </tr>
-                ) : (
-                  facturen.map((f) => (
-                    <tr key={f.id} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {f.factuurnummer}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {formatDate(f.factuurdatum)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        {f.debiteur_naam}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-600">
-                        {formatDate(f.vervaldatum)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 text-right font-medium">
-                        {formatCurrency(f.totaal_incl_btw, f.valuta)}
-                      </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={f.status} />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <button className="p-1 text-gray-400 hover:text-gray-600">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button className="p-1 text-gray-400 hover:text-blue-600">
-                            <Send className="w-4 h-4" />
-                          </button>
-                          <button className="p-1 text-gray-400 hover:text-red-600">
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+      <Card className="border-slate-200">
+        <CardHeader>
+          <CardTitle className="text-lg">Verkoopfacturen</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8 text-slate-500">Laden...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50">
+                  <TableHead className="w-28">Nummer</TableHead>
+                  <TableHead className="w-28">Datum</TableHead>
+                  <TableHead>Klant</TableHead>
+                  <TableHead className="w-28">Vervaldatum</TableHead>
+                  <TableHead className="text-right w-32">Bedrag</TableHead>
+                  <TableHead className="w-24">Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invoices.map(invoice => (
+                  <TableRow key={invoice.factuurnummer} data-testid={`sales-invoice-row-${invoice.factuurnummer}`}>
+                    <TableCell className="font-mono">{invoice.factuurnummer}</TableCell>
+                    <TableCell>{formatDate(invoice.factuurdatum)}</TableCell>
+                    <TableCell className="font-medium">{invoice.debiteur_naam}</TableCell>
+                    <TableCell>{formatDate(invoice.vervaldatum)}</TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatCurrency(invoice.totaal_bedrag, invoice.valuta)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(invoice.status)}>
+                        {getStatusLabel(invoice.status)}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {invoices.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                      Geen verkoopfacturen gevonden
+                    </TableCell>
+                  </TableRow>
                 )}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {activeTab === 'offertes' && (
-          <div className="p-12 text-center text-gray-500">
-            <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>Geen offertes gevonden</p>
-          </div>
-        )}
-
-        {activeTab === 'orders' && (
-          <div className="p-12 text-center text-gray-500">
-            <ShoppingCart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>Geen orders gevonden</p>
-          </div>
-        )}
-      </div>
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
+
+export default VerkoopPage;

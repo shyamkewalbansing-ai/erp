@@ -1,126 +1,327 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../../context/AuthContext';
-import { Receipt, TrendingUp, TrendingDown } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { btwAPI, reportsAPI } from '../../lib/boekhoudingApi';
+import { formatCurrency, formatPercentage } from '../../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Badge } from '../../components/ui/badge';
+import { toast } from 'sonner';
+import { Plus, Calculator, FileText, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-
-const formatCurrency = (amount) => {
-  if (amount === null || amount === undefined) return 'SRD 0,00';
-  return `SRD ${new Intl.NumberFormat('nl-NL', { minimumFractionDigits: 2 }).format(amount)}`;
-};
-
-export default function BTWPage() {
-  const { token } = useAuth();
-  const [aangifte, setAangifte] = useState(null);
-  const [codes, setCodes] = useState([]);
+const BTWPage = () => {
+  const [btwCodes, setBtwCodes] = useState([]);
+  const [btwReport, setBtwReport] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showCodeDialog, setShowCodeDialog] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const fetchData = useCallback(async () => {
+  const [newCode, setNewCode] = useState({
+    code: '',
+    naam: '',
+    percentage: 0,
+    type: 'beide'
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
     try {
-      const [aangifteRes, codesRes] = await Promise.all([
-        fetch(`${API_URL}/api/boekhouding/btw/aangifte`, { headers: { Authorization: `Bearer ${token}` } }),
-        fetch(`${API_URL}/api/boekhouding/btw/codes`, { headers: { Authorization: `Bearer ${token}` } })
+      const [codesRes, reportRes] = await Promise.all([
+        btwAPI.getAll(),
+        reportsAPI.btw().catch(() => ({ btw_verkoop: 0, btw_inkoop: 0 }))
       ]);
-      if (aangifteRes.ok) setAangifte(await aangifteRes.json());
-      if (codesRes.ok) setCodes(await codesRes.json());
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
-  }, [token]);
+      setBtwCodes(Array.isArray(codesRes) ? codesRes : codesRes.data || []);
+      setBtwReport(reportRes);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Fout bij laden gegevens');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  const handleCreateCode = async () => {
+    if (!newCode.code || !newCode.naam) {
+      toast.error('Vul code en naam in');
+      return;
+    }
+    setSaving(true);
+    try {
+      await btwAPI.create(newCode);
+      toast.success('BTW-code aangemaakt');
+      setShowCodeDialog(false);
+      setNewCode({ code: '', naam: '', percentage: 0, type: 'beide' });
+      fetchData();
+    } catch (error) {
+      toast.error(error.message || 'Fout bij aanmaken');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-  if (loading) return <div className="p-6 flex items-center justify-center h-64"><div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full" /></div>;
+  const handleDeleteCode = async (id) => {
+    if (!window.confirm('Weet u zeker dat u deze BTW-code wilt verwijderen?')) return;
+    try {
+      await btwAPI.delete(id);
+      toast.success('BTW-code verwijderd');
+      fetchData();
+    } catch (error) {
+      toast.error('Fout bij verwijderen');
+    }
+  };
 
-  const saldo = (aangifte?.saldo?.te_betalen_aan_belastingdienst || 0);
+  const btwBalance = (btwReport?.btw_verkoop || 0) - (btwReport?.btw_inkoop || 0);
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">BTW Module</h1>
-        <p className="text-gray-500">Beheer BTW tarieven en bekijk aangifte overzicht</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(aangifte?.verkoop?.totaal_btw)}</p>
-              <p className="text-sm text-gray-500">BTW Verkoop</p>
-            </div>
-          </div>
+    <div className="space-y-6" data-testid="btw-page">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">BTW</h1>
+          <p className="text-slate-500 mt-1">Beheer BTW-tarieven en bekijk aangifteoverzicht</p>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <TrendingDown className="w-5 h-5 text-green-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(aangifte?.inkoop?.totaal_btw)}</p>
-              <p className="text-sm text-gray-500">BTW Inkoop</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-5">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 ${saldo >= 0 ? 'bg-red-100' : 'bg-green-100'} rounded-lg flex items-center justify-center`}>
-              <Receipt className={`w-5 h-5 ${saldo >= 0 ? 'text-red-600' : 'text-green-600'}`} />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(Math.abs(saldo))}</p>
-              <p className="text-sm text-gray-500">{saldo >= 0 ? 'Te betalen' : 'Te vorderen'}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">BTW Aangifte Q{aangifte?.periode?.kwartaal} {aangifte?.periode?.jaar}</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">Omzet 25%</span>
-              <span className="font-medium">{formatCurrency(aangifte?.verkoop?.omzet_per_tarief?.V25)}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">BTW 25%</span>
-              <span className="font-medium">{formatCurrency(aangifte?.verkoop?.btw_per_tarief?.V25)}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">Omzet 10%</span>
-              <span className="font-medium">{formatCurrency(aangifte?.verkoop?.omzet_per_tarief?.V10)}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-gray-100">
-              <span className="text-gray-600">BTW 10%</span>
-              <span className="font-medium">{formatCurrency(aangifte?.verkoop?.btw_per_tarief?.V10)}</span>
-            </div>
-            <div className="flex justify-between py-2 font-semibold">
-              <span>Totaal BTW Verkoop</span>
-              <span>{formatCurrency(aangifte?.verkoop?.totaal_btw)}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
-          <h3 className="font-semibold text-gray-900 mb-4">BTW Codes</h3>
-          <div className="space-y-2">
-            {codes.map((c) => (
-              <div key={c.id} className="flex items-center justify-between py-2 border-b border-gray-100">
-                <div>
-                  <span className="font-medium text-gray-900">{c.code}</span>
-                  <span className="ml-2 text-gray-500 text-sm">{c.naam}</span>
+        <Dialog open={showCodeDialog} onOpenChange={setShowCodeDialog}>
+          <DialogTrigger asChild>
+            <Button data-testid="add-btw-code-btn">
+              <Plus className="w-4 h-4 mr-2" />
+              BTW-code
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Nieuwe BTW-code</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Code *</Label>
+                  <Input
+                    value={newCode.code}
+                    onChange={(e) => setNewCode({...newCode, code: e.target.value})}
+                    placeholder="BTW21"
+                    data-testid="btw-code-input"
+                  />
                 </div>
-                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  c.type === 'verkoop' ? 'bg-green-100 text-green-600' :
-                  c.type === 'inkoop' ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
-                }`}>{c.percentage}%</span>
+                <div className="space-y-2">
+                  <Label>Percentage *</Label>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    value={newCode.percentage}
+                    onChange={(e) => setNewCode({...newCode, percentage: parseFloat(e.target.value) || 0})}
+                    data-testid="btw-percentage-input"
+                  />
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+              <div className="space-y-2">
+                <Label>Naam *</Label>
+                <Input
+                  value={newCode.naam}
+                  onChange={(e) => setNewCode({...newCode, naam: e.target.value})}
+                  placeholder="Standaard tarief (10%)"
+                  data-testid="btw-name-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select value={newCode.type} onValueChange={(v) => setNewCode({...newCode, type: v})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beide">Beide (Verkoop & Inkoop)</SelectItem>
+                    <SelectItem value="verkoop">Alleen Verkoop</SelectItem>
+                    <SelectItem value="inkoop">Alleen Inkoop</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleCreateCode} className="w-full" disabled={saving} data-testid="save-btw-code-btn">
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Opslaan
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-slate-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">BTW Verkoop</p>
+                <p className="text-2xl font-bold font-mono text-slate-900">
+                  {formatCurrency(btwReport?.btw_verkoop || 0)}
+                </p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">BTW Inkoop</p>
+                <p className="text-2xl font-bold font-mono text-slate-900">
+                  {formatCurrency(btwReport?.btw_inkoop || 0)}
+                </p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                <TrendingDown className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className={`border-slate-200 ${btwBalance > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">
+                  {btwBalance > 0 ? 'BTW Te Betalen' : 'BTW Te Vorderen'}
+                </p>
+                <p className={`text-2xl font-bold font-mono ${btwBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  {formatCurrency(Math.abs(btwBalance))}
+                </p>
+              </div>
+              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${btwBalance > 0 ? 'bg-red-100' : 'bg-green-100'}`}>
+                <Calculator className={`w-6 h-6 ${btwBalance > 0 ? 'text-red-600' : 'text-green-600'}`} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs defaultValue="codes">
+        <TabsList>
+          <TabsTrigger value="codes" data-testid="tab-btw-codes">
+            <Calculator className="w-4 h-4 mr-2" />
+            BTW-codes
+          </TabsTrigger>
+          <TabsTrigger value="declaration" data-testid="tab-declaration">
+            <FileText className="w-4 h-4 mr-2" />
+            Aangifte
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="codes" className="mt-4">
+          <Card className="border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-lg">BTW-codes</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8 text-slate-500">Laden...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50">
+                      <TableHead className="w-24">Code</TableHead>
+                      <TableHead>Naam</TableHead>
+                      <TableHead className="w-24">Percentage</TableHead>
+                      <TableHead className="w-32">Type</TableHead>
+                      <TableHead className="w-20">Status</TableHead>
+                      <TableHead className="w-24">Acties</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {btwCodes.map(code => (
+                      <TableRow key={code.code} data-testid={`btw-code-row-${code.code}`}>
+                        <TableCell className="font-mono font-medium">{code.code}</TableCell>
+                        <TableCell>{code.naam}</TableCell>
+                        <TableCell className="font-mono">{formatPercentage(code.percentage)}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {code.type === 'beide' ? 'Beide' : code.type === 'verkoop' ? 'Verkoop' : 'Inkoop'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={code.actief !== false ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}>
+                            {code.actief !== false ? 'Actief' : 'Inactief'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleDeleteCode(code.code)}
+                          >
+                            Verwijder
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {btwCodes.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                          Geen BTW-codes gevonden
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="declaration" className="mt-4">
+          <Card className="border-slate-200">
+            <CardHeader>
+              <CardTitle className="text-lg">BTW Aangifte Overzicht</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-white border border-slate-200 rounded-xl p-8 max-w-2xl">
+                <h3 className="font-bold text-xl mb-6">BTW Aangifte</h3>
+                
+                <div className="space-y-4">
+                  <div className="flex justify-between py-3 border-b border-slate-100">
+                    <span className="text-slate-600">1a. Leveringen/diensten belast met hoog tarief</span>
+                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_verkoop || 0)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between py-3 border-b border-slate-100">
+                    <span className="text-slate-600">5a. Verschuldigde BTW (rubriek 1 t/m 4)</span>
+                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_verkoop || 0)}</span>
+                  </div>
+                  
+                  <div className="flex justify-between py-3 border-b border-slate-100">
+                    <span className="text-slate-600">5b. Voorbelasting</span>
+                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_inkoop || 0)}</span>
+                  </div>
+                  
+                  <div className={`flex justify-between py-4 rounded-lg px-4 mt-4 ${btwBalance > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
+                    <span className="font-medium">
+                      {btwBalance > 0 ? '5c. Te betalen' : '5d. Te ontvangen'}
+                    </span>
+                    <span className={`font-mono font-bold ${btwBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {formatCurrency(Math.abs(btwBalance))}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="mt-8 pt-6 border-t border-slate-200">
+                  <p className="text-sm text-slate-500">
+                    Dit is een indicatief overzicht. Raadpleeg uw accountant voor de officiële BTW-aangifte.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
-}
+};
+
+export default BTWPage;
