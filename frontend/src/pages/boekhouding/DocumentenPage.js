@@ -146,8 +146,8 @@ const DocumentenPage = () => {
   };
 
   const filteredDocuments = documents.filter(doc =>
-    doc.original_filename.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doc.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    (doc.original_filename || doc.bestandsnaam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (doc.description || doc.omschrijving || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
