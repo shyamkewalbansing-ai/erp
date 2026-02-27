@@ -178,7 +178,6 @@ const ProtectedRoute = ({ children }) => {
 
 // Subscription Protected Route - requires active subscription (customers only)
 // Now allows access to dashboard even without modules - popup will show there
-// Free modules like 'boekhouding' are always accessible
 const SubscriptionRoute = ({ children, requiredAddon }) => {
   const { user, loading, hasActiveSubscription, isSuperAdmin } = useAuth();
   
