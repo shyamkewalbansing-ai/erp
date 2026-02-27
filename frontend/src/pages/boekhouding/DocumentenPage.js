@@ -325,19 +325,26 @@ const DocumentenPage = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredDocuments.map(doc => (
+                {filteredDocuments.map(doc => {
+                  const filename = doc.original_filename || doc.bestandsnaam || 'Onbekend';
+                  const fileType = doc.file_type || doc.bestandstype || 'other';
+                  const fileSize = doc.file_size || doc.bestandsgrootte || 0;
+                  const description = doc.description || doc.omschrijving || '';
+                  const entityType = doc.entity_type || doc.entiteit_type || 'general';
+                  
+                  return (
                   <TableRow key={doc.id} data-testid={`document-row-${doc.id}`}>
-                    <TableCell>{getFileIcon(doc.file_type)}</TableCell>
+                    <TableCell>{getFileIcon(fileType)}</TableCell>
                     <TableCell>
                       <div>
-                        <span className="font-medium">{doc.original_filename}</span>
-                        {doc.description && (
-                          <p className="text-xs text-slate-500">{doc.description}</p>
+                        <span className="font-medium">{filename}</span>
+                        {description && (
+                          <p className="text-xs text-slate-500">{description}</p>
                         )}
                       </div>
                     </TableCell>
-                    <TableCell>{getEntityTypeBadge(doc.entity_type)}</TableCell>
-                    <TableCell className="font-mono text-sm">{formatFileSize(doc.file_size)}</TableCell>
+                    <TableCell>{getEntityTypeBadge(entityType)}</TableCell>
+                    <TableCell className="font-mono text-sm">{formatFileSize(fileSize)}</TableCell>
                     <TableCell className="text-slate-500">{formatDate(doc.created_at)}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
