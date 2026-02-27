@@ -194,6 +194,7 @@ class ArtikelCreate(BaseModel):
     btw_code: str = "V25"
     minimum_voorraad: int = 0
     leverancier_id: Optional[str] = None
+    foto_url: Optional[str] = None
 
 class VastActivumCreate(BaseModel):
     naam: str

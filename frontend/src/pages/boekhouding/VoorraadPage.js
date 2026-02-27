@@ -148,14 +148,15 @@ const VoorraadPage = () => {
         eenheid: newProduct.unit,
         inkoopprijs: newProduct.purchase_price,
         verkoopprijs: newProduct.sales_price,
-        minimum_voorraad: newProduct.min_stock
+        minimum_voorraad: newProduct.min_stock,
+        foto_url: newProduct.image_url || null
       };
       await productsAPI.create(productData);
       toast.success('Product aangemaakt');
       setShowProductDialog(false);
       setNewProduct({
         code: '', name: '', description: '', type: 'product',
-        unit: 'stuk', purchase_price: 0, sales_price: 0, min_stock: 0
+        unit: 'stuk', purchase_price: 0, sales_price: 0, min_stock: 0, image_url: ''
       });
       fetchData();
     } catch (error) {
