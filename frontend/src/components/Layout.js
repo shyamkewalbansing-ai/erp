@@ -265,6 +265,7 @@ export default function Layout() {
     autodealer: { name: 'Auto Dealer', items: autoDealerNavItems, icon: Car },
     beauty: { name: 'Beauty Spa', items: beautySpaItems, icon: Sparkles },
     suribet: { name: 'Suribet', items: suribetNavItems, icon: Gamepad2 },
+    boekhouding: { name: 'Boekhouding', items: boekhoudingNavItems, icon: Calculator },
   };
 
   // Get modules in the correct order based on user preference
