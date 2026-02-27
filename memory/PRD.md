@@ -12,85 +12,84 @@ De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die spec
 | Grootboek | `/app/boekhouding/grootboek` | ✅ | Rekeningschema, journaalposten |
 | Debiteuren | `/app/boekhouding/debiteuren` | ✅ | Klanten, verkoopfacturen |
 | Crediteuren | `/app/boekhouding/crediteuren` | ✅ | Leveranciers, inkoopfacturen |
-| Bank/Kas | `/app/boekhouding/bank-kas` | ✅ | **5 tabs**: Bankrekening, Transactie, Importeren, Bankreconciliatie, Kasboek |
+| Bank/Kas | `/app/boekhouding/bank-kas` | ✅ | 5 tabs met MT940/CSV import en reconciliatie |
 | BTW | `/app/boekhouding/btw` | ✅ | BTW-codes, aangifte overzicht |
-| Verkoop | `/app/boekhouding/verkoop` | ✅ | **3 tabs**: Offertes, Orders, Facturen |
-| Inkoop | `/app/boekhouding/inkoop` | ✅ | **2 tabs**: Inkooporders, Inkoopfacturen |
+| Verkoop | `/app/boekhouding/verkoop` | ✅ | 3 tabs: Offertes, Orders, Facturen |
+| Inkoop | `/app/boekhouding/inkoop` | ✅ | 2 tabs: Inkooporders, Inkoopfacturen |
 | Voorraad | `/app/boekhouding/voorraad` | ✅ | Producten, mutaties, niveaus |
 | Vaste Activa | `/app/boekhouding/vaste-activa` | ✅ | Activa, afschrijvingen |
 | Projecten | `/app/boekhouding/projecten` | ✅ | Budget, uren tracking |
 | Rapportages | `/app/boekhouding/rapportages` | ✅ | Balans, Winst & Verlies |
 | Wisselkoersen | `/app/boekhouding/wisselkoersen` | ✅ | Koersen SRD/USD/EUR |
-| Herinneringen | `/app/boekhouding/herinneringen` | ✅ | Betalingsherinneringen, vervallen facturen |
-| Documenten | `/app/boekhouding/documenten` | ✅ | Documentbeheer, upload bijlagen |
-| Audit Trail | `/app/boekhouding/audit-trail` | ✅ | Gebruikersacties en wijzigingen log |
+| Herinneringen | `/app/boekhouding/herinneringen` | ✅ | Betalingsherinneringen |
+| Documenten | `/app/boekhouding/documenten` | ✅ | Documentbeheer met file upload |
+| Audit Trail | `/app/boekhouding/audit-trail` | ✅ | Gebruikersacties log |
 | Instellingen | `/app/boekhouding/instellingen` | ✅ | Bedrijfsgegevens, nummering |
 
-### Backend Endpoints Implemented
-| Endpoint | Status | Description |
-|----------|--------|-------------|
-| `/api/boekhouding/audit-trail` | ✅ | GET/POST audit logs |
-| `/api/boekhouding/herinneringen` | ✅ | GET/POST betalingsherinneringen |
-| `/api/boekhouding/herinneringen/facturen` | ✅ | GET facturen voor herinnering |
-| `/api/boekhouding/herinneringen/{id}/verzonden` | ✅ | PUT markeer als verzonden |
-| `/api/boekhouding/documenten` | ✅ | GET/POST/DELETE documenten |
+### P1 Features Completed ✅
+
+#### 1. MT940 Bank Import
+- **Endpoint**: `POST /api/boekhouding/bank/import/mt940`
+- **Features**:
+  - Parse standaard MT940 formaat
+  - Ondersteunt Surinaamse banken (DSB, Hakrinbank, Finabank, Republic Bank)
+  - Automatische duplicaat detectie
+  - Extraheert tegenpartij informatie
+  - Frontend: Drag & drop file upload met formaat auto-detectie
+
+#### 2. CSV Bank Import
+- **Endpoint**: `POST /api/boekhouding/bank/import/csv`
+- **Features**:
+  - Flexibele CSV parsing
+  - Configureerbare delimiter
+  - Handmatige CSV paste optie
+  - Foutrapportage per regel
+
+#### 3. Automatische Reconciliatie
+- **Endpoint**: `POST /api/boekhouding/reconciliatie/auto-match/{bank_id}`
+- **Matching Strategies**:
+  1. Factuurnummer in omschrijving (95% confidence)
+  2. Exact bedrag match + klant naam (85% confidence)
+  3. Exact bedrag match alleen (80% confidence)
+- **Additional Endpoints**:
+  - `POST /reconciliatie/manual-match` - Handmatige koppeling
+  - `POST /reconciliatie/book-payment` - Betaling boeken
+  - `GET /reconciliatie/overzicht/{bank_id}` - Overzicht
+
+#### 4. Document Upload
+- **Endpoint**: `POST /api/boekhouding/documenten/upload`
+- **Features**:
+  - Max 10MB bestandsgrootte
+  - Ondersteunde formaten: PDF, JPG, PNG, GIF, DOC, DOCX, XLS, XLSX, CSV, TXT
+  - Automatische file hash voor uniciteit
+  - Koppeling aan facturen, debiteuren, etc.
+- **Additional Endpoints**:
+  - `GET /documenten/{id}/download` - Base64 download
+  - `GET /documenten/{id}/preview` - Preview info
 
 ### Key Files
 - **API Client**: `/app/frontend/src/lib/boekhoudingApi.js`
-- **Utils**: `/app/frontend/src/lib/utils.js` (currency formatting)
-- **Backend Router**: `/app/backend/routers/boekhouding.py` (100+ endpoints)
+- **Backend Router**: `/app/backend/routers/boekhouding.py` (120+ endpoints)
 - **Pages**: `/app/frontend/src/pages/boekhouding/*.js`
-
-### Valuta Support
-- SRD (Surinaamse Dollar) - primary
-- USD (US Dollar)
-- EUR (Euro)
+- **Upload Directory**: `/app/uploads/documenten`
 
 ### Test Credentials
 - Email: `demo@facturatie.sr`
 - Password: `demo2024`
 
-## Verified Working (Feb 27, 2026) - Full Testing Complete
-
-### Latest Update: All Features Complete
-| Feature | Frontend | Backend | Status |
-|---------|----------|---------|--------|
-| Bank/Kas 5 tabs | ✅ | ✅ | Working |
-| Verkoop 3 tabs | ✅ | ✅ | Working |
-| Inkoop 2 tabs | ✅ | ✅ | Working |
-| Betalingsherinneringen | ✅ | ✅ | Working |
-| Documentbeheer | ✅ | ✅ | Working |
-| Audit Trail | ✅ | ✅ | Working |
-| Sidebar Navigation | ✅ | N/A | 17 menu items |
+## Verified Working (Feb 27, 2026)
 
 ### API Tests: 100% PASSED
-- Audit Trail: Returns 6 demo logs
-- Herinneringen: Endpoints working
-- Documenten: CRUD operations working
+- ✅ MT940 import endpoint
+- ✅ CSV import endpoint
+- ✅ Auto-match reconciliatie
+- ✅ Document upload
+- ✅ Audit trail
 
-### Demo Data Available
-- 1 debiteur (Test Klant N.V.)
-- 1 crediteur (Test Leverancier N.V.)
-- 1 bankrekening (DSB Zakelijk met SRD 10.000)
-- 1 verkoopfactuur (VF2026-00001)
-- 83 grootboekrekeningen (volledig rekeningschema)
-- 1 wisselkoers (USD/SRD: 35.5)
-- 6 audit trail entries (demo)
-
-## Completed in This Session
-- [x] Bank/Kas uitgebreid met 5 tabs (Bankrekening, Transactie, Importeren, Bankreconciliatie, Kasboek)
-- [x] Verkoop uitgebreid met 3 tabs (Offertes, Orders, Facturen)
-- [x] Inkoop uitgebreid met 2 tabs (Inkooporders, Inkoopfacturen)
-- [x] Nieuwe pagina: Betalingsherinneringen met backend endpoints
-- [x] Nieuwe pagina: Documentbeheer met backend endpoints
-- [x] Nieuwe pagina: Audit Trail met backend endpoints
-- [x] Sidebar navigatie bijgewerkt met 17 menu items
-- [x] Boekhouding addon geactiveerd voor demo gebruiker
-
-## Backlog (P1)
-- [ ] MT940 bank import functionaliteit
-- [ ] Automatische reconciliatie matching
-- [ ] File upload implementatie voor documenten
+### Frontend Tests: 100% PASSED
+- ✅ Bank/Kas Import tab met file upload
+- ✅ Bank/Kas Reconciliatie tab met Auto-Match
+- ✅ Documenten upload dialog
 
 ## Backlog (P2)
 - [ ] PDF generatie voor facturen
@@ -98,3 +97,4 @@ De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die spec
 - [ ] OCR voor document scanning
 - [ ] Surinaamse belastingrapportages
 - [ ] Multi-company support
+- [ ] Real-time bank koppeling (via bank API)
