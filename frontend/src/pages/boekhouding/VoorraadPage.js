@@ -314,6 +314,52 @@ const VoorraadPage = () => {
                     />
                   </div>
                 </div>
+                
+                {/* Product Foto Upload */}
+                <div className="space-y-2">
+                  <Label>Product Foto</Label>
+                  <div className="flex items-center gap-4">
+                    {newProduct.image_url ? (
+                      <div className="relative">
+                        <img 
+                          src={newProduct.image_url} 
+                          alt="Product" 
+                          className="w-24 h-24 object-cover rounded-lg border border-slate-200"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setNewProduct({...newProduct, image_url: ''})}
+                          className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <label className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                        {uploadingImage ? (
+                          <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                        ) : (
+                          <>
+                            <ImagePlus className="w-6 h-6 text-slate-400" />
+                            <span className="text-xs text-slate-500 mt-1">Upload</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                          disabled={uploadingImage}
+                        />
+                      </label>
+                    )}
+                    <div className="text-xs text-slate-500">
+                      <p>Max. 5MB</p>
+                      <p>JPG, PNG of GIF</p>
+                    </div>
+                  </div>
+                </div>
+                
                 <Button onClick={handleCreateProduct} className="w-full" disabled={saving} data-testid="save-product-btn">
                   {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                   Opslaan
