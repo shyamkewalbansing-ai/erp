@@ -156,7 +156,7 @@ export default function BoekhoudingLayout() {
         </div>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto p-6 bg-slate-50">
           <Outlet />
         </div>
       </div>
