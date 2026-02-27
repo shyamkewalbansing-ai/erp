@@ -307,7 +307,33 @@ export const reportsAPI = {
 export const settingsAPI = {
   getCompany: () => apiFetch('/boekhouding/instellingen'),
   updateCompany: (data) => apiFetch('/boekhouding/instellingen', { method: 'PUT', body: JSON.stringify(data) }),
-  testEmail: () => apiFetch('/boekhouding/instellingen/test-email', { method: 'POST' }),
+  testEmail: async () => {
+    // Special handling for test email with longer timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
+    try {
+      const response = await fetch(`${API_BASE}/boekhouding/instellingen/test-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader(),
+        },
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      const data = await response.json();
+      return { data };
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        return { data: { success: false, error: 'Timeout: De SMTP-server reageert niet. Controleer uw instellingen.' } };
+      }
+      throw error;
+    }
+  },
 };
 
 // PDF Invoice
