@@ -65,6 +65,53 @@ const VoorraadPage = () => {
     }).format(num || 0);
   };
 
+  const API_URL = process.env.REACT_APP_BACKEND_URL;
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Alleen afbeeldingen zijn toegestaan');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Afbeelding mag maximaal 5MB zijn');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_URL}/api/boekhouding/upload-image`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setNewProduct({...newProduct, image_url: data.url});
+        toast.success('Afbeelding geüpload');
+      } else {
+        toast.error('Fout bij uploaden afbeelding');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Fout bij uploaden afbeelding');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
