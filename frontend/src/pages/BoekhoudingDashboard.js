@@ -462,29 +462,33 @@ const BoekhoudingDashboard = () => {
                   </h3>
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <button
-                      onClick={() => setActiveModule('verkoop')}
+                      onClick={() => handleModuleClick({ id: 'verkoop', path: '/app/boekhouding/verkoop' })}
                       className="flex items-center p-3 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors"
+                      data-testid="quick-action-factuur"
                     >
                       <Plus className="w-5 h-5 mr-2" />
                       Nieuwe Factuur
                     </button>
                     <button
-                      onClick={() => setActiveModule('inkoop')}
+                      onClick={() => handleModuleClick({ id: 'crediteuren', path: '/app/boekhouding/crediteuren' })}
                       className="flex items-center p-3 bg-purple-50 text-purple-700 rounded-lg hover:bg-purple-100 transition-colors"
+                      data-testid="quick-action-inkoop"
                     >
                       <ShoppingCart className="w-5 h-5 mr-2" />
                       Inkoop Boeken
                     </button>
                     <button
-                      onClick={() => setActiveModule('reconciliatie')}
+                      onClick={() => handleModuleClick({ id: 'bank', path: '/app/boekhouding/bank' })}
                       className="flex items-center p-3 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors"
+                      data-testid="quick-action-bank"
                     >
                       <RefreshCcw className="w-5 h-5 mr-2" />
                       Bank Import
                     </button>
                     <button
-                      onClick={() => setActiveModule('rapportages')}
+                      onClick={() => handleModuleClick({ id: 'rapportages', path: '/app/boekhouding/rapportages' })}
                       className="flex items-center p-3 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors"
+                      data-testid="quick-action-rapporten"
                     >
                       <FileBarChart className="w-5 h-5 mr-2" />
                       Rapporten
