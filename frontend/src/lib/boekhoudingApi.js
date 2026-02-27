@@ -342,4 +342,6 @@ export default {
   pdf: pdfAPI,
   reminders: remindersAPI,
   documents: documentsAPI,
+  bedrijven: bedrijvenAPI,
+  charts: chartsAPI,
 };
