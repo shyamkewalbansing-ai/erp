@@ -254,6 +254,10 @@ const InstellingenPage = () => {
             <FileText className="w-4 h-4" />
             Factuur
           </TabsTrigger>
+          <TabsTrigger value="multi-tenant" className="gap-2">
+            <Building className="w-4 h-4" />
+            Bedrijven
+          </TabsTrigger>
         </TabsList>
 
         {/* Bedrijfsgegevens Tab */}
