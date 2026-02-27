@@ -140,9 +140,22 @@ const suribetNavItems = [
   { to: '/app/suribet/portaal', icon: Link, label: 'Suribet', addon: 'suribet', isPortalLink: true },
 ];
 
-// Boekhouding Module navigation
+// Boekhouding Module navigation - Complete Finance OS sidebar
 const boekhoudingNavItems = [
   { to: '/app/boekhouding', icon: LayoutDashboard, label: 'Dashboard', addon: 'boekhouding' },
+  { to: '/app/boekhouding/grootboek', icon: BookOpen, label: 'Grootboek', addon: 'boekhouding' },
+  { to: '/app/boekhouding/debiteuren', icon: Users, label: 'Debiteuren', addon: 'boekhouding' },
+  { to: '/app/boekhouding/crediteuren', icon: Building2, label: 'Crediteuren', addon: 'boekhouding' },
+  { to: '/app/boekhouding/bank-kas', icon: Landmark, label: 'Bank/Kas', addon: 'boekhouding' },
+  { to: '/app/boekhouding/btw', icon: Receipt, label: 'BTW', addon: 'boekhouding' },
+  { to: '/app/boekhouding/verkoop', icon: ShoppingCart, label: 'Verkoop', addon: 'boekhouding' },
+  { to: '/app/boekhouding/inkoop', icon: ShoppingBag, label: 'Inkoop', addon: 'boekhouding' },
+  { to: '/app/boekhouding/voorraad', icon: Package, label: 'Voorraad', addon: 'boekhouding' },
+  { to: '/app/boekhouding/vaste-activa', icon: Archive, label: 'Vaste Activa', addon: 'boekhouding' },
+  { to: '/app/boekhouding/projecten', icon: FolderKanban, label: 'Projecten', addon: 'boekhouding' },
+  { to: '/app/boekhouding/rapportages', icon: BarChart3, label: 'Rapportages', addon: 'boekhouding' },
+  { to: '/app/boekhouding/wisselkoersen', icon: RefreshCw, label: 'Wisselkoersen', addon: 'boekhouding' },
+  { to: '/app/boekhouding/instellingen', icon: Settings, label: 'Instellingen', addon: 'boekhouding' },
 ];
 
 export default function Layout() {
