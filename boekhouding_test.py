@@ -267,7 +267,7 @@ class BoekhoudingTester:
         if success:
             print(f"   Found {len(response)} crediteuren")
             for crediteur in response:
-                print(f"   - {crediteur.get('naam')} ({crediteur.get('standaard_valuta')})")
+                print(f"   - {crediteur.get('bedrijfsnaam')} ({crediteur.get('valuta')})")
             return True
         return False
     
