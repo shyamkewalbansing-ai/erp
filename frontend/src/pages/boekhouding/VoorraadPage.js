@@ -265,7 +265,7 @@ const VoorraadPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {products.filter(p => p.type === 'product').map(p => (
-                        <SelectItem key={p.id} value={p.id}>{p.code} - {p.name}</SelectItem>
+                        <SelectItem key={p.id} value={p.id}>{p.code} - {p.naam || p.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
