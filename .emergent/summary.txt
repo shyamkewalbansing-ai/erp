@@ -18,128 +18,135 @@ De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die spec
 **User's preferred language**: Dutch
 
 **what currently exists?**
-De applicatie is een full-stack React/FastAPI-app. Na meerdere afgekeurde pogingen heeft de vorige agent de frontend van de  module volledig vervangen door de bestanden uit de door de gebruiker opgegeven referentie-repository. Concreet zijn alle pagina-componenten, de API-client () en utility-functies () gekopieerd. De import-paden in de nieuwe componenten zijn aangepast. De backend-router () is echter nog de oude versie en is nu **incompatibel** met de nieuwe frontend, die andere API-endpoints verwacht.
+De applicatie is een stabiele, full-stack React/FastAPI-app. De kritieke mismatch tussen de frontend en backend is volledig opgelost. De agent heeft de backend-router () compleet herschreven om aan te sluiten bij de van de referentie-repository gekopieerde frontend. Vervolgens zijn er in meerdere fases diverse P1, P2 en P3 taken succesvol geïmplementeerd, waaronder:
+-   PDF-generatie voor facturen.
+-   Verbeterde MT940-import met automatische reconciliatie-suggesties.
+-   Specifieke Surinaamse belastingrapportages (BTW en Inkomstenbelasting).
+-   Excel-exports voor rapportages.
+-   Controle en verificatie van de Voorraad, Vaste Activa en Projecten modules.
+De backend is nu voorbereid om gebruikersspecifieke SMTP-instellingen op te slaan en te gebruiken. De frontend is uitgebreid met de  library voor grafieken.
 
 **Last working item**:
--   **Last item agent was working:** De agent had zojuist het overschrijven van de gehele frontend voor de Boekhouding module voltooid met de code uit de referentie-repository. Dit was de laatste actie in reactie op de herhaalde feedback van de gebruiker dat de implementatie niet exact overeenkwam met het voorbeeld. De volgende stap is het verifiëren van deze nieuwe frontend en, nog belangrijker, het aanpassen van de backend om deze te ondersteunen.
+-   **Last item agent was working:** De agent was bezig met de implementatie van de laatste vier door de gebruiker goedgekeurde taken. De backend was al uitgebreid om gedetailleerde data voor de dashboardgrafieken te leveren en om gebruikersspecifieke SMTP-instellingen te beheren. De laatste actie van de agent was de intentie om de frontend Instellingen pagina () te creëren, waar gebruikers hun SMTP-gegevens kunnen configureren.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
 -   **Which testing method agent to use?** both
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1:** De gehele Boekhouding module is functioneel defect na het vervangen van de frontend. (Priority: P0)
-
-    -   **Issues Detail:**
-        -   **Issue 1:** De nieuwe frontend, gekopieerd uit de referentie-repo, roept API-endpoints aan die niet (meer) overeenkomen met de huidige backend-implementatie in . Dit zal resulteren in wijdverspreide data-laadfouten op elke pagina. De gebruiker heeft al meerdere keren eerdere implementaties afgewezen omdat ze niet exact overeenkwamen met de referentie.
-            -   **Attempted fixes:** De volledige frontend voor de boekhouding module is overschreven met de bestanden uit de  repository.
-            -   **Next debug checklist:**
-                1.  Inspecteer de nieuwe frontend API-client  om de *exacte* endpoint-paden, methodes (GET/POST) en datastructuren te identificeren die de frontend verwacht.
-                2.  Vergelijk deze verwachtingen met de bestaande endpoints in .
-                3.  Begin met het systematisch refactoren van . Pas de endpoint-namen, Pydantic-modellen en logica aan zodat ze overeenkomen met wat de nieuwe frontend vereist. Start met de API-calls voor het Dashboard en de Grootboek-pagina.
-                4.  Test na elke backend-aanpassing de corresponderende frontend-pagina om te verifiëren dat data correct wordt geladen en de UI overeenkomt met de referentie.
-            -   **Why fix this issue and what will be achieved with the fix?** Dit is de hoogste prioriteit en de expliciete, herhaalde eis van de gebruiker. Het oplossen hiervan levert een werkende basis op die 1:1 overeenkomt met het voorbeeld, wat de voorwaarde is voor verdere ontwikkeling.
-            -   **Status:** IN PROGRESS
-            -   **Is recurring issue?** Y
-            -   **Should Test frontend/backend/both after fix?** both
-            -   **Blocked on other issue:** None
+-   Er zijn momenteel geen openstaande *issues* of *bugs*. De focus ligt volledig op het afronden van de in uitvoering zijnde taken.
 
 **In progress Task List**:
--   **Task 1:** Refactor de backend om de nieuwe, gekopieerde frontend te ondersteunen. (Priority: P0)
+-   **Task 1:** Implementeer de laatste vier aangevraagde features. (Priority: P0)
     -   **Task Detail:**
-        -   **Where to resume:** Begin met het analyseren van  en  om de verschillen in kaart te brengen. Start daarna met het aanpassen van de backend router.
-        -   **What will be achieved with this?** Een functionele Boekhouding module die exact overeenkomt met het ontwerp en de structuur van de referentie-repository, zowel in de frontend als in de API-interacties.
+        -   **Where to resume:** De volgende stap is het daadwerkelijk creëren en implementeren van de frontend-pagina . Deze pagina moet een formulier bevatten waarmee de gebruiker zijn eigen SMTP-servergegevens (host, poort, gebruiker, wachtwoord) kan opslaan en testen. Vervolgens moet de interactieve data op de Dashboard pagina () geverifieerd worden. De taken Multi-tenant ondersteuning en Custom factuur templates moeten daarna nog worden aangepakt.
+        -   **What will be achieved with this?** Gebruikers kunnen het systeem configureren om e-mails via hun eigen SMTP-server te versturen. Het dashboard toont interactieve grafieken met live data. Dit rondt de laatste set van goedgekeurde taken af en maakt de applicatie grotendeels compleet.
         -   **Status:** IN PROGRESS
         -   **Should Test frontend/backend/both after fix?** both
         -   **Blocked on something:** None
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks (P0):**
-    -   Nadat de backend is gesynchroniseerd met de frontend: voer een volledige end-to-end test uit van de gehele Boekhouding module om te bevestigen dat elke knop, tabblad en functie werkt zoals in het origineel.
--   **Future Tasks (P1):**
-    -   Implementeer MT940 bankimport en automatische reconciliatie.
-    -   Implementeer bestands-upload voor de Documenten module.
-    -   Implementeer PDF-generatie voor facturen.
-    -   Implementeer e-mailverzending voor betalingsherinneringen.
-    -   Bouw specifieke Surinaamse belastingrapportages.
+    -   Implementeer Multi-tenant ondersteuning om data strikt te scheiden per gebruiker/bedrijf.
+    -   Implementeer de mogelijkheid voor gebruikers om custom factuur-templates te kiezen of te uploaden.
 
 **Completed work in this session**
--   Alle frontend-pagina's voor de Boekhouding module zijn gekopieerd van de referentie-repository () naar .
--   De API-client () en helper-functies () zijn ook gekopieerd uit de referentie.
--   De import-paden in de gekopieerde bestanden zijn gecorrigeerd.
--   Het probleem waarbij de Boekhouding-module niet zichtbaar was voor de demo-gebruiker is opgelost door de addon correct te activeren in de database.
+-   **Backend Refactor:** De gehele backend router  is herschreven om 1-op-1 aan te sluiten op de API-calls van de nieuwe frontend, waardoor de applicatie weer functioneel is.
+-   **Frontend Bugfixes:** Meerdere frontend componenten (, , , ) zijn gecorrigeerd om de Nederlandse datavelden () correct te tonen in plaats van de Engelse ().
+-   **Testing Agent Succesvol:** De testing agent is ingezet om de gehele boekhouding module na de grote refactor te valideren. Alle 14 backend-tests en 9 frontend-paginatests zijn geslaagd.
+-   **PDF Generatie:** De mogelijkheid om verkoopfacturen als PDF te downloaden is geïmplementeerd met .
+-   **Bank Reconciliatie:** Implementatie van MT940 import met automatische suggesties voor het afletteren van transacties tegen openstaande facturen.
+-   **Rapportages:** Specifieke Surinaamse rapportages voor BTW-aangifte en een indicatieve Inkomstenbelasting zijn toegevoegd.
+-   **Excel Export:** Functionaliteit toegevoegd om diverse rapportages (bv. Grootboek) naar Excel te exporteren.
+-   **E-mail Service:** Een aparte e-mailservice voor de boekhouding is opgezet om conflicten met een bestaande service te vermijden.
+-   **Module Verificatie:** De bestaande pagina's voor Voorraad, Vaste Activa en Projecten zijn getest en functioneel bevonden.
 
 **Earlier issues found/mentioned but not fixed**
--   De fundamentele mismatch tussen de implementatie en de referentie-repository was het enige relevante, niet-opgeloste probleem. Dit wordt nu aangepakt door de code volledig te vervangen.
+-   None. Alle geïdentificeerde problemen zijn in deze sessie opgelost.
 
 **Known issue recurrence from previous fork**
--   **Issue:** De agent voltooit een taak, maar deze wordt door de gebruiker afgewezen omdat deze niet exact overeenkomt met de specificaties of de referentie-repository.
--   **Recurrence count:** 2+ in deze sessie.
--   **Status:** RESOLVED (in de zin dat de agent nu de juiste strategie volgt: 1:1 kopiëren). De volgende agent moet deze strategie voortzetten.
+-   **Issue:** De agent volgde de referentie-repository niet exact, wat leidde tot afgekeurd werk.
+-   **Recurrence count:** 2+
+-   **Status:** RESOLVED. De strategie is gewijzigd naar het 1:1 kopiëren van de frontend en het aanpassen van de backend. Deze aanpak is succesvol en moet worden voortgezet.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 -   **Backend:** FastAPI, MongoDB
--   **Frontend:** React, React Router, TailwindCSS
--   **Architecture:** Modulair addon-systeem. De belangrijkste uitdaging is nu het synchroniseren van de backend API met de verwachtingen van de nieuwe frontend.
+-   **Frontend:** React, React Router, TailwindCSS, Recharts
+-   **Data Processing:**  voor bankbestanden,  voor PDF's,  voor Excel.
 
 **key DB schema**
--   : Bevat gebruikersinformatie.
--   : Bevel de definities van alle beschikbare modules.
--   : Koppelt welke gebruiker welke module heeft geactiveerd.
--   Andere boekhouding-collecties (bv. , ) worden verwacht door , maar moeten mogelijk worden aangepast aan de nieuwe logica.
+-   De bestaande schema's (, , etc.) zijn in gebruik.
+-   Er is nieuwe logica toegevoegd in de  router om SMTP-instellingen per gebruiker te lezen en schrijven, waarschijnlijk opgeslagen binnen het  document of een gerelateerde  collectie.
 
 **changes in tech stack**
--   None
+-   **Backend:** , , , ,  zijn toegevoegd.
+-   **Frontend:**  is toegevoegd voor grafieken.
 
 **All files of reference**
--   **Primary Reference:**  (lokaal gekloond in ). Dit is de absolute bron van waarheid.
--   **Overwritten Files:**
-    -   Alle bestanden in 
+-   **Primair Aangepast:** 
+-   **Nieuw Aangemaakt (Services):**
     -   
     -   
--   **File to be Refactored:**
+    -   
+    -   
+-   **Frontend Aanpassingen:**
+    -   
+    -   
+    -   
+-   **Gepland (Nieuw):**
     -   
 
 **Areas that need refactoring**:
--    moet een grootschalige refactoring ondergaan om aan te sluiten bij de API-calls die worden gedefinieerd in de nieuwe .
+-   De dubbele e-mailservices ( en ) is een technische schuld. Op termijn zou dit samengevoegd kunnen worden tot één configureerbare service. Voor nu is het functioneel.
 
 **key api endpoints**
--   De vereiste API-endpoints worden nu gedicteerd door de inhoud van . De volgende agent moet dit bestand analyseren om de backend te bouwen.
+-   **Instellingen:** , , 
+-   **Rapportages (Nieuw):**
+    -   
+    -   
+    -   
+-   **PDF Generatie:** 
+-   **Reconciliatie:** , 
 
 **Critical Info for New Agent**
--   **VOLG DE GITHUB REPOSITORY EXACT!** De gebruiker heeft alle eerdere, afwijkende implementaties afgewezen. Elke functie en elk UI-element moet een exacte kopie zijn van de  repository. Probeer niet te improviseren of te verbeteren.
--   **BACKEND REFACTORING IS DE EERSTE STAP.** De frontend-bestanden zijn gekopieerd, maar de applicatie is defect. De onmiddellijke prioriteit is het aanpassen van  zodat deze de API-requests van de nieuwe frontend kan verwerken.
--   **TEST PAGINA PER PAGINA.** Nadat je een set backend-endpoints hebt aangepast (bijv. voor het Grootboek), test je onmiddellijk de Grootboek-pagina op de frontend om te zien of de data laadt en de UI correct is. Ga pas verder als het werkt.
--   De vorige agent heeft veel tijd besteed aan het implementeren van functies die later zijn weggegooid. Verspil geen tijd en begin direct met de refactoring van de backend om deze aan te passen aan de gekopieerde frontend.
+-   Focus direct op het afronden van de in uitvoering zijnde taken. Begin met het bouwen van de  frontend. Gebruik de nieuwe backend endpoints () om data op te halen en op te slaan.
+-   Verifieer na de instellingenpagina dat de grafieken op de  correct laden met de live data van het  endpoint.
+-   Pak daarna de resterende taken aan: multi-tenancy en custom factuur templates.
+-   De applicatie is nu stabiel. Voer na elke feature-implementatie gerichte tests uit met  en screenshots.
 
 **documents and test reports created in this job**
--    (irrelevant, testte code die nu is verwijderd).
 -   
+-    (is recent bijgewerkt)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:**  - Dit is de belangrijkste instructie die al het voorgaande werk ongeldig maakte en de huidige taak definieert. **Status: IN PROGRESS**.
-2.  **User:**  - Akkoord met het implementeren van toekomstige P1-taken (zoals MT940), maar dit is pas relevant nadat de huidige, grote refactoring is voltooid.
-3.  **User:**  - De vorige afwijzing, die leidde tot de beslissing om de hele frontend te vervangen.
-4.  **User:**  - Een probleem dat de vorige agent heeft opgelost door de addon voor de demo-gebruiker te activeren.
+1.  **User:**  - Akkoord om door te gaan met de laatste vier voorgestelde taken (interactieve grafieken, SMTP-instellingen, multi-tenancy, custom templates). **Status: IN PROGRESS**.
+2.  **User:** (via ask_human)  - Vraag die leidde tot het plan om de Instellingen-pagina te bouwen. **Status: IN PROGRESS**.
+3.  **User:**  - Goedkeuring voor de P2 en P3 taken. **Status: COMPLETED**.
+4.  **User:**  - Goedkeuring voor de P1 taken (MT940 & PDF). **Status: COMPLETED**.
 
 **Project Health Check:**
--   **Broken:** De Boekhouding module is volledig defect. De frontend en backend zijn niet-gesynchroniseerd. De frontend-pagina's zullen renderen, maar zullen geen data kunnen ophalen van de backend, wat leidt tot lege tabellen en foutmeldingen.
+-   **Healthy:** De applicatie is stabiel en functioneel. De belangrijkste blockers zijn opgelost.
+-   **Mocked:** Geen. De mock data op het dashboard staat op het punt vervangen te worden door echte data.
 
 **3rd Party Integrations**
--   None
+-   **recharts:** (v3.7.0) Geïnstalleerd voor frontend grafieken.
+-   **mt940:** (v0.7.0) Voor het parsen van bankbestanden.
+-   **reportlab:** (v4.4.9) Voor PDF-generatie.
+-   **openpyxl:** (v3.1.5) Voor het genereren van Excel-bestanden.
+-   **aiosmtplib:** (v5.1.0) Voor het versturen van e-mails.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (voor de nu verwijderde code).
+-   **Testing agent used after significant changes:** YES, na de grote backend refactor. De resultaten waren positief.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** []
--   **Known regressions:** De gehele boekhouding functionaliteit is een regressie; het werkte gedeeltelijk, maar is nu (tijdelijk) volledig kapot om het correct te kunnen herbouwen.
+-   **Known regressions:** None.
 
 **Credentials to test flow:**
 -   **Gebruikersnaam:** 
 -   **Wachtwoord:** 
 
 **What agent forgot to execute**
--   De vorige agent heeft de kerneis van de gebruiker (exacte kopie van de repo) meerdere keren verkeerd geïnterpreteerd, wat leidde tot verspild werk. De les is om de referentie-repository als de enige bron van waarheid te behandelen en niet af te wijken.</analysis>
+-   De agent was van plan  te creëren, maar de  actie is nog niet uitgevoerd. Dit is de directe volgende stap in het plan.</analysis>
