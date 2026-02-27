@@ -302,6 +302,10 @@ const InstellingenPage = () => {
             <Mail className="w-4 h-4" />
             E-mail (SMTP)
           </TabsTrigger>
+          <TabsTrigger value="herinneringen" className="gap-2">
+            <Bell className="w-4 h-4" />
+            Herinneringen
+          </TabsTrigger>
           <TabsTrigger value="factuur" className="gap-2">
             <FileText className="w-4 h-4" />
             Factuur
