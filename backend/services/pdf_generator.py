@@ -28,7 +28,7 @@ def format_date(date_str: str) -> str:
     try:
         dt = datetime.fromisoformat(str(date_str).replace('Z', '+00:00'))
         return dt.strftime("%d-%m-%Y")
-    except:
+    except (ValueError, TypeError):
         return str(date_str)
 
 
@@ -56,7 +56,8 @@ def generate_invoice_pdf(
     settings = template_settings or {}
     primary_color = settings.get('factuur_primaire_kleur', '#1e293b')
     secondary_color = settings.get('factuur_secundaire_kleur', '#f1f5f9')
-    template_type = settings.get('factuur_template', 'standaard')
+    # template_type can be used for different PDF layouts in the future
+    _ = settings.get('factuur_template', 'standaard')
     footer_text = settings.get('factuur_voorwaarden', '')
     
     # Setup document
