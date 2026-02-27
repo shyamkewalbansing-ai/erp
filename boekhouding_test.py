@@ -287,15 +287,16 @@ class BoekhoudingTester:
                 {
                     "omschrijving": "Consultancy Services",
                     "aantal": 10,
-                    "prijs_per_stuk": 250,
-                    "btw_tarief": "25",
-                    "korting_percentage": 0
+                    "prijs_per_eenheid": 250,
+                    "btw_code": "V25",
+                    "btw_percentage": 25.0
                 },
                 {
                     "omschrijving": "Software License",
                     "aantal": 1,
-                    "prijs_per_stuk": 1500,
-                    "btw_tarief": "10",
+                    "prijs_per_eenheid": 1500,
+                    "btw_code": "V10",
+                    "btw_percentage": 10.0,
                     "korting_percentage": 5
                 }
             ],
