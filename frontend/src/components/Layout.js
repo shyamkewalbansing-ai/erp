@@ -163,6 +163,9 @@ const boekhoudingNavItems = [
   { to: '/app/boekhouding/projecten', icon: FolderKanban, label: 'Projecten', addon: 'boekhouding' },
   { to: '/app/boekhouding/rapportages', icon: BarChart3, label: 'Rapportages', addon: 'boekhouding' },
   { to: '/app/boekhouding/wisselkoersen', icon: RefreshCw, label: 'Wisselkoersen', addon: 'boekhouding' },
+  { to: '/app/boekhouding/herinneringen', icon: Bell, label: 'Herinneringen', addon: 'boekhouding' },
+  { to: '/app/boekhouding/documenten', icon: FileUp, label: 'Documenten', addon: 'boekhouding' },
+  { to: '/app/boekhouding/audit-trail', icon: History, label: 'Audit Trail', addon: 'boekhouding' },
   { to: '/app/boekhouding/instellingen', icon: Settings, label: 'Instellingen', addon: 'boekhouding' },
 ];
 
