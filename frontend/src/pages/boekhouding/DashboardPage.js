@@ -219,7 +219,7 @@ const DashboardPage = () => {
   const openstaandeFacturen = summary?.openstaande_facturen || 0;
 
   return (
-    <div className="space-y-6 max-w-7xl" data-testid="dashboard-page">
+    <div className="space-y-6" data-testid="dashboard-page">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
