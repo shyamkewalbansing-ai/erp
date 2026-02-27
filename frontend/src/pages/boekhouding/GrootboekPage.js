@@ -108,7 +108,7 @@ const GrootboekPage = () => {
         ...lines[index],
         account_id: value,
         account_code: account?.code || '',
-        account_name: account?.name || ''
+        account_name: account?.naam || ''
       };
     } else {
       lines[index][field] = field === 'debit' || field === 'credit' ? parseFloat(value) || 0 : value;
