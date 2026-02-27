@@ -113,13 +113,13 @@ const WisselkoersenPage = () => {
                   <Label>Datum</Label>
                   <Input
                     type="date"
-                    value={newRate.date}
-                    onChange={(e) => setNewRate({...newRate, date: e.target.value})}
+                    value={newRate.datum}
+                    onChange={(e) => setNewRate({...newRate, datum: e.target.value})}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Valuta</Label>
-                  <Select value={newRate.currency_from} onValueChange={(v) => setNewRate({...newRate, currency_from: v})}>
+                  <Select value={newRate.valuta_van} onValueChange={(v) => setNewRate({...newRate, valuta_van: v})}>
                     <SelectTrigger data-testid="rate-currency-select">
                       <SelectValue />
                     </SelectTrigger>
@@ -131,26 +131,26 @@ const WisselkoersenPage = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Koers (1 {newRate.currency_from} = ? SRD)</Label>
+                <Label>Koers (1 {newRate.valuta_van} = ? SRD)</Label>
                 <Input
                   type="number"
                   step="0.0001"
-                  value={newRate.rate}
-                  onChange={(e) => setNewRate({...newRate, rate: parseFloat(e.target.value) || 0})}
+                  value={newRate.koers}
+                  onChange={(e) => setNewRate({...newRate, koers: parseFloat(e.target.value) || 0})}
                   placeholder="35.50"
                   data-testid="rate-value-input"
                 />
               </div>
               <div className="space-y-2">
                 <Label>Bron</Label>
-                <Select value={newRate.source} onValueChange={(v) => setNewRate({...newRate, source: v})}>
+                <Select value={newRate.bron} onValueChange={(v) => setNewRate({...newRate, bron: v})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="central_bank">Centrale Bank Suriname</SelectItem>
                     <SelectItem value="bank">Commerciële Bank</SelectItem>
-                    <SelectItem value="manual">Handmatig</SelectItem>
+                    <SelectItem value="handmatig">Handmatig</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
