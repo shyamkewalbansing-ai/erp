@@ -122,8 +122,22 @@ const HRMHandleiding = lazy(() => import("./pages/handleiding/HRMHandleidingPage
 const AutoDealerHandleiding = lazy(() => import("./pages/handleiding/AutoDealerHandleidingPage"));
 const BeautySpaHandleiding = lazy(() => import("./pages/handleiding/BeautySpaHandleidingPage"));
 
-// Boekhouding Module
-const BoekhoudingDashboard = lazy(() => import("./pages/BoekhoudingDashboard"));
+// Boekhouding Module - Complete Finance OS
+const BoekhoudingLayout = lazy(() => import("./pages/boekhouding/BoekhoudingLayout"));
+const BoekhoudingDashboard = lazy(() => import("./pages/boekhouding/DashboardPage"));
+const BoekhoudingGrootboek = lazy(() => import("./pages/boekhouding/GrootboekPage"));
+const BoekhoudingDebiteuren = lazy(() => import("./pages/boekhouding/DebiteruenPage"));
+const BoekhoudingCrediteuren = lazy(() => import("./pages/boekhouding/CrediteruenPage"));
+const BoekhoudingBankKas = lazy(() => import("./pages/boekhouding/BankKasPage"));
+const BoekhoudingBTW = lazy(() => import("./pages/boekhouding/BTWPage"));
+const BoekhoudingVerkoop = lazy(() => import("./pages/boekhouding/VerkoopPage"));
+const BoekhoudingInkoop = lazy(() => import("./pages/boekhouding/InkoopPage"));
+const BoekhoudingVoorraad = lazy(() => import("./pages/boekhouding/VoorraadPage"));
+const BoekhoudingVasteActiva = lazy(() => import("./pages/boekhouding/VasteActivaPage"));
+const BoekhoudingProjecten = lazy(() => import("./pages/boekhouding/ProjectenPage"));
+const BoekhoudingRapportages = lazy(() => import("./pages/boekhouding/RapportagesPage"));
+const BoekhoudingWisselkoersen = lazy(() => import("./pages/boekhouding/WisselkoersenPage"));
+const BoekhoudingInstellingen = lazy(() => import("./pages/boekhouding/InstellingenPage"));
 
 // Suribet Module
 const SuribetDashboard = lazy(() => import("./pages/suribet/DashboardPage"));
