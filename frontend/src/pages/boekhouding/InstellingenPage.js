@@ -699,6 +699,178 @@ const InstellingenPage = () => {
             </Card>
           </div>
         </TabsContent>
+
+        {/* Multi-Tenant / Bedrijven Tab */}
+        <TabsContent value="multi-tenant" className="space-y-6">
+          <Card className="border-slate-200">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+                    <Building className="w-5 h-5 text-indigo-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">Bedrijven Beheer</CardTitle>
+                    <CardDescription>
+                      Beheer meerdere bedrijven vanuit één account. Elke bedrijf heeft gescheiden data.
+                    </CardDescription>
+                  </div>
+                </div>
+                <Dialog open={showNewBedrijfDialog} onOpenChange={setShowNewBedrijfDialog}>
+                  <DialogTrigger asChild>
+                    <Button data-testid="add-bedrijf-btn">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nieuw Bedrijf
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Nieuw Bedrijf Toevoegen</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label>Bedrijfsnaam *</Label>
+                        <Input
+                          value={newBedrijf.naam}
+                          onChange={(e) => setNewBedrijf({...newBedrijf, naam: e.target.value})}
+                          placeholder="Bedrijf B.V."
+                          data-testid="new-bedrijf-naam"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Adres</Label>
+                        <Input
+                          value={newBedrijf.adres}
+                          onChange={(e) => setNewBedrijf({...newBedrijf, adres: e.target.value})}
+                          placeholder="Straat en nummer"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Plaats</Label>
+                          <Input
+                            value={newBedrijf.plaats}
+                            onChange={(e) => setNewBedrijf({...newBedrijf, plaats: e.target.value})}
+                            placeholder="Paramaribo"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>BTW-nummer</Label>
+                          <Input
+                            value={newBedrijf.btw_nummer}
+                            onChange={(e) => setNewBedrijf({...newBedrijf, btw_nummer: e.target.value})}
+                            placeholder="BTW123456"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setShowNewBedrijfDialog(false)}>
+                        Annuleren
+                      </Button>
+                      <Button onClick={handleCreateBedrijf} disabled={savingBedrijf}>
+                        {savingBedrijf ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Plus className="w-4 h-4 mr-2" />
+                        )}
+                        Toevoegen
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {bedrijvenLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                </div>
+              ) : bedrijven.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  Nog geen bedrijven aangemaakt
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {bedrijven.map((bedrijf) => (
+                    <div 
+                      key={bedrijf.id}
+                      className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
+                        bedrijf.is_actief 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-slate-200 hover:border-slate-300'
+                      }`}
+                      data-testid={`bedrijf-item-${bedrijf.id}`}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                          bedrijf.is_actief ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          <Building2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-slate-900">{bedrijf.naam}</span>
+                            {bedrijf.is_actief && (
+                              <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full font-medium">
+                                Actief
+                              </span>
+                            )}
+                            {bedrijf.is_default && (
+                              <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full">
+                                Standaard
+                              </span>
+                            )}
+                          </div>
+                          {(bedrijf.adres || bedrijf.plaats) && (
+                            <p className="text-sm text-slate-500">
+                              {[bedrijf.adres, bedrijf.plaats].filter(Boolean).join(', ')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {!bedrijf.is_actief && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleActiveerBedrijf(bedrijf.id)}
+                            data-testid={`activeer-bedrijf-${bedrijf.id}`}
+                          >
+                            <Check className="w-4 h-4 mr-1" />
+                            Activeren
+                          </Button>
+                        )}
+                        {!bedrijf.is_actief && bedrijven.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => handleDeleteBedrijf(bedrijf.id)}
+                            data-testid={`delete-bedrijf-${bedrijf.id}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Info box */}
+              <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h5 className="font-medium text-blue-900 mb-2">Hoe werkt Multi-Tenant?</h5>
+                <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                  <li>Elk bedrijf heeft volledig gescheiden data (facturen, klanten, etc.)</li>
+                  <li>Het actieve bedrijf bepaalt welke data u ziet en bewerkt</li>
+                  <li>U kunt eenvoudig wisselen door een ander bedrijf te activeren</li>
+                  <li>Rapporten en exports zijn altijd voor het actieve bedrijf</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
 
       {/* Bottom Save Button */}
