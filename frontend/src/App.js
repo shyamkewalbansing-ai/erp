@@ -123,7 +123,6 @@ const AutoDealerHandleiding = lazy(() => import("./pages/handleiding/AutoDealerH
 const BeautySpaHandleiding = lazy(() => import("./pages/handleiding/BeautySpaHandleidingPage"));
 
 // Boekhouding Module - Complete Finance OS
-const BoekhoudingLayout = lazy(() => import("./pages/boekhouding/BoekhoudingLayout"));
 const BoekhoudingDashboard = lazy(() => import("./pages/boekhouding/DashboardPage"));
 const BoekhoudingGrootboek = lazy(() => import("./pages/boekhouding/GrootboekPage"));
 const BoekhoudingDebiteuren = lazy(() => import("./pages/boekhouding/DebiteruenPage"));
