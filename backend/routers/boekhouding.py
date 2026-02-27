@@ -1832,46 +1832,6 @@ async def get_betaaladvies(db=Depends(get_db), current_user=Depends(get_current_
     
     return facturen
 
-        sort=[("created_at", -1)]
-    )
-    
-    if last_doc:
-        # Extract number from various field names
-        for field in ["factuurnummer", "ordernummer", "offertenummer", "projectnummer", 
-                      "activum_nummer", "boekstuknummer", "mutatie_nummer", "kasmutatie_nummer"]:
-            if field in last_doc and last_doc[field]:
-                try:
-                    num = int(last_doc[field].split("-")[-1])
-                    return generate_nummer(prefix, num + 1)
-                except:
-                    pass
-    
-    return generate_nummer(prefix, 1)
-
-def calculate_btw(bedrag: float, percentage: float) -> float:
-    """Calculate BTW amount"""
-    return round(bedrag * (percentage / 100), 2)
-
-def calculate_factuur_totalen(regels: List[dict]) -> dict:
-    """Calculate invoice totals"""
-    subtotaal = 0.0
-    btw_totaal = 0.0
-    
-    for regel in regels:
-        regel_subtotaal = regel.get("aantal", 1) * regel.get("prijs_per_eenheid", 0)
-        korting = regel_subtotaal * (regel.get("korting_percentage", 0) / 100)
-        regel_netto = regel_subtotaal - korting
-        btw = calculate_btw(regel_netto, regel.get("btw_percentage", 0))
-        
-        subtotaal += regel_netto
-        btw_totaal += btw
-    
-    return {
-        "subtotaal": round(subtotaal, 2),
-        "btw_totaal": round(btw_totaal, 2),
-        "totaal": round(subtotaal + btw_totaal, 2)
-    }
-
 # ==================== STANDAARD REKENINGSCHEMA SURINAME ====================
 
 STANDAARD_REKENINGSCHEMA = [
