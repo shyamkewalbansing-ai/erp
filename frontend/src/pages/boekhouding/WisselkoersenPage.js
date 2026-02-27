@@ -78,13 +78,13 @@ const WisselkoersenPage = () => {
     }
   };
 
-  const usdRates = rates.filter(r => r.currency_from === 'USD').slice(0, 30).reverse();
-  const eurRates = rates.filter(r => r.currency_from === 'EUR').slice(0, 30).reverse();
+  const usdRates = rates.filter(r => r.valuta_van === 'USD').slice(0, 30).reverse();
+  const eurRates = rates.filter(r => r.valuta_van === 'EUR').slice(0, 30).reverse();
 
   const chartData = usdRates.map((r, i) => ({
-    date: formatDate(r.date, 'short'),
-    USD: r.rate,
-    EUR: eurRates[i]?.rate || null
+    date: formatDate(r.datum, 'short'),
+    USD: r.koers,
+    EUR: eurRates[i]?.koers || null
   }));
 
   return (
