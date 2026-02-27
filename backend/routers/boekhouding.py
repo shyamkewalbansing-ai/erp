@@ -818,16 +818,7 @@ class WinstVerliesRapport(BaseModel):
 
 # ==================== DATABASE DEPENDENCY ====================
 
-async def get_db():
-    """Get database instance from main app"""
-    from server import db
-    return db
-
-async def get_current_user(request):
-    """Get current authenticated user"""
-    from server import get_current_user as main_get_current_user
-    # This will be injected by the main app
-    return await main_get_current_user(request)
+from routers.deps import get_db, get_current_user, security, db, clean_doc
 
 # ==================== HELPER FUNCTIONS ====================
 
