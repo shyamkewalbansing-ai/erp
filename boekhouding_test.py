@@ -250,8 +250,8 @@ class BoekhoudingTester:
         if success and 'id' in response:
             self.created_resources['crediteuren'].append(response['id'])
             print(f"   Created crediteur ID: {response['id']}")
-            print(f"   Name: {response.get('naam')}")
-            print(f"   Currency: {response.get('standaard_valuta')}")
+            print(f"   Name: {response.get('bedrijfsnaam')}")
+            print(f"   Currency: {response.get('valuta')}")
             return True
         return False
     
