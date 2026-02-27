@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { exchangeRatesAPI } from '../../lib/boekhoudingApi';
-import { formatNumber, formatDate } from '../../lib/utils';
+import { formatDate } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, ArrowLeftRight, Loader2, TrendingUp, DollarSign, Euro, RefreshCw, ExternalLink, CheckCircle, Building2 } from 'lucide-react';
+import { Plus, Loader2, DollarSign, Euro, RefreshCw, ExternalLink, CheckCircle, Building2 } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -41,10 +41,17 @@ const WisselkoersenPage = () => {
     bron: 'handmatig'
   });
 
+  // Format number with Dutch locale
+  const formatNumber = (num, decimals = 2) => {
+    return new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(num || 0);
+  };
+
   useEffect(() => {
     fetchData();
     fetchSchedulerStatus();
-    // Auto-sync CME koersen bij openen van de pagina
     handleAutoSync();
   }, []);
 
@@ -73,7 +80,6 @@ const WisselkoersenPage = () => {
   };
 
   const handleAutoSync = async () => {
-    // Controleer of er vandaag al koersen van CME zijn
     const today = new Date().toISOString().split('T')[0];
     try {
       const ratesRes = await exchangeRatesAPI.getAll();
@@ -81,9 +87,8 @@ const WisselkoersenPage = () => {
         r => r.datum === today && r.bron === 'CME.sr'
       );
       
-      // Als er nog geen CME koersen van vandaag zijn, sync automatisch
       if (todaysCMERates.length === 0) {
-        await handleSyncCME(true); // silent mode
+        await handleSyncCME(true);
       }
     } catch (error) {
       console.log('Auto-sync check failed:', error);
@@ -157,13 +162,21 @@ const WisselkoersenPage = () => {
     EUR: eurRates[i]?.koers || null
   }));
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96" data-testid="wisselkoersen-page">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6" data-testid="wisselkoersen-page">
+    <div className="space-y-6 max-w-7xl" data-testid="wisselkoersen-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Wisselkoersen</h1>
-          <p className="text-slate-500 mt-1">Beheer valutakoersen voor SRD</p>
-          {/* Scheduler Status */}
+          <h1 className="text-2xl font-semibold text-slate-900">Wisselkoersen</h1>
+          <p className="text-slate-500 mt-0.5">Beheer valutakoersen voor SRD</p>
           {schedulerStatus?.scheduler?.running && (
             <div className="flex items-center gap-2 mt-2 text-xs text-green-600">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
@@ -172,7 +185,6 @@ const WisselkoersenPage = () => {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          {/* CME.sr Sync Button */}
           <Dialog open={showCMEDialog} onOpenChange={(open) => { setShowCMEDialog(open); if (open) handlePreviewCME(); }}>
             <DialogTrigger asChild>
               <Button variant="outline" className="gap-2" data-testid="sync-cme-btn">
@@ -214,7 +226,6 @@ const WisselkoersenPage = () => {
                     )}
                     
                     <div className="space-y-3">
-                      {/* USD Koersen */}
                       <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-3">
                           <DollarSign className="w-5 h-5 text-green-600" />
@@ -222,21 +233,20 @@ const WisselkoersenPage = () => {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <span className="text-xs text-green-600 uppercase">Inkoop (CME koopt)</span>
-                            <p className="text-xl font-bold text-green-900">
-                              {cmePreview.rates?.USD_SRD?.inkoop?.toFixed(2) || '-'} SRD
+                            <span className="text-xs text-green-600 uppercase">Inkoop</span>
+                            <p className="text-xl font-semibold text-green-900">
+                              {formatNumber(cmePreview.rates?.USD_SRD?.inkoop, 2)} SRD
                             </p>
                           </div>
                           <div>
-                            <span className="text-xs text-green-600 uppercase">Verkoop (CME verkoopt)</span>
-                            <p className="text-xl font-bold text-green-900">
-                              {cmePreview.rates?.USD_SRD?.verkoop?.toFixed(2) || '-'} SRD
+                            <span className="text-xs text-green-600 uppercase">Verkoop</span>
+                            <p className="text-xl font-semibold text-green-900">
+                              {formatNumber(cmePreview.rates?.USD_SRD?.verkoop, 2)} SRD
                             </p>
                           </div>
                         </div>
                       </div>
                       
-                      {/* EUR Koersen */}
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                         <div className="flex items-center gap-2 mb-3">
                           <Euro className="w-5 h-5 text-blue-600" />
@@ -245,14 +255,14 @@ const WisselkoersenPage = () => {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <span className="text-xs text-blue-600 uppercase">Inkoop</span>
-                            <p className="text-xl font-bold text-blue-900">
-                              {cmePreview.rates?.EUR_SRD?.inkoop?.toFixed(2) || '-'} SRD
+                            <p className="text-xl font-semibold text-blue-900">
+                              {formatNumber(cmePreview.rates?.EUR_SRD?.inkoop, 2)} SRD
                             </p>
                           </div>
                           <div>
                             <span className="text-xs text-blue-600 uppercase">Verkoop</span>
-                            <p className="text-xl font-bold text-blue-900">
-                              {cmePreview.rates?.EUR_SRD?.verkoop?.toFixed(2) || '-'} SRD
+                            <p className="text-xl font-semibold text-blue-900">
+                              {formatNumber(cmePreview.rates?.EUR_SRD?.verkoop, 2)} SRD
                             </p>
                           </div>
                         </div>
@@ -285,7 +295,6 @@ const WisselkoersenPage = () => {
             </DialogContent>
           </Dialog>
           
-          {/* Handmatig Toevoegen */}
           <Dialog open={showRateDialog} onOpenChange={setShowRateDialog}>
             <DialogTrigger asChild>
               <Button data-testid="add-rate-btn">
@@ -356,12 +365,12 @@ const WisselkoersenPage = () => {
 
       {/* Current Rates */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">USD / SRD</p>
-                <p className="text-3xl font-bold font-mono text-slate-900">
+                <p className="text-sm text-slate-500 mb-2">USD / SRD</p>
+                <p className="text-2xl font-semibold text-slate-900">
                   {latestRates?.USD_SRD ? formatNumber(latestRates.USD_SRD.koers, 4) : '-'}
                 </p>
                 {latestRates?.USD_SRD && (
@@ -370,18 +379,18 @@ const WisselkoersenPage = () => {
                   </p>
                 )}
               </div>
-              <div className="w-16 h-16 rounded-xl bg-green-100 flex items-center justify-center">
-                <DollarSign className="w-8 h-8 text-green-600" />
+              <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
+                <DollarSign className="w-6 h-6 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">EUR / SRD</p>
-                <p className="text-3xl font-bold font-mono text-slate-900">
+                <p className="text-sm text-slate-500 mb-2">EUR / SRD</p>
+                <p className="text-2xl font-semibold text-slate-900">
                   {latestRates?.EUR_SRD ? formatNumber(latestRates.EUR_SRD.koers, 4) : '-'}
                 </p>
                 {latestRates?.EUR_SRD && (
@@ -390,8 +399,8 @@ const WisselkoersenPage = () => {
                   </p>
                 )}
               </div>
-              <div className="w-16 h-16 rounded-xl bg-blue-100 flex items-center justify-center">
-                <Euro className="w-8 h-8 text-blue-600" />
+              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+                <Euro className="w-6 h-6 text-blue-500" />
               </div>
             </div>
           </CardContent>
@@ -400,23 +409,24 @@ const WisselkoersenPage = () => {
 
       {/* Chart */}
       {chartData.length > 0 && (
-        <Card className="border-slate-200">
+        <Card className="bg-white border border-slate-100 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-lg">Koersontwikkeling</CardTitle>
+            <CardTitle className="text-base font-semibold text-slate-900">Koersontwikkeling</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="h-[300px]">
+            <div className="h-[280px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#94a3b8" />
-                  <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={{ stroke: '#e2e8f0' }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: 'white',
                       border: '1px solid #e2e8f0',
                       borderRadius: '8px',
-                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                      fontSize: '12px'
                     }}
                   />
                   <Line
@@ -424,7 +434,7 @@ const WisselkoersenPage = () => {
                     dataKey="USD"
                     stroke="#22c55e"
                     strokeWidth={2}
-                    dot={{ fill: '#22c55e' }}
+                    dot={{ fill: '#22c55e', strokeWidth: 0, r: 3 }}
                     name="USD/SRD"
                   />
                   <Line
@@ -432,7 +442,7 @@ const WisselkoersenPage = () => {
                     dataKey="EUR"
                     stroke="#3b82f6"
                     strokeWidth={2}
-                    dot={{ fill: '#3b82f6' }}
+                    dot={{ fill: '#3b82f6', strokeWidth: 0, r: 3 }}
                     name="EUR/SRD"
                   />
                 </LineChart>
@@ -443,10 +453,10 @@ const WisselkoersenPage = () => {
       )}
 
       {/* History Table */}
-      <Card className="border-slate-200">
+      <Card className="bg-white border border-slate-100 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Koershistorie</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-base font-semibold text-slate-900">Koershistorie</CardTitle>
+          <CardDescription className="text-xs text-slate-500">
             Koersen worden automatisch gesynchroniseerd bij openen van de boekhouding module
           </CardDescription>
         </CardHeader>
@@ -454,45 +464,45 @@ const WisselkoersenPage = () => {
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50">
-                <TableHead className="w-28">Datum</TableHead>
-                <TableHead className="w-20">Valuta</TableHead>
-                <TableHead className="w-24">Type</TableHead>
-                <TableHead className="text-right w-32">Koers</TableHead>
-                <TableHead>Bron</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
+                <TableHead className="w-20 text-xs font-medium text-slate-500">Valuta</TableHead>
+                <TableHead className="w-24 text-xs font-medium text-slate-500">Type</TableHead>
+                <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Koers</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500">Bron</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rates.map(rate => (
                 <TableRow key={rate.id}>
-                  <TableCell>{formatDate(rate.datum)}</TableCell>
+                  <TableCell className="text-sm text-slate-600">{formatDate(rate.datum)}</TableCell>
                   <TableCell>
-                    <Badge variant="outline" className="font-mono">
+                    <Badge variant="outline" className="text-xs">
                       {rate.valuta_van}/{rate.valuta_naar || 'SRD'}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     {rate.koers_type ? (
-                      <Badge variant="secondary" className={
+                      <Badge className={`text-xs ${
                         rate.koers_type === 'inkoop' ? 'bg-orange-100 text-orange-700' :
                         rate.koers_type === 'verkoop' ? 'bg-purple-100 text-purple-700' :
                         'bg-slate-100 text-slate-700'
-                      }>
+                      }`}>
                         {rate.koers_type === 'inkoop' ? 'Inkoop' : rate.koers_type === 'verkoop' ? 'Verkoop' : rate.koers_type}
                       </Badge>
                     ) : (
                       <span className="text-slate-400">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-mono font-medium">
+                  <TableCell className="text-right text-sm font-medium text-slate-900">
                     {formatNumber(rate.koers, 4)}
                   </TableCell>
                   <TableCell>
-                    <Badge className={
+                    <Badge className={`text-xs ${
                       rate.bron === 'CME.sr' ? 'bg-green-100 text-green-700' :
                       rate.bron === 'central_bank' ? 'bg-blue-100 text-blue-700' :
                       rate.bron === 'bank' ? 'bg-cyan-100 text-cyan-700' :
                       'bg-slate-100 text-slate-700'
-                    }>
+                    }`}>
                       {rate.bron === 'CME.sr' ? 'CME.sr' :
                        rate.bron === 'central_bank' ? 'Centrale Bank' : 
                        rate.bron === 'bank' ? 'Bank' : 'Handmatig'}
