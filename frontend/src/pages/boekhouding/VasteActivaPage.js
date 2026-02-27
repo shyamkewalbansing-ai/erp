@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { fixedAssetsAPI } from '../lib/api';
-import { formatCurrency, formatDate, formatNumber } from '../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Badge } from '../components/ui/badge';
+import { fixedAssetsAPI } from '../../lib/boekhoudingApi';
+import { formatCurrency, formatDate, formatNumber } from '../../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, Landmark, Building, Calculator, Loader2 } from 'lucide-react';
-import { Progress } from '../components/ui/progress';
+import { Progress } from '../../components/ui/progress';
 
 const ActivaPage = () => {
   const [assets, setAssets] = useState([]);

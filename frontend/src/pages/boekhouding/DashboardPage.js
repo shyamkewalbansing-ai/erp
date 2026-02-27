@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardAPI, exchangeRatesAPI } from '../lib/api';
-import { formatCurrency, formatDate, formatNumber } from '../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Skeleton } from '../components/ui/skeleton';
+import { dashboardAPI, exchangeRatesAPI } from '../../lib/boekhoudingApi';
+import { formatCurrency, formatDate, formatNumber } from '../../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Skeleton } from '../../components/ui/skeleton';
 import {
   TrendingUp,
   TrendingDown,

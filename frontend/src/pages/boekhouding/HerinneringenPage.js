@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { remindersAPI } from '../lib/api';
-import { formatCurrency, formatDate } from '../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Button } from '../components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
-import { Badge } from '../components/ui/badge';
+import { remindersAPI } from '../../lib/boekhoudingApi';
+import { formatCurrency, formatDate } from '../../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '../../components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 import { RefreshCw, Mail, Check, FileText, Loader2, AlertTriangle, Clock } from 'lucide-react';
 

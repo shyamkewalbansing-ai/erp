@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { reportsAPI } from '../lib/api';
-import { formatCurrency, formatDate, accountTypes } from '../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { reportsAPI } from '../../lib/boekhoudingApi';
+import { formatCurrency, formatDate, accountTypes } from '../../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { toast } from 'sonner';
 import { FileText, Scale, TrendingUp, Calculator, Download } from 'lucide-react';
-import { Button } from '../components/ui/button';
+import { Button } from '../../components/ui/button';
 import {
   BarChart,
   Bar,
