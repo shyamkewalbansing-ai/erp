@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { projectsAPI, timeEntriesAPI, customersAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, formatDate, formatNumber, getStatusColor, getStatusLabel } from '../../lib/utils';
+import { formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -45,6 +45,25 @@ const ProjectenPage = () => {
     hourly_rate: 0
   });
 
+  // Format number with Dutch locale
+  const formatAmount = (amount, currency = 'SRD') => {
+    const formatted = new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount || 0));
+    
+    if (currency === 'USD') return `$ ${formatted}`;
+    if (currency === 'EUR') return `€ ${formatted}`;
+    return `SRD ${formatted}`;
+  };
+
+  const formatNumber = (num, decimals = 0) => {
+    return new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(num || 0);
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -73,7 +92,6 @@ const ProjectenPage = () => {
     }
     setSaving(true);
     try {
-      // Map frontend fields to backend Dutch field names
       const projectData = {
         code: newProject.code,
         naam: newProject.name,
@@ -126,12 +144,21 @@ const ProjectenPage = () => {
   const activeProjects = projects.filter(p => p.status === 'active').length;
   const totalHours = timeEntries.reduce((sum, e) => sum + e.hours, 0);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96" data-testid="projecten-page">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6" data-testid="projecten-page">
+    <div className="space-y-6 max-w-7xl" data-testid="projecten-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Projecten</h1>
-          <p className="text-slate-500 mt-1">Beheer projecten en urenregistratie</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Projecten</h1>
+          <p className="text-slate-500 mt-0.5">Beheer projecten en urenregistratie</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={showProjectDialog} onOpenChange={setShowProjectDialog}>
@@ -164,7 +191,7 @@ const ProjectenPage = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {customers.map(c => (
-                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                          <SelectItem key={c.id} value={c.id}>{c.naam || c.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -332,41 +359,41 @@ const ProjectenPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Totaal Projecten</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{projects.length}</p>
+                <p className="text-sm text-slate-500 mb-2">Totaal Projecten</p>
+                <p className="text-2xl font-semibold text-slate-900">{projects.length}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <FolderKanban className="w-6 h-6 text-blue-600" />
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                <FolderKanban className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Actieve Projecten</p>
-                <p className="text-2xl font-bold font-mono text-green-600">{activeProjects}</p>
+                <p className="text-sm text-slate-500 mb-2">Actieve Projecten</p>
+                <p className="text-2xl font-semibold text-green-600">{activeProjects}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <FolderKanban className="w-6 h-6 text-green-600" />
+              <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+                <FolderKanban className="w-5 h-5 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Totaal Uren</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{formatNumber(totalHours, 1)}</p>
+                <p className="text-sm text-slate-500 mb-2">Totaal Uren</p>
+                <p className="text-2xl font-semibold text-slate-900">{formatNumber(totalHours, 1)}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-amber-600" />
+              <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-amber-500" />
               </div>
             </div>
           </CardContent>
@@ -386,20 +413,20 @@ const ProjectenPage = () => {
         </TabsList>
 
         <TabsContent value="projects" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">Projecten</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-900">Projecten</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-24">Code</TableHead>
-                    <TableHead>Naam</TableHead>
-                    <TableHead>Klant</TableHead>
-                    <TableHead className="text-right w-28">Budget</TableHead>
-                    <TableHead className="w-32">Uren</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Klant</TableHead>
+                    <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Budget</TableHead>
+                    <TableHead className="w-32 text-xs font-medium text-slate-500">Uren</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -407,11 +434,11 @@ const ProjectenPage = () => {
                     const hoursProgress = project.hours_budget > 0 ? (project.hours_actual / project.hours_budget) * 100 : 0;
                     return (
                       <TableRow key={project.id} data-testid={`project-row-${project.code}`}>
-                        <TableCell className="font-mono">{project.code}</TableCell>
-                        <TableCell className="font-medium">{project.name}</TableCell>
-                        <TableCell className="text-slate-500">{project.customer_name || '-'}</TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatCurrency(project.budget, project.currency)}
+                        <TableCell className="text-sm text-slate-600">{project.code}</TableCell>
+                        <TableCell className="text-sm font-medium text-slate-900">{project.name}</TableCell>
+                        <TableCell className="text-sm text-slate-500">{project.customer_name || '-'}</TableCell>
+                        <TableCell className="text-right text-sm font-medium text-slate-900">
+                          {formatAmount(project.budget, project.currency)}
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
@@ -422,7 +449,7 @@ const ProjectenPage = () => {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={getStatusColor(project.status)}>
+                          <Badge className={`text-xs ${getStatusColor(project.status)}`}>
                             {getStatusLabel(project.status)}
                           </Badge>
                         </TableCell>
@@ -443,19 +470,19 @@ const ProjectenPage = () => {
         </TabsContent>
 
         <TabsContent value="time" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">Urenregistratie</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-900">Urenregistratie</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-28">Datum</TableHead>
-                    <TableHead>Project</TableHead>
-                    <TableHead>Omschrijving</TableHead>
-                    <TableHead className="text-right w-20">Uren</TableHead>
-                    <TableHead className="w-24">Factureerbaar</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Project</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Omschrijving</TableHead>
+                    <TableHead className="text-right w-20 text-xs font-medium text-slate-500">Uren</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Factureerbaar</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -463,12 +490,12 @@ const ProjectenPage = () => {
                     const project = projects.find(p => p.id === entry.project_id);
                     return (
                       <TableRow key={entry.id}>
-                        <TableCell>{formatDate(entry.date)}</TableCell>
-                        <TableCell className="font-medium">{project?.name || '-'}</TableCell>
-                        <TableCell className="text-slate-500">{entry.description}</TableCell>
-                        <TableCell className="text-right font-mono">{formatNumber(entry.hours, 1)}</TableCell>
+                        <TableCell className="text-sm text-slate-600">{formatDate(entry.date)}</TableCell>
+                        <TableCell className="text-sm font-medium text-slate-900">{project?.name || '-'}</TableCell>
+                        <TableCell className="text-sm text-slate-500">{entry.description}</TableCell>
+                        <TableCell className="text-right text-sm font-medium text-slate-900">{formatNumber(entry.hours, 1)}</TableCell>
                         <TableCell>
-                          <Badge className={entry.billable ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}>
+                          <Badge className={`text-xs ${entry.billable ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
                             {entry.billable ? 'Ja' : 'Nee'}
                           </Badge>
                         </TableCell>

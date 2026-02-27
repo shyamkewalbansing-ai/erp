@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { purchaseOrdersAPI, invoicesAPI, suppliersAPI, productsAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
+import { formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -32,6 +32,18 @@ const InkoopPage = () => {
     lines: [{ description: '', quantity: 1, unit_price: 0, btw_percentage: 10, btw_amount: 0, total: 0 }],
     notes: ''
   });
+
+  // Format number with Dutch locale
+  const formatAmount = (amount, currency = 'SRD') => {
+    const formatted = new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount || 0));
+    
+    if (currency === 'USD') return `$ ${formatted}`;
+    if (currency === 'EUR') return `€ ${formatted}`;
+    return `SRD ${formatted}`;
+  };
 
   useEffect(() => {
     fetchData();
@@ -118,12 +130,21 @@ const InkoopPage = () => {
   const btwTotal = newInvoice.lines.reduce((s, l) => s + (l.btw_amount || 0), 0);
   const total = subtotal + btwTotal;
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96" data-testid="inkoop-page">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6" data-testid="inkoop-page">
+    <div className="space-y-6 max-w-7xl" data-testid="inkoop-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Inkoop</h1>
-          <p className="text-slate-500 mt-1">Beheer inkooporders en inkoopfacturen</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Inkoop</h1>
+          <p className="text-slate-500 mt-0.5">Beheer inkooporders en inkoopfacturen</p>
         </div>
         <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
           <DialogTrigger asChild>
@@ -146,7 +167,7 @@ const InkoopPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {suppliers.map(s => (
-                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                        <SelectItem key={s.id} value={s.id}>{s.naam || s.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -182,15 +203,15 @@ const InkoopPage = () => {
                 </div>
               </div>
 
-              <div className="border rounded-lg overflow-hidden">
+              <div className="border border-slate-200 rounded-lg overflow-hidden">
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="w-[300px]">Omschrijving</TableHead>
-                      <TableHead className="w-20">Aantal</TableHead>
-                      <TableHead className="w-28">Prijs</TableHead>
-                      <TableHead className="w-20">BTW %</TableHead>
-                      <TableHead className="w-28 text-right">Totaal</TableHead>
+                      <TableHead className="w-[300px] text-xs font-medium text-slate-500">Omschrijving</TableHead>
+                      <TableHead className="w-20 text-xs font-medium text-slate-500">Aantal</TableHead>
+                      <TableHead className="w-28 text-xs font-medium text-slate-500">Prijs</TableHead>
+                      <TableHead className="w-20 text-xs font-medium text-slate-500">BTW %</TableHead>
+                      <TableHead className="w-28 text-right text-xs font-medium text-slate-500">Totaal</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -219,7 +240,7 @@ const InkoopPage = () => {
                             step="0.01"
                             value={line.unit_price}
                             onChange={(e) => updateLine(idx, 'unit_price', e.target.value)}
-                            className="text-right font-mono"
+                            className="text-right"
                           />
                         </TableCell>
                         <TableCell>
@@ -234,8 +255,8 @@ const InkoopPage = () => {
                             </SelectContent>
                           </Select>
                         </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatCurrency(line.total || 0, newInvoice.currency, false)}
+                        <TableCell className="text-right text-sm font-medium text-slate-900">
+                          {formatAmount(line.total || 0, newInvoice.currency)}
                         </TableCell>
                         <TableCell>
                           <Button
@@ -261,16 +282,16 @@ const InkoopPage = () => {
               <div className="flex justify-end">
                 <div className="w-64 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Subtotaal:</span>
-                    <span className="font-mono">{formatCurrency(subtotal, newInvoice.currency)}</span>
+                    <span className="text-slate-500">Subtotaal:</span>
+                    <span className="font-medium text-slate-900">{formatAmount(subtotal, newInvoice.currency)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>BTW:</span>
-                    <span className="font-mono">{formatCurrency(btwTotal, newInvoice.currency)}</span>
+                    <span className="text-slate-500">BTW:</span>
+                    <span className="font-medium text-slate-900">{formatAmount(btwTotal, newInvoice.currency)}</span>
                   </div>
-                  <div className="flex justify-between font-bold border-t pt-2">
-                    <span>Totaal:</span>
-                    <span className="font-mono">{formatCurrency(total, newInvoice.currency)}</span>
+                  <div className="flex justify-between font-semibold border-t pt-2">
+                    <span className="text-slate-900">Totaal:</span>
+                    <span className="text-slate-900">{formatAmount(total, newInvoice.currency)}</span>
                   </div>
                 </div>
               </div>
@@ -293,29 +314,30 @@ const InkoopPage = () => {
         </Dialog>
       </div>
 
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Inkooporders</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{purchaseOrders.length}</p>
+                <p className="text-sm text-slate-500 mb-2">Inkooporders</p>
+                <p className="text-2xl font-semibold text-slate-900">{purchaseOrders.length}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <ShoppingCart className="w-6 h-6 text-blue-600" />
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                <ShoppingCart className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Inkoopfacturen</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{invoices.length}</p>
+                <p className="text-sm text-slate-500 mb-2">Inkoopfacturen</p>
+                <p className="text-2xl font-semibold text-slate-900">{invoices.length}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                <Receipt className="w-6 h-6 text-amber-600" />
+              <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                <Receipt className="w-5 h-5 text-amber-500" />
               </div>
             </div>
           </CardContent>
@@ -335,34 +357,34 @@ const InkoopPage = () => {
         </TabsList>
 
         <TabsContent value="orders" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">Inkooporders</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-900">Inkooporders</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-28">Nummer</TableHead>
-                    <TableHead className="w-28">Datum</TableHead>
-                    <TableHead>Leverancier</TableHead>
-                    <TableHead className="w-28">Verwacht</TableHead>
-                    <TableHead className="text-right w-32">Bedrag</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Nummer</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Leverancier</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Verwacht</TableHead>
+                    <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Bedrag</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {purchaseOrders.map(order => (
                     <TableRow key={order.id}>
-                      <TableCell className="font-mono">{order.order_number}</TableCell>
-                      <TableCell>{formatDate(order.date)}</TableCell>
-                      <TableCell className="font-medium">{order.supplier_name}</TableCell>
-                      <TableCell>{formatDate(order.expected_date)}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(order.total, order.currency)}
+                      <TableCell className="text-sm text-slate-600">{order.order_number}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatDate(order.date)}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{order.supplier_name}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatDate(order.expected_date)}</TableCell>
+                      <TableCell className="text-right text-sm font-medium text-slate-900">
+                        {formatAmount(order.total, order.currency)}
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(order.status)}>
+                        <Badge className={`text-xs ${getStatusColor(order.status)}`}>
                           {getStatusLabel(order.status)}
                         </Badge>
                       </TableCell>
@@ -382,34 +404,34 @@ const InkoopPage = () => {
         </TabsContent>
 
         <TabsContent value="invoices" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">Inkoopfacturen</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-900">Inkoopfacturen</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-28">Nummer</TableHead>
-                    <TableHead className="w-28">Datum</TableHead>
-                    <TableHead>Leverancier</TableHead>
-                    <TableHead className="w-28">Vervaldatum</TableHead>
-                    <TableHead className="text-right w-32">Bedrag</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Nummer</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Leverancier</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Vervaldatum</TableHead>
+                    <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Bedrag</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {invoices.map(invoice => (
                     <TableRow key={invoice.id} data-testid={`purchase-invoice-row-${invoice.invoice_number}`}>
-                      <TableCell className="font-mono">{invoice.invoice_number}</TableCell>
-                      <TableCell>{formatDate(invoice.date)}</TableCell>
-                      <TableCell className="font-medium">{invoice.supplier_name}</TableCell>
-                      <TableCell>{formatDate(invoice.due_date)}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(invoice.total, invoice.currency)}
+                      <TableCell className="text-sm text-slate-600">{invoice.invoice_number}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatDate(invoice.date)}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{invoice.supplier_name}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatDate(invoice.due_date)}</TableCell>
+                      <TableCell className="text-right text-sm font-medium text-slate-900">
+                        {formatAmount(invoice.total, invoice.currency)}
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(invoice.status)}>
+                        <Badge className={`text-xs ${getStatusColor(invoice.status)}`}>
                           {getStatusLabel(invoice.status)}
                         </Badge>
                       </TableCell>
