@@ -439,15 +439,15 @@ const GrootboekPage = () => {
                 </TableHeader>
                 <TableBody>
                   {journalEntries.map(entry => (
-                    <TableRow key={entry.id} data-testid={`journal-row-${entry.entry_number}`}>
-                      <TableCell className="font-mono">{entry.entry_number}</TableCell>
-                      <TableCell>{new Date(entry.date).toLocaleDateString('nl-NL')}</TableCell>
+                    <TableRow key={entry.id} data-testid={`journal-row-${entry.volgnummer}`}>
+                      <TableCell className="font-mono">{entry.volgnummer}</TableCell>
+                      <TableCell>{new Date(entry.datum).toLocaleDateString('nl-NL')}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{journalTypes[entry.journal_type]}</Badge>
+                        <Badge variant="outline">{journalTypes[entry.dagboek_code] || entry.dagboek_code}</Badge>
                       </TableCell>
-                      <TableCell>{entry.description}</TableCell>
+                      <TableCell>{entry.omschrijving}</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(entry.lines.reduce((s, l) => s + l.debit, 0), entry.currency)}
+                        {formatCurrency(entry.totaal_debet || 0, 'SRD')}
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(entry.status)}>
