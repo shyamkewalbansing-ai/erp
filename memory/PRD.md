@@ -69,6 +69,29 @@ Dutch (Nederlands)
 - Documenten upload/download
 - Herinneringen genereren
 
+### ✅ MT940 Bankimport (P1 - Voltooid)
+- Verbeterde MT940 parser met `mt940` library
+- Fallback naar handmatige parsing voor non-standard formaten
+- Parsing van: datum, bedrag, tegenrekening, tegenpartij, omschrijving
+- Automatische saldo-update van bankrekening
+
+### ✅ PDF Generatie (P1 - Voltooid)
+- Professionele factuur PDFs met `reportlab` library
+- Volledig bedrijfslogo-ondersteuning
+- Gedetailleerde factuurregels met BTW berekening
+- Betalingsgegevens sectie
+- Herinnering brieven in PDF formaat
+
+### ✅ Automatische Reconciliatie (P1 - Voltooid)
+- Intelligente matching van banktransacties met facturen
+- Confidence score gebaseerd op:
+  - Bedrag matching (50 punten voor exact, 40 voor <1%, 20 voor <5%)
+  - Factuurnummer in omschrijving (30 punten)
+  - Klantnaam matching (20 punten)
+- API endpoint: `/api/boekhouding/banktransacties/{id}/reconciliatie-suggesties`
+- API endpoint: `/api/boekhouding/banktransacties/{id}/reconcilieer`
+- Automatische update van factuur status en openstaand bedrag
+
 ### ✅ Frontend - Alle Pagina's Werkend
 1. **Dashboard** (`/app/boekhouding`) - KPI overzicht
 2. **Grootboek** (`/app/boekhouding/grootboek`) - Rekeningschema & Journaalposten
