@@ -106,7 +106,7 @@ const DebiterenPage = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl" data-testid="debiteuren-page">
+    <div className="space-y-6 " data-testid="debiteuren-page">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>

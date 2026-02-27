@@ -159,7 +159,7 @@ const DocumentenPage = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl" data-testid="documenten-page">
+    <div className="space-y-6 " data-testid="documenten-page">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
