@@ -223,14 +223,14 @@ const DashboardPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Dashboard</h1>
-          <p className="text-slate-500 mt-1">Welkom terug! Hier is uw financiële overzicht.</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
+          <p className="text-slate-500 mt-0.5">Welkom terug! Hier is uw financiële overzicht.</p>
         </div>
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-3">
           {rates?.EUR_SRD && (
-            <div className="bg-white border border-slate-200 rounded-lg px-4 py-2">
+            <div className="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-sm">
               <span className="text-slate-500">EUR/SRD:</span>
-              <span className="font-mono font-medium text-slate-900 ml-2">
+              <span className="font-medium text-slate-900 ml-1.5">
                 {formatNumber(rates.EUR_SRD.koers, 2)}
               </span>
             </div>
