@@ -354,7 +354,7 @@ class BoekhoudingTester:
         
         factuur_data = {
             "crediteur_id": crediteur_id,
-            "factuurnummer": "INK-2026-001",
+            "extern_factuurnummer": "INK-2026-001",
             "factuurdatum": "2026-02-27",
             "vervaldatum": "2026-03-13",
             "valuta": "USD",
@@ -362,9 +362,9 @@ class BoekhoudingTester:
                 {
                     "omschrijving": "Office Supplies",
                     "aantal": 5,
-                    "prijs_per_stuk": 30,
-                    "btw_tarief": "25",
-                    "rekening_nummer": "4000"
+                    "prijs_per_eenheid": 30,
+                    "btw_code": "I25",
+                    "btw_percentage": 25.0
                 }
             ],
             "opmerkingen": "Monthly office supplies purchase"
