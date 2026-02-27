@@ -501,50 +501,50 @@ const BoekhoudingDashboard = () => {
                     title="Grootboek"
                     description="Rekeningschema, dagboeken en journaalposten"
                     icon={BookOpen}
-                    onClick={() => setActiveModule('grootboek')}
+                    onClick={() => handleModuleClick({ id: 'grootboek', path: '/app/boekhouding/grootboek' })}
                   />
                   <ModuleCard
                     title="Debiteuren"
                     description="Klantenbeheer en verkoopfacturen"
                     icon={Users}
-                    onClick={() => setActiveModule('debiteuren')}
+                    onClick={() => handleModuleClick({ id: 'debiteuren', path: '/app/boekhouding/debiteuren' })}
                     badge={dashboardData?.aantal_vervallen_facturen > 0 ? `${dashboardData.aantal_vervallen_facturen} vervallen` : null}
                   />
                   <ModuleCard
                     title="Crediteuren"
                     description="Leveranciers en inkoopfacturen"
                     icon={Building2}
-                    onClick={() => setActiveModule('crediteuren')}
+                    onClick={() => handleModuleClick({ id: 'crediteuren', path: '/app/boekhouding/crediteuren' })}
                   />
                   <ModuleCard
                     title="Bank & Kas"
                     description="Bankmutaties en kasboek"
                     icon={Landmark}
-                    onClick={() => setActiveModule('bank')}
+                    onClick={() => handleModuleClick({ id: 'bank', path: '/app/boekhouding/bank' })}
                   />
                   <ModuleCard
-                    title="Voorraad"
-                    description="Artikelen en magazijnbeheer"
-                    icon={Warehouse}
-                    onClick={() => setActiveModule('voorraad')}
+                    title="Wisselkoersen"
+                    description="Centrale Bank koersen en valuta beheer"
+                    icon={DollarSign}
+                    onClick={() => handleModuleClick({ id: 'wisselkoersen', path: '/app/boekhouding/wisselkoersen' })}
                   />
                   <ModuleCard
-                    title="Projecten"
-                    description="Urenregistratie en projectfacturatie"
-                    icon={FolderKanban}
-                    onClick={() => setActiveModule('projecten')}
+                    title="Verkoopfacturen"
+                    description="Facturatie en betalingen"
+                    icon={Receipt}
+                    onClick={() => handleModuleClick({ id: 'verkoop', path: '/app/boekhouding/verkoop' })}
                   />
                   <ModuleCard
                     title="BTW Aangifte"
                     description="BTW codes en aangifterapporten"
                     icon={Calculator}
-                    onClick={() => setActiveModule('btw')}
+                    onClick={() => handleModuleClick({ id: 'btw', path: '/app/boekhouding/btw' })}
                   />
                   <ModuleCard
                     title="Rapportages"
                     description="Balans, W&V en meer"
                     icon={FileBarChart}
-                    onClick={() => setActiveModule('rapportages')}
+                    onClick={() => handleModuleClick({ id: 'rapportages', path: '/app/boekhouding/rapportages' })}
                   />
                 </div>
               </div>
