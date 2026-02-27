@@ -305,79 +305,214 @@ const BoekhoudingDashboard = () => {
     .join(' | ') || formatCurrency(0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center">
-              <BookOpen className="w-8 h-8 text-blue-600" />
-              <h1 className="text-xl font-bold text-gray-900 ml-3">Boekhouding</h1>
+    <div className="space-y-6">
+      {/* Render sub-module pages based on URL */}
+      {activeModule === 'debiteuren' && (
+        <Suspense fallback={<PageLoader />}>
+          <DebiteurenPage />
+        </Suspense>
+      )}
+      {activeModule === 'crediteuren' && (
+        <Suspense fallback={<PageLoader />}>
+          <CrediteurenPage />
+        </Suspense>
+      )}
+      {activeModule === 'verkoop' && (
+        <Suspense fallback={<PageLoader />}>
+          <VerkoopfacturenPage />
+        </Suspense>
+      )}
+      {activeModule === 'bank' && (
+        <Suspense fallback={<PageLoader />}>
+          <BankPage />
+        </Suspense>
+      )}
+      {activeModule === 'grootboek' && (
+        <Suspense fallback={<PageLoader />}>
+          <GrootboekPage />
+        </Suspense>
+      )}
+      {activeModule === 'btw' && (
+        <Suspense fallback={<PageLoader />}>
+          <BTWPage />
+        </Suspense>
+      )}
+      {activeModule === 'rapportages' && (
+        <Suspense fallback={<PageLoader />}>
+          <RapportagesPage />
+        </Suspense>
+      )}
+      {activeModule === 'wisselkoersen' && (
+        <Suspense fallback={<PageLoader />}>
+          <WisselkoersenPage />
+        </Suspense>
+      )}
+      
+      {/* Dashboard Content - Default View */}
+      {activeModule === 'dashboard' && (
+        <div className="space-y-6">
+          {/* Page Header with EUR/SRD Rate */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
+              <p className="text-gray-500 mt-1">Overzicht van uw financiele situatie</p>
             </div>
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
-                <Search className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
-                <HelpCircle className="w-5 h-5" />
-              </button>
-              <button className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg">
-                <Settings className="w-5 h-5" />
+              <div className="bg-white border border-gray-200 rounded-lg px-4 py-2">
+                <span className="text-sm text-gray-500">EUR/SRD: </span>
+                <span className="font-semibold text-gray-900">{dashboardData?.wisselkoers_eur_srd || '44,50'}</span>
+              </div>
+              <button
+                onClick={loadDashboard}
+                className="flex items-center px-4 py-2 text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
+              >
+                <RefreshCcw className="w-4 h-4 mr-2" />
+                Vernieuwen
               </button>
             </div>
           </div>
-        </div>
-      </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-64px)] hidden lg:block">
-          <nav className="p-4 space-y-1">
-            {modules.map((module) => (
-              <button
-                key={module.id}
-                onClick={() => handleModuleClick(module)}
-                data-testid={`nav-${module.id}`}
-                className={`w-full flex items-center px-3 py-2.5 rounded-lg text-left transition-colors ${
-                  activeModule === module.id
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
-                <module.icon className="w-5 h-5 mr-3" />
-                {module.name}
-              </button>
-            ))}
-          </nav>
-        </aside>
+          {/* KPI Cards Row 1 - Main Financial Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPICard
+              title="Omzet"
+              value={formatCurrency(dashboardData?.omzet_periode || 0)}
+              subtitle="+12% Deze periode"
+              icon={TrendingUp}
+              color="green"
+            />
+            <KPICard
+              title="Kosten"
+              value={formatCurrency(dashboardData?.kosten_periode || 0)}
+              subtitle="Deze periode"
+              icon={TrendingDown}
+              color="red"
+            />
+            <KPICard
+              title="Winst"
+              value={formatCurrency((dashboardData?.omzet_periode || 0) - (dashboardData?.kosten_periode || 0))}
+              subtitle={((dashboardData?.omzet_periode || 0) - (dashboardData?.kosten_periode || 0)) < 0 ? "Negatief Netto resultaat" : "Positief Netto resultaat"}
+              icon={(dashboardData?.omzet_periode || 0) - (dashboardData?.kosten_periode || 0) >= 0 ? TrendingUp : TrendingDown}
+              color={(dashboardData?.omzet_periode || 0) - (dashboardData?.kosten_periode || 0) >= 0 ? "green" : "red"}
+            />
+            <KPICard
+              title="Openstaande Facturen"
+              value={dashboardData?.aantal_openstaande_facturen || 0}
+              subtitle={`${dashboardData?.aantal_vervallen_facturen || 0} vervallen`}
+              icon={Receipt}
+              color="blue"
+            />
+          </div>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6">
-          {activeModule === 'dashboard' && (
-            <div className="max-w-7xl mx-auto space-y-6">
-              {/* Page Header */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Dashboard</h2>
-                  <p className="text-gray-500 mt-1">Overzicht van uw financiele situatie</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={loadDashboard}
-                    className="flex items-center px-4 py-2 text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50"
-                  >
-                    <RefreshCcw className="w-4 h-4 mr-2" />
-                    Vernieuwen
-                  </button>
-                </div>
+          {/* KPI Cards Row 2 - Debiteuren/Crediteuren/BTW */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <KPICard
+              title="Debiteuren"
+              value={totaalDebiteuren}
+              subtitle={`${Object.keys(dashboardData?.openstaande_debiteuren || {}).length || 0} klanten`}
+              icon={Users}
+              color="blue"
+            />
+            <KPICard
+              title="Crediteuren"
+              value={totaalCrediteuren}
+              subtitle={`${Object.keys(dashboardData?.openstaande_crediteuren || {}).length || 0} leveranciers`}
+              icon={Building2}
+              color="purple"
+            />
+            <KPICard
+              title="BTW te betalen"
+              value={formatCurrency(dashboardData?.btw_positie?.af_te_dragen || 0)}
+              subtitle="Huidige periode"
+              icon={Calculator}
+              color="yellow"
+            />
+            <KPICard
+              title="BTW te vorderen"
+              value={formatCurrency(dashboardData?.btw_positie?.voorbelasting || 0)}
+              subtitle="Huidige periode"
+              icon={Calculator}
+              color="green"
+            />
+          </div>
+
+          {/* KPI Cards Row 3 - Bank Balances */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <KPICard
+              title="Bank SRD"
+              value={formatCurrency(dashboardData?.bank_saldi?.SRD || 0, 'SRD')}
+              icon={Landmark}
+              color="blue"
+            />
+            <KPICard
+              title="Bank USD"
+              value={formatCurrency(dashboardData?.bank_saldi?.USD || 0, 'USD')}
+              icon={Landmark}
+              color="green"
+            />
+            <KPICard
+              title="Bank EUR"
+              value={formatCurrency(dashboardData?.bank_saldi?.EUR || 0, 'EUR')}
+              icon={Landmark}
+              color="purple"
+            />
+          </div>
+
+          {/* Charts Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Cashflow Chart Placeholder */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="font-semibold text-gray-900 flex items-center">
+                <BarChart3 className="w-5 h-5 mr-2 text-blue-500" />
+                Cashflow Overzicht
+              </h3>
+              <div className="mt-4 h-48 flex items-center justify-center bg-gray-50 rounded-lg">
+                <span className="text-gray-400">Grafiek wordt geladen...</span>
               </div>
+            </div>
 
-              {/* KPI Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <KPICard
-                  title="Openstaande Debiteuren"
-                  value={totaalDebiteuren}
-                  subtitle={`${dashboardData?.aantal_openstaande_facturen || 0} facturen`}
+            {/* Debtor Aging Chart Placeholder */}
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="font-semibold text-gray-900 flex items-center">
+                <PieChart className="w-5 h-5 mr-2 text-purple-500" />
+                Ouderdomsanalyse Debiteuren
+              </h3>
+              <div className="mt-4 h-48 flex items-center justify-center bg-gray-50 rounded-lg">
+                <span className="text-gray-400">Grafiek wordt geladen...</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action List */}
+          {actielijst && actielijst.length > 0 && (
+            <div className="bg-white rounded-xl border border-gray-200 p-6">
+              <h3 className="font-semibold text-gray-900 flex items-center mb-4">
+                <AlertCircle className="w-5 h-5 mr-2 text-yellow-500" />
+                Actielijst
+              </h3>
+              <div className="space-y-3">
+                {actielijst.slice(0, 5).map((item, index) => (
+                  <ActionItem
+                    key={index}
+                    {...item}
+                    onClick={() => {
+                      if (item.module) {
+                        const mod = modules.find(m => m.id === item.module);
+                        if (mod) handleModuleClick(mod);
+                      }
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default BoekhoudingDashboard;
                   icon={Users}
                   color="blue"
                 />
