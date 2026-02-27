@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, Users, Building2, Landmark, RefreshCcw,
   Package, Warehouse, DollarSign, Receipt, ShoppingCart, Truck,
@@ -7,8 +7,24 @@ import {
   Settings, TrendingUp, TrendingDown, AlertCircle, CheckCircle,
   ChevronRight, Plus, Search, Filter, Download, Upload, ArrowUpRight,
   ArrowDownRight, Clock, Calendar, CreditCard, Wallet, PiggyBank,
-  BarChart3, PieChart, Activity
+  BarChart3, PieChart, Activity, ArrowLeft
 } from 'lucide-react';
+
+// Lazy load sub-pages
+const DebiteurenPage = lazy(() => import('./boekhouding/DebiteurenPage'));
+const CrediteurenPage = lazy(() => import('./boekhouding/CrediteurenPage'));
+const VerkoopfacturenPage = lazy(() => import('./boekhouding/VerkoopfacturenPage'));
+const BankPage = lazy(() => import('./boekhouding/BankPage'));
+const GrootboekPage = lazy(() => import('./boekhouding/GrootboekPage'));
+const BTWPage = lazy(() => import('./boekhouding/BTWPage'));
+const RapportagesPage = lazy(() => import('./boekhouding/RapportagesPage'));
+const WisselkoersenPage = lazy(() => import('./boekhouding/WisselkoersenPage'));
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center py-12">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  </div>
+);
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
