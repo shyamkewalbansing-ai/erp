@@ -248,7 +248,7 @@ const VerkoopPage = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="w-[300px] text-xs font-medium text-slate-500">Omschrijving</TableHead>
+                      <TableHead className="w-[300px] text-xs font-medium text-slate-500">Artikel</TableHead>
                       <TableHead className="w-20 text-xs font-medium text-slate-500">Aantal</TableHead>
                       <TableHead className="w-28 text-xs font-medium text-slate-500">Prijs</TableHead>
                       <TableHead className="w-20 text-xs font-medium text-slate-500">BTW %</TableHead>
@@ -260,12 +260,30 @@ const VerkoopPage = () => {
                     {newInvoice.lines.map((line, idx) => (
                       <TableRow key={idx}>
                         <TableCell>
-                          <Input
-                            value={line.description}
-                            onChange={(e) => updateLine(idx, 'description', e.target.value)}
-                            placeholder="Omschrijving"
-                            data-testid={`invoice-line-desc-${idx}`}
-                          />
+                          <div className="flex flex-col gap-1">
+                            <Select 
+                              value={line.product_id || ''} 
+                              onValueChange={(v) => selectProduct(idx, v)}
+                            >
+                              <SelectTrigger data-testid={`invoice-line-product-${idx}`}>
+                                <SelectValue placeholder="Selecteer artikel..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {products.map(product => (
+                                  <SelectItem key={product.id} value={product.id}>
+                                    {product.naam || product.name} - {formatAmount(product.verkoopprijs || product.sales_price || 0)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <Input
+                              value={line.description}
+                              onChange={(e) => updateLine(idx, 'description', e.target.value)}
+                              placeholder="Of typ handmatig..."
+                              className="text-sm"
+                              data-testid={`invoice-line-desc-${idx}`}
+                            />
+                          </div>
                         </TableCell>
                         <TableCell>
                           <Input
