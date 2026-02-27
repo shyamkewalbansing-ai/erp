@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { btwAPI, reportsAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, formatPercentage } from '../../lib/utils';
+import { formatPercentage } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -26,6 +26,18 @@ const BTWPage = () => {
     percentage: 0,
     type: 'both'
   });
+
+  // Format number with Dutch locale
+  const formatAmount = (amount, currency = 'SRD') => {
+    const formatted = new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount || 0));
+    
+    if (currency === 'USD') return `$ ${formatted}`;
+    if (currency === 'EUR') return `€ ${formatted}`;
+    return `SRD ${formatted}`;
+  };
 
   useEffect(() => {
     fetchData();
@@ -53,7 +65,6 @@ const BTWPage = () => {
     }
     setSaving(true);
     try {
-      // Map frontend fields to backend Dutch field names
       const btwData = {
         code: newCode.code,
         naam: newCode.name,
@@ -85,12 +96,21 @@ const BTWPage = () => {
 
   const btwBalance = (btwReport?.btw_sales || 0) - (btwReport?.btw_purchases || 0);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96" data-testid="btw-page">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6" data-testid="btw-page">
+    <div className="space-y-6 max-w-7xl" data-testid="btw-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">BTW</h1>
-          <p className="text-slate-500 mt-1">Beheer BTW-tarieven en bekijk aangifteoverzicht</p>
+          <h1 className="text-2xl font-semibold text-slate-900">BTW</h1>
+          <p className="text-slate-500 mt-0.5">Beheer BTW-tarieven en bekijk aangifteoverzicht</p>
         </div>
         <Dialog open={showCodeDialog} onOpenChange={setShowCodeDialog}>
           <DialogTrigger asChild>
@@ -158,49 +178,49 @@ const BTWPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">BTW Verkoop</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">
-                  {formatCurrency(btwReport?.btw_sales || 0)}
+                <p className="text-sm text-slate-500 mb-2">BTW Verkoop</p>
+                <p className="text-2xl font-semibold text-slate-900">
+                  {formatAmount(btwReport?.btw_sales || 0)}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+              <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+                <TrendingUp className="w-5 h-5 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">BTW Inkoop</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">
-                  {formatCurrency(btwReport?.btw_purchases || 0)}
+                <p className="text-sm text-slate-500 mb-2">BTW Inkoop</p>
+                <p className="text-2xl font-semibold text-slate-900">
+                  {formatAmount(btwReport?.btw_purchases || 0)}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <TrendingDown className="w-6 h-6 text-blue-600" />
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                <TrendingDown className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className={`border-slate-200 ${btwBalance > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className={`bg-white border border-slate-100 shadow-sm ${btwBalance > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 mb-2">
                   {btwBalance > 0 ? 'BTW Te Betalen' : 'BTW Te Vorderen'}
                 </p>
-                <p className={`text-2xl font-bold font-mono ${btwBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                  {formatCurrency(Math.abs(btwBalance))}
+                <p className={`text-2xl font-semibold ${btwBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  {formatAmount(Math.abs(btwBalance))}
                 </p>
               </div>
-              <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${btwBalance > 0 ? 'bg-red-100' : 'bg-green-100'}`}>
-                <Calculator className={`w-6 h-6 ${btwBalance > 0 ? 'text-red-600' : 'text-green-600'}`} />
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${btwBalance > 0 ? 'bg-red-100' : 'bg-green-100'}`}>
+                <Calculator className={`w-5 h-5 ${btwBalance > 0 ? 'text-red-500' : 'text-green-500'}`} />
               </div>
             </div>
           </CardContent>
@@ -220,35 +240,35 @@ const BTWPage = () => {
         </TabsList>
 
         <TabsContent value="codes" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">BTW-codes</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-900">BTW-codes</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-24">Code</TableHead>
-                    <TableHead>Naam</TableHead>
-                    <TableHead className="w-24">Percentage</TableHead>
-                    <TableHead className="w-32">Type</TableHead>
-                    <TableHead className="w-20">Status</TableHead>
-                    <TableHead className="w-24">Acties</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Percentage</TableHead>
+                    <TableHead className="w-32 text-xs font-medium text-slate-500">Type</TableHead>
+                    <TableHead className="w-20 text-xs font-medium text-slate-500">Status</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Acties</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {btwCodes.map(code => (
                     <TableRow key={code.id} data-testid={`btw-code-row-${code.code}`}>
-                      <TableCell className="font-mono font-medium">{code.code}</TableCell>
-                      <TableCell>{code.name}</TableCell>
-                      <TableCell className="font-mono">{formatPercentage(code.percentage)}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{code.code}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{code.name}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{formatPercentage(code.percentage)}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">
+                        <Badge variant="outline" className="text-xs">
                           {code.type === 'both' ? 'Beide' : code.type === 'sales' ? 'Verkoop' : 'Inkoop'}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={code.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}>
+                        <Badge className={`text-xs ${code.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
                           {code.active ? 'Actief' : 'Inactief'}
                         </Badge>
                       </TableCell>
@@ -256,7 +276,7 @@ const BTWPage = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 text-xs"
                           onClick={() => handleDeleteCode(code.id)}
                         >
                           Verwijder
@@ -278,42 +298,42 @@ const BTWPage = () => {
         </TabsContent>
 
         <TabsContent value="declaration" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">BTW Aangifte Overzicht</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-900">BTW Aangifte Overzicht</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-white border border-slate-200 rounded-xl p-8 max-w-2xl">
-                <h3 className="font-heading font-bold text-xl mb-6">BTW Aangifte</h3>
+              <div className="bg-white border border-slate-200 rounded-xl p-6 max-w-2xl">
+                <h3 className="font-semibold text-lg text-slate-900 mb-6">BTW Aangifte</h3>
                 
                 <div className="space-y-4">
                   <div className="flex justify-between py-3 border-b border-slate-100">
-                    <span className="text-slate-600">1a. Leveringen/diensten belast met hoog tarief</span>
-                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_sales || 0)}</span>
+                    <span className="text-sm text-slate-600">1a. Leveringen/diensten belast met hoog tarief</span>
+                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_sales || 0)}</span>
                   </div>
                   
                   <div className="flex justify-between py-3 border-b border-slate-100">
-                    <span className="text-slate-600">5a. Verschuldigde BTW (rubriek 1 t/m 4)</span>
-                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_sales || 0)}</span>
+                    <span className="text-sm text-slate-600">5a. Verschuldigde BTW (rubriek 1 t/m 4)</span>
+                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_sales || 0)}</span>
                   </div>
                   
                   <div className="flex justify-between py-3 border-b border-slate-100">
-                    <span className="text-slate-600">5b. Voorbelasting</span>
-                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_purchases || 0)}</span>
+                    <span className="text-sm text-slate-600">5b. Voorbelasting</span>
+                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_purchases || 0)}</span>
                   </div>
                   
                   <div className={`flex justify-between py-4 rounded-lg px-4 mt-4 ${btwBalance > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
-                    <span className="font-medium">
+                    <span className="text-sm font-medium text-slate-700">
                       {btwBalance > 0 ? '5c. Te betalen' : '5d. Te ontvangen'}
                     </span>
-                    <span className={`font-mono font-bold ${btwBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {formatCurrency(Math.abs(btwBalance))}
+                    <span className={`text-sm font-semibold ${btwBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {formatAmount(Math.abs(btwBalance))}
                     </span>
                   </div>
                 </div>
                 
-                <div className="mt-8 pt-6 border-t border-slate-200">
-                  <p className="text-sm text-slate-500">
+                <div className="mt-6 pt-4 border-t border-slate-200">
+                  <p className="text-xs text-slate-500">
                     Dit is een indicatief overzicht. Raadpleeg uw accountant voor de officiële BTW-aangifte.
                   </p>
                 </div>
