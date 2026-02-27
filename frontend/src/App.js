@@ -747,10 +747,7 @@ function MainAppRoutes() {
             <SubscriptionRoute requiredAddon="suribet"><SuribetPortaalLink /></SubscriptionRoute>
           } />
           
-          {/* Boekhouding Module Routes */}
-          <Route path="boekhouding" element={
-            <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingDashboard /></SubscriptionRoute>
-          } />
+          {/* Boekhouding Module Routes - Single route with wildcard */}
           <Route path="boekhouding/*" element={
             <SubscriptionRoute requiredAddon="boekhouding"><BoekhoudingDashboard /></SubscriptionRoute>
           } />
