@@ -144,28 +144,61 @@ const BankKasPage = () => {
   };
 
   const handleImport = async () => {
-    if (!importData.trim() || !selectedBankId) {
-      toast.error('Voer importdata in');
+    if (!selectedBankId) {
+      toast.error('Selecteer eerst een bankrekening');
       return;
     }
+    
     setSaving(true);
     try {
-      // Parse CSV data
-      const lines = importData.trim().split('\n');
-      const mutaties = lines.slice(1).map(line => {
-        const [datum, omschrijving, bedrag] = line.split(';');
-        return { datum, omschrijving, bedrag: parseFloat(bedrag) || 0 };
-      });
-      await bankAccountsAPI.importMutaties(selectedBankId, mutaties);
-      toast.success(`${mutaties.length} transacties geïmporteerd`);
+      let result;
+      
+      if (importFile) {
+        // File upload (MT940 or CSV file)
+        if (importFormat === 'mt940') {
+          result = await bankAccountsAPI.importMT940(selectedBankId, importFile);
+        } else {
+          result = await bankAccountsAPI.importCSV(selectedBankId, importFile);
+        }
+        toast.success(`${result.imported} transacties geïmporteerd${result.skipped ? `, ${result.skipped} overgeslagen (duplicaten)` : ''}`);
+      } else if (importData.trim()) {
+        // Manual CSV paste
+        const lines = importData.trim().split('\n');
+        const mutaties = lines.slice(1).map(line => {
+          const [datum, omschrijving, bedrag] = line.split(';');
+          return { datum, omschrijving, bedrag: parseFloat(bedrag) || 0 };
+        });
+        await bankAccountsAPI.importMutaties(selectedBankId, mutaties);
+        toast.success(`${mutaties.length} transacties geïmporteerd`);
+      } else {
+        toast.error('Selecteer een bestand of plak CSV data');
+        return;
+      }
+      
       setShowImportDialog(false);
       setImportData('');
+      setImportFile(null);
       fetchTransactions(selectedBankId);
+      fetchReconciliatie(selectedBankId);
       fetchData();
     } catch (error) {
       toast.error(error.message || 'Fout bij importeren');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImportFile(file);
+      // Auto-detect format from extension
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext === 'sta' || ext === 'mt940' || ext === 'mt9') {
+        setImportFormat('mt940');
+      } else {
+        setImportFormat('csv');
+      }
     }
   };
 
