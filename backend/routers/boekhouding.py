@@ -316,7 +316,7 @@ class HerinneringCreate(BaseModel):
 # ==================== INITIALIZATION ====================
 
 @router.post("/init/volledig")
-async def initialiseer_boekhouding(authorization: str = None):
+async def initialiseer_boekhouding(authorization: str = Header(None)):
     """Initialiseer complete boekhouding met standaard Surinaams rekeningschema"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -485,7 +485,7 @@ async def initialiseer_boekhouding(authorization: str = None):
 # ==================== DASHBOARD ====================
 
 @router.get("/dashboard")
-async def get_dashboard(authorization: str = None):
+async def get_dashboard(authorization: str = Header(None)):
     """Haal dashboard KPI's op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -621,7 +621,7 @@ async def get_dashboard(authorization: str = None):
     }
 
 @router.get("/dashboard/actielijst")
-async def get_actielijst(authorization: str = None):
+async def get_actielijst(authorization: str = Header(None)):
     """Haal actielijst op met openstaande taken"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -689,7 +689,7 @@ async def get_actielijst(authorization: str = None):
 # ==================== GROOTBOEK ====================
 
 @router.get("/rekeningen")
-async def get_rekeningen(type: str = None, authorization: str = None):
+async def get_rekeningen(type: str = None, authorization: str = Header(None)):
     """Haal alle grootboekrekeningen op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -702,7 +702,7 @@ async def get_rekeningen(type: str = None, authorization: str = None):
     return [clean_doc(r) for r in rekeningen]
 
 @router.post("/rekeningen")
-async def create_rekening(data: RekeningCreate, authorization: str = None):
+async def create_rekening(data: RekeningCreate, authorization: str = Header(None)):
     """Maak nieuwe grootboekrekening"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -723,7 +723,7 @@ async def create_rekening(data: RekeningCreate, authorization: str = None):
     return clean_doc(rekening)
 
 @router.get("/dagboeken")
-async def get_dagboeken(authorization: str = None):
+async def get_dagboeken(authorization: str = Header(None)):
     """Haal alle dagboeken op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -732,7 +732,7 @@ async def get_dagboeken(authorization: str = None):
     return [clean_doc(d) for d in dagboeken]
 
 @router.post("/journaalposten")
-async def create_journaalpost(data: JournaalpostCreate, authorization: str = None):
+async def create_journaalpost(data: JournaalpostCreate, authorization: str = Header(None)):
     """Maak nieuwe journaalpost"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -766,7 +766,7 @@ async def create_journaalpost(data: JournaalpostCreate, authorization: str = Non
     return clean_doc(journaalpost)
 
 @router.get("/journaalposten")
-async def get_journaalposten(dagboek: str = None, van: str = None, tot: str = None, authorization: str = None):
+async def get_journaalposten(dagboek: str = None, van: str = None, tot: str = None, authorization: str = Header(None)):
     """Haal journaalposten op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -788,7 +788,7 @@ async def get_journaalposten(dagboek: str = None, van: str = None, tot: str = No
 # ==================== DEBITEUREN ====================
 
 @router.get("/debiteuren")
-async def get_debiteuren(authorization: str = None):
+async def get_debiteuren(authorization: str = Header(None)):
     """Haal alle debiteuren op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -797,7 +797,7 @@ async def get_debiteuren(authorization: str = None):
     return [clean_doc(d) for d in debiteuren]
 
 @router.post("/debiteuren")
-async def create_debiteur(data: DebiteurCreate, authorization: str = None):
+async def create_debiteur(data: DebiteurCreate, authorization: str = Header(None)):
     """Maak nieuwe debiteur"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -819,7 +819,7 @@ async def create_debiteur(data: DebiteurCreate, authorization: str = None):
     return clean_doc(debiteur)
 
 @router.get("/debiteuren/{debiteur_id}")
-async def get_debiteur(debiteur_id: str, authorization: str = None):
+async def get_debiteur(debiteur_id: str, authorization: str = Header(None)):
     """Haal specifieke debiteur op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -830,7 +830,7 @@ async def get_debiteur(debiteur_id: str, authorization: str = None):
     return clean_doc(debiteur)
 
 @router.put("/debiteuren/{debiteur_id}")
-async def update_debiteur(debiteur_id: str, data: DebiteurCreate, authorization: str = None):
+async def update_debiteur(debiteur_id: str, data: DebiteurCreate, authorization: str = Header(None)):
     """Update debiteur"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -846,7 +846,7 @@ async def update_debiteur(debiteur_id: str, data: DebiteurCreate, authorization:
     return {"message": "Debiteur bijgewerkt"}
 
 @router.get("/debiteuren/{debiteur_id}/openstaand")
-async def get_debiteur_openstaand(debiteur_id: str, authorization: str = None):
+async def get_debiteur_openstaand(debiteur_id: str, authorization: str = Header(None)):
     """Haal openstaande facturen van debiteur"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -860,7 +860,7 @@ async def get_debiteur_openstaand(debiteur_id: str, authorization: str = None):
     return [clean_doc(f) for f in facturen]
 
 @router.get("/debiteuren/ouderdom/analyse")
-async def get_ouderdom_analyse(authorization: str = None):
+async def get_ouderdom_analyse(authorization: str = Header(None)):
     """Ouderdomsanalyse openstaande debiteuren"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -901,7 +901,7 @@ async def get_ouderdom_analyse(authorization: str = None):
 # ==================== CREDITEUREN ====================
 
 @router.get("/crediteuren")
-async def get_crediteuren(authorization: str = None):
+async def get_crediteuren(authorization: str = Header(None)):
     """Haal alle crediteuren op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -910,7 +910,7 @@ async def get_crediteuren(authorization: str = None):
     return [clean_doc(c) for c in crediteuren]
 
 @router.post("/crediteuren")
-async def create_crediteur(data: CrediteurCreate, authorization: str = None):
+async def create_crediteur(data: CrediteurCreate, authorization: str = Header(None)):
     """Maak nieuwe crediteur"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -932,7 +932,7 @@ async def create_crediteur(data: CrediteurCreate, authorization: str = None):
     return clean_doc(crediteur)
 
 @router.get("/crediteuren/{crediteur_id}")
-async def get_crediteur(crediteur_id: str, authorization: str = None):
+async def get_crediteur(crediteur_id: str, authorization: str = Header(None)):
     """Haal specifieke crediteur op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -943,7 +943,7 @@ async def get_crediteur(crediteur_id: str, authorization: str = None):
     return clean_doc(crediteur)
 
 @router.put("/crediteuren/{crediteur_id}")
-async def update_crediteur(crediteur_id: str, data: CrediteurCreate, authorization: str = None):
+async def update_crediteur(crediteur_id: str, data: CrediteurCreate, authorization: str = Header(None)):
     """Update crediteur"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -959,7 +959,7 @@ async def update_crediteur(crediteur_id: str, data: CrediteurCreate, authorizati
     return {"message": "Crediteur bijgewerkt"}
 
 @router.get("/crediteuren/betaaladvies")
-async def get_betaaladvies(authorization: str = None):
+async def get_betaaladvies(authorization: str = Header(None)):
     """Haal betaaladvieslijst op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -977,7 +977,7 @@ async def get_betaaladvies(authorization: str = None):
 # ==================== VERKOOPFACTUREN ====================
 
 @router.get("/verkoopfacturen")
-async def get_verkoopfacturen(status: str = None, debiteur_id: str = None, authorization: str = None):
+async def get_verkoopfacturen(status: str = None, debiteur_id: str = None, authorization: str = Header(None)):
     """Haal alle verkoopfacturen op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -992,7 +992,7 @@ async def get_verkoopfacturen(status: str = None, debiteur_id: str = None, autho
     return [clean_doc(f) for f in facturen]
 
 @router.post("/verkoopfacturen")
-async def create_verkoopfactuur(data: VerkoopfactuurCreate, authorization: str = None):
+async def create_verkoopfactuur(data: VerkoopfactuurCreate, authorization: str = Header(None)):
     """Maak nieuwe verkoopfactuur"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1061,7 +1061,7 @@ async def create_verkoopfactuur(data: VerkoopfactuurCreate, authorization: str =
     return clean_doc(factuur)
 
 @router.get("/verkoopfacturen/{factuur_id}")
-async def get_verkoopfactuur(factuur_id: str, authorization: str = None):
+async def get_verkoopfactuur(factuur_id: str, authorization: str = Header(None)):
     """Haal specifieke verkoopfactuur op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1072,7 +1072,7 @@ async def get_verkoopfactuur(factuur_id: str, authorization: str = None):
     return clean_doc(factuur)
 
 @router.post("/verkoopfacturen/{factuur_id}/verzenden")
-async def verzend_verkoopfactuur(factuur_id: str, authorization: str = None):
+async def verzend_verkoopfactuur(factuur_id: str, authorization: str = Header(None)):
     """Verzend verkoopfactuur en maak journaalpost"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1120,7 +1120,7 @@ async def verzend_verkoopfactuur(factuur_id: str, authorization: str = None):
     return {"message": "Factuur verzonden", "journaalpost_id": journaalpost["id"]}
 
 @router.post("/verkoopfacturen/{factuur_id}/betaling")
-async def registreer_betaling_verkoopfactuur(factuur_id: str, bedrag: float, datum: date = None, authorization: str = None):
+async def registreer_betaling_verkoopfactuur(factuur_id: str, bedrag: float, datum: date = None, authorization: str = Header(None)):
     """Registreer betaling op verkoopfactuur"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1171,7 +1171,7 @@ async def registreer_betaling_verkoopfactuur(factuur_id: str, bedrag: float, dat
 # ==================== INKOOPFACTUREN ====================
 
 @router.get("/inkoopfacturen")
-async def get_inkoopfacturen(status: str = None, crediteur_id: str = None, authorization: str = None):
+async def get_inkoopfacturen(status: str = None, crediteur_id: str = None, authorization: str = Header(None)):
     """Haal alle inkoopfacturen op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1186,7 +1186,7 @@ async def get_inkoopfacturen(status: str = None, crediteur_id: str = None, autho
     return [clean_doc(f) for f in facturen]
 
 @router.post("/inkoopfacturen")
-async def create_inkoopfactuur(data: InkoopfactuurCreate, authorization: str = None):
+async def create_inkoopfactuur(data: InkoopfactuurCreate, authorization: str = Header(None)):
     """Maak nieuwe inkoopfactuur"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1255,7 +1255,7 @@ async def create_inkoopfactuur(data: InkoopfactuurCreate, authorization: str = N
     return clean_doc(factuur)
 
 @router.post("/inkoopfacturen/{factuur_id}/boeken")
-async def boek_inkoopfactuur(factuur_id: str, authorization: str = None):
+async def boek_inkoopfactuur(factuur_id: str, authorization: str = Header(None)):
     """Boek inkoopfactuur en maak journaalpost"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1303,7 +1303,7 @@ async def boek_inkoopfactuur(factuur_id: str, authorization: str = None):
     return {"message": "Factuur geboekt", "journaalpost_id": journaalpost["id"]}
 
 @router.post("/inkoopfacturen/{factuur_id}/betaling")
-async def registreer_betaling_inkoopfactuur(factuur_id: str, bedrag: float, datum: date = None, authorization: str = None):
+async def registreer_betaling_inkoopfactuur(factuur_id: str, bedrag: float, datum: date = None, authorization: str = Header(None)):
     """Registreer betaling op inkoopfactuur"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1355,7 +1355,7 @@ async def registreer_betaling_inkoopfactuur(factuur_id: str, bedrag: float, datu
 # ==================== BANKREKENINGEN ====================
 
 @router.get("/bankrekeningen")
-async def get_bankrekeningen(authorization: str = None):
+async def get_bankrekeningen(authorization: str = Header(None)):
     """Haal alle bankrekeningen op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1364,7 +1364,7 @@ async def get_bankrekeningen(authorization: str = None):
     return [clean_doc(r) for r in rekeningen]
 
 @router.post("/bankrekeningen")
-async def create_bankrekening(data: BankrekeningCreate, authorization: str = None):
+async def create_bankrekening(data: BankrekeningCreate, authorization: str = Header(None)):
     """Maak nieuwe bankrekening"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1382,7 +1382,7 @@ async def create_bankrekening(data: BankrekeningCreate, authorization: str = Non
     return clean_doc(rekening)
 
 @router.get("/bankrekeningen/{rekening_id}/mutaties")
-async def get_bankmutaties(rekening_id: str, van: str = None, tot: str = None, authorization: str = None):
+async def get_bankmutaties(rekening_id: str, van: str = None, tot: str = None, authorization: str = Header(None)):
     """Haal bankmutaties op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1400,7 +1400,7 @@ async def get_bankmutaties(rekening_id: str, van: str = None, tot: str = None, a
     return [clean_doc(m) for m in mutaties]
 
 @router.post("/bankrekeningen/{rekening_id}/mutaties")
-async def create_bankmutatie(rekening_id: str, datum: date, omschrijving: str, bedrag: float, tegenrekening: str = None, authorization: str = None):
+async def create_bankmutatie(rekening_id: str, datum: date, omschrijving: str, bedrag: float, tegenrekening: str = None, authorization: str = Header(None)):
     """Maak nieuwe bankmutatie"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1434,7 +1434,7 @@ async def create_bankmutatie(rekening_id: str, datum: date, omschrijving: str, b
     return clean_doc(mutatie)
 
 @router.post("/bankrekeningen/{rekening_id}/import")
-async def import_bankmutaties(rekening_id: str, data: BankmutatieBatchCreate, authorization: str = None):
+async def import_bankmutaties(rekening_id: str, data: BankmutatieBatchCreate, authorization: str = Header(None)):
     """Importeer bankmutaties in batch"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1475,7 +1475,7 @@ async def import_bankmutaties(rekening_id: str, data: BankmutatieBatchCreate, au
 # ==================== KASBOEK ====================
 
 @router.get("/kasboek")
-async def get_kasboek(van: str = None, tot: str = None, authorization: str = None):
+async def get_kasboek(van: str = None, tot: str = None, authorization: str = Header(None)):
     """Haal kasboek mutaties op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1493,7 +1493,7 @@ async def get_kasboek(van: str = None, tot: str = None, authorization: str = Non
     return [clean_doc(m) for m in mutaties]
 
 @router.post("/kasboek")
-async def create_kasmutatie(data: KasmutatieCreate, authorization: str = None):
+async def create_kasmutatie(data: KasmutatieCreate, authorization: str = Header(None)):
     """Maak nieuwe kasmutatie"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1517,7 +1517,7 @@ async def create_kasmutatie(data: KasmutatieCreate, authorization: str = None):
     return clean_doc(mutatie)
 
 @router.get("/kasboek/saldo")
-async def get_kassaldo(authorization: str = None):
+async def get_kassaldo(authorization: str = Header(None)):
     """Haal huidige kassaldo op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1532,7 +1532,7 @@ async def get_kassaldo(authorization: str = None):
 # ==================== BANK RECONCILIATIE ====================
 
 @router.get("/reconciliatie/{bankrekening_id}")
-async def get_reconciliatie_overzicht(bankrekening_id: str, authorization: str = None):
+async def get_reconciliatie_overzicht(bankrekening_id: str, authorization: str = Header(None)):
     """Haal reconciliatie overzicht op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1563,7 +1563,7 @@ async def get_reconciliatie_overzicht(bankrekening_id: str, authorization: str =
     }
 
 @router.post("/reconciliatie/auto-match")
-async def auto_match_reconciliatie(bankrekening_id: str, authorization: str = None):
+async def auto_match_reconciliatie(bankrekening_id: str, authorization: str = Header(None)):
     """Automatisch matchen van bankmutaties"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1627,7 +1627,7 @@ async def auto_match_reconciliatie(bankrekening_id: str, authorization: str = No
     return {"matches": matches, "totaal": len(matches)}
 
 @router.post("/reconciliatie/handmatig")
-async def handmatig_match(data: ReconciliatieMatchCreate, authorization: str = None):
+async def handmatig_match(data: ReconciliatieMatchCreate, authorization: str = Header(None)):
     """Handmatig matchen van bankmutatie"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1642,7 +1642,7 @@ async def handmatig_match(data: ReconciliatieMatchCreate, authorization: str = N
     return {"message": "Mutatie gematched"}
 
 @router.post("/reconciliatie/verwerken")
-async def verwerk_reconciliatie(bankrekening_id: str, authorization: str = None):
+async def verwerk_reconciliatie(bankrekening_id: str, authorization: str = Header(None)):
     """Verwerk gematchte mutaties naar betalingen"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1717,7 +1717,7 @@ async def verwerk_reconciliatie(bankrekening_id: str, authorization: str = None)
 # ==================== VASTE ACTIVA ====================
 
 @router.get("/vaste-activa")
-async def get_vaste_activa(categorie: str = None, authorization: str = None):
+async def get_vaste_activa(categorie: str = None, authorization: str = Header(None)):
     """Haal alle vaste activa op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1730,7 +1730,7 @@ async def get_vaste_activa(categorie: str = None, authorization: str = None):
     return [clean_doc(a) for a in activa]
 
 @router.post("/vaste-activa")
-async def create_vast_activum(data: VastActivumCreate, authorization: str = None):
+async def create_vast_activum(data: VastActivumCreate, authorization: str = Header(None)):
     """Maak nieuw vast activum"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1762,7 +1762,7 @@ async def create_vast_activum(data: VastActivumCreate, authorization: str = None
     return clean_doc(activum)
 
 @router.get("/vaste-activa/{activum_id}")
-async def get_vast_activum(activum_id: str, authorization: str = None):
+async def get_vast_activum(activum_id: str, authorization: str = Header(None)):
     """Haal specifiek vast activum op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1773,7 +1773,7 @@ async def get_vast_activum(activum_id: str, authorization: str = None):
     return clean_doc(activum)
 
 @router.post("/vaste-activa/afschrijven")
-async def batch_afschrijving(periode: str, authorization: str = None):
+async def batch_afschrijving(periode: str, authorization: str = Header(None)):
     """Voer batch afschrijving uit voor periode (YYYY-MM)"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1846,7 +1846,7 @@ async def batch_afschrijving(periode: str, authorization: str = None):
 # ==================== KOSTENPLAATSEN ====================
 
 @router.get("/kostenplaatsen")
-async def get_kostenplaatsen(authorization: str = None):
+async def get_kostenplaatsen(authorization: str = Header(None)):
     """Haal alle kostenplaatsen op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1855,7 +1855,7 @@ async def get_kostenplaatsen(authorization: str = None):
     return [clean_doc(k) for k in kostenplaatsen]
 
 @router.post("/kostenplaatsen")
-async def create_kostenplaats(data: KostenplaatsCreate, authorization: str = None):
+async def create_kostenplaats(data: KostenplaatsCreate, authorization: str = Header(None)):
     """Maak nieuwe kostenplaats"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1877,7 +1877,7 @@ async def create_kostenplaats(data: KostenplaatsCreate, authorization: str = Non
     return clean_doc(kostenplaats)
 
 @router.get("/kostenplaatsen/{kostenplaats_id}/rapport")
-async def get_kostenplaats_rapport(kostenplaats_id: str, authorization: str = None):
+async def get_kostenplaats_rapport(kostenplaats_id: str, authorization: str = Header(None)):
     """Haal kostenplaats rapport op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1903,7 +1903,7 @@ async def get_kostenplaats_rapport(kostenplaats_id: str, authorization: str = No
 # ==================== WISSELKOERSEN ====================
 
 @router.get("/wisselkoersen")
-async def get_wisselkoersen(valuta_van: str = None, authorization: str = None):
+async def get_wisselkoersen(valuta_van: str = None, authorization: str = Header(None)):
     """Haal alle wisselkoersen op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1916,7 +1916,7 @@ async def get_wisselkoersen(valuta_van: str = None, authorization: str = None):
     return [clean_doc(k) for k in koersen]
 
 @router.post("/wisselkoersen")
-async def create_wisselkoers(data: WisselkoersCreate, authorization: str = None):
+async def create_wisselkoers(data: WisselkoersCreate, authorization: str = Header(None)):
     """Maak nieuwe wisselkoers (handmatig)"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1933,7 +1933,7 @@ async def create_wisselkoers(data: WisselkoersCreate, authorization: str = None)
     return clean_doc(koers)
 
 @router.get("/wisselkoersen/actueel")
-async def get_actuele_koersen(authorization: str = None):
+async def get_actuele_koersen(authorization: str = Header(None)):
     """Haal meest recente wisselkoersen op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1958,7 +1958,7 @@ async def get_actuele_koersen(authorization: str = None):
 # ==================== VOORRAAD ====================
 
 @router.get("/artikelen")
-async def get_artikelen(type: str = None, authorization: str = None):
+async def get_artikelen(type: str = None, authorization: str = Header(None)):
     """Haal alle artikelen op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1971,7 +1971,7 @@ async def get_artikelen(type: str = None, authorization: str = None):
     return [clean_doc(a) for a in artikelen]
 
 @router.post("/artikelen")
-async def create_artikel(data: ArtikelCreate, authorization: str = None):
+async def create_artikel(data: ArtikelCreate, authorization: str = Header(None)):
     """Maak nieuw artikel"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -1996,7 +1996,7 @@ async def create_artikel(data: ArtikelCreate, authorization: str = None):
     return clean_doc(artikel)
 
 @router.get("/magazijnen")
-async def get_magazijnen(authorization: str = None):
+async def get_magazijnen(authorization: str = Header(None)):
     """Haal alle magazijnen op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2005,7 +2005,7 @@ async def get_magazijnen(authorization: str = None):
     return [clean_doc(m) for m in magazijnen]
 
 @router.post("/magazijnen")
-async def create_magazijn(data: MagazijnCreate, authorization: str = None):
+async def create_magazijn(data: MagazijnCreate, authorization: str = Header(None)):
     """Maak nieuw magazijn"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2025,7 +2025,7 @@ async def create_magazijn(data: MagazijnCreate, authorization: str = None):
     return clean_doc(magazijn)
 
 @router.post("/mutaties")
-async def create_voorraadmutatie(data: VoorraadmutatieCreate, authorization: str = None):
+async def create_voorraadmutatie(data: VoorraadmutatieCreate, authorization: str = Header(None)):
     """Maak nieuwe voorraadmutatie"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2086,7 +2086,7 @@ async def create_voorraadmutatie(data: VoorraadmutatieCreate, authorization: str
 # ==================== PROJECTEN ====================
 
 @router.get("/projecten")
-async def get_projecten(status: str = None, authorization: str = None):
+async def get_projecten(status: str = None, authorization: str = Header(None)):
     """Haal alle projecten op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2099,7 +2099,7 @@ async def get_projecten(status: str = None, authorization: str = None):
     return [clean_doc(p) for p in projecten]
 
 @router.post("/projecten")
-async def create_project(data: ProjectCreate, authorization: str = None):
+async def create_project(data: ProjectCreate, authorization: str = Header(None)):
     """Maak nieuw project"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2124,7 +2124,7 @@ async def create_project(data: ProjectCreate, authorization: str = None):
     return clean_doc(project)
 
 @router.get("/projecten/{project_id}")
-async def get_project(project_id: str, authorization: str = None):
+async def get_project(project_id: str, authorization: str = Header(None)):
     """Haal specifiek project op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2135,7 +2135,7 @@ async def get_project(project_id: str, authorization: str = None):
     return clean_doc(project)
 
 @router.post("/projecten/{project_id}/uren")
-async def registreer_uren(project_id: str, data: UrenregistratieCreate, authorization: str = None):
+async def registreer_uren(project_id: str, data: UrenregistratieCreate, authorization: str = Header(None)):
     """Registreer uren op project"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2164,7 +2164,7 @@ async def registreer_uren(project_id: str, data: UrenregistratieCreate, authoriz
     return clean_doc(uren)
 
 @router.post("/projecten/{project_id}/kosten")
-async def registreer_kosten(project_id: str, data: ProjectkostenCreate, authorization: str = None):
+async def registreer_kosten(project_id: str, data: ProjectkostenCreate, authorization: str = Header(None)):
     """Registreer kosten op project"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2192,7 +2192,7 @@ async def registreer_kosten(project_id: str, data: ProjectkostenCreate, authoriz
     return clean_doc(kosten)
 
 @router.get("/projecten/{project_id}/overzicht")
-async def get_project_overzicht(project_id: str, authorization: str = None):
+async def get_project_overzicht(project_id: str, authorization: str = Header(None)):
     """Haal project overzicht met budget vs realisatie"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2224,7 +2224,7 @@ async def get_project_overzicht(project_id: str, authorization: str = None):
 # ==================== BTW MODULE ====================
 
 @router.get("/btw/codes")
-async def get_btw_codes(authorization: str = None):
+async def get_btw_codes(authorization: str = Header(None)):
     """Haal alle BTW codes op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2233,7 +2233,7 @@ async def get_btw_codes(authorization: str = None):
     return [clean_doc(c) for c in codes]
 
 @router.post("/btw/codes")
-async def create_btw_code(data: BTWCodeCreate, authorization: str = None):
+async def create_btw_code(data: BTWCodeCreate, authorization: str = Header(None)):
     """Maak nieuwe BTW code"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2253,7 +2253,7 @@ async def create_btw_code(data: BTWCodeCreate, authorization: str = None):
     return clean_doc(btw_code)
 
 @router.get("/btw/aangifte")
-async def get_btw_aangifte(jaar: int = None, kwartaal: int = None, authorization: str = None):
+async def get_btw_aangifte(jaar: int = None, kwartaal: int = None, authorization: str = Header(None)):
     """Haal BTW aangifte overzicht op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2337,7 +2337,7 @@ async def get_btw_aangifte(jaar: int = None, kwartaal: int = None, authorization
 # ==================== RAPPORTAGES ====================
 
 @router.get("/rapportages/balans")
-async def get_balans(datum: str = None, authorization: str = None):
+async def get_balans(datum: str = None, authorization: str = Header(None)):
     """Haal balans op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2396,7 +2396,7 @@ async def get_balans(datum: str = None, authorization: str = None):
     }
 
 @router.get("/rapportages/winst-verlies")
-async def get_winst_verlies(jaar: int = None, authorization: str = None):
+async def get_winst_verlies(jaar: int = None, authorization: str = Header(None)):
     """Haal winst & verlies rekening op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2460,7 +2460,7 @@ async def get_winst_verlies(jaar: int = None, authorization: str = None):
     }
 
 @router.get("/rapportages/proef-saldibalans")
-async def get_proef_saldibalans(datum: str = None, authorization: str = None):
+async def get_proef_saldibalans(datum: str = None, authorization: str = Header(None)):
     """Haal proef- en saldibalans op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2519,7 +2519,7 @@ async def get_proef_saldibalans(datum: str = None, authorization: str = None):
     }
 
 @router.get("/rapportages/openstaande-debiteuren")
-async def get_openstaande_debiteuren_rapport(authorization: str = None):
+async def get_openstaande_debiteuren_rapport(authorization: str = Header(None)):
     """Haal openstaande debiteuren rapport op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2548,7 +2548,7 @@ async def get_openstaande_debiteuren_rapport(authorization: str = None):
     }
 
 @router.get("/rapportages/openstaande-crediteuren")
-async def get_openstaande_crediteuren_rapport(authorization: str = None):
+async def get_openstaande_crediteuren_rapport(authorization: str = Header(None)):
     """Haal openstaande crediteuren rapport op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2579,7 +2579,7 @@ async def get_openstaande_crediteuren_rapport(authorization: str = None):
 # ==================== DOCUMENTEN ====================
 
 @router.get("/documenten")
-async def get_documenten(type: str = None, authorization: str = None):
+async def get_documenten(type: str = None, authorization: str = Header(None)):
     """Haal alle documenten op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2598,7 +2598,7 @@ async def upload_document(
     gekoppeld_aan_type: str = None,
     gekoppeld_aan_id: str = None,
     file: UploadFile = File(...),
-    authorization: str = None
+    authorization: str = Header(None)
 ):
     """Upload document"""
     user = await get_current_user(authorization)
@@ -2635,7 +2635,7 @@ async def upload_document(
 # ==================== EMAIL HERINNERINGEN ====================
 
 @router.get("/herinneringen")
-async def get_herinneringen(authorization: str = None):
+async def get_herinneringen(authorization: str = Header(None)):
     """Haal alle herinneringen op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2644,7 +2644,7 @@ async def get_herinneringen(authorization: str = None):
     return [clean_doc(h) for h in herinneringen]
 
 @router.post("/herinneringen/genereer")
-async def genereer_herinneringen(authorization: str = None):
+async def genereer_herinneringen(authorization: str = Header(None)):
     """Genereer herinneringen voor verlopen facturen"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2709,7 +2709,7 @@ async def genereer_herinneringen(authorization: str = None):
     return {"herinneringen": nieuwe_herinneringen, "aantal": len(nieuwe_herinneringen)}
 
 @router.post("/herinneringen/{herinnering_id}/verzenden")
-async def verzend_herinnering(herinnering_id: str, background_tasks: BackgroundTasks, authorization: str = None):
+async def verzend_herinnering(herinnering_id: str, background_tasks: BackgroundTasks, authorization: str = Header(None)):
     """Verzend herinnering per email"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2785,7 +2785,7 @@ Met vriendelijke groet,
     return {"message": "Herinnering wordt verzonden", "email": debiteur['email']}
 
 @router.post("/herinneringen/batch-verzenden")
-async def batch_verzend_herinneringen(background_tasks: BackgroundTasks, authorization: str = None):
+async def batch_verzend_herinneringen(background_tasks: BackgroundTasks, authorization: str = Header(None)):
     """Verzend alle niet-verzonden herinneringen"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2813,7 +2813,7 @@ async def get_audit_trail(
     entity_type: str = None,
     van: str = None,
     tot: str = None,
-    authorization: str = None
+    authorization: str = Header(None)
 ):
     """Haal audit trail op"""
     user = await get_current_user(authorization)
@@ -2836,7 +2836,7 @@ async def get_audit_trail(
     return [clean_doc(t) for t in trail]
 
 @router.get("/audit-trail/entity/{entity_type}/{entity_id}")
-async def get_audit_trail_entity(entity_type: str, entity_id: str, authorization: str = None):
+async def get_audit_trail_entity(entity_type: str, entity_id: str, authorization: str = Header(None)):
     """Haal audit trail voor specifieke entiteit"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2852,7 +2852,7 @@ async def get_audit_trail_entity(entity_type: str, entity_id: str, authorization
 # ==================== PERIODE AFSLUITING ====================
 
 @router.post("/periode/afsluiten")
-async def sluit_periode(jaar: int, maand: int, authorization: str = None):
+async def sluit_periode(jaar: int, maand: int, authorization: str = Header(None)):
     """Sluit boekingsperiode af"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
@@ -2887,7 +2887,7 @@ async def sluit_periode(jaar: int, maand: int, authorization: str = None):
     return {"message": f"Periode {periode} afgesloten", "periode": clean_doc(afsluiting)}
 
 @router.get("/periode/status")
-async def get_periode_status(authorization: str = None):
+async def get_periode_status(authorization: str = Header(None)):
     """Haal status van alle periodes op"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
