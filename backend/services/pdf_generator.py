@@ -401,18 +401,18 @@ def generate_reminder_pdf(
     content.append(Spacer(1, 5*mm))
     
     if herinnering_type == 'eerste':
-        tekst = f"""
+        tekst = """
         Bij controle van onze administratie is ons gebleken dat de betaling van onderstaande factuur 
         nog niet door ons is ontvangen. Wij verzoeken u vriendelijk het openstaande bedrag zo spoedig 
         mogelijk over te maken.
         """
     elif herinnering_type == 'tweede':
-        tekst = f"""
+        tekst = """
         Ondanks onze eerdere herinnering hebben wij nog geen betaling mogen ontvangen voor onderstaande 
         factuur. Wij verzoeken u dringend het openstaande bedrag binnen 7 dagen te voldoen.
         """
     else:
-        tekst = f"""
+        tekst = """
         Tot op heden hebben wij, ondanks herhaalde herinneringen, geen betaling mogen ontvangen voor 
         onderstaande factuur. Indien wij binnen 5 dagen geen betaling ontvangen, zien wij ons genoodzaakt 
         verdere incassomaatregelen te nemen. De eventuele kosten hiervan komen voor uw rekening.
