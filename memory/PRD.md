@@ -112,13 +112,8 @@ Dutch (Nederlands)
 
 ## Backlog / Toekomstige Taken
 
-### P1 - Hoge Prioriteit
-- [ ] MT940 bankimport verbeterde parsing
-- [ ] Automatische reconciliatie van banktransacties
-- [ ] PDF-generatie voor facturen (wkhtmltopdf of similar)
-- [ ] E-mailverzending voor betalingsherinneringen
-
 ### P2 - Medium Prioriteit
+- [ ] E-mailverzending voor betalingsherinneringen
 - [ ] Surinaamse belastingrapportages
 - [ ] Bestands-upload voor Documenten module (met preview)
 - [ ] Voorraad pagina (`/app/boekhouding/voorraad`)
