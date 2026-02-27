@@ -18,7 +18,13 @@ class BoekhoudingReviewTester:
         url = f"{self.base_url}/{endpoint}"
         test_headers = {'Content-Type': 'application/json'}
         
-        if self.token:
+        # For boekhouding endpoints, pass authorization as query parameter
+        if self.token and endpoint.startswith('boekhouding/'):
+            if '?' in endpoint:
+                url = f"{self.base_url}/{endpoint}&authorization=Bearer {self.token}"
+            else:
+                url = f"{self.base_url}/{endpoint}?authorization=Bearer {self.token}"
+        elif self.token:
             test_headers['Authorization'] = f'Bearer {self.token}'
         
         if headers:
