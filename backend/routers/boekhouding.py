@@ -829,6 +829,35 @@ async def preview_cme_wisselkoersen(authorization: str = Header(None)):
         "formatted": format_rate_for_display(result.get("rates", {}))
     }
 
+
+@router.get("/wisselkoersen/scheduler-status")
+async def get_wisselkoers_scheduler_status(authorization: str = Header(None)):
+    """
+    Bekijk de status van de automatische wisselkoers scheduler.
+    Toont wanneer de volgende sync gepland staat.
+    """
+    from services.wisselkoers_scheduler import get_scheduler_status
+    
+    await get_current_user(authorization)  # Auth check
+    
+    status = get_scheduler_status()
+    
+    # Voeg Surinaamse tijd toe voor duidelijkheid
+    if status.get("jobs"):
+        for job in status["jobs"]:
+            if job.get("next_run"):
+                # Convert UTC to Suriname time (UTC-3)
+                from datetime import datetime, timedelta
+                utc_time = datetime.fromisoformat(job["next_run"].replace('Z', '+00:00'))
+                srt_time = utc_time - timedelta(hours=3)
+                job["next_run_srt"] = srt_time.strftime("%H:%M:%S SRT")
+    
+    return {
+        "scheduler": status,
+        "sync_times": ["09:00 SRT", "10:00 SRT", "11:00 SRT"],
+        "timezone": "UTC-3 (Suriname Time)"
+    }
+
 # ==================== BTW CODES ====================
 
 @router.get("/btw-codes")
