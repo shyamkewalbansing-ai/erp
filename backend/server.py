@@ -9507,59 +9507,6 @@ async def seed_default_addons():
         await db.addons.insert_one(autodealer_doc)
         logger.info("Default 'Auto Dealer' add-on created")
     
-    # Boekhouding Module - GRATIS voor alle klanten
-    existing_boekhouding = await db.addons.find_one({"slug": "boekhouding"}, {"_id": 0})
-    if not existing_boekhouding:
-        boekhouding_doc = {
-            "id": str(uuid.uuid4()),
-            "name": "Boekhouding",
-            "slug": "boekhouding",
-            "description": "Complete boekhoudoplossing voor Surinaamse bedrijven. Grootboek, debiteuren, crediteuren, BTW, bank/kas administratie en rapportages. Multi-valuta ondersteuning: SRD, USD en EUR.",
-            "price": 0.0,  # GRATIS
-            "is_active": True,
-            "is_free": True,  # Marker dat dit een gratis module is
-            "auto_activate": True,  # Automatisch activeren voor nieuwe gebruikers
-            "category": "financieel",
-            "icon_name": "Calculator",
-            "highlights": [
-                "Surinaams standaard rekeningschema",
-                "Multi-valuta: SRD, USD, EUR",
-                "BTW tarieven: 0%, 10%, 25%",
-                "Debiteuren & Crediteuren beheer",
-                "Bank & Kas administratie",
-                "Verkoopfacturen met automatische BTW berekening",
-                "Inkoopfacturen registratie",
-                "BTW aangifte overzicht",
-                "Balans & Resultatenrekening",
-                "Openstaande posten rapportage"
-            ],
-            "features": [
-                {
-                    "title": "Grootboek",
-                    "description": "Volledig rekeningschema met journaalboekingen",
-                    "features": ["Surinaams standaard rekeningschema", "Journaalposten", "Automatische saldo updates"]
-                },
-                {
-                    "title": "Debiteuren & Crediteuren",
-                    "description": "Beheer uw klanten en leveranciers",
-                    "features": ["Klanten beheer", "Leveranciers beheer", "Openstaande posten", "Betalingstermijnen"]
-                },
-                {
-                    "title": "Facturatie",
-                    "description": "Professionele facturen met BTW berekening",
-                    "features": ["Verkoopfacturen", "Inkoopfacturen", "Automatische BTW", "Multi-valuta"]
-                },
-                {
-                    "title": "Rapportages",
-                    "description": "Financiële overzichten en analyses",
-                    "features": ["Balans", "Winst & Verlies", "BTW aangifte", "Ouderdomsanalyse debiteuren"]
-                }
-            ],
-            "created_at": now
-        }
-        await db.addons.insert_one(boekhouding_doc)
-        logger.info("Default 'Boekhouding' add-on created (GRATIS)")
-    
     # Suribet Retailer Management Module
     existing_suribet = await db.addons.find_one({"slug": "suribet"}, {"_id": 0})
     if not existing_suribet:
