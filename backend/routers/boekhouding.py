@@ -2078,6 +2078,227 @@ async def get_btw_rapport(jaar: int = None, kwartaal: int = None, authorization:
         "btw_te_betalen": btw_verkoop_totaal - btw_inkoop_totaal
     }
 
+
+# ==================== SURINAAMSE BELASTINGRAPPORTAGES ====================
+
+@router.get("/rapportages/suriname/btw-aangifte")
+async def get_suriname_btw_aangifte(jaar: int = None, maand: int = None, authorization: str = Header(None)):
+    """
+    Surinaamse BTW Aangifte Rapport
+    Conform Surinaamse belastingdienst eisen
+    """
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    jaar = jaar or datetime.now().year
+    maand = maand or datetime.now().month
+    
+    # Bepaal periode
+    start_date = f"{jaar}-{maand:02d}-01"
+    if maand == 12:
+        end_date = f"{jaar + 1}-01-01"
+    else:
+        end_date = f"{jaar}-{maand + 1:02d}-01"
+    
+    # BTW Verkopen per tarief
+    btw_verkoop_25 = await db.boekhouding_verkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "concept"}}},
+        {"$unwind": "$regels"},
+        {"$match": {"regels.btw_percentage": 25}},
+        {"$group": {
+            "_id": None,
+            "omzet": {"$sum": "$regels.bedrag_excl"},
+            "btw": {"$sum": "$regels.btw_bedrag"}
+        }}
+    ]).to_list(1)
+    
+    btw_verkoop_10 = await db.boekhouding_verkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "concept"}}},
+        {"$unwind": "$regels"},
+        {"$match": {"regels.btw_percentage": 10}},
+        {"$group": {
+            "_id": None,
+            "omzet": {"$sum": "$regels.bedrag_excl"},
+            "btw": {"$sum": "$regels.btw_bedrag"}
+        }}
+    ]).to_list(1)
+    
+    btw_verkoop_0 = await db.boekhouding_verkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "concept"}}},
+        {"$unwind": "$regels"},
+        {"$match": {"regels.btw_percentage": 0}},
+        {"$group": {
+            "_id": None,
+            "omzet": {"$sum": "$regels.bedrag_excl"}
+        }}
+    ]).to_list(1)
+    
+    # BTW Inkoop (voorbelasting)
+    btw_inkoop = await db.boekhouding_inkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "nieuw"}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$btw_bedrag"}}}
+    ]).to_list(1)
+    
+    # Bereken totalen
+    omzet_25 = btw_verkoop_25[0]["omzet"] if btw_verkoop_25 else 0
+    btw_25 = btw_verkoop_25[0]["btw"] if btw_verkoop_25 else 0
+    omzet_10 = btw_verkoop_10[0]["omzet"] if btw_verkoop_10 else 0
+    btw_10 = btw_verkoop_10[0]["btw"] if btw_verkoop_10 else 0
+    omzet_0 = btw_verkoop_0[0]["omzet"] if btw_verkoop_0 else 0
+    voorbelasting = btw_inkoop[0]["totaal"] if btw_inkoop else 0
+    
+    totaal_btw_af = btw_25 + btw_10
+    te_betalen = totaal_btw_af - voorbelasting
+    
+    return {
+        "rapport_type": "BTW Aangifte Suriname",
+        "periode": {
+            "jaar": jaar,
+            "maand": maand,
+            "maand_naam": ["", "Januari", "Februari", "Maart", "April", "Mei", "Juni",
+                          "Juli", "Augustus", "September", "Oktober", "November", "December"][maand]
+        },
+        "verkopen": {
+            "tarief_25": {"omzet": omzet_25, "btw": btw_25},
+            "tarief_10": {"omzet": omzet_10, "btw": btw_10},
+            "tarief_0": {"omzet": omzet_0, "btw": 0},
+            "totaal_omzet": omzet_25 + omzet_10 + omzet_0,
+            "totaal_btw": totaal_btw_af
+        },
+        "voorbelasting": voorbelasting,
+        "te_betalen": te_betalen,
+        "te_vorderen": -te_betalen if te_betalen < 0 else 0
+    }
+
+
+@router.get("/rapportages/suriname/loonbelasting")
+async def get_suriname_loonbelasting(jaar: int = None, maand: int = None, authorization: str = Header(None)):
+    """
+    Surinaamse Loonbelasting Rapport
+    Overzicht van loonkosten en af te dragen loonbelasting
+    """
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    jaar = jaar or datetime.now().year
+    maand = maand or datetime.now().month
+    
+    # Haal uren/loongegevens
+    uren = await db.boekhouding_uren.find({
+        "user_id": user_id,
+        "factureerbaar": True
+    }).to_list(1000)
+    
+    totaal_uren = sum(u.get('uren', 0) for u in uren)
+    totaal_loon = sum(u.get('bedrag', 0) for u in uren)
+    
+    # Surinaamse loonbelasting schijven (vereenvoudigd)
+    # 0-2.646 SRD: 0%
+    # 2.646-10.045 SRD: 18%
+    # 10.045-28.694 SRD: 28%
+    # > 28.694 SRD: 38%
+    
+    loonbelasting = 0
+    if totaal_loon > 28694:
+        loonbelasting += (totaal_loon - 28694) * 0.38
+        loonbelasting += (28694 - 10045) * 0.28
+        loonbelasting += (10045 - 2646) * 0.18
+    elif totaal_loon > 10045:
+        loonbelasting += (totaal_loon - 10045) * 0.28
+        loonbelasting += (10045 - 2646) * 0.18
+    elif totaal_loon > 2646:
+        loonbelasting += (totaal_loon - 2646) * 0.18
+    
+    return {
+        "rapport_type": "Loonbelasting Overzicht Suriname",
+        "periode": {"jaar": jaar, "maand": maand},
+        "totaal_uren": totaal_uren,
+        "bruto_loon": totaal_loon,
+        "loonbelasting_schijven": [
+            {"schijf": "0 - 2.646", "percentage": "0%"},
+            {"schijf": "2.646 - 10.045", "percentage": "18%"},
+            {"schijf": "10.045 - 28.694", "percentage": "28%"},
+            {"schijf": "> 28.694", "percentage": "38%"}
+        ],
+        "geschatte_loonbelasting": round(loonbelasting, 2),
+        "disclaimer": "Dit is een geschatte berekening. Raadpleeg uw accountant voor exacte berekening."
+    }
+
+
+@router.get("/rapportages/suriname/inkomstenbelasting")
+async def get_suriname_inkomstenbelasting(jaar: int = None, authorization: str = Header(None)):
+    """
+    Surinaamse Inkomstenbelasting Overzicht
+    Jaaroverzicht voor IB aangifte
+    """
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    jaar = jaar or datetime.now().year
+    
+    # Omzet
+    omzet = await db.boekhouding_verkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "concept"}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$subtotaal"}}}
+    ]).to_list(1)
+    
+    # Kosten
+    kosten = await db.boekhouding_inkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "nieuw"}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$subtotaal"}}}
+    ]).to_list(1)
+    
+    # Afschrijvingen
+    afschrijvingen = await db.boekhouding_vaste_activa.aggregate([
+        {"$match": {"user_id": user_id, "status": "actief"}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$jaarlijkse_afschrijving"}}}
+    ]).to_list(1)
+    
+    totaal_omzet = omzet[0]["totaal"] if omzet else 0
+    totaal_kosten = kosten[0]["totaal"] if kosten else 0
+    totaal_afschrijving = afschrijvingen[0]["totaal"] if afschrijvingen else 0
+    
+    winst_voor_belasting = totaal_omzet - totaal_kosten - totaal_afschrijving
+    
+    # Surinaamse IB schijven (vereenvoudigd voor ondernemers)
+    # 0% tot SRD 2.646
+    # 18% van SRD 2.646 tot 10.045
+    # 28% van SRD 10.045 tot 28.694
+    # 38% boven SRD 28.694
+    
+    ib_belasting = 0
+    belastbaar = winst_voor_belasting
+    if belastbaar > 28694:
+        ib_belasting += (belastbaar - 28694) * 0.38
+        ib_belasting += (28694 - 10045) * 0.28
+        ib_belasting += (10045 - 2646) * 0.18
+    elif belastbaar > 10045:
+        ib_belasting += (belastbaar - 10045) * 0.28
+        ib_belasting += (10045 - 2646) * 0.18
+    elif belastbaar > 2646:
+        ib_belasting += (belastbaar - 2646) * 0.18
+    
+    return {
+        "rapport_type": "Inkomstenbelasting Overzicht Suriname",
+        "jaar": jaar,
+        "bedrijfsresultaat": {
+            "omzet": totaal_omzet,
+            "kosten": totaal_kosten,
+            "afschrijvingen": totaal_afschrijving,
+            "winst_voor_belasting": winst_voor_belasting
+        },
+        "belasting_schijven": [
+            {"van": 0, "tot": 2646, "percentage": 0},
+            {"van": 2646, "tot": 10045, "percentage": 18},
+            {"van": 10045, "tot": 28694, "percentage": 28},
+            {"van": 28694, "tot": None, "percentage": 38}
+        ],
+        "geschatte_ib": round(ib_belasting, 2),
+        "netto_winst": winst_voor_belasting - ib_belasting,
+        "disclaimer": "Dit is een geschatte berekening. Raadpleeg uw accountant voor exacte berekening."
+    }
+
+
 @router.get("/rapportages/ouderdom")
 async def get_ouderdom_rapport(type: str = "debiteuren", authorization: str = Header(None)):
     """Haal ouderdomsanalyse op"""
