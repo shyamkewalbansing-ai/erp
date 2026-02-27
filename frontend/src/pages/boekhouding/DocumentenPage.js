@@ -12,7 +12,7 @@ import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 import { 
   Upload, FileText, Download, Trash2, Loader2, Search, 
-  File, Image, FileSpreadsheet, FolderOpen, Link
+  File, Image, FileSpreadsheet, FolderOpen
 } from 'lucide-react';
 
 const DocumentenPage = () => {
@@ -136,7 +136,7 @@ const DocumentenPage = () => {
       journal: 'bg-slate-100 text-slate-700',
       general: 'bg-slate-100 text-slate-500'
     };
-    return <Badge className={colors[type]}>{labels[type] || type}</Badge>;
+    return <Badge className={`text-xs ${colors[type]}`}>{labels[type] || type}</Badge>;
   };
 
   const formatFileSize = (bytes) => {
@@ -150,12 +150,21 @@ const DocumentenPage = () => {
     (doc.description || doc.omschrijving || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96" data-testid="documenten-page">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6" data-testid="documenten-page">
+    <div className="space-y-6 max-w-7xl" data-testid="documenten-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Documentbeheer</h1>
-          <p className="text-slate-500 mt-1">Upload en beheer documenten en bijlagen</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Documentbeheer</h1>
+          <p className="text-slate-500 mt-0.5">Upload en beheer documenten en bijlagen</p>
         </div>
         <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
           <DialogTrigger asChild>
@@ -186,14 +195,14 @@ const DocumentenPage = () => {
                     <div className="flex items-center justify-center gap-2">
                       <FileText className="w-8 h-8 text-primary" />
                       <div className="text-left">
-                        <p className="font-medium">{selectedFile.name}</p>
-                        <p className="text-sm text-slate-500">{formatFileSize(selectedFile.size)}</p>
+                        <p className="font-medium text-sm">{selectedFile.name}</p>
+                        <p className="text-xs text-slate-500">{formatFileSize(selectedFile.size)}</p>
                       </div>
                     </div>
                   ) : (
                     <>
                       <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-                      <p className="text-slate-600">Klik om een bestand te selecteren</p>
+                      <p className="text-sm text-slate-600">Klik om een bestand te selecteren</p>
                       <p className="text-xs text-slate-400 mt-1">PDF, JPG, PNG, DOC, XLS (max 10MB)</p>
                     </>
                   )}
@@ -246,32 +255,32 @@ const DocumentenPage = () => {
         </Dialog>
       </div>
 
-      {/* Summary Card */}
+      {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Totaal Documenten</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{documents.length}</p>
+                <p className="text-sm text-slate-500 mb-2">Totaal Documenten</p>
+                <p className="text-2xl font-semibold text-slate-900">{documents.length}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <FolderOpen className="w-6 h-6 text-blue-600" />
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                <FolderOpen className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Totale Grootte</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">
+                <p className="text-sm text-slate-500 mb-2">Totale Grootte</p>
+                <p className="text-2xl font-semibold text-slate-900">
                   {formatFileSize(documents.reduce((sum, d) => sum + (d.file_size || d.bestandsgrootte || 0), 0))}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <File className="w-6 h-6 text-green-600" />
+              <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+                <File className="w-5 h-5 text-green-500" />
               </div>
             </div>
           </CardContent>
@@ -279,10 +288,10 @@ const DocumentenPage = () => {
       </div>
 
       {/* Documents Table */}
-      <Card className="border-slate-200">
+      <Card className="bg-white border border-slate-100 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <CardTitle className="text-lg">Documenten</CardTitle>
+            <CardTitle className="text-base font-semibold text-slate-900">Documenten</CardTitle>
             <div className="flex gap-2">
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -310,75 +319,71 @@ const DocumentenPage = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-500">Laden...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead>Bestandsnaam</TableHead>
-                  <TableHead className="w-28">Type</TableHead>
-                  <TableHead className="w-24">Grootte</TableHead>
-                  <TableHead className="w-28">Datum</TableHead>
-                  <TableHead className="w-28">Acties</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50">
+                <TableHead className="w-12"></TableHead>
+                <TableHead className="text-xs font-medium text-slate-500">Bestandsnaam</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-slate-500">Type</TableHead>
+                <TableHead className="w-24 text-xs font-medium text-slate-500">Grootte</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-slate-500">Acties</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredDocuments.map(doc => {
+                const filename = doc.original_filename || doc.bestandsnaam || 'Onbekend';
+                const fileType = doc.file_type || doc.bestandstype || 'other';
+                const fileSize = doc.file_size || doc.bestandsgrootte || 0;
+                const description = doc.description || doc.omschrijving || '';
+                const entityType = doc.entity_type || doc.entiteit_type || 'general';
+                
+                return (
+                <TableRow key={doc.id} data-testid={`document-row-${doc.id}`}>
+                  <TableCell>{getFileIcon(fileType)}</TableCell>
+                  <TableCell>
+                    <div>
+                      <span className="text-sm font-medium text-slate-900">{filename}</span>
+                      {description && (
+                        <p className="text-xs text-slate-500">{description}</p>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell>{getEntityTypeBadge(entityType)}</TableCell>
+                  <TableCell className="text-sm text-slate-600">{formatFileSize(fileSize)}</TableCell>
+                  <TableCell className="text-sm text-slate-500">{formatDate(doc.created_at)}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(doc)}
+                        title="Downloaden"
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDelete(doc.id)}
+                        title="Verwijderen"
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredDocuments.map(doc => {
-                  const filename = doc.original_filename || doc.bestandsnaam || 'Onbekend';
-                  const fileType = doc.file_type || doc.bestandstype || 'other';
-                  const fileSize = doc.file_size || doc.bestandsgrootte || 0;
-                  const description = doc.description || doc.omschrijving || '';
-                  const entityType = doc.entity_type || doc.entiteit_type || 'general';
-                  
-                  return (
-                  <TableRow key={doc.id} data-testid={`document-row-${doc.id}`}>
-                    <TableCell>{getFileIcon(fileType)}</TableCell>
-                    <TableCell>
-                      <div>
-                        <span className="font-medium">{filename}</span>
-                        {description && (
-                          <p className="text-xs text-slate-500">{description}</p>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getEntityTypeBadge(entityType)}</TableCell>
-                    <TableCell className="font-mono text-sm">{formatFileSize(fileSize)}</TableCell>
-                    <TableCell className="text-slate-500">{formatDate(doc.created_at)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownload(doc)}
-                          title="Downloaden"
-                        >
-                          <Download className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(doc.id)}
-                          title="Verwijderen"
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )})}
-                {filteredDocuments.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                      {searchTerm ? 'Geen documenten gevonden' : 'Geen documenten. Upload uw eerste document.'}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
+              )})}
+              {filteredDocuments.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                    {searchTerm ? 'Geen documenten gevonden' : 'Geen documenten. Upload uw eerste document.'}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
