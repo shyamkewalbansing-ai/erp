@@ -464,26 +464,6 @@ export default function Layout() {
               </div>
             )}
           </div>
-          {/* Toggle Button */}
-          {!isCollapsed && (
-            <button
-              onClick={toggleSidebarCollapse}
-              className="sidebar-toggle-btn hidden lg:flex"
-              title="Sidebar inklappen"
-            >
-              <PanelLeftClose className="w-4 h-4" />
-            </button>
-          )}
-          {isCollapsed && (
-            <button
-              onClick={toggleSidebarCollapse}
-              className="sidebar-toggle-btn hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 bg-white dark:bg-slate-800 shadow-md border border-slate-200 dark:border-slate-600"
-              style={{ width: '24px', height: '24px', borderRadius: '50%' }}
-              title="Sidebar uitklappen"
-            >
-              <PanelLeftOpen className="w-3 h-3 text-slate-600" />
-            </button>
-          )}
         </div>
 
         {/* Navigation */}
