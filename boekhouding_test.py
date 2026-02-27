@@ -432,7 +432,7 @@ class BoekhoudingTester:
             print(f"   Created bankrekening ID: {response['id']}")
             print(f"   Name: {response.get('naam')}")
             print(f"   Account number: {response.get('rekeningnummer')}")
-            print(f"   Bank: {response.get('bank_naam')}")
+            print(f"   Bank: {response.get('bank')}")
             print(f"   Balance: {response.get('huidig_saldo')} {response.get('valuta')}")
             return True
         return False
