@@ -301,7 +301,7 @@ const SmartRedirect = () => {
         };
 
         // Default order - same as Layout.js sidebar
-        const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding'];
+        const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty'];
 
         // Get ordered modules (same logic as Layout.js getOrderedModules)
         let orderedModules = defaultOrder;
