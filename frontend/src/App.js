@@ -312,7 +312,7 @@ const SmartRedirect = () => {
 
         // Module routes mapping
         const moduleRoutes = {
-          'vastgoed_beheer': '/app/vastgoed',
+          'vastgoed_beheer': '/app/dashboard',
           'hrm': '/app/hrm',
           'autodealer': '/app/autodealer',
           'beauty': '/app/beautyspa',
