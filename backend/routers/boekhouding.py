@@ -300,6 +300,28 @@ class InstellingenUpdate(BaseModel):
     logo_url: Optional[str] = None
     factuur_voorwaarden: Optional[str] = None
     standaard_betalingstermijn: int = 30
+    # Email instellingen
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = 587
+    smtp_user: Optional[str] = None
+    smtp_password: Optional[str] = None
+    smtp_from_email: Optional[str] = None
+    smtp_from_name: Optional[str] = None
+    # Factuur template instellingen
+    factuur_primaire_kleur: Optional[str] = "#1e293b"
+    factuur_secundaire_kleur: Optional[str] = "#f1f5f9"
+    factuur_template: Optional[str] = "standaard"
+
+
+class BedrijfCreate(BaseModel):
+    naam: str
+    adres: Optional[str] = None
+    plaats: Optional[str] = None
+    land: str = "Suriname"
+    telefoon: Optional[str] = None
+    email: Optional[str] = None
+    btw_nummer: Optional[str] = None
+    kvk_nummer: Optional[str] = None
 
 # ==================== DASHBOARD ====================
 
