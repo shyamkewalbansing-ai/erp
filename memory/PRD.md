@@ -227,6 +227,11 @@ Dutch (Nederlands)
 | `/api/boekhouding/projecten` | GET/POST | Projecten |
 | `/api/boekhouding/rapportages/*` | GET | Diverse rapporten |
 | `/api/boekhouding/instellingen` | GET/PUT | Bedrijfsinstellingen |
+| `/api/boekhouding/instellingen/test-email` | POST | Test SMTP configuratie |
+| `/api/boekhouding/bedrijven` | GET/POST | Multi-tenant bedrijven |
+| `/api/boekhouding/bedrijven/actief` | GET | Actief bedrijf |
+| `/api/boekhouding/bedrijven/{id}/activeer` | PUT | Activeer bedrijf |
+| `/api/boekhouding/dashboard/charts` | GET | Dashboard grafieken data |
 
 ---
 
