@@ -143,29 +143,38 @@ const BoekhoudingDashboard = () => {
   const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
-  const [activeModule, setActiveModule] = useState(() => {
-    // Initialize from URL on mount
-    const path = window.location.pathname;
-    const match = path.match(/\/boekhouding\/([^/]+)/);
-    return match ? match[1] : 'dashboard';
-  });
+  const [activeModule, setActiveModule] = useState('dashboard');
   const [dashboardData, setDashboardData] = useState(null);
   const [actielijst, setActielijst] = useState([]);
   const [error, setError] = useState(null);
 
-  // Handle URL-based module selection on navigation
+  // Handle URL-based module selection - runs on every location change
+  useEffect(() => {
+    // Use a small delay to ensure URL is updated
+    const timer = setTimeout(() => {
+      const path = window.location.pathname;
+      console.log('Checking path:', path);
+      
+      const match = path.match(/\/boekhouding\/([^/]+)/);
+      if (match && match[1]) {
+        console.log('Setting active module to:', match[1]);
+        setActiveModule(match[1]);
+      } else {
+        setActiveModule('dashboard');
+      }
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [location.pathname]);
+
+  // Also check on initial mount
   useEffect(() => {
     const path = window.location.pathname;
-    console.log('Path on effect:', path);
-    
     const match = path.match(/\/boekhouding\/([^/]+)/);
     if (match && match[1]) {
-      console.log('Setting active module to:', match[1]);
       setActiveModule(match[1]);
-    } else if (path.includes('/boekhouding') && !path.match(/\/boekhouding\/.+/)) {
-      setActiveModule('dashboard');
     }
-  }, [location]);
+  }, []);
 
   // Check if system is initialized
   const checkInitialization = async () => {
