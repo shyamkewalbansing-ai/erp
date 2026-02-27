@@ -215,21 +215,24 @@ const BoekhoudingDashboard = () => {
 
   // Module navigation
   const modules = [
-    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
-    { id: 'grootboek', name: 'Grootboek', icon: BookOpen },
-    { id: 'debiteuren', name: 'Debiteuren', icon: Users },
-    { id: 'crediteuren', name: 'Crediteuren', icon: Building2 },
-    { id: 'bank', name: 'Bank/Kas', icon: Landmark },
-    { id: 'reconciliatie', name: 'Reconciliatie', icon: RefreshCcw },
-    { id: 'vaste-activa', name: 'Vaste Activa', icon: Package },
-    { id: 'voorraad', name: 'Voorraad', icon: Warehouse },
-    { id: 'wisselkoersen', name: 'Wisselkoersen', icon: DollarSign },
-    { id: 'verkoop', name: 'Verkoop', icon: Receipt },
-    { id: 'inkoop', name: 'Inkoop', icon: ShoppingCart },
-    { id: 'projecten', name: 'Projecten', icon: FolderKanban },
-    { id: 'rapportages', name: 'Rapportages', icon: FileBarChart },
-    { id: 'btw', name: 'BTW', icon: Calculator },
+    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, path: '/app/boekhouding' },
+    { id: 'grootboek', name: 'Grootboek', icon: BookOpen, path: '/app/boekhouding/grootboek' },
+    { id: 'debiteuren', name: 'Debiteuren', icon: Users, path: '/app/boekhouding/debiteuren' },
+    { id: 'crediteuren', name: 'Crediteuren', icon: Building2, path: '/app/boekhouding/crediteuren' },
+    { id: 'bank', name: 'Bank/Kas', icon: Landmark, path: '/app/boekhouding/bank' },
+    { id: 'verkoop', name: 'Verkoop', icon: Receipt, path: '/app/boekhouding/verkoop' },
+    { id: 'wisselkoersen', name: 'Wisselkoersen', icon: DollarSign, path: '/app/boekhouding/wisselkoersen' },
+    { id: 'rapportages', name: 'Rapportages', icon: FileBarChart, path: '/app/boekhouding/rapportages' },
+    { id: 'btw', name: 'BTW', icon: Calculator, path: '/app/boekhouding/btw' },
   ];
+
+  // Navigate to module
+  const handleModuleClick = (module) => {
+    setActiveModule(module.id);
+    if (module.path) {
+      navigate(module.path);
+    }
+  };
 
   // Initialization screen
   if (!initialized && !loading) {
