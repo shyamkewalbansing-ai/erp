@@ -24,10 +24,10 @@ const GrootboekPage = () => {
 
   const [newAccount, setNewAccount] = useState({
     code: '',
-    name: '',
-    type: 'asset',
-    category: '',
-    currency: 'SRD'
+    naam: '',
+    type: 'activa',
+    categorie: '',
+    valuta: 'SRD'
   });
 
   const [newJournal, setNewJournal] = useState({
