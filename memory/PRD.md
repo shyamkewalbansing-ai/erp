@@ -1,62 +1,34 @@
-# ERP Boekhouding - Product Requirements Document
+# Facturatie.sr - Product Requirements Document
 
-## Oorspronkelijke Probleemstelling
-Een uitgebreide ERP-applicatie met volledig geïntegreerde boekhoudkundige modules:
-- **Boekhouding Core**: Grootboek, Debiteuren, Crediteuren, Bank/Kas, Vaste Activa, Kostenplaatsen
-- **Inkoop Module**: Offertes, Goederenontvangst, Inkoopfacturen → Grootboek
-- **Verkoop Module**: Offertes, Verkoopfacturen → Grootboek, Prijslijsten
-- **Voorraad Module**: Artikelenbeheer, Magazijnen, Voorraadmutaties → Grootboek
-- **Projecten Module**: Projectenbeheer, Urenregistratie → Grootboek
-- **Rapportages**: Balans, Winst & Verlies, BTW Aangifte, etc.
+## Platform Overzicht
+Een multi-tenant ERP platform voor Surinaamse bedrijven met modulaire add-ons.
 
-**Vereenvoudigde Workflow (25 feb 2026):**
-- Inkoop/Verkoop Orders zijn VERWIJDERD uit de workflow
-- Offertes gaan nu direct naar Facturen (zonder tussenstap)
+## Beschikbare Modules
+- **Vastgoed Beheer** - Huurders, appartementen, betalingen, contracten
+- **HRM** - Werknemers, salarissen, verlof, roosters
+- **Auto Dealer** - Voertuigen, klanten, verkoop
+- **Suribet Retailer** - Machine management, dagrapporten, kasboek
+- **Beauty Spa** - Afspraken, behandelingen, klanten
 
 ## Technische Stack
 - **Frontend**: React met TailwindCSS, Shadcn/UI componenten
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
 - **Taal**: Nederlands (Dutch)
-- **Design**: Clean/Modern Light thema
 
-## Voltooide Functies
+## Recente Wijzigingen
 
-### 27 februari 2026 - FINANCE OS SIDEBAR INTEGRATIE (VOLTOOID)
-De Finance OS / Boekhouding module is nu volledig geïntegreerd in de hoofd applicatie sidebar:
+### 27 februari 2026 - BOEKHOUDING MODULE VERWIJDERD
+Op verzoek van gebruiker is de volledige boekhouding/Finance OS module verwijderd:
+- ❌ Frontend pagina's verwijderd (`/pages/boekhouding/`, `BoekhoudingDashboard.js`)
+- ❌ Backend router verwijderd (`boekhouding.py`)
+- ❌ Database collecties verwijderd (16 collecties)
+- ❌ Sidebar navigatie items verwijderd
+- ❌ Addon definitie verwijderd
+- ❌ User subscriptions verwijderd
+- ❌ Instellingen pagina referenties verwijderd
 
-#### Sidebar Navigatie (14 items)
-- ✅ **Dashboard** - KPI cards met Omzet, Kosten, Winst, Facturen, Debiteuren, Crediteuren, BTW, Bank balansen
-- ✅ **Grootboek** - Rekeningschema, Dagboeken, Journaalposten
-- ✅ **Debiteuren** - Klanten beheer
-- ✅ **Crediteuren** - Leveranciers beheer
-- ✅ **Bank/Kas** - Bankmutaties en kasboek
-- ✅ **BTW** - BTW aangifte en codes
-- ✅ **Verkoop** - Verkoopfacturen met tabs (Offertes, Orders, Facturen)
-- ✅ **Inkoop** - Inkoopfacturen
-- ✅ **Voorraad** - Artikelen en magazijnen
-- ✅ **Vaste Activa** - Activa register
-- ✅ **Projecten** - Urenregistratie
-- ✅ **Rapportages** - Balans, Winst & Verlies
-- ✅ **Wisselkoersen** - Centrale Bank van Suriname integratie
-- ✅ **Instellingen** - Module instellingen
-
-#### Centrale Bank van Suriname (CBvS) Integratie
-- ✅ **Live koersen ophalen** via web scraping van cbvs.sr
-- ✅ **6 wisselkoersen** worden opgehaald (USD/SRD, EUR/SRD varianten)
-- ✅ **Actuele koersen:** USD → SRD: 5,1910 | EUR → SRD: 44,0620
-- ✅ **Snelle Omrekening** sectie voor directe conversie
-- ✅ **Currency cards** met landenvlaggen (🇺🇸 🇪🇺 🇸🇷)
-
-#### Dashboard Layout (volgens referentiebeelden)
-- ✅ **EUR/SRD wisselkoers** rechtsboven (44,50)
-- ✅ **KPI Row 1:** Omzet, Kosten, Winst, Openstaande Facturen
-- ✅ **KPI Row 2:** Debiteuren, Crediteuren, BTW te betalen, BTW te vorderen
-- ✅ **KPI Row 3:** Bank SRD, Bank USD, Bank EUR
-- ✅ **Charts:** Cashflow Overzicht, Ouderdomsanalyse Debiteuren
-
-### 27 februari 2026 - BOEKHOUDING FRONTEND MODULE (VOLTOOID)
-Uitgebreide frontend module voor Surinaams boekhouden:
+Het systeem is nu clean zonder boekhouding functionaliteit.
 
 #### Frontend Pagina's
 - ✅ **BoekhoudingDashboard.js** - Hoofd dashboard met sidebar navigatie, KPI cards, en snelle acties
