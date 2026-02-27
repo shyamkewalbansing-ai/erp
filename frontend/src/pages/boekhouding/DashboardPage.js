@@ -99,12 +99,12 @@ const SmallStatCard = ({ title, value, icon: Icon, iconBg = "bg-blue-50", iconCo
       <CardContent className="p-5">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm text-slate-500 mb-2">{title}</p>
-            <p className="text-xl font-semibold text-slate-900 tracking-tight">{value}</p>
+            <p className="text-sm font-medium text-slate-500 mb-2">{title}</p>
+            <p className="font-mono text-xl font-semibold text-slate-900">{value}</p>
             {subtitle && <p className="text-xs text-slate-400 mt-1">{subtitle}</p>}
           </div>
-          <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
-            <Icon className={`w-5 h-5 ${iconColor}`} />
+          <div className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 ${iconColor}`} strokeWidth={1.5} />
           </div>
         </div>
       </CardContent>
@@ -116,8 +116,8 @@ const SmallStatCard = ({ title, value, icon: Icon, iconBg = "bg-blue-50", iconCo
 const BankCard = ({ title, currency, value, loading }) => {
   if (loading) {
     return (
-      <Card className="bg-white border border-slate-100 shadow-sm">
-        <CardContent className="p-5">
+      <Card className="border-slate-200">
+        <CardContent className="p-6">
           <Skeleton className="h-4 w-20 mb-3" />
           <Skeleton className="h-7 w-28" />
         </CardContent>
@@ -132,13 +132,13 @@ const BankCard = ({ title, currency, value, loading }) => {
   }).format(value || 0);
 
   return (
-    <Card className="bg-white border border-slate-100 shadow-sm">
-      <CardContent className="p-5">
+    <Card className="border-slate-200 hover:shadow-md transition-shadow duration-200">
+      <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-2">
           <Building2 className="w-4 h-4 text-slate-400" />
-          <p className="text-sm text-slate-500">{title}</p>
+          <p className="text-sm font-medium text-slate-500">{title}</p>
         </div>
-        <p className="text-xl font-semibold text-slate-900 tracking-tight">
+        <p className="font-mono text-xl font-semibold text-slate-900">
           {symbol === 'SRD' ? `SRD ${formattedValue}` : `${symbol} ${formattedValue}`}
         </p>
       </CardContent>
