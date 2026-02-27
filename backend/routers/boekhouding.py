@@ -3271,6 +3271,7 @@ async def test_email(to_email: str = None, authorization: str = Header(None)):
     smtp_host = instellingen.get('smtp_host') or os.environ.get('SMTP_HOST')
     smtp_user = instellingen.get('smtp_user') or os.environ.get('SMTP_USER')
     smtp_password = instellingen.get('smtp_password') or os.environ.get('SMTP_PASSWORD')
+    smtp_port = instellingen.get('smtp_port', 587)
     
     if not smtp_host or not smtp_user or not smtp_password:
         return {
@@ -3288,6 +3289,7 @@ async def test_email(to_email: str = None, authorization: str = Header(None)):
     
     try:
         import aiosmtplib
+        import asyncio
         from email.mime.text import MIMEText
         from email.mime.multipart import MIMEMultipart
         
@@ -3301,25 +3303,39 @@ async def test_email(to_email: str = None, authorization: str = Header(None)):
             <h1 style="color: #1e293b;">Test Email Geslaagd! ✅</h1>
             <p>Uw email configuratie werkt correct.</p>
             <p>Bedrijf: {instellingen.get('bedrijfsnaam', '-')}</p>
-            <p>SMTP Host: {smtp_host}</p>
+            <p>SMTP Host: {smtp_host}:{smtp_port}</p>
             <p style="color: #64748b; font-size: 12px;">Dit is een test email van Facturatie.sr</p>
         </div>
         """
         msg.attach(MIMEText(html, 'html', 'utf-8'))
         
-        await aiosmtplib.send(
-            msg,
-            hostname=smtp_host,
-            port=instellingen.get('smtp_port', 587),
-            username=smtp_user,
-            password=smtp_password,
-            start_tls=True
-        )
+        # Use timeout to prevent hanging
+        try:
+            await asyncio.wait_for(
+                aiosmtplib.send(
+                    msg,
+                    hostname=smtp_host,
+                    port=smtp_port,
+                    username=smtp_user,
+                    password=smtp_password,
+                    start_tls=True,
+                    timeout=30
+                ),
+                timeout=45
+            )
+        except asyncio.TimeoutError:
+            return {"success": False, "error": f"Timeout bij verbinden met {smtp_host}:{smtp_port}. Controleer uw SMTP-instellingen."}
         
         return {"success": True, "message": f"Test email verzonden naar {recipient_email}"}
         
+    except aiosmtplib.SMTPAuthenticationError as e:
+        return {"success": False, "error": f"Authenticatie mislukt. Controleer uw gebruikersnaam en wachtwoord. ({str(e)})"}
+    except aiosmtplib.SMTPConnectError as e:
+        return {"success": False, "error": f"Kan niet verbinden met {smtp_host}:{smtp_port}. Controleer de server en poort. ({str(e)})"}
+    except aiosmtplib.SMTPException as e:
+        return {"success": False, "error": f"SMTP fout: {str(e)}"}
     except Exception as e:
-        return {"success": False, "error": str(e)}
+        return {"success": False, "error": f"Onverwachte fout: {str(e)}"}
 
 @router.put("/herinneringen/{herinnering_id}/bevestigen")
 async def bevestig_herinnering(herinnering_id: str, authorization: str = Header(None)):
