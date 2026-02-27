@@ -581,16 +581,14 @@ class BoekhoudingTester:
     def test_create_artikel(self):
         """Test creating article"""
         artikel_data = {
-            "code": "ART-BH-001",
+            "artikelcode": "ART-BH-001",
             "naam": "Consultancy Service",
             "omschrijving": "Professional consultancy services",
             "eenheid": "uur",
             "verkoopprijs": 125.00,
             "inkoopprijs": 0.00,
-            "btw_tarief": "25",
-            "voorraad_rekening": "1300",
-            "omzet_rekening": "8000",
-            "inkoop_rekening": "7000"
+            "btw_code_verkoop": "V25",
+            "btw_code_inkoop": "I25"
         }
         
         success, response = self.run_test(
