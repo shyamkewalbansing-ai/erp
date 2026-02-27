@@ -102,20 +102,11 @@ const DebiterenPage = () => {
               <DialogTitle>Nieuwe Klant</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
-              <div className="space-y-2">
-                <Label>Klantcode *</Label>
-                <Input
-                  value={newCustomer.code}
-                  onChange={(e) => setNewCustomer({...newCustomer, code: e.target.value})}
-                  placeholder="K001"
-                  data-testid="customer-code-input"
-                />
-              </div>
-              <div className="space-y-2">
+              <div className="space-y-2 col-span-2">
                 <Label>Naam *</Label>
                 <Input
-                  value={newCustomer.name}
-                  onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
+                  value={newCustomer.naam}
+                  onChange={(e) => setNewCustomer({...newCustomer, naam: e.target.value})}
                   placeholder="Bedrijfsnaam"
                   data-testid="customer-name-input"
                 />
@@ -123,24 +114,32 @@ const DebiterenPage = () => {
               <div className="space-y-2 col-span-2">
                 <Label>Adres</Label>
                 <Input
-                  value={newCustomer.address}
-                  onChange={(e) => setNewCustomer({...newCustomer, address: e.target.value})}
+                  value={newCustomer.adres}
+                  onChange={(e) => setNewCustomer({...newCustomer, adres: e.target.value})}
                   placeholder="Straat en nummer"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Stad</Label>
+                <Label>Plaats</Label>
                 <Input
-                  value={newCustomer.city}
-                  onChange={(e) => setNewCustomer({...newCustomer, city: e.target.value})}
+                  value={newCustomer.plaats}
+                  onChange={(e) => setNewCustomer({...newCustomer, plaats: e.target.value})}
                   placeholder="Paramaribo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Land</Label>
+                <Input
+                  value={newCustomer.land}
+                  onChange={(e) => setNewCustomer({...newCustomer, land: e.target.value})}
+                  placeholder="Suriname"
                 />
               </div>
               <div className="space-y-2">
                 <Label>Telefoon</Label>
                 <Input
-                  value={newCustomer.phone}
-                  onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})}
+                  value={newCustomer.telefoon}
+                  onChange={(e) => setNewCustomer({...newCustomer, telefoon: e.target.value})}
                   placeholder="+597 123 4567"
                 />
               </div>
@@ -156,8 +155,8 @@ const DebiterenPage = () => {
               <div className="space-y-2">
                 <Label>BTW-nummer</Label>
                 <Input
-                  value={newCustomer.btw_number}
-                  onChange={(e) => setNewCustomer({...newCustomer, btw_number: e.target.value})}
+                  value={newCustomer.btw_nummer}
+                  onChange={(e) => setNewCustomer({...newCustomer, btw_nummer: e.target.value})}
                   placeholder="BTW123456"
                 />
               </div>
@@ -165,13 +164,13 @@ const DebiterenPage = () => {
                 <Label>Betalingstermijn (dagen)</Label>
                 <Input
                   type="number"
-                  value={newCustomer.payment_terms}
-                  onChange={(e) => setNewCustomer({...newCustomer, payment_terms: parseInt(e.target.value) || 30})}
+                  value={newCustomer.betalingstermijn}
+                  onChange={(e) => setNewCustomer({...newCustomer, betalingstermijn: parseInt(e.target.value) || 30})}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Valuta</Label>
-                <Select value={newCustomer.currency} onValueChange={(v) => setNewCustomer({...newCustomer, currency: v})}>
+                <Select value={newCustomer.valuta} onValueChange={(v) => setNewCustomer({...newCustomer, valuta: v})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
