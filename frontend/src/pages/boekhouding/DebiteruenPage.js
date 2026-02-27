@@ -324,13 +324,13 @@ const DebiterenPage = () => {
                 </TableHeader>
                 <TableBody>
                   {invoices.map(invoice => (
-                    <TableRow key={invoice.id} data-testid={`invoice-row-${invoice.invoice_number}`}>
-                      <TableCell className="font-mono">{invoice.invoice_number}</TableCell>
-                      <TableCell>{formatDate(invoice.date)}</TableCell>
-                      <TableCell className="font-medium">{invoice.customer_name}</TableCell>
-                      <TableCell>{formatDate(invoice.due_date)}</TableCell>
+                    <TableRow key={invoice.id} data-testid={`invoice-row-${invoice.factuurnummer}`}>
+                      <TableCell className="font-mono">{invoice.factuurnummer}</TableCell>
+                      <TableCell>{formatDate(invoice.factuurdatum)}</TableCell>
+                      <TableCell className="font-medium">{invoice.debiteur_naam}</TableCell>
+                      <TableCell>{formatDate(invoice.vervaldatum)}</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(invoice.total, invoice.currency)}
+                        {formatCurrency(invoice.totaal_incl_btw, invoice.valuta)}
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(invoice.status)}>
