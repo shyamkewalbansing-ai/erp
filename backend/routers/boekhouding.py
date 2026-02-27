@@ -32,6 +32,24 @@ except ImportError:
     PDF_ENABLED = False
     MT940_ENABLED = False
 
+# Import email service
+try:
+    from services.email_service import email_service
+    EMAIL_ENABLED = True
+except ImportError:
+    EMAIL_ENABLED = False
+
+# Import Excel export
+try:
+    from services.excel_export import (
+        export_grootboek_excel, export_debiteuren_excel, export_crediteuren_excel,
+        export_btw_aangifte_excel, export_winst_verlies_excel, export_balans_excel,
+        export_ouderdom_excel
+    )
+    EXCEL_ENABLED = True
+except ImportError:
+    EXCEL_ENABLED = False
+
 router = APIRouter(prefix="/boekhouding", tags=["Boekhouding"])
 
 # MongoDB connection
