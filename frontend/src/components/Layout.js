@@ -529,9 +529,16 @@ export default function Layout() {
                 const ModuleIcon = config.icon;
                 const isFirst = index === 0;
                 
-                // Default rendering for modules
+                // Default rendering for modules with headers
                 return (
-                  <div key={moduleSlug} className="mb-1">
+                  <div key={moduleSlug} className="mb-2">
+                    {/* Module Header - shows module name for clarity */}
+                    {!isCollapsed && (
+                      <div className="flex items-center gap-2 px-3 py-2 mt-2 mb-1">
+                        <ModuleIcon className="w-4 h-4 text-slate-400" />
+                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{config.name}</span>
+                      </div>
+                    )}
                     {isCollapsed && !isFirst && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
                     {config.items.filter(item => config.alwaysShow || hasAddon(item.addon)).map((item) => (
                       item.external ? (
