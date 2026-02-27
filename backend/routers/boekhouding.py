@@ -2979,9 +2979,6 @@ async def send_herinnering_email(herinnering_id: str, authorization: str = Heade
     user = await get_current_user(authorization)
     user_id = user.get('id')
     
-    if not EMAIL_ENABLED:
-        raise HTTPException(status_code=501, detail="Email service niet beschikbaar")
-    
     # Haal herinnering
     herinnering = await db.boekhouding_herinneringen.find_one({"id": herinnering_id, "user_id": user_id})
     if not herinnering:
@@ -3000,19 +2997,31 @@ async def send_herinnering_email(herinnering_id: str, authorization: str = Heade
     if not debiteur or not debiteur.get('email'):
         raise HTTPException(status_code=400, detail="Debiteur heeft geen email adres")
     
-    # Haal bedrijfsinstellingen
+    # Haal bedrijfsinstellingen (inclusief SMTP)
     instellingen = await db.boekhouding_instellingen.find_one({"user_id": user_id})
-    instellingen = clean_doc(instellingen) if instellingen else {
-        "bedrijfsnaam": user.get('company_name', 'Uw Bedrijf'),
-        "email": user.get('email', '')
-    }
+    instellingen = clean_doc(instellingen) if instellingen else {}
+    
+    # Check SMTP configuratie
+    smtp_host = instellingen.get('smtp_host') or os.environ.get('SMTP_HOST')
+    smtp_user = instellingen.get('smtp_user') or os.environ.get('SMTP_USER')
+    smtp_password = instellingen.get('smtp_password') or os.environ.get('SMTP_PASSWORD')
+    
+    if not smtp_host or not smtp_user or not smtp_password:
+        return {
+            "success": False,
+            "error": "Email niet geconfigureerd. Ga naar Instellingen om SMTP in te stellen.",
+            "smtp_configured": False
+        }
     
     # Genereer email HTML
-    html = email_service.generate_reminder_html(
-        herinnering=clean_doc(herinnering),
-        bedrijf=instellingen,
-        factuur=factuur
-    )
+    if EMAIL_ENABLED:
+        html = email_service.generate_reminder_html(
+            herinnering=clean_doc(herinnering),
+            bedrijf=instellingen,
+            factuur=factuur
+        )
+    else:
+        html = f"<h1>Betalingsherinnering</h1><p>Factuur: {herinnering.get('factuurnummer')}</p>"
     
     # Type labels
     type_labels = {
@@ -3022,14 +3031,27 @@ async def send_herinnering_email(herinnering_id: str, authorization: str = Heade
     }
     subject = f"{type_labels.get(herinnering.get('type', 'eerste'), 'Herinnering')} - Factuur {herinnering.get('factuurnummer', '')}"
     
-    # Verzend email
-    result = await email_service.send_email(
-        to_email=debiteur['email'],
-        subject=subject,
-        body_html=html
-    )
-    
-    if result.get('success'):
+    # Verzend email via SMTP
+    try:
+        import aiosmtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"{instellingen.get('smtp_from_name', instellingen.get('bedrijfsnaam', 'Facturatie'))} <{instellingen.get('smtp_from_email', smtp_user)}>"
+        msg['To'] = debiteur['email']
+        msg.attach(MIMEText(html, 'html', 'utf-8'))
+        
+        await aiosmtplib.send(
+            msg,
+            hostname=smtp_host,
+            port=instellingen.get('smtp_port', 587),
+            username=smtp_user,
+            password=smtp_password,
+            start_tls=True
+        )
+        
         # Update herinnering status
         await db.boekhouding_herinneringen.update_one(
             {"id": herinnering_id},
@@ -3044,8 +3066,67 @@ async def send_herinnering_email(herinnering_id: str, authorization: str = Heade
             "email": debiteur['email'],
             "type": herinnering.get('type')
         })
+        
+        return {"success": True, "message": f"Email verzonden naar {debiteur['email']}"}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+
+
+@router.post("/instellingen/test-email")
+async def test_email(to_email: str, authorization: str = Header(None)):
+    """Test email configuratie"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
     
-    return result
+    # Haal instellingen
+    instellingen = await db.boekhouding_instellingen.find_one({"user_id": user_id})
+    instellingen = clean_doc(instellingen) if instellingen else {}
+    
+    smtp_host = instellingen.get('smtp_host') or os.environ.get('SMTP_HOST')
+    smtp_user = instellingen.get('smtp_user') or os.environ.get('SMTP_USER')
+    smtp_password = instellingen.get('smtp_password') or os.environ.get('SMTP_PASSWORD')
+    
+    if not smtp_host or not smtp_user or not smtp_password:
+        return {
+            "success": False,
+            "error": "SMTP niet geconfigureerd. Vul SMTP Host, Gebruikersnaam en Wachtwoord in."
+        }
+    
+    try:
+        import aiosmtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "Test Email - Facturatie.sr"
+        msg['From'] = f"{instellingen.get('smtp_from_name', 'Facturatie')} <{instellingen.get('smtp_from_email', smtp_user)}>"
+        msg['To'] = to_email
+        
+        html = f"""
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+            <h1 style="color: #1e293b;">Test Email Geslaagd! ✅</h1>
+            <p>Uw email configuratie werkt correct.</p>
+            <p>Bedrijf: {instellingen.get('bedrijfsnaam', '-')}</p>
+            <p>SMTP Host: {smtp_host}</p>
+            <p style="color: #64748b; font-size: 12px;">Dit is een test email van Facturatie.sr</p>
+        </div>
+        """
+        msg.attach(MIMEText(html, 'html', 'utf-8'))
+        
+        await aiosmtplib.send(
+            msg,
+            hostname=smtp_host,
+            port=instellingen.get('smtp_port', 587),
+            username=smtp_user,
+            password=smtp_password,
+            start_tls=True
+        )
+        
+        return {"success": True, "message": f"Test email verzonden naar {to_email}"}
+        
+    except Exception as e:
+        return {"success": False, "error": str(e)}
 
 @router.put("/herinneringen/{herinnering_id}/bevestigen")
 async def bevestig_herinnering(herinnering_id: str, authorization: str = Header(None)):
