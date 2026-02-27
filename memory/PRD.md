@@ -333,4 +333,4 @@ Aangepaste pagina's:
 
 ---
 
-*Laatste update: 27 december 2025 - Finance OS UI Refactoring voltooid*
+*Laatste update: 27 december 2025 - Product Foto Upload & Artikel Selectie voltooid*
