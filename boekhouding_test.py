@@ -673,9 +673,11 @@ class BoekhoudingTester:
         project_id = self.created_resources['projecten'][0]
         
         hours_data = {
+            "project_id": project_id,
             "datum": "2026-02-27",
             "medewerker_naam": "John Doe",
-            "uren": 8.0,
+            "activiteit": "System analysis and design",
+            "aantal_uren": 8.0,
             "tarief": 125.00,
             "omschrijving": "System analysis and design",
             "factureerbaar": True
