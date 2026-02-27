@@ -210,21 +210,19 @@ const InstellingenPage = () => {
 
   if (loading) {
     return (
-      <div className="space-y-6" data-testid="instellingen-page">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-        </div>
+      <div className="flex items-center justify-center h-96" data-testid="instellingen-page">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6" data-testid="instellingen-page">
+    <div className="space-y-6 max-w-7xl" data-testid="instellingen-page">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Instellingen</h1>
-          <p className="text-slate-500 mt-1">Beheer uw bedrijfsgegevens, e-mail en factuurinstellingen</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Instellingen</h1>
+          <p className="text-slate-500 mt-0.5">Beheer uw bedrijfsgegevens, e-mail en factuurinstellingen</p>
         </div>
         <Button 
           onClick={handleSave} 
@@ -241,7 +239,7 @@ const InstellingenPage = () => {
       </div>
 
       <Tabs defaultValue="bedrijf" className="space-y-6">
-        <TabsList className="bg-slate-100">
+        <TabsList className="bg-slate-100/80">
           <TabsTrigger value="bedrijf" className="gap-2">
             <Building2 className="w-4 h-4" />
             Bedrijf

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { formatDate } from '../../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { History, Search, Filter, User, FileText, Settings, Database, Download, RefreshCw, Eye, Edit, Trash2, Plus, CheckCircle } from 'lucide-react';
+import { History, Search, User, Database, Download, RefreshCw, Eye, Edit, Trash2, Plus, CheckCircle, FileText, Loader2 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -47,7 +47,6 @@ const AuditTrailPage = () => {
         const data = await response.json();
         setAuditLogs(Array.isArray(data) ? data : data.data || []);
       } else {
-        // Als endpoint niet bestaat, toon demo data
         setAuditLogs(generateDemoData());
       }
     } catch (error) {
@@ -80,7 +79,6 @@ const AuditTrailPage = () => {
 
   const handleExport = () => {
     toast.success('Audit trail wordt geëxporteerd...');
-    // In productie zou dit een CSV/Excel export genereren
   };
 
   const getActionIcon = (action) => {
@@ -97,29 +95,29 @@ const AuditTrailPage = () => {
   };
 
   const getActionLabel = (action) => {
-    switch (action) {
-      case 'create': return 'Aangemaakt';
-      case 'update': return 'Bijgewerkt';
-      case 'delete': return 'Verwijderd';
-      case 'view': return 'Bekeken';
-      case 'verzenden': return 'Verzonden';
-      case 'betaling': return 'Betaling';
-      case 'boeken': return 'Geboekt';
-      default: return action;
-    }
+    const labels = {
+      'create': 'Aangemaakt',
+      'update': 'Bijgewerkt',
+      'delete': 'Verwijderd',
+      'view': 'Bekeken',
+      'verzenden': 'Verzonden',
+      'betaling': 'Betaling',
+      'boeken': 'Geboekt'
+    };
+    return labels[action] || action;
   };
 
   const getActionColor = (action) => {
-    switch (action) {
-      case 'create': return 'bg-green-100 text-green-800';
-      case 'update': return 'bg-blue-100 text-blue-800';
-      case 'delete': return 'bg-red-100 text-red-800';
-      case 'view': return 'bg-slate-100 text-slate-800';
-      case 'verzenden': return 'bg-green-100 text-green-800';
-      case 'betaling': return 'bg-blue-100 text-blue-800';
-      case 'boeken': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-slate-100 text-slate-800';
-    }
+    const colors = {
+      'create': 'bg-green-100 text-green-700',
+      'update': 'bg-blue-100 text-blue-700',
+      'delete': 'bg-red-100 text-red-700',
+      'view': 'bg-slate-100 text-slate-700',
+      'verzenden': 'bg-green-100 text-green-700',
+      'betaling': 'bg-blue-100 text-blue-700',
+      'boeken': 'bg-purple-100 text-purple-700'
+    };
+    return colors[action] || 'bg-slate-100 text-slate-700';
   };
 
   const getModuleLabel = (module) => {
@@ -157,12 +155,21 @@ const AuditTrailPage = () => {
     updates: auditLogs.filter(l => l.action === 'update').length
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96" data-testid="audit-trail-page">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6" data-testid="audit-trail-page">
+    <div className="space-y-6 max-w-7xl" data-testid="audit-trail-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Audit Trail</h1>
-          <p className="text-slate-500 mt-1">Bekijk alle gebruikersacties en wijzigingen</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Audit Trail</h1>
+          <p className="text-slate-500 mt-0.5">Bekijk alle gebruikersacties en wijzigingen</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={fetchData}>
@@ -178,54 +185,54 @@ const AuditTrailPage = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Totaal Acties</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{stats.totaal}</p>
+                <p className="text-sm text-slate-500 mb-2">Totaal Acties</p>
+                <p className="text-2xl font-semibold text-slate-900">{stats.totaal}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <History className="w-6 h-6 text-blue-600" />
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                <History className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Vandaag</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{stats.vandaag}</p>
+                <p className="text-sm text-slate-500 mb-2">Vandaag</p>
+                <p className="text-2xl font-semibold text-slate-900">{stats.vandaag}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <Database className="w-6 h-6 text-green-600" />
+              <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+                <Database className="w-5 h-5 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Aangemaakt</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{stats.creates}</p>
+                <p className="text-sm text-slate-500 mb-2">Aangemaakt</p>
+                <p className="text-2xl font-semibold text-slate-900">{stats.creates}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                <Plus className="w-6 h-6 text-purple-600" />
+              <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center">
+                <Plus className="w-5 h-5 text-purple-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Bijgewerkt</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{stats.updates}</p>
+                <p className="text-sm text-slate-500 mb-2">Bijgewerkt</p>
+                <p className="text-2xl font-semibold text-slate-900">{stats.updates}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                <Edit className="w-6 h-6 text-amber-600" />
+              <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                <Edit className="w-5 h-5 text-amber-500" />
               </div>
             </div>
           </CardContent>
@@ -233,7 +240,7 @@ const AuditTrailPage = () => {
       </div>
 
       {/* Filters */}
-      <Card className="border-slate-200">
+      <Card className="bg-white border border-slate-100 shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
@@ -279,81 +286,76 @@ const AuditTrailPage = () => {
               </Select>
             </div>
             <div className="w-36">
-              <Input type="date" value={dateRange.van} onChange={(e) => setDateRange({...dateRange, van: e.target.value})} placeholder="Van" />
+              <Input type="date" value={dateRange.van} onChange={(e) => setDateRange({...dateRange, van: e.target.value})} />
             </div>
             <div className="w-36">
-              <Input type="date" value={dateRange.tot} onChange={(e) => setDateRange({...dateRange, tot: e.target.value})} placeholder="Tot" />
+              <Input type="date" value={dateRange.tot} onChange={(e) => setDateRange({...dateRange, tot: e.target.value})} />
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Audit Logs Table */}
-      <Card className="border-slate-200">
+      <Card className="bg-white border border-slate-100 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-lg">Activiteitenlog</CardTitle>
-          <CardDescription>Chronologisch overzicht van alle gebruikersacties</CardDescription>
+          <CardTitle className="text-base font-semibold text-slate-900">Activiteitenlog</CardTitle>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="text-center py-8 text-slate-500">Laden...</div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="w-12"></TableHead>
-                  <TableHead className="w-40">Tijdstip</TableHead>
-                  <TableHead>Gebruiker</TableHead>
-                  <TableHead className="w-28">Module</TableHead>
-                  <TableHead className="w-28">Actie</TableHead>
-                  <TableHead>Entiteit</TableHead>
-                  <TableHead className="w-32">IP Adres</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50">
+                <TableHead className="w-12 text-xs font-medium text-slate-500"></TableHead>
+                <TableHead className="w-40 text-xs font-medium text-slate-500">Tijdstip</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500">Gebruiker</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-slate-500">Module</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-slate-500">Actie</TableHead>
+                <TableHead className="text-xs font-medium text-slate-500">Entiteit</TableHead>
+                <TableHead className="w-32 text-xs font-medium text-slate-500">IP Adres</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredLogs.map(log => (
+                <TableRow key={log.id}>
+                  <TableCell>{getActionIcon(log.action)}</TableCell>
+                  <TableCell className="text-sm text-slate-600">
+                    <div>{formatDate(log.timestamp)}</div>
+                    <div className="text-slate-400 text-xs">{new Date(log.timestamp).toLocaleTimeString('nl-NL')}</div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                        <User className="w-4 h-4 text-slate-500" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium text-slate-900">{log.user_name || 'Onbekend'}</div>
+                        <div className="text-xs text-slate-500">{log.user_email}</div>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs">{getModuleLabel(log.module)}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={`text-xs ${getActionColor(log.action)}`}>{getActionLabel(log.action)}</Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">
+                      <div className="font-medium text-slate-900">{log.entity_type}</div>
+                      <div className="text-slate-500 text-xs">{log.entity_id}</div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-sm text-slate-500">{log.ip_address || '-'}</TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredLogs.map(log => (
-                  <TableRow key={log.id}>
-                    <TableCell>{getActionIcon(log.action)}</TableCell>
-                    <TableCell className="text-sm">
-                      <div>{formatDate(log.timestamp)}</div>
-                      <div className="text-slate-400 text-xs">{new Date(log.timestamp).toLocaleTimeString('nl-NL')}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                          <User className="w-4 h-4 text-slate-500" />
-                        </div>
-                        <div>
-                          <div className="font-medium">{log.user_name || 'Onbekend'}</div>
-                          <div className="text-sm text-slate-500">{log.user_email}</div>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{getModuleLabel(log.module)}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge className={getActionColor(log.action)}>{getActionLabel(log.action)}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">
-                        <div className="font-medium">{log.entity_type}</div>
-                        <div className="text-slate-500 font-mono text-xs">{log.entity_id}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm text-slate-500">{log.ip_address || '-'}</TableCell>
-                  </TableRow>
-                ))}
-                {filteredLogs.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-slate-500">
-                      Geen audit logs gevonden met deze filters
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
+              ))}
+              {filteredLogs.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                    Geen audit logs gevonden met deze filters
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>
