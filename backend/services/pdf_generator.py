@@ -219,37 +219,78 @@ def generate_invoice_pdf(
     # === FACTUURREGELS ===
     content.append(Paragraph("FACTUURREGELS", heading_style))
     
-    # Header row
-    regels_header = [
-        Paragraph("<b>Omschrijving</b>", normal_style),
-        Paragraph("<b>Aantal</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
-        Paragraph("<b>Prijs</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
-        Paragraph("<b>BTW</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
-        Paragraph("<b>Bedrag</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT))
-    ]
+    # Check if any regel has a foto_url to determine if we need the foto column
+    regels = factuur.get('regels', [])
+    has_fotos = any(regel.get('foto_url') for regel in regels)
+    
+    # Header row - with or without foto column
+    if has_fotos:
+        regels_header = [
+            Paragraph("<b>Foto</b>", normal_style),
+            Paragraph("<b>Omschrijving</b>", normal_style),
+            Paragraph("<b>Aantal</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+            Paragraph("<b>Prijs</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+            Paragraph("<b>BTW</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+            Paragraph("<b>Bedrag</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT))
+        ]
+        col_widths = [15*mm, 55*mm, 20*mm, 30*mm, 20*mm, 30*mm]
+    else:
+        regels_header = [
+            Paragraph("<b>Omschrijving</b>", normal_style),
+            Paragraph("<b>Aantal</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+            Paragraph("<b>Prijs</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+            Paragraph("<b>BTW</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+            Paragraph("<b>Bedrag</b>", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT))
+        ]
+        col_widths = [70*mm, 20*mm, 30*mm, 20*mm, 30*mm]
     
     regels_data = [regels_header]
     valuta = factuur.get('valuta', 'SRD')
     
     # Factuurregels
-    regels = factuur.get('regels', [])
     for regel in regels:
         omschrijving = regel.get('omschrijving', regel.get('artikel_naam', 'Product/Dienst'))
         aantal = regel.get('aantal', 1)
         prijs = regel.get('eenheidsprijs', 0)
         btw_perc = regel.get('btw_percentage', 0)
         bedrag = regel.get('bedrag_incl', regel.get('bedrag_excl', aantal * prijs))
+        foto_url = regel.get('foto_url', '')
         
-        regels_data.append([
-            Paragraph(omschrijving, normal_style),
-            Paragraph(str(aantal), ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
-            Paragraph(format_currency(prijs, valuta), ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
-            Paragraph(f"{btw_perc}%", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
-            Paragraph(format_currency(bedrag, valuta), ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT))
-        ])
+        # Create row data
+        if has_fotos:
+            # Try to load product image
+            foto_cell = ""
+            if foto_url:
+                try:
+                    import os
+                    # Handle local file path
+                    if foto_url.startswith('/api/boekhouding/images/'):
+                        filename = foto_url.split('/')[-1]
+                        local_path = f"/app/backend/uploads/{filename}"
+                        if os.path.exists(local_path):
+                            foto_cell = Image(local_path, width=12*mm, height=12*mm)
+                except Exception:
+                    foto_cell = ""
+            
+            regels_data.append([
+                foto_cell,
+                Paragraph(omschrijving, normal_style),
+                Paragraph(str(aantal), ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+                Paragraph(format_currency(prijs, valuta), ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+                Paragraph(f"{btw_perc}%", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+                Paragraph(format_currency(bedrag, valuta), ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT))
+            ])
+        else:
+            regels_data.append([
+                Paragraph(omschrijving, normal_style),
+                Paragraph(str(aantal), ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+                Paragraph(format_currency(prijs, valuta), ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+                Paragraph(f"{btw_perc}%", ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT)),
+                Paragraph(format_currency(bedrag, valuta), ParagraphStyle('Right', parent=normal_style, alignment=TA_RIGHT))
+            ])
     
     # Maak tabel met template-specifieke styling
-    regels_table = Table(regels_data, colWidths=[70*mm, 20*mm, 30*mm, 20*mm, 30*mm])
+    regels_table = Table(regels_data, colWidths=col_widths)
     
     # Template-specific table styles
     table_style_commands = [
