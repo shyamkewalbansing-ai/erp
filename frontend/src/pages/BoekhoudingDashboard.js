@@ -551,31 +551,46 @@ const BoekhoudingDashboard = () => {
             </div>
           )}
 
-          {/* Placeholder for other modules - will be expanded */}
-          {activeModule !== 'dashboard' && (
-            <div className="max-w-4xl mx-auto">
-              <div className="bg-white rounded-xl border border-gray-200 p-8 text-center">
-                <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto">
-                  {(() => {
-                    const module = modules.find(m => m.id === activeModule);
-                    const Icon = module?.icon || BookOpen;
-                    return <Icon className="w-8 h-8 text-blue-600" />;
-                  })()}
-                </div>
-                <h2 className="text-xl font-bold text-gray-900 mt-4">
-                  {modules.find(m => m.id === activeModule)?.name || 'Module'}
-                </h2>
-                <p className="text-gray-500 mt-2">
-                  Deze module wordt binnenkort uitgebreid met alle functionaliteit.
-                </p>
-                <button
-                  onClick={() => setActiveModule('dashboard')}
-                  className="mt-6 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Terug naar Dashboard
-                </button>
-              </div>
-            </div>
+          {/* Render sub-module pages */}
+          {activeModule === 'debiteuren' && (
+            <Suspense fallback={<PageLoader />}>
+              <DebiteurenPage />
+            </Suspense>
+          )}
+          {activeModule === 'crediteuren' && (
+            <Suspense fallback={<PageLoader />}>
+              <CrediteurenPage />
+            </Suspense>
+          )}
+          {activeModule === 'verkoop' && (
+            <Suspense fallback={<PageLoader />}>
+              <VerkoopfacturenPage />
+            </Suspense>
+          )}
+          {activeModule === 'bank' && (
+            <Suspense fallback={<PageLoader />}>
+              <BankPage />
+            </Suspense>
+          )}
+          {activeModule === 'grootboek' && (
+            <Suspense fallback={<PageLoader />}>
+              <GrootboekPage />
+            </Suspense>
+          )}
+          {activeModule === 'btw' && (
+            <Suspense fallback={<PageLoader />}>
+              <BTWPage />
+            </Suspense>
+          )}
+          {activeModule === 'rapportages' && (
+            <Suspense fallback={<PageLoader />}>
+              <RapportagesPage />
+            </Suspense>
+          )}
+          {activeModule === 'wisselkoersen' && (
+            <Suspense fallback={<PageLoader />}>
+              <WisselkoersenPage />
+            </Suspense>
           )}
         </main>
       </div>
