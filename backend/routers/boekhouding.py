@@ -1744,6 +1744,17 @@ async def get_verkoopfactuur_pdf(factuur_id: str, authorization: str = Header(No
         if debiteur:
             debiteur = clean_doc(debiteur)
     
+    # Verrijk factuurregels met foto_url van artikelen
+    factuur_clean = clean_doc(factuur)
+    regels = factuur_clean.get('regels', [])
+    for regel in regels:
+        artikel_id = regel.get('artikel_id') or regel.get('product_id')
+        if artikel_id:
+            artikel = await db.boekhouding_artikelen.find_one({"id": artikel_id, "user_id": user_id})
+            if artikel and artikel.get('foto_url'):
+                regel['foto_url'] = artikel.get('foto_url')
+    factuur_clean['regels'] = regels
+    
     # Genereer PDF
     if PDF_ENABLED:
         try:
@@ -1756,7 +1767,7 @@ async def get_verkoopfactuur_pdf(factuur_id: str, authorization: str = Header(No
             }
             
             pdf_bytes = generate_invoice_pdf(
-                factuur=clean_doc(factuur),
+                factuur=factuur_clean,
                 bedrijf=clean_doc(instellingen) if instellingen else {},
                 debiteur=debiteur,
                 template_settings=template_settings
