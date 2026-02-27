@@ -223,7 +223,7 @@ class BoekhoudingTester:
         if success:
             print(f"   Found {len(response)} debiteuren")
             for debiteur in response:
-                print(f"   - {debiteur.get('naam')} ({debiteur.get('standaard_valuta')})")
+                print(f"   - {debiteur.get('bedrijfsnaam')} ({debiteur.get('valuta')})")
             return True
         return False
     
