@@ -1610,12 +1610,17 @@ async def create_verkoopfactuur(data: VerkoopfactuurCreate, authorization: str =
         bedrag_excl = aantal * prijs * (1 - korting / 100)
         btw = bedrag_excl * btw_perc / 100
         
-        regels_met_btw.append({
+        # Store artikel_id from either product_id or artikel_id field
+        artikel_id = regel.get("product_id") or regel.get("artikel_id")
+        
+        regel_data = {
             **regel,
+            "artikel_id": artikel_id,
             "bedrag_excl": bedrag_excl,
             "btw_bedrag": btw,
             "bedrag_incl": bedrag_excl + btw
-        })
+        }
+        regels_met_btw.append(regel_data)
         
         subtotaal += bedrag_excl
         btw_bedrag += btw
