@@ -386,13 +386,13 @@ const GrootboekPage = () => {
                           {accs.map(account => (
                             <TableRow key={account.id} data-testid={`account-row-${account.code}`}>
                               <TableCell className="font-mono">{account.code}</TableCell>
-                              <TableCell className="font-medium">{account.name}</TableCell>
-                              <TableCell className="text-slate-500">{account.category}</TableCell>
+                              <TableCell className="font-medium">{account.naam}</TableCell>
+                              <TableCell className="text-slate-500">{account.categorie}</TableCell>
                               <TableCell>
-                                <Badge variant="outline">{account.currency}</Badge>
+                                <Badge variant="outline">{account.valuta}</Badge>
                               </TableCell>
-                              <TableCell className={`text-right font-mono ${account.balance < 0 ? 'text-red-600' : ''}`}>
-                                {formatCurrency(account.balance, account.currency)}
+                              <TableCell className={`text-right font-mono ${account.saldo < 0 ? 'text-red-600' : ''}`}>
+                                {formatCurrency(account.saldo || 0, account.valuta)}
                               </TableCell>
                             </TableRow>
                           ))}
