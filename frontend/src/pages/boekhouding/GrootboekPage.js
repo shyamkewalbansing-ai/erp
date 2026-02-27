@@ -243,13 +243,13 @@ const GrootboekPage = () => {
                     <Label>Datum</Label>
                     <Input
                       type="date"
-                      value={newJournal.date}
-                      onChange={(e) => setNewJournal({...newJournal, date: e.target.value})}
+                      value={newJournal.datum}
+                      onChange={(e) => setNewJournal({...newJournal, datum: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Dagboek</Label>
-                    <Select value={newJournal.journal_type} onValueChange={(v) => setNewJournal({...newJournal, journal_type: v})}>
+                    <Select value={newJournal.dagboek_code} onValueChange={(v) => setNewJournal({...newJournal, dagboek_code: v})}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -263,8 +263,8 @@ const GrootboekPage = () => {
                   <div className="space-y-2">
                     <Label>Omschrijving</Label>
                     <Input
-                      value={newJournal.description}
-                      onChange={(e) => setNewJournal({...newJournal, description: e.target.value})}
+                      value={newJournal.omschrijving}
+                      onChange={(e) => setNewJournal({...newJournal, omschrijving: e.target.value})}
                       placeholder="Omschrijving"
                     />
                   </div>
@@ -280,10 +280,10 @@ const GrootboekPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {newJournal.lines.map((line, idx) => (
+                      {newJournal.regels.map((regel, idx) => (
                         <TableRow key={idx}>
                           <TableCell>
-                            <Select value={line.account_id} onValueChange={(v) => updateJournalLine(idx, 'account_id', v)}>
+                            <Select value={regel.rekening_id} onValueChange={(v) => updateJournalLine(idx, 'rekening_id', v)}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Kies rekening" />
                               </SelectTrigger>
@@ -298,8 +298,8 @@ const GrootboekPage = () => {
                             <Input
                               type="number"
                               step="0.01"
-                              value={line.debit || ''}
-                              onChange={(e) => updateJournalLine(idx, 'debit', e.target.value)}
+                              value={regel.debet || ''}
+                              onChange={(e) => updateJournalLine(idx, 'debet', e.target.value)}
                               className="text-right font-mono"
                             />
                           </TableCell>
@@ -307,7 +307,7 @@ const GrootboekPage = () => {
                             <Input
                               type="number"
                               step="0.01"
-                              value={line.credit || ''}
+                              value={regel.credit || ''}
                               onChange={(e) => updateJournalLine(idx, 'credit', e.target.value)}
                               className="text-right font-mono"
                             />
@@ -317,10 +317,10 @@ const GrootboekPage = () => {
                       <TableRow className="bg-slate-50 font-medium">
                         <TableCell>Totaal</TableCell>
                         <TableCell className="text-right font-mono">
-                          {formatCurrency(newJournal.lines.reduce((s, l) => s + (parseFloat(l.debit) || 0), 0), 'SRD', false)}
+                          {formatCurrency(newJournal.regels.reduce((s, l) => s + (parseFloat(l.debet) || 0), 0), 'SRD', false)}
                         </TableCell>
                         <TableCell className="text-right font-mono">
-                          {formatCurrency(newJournal.lines.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0), 'SRD', false)}
+                          {formatCurrency(newJournal.regels.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0), 'SRD', false)}
                         </TableCell>
                       </TableRow>
                     </TableBody>
