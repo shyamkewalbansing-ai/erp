@@ -137,6 +137,9 @@ const BoekhoudingProjecten = lazy(() => import("./pages/boekhouding/ProjectenPag
 const BoekhoudingRapportages = lazy(() => import("./pages/boekhouding/RapportagesPage"));
 const BoekhoudingWisselkoersen = lazy(() => import("./pages/boekhouding/WisselkoersenPage"));
 const BoekhoudingInstellingen = lazy(() => import("./pages/boekhouding/InstellingenPage"));
+const BoekhoudingHerinneringen = lazy(() => import("./pages/boekhouding/HerinneringenPage"));
+const BoekhoudingDocumenten = lazy(() => import("./pages/boekhouding/DocumentenPage"));
+const BoekhoudingAuditTrail = lazy(() => import("./pages/boekhouding/AuditTrailPage"));
 
 // Suribet Module
 const SuribetDashboard = lazy(() => import("./pages/suribet/DashboardPage"));
