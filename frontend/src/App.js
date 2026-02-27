@@ -633,6 +633,8 @@ function MainAppRoutes() {
           <Route path="vastgoed/handleiding" element={
             <SubscriptionRoute><VastgoedHandleiding /></SubscriptionRoute>
           } />
+          {/* Vastgoed module redirect */}
+          <Route path="vastgoed" element={<Navigate to="/app/dashboard" replace />} />
           <Route path="abonnement" element={<Abonnement />} />
           <Route path="instellingen" element={<Instellingen />} />
           <Route path="betaalmethodes" element={<BetaalmethodesPage />} />
