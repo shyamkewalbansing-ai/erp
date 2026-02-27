@@ -3054,6 +3054,11 @@ async def get_instellingen(authorization: str = Header(None)):
             "bank_naam": "",
             "bank_rekening": "",
             "standaard_betalingstermijn": 30,
+            # Factuur template instellingen
+            "factuur_primaire_kleur": "#1e293b",
+            "factuur_secundaire_kleur": "#f1f5f9",
+            "factuur_template": "standaard",
+            "factuur_voorwaarden": "",
             "created_at": datetime.now(timezone.utc)
         }
         await db.boekhouding_instellingen.insert_one(instellingen)
