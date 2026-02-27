@@ -8,6 +8,7 @@ import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../../components/ui/dialog';
+import { Switch } from '../../components/ui/switch';
 import { toast } from 'sonner';
 import { 
   Settings, 
@@ -24,8 +25,13 @@ import {
   Plus,
   Trash2,
   Check,
-  Building
+  Building,
+  Bell,
+  Clock,
+  Play
 } from 'lucide-react';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const InstellingenPage = () => {
   const [settings, setSettings] = useState({
@@ -52,7 +58,12 @@ const InstellingenPage = () => {
     // Factuur template instellingen
     factuur_primaire_kleur: '#1e293b',
     factuur_secundaire_kleur: '#f1f5f9',
-    factuur_template: 'standaard'
+    factuur_template: 'standaard',
+    // Automatische herinneringen
+    auto_herinneringen_enabled: false,
+    dagen_voor_eerste_herinnering: 7,
+    dagen_tussen_herinneringen: 7,
+    max_herinneringen: 3
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
