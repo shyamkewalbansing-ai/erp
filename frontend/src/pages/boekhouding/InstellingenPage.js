@@ -140,6 +140,53 @@ const InstellingenPage = () => {
     }
   };
 
+  // Multi-tenant functies
+  const handleCreateBedrijf = async () => {
+    if (!newBedrijf.naam) {
+      toast.error('Bedrijfsnaam is verplicht');
+      return;
+    }
+    
+    setSavingBedrijf(true);
+    try {
+      await bedrijvenAPI.create(newBedrijf);
+      toast.success('Bedrijf aangemaakt');
+      setNewBedrijf({ naam: '', adres: '', plaats: '', btw_nummer: '' });
+      setShowNewBedrijfDialog(false);
+      fetchBedrijven();
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || 'Fout bij aanmaken bedrijf');
+    } finally {
+      setSavingBedrijf(false);
+    }
+  };
+
+  const handleActiveerBedrijf = async (bedrijfId) => {
+    try {
+      await bedrijvenAPI.activeer(bedrijfId);
+      toast.success('Bedrijf geactiveerd - data wordt nu gefilterd op dit bedrijf');
+      fetchBedrijven();
+      // Refresh instellingen voor nieuwe bedrijf
+      fetchSettings();
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || 'Fout bij activeren bedrijf');
+    }
+  };
+
+  const handleDeleteBedrijf = async (bedrijfId) => {
+    if (!window.confirm('Weet u zeker dat u dit bedrijf wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) {
+      return;
+    }
+    
+    try {
+      await bedrijvenAPI.delete(bedrijfId);
+      toast.success('Bedrijf verwijderd');
+      fetchBedrijven();
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || 'Fout bij verwijderen bedrijf');
+    }
+  };
+
   const months = [
     { value: 1, label: 'Januari' },
     { value: 2, label: 'Februari' },
