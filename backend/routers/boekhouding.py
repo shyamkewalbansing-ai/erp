@@ -5,7 +5,7 @@ Refactored to match the frontend API client (boekhoudingApi.js)
 """
 
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, BackgroundTasks, Header, Query
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, Response
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date, timedelta, timezone
@@ -21,6 +21,16 @@ from bson import ObjectId
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+# Import PDF generator and MT940 parser
+try:
+    from services.pdf_generator import generate_invoice_pdf, generate_reminder_pdf
+    from services.mt940_parser import parse_mt940_file, suggest_reconciliation, MT940Transaction
+    PDF_ENABLED = True
+    MT940_ENABLED = True
+except ImportError:
+    PDF_ENABLED = False
+    MT940_ENABLED = False
 
 router = APIRouter(prefix="/boekhouding", tags=["Boekhouding"])
 
