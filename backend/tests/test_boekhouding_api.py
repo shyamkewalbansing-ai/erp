@@ -13,20 +13,22 @@ TEST_EMAIL = "demo@facturatie.sr"
 TEST_PASSWORD = "demo2024"
 
 
+def get_auth_token():
+    """Get authentication token"""
+    response = requests.post(f"{BASE_URL}/api/auth/login", json={
+        "email": TEST_EMAIL,
+        "password": TEST_PASSWORD
+    })
+    assert response.status_code == 200, f"Login failed: {response.text}"
+    data = response.json()
+    # API returns access_token, not token
+    token = data.get("access_token") or data.get("token")
+    assert token, f"No token in response: {data.keys()}"
+    return token
+
+
 class TestAuthentication:
     """Test authentication for boekhouding module"""
-    
-    @pytest.fixture(scope="class")
-    def auth_token(self):
-        """Get authentication token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
-        assert "token" in data, "No token in response"
-        return data["token"]
     
     def test_login_success(self):
         """Test login with valid credentials"""
@@ -36,7 +38,8 @@ class TestAuthentication:
         })
         assert response.status_code == 200
         data = response.json()
-        assert "token" in data
+        # API returns access_token
+        assert "access_token" in data or "token" in data, f"No token in response: {data.keys()}"
         assert "user" in data
         print(f"✓ Login successful for {TEST_EMAIL}")
 
@@ -46,11 +49,7 @@ class TestDashboard:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_dashboard(self, auth_token):
         """Test GET /api/boekhouding/dashboard returns correct data"""
@@ -77,11 +76,7 @@ class TestRekeningen:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_rekeningen(self, auth_token):
         """Test GET /api/boekhouding/rekeningen returns list of accounts"""
@@ -111,11 +106,7 @@ class TestDebiteuren:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_debiteuren(self, auth_token):
         """Test GET /api/boekhouding/debiteuren returns list of customers"""
@@ -144,11 +135,7 @@ class TestCrediteuren:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_crediteuren(self, auth_token):
         """Test GET /api/boekhouding/crediteuren returns list of suppliers"""
@@ -175,11 +162,7 @@ class TestBTWCodes:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_btw_codes(self, auth_token):
         """Test GET /api/boekhouding/btw-codes returns list of BTW codes"""
@@ -207,11 +190,7 @@ class TestBankrekeningen:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_bankrekeningen(self, auth_token):
         """Test GET /api/boekhouding/bankrekeningen returns list of bank accounts"""
@@ -239,11 +218,7 @@ class TestVerkoopfacturen:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_verkoopfacturen(self, auth_token):
         """Test GET /api/boekhouding/verkoopfacturen returns list of sales invoices"""
@@ -270,11 +245,7 @@ class TestInkoopfacturen:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_inkoopfacturen(self, auth_token):
         """Test GET /api/boekhouding/inkoopfacturen returns list of purchase invoices"""
@@ -294,11 +265,7 @@ class TestWisselkoersen:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_wisselkoersen(self, auth_token):
         """Test GET /api/boekhouding/wisselkoersen returns list of exchange rates"""
@@ -338,11 +305,7 @@ class TestJournaalposten:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_journaalposten(self, auth_token):
         """Test GET /api/boekhouding/journaalposten returns list of journal entries"""
@@ -362,11 +325,7 @@ class TestRapportages:
     
     @pytest.fixture(scope="class")
     def auth_token(self):
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        return response.json().get("token")
+        return get_auth_token()
     
     def test_get_balans(self, auth_token):
         """Test GET /api/boekhouding/rapportages/balans returns balance sheet"""
