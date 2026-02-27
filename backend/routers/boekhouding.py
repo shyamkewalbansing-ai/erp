@@ -3552,6 +3552,68 @@ async def link_document(document_id: str, entity_type: str, entity_id: str, auth
         raise HTTPException(status_code=404, detail="Document niet gevonden")
     return {"message": "Document gekoppeld"}
 
+
+# ==================== AUTOMATISCHE HERINNERINGEN ====================
+
+@router.get("/herinneringen/scheduler-status")
+async def get_reminder_scheduler_status(authorization: str = Header(None)):
+    """Haal status van automatische herinneringen op"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Haal instellingen op
+    instellingen = await db.boekhouding_instellingen.find_one({"user_id": user_id})
+    
+    # Tel herinneringen vandaag
+    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+    herinneringen_vandaag = await db.boekhouding_herinneringen.count_documents({
+        "user_id": user_id,
+        "auto_generated": True,
+        "created_at": {"$gte": today_start.isoformat()}
+    })
+    
+    # Tel openstaande facturen over vervaldatum
+    vandaag = datetime.now(timezone.utc).date().isoformat()
+    facturen_over_vervaldatum = await db.boekhouding_verkoopfacturen.count_documents({
+        "user_id": user_id,
+        "status": {"$nin": ["betaald", "geannuleerd"]},
+        "openstaand_bedrag": {"$gt": 0},
+        "vervaldatum": {"$lt": vandaag}
+    })
+    
+    return {
+        "auto_herinneringen_enabled": instellingen.get("auto_herinneringen_enabled", False) if instellingen else False,
+        "dagen_voor_eerste_herinnering": instellingen.get("dagen_voor_eerste_herinnering", 7) if instellingen else 7,
+        "dagen_tussen_herinneringen": instellingen.get("dagen_tussen_herinneringen", 7) if instellingen else 7,
+        "max_herinneringen": instellingen.get("max_herinneringen", 3) if instellingen else 3,
+        "smtp_configured": bool(instellingen.get("smtp_user") and instellingen.get("smtp_password")) if instellingen else False,
+        "herinneringen_vandaag": herinneringen_vandaag,
+        "facturen_over_vervaldatum": facturen_over_vervaldatum,
+        "scheduler_active": True,
+        "next_run": "08:00 SRT (dagelijks)"
+    }
+
+
+@router.post("/herinneringen/trigger-check")
+async def trigger_reminder_check(authorization: str = Header(None)):
+    """Handmatig triggeren van herinnering controle"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    try:
+        from services.herinnering_scheduler import trigger_manual_reminder_check
+        result = await trigger_manual_reminder_check(db, user_id)
+        
+        return {
+            "success": True,
+            "message": "Herinnering controle uitgevoerd",
+            "reminders_created": result.get("reminders_created", 0),
+            "emails_sent": result.get("emails_sent", 0)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fout bij uitvoeren controle: {str(e)}")
+
+
 # ==================== AUDIT TRAIL ====================
 
 @router.get("/audit-trail")
