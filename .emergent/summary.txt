@@ -1,152 +1,139 @@
 <analysis>**original_problem_statement:**
-De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die specifiek is afgestemd op de Surinaamse markt. De aanvraag omvat meer dan 15 sub-modules, waaronder:
--   Dashboard
--   Grootboek (General Ledger)
--   Debiteuren (Accounts Receivable)
--   Crediteuren (Accounts Payable)
--   Bank/Kas (Bank/Cash)
--   BTW-module (VAT module)
--   Rapportages (Financial Reports)
--   En andere.
+De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die specifiek is afgestemd op de Surinaamse markt. De kerninstructie is om de structuur en UI van een referentieproject exact te volgen: . Inmiddels is de scope uitgebreid met features zoals PDF-facturen, MT940-import, Surinaamse belastingrapportages, Excel-exports, configureerbare SMTP-instellingen, multi-tenancy, en het automatisch ophalen en inplannen van wisselkoersen van de Centrale Bank van Suriname ().
 
 **PRODUCTVEREISTEN:**
--   **Valuta:** Ondersteuning voor SRD, USD, en EUR.
--   **Wisselkoersen:** Handmatige invoer van wisselkoersen.
--   **Thema:** Clean/Modern (licht thema).
--   **Structuur & UI:** De implementatie moet de structuur en UI van een referentieproject exact volgen. De definitieve en herhaalde instructie is om de code uit een specifieke GitHub repository te gebruiken: ****.
+-   **Valuta:** SRD, USD, EUR.
+-   **Wisselkoersen:** Zowel handmatige invoer als automatische synchronisatie van .
+-   **Thema & UI:** Clean, modern, en professioneel, gebaseerd op de look-and-feel van traditionele boekhoudsoftware (zoals Exact/Twinfield).
+-   **Backend:** FastAPI met MongoDB.
+-   **Frontend:** React met TailwindCSS.
 
 **User's preferred language**: Dutch
 
 **what currently exists?**
-De applicatie is een stabiele, full-stack React/FastAPI-app. De kritieke mismatch tussen de frontend en backend is volledig opgelost. De agent heeft de backend-router () compleet herschreven om aan te sluiten bij de van de referentie-repository gekopieerde frontend. Vervolgens zijn er in meerdere fases diverse P1, P2 en P3 taken succesvol geïmplementeerd, waaronder:
--   PDF-generatie voor facturen.
--   Verbeterde MT940-import met automatische reconciliatie-suggesties.
--   Specifieke Surinaamse belastingrapportages (BTW en Inkomstenbelasting).
--   Excel-exports voor rapportages.
--   Controle en verificatie van de Voorraad, Vaste Activa en Projecten modules.
-De backend is nu voorbereid om gebruikersspecifieke SMTP-instellingen op te slaan en te gebruiken. De frontend is uitgebreid met de  library voor grafieken.
+De applicatie is een full-stack React/FastAPI-app. Een groot deel van de boekhoudmodule is geïmplementeerd en functioneel, inclusief een werkende instellingenpagina voor SMTP, een multi-tenant UI voor bedrijvenbeheer, en een complete, geautomatiseerde wisselkoersmodule die data van  schraapt via Playwright en inplant met APScheduler. De vorige agent heeft een grote reeks bugs opgelost die veroorzaakt werden door een mismatch in veldnamen (Engels in de frontend vs. Nederlands in de backend) op diverse pagina's. De  is recentelijk voor een tweede keer volledig herschreven om te voldoen aan de wens van de gebruiker voor een meer traditioneel, zakelijk ontwerp.
 
 **Last working item**:
--   **Last item agent was working:** De agent was bezig met de implementatie van de laatste vier door de gebruiker goedgekeurde taken. De backend was al uitgebreid om gedetailleerde data voor de dashboardgrafieken te leveren en om gebruikersspecifieke SMTP-instellingen te beheren. De laatste actie van de agent was de intentie om de frontend Instellingen pagina () te creëren, waar gebruikers hun SMTP-gegevens kunnen configureren.
+-   **Last item agent was working:** De agent was bezig met het herontwerpen van de  (klantenpagina). Nadat de eerste professionele make-over werd afgekeurd, heeft de agent de pagina opnieuw herschreven () met een ontwerp dat meer moet lijken op traditionele boekhoudsoftware zoals Exact of Twinfield.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** both
+-   **Which testing method agent to use?** frontend testing agent. De eerste stap is een screenshot maken van de nieuwe  pagina om het nieuwe ontwerp aan de gebruiker te tonen voor goedkeuring.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   Er zijn momenteel geen openstaande *issues* of *bugs*. De focus ligt volledig op het afronden van de in uitvoering zijnde taken.
+-   **Issue 1: Inconsistentie in datamodel tussen frontend en backend (P0)**
+    -   **Beschrijving:** De gekopieerde frontend gebruikt Engelse veldnamen (bv. , ), terwijl de backend Nederlandse veldnamen verwacht (bv. , ). Dit heeft tot meerdere Unknown error en  crashes geleid op verschillende pagina's.
+    -   **Status:** IN PROGRESS. Hoewel de vorige agent dit op veel pagina's (, , , etc.) reactief heeft opgelost, blijft dit een systemisch risico. Het probleem is nog niet volledig uitgeroeid en kan op andere pagina's nog bestaan.
+    -   **Is recurring issue?** Y
 
 **In progress Task List**:
--   **Task 1:** Implementeer de laatste vier aangevraagde features. (Priority: P0)
-    -   **Task Detail:**
-        -   **Where to resume:** De volgende stap is het daadwerkelijk creëren en implementeren van de frontend-pagina . Deze pagina moet een formulier bevatten waarmee de gebruiker zijn eigen SMTP-servergegevens (host, poort, gebruiker, wachtwoord) kan opslaan en testen. Vervolgens moet de interactieve data op de Dashboard pagina () geverifieerd worden. De taken Multi-tenant ondersteuning en Custom factuur templates moeten daarna nog worden aangepakt.
-        -   **What will be achieved with this?** Gebruikers kunnen het systeem configureren om e-mails via hun eigen SMTP-server te versturen. Het dashboard toont interactieve grafieken met live data. Dit rondt de laatste set van goedgekeurde taken af en maakt de applicatie grotendeels compleet.
-        -   **Status:** IN PROGRESS
-        -   **Should Test frontend/backend/both after fix?** both
-        -   **Blocked on something:** None
+-   **Task 1: Valideer en voltooi het nieuwe ontwerp van de DebiteurenPage (P0)**
+    -   **Where to resume:** Het bestand  is zojuist overschreven. De volgende stap is om via een screenshot te verifiëren of het nieuwe, meer traditionele ontwerp voldoet aan de wensen van de gebruiker.
+    -   **What will be achieved with this?** De belangrijkste klantenpagina krijgt een UI die aansluit bij de professionele verwachtingen van de gebruiker.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** frontend
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks (P0):**
-    -   Implementeer Multi-tenant ondersteuning om data strikt te scheiden per gebruiker/bedrijf.
-    -   Implementeer de mogelijkheid voor gebruikers om custom factuur-templates te kiezen of te uploaden.
+-   **Upcoming Tasks:**
+    -   **Implementeer custom factuur-templates (P1):** De UI-tab bestaat op de instellingenpagina, maar de backend-logica om templates op te slaan en toe te passen op gegenereerde PDF's moet nog worden gebouwd.
+-   **Future Tasks:**
+    -   **Refactor e-mail services (P2):** Voeg de twee e-maildiensten ( en ) samen tot één configureerbare service.
+    -   **Verbeter Multi-tenancy (P2):** Zorg ervoor dat *alle* databasequeries in de applicatie strikt gefilterd worden op het actieve  om dataseparatie te garanderen.
+    -   **Los 500-errors op vastgoed-dashboard op (P3):** De  endpoint (voor de vastgoedmodule) geeft 500-errors. Dit is niet kritiek voor de boekhouding, maar moet worden opgelost voor een naadloze app-ervaring.
 
 **Completed work in this session**
--   **Backend Refactor:** De gehele backend router  is herschreven om 1-op-1 aan te sluiten op de API-calls van de nieuwe frontend, waardoor de applicatie weer functioneel is.
--   **Frontend Bugfixes:** Meerdere frontend componenten (, , , ) zijn gecorrigeerd om de Nederlandse datavelden () correct te tonen in plaats van de Engelse ().
--   **Testing Agent Succesvol:** De testing agent is ingezet om de gehele boekhouding module na de grote refactor te valideren. Alle 14 backend-tests en 9 frontend-paginatests zijn geslaagd.
--   **PDF Generatie:** De mogelijkheid om verkoopfacturen als PDF te downloaden is geïmplementeerd met .
--   **Bank Reconciliatie:** Implementatie van MT940 import met automatische suggesties voor het afletteren van transacties tegen openstaande facturen.
--   **Rapportages:** Specifieke Surinaamse rapportages voor BTW-aangifte en een indicatieve Inkomstenbelasting zijn toegevoegd.
--   **Excel Export:** Functionaliteit toegevoegd om diverse rapportages (bv. Grootboek) naar Excel te exporteren.
--   **E-mail Service:** Een aparte e-mailservice voor de boekhouding is opgezet om conflicten met een bestaande service te vermijden.
--   **Module Verificatie:** De bestaande pagina's voor Voorraad, Vaste Activa en Projecten zijn getest en functioneel bevonden.
+-   **Instellingenpagina:** Volledig geïmplementeerd, inclusief tabs voor SMTP-configuratie en bedrijvenbeheer (multi-tenant).
+-   **Automatische Wisselkoers-integratie (CME.sr):**
+    -   Een scraper () gebouwd met Playwright die wisselkoersen van  haalt.
+    -   Een scheduler ( met APScheduler) ingesteld die dagelijks om 9:00, 10:00 en 11:00 (SRT) de koersen synchroniseert.
+    -   De  uitgebreid met een handmatige sync-knop, een statusindicator voor de scheduler, en weergave van de gesynchroniseerde koersen.
+-   **Kritieke Bugfixes:**
+    -   Een  opgelost op de ,  en .
+    -   403 Forbidden-errors opgelost door de  en  van de demogebruiker in de database te corrigeren.
+    -   Meerdere Unknown error meldingen opgelost door de Engelse/Nederlandse veldnamen (/) te mappen in de API-calls op de , , , ,  en .
+-   **Testing Agent Succesvol:** De testing agent is ingezet () en alle tests slaagden op dat moment.
 
 **Earlier issues found/mentioned but not fixed**
--   None. Alle geïdentificeerde problemen zijn in deze sessie opgelost.
+-   De  endpoint (voor de vastgoedmodule) crasht met een 500 server error. Dit is genegeerd omdat het buiten de scope van de boekhoudmodule viel, maar het beïnvloedt de algehele gebruikerservaring bij het inloggen.
 
 **Known issue recurrence from previous fork**
--   **Issue:** De agent volgde de referentie-repository niet exact, wat leidde tot afgekeurd werk.
--   **Recurrence count:** 2+
--   **Status:** RESOLVED. De strategie is gewijzigd naar het 1:1 kopiëren van de frontend en het aanpassen van de backend. Deze aanpak is succesvol en moet worden voortgezet.
+-   **Issue:** Inconsistentie tussen de frontend (gebaseerd op een Engelse referentie-repo) en de Nederlandse backend. Dit blijft de voornaamste bron van bugs.
+-   **Recurrence count:** Hoog
+-   **Status:** IN PROGRESS. De aanpak is reactief (pagina voor pagina oplossen). Een proactieve, systeembrede oplossing is nog niet geïmplementeerd.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, MongoDB
--   **Frontend:** React, React Router, TailwindCSS, Recharts
--   **Data Processing:**  voor bankbestanden,  voor PDF's,  voor Excel.
+-   **Backend:** FastAPI, MongoDB, APScheduler, Playwright
+-   **Frontend:** React, TailwindCSS, Recharts
+-   **Kernprobleem:** Een mismatch in datamodellen (Engelse vs. Nederlandse veldnamen) tussen de frontend en de backend.
 
 **key DB schema**
--   De bestaande schema's (, , etc.) zijn in gebruik.
--   Er is nieuwe logica toegevoegd in de  router om SMTP-instellingen per gebruiker te lezen en schrijven, waarschijnlijk opgeslagen binnen het  document of een gerelateerde  collectie.
+-   ****: De velden  en een geldige  zijn cruciaal voor de authenticatie-middleware om 403-fouten te voorkomen.
+-   ****: Collectie voor de multi-tenant functionaliteit.
+-   ****: Slaat nu ook  ('inkoop'/'verkoop') en  ('CME.sr') op.
 
 **changes in tech stack**
--   **Backend:** , , , ,  zijn toegevoegd.
--   **Frontend:**  is toegevoegd voor grafieken.
+-   ****: Toegevoegd aan de backend voor het scrapen van JavaScript-gerenderde webpagina's.
+-   ****: Toegevoegd aan de backend voor het inplannen van achtergrondtaken.
 
 **All files of reference**
--   **Primair Aangepast:** 
--   **Nieuw Aangemaakt (Services):**
-    -   
-    -   
-    -   
-    -   
--   **Frontend Aanpassingen:**
-    -   
-    -   
-    -   
--   **Gepland (Nieuw):**
-    -   
+-   **Huidige focus:**  (is net herschreven).
+-   **Nieuwe backend services:** , .
+-   **Recent gewijzigd (bugs):** , , , , en diverse andere pagina's in .
+-   **Backend aanpassingen:**  (integratie scheduler),  (nieuwe endpoints).
 
 **Areas that need refactoring**:
--   De dubbele e-mailservices ( en ) is een technische schuld. Op termijn zou dit samengevoegd kunnen worden tot één configureerbare service. Voor nu is het functioneel.
+-   Een centrale oplossing voor de vertaling van veldnamen (Engels ↔ Nederlands) is nodig om de constante stroom van gerelateerde bugs te stoppen. Dit kan in  of via een gedeelde utility-functie.
 
 **key api endpoints**
--   **Instellingen:** , , 
--   **Rapportages (Nieuw):**
-    -   
-    -   
-    -   
--   **PDF Generatie:** 
--   **Reconciliatie:** , 
+-   : Start de wisselkoers-scraper.
+-   : Vraagt de status van de geplande taken op.
+-   : De correcte endpoint voor producten (die in de frontend 'products' werden genoemd).
 
 **Critical Info for New Agent**
--   Focus direct op het afronden van de in uitvoering zijnde taken. Begin met het bouwen van de  frontend. Gebruik de nieuwe backend endpoints () om data op te halen en op te slaan.
--   Verifieer na de instellingenpagina dat de grafieken op de  correct laden met de live data van het  endpoint.
--   Pak daarna de resterende taken aan: multi-tenancy en custom factuur templates.
--   De applicatie is nu stabiel. Voer na elke feature-implementatie gerichte tests uit met  en screenshots.
+-   **Prioriteit 1: Valideer het nieuwe  ontwerp.** De gebruiker is zeer specifiek over de UI. Maak direct een screenshot en vraag om goedkeuring.
+-   **Wees alert op veldnaam-bugs.** Het  vs.  probleem is de hoofdoorzaak van de meeste recente bugs. Controleer bij elke nieuwe taak of wijziging of de data-objecten correct gemapt worden tussen frontend en backend. Overweeg een structurele oplossing voor te stellen.
+-   **Authenticatie is gevoelig.** De  gebruiker moet een actieve  en een  in de toekomst hebben, anders faalt de authenticatie-middleware voor bepaalde API-calls.
 
 **documents and test reports created in this job**
 -   
--    (is recent bijgewerkt)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:**  - Akkoord om door te gaan met de laatste vier voorgestelde taken (interactieve grafieken, SMTP-instellingen, multi-tenancy, custom templates). **Status: IN PROGRESS**.
-2.  **User:** (via ask_human)  - Vraag die leidde tot het plan om de Instellingen-pagina te bouwen. **Status: IN PROGRESS**.
-3.  **User:**  - Goedkeuring voor de P2 en P3 taken. **Status: COMPLETED**.
-4.  **User:**  - Goedkeuring voor de P1 taken (MT940 & PDF). **Status: COMPLETED**.
+1.  **User (pending):** Heeft gevraagd om een meer traditioneel, echt boekhouding design voor de Debiteuren-pagina. **Status: IN PROGRESS**.
+2.  **User:** Bevestigde dat de app werkte na een reeks bugfixes. **Status: COMPLETED**.
+3.  **User:** Rapporteerde een  op de . **Status: RESOLVED**.
+4.  **User:** Rapporteerde dat het aanmaken van Producten en BTW-codes niet werkte. **Status: RESOLVED**.
+5.  **User:** Rapporteerde een  op de . **Status: RESOLVED**.
+6.  **User:** Gaf akkoord voor het dagelijks syncen van wisselkoersen. **Status: COMPLETED**.
+7.  **User:** Stelde de verbetering voor om wisselkoersen automatisch van  te halen. **Status: COMPLETED**.
+8.  **User:** Vroeg om zowel inkoop- als verkoopkoersen op te slaan. **Status: COMPLETED**.
+9.  **User:** Gaf akkoord om verder te gaan met een taak. **Status: COMPLETED**.
+10. **User:** Vroeg om een professioneler design voor de Debiteuren-pagina. **Status: IN PROGRESS**.
 
 **Project Health Check:**
--   **Healthy:** De applicatie is stabiel en functioneel. De belangrijkste blockers zijn opgelost.
--   **Mocked:** Geen. De mock data op het dashboard staat op het punt vervangen te worden door echte data.
+-   **Broken:** De  is in een ongeteste staat na een volledige rewrite. De systemische inconsistentie in veldnamen vormt een risico voor de stabiliteit van de hele applicatie.
+-   **Mocked:** Geen.
 
 **3rd Party Integrations**
--   **recharts:** (v3.7.0) Geïnstalleerd voor frontend grafieken.
--   **mt940:** (v0.7.0) Voor het parsen van bankbestanden.
--   **reportlab:** (v4.4.9) Voor PDF-generatie.
--   **openpyxl:** (v3.1.5) Voor het genereren van Excel-bestanden.
--   **aiosmtplib:** (v5.1.0) Voor het versturen van e-mails.
+-   **playwright:** (v1.44.0) Voor web scraping.
+-   **APScheduler:** (v3.11.2) Voor achtergrondtaken.
+-   **recharts:** (v3.7.0) Voor grafieken.
+-   **mt940:** (v0.7.0) Voor bankbestanden.
+-   **reportlab:** (v4.4.9) Voor PDF's.
+-   **openpyxl:** (v3.1.5) Voor Excel.
+-   **aiosmtplib:** (v5.1.0) Voor e-mail.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES, na de grote backend refactor. De resultaten waren positief.
+-   **Testing agent used after significant changes:** YES
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** []
--   **Known regressions:** None.
+-   **Known regressions:** De kernfunctionaliteit (items aanmaken) was recentelijk stuk door de veldnaam-mismatch en is grotendeels hersteld.
 
 **Credentials to test flow:**
 -   **Gebruikersnaam:** 
 -   **Wachtwoord:** 
 
 **What agent forgot to execute**
--   De agent was van plan  te creëren, maar de  actie is nog niet uitgevoerd. Dit is de directe volgende stap in het plan.</analysis>
+De agent heeft het kernprobleem van de veldnaam-mismatch reactief en ad-hoc opgelost per pagina. Een proactieve, systeembrede audit en een structurele oplossing zijn niet geïmplementeerd, waardoor het probleem bleef terugkeren op nieuwe locaties.</analysis>
