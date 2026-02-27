@@ -9786,7 +9786,11 @@ async def startup_event():
         scheduler = get_scheduled_tasks(db, email_service)
         await scheduler.start()
         
-        logger.info("Startup tasks completed (including scheduler)")
+        # Start wisselkoers scheduler for CME.sr sync
+        from services.wisselkoers_scheduler import start_scheduler as start_wisselkoers_scheduler
+        start_wisselkoers_scheduler()
+        
+        logger.info("Startup tasks completed (including schedulers)")
     except Exception as e:
         logger.error(f"Startup error: {e}")
 
