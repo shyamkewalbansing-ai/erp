@@ -777,6 +777,9 @@ function MainAppRoutes() {
           <Route path="boekhouding/rapportages" element={<BoekhoudingRapportages />} />
           <Route path="boekhouding/wisselkoersen" element={<BoekhoudingWisselkoersen />} />
           <Route path="boekhouding/instellingen" element={<BoekhoudingInstellingen />} />
+          <Route path="boekhouding/herinneringen" element={<BoekhoudingHerinneringen />} />
+          <Route path="boekhouding/documenten" element={<BoekhoudingDocumenten />} />
+          <Route path="boekhouding/audit-trail" element={<BoekhoudingAuditTrail />} />
         </Route>
         
         {/* Redirect old routes to new app routes */}
