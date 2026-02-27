@@ -707,6 +707,128 @@ async def create_wisselkoers(data: WisselkoersCreate, authorization: str = Heade
     await log_audit(user_id, "create", "wisselkoersen", "wisselkoers", koers["id"], {"valuta": f"{data.valuta_van}/{data.valuta_naar}"})
     return clean_doc(koers)
 
+
+@router.post("/wisselkoersen/sync-cme")
+async def sync_cme_wisselkoersen(authorization: str = Header(None)):
+    """
+    Synchroniseer wisselkoersen van CME.sr (Central Money Exchange Suriname)
+    Haalt actuele inkoop- en verkoopkoersen op voor USD en EUR
+    """
+    from services.cme_scraper import fetch_cme_exchange_rates
+    
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Haal koersen op van CME.sr
+    result = await fetch_cme_exchange_rates()
+    
+    if not result.get("success"):
+        raise HTTPException(
+            status_code=503, 
+            detail=result.get("error", "Kon wisselkoersen niet ophalen van CME.sr")
+        )
+    
+    rates = result.get("rates", {})
+    saved_rates = []
+    now = datetime.now(timezone.utc)
+    today = now.date().isoformat()
+    
+    # Sla elke koers apart op (inkoop en verkoop)
+    rate_mappings = [
+        ("USD", "SRD", "inkoop", rates.get("USD_SRD", {}).get("inkoop")),
+        ("USD", "SRD", "verkoop", rates.get("USD_SRD", {}).get("verkoop")),
+        ("EUR", "SRD", "inkoop", rates.get("EUR_SRD", {}).get("inkoop")),
+        ("EUR", "SRD", "verkoop", rates.get("EUR_SRD", {}).get("verkoop")),
+        ("EUR", "USD", "inkoop", rates.get("EUR_USD", {}).get("inkoop")),
+    ]
+    
+    for valuta_van, valuta_naar, koers_type, koers_waarde in rate_mappings:
+        if koers_waarde is not None and koers_waarde > 0:
+            # Check of er al een koers bestaat voor vandaag met dit type
+            existing = await db.boekhouding_wisselkoersen.find_one({
+                "user_id": user_id,
+                "valuta_van": valuta_van,
+                "valuta_naar": valuta_naar,
+                "koers_type": koers_type,
+                "datum": today
+            })
+            
+            if existing:
+                # Update bestaande koers
+                await db.boekhouding_wisselkoersen.update_one(
+                    {"id": existing["id"]},
+                    {"$set": {
+                        "koers": koers_waarde,
+                        "bron": "CME.sr",
+                        "updated_at": now
+                    }}
+                )
+                saved_rates.append({
+                    "valuta": f"{valuta_van}/{valuta_naar}",
+                    "type": koers_type,
+                    "koers": koers_waarde,
+                    "actie": "bijgewerkt"
+                })
+            else:
+                # Maak nieuwe koers
+                new_koers = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": user_id,
+                    "valuta_van": valuta_van,
+                    "valuta_naar": valuta_naar,
+                    "koers": koers_waarde,
+                    "koers_type": koers_type,
+                    "datum": today,
+                    "bron": "CME.sr",
+                    "created_at": now
+                }
+                await db.boekhouding_wisselkoersen.insert_one(new_koers)
+                saved_rates.append({
+                    "valuta": f"{valuta_van}/{valuta_naar}",
+                    "type": koers_type,
+                    "koers": koers_waarde,
+                    "actie": "aangemaakt"
+                })
+    
+    await log_audit(user_id, "sync", "wisselkoersen", "cme_import", None, {
+        "aantal_koersen": len(saved_rates),
+        "bron": "CME.sr"
+    })
+    
+    return {
+        "success": True,
+        "message": f"{len(saved_rates)} wisselkoersen gesynchroniseerd van CME.sr",
+        "timestamp": result.get("timestamp"),
+        "cme_last_updated": result.get("last_updated"),
+        "rates": saved_rates
+    }
+
+
+@router.get("/wisselkoersen/cme-preview")
+async def preview_cme_wisselkoersen(authorization: str = Header(None)):
+    """
+    Preview van CME.sr koersen zonder op te slaan
+    """
+    from services.cme_scraper import fetch_cme_exchange_rates, format_rate_for_display
+    
+    await get_current_user(authorization)  # Alleen authenticatie check
+    
+    result = await fetch_cme_exchange_rates()
+    
+    if not result.get("success"):
+        raise HTTPException(
+            status_code=503, 
+            detail=result.get("error", "Kon wisselkoersen niet ophalen van CME.sr")
+        )
+    
+    return {
+        "success": True,
+        "timestamp": result.get("timestamp"),
+        "cme_last_updated": result.get("last_updated"),
+        "rates": result.get("rates"),
+        "formatted": format_rate_for_display(result.get("rates", {}))
+    }
+
 # ==================== BTW CODES ====================
 
 @router.get("/btw-codes")
