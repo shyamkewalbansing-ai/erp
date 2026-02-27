@@ -1949,6 +1949,74 @@ async def update_inkoopfactuur_status(factuur_id: str, status: str, authorizatio
         raise HTTPException(status_code=404, detail="Factuur niet gevonden")
     return {"message": f"Status gewijzigd naar {status}"}
 
+
+
+# ==================== IMAGE UPLOAD ====================
+
+@router.post("/upload-image")
+async def upload_image(file: UploadFile = File(...), authorization: str = Header(None)):
+    """Upload product image"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Validate file type
+    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+    if file.content_type not in allowed_types:
+        raise HTTPException(status_code=400, detail="Alleen afbeeldingen zijn toegestaan (JPG, PNG, GIF, WEBP)")
+    
+    # Read file content
+    content = await file.read()
+    
+    # Validate file size (max 5MB)
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Afbeelding mag maximaal 5MB zijn")
+    
+    # Generate unique filename
+    file_ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
+    unique_id = str(uuid.uuid4())[:8]
+    filename = f"product_{user_id[:8]}_{unique_id}.{file_ext}"
+    
+    # Save to uploads directory
+    upload_dir = "/app/backend/uploads"
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    file_path = os.path.join(upload_dir, filename)
+    with open(file_path, 'wb') as f:
+        f.write(content)
+    
+    # Return URL (will be served by backend)
+    url = f"/api/boekhouding/images/{filename}"
+    
+    return {"url": url, "filename": filename}
+
+
+@router.get("/images/{filename}")
+async def get_image(filename: str):
+    """Serve uploaded images"""
+    # Sanitize filename to prevent path traversal
+    safe_filename = os.path.basename(filename)
+    file_path = f"/app/backend/uploads/{safe_filename}"
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Afbeelding niet gevonden")
+    
+    # Determine content type
+    ext = safe_filename.split('.')[-1].lower()
+    content_types = {
+        'jpg': 'image/jpeg',
+        'jpeg': 'image/jpeg',
+        'png': 'image/png',
+        'gif': 'image/gif',
+        'webp': 'image/webp'
+    }
+    content_type = content_types.get(ext, 'image/jpeg')
+    
+    with open(file_path, 'rb') as f:
+        content = f.read()
+    
+    return Response(content=content, media_type=content_type)
+
+
 # ==================== ARTIKELEN ====================
 
 @router.get("/artikelen")
