@@ -547,7 +547,7 @@ async def get_bedrijven(authorization: str = Header(None)):
                 "created_at": datetime.now(timezone.utc)
             }},
             upsert=True,
-            return_document=True
+            return_document=ReturnDocument.AFTER
         )
         bedrijven = [result] if result else []
     
@@ -580,7 +580,7 @@ async def get_actief_bedrijf(authorization: str = Header(None)):
                     "created_at": datetime.now(timezone.utc)
                 }},
                 upsert=True,
-                return_document=True
+                return_document=ReturnDocument.AFTER
             )
         else:
             # Activeer bestaand bedrijf
