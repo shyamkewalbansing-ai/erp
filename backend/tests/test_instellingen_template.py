@@ -30,7 +30,7 @@ class TestInstellingenTemplateAPI:
         
         if login_response.status_code == 200:
             data = login_response.json()
-            self.token = data.get("token")
+            self.token = data.get("access_token") or data.get("token")
             self.session.headers.update({"Authorization": f"Bearer {self.token}"})
         else:
             pytest.skip(f"Login failed: {login_response.status_code}")
@@ -132,7 +132,7 @@ class TestVerkoopfacturenAPI:
         
         if login_response.status_code == 200:
             data = login_response.json()
-            self.token = data.get("token")
+            self.token = data.get("access_token") or data.get("token")
             self.session.headers.update({"Authorization": f"Bearer {self.token}"})
         else:
             pytest.skip(f"Login failed: {login_response.status_code}")
@@ -272,7 +272,8 @@ class TestFieldNameTranslation:
         if login_response.status_code != 200:
             pytest.skip("Login failed")
         
-        token = login_response.json().get("token")
+        data = login_response.json()
+        token = data.get("access_token") or data.get("token")
         session.headers.update({"Authorization": f"Bearer {token}"})
         
         # Test creating a debiteur with Dutch field names
