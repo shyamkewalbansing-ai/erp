@@ -50,12 +50,12 @@ const RapportagesPage = () => {
     }
   };
 
-  const agingChartData = agingReceivables ? [
-    { name: 'Huidig', value: agingReceivables.aging.current },
-    { name: '30 dagen', value: agingReceivables.aging['30_days'] },
-    { name: '60 dagen', value: agingReceivables.aging['60_days'] },
-    { name: '90 dagen', value: agingReceivables.aging['90_days'] },
-    { name: '90+ dagen', value: agingReceivables.aging.over_90 },
+  const agingChartData = agingReceivables?.aging ? [
+    { name: 'Huidig', value: agingReceivables.aging.current || 0 },
+    { name: '30 dagen', value: agingReceivables.aging['30_days'] || 0 },
+    { name: '60 dagen', value: agingReceivables.aging['60_days'] || 0 },
+    { name: '90 dagen', value: agingReceivables.aging['90_days'] || 0 },
+    { name: '90+ dagen', value: agingReceivables.aging.over_90 || 0 },
   ] : [];
 
   return (
