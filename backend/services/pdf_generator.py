@@ -228,9 +228,9 @@ def generate_invoice_pdf(
     # Maak tabel
     regels_table = Table(regels_data, colWidths=[70*mm, 20*mm, 30*mm, 20*mm, 30*mm])
     regels_table.setStyle(TableStyle([
-        # Header
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f1f5f9')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#1e293b')),
+        # Header - use template secondary color
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(secondary_color)),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(primary_color)),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         
         # Body
@@ -239,7 +239,7 @@ def generate_invoice_pdf(
         
         # Borders
         ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor('#e2e8f0')),
-        ('LINEBELOW', (0, 1), (-1, -2), 0.5, colors.HexColor('#f1f5f9')),
+        ('LINEBELOW', (0, 1), (-1, -2), 0.5, colors.HexColor(secondary_color)),
         
         # Padding
         ('TOPPADDING', (0, 0), (-1, -1), 8),
