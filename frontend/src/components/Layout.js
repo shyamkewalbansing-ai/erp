@@ -540,7 +540,6 @@ export default function Layout() {
                       const displayLabel = isDashboard ? config.name : item.label;
                       
                       return item.external ? (
-                      item.external ? (
                         <a
                           key={item.to}
                           href={item.to}
@@ -549,10 +548,10 @@ export default function Layout() {
                           onClick={() => setSidebarOpen(false)}
                           className={`nav-item ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
                           data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
-                          title={item.label}
+                          title={displayLabel}
                         >
                           <item.icon className="w-5 h-5 flex-shrink-0" />
-                          {!isCollapsed && <span>{item.label}</span>}
+                          {!isCollapsed && <span>{displayLabel}</span>}
                           {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-40" />}
                         </a>
                       ) : (
@@ -560,15 +559,15 @@ export default function Layout() {
                           key={item.to}
                           to={item.to}
                           onClick={() => setSidebarOpen(false)}
-                          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
+                          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isDashboard ? 'font-semibold' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
                           data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
-                          title={item.label}
+                          title={displayLabel}
                         >
                           <item.icon className="w-5 h-5 flex-shrink-0" />
-                          {!isCollapsed && <span>{item.label}</span>}
+                          {!isCollapsed && <span>{displayLabel}</span>}
                         </NavLink>
-                      )
-                    ))}
+                      );
+                    })}
                   </div>
                 );
               })}
