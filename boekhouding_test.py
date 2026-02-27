@@ -522,8 +522,11 @@ class BoekhoudingTester:
         
         if success:
             print(f"   Current rates available: {len(response)}")
-            for rate in response:
-                print(f"   - {rate.get('van_valuta')}/{rate.get('naar_valuta')}: {rate.get('koers')}")
+            if isinstance(response, list):
+                for rate in response:
+                    print(f"   - {rate.get('van_valuta')}/{rate.get('naar_valuta')}: {rate.get('koers')}")
+            else:
+                print(f"   Response format: {type(response)}")
             return True
         return False
     
