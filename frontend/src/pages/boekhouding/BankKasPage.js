@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { bankAccountsAPI, bankTransactionsAPI, bankImportAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
+import { formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -43,6 +43,18 @@ const BankPage = () => {
     type: 'credit'
   });
 
+  // Format number with Dutch locale
+  const formatAmount = (amount, currency = 'SRD') => {
+    const formatted = new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount || 0));
+    
+    if (currency === 'USD') return `$ ${formatted}`;
+    if (currency === 'EUR') return `€ ${formatted}`;
+    return `SRD ${formatted}`;
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -69,7 +81,6 @@ const BankPage = () => {
     }
     setSaving(true);
     try {
-      // Map frontend fields to backend Dutch field names
       const accountData = {
         naam: newAccount.name,
         bank: newAccount.bank_name,
@@ -130,7 +141,6 @@ const BankPage = () => {
     }
     setSaving(true);
     try {
-      // Map frontend fields to backend Dutch field names
       const transactionData = {
         bankrekening_id: newTransaction.bank_account_id,
         datum: newTransaction.date,
@@ -162,12 +172,21 @@ const BankPage = () => {
   const totalUSD = bankAccounts.filter(a => a.currency === 'USD').reduce((s, a) => s + a.balance, 0);
   const totalEUR = bankAccounts.filter(a => a.currency === 'EUR').reduce((s, a) => s + a.balance, 0);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96" data-testid="bank-page">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6" data-testid="bank-page">
+    <div className="space-y-6 max-w-7xl" data-testid="bank-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Bank/Kas</h1>
-          <p className="text-slate-500 mt-1">Beheer uw bankrekeningen en transacties</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Bank/Kas</h1>
+          <p className="text-slate-500 mt-0.5">Beheer uw bankrekeningen en transacties</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={showAccountDialog} onOpenChange={setShowAccountDialog}>
@@ -320,7 +339,6 @@ const BankPage = () => {
             </DialogContent>
           </Dialog>
 
-          {/* Import Dialog */}
           <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
             <DialogTrigger asChild>
               <Button variant="outline" data-testid="import-bank-btn">
@@ -397,41 +415,41 @@ const BankPage = () => {
 
       {/* Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Totaal SRD</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{formatCurrency(totalSRD)}</p>
+                <p className="text-sm text-slate-500 mb-2">Totaal SRD</p>
+                <p className="text-2xl font-semibold text-slate-900">{formatAmount(totalSRD)}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Wallet className="w-6 h-6 text-blue-600" />
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Totaal USD</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{formatCurrency(totalUSD, 'USD')}</p>
+                <p className="text-sm text-slate-500 mb-2">Totaal USD</p>
+                <p className="text-2xl font-semibold text-slate-900">{formatAmount(totalUSD, 'USD')}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <Wallet className="w-6 h-6 text-green-600" />
+              <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500">Totaal EUR</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{formatCurrency(totalEUR, 'EUR')}</p>
+                <p className="text-sm text-slate-500 mb-2">Totaal EUR</p>
+                <p className="text-2xl font-semibold text-slate-900">{formatAmount(totalEUR, 'EUR')}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                <Wallet className="w-6 h-6 text-purple-600" />
+              <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center">
+                <Wallet className="w-5 h-5 text-purple-500" />
               </div>
             </div>
           </CardContent>
@@ -451,32 +469,32 @@ const BankPage = () => {
         </TabsList>
 
         <TabsContent value="accounts" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">Bankrekeningen</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-900">Bankrekeningen</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead>Naam</TableHead>
-                    <TableHead>Bank</TableHead>
-                    <TableHead>Rekeningnummer</TableHead>
-                    <TableHead className="w-20">Valuta</TableHead>
-                    <TableHead className="text-right w-32">Saldo</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Bank</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Rekeningnummer</TableHead>
+                    <TableHead className="w-20 text-xs font-medium text-slate-500">Valuta</TableHead>
+                    <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Saldo</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {bankAccounts.map(account => (
                     <TableRow key={account.id} data-testid={`bank-account-row-${account.account_number}`}>
-                      <TableCell className="font-medium">{account.name}</TableCell>
-                      <TableCell>{account.bank_name}</TableCell>
-                      <TableCell className="font-mono">{account.account_number}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{account.name}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{account.bank_name}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{account.account_number}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{account.currency}</Badge>
+                        <Badge variant="outline" className="text-xs">{account.currency}</Badge>
                       </TableCell>
-                      <TableCell className={`text-right font-mono ${account.balance < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {formatCurrency(account.balance, account.currency)}
+                      <TableCell className={`text-right text-sm font-medium ${account.balance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {formatAmount(account.balance, account.currency)}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -494,10 +512,10 @@ const BankPage = () => {
         </TabsContent>
 
         <TabsContent value="transactions" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Transacties</CardTitle>
+                <CardTitle className="text-base font-semibold text-slate-900">Transacties</CardTitle>
                 <Select value={selectedAccount} onValueChange={setSelectedAccount}>
                   <SelectTrigger className="w-48">
                     <SelectValue placeholder="Alle rekeningen" />
@@ -515,29 +533,29 @@ const BankPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-28">Datum</TableHead>
-                    <TableHead>Omschrijving</TableHead>
-                    <TableHead className="w-28">Referentie</TableHead>
-                    <TableHead className="text-right w-32">Bedrag</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Omschrijving</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Referentie</TableHead>
+                    <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Bedrag</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTransactions.map(tx => (
                     <TableRow key={tx.id}>
-                      <TableCell>{formatDate(tx.date)}</TableCell>
-                      <TableCell className="font-medium">{tx.description}</TableCell>
-                      <TableCell className="text-slate-500">{tx.reference || '-'}</TableCell>
-                      <TableCell className={`text-right font-mono flex items-center justify-end gap-1 ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                      <TableCell className="text-sm text-slate-600">{formatDate(tx.date)}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{tx.description}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{tx.reference || '-'}</TableCell>
+                      <TableCell className={`text-right text-sm font-medium flex items-center justify-end gap-1 ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
                         {tx.type === 'credit' ? (
                           <ArrowUpRight className="w-4 h-4" />
                         ) : (
                           <ArrowDownRight className="w-4 h-4" />
                         )}
-                        {formatCurrency(tx.amount, 'SRD', false)}
+                        {formatAmount(tx.amount, 'SRD')}
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(tx.status)}>
+                        <Badge className={`text-xs ${getStatusColor(tx.status)}`}>
                           {getStatusLabel(tx.status)}
                         </Badge>
                       </TableCell>
