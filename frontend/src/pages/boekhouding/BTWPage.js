@@ -53,7 +53,14 @@ const BTWPage = () => {
     }
     setSaving(true);
     try {
-      await btwAPI.create(newCode);
+      // Map frontend fields to backend Dutch field names
+      const btwData = {
+        code: newCode.code,
+        naam: newCode.name,
+        percentage: newCode.percentage,
+        type: newCode.type
+      };
+      await btwAPI.create(btwData);
       toast.success('BTW-code aangemaakt');
       setShowCodeDialog(false);
       setNewCode({ code: '', name: '', percentage: 0, type: 'both' });
