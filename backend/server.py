@@ -4225,8 +4225,8 @@ async def get_dashboard(current_user: dict = Depends(get_current_active_user)):
     ).sort("created_at", -1).to_list(5)
     
     # Batch fetch tenant and apartment names for recent payments
-    recent_tenant_ids = list(set(p["tenant_id"] for p in recent_payments_cursor))
-    recent_apt_ids = list(set(p["apartment_id"] for p in recent_payments_cursor))
+    recent_tenant_ids = list(set(p.get("tenant_id") for p in recent_payments_cursor if p.get("tenant_id")))
+    recent_apt_ids = list(set(p.get("apartment_id") for p in recent_payments_cursor if p.get("apartment_id")))
     
     recent_tenants = await db.tenants.find({"id": {"$in": recent_tenant_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(100)
     recent_apts = await db.apartments.find({"id": {"$in": recent_apt_ids}}, {"_id": 0, "id": 1, "name": 1}).to_list(100)
