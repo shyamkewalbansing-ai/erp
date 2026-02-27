@@ -185,14 +185,13 @@ class BoekhoudingTester:
     def test_create_debiteur(self):
         """Test creating a debiteur (customer)"""
         debiteur_data = {
-            "naam": "Suriname Business Solutions N.V.",
+            "bedrijfsnaam": "Suriname Business Solutions N.V.",
             "email": "info@sbs.sr",
             "telefoon": "+597 456 7890",
             "adres": "Henck Arronstraat 100, Paramaribo",
             "btw_nummer": "SR123456789",
-            "standaard_valuta": "SRD",
-            "betalingstermijn": 30,
-            "notities": "Belangrijke klant voor boekhouding module"
+            "valuta": "SRD",
+            "betaalconditie_dagen": 30
         }
         
         success, response = self.run_test(
