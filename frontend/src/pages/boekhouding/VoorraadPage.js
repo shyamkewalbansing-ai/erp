@@ -121,12 +121,16 @@ const VoorraadPage = () => {
   };
 
   const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.code.toLowerCase().includes(searchTerm.toLowerCase())
+    (p.naam || p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (p.code || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalValue = products.reduce((sum, p) => sum + (p.stock_quantity * p.purchase_price), 0);
-  const lowStockProducts = products.filter(p => p.stock_quantity <= p.min_stock && p.min_stock > 0);
+  const totalValue = products.reduce((sum, p) => sum + ((p.voorraad_aantal || p.stock_quantity || 0) * (p.inkoopprijs || p.purchase_price || 0)), 0);
+  const lowStockProducts = products.filter(p => {
+    const stock = p.voorraad_aantal || p.stock_quantity || 0;
+    const minStock = p.minimum_voorraad || p.min_stock || 0;
+    return stock <= minStock && minStock > 0;
+  });
 
   return (
     <div className="space-y-6" data-testid="voorraad-page">
