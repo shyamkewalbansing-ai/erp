@@ -492,10 +492,35 @@ export default function Layout() {
                 const config = moduleConfigs[moduleSlug];
                 if (!config) return null;
                 
-                // If on boekhouding pages, only show boekhouding module
+                // Detect current module context based on URL
                 const isOnBoekhouding = location.pathname.startsWith('/app/boekhouding');
-                if (isOnBoekhouding && moduleSlug !== 'boekhouding') return null;
-                if (!isOnBoekhouding && moduleSlug === 'boekhouding') return null;
+                const isOnSystemSettings = location.pathname === '/app/instellingen' || 
+                                           location.pathname === '/app/abonnement' || 
+                                           location.pathname === '/app/workspace' ||
+                                           location.pathname === '/app/betaalmethodes';
+                
+                // If on system settings, show the module the user was previously in (stored in localStorage)
+                // or show all available modules
+                if (isOnSystemSettings) {
+                  const previousModule = localStorage.getItem('lastActiveModule');
+                  if (previousModule === 'boekhouding' && moduleSlug !== 'boekhouding') return null;
+                  if (previousModule === 'boekhouding' && moduleSlug === 'boekhouding') {
+                    // Show boekhouding module when coming from boekhouding
+                  } else if (previousModule !== 'boekhouding' && moduleSlug === 'boekhouding') {
+                    return null;
+                  }
+                } else {
+                  // Normal module filtering
+                  if (isOnBoekhouding && moduleSlug !== 'boekhouding') return null;
+                  if (!isOnBoekhouding && moduleSlug === 'boekhouding') return null;
+                  
+                  // Store the current module for later use
+                  if (isOnBoekhouding) {
+                    localStorage.setItem('lastActiveModule', 'boekhouding');
+                  } else if (moduleSlug !== 'boekhouding' && hasAddon(moduleSlug)) {
+                    localStorage.setItem('lastActiveModule', moduleSlug);
+                  }
+                }
                 
                 // Check if module should be shown
                 const shouldShow = config.alwaysShow || hasAddon(moduleSlug);
