@@ -58,10 +58,35 @@ const InstellingenPage = () => {
   const [saving, setSaving] = useState(false);
   const [testingEmail, setTestingEmail] = useState(false);
   const [emailTestResult, setEmailTestResult] = useState(null);
+  
+  // Multi-tenant state
+  const [bedrijven, setBedrijven] = useState([]);
+  const [actiefBedrijf, setActiefBedrijf] = useState(null);
+  const [bedrijvenLoading, setBedrijvenLoading] = useState(false);
+  const [showNewBedrijfDialog, setShowNewBedrijfDialog] = useState(false);
+  const [newBedrijf, setNewBedrijf] = useState({ naam: '', adres: '', plaats: '', btw_nummer: '' });
+  const [savingBedrijf, setSavingBedrijf] = useState(false);
 
   useEffect(() => {
     fetchSettings();
+    fetchBedrijven();
   }, []);
+
+  const fetchBedrijven = async () => {
+    setBedrijvenLoading(true);
+    try {
+      const [allRes, actiefRes] = await Promise.all([
+        bedrijvenAPI.getAll(),
+        bedrijvenAPI.getActief()
+      ]);
+      setBedrijven(allRes.data || []);
+      setActiefBedrijf(actiefRes.data);
+    } catch (error) {
+      console.error('Error loading bedrijven:', error);
+    } finally {
+      setBedrijvenLoading(false);
+    }
+  };
 
   const fetchSettings = async () => {
     try {
