@@ -692,8 +692,8 @@ class BoekhoudingTester:
         )
         
         if success and 'id' in response:
-            print(f"   Registered hours: {response.get('uren')} @ {response.get('tarief')}")
-            print(f"   Total amount: {response.get('bedrag')}")
+            print(f"   Registered hours: {response.get('aantal_uren')} @ {response.get('tarief')}")
+            print(f"   Total amount: {response.get('totaal_bedrag')}")
             return True
         return False
     
