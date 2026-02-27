@@ -1,150 +1,301 @@
 import React, { useState, useEffect } from 'react';
-import { exchangeRatesAPI } from '../../lib/boekhoudingApi';
-import { formatNumber, formatDate } from '../../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { exchangeRatesAPI } from '../lib/api';
+import { formatNumber, formatDate } from '../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, TrendingUp, DollarSign, Euro, Loader2 } from 'lucide-react';
+import { Plus, ArrowLeftRight, Loader2, TrendingUp, DollarSign, Euro } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
+} from 'recharts';
 
 const WisselkoersenPage = () => {
   const [rates, setRates] = useState([]);
   const [latestRates, setLatestRates] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showDialog, setShowDialog] = useState(false);
+  const [showRateDialog, setShowRateDialog] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [newRate, setNewRate] = useState({
-    datum: new Date().toISOString().split('T')[0],
-    usd_srd: 0, eur_srd: 0, eur_usd: 0
+    date: new Date().toISOString().split('T')[0],
+    currency_from: 'USD',
+    rate: 0,
+    source: 'manual'
   });
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     try {
       const [ratesRes, latestRes] = await Promise.all([
         exchangeRatesAPI.getAll(),
-        exchangeRatesAPI.getLatest().catch(() => null)
+        exchangeRatesAPI.getLatest()
       ]);
-      setRates(Array.isArray(ratesRes) ? ratesRes : ratesRes.data || []);
-      setLatestRates(latestRes);
+      setRates(ratesRes.data);
+      setLatestRates(latestRes.data);
     } catch (error) {
       toast.error('Fout bij laden gegevens');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleCreate = async () => {
-    if (!newRate.usd_srd || !newRate.eur_srd) { toast.error('Vul de wisselkoersen in'); return; }
+  const handleCreateRate = async () => {
+    if (!newRate.rate || newRate.rate <= 0) {
+      toast.error('Voer een geldige koers in');
+      return;
+    }
     setSaving(true);
     try {
       await exchangeRatesAPI.create(newRate);
       toast.success('Wisselkoers toegevoegd');
-      setShowDialog(false);
-      setNewRate({ datum: new Date().toISOString().split('T')[0], usd_srd: 0, eur_srd: 0, eur_usd: 0 });
+      setShowRateDialog(false);
+      setNewRate({
+        date: new Date().toISOString().split('T')[0],
+        currency_from: 'USD',
+        rate: 0,
+        source: 'manual'
+      });
       fetchData();
-    } catch (error) { toast.error(error.message || 'Fout bij opslaan'); }
-    finally { setSaving(false); }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij toevoegen');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const usdRates = rates.filter(r => r.currency_from === 'USD').slice(0, 30).reverse();
+  const eurRates = rates.filter(r => r.currency_from === 'EUR').slice(0, 30).reverse();
+
+  const chartData = usdRates.map((r, i) => ({
+    date: formatDate(r.date, 'short'),
+    USD: r.rate,
+    EUR: eurRates[i]?.rate || null
+  }));
 
   return (
     <div className="space-y-6" data-testid="wisselkoersen-page">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Wisselkoersen</h1>
-          <p className="text-slate-500 mt-1">Beheer valutakoersen voor SRD, USD en EUR</p>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Wisselkoersen</h1>
+          <p className="text-slate-500 mt-1">Beheer valutakoersen voor SRD</p>
         </div>
-        <Dialog open={showDialog} onOpenChange={setShowDialog}>
-          <DialogTrigger asChild><Button data-testid="add-rate-btn"><Plus className="w-4 h-4 mr-2" />Nieuwe Koers</Button></DialogTrigger>
+        <Dialog open={showRateDialog} onOpenChange={setShowRateDialog}>
+          <DialogTrigger asChild>
+            <Button data-testid="add-rate-btn">
+              <Plus className="w-4 h-4 mr-2" />
+              Koers Toevoegen
+            </Button>
+          </DialogTrigger>
           <DialogContent>
-            <DialogHeader><DialogTitle>Nieuwe Wisselkoers</DialogTitle></DialogHeader>
+            <DialogHeader>
+              <DialogTitle>Wisselkoers Toevoegen</DialogTitle>
+            </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2"><Label>Datum</Label><Input type="date" value={newRate.datum} onChange={(e) => setNewRate({...newRate, datum: e.target.value})} /></div>
-              <div className="space-y-2"><Label>USD/SRD *</Label><Input type="number" step="0.0001" value={newRate.usd_srd} onChange={(e) => setNewRate({...newRate, usd_srd: parseFloat(e.target.value) || 0})} placeholder="36.50" /></div>
-              <div className="space-y-2"><Label>EUR/SRD *</Label><Input type="number" step="0.0001" value={newRate.eur_srd} onChange={(e) => setNewRate({...newRate, eur_srd: parseFloat(e.target.value) || 0})} placeholder="39.50" /></div>
-              <div className="space-y-2"><Label>EUR/USD</Label><Input type="number" step="0.0001" value={newRate.eur_usd} onChange={(e) => setNewRate({...newRate, eur_usd: parseFloat(e.target.value) || 0})} placeholder="1.08" /></div>
-              <Button onClick={handleCreate} className="w-full" disabled={saving}>{saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}Opslaan</Button>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Datum</Label>
+                  <Input
+                    type="date"
+                    value={newRate.date}
+                    onChange={(e) => setNewRate({...newRate, date: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Valuta</Label>
+                  <Select value={newRate.currency_from} onValueChange={(v) => setNewRate({...newRate, currency_from: v})}>
+                    <SelectTrigger data-testid="rate-currency-select">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                      <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Koers (1 {newRate.currency_from} = ? SRD)</Label>
+                <Input
+                  type="number"
+                  step="0.0001"
+                  value={newRate.rate}
+                  onChange={(e) => setNewRate({...newRate, rate: parseFloat(e.target.value) || 0})}
+                  placeholder="35.50"
+                  data-testid="rate-value-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Bron</Label>
+                <Select value={newRate.source} onValueChange={(v) => setNewRate({...newRate, source: v})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="central_bank">Centrale Bank Suriname</SelectItem>
+                    <SelectItem value="bank">Commerciële Bank</SelectItem>
+                    <SelectItem value="manual">Handmatig</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleCreateRate} className="w-full" disabled={saving} data-testid="save-rate-btn">
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                Opslaan
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
       {/* Current Rates */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-slate-200 bg-gradient-to-br from-green-50 to-white">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="border-slate-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">USD/SRD</p>
-                <p className="text-3xl font-bold font-mono text-slate-900">{formatNumber(latestRates?.usd_srd || 0, 4)}</p>
-                <p className="text-xs text-slate-400 mt-1">{latestRates?.datum ? formatDate(latestRates.datum) : '-'}</p>
+                <p className="text-sm text-slate-500">USD / SRD</p>
+                <p className="text-3xl font-bold font-mono text-slate-900">
+                  {latestRates?.USD ? formatNumber(latestRates.USD.rate, 4) : '-'}
+                </p>
+                {latestRates?.USD && (
+                  <p className="text-xs text-slate-400 mt-1">
+                    {formatDate(latestRates.USD.date)} - {latestRates.USD.source === 'central_bank' ? 'Centrale Bank' : latestRates.USD.source === 'bank' ? 'Bank' : 'Handmatig'}
+                  </p>
+                )}
               </div>
-              <div className="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center">
-                <DollarSign className="w-7 h-7 text-green-600" />
+              <div className="w-16 h-16 rounded-xl bg-green-100 flex items-center justify-center">
+                <DollarSign className="w-8 h-8 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-slate-200 bg-gradient-to-br from-blue-50 to-white">
+        <Card className="border-slate-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">EUR/SRD</p>
-                <p className="text-3xl font-bold font-mono text-slate-900">{formatNumber(latestRates?.eur_srd || 0, 4)}</p>
-                <p className="text-xs text-slate-400 mt-1">{latestRates?.datum ? formatDate(latestRates.datum) : '-'}</p>
+                <p className="text-sm text-slate-500">EUR / SRD</p>
+                <p className="text-3xl font-bold font-mono text-slate-900">
+                  {latestRates?.EUR ? formatNumber(latestRates.EUR.rate, 4) : '-'}
+                </p>
+                {latestRates?.EUR && (
+                  <p className="text-xs text-slate-400 mt-1">
+                    {formatDate(latestRates.EUR.date)} - {latestRates.EUR.source === 'central_bank' ? 'Centrale Bank' : latestRates.EUR.source === 'bank' ? 'Bank' : 'Handmatig'}
+                  </p>
+                )}
               </div>
-              <div className="w-14 h-14 rounded-xl bg-blue-100 flex items-center justify-center">
-                <Euro className="w-7 h-7 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200 bg-gradient-to-br from-purple-50 to-white">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500">EUR/USD</p>
-                <p className="text-3xl font-bold font-mono text-slate-900">{formatNumber(latestRates?.eur_usd || 0, 4)}</p>
-                <p className="text-xs text-slate-400 mt-1">{latestRates?.datum ? formatDate(latestRates.datum) : '-'}</p>
-              </div>
-              <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center">
-                <TrendingUp className="w-7 h-7 text-purple-600" />
+              <div className="w-16 h-16 rounded-xl bg-blue-100 flex items-center justify-center">
+                <Euro className="w-8 h-8 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Rate History */}
+      {/* Chart */}
+      {chartData.length > 0 && (
+        <Card className="border-slate-200">
+          <CardHeader>
+            <CardTitle className="text-lg">Koersontwikkeling</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="h-[300px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                  <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                  <YAxis tick={{ fontSize: 12 }} stroke="#94a3b8" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="USD"
+                    stroke="#22c55e"
+                    strokeWidth={2}
+                    dot={{ fill: '#22c55e' }}
+                    name="USD/SRD"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="EUR"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    dot={{ fill: '#3b82f6' }}
+                    name="EUR/SRD"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* History Table */}
       <Card className="border-slate-200">
-        <CardHeader><CardTitle className="text-lg">Koershistorie</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-lg">Koershistorie</CardTitle>
+        </CardHeader>
         <CardContent>
-          {loading ? <div className="text-center py-8 text-slate-500">Laden...</div> : (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50">
-                  <TableHead className="w-32">Datum</TableHead>
-                  <TableHead className="text-right">USD/SRD</TableHead>
-                  <TableHead className="text-right">EUR/SRD</TableHead>
-                  <TableHead className="text-right">EUR/USD</TableHead>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50">
+                <TableHead className="w-28">Datum</TableHead>
+                <TableHead className="w-20">Valuta</TableHead>
+                <TableHead className="text-right w-32">Koers</TableHead>
+                <TableHead>Bron</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {rates.map(rate => (
+                <TableRow key={rate.id}>
+                  <TableCell>{formatDate(rate.date)}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="font-mono">
+                      {rate.currency_from}/SRD
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-mono font-medium">
+                    {formatNumber(rate.rate, 4)}
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={
+                      rate.source === 'central_bank' ? 'bg-blue-100 text-blue-700' :
+                      rate.source === 'bank' ? 'bg-green-100 text-green-700' :
+                      'bg-slate-100 text-slate-700'
+                    }>
+                      {rate.source === 'central_bank' ? 'Centrale Bank' : rate.source === 'bank' ? 'Bank' : 'Handmatig'}
+                    </Badge>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rates.map((rate, idx) => (
-                  <TableRow key={idx}>
-                    <TableCell>{formatDate(rate.datum)}</TableCell>
-                    <TableCell className="text-right font-mono">{formatNumber(rate.usd_srd, 4)}</TableCell>
-                    <TableCell className="text-right font-mono">{formatNumber(rate.eur_srd, 4)}</TableCell>
-                    <TableCell className="text-right font-mono">{formatNumber(rate.eur_usd, 4)}</TableCell>
-                  </TableRow>
-                ))}
-                {rates.length === 0 && <TableRow><TableCell colSpan={4} className="text-center py-8 text-slate-500">Geen koershistorie gevonden</TableCell></TableRow>}
-              </TableBody>
-            </Table>
-          )}
+              ))}
+              {rates.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-8 text-slate-500">
+                    Geen wisselkoersen gevonden. Voeg uw eerste koers toe.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
     </div>

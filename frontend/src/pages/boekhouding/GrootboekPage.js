@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { accountsAPI, journalAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, accountTypes, journalTypes, getStatusColor, getStatusLabel } from '../../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Badge } from '../../components/ui/badge';
+import { accountsAPI, journalAPI } from '../lib/api';
+import { formatCurrency, accountTypes, journalTypes, getStatusColor, getStatusLabel } from '../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, BookOpen, FileText, Loader2 } from 'lucide-react';
 
@@ -24,19 +24,19 @@ const GrootboekPage = () => {
 
   const [newAccount, setNewAccount] = useState({
     code: '',
-    naam: '',
-    type: 'activa',
-    categorie: '',
-    valuta: 'SRD'
+    name: '',
+    type: 'asset',
+    category: '',
+    currency: 'SRD'
   });
 
   const [newJournal, setNewJournal] = useState({
-    datum: new Date().toISOString().split('T')[0],
-    dagboek_type: 'memoriaal',
-    omschrijving: '',
-    regels: [
-      { rekening_code: '', debet: 0, credit: 0 },
-      { rekening_code: '', debet: 0, credit: 0 }
+    date: new Date().toISOString().split('T')[0],
+    journal_type: 'memorial',
+    description: '',
+    lines: [
+      { account_id: '', account_code: '', account_name: '', debit: 0, credit: 0, description: '' },
+      { account_id: '', account_code: '', account_name: '', debit: 0, credit: 0, description: '' }
     ]
   });
 
@@ -50,10 +50,9 @@ const GrootboekPage = () => {
         accountsAPI.getAll(),
         journalAPI.getAll()
       ]);
-      setAccounts(Array.isArray(accountsRes) ? accountsRes : accountsRes.data || []);
-      setJournalEntries(Array.isArray(journalRes) ? journalRes : journalRes.data || []);
+      setAccounts(accountsRes.data);
+      setJournalEntries(journalRes.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
       toast.error('Fout bij laden gegevens');
     } finally {
       setLoading(false);
@@ -61,7 +60,7 @@ const GrootboekPage = () => {
   };
 
   const handleCreateAccount = async () => {
-    if (!newAccount.code || !newAccount.naam || !newAccount.categorie) {
+    if (!newAccount.code || !newAccount.name || !newAccount.category) {
       toast.error('Vul alle verplichte velden in');
       return;
     }
@@ -70,18 +69,18 @@ const GrootboekPage = () => {
       await accountsAPI.create(newAccount);
       toast.success('Rekening aangemaakt');
       setShowAccountDialog(false);
-      setNewAccount({ code: '', naam: '', type: 'activa', categorie: '', valuta: 'SRD' });
+      setNewAccount({ code: '', name: '', type: 'asset', category: '', currency: 'SRD' });
       fetchData();
     } catch (error) {
-      toast.error(error.message || 'Fout bij aanmaken');
+      toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
     } finally {
       setSaving(false);
     }
   };
 
   const handleCreateJournal = async () => {
-    const totalDebit = newJournal.regels.reduce((sum, l) => sum + (parseFloat(l.debet) || 0), 0);
-    const totalCredit = newJournal.regels.reduce((sum, l) => sum + (parseFloat(l.credit) || 0), 0);
+    const totalDebit = newJournal.lines.reduce((sum, l) => sum + (parseFloat(l.debit) || 0), 0);
+    const totalCredit = newJournal.lines.reduce((sum, l) => sum + (parseFloat(l.credit) || 0), 0);
     
     if (Math.abs(totalDebit - totalCredit) > 0.01) {
       toast.error('Debet en credit moeten gelijk zijn');
@@ -95,22 +94,32 @@ const GrootboekPage = () => {
       setShowJournalDialog(false);
       fetchData();
     } catch (error) {
-      toast.error(error.message || 'Fout bij aanmaken');
+      toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
     } finally {
       setSaving(false);
     }
   };
 
   const updateJournalLine = (index, field, value) => {
-    const regels = [...newJournal.regels];
-    regels[index][field] = field === 'debet' || field === 'credit' ? parseFloat(value) || 0 : value;
-    setNewJournal({ ...newJournal, regels });
+    const lines = [...newJournal.lines];
+    if (field === 'account_id') {
+      const account = accounts.find(a => a.id === value);
+      lines[index] = {
+        ...lines[index],
+        account_id: value,
+        account_code: account?.code || '',
+        account_name: account?.name || ''
+      };
+    } else {
+      lines[index][field] = field === 'debit' || field === 'credit' ? parseFloat(value) || 0 : value;
+    }
+    setNewJournal({ ...newJournal, lines });
   };
 
   const addJournalLine = () => {
     setNewJournal({
       ...newJournal,
-      regels: [...newJournal.regels, { rekening_code: '', debet: 0, credit: 0 }]
+      lines: [...newJournal.lines, { account_id: '', account_code: '', account_name: '', debit: 0, credit: 0, description: '' }]
     });
   };
 
@@ -129,7 +138,7 @@ const GrootboekPage = () => {
     <div className="space-y-6" data-testid="grootboek-page">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Grootboek</h1>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Grootboek</h1>
           <p className="text-slate-500 mt-1">Beheer uw rekeningschema en journaalposten</p>
         </div>
         <div className="flex gap-2">
@@ -172,8 +181,8 @@ const GrootboekPage = () => {
                 <div className="space-y-2">
                   <Label>Naam *</Label>
                   <Input
-                    value={newAccount.naam}
-                    onChange={(e) => setNewAccount({...newAccount, naam: e.target.value})}
+                    value={newAccount.name}
+                    onChange={(e) => setNewAccount({...newAccount, name: e.target.value})}
                     placeholder="Kas"
                     data-testid="account-name-input"
                   />
@@ -181,15 +190,15 @@ const GrootboekPage = () => {
                 <div className="space-y-2">
                   <Label>Categorie *</Label>
                   <Input
-                    value={newAccount.categorie}
-                    onChange={(e) => setNewAccount({...newAccount, categorie: e.target.value})}
+                    value={newAccount.category}
+                    onChange={(e) => setNewAccount({...newAccount, category: e.target.value})}
                     placeholder="Liquide middelen"
                     data-testid="account-category-input"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Valuta</Label>
-                  <Select value={newAccount.valuta} onValueChange={(v) => setNewAccount({...newAccount, valuta: v})}>
+                  <Select value={newAccount.currency} onValueChange={(v) => setNewAccount({...newAccount, currency: v})}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -225,13 +234,13 @@ const GrootboekPage = () => {
                     <Label>Datum</Label>
                     <Input
                       type="date"
-                      value={newJournal.datum}
-                      onChange={(e) => setNewJournal({...newJournal, datum: e.target.value})}
+                      value={newJournal.date}
+                      onChange={(e) => setNewJournal({...newJournal, date: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Dagboek</Label>
-                    <Select value={newJournal.dagboek_type} onValueChange={(v) => setNewJournal({...newJournal, dagboek_type: v})}>
+                    <Select value={newJournal.journal_type} onValueChange={(v) => setNewJournal({...newJournal, journal_type: v})}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -245,8 +254,8 @@ const GrootboekPage = () => {
                   <div className="space-y-2">
                     <Label>Omschrijving</Label>
                     <Input
-                      value={newJournal.omschrijving}
-                      onChange={(e) => setNewJournal({...newJournal, omschrijving: e.target.value})}
+                      value={newJournal.description}
+                      onChange={(e) => setNewJournal({...newJournal, description: e.target.value})}
                       placeholder="Omschrijving"
                     />
                   </div>
@@ -256,22 +265,22 @@ const GrootboekPage = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-slate-50">
-                        <TableHead>Rekening Code</TableHead>
+                        <TableHead>Rekening</TableHead>
                         <TableHead className="text-right w-32">Debet</TableHead>
                         <TableHead className="text-right w-32">Credit</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {newJournal.regels.map((line, idx) => (
+                      {newJournal.lines.map((line, idx) => (
                         <TableRow key={idx}>
                           <TableCell>
-                            <Select value={line.rekening_code} onValueChange={(v) => updateJournalLine(idx, 'rekening_code', v)}>
+                            <Select value={line.account_id} onValueChange={(v) => updateJournalLine(idx, 'account_id', v)}>
                               <SelectTrigger>
                                 <SelectValue placeholder="Kies rekening" />
                               </SelectTrigger>
                               <SelectContent>
                                 {accounts.map(a => (
-                                  <SelectItem key={a.code} value={a.code}>{a.code} - {a.naam}</SelectItem>
+                                  <SelectItem key={a.id} value={a.id}>{a.code} - {a.name}</SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
@@ -280,8 +289,8 @@ const GrootboekPage = () => {
                             <Input
                               type="number"
                               step="0.01"
-                              value={line.debet || ''}
-                              onChange={(e) => updateJournalLine(idx, 'debet', e.target.value)}
+                              value={line.debit || ''}
+                              onChange={(e) => updateJournalLine(idx, 'debit', e.target.value)}
                               className="text-right font-mono"
                             />
                           </TableCell>
@@ -299,10 +308,10 @@ const GrootboekPage = () => {
                       <TableRow className="bg-slate-50 font-medium">
                         <TableCell>Totaal</TableCell>
                         <TableCell className="text-right font-mono">
-                          {formatCurrency(newJournal.regels.reduce((s, l) => s + (parseFloat(l.debet) || 0), 0), 'SRD', false)}
+                          {formatCurrency(newJournal.lines.reduce((s, l) => s + (parseFloat(l.debit) || 0), 0), 'SRD', false)}
                         </TableCell>
                         <TableCell className="text-right font-mono">
-                          {formatCurrency(newJournal.regels.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0), 'SRD', false)}
+                          {formatCurrency(newJournal.lines.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0), 'SRD', false)}
                         </TableCell>
                       </TableRow>
                     </TableBody>
@@ -362,7 +371,7 @@ const GrootboekPage = () => {
                 <div className="space-y-6">
                   {Object.entries(groupedAccounts).map(([type, accs]) => (
                     <div key={type}>
-                      <h3 className="font-medium text-slate-900 mb-2">{accountTypes[type] || type}</h3>
+                      <h3 className="font-medium text-slate-900 mb-2">{accountTypes[type]}</h3>
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-slate-50">
@@ -375,15 +384,15 @@ const GrootboekPage = () => {
                         </TableHeader>
                         <TableBody>
                           {accs.map(account => (
-                            <TableRow key={account.code} data-testid={`account-row-${account.code}`}>
+                            <TableRow key={account.id} data-testid={`account-row-${account.code}`}>
                               <TableCell className="font-mono">{account.code}</TableCell>
-                              <TableCell className="font-medium">{account.naam}</TableCell>
-                              <TableCell className="text-slate-500">{account.categorie}</TableCell>
+                              <TableCell className="font-medium">{account.name}</TableCell>
+                              <TableCell className="text-slate-500">{account.category}</TableCell>
                               <TableCell>
-                                <Badge variant="outline">{account.valuta}</Badge>
+                                <Badge variant="outline">{account.currency}</Badge>
                               </TableCell>
-                              <TableCell className={`text-right font-mono ${(account.saldo || 0) < 0 ? 'text-red-600' : ''}`}>
-                                {formatCurrency(account.saldo || 0, account.valuta)}
+                              <TableCell className={`text-right font-mono ${account.balance < 0 ? 'text-red-600' : ''}`}>
+                                {formatCurrency(account.balance, account.currency)}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -421,15 +430,15 @@ const GrootboekPage = () => {
                 </TableHeader>
                 <TableBody>
                   {journalEntries.map(entry => (
-                    <TableRow key={entry.boekstuknummer} data-testid={`journal-row-${entry.boekstuknummer}`}>
-                      <TableCell className="font-mono">{entry.boekstuknummer}</TableCell>
-                      <TableCell>{new Date(entry.datum).toLocaleDateString('nl-NL')}</TableCell>
+                    <TableRow key={entry.id} data-testid={`journal-row-${entry.entry_number}`}>
+                      <TableCell className="font-mono">{entry.entry_number}</TableCell>
+                      <TableCell>{new Date(entry.date).toLocaleDateString('nl-NL')}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{journalTypes[entry.dagboek_type] || entry.dagboek_type}</Badge>
+                        <Badge variant="outline">{journalTypes[entry.journal_type]}</Badge>
                       </TableCell>
-                      <TableCell>{entry.omschrijving}</TableCell>
+                      <TableCell>{entry.description}</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency((entry.regels || []).reduce((s, l) => s + (l.debet || 0), 0), entry.valuta || 'SRD')}
+                        {formatCurrency(entry.lines.reduce((s, l) => s + l.debit, 0), entry.currency)}
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(entry.status)}>

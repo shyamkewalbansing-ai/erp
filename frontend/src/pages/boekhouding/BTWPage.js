@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { btwAPI, reportsAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, formatPercentage } from '../../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Badge } from '../../components/ui/badge';
+import { btwAPI, reportsAPI } from '../lib/api';
+import { formatCurrency, formatPercentage } from '../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, Calculator, FileText, Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 
@@ -22,9 +22,9 @@ const BTWPage = () => {
 
   const [newCode, setNewCode] = useState({
     code: '',
-    naam: '',
+    name: '',
     percentage: 0,
-    type: 'beide'
+    type: 'both'
   });
 
   useEffect(() => {
@@ -35,12 +35,11 @@ const BTWPage = () => {
     try {
       const [codesRes, reportRes] = await Promise.all([
         btwAPI.getAll(),
-        reportsAPI.btw().catch(() => ({ btw_verkoop: 0, btw_inkoop: 0 }))
+        reportsAPI.btw()
       ]);
-      setBtwCodes(Array.isArray(codesRes) ? codesRes : codesRes.data || []);
-      setBtwReport(reportRes);
+      setBtwCodes(codesRes.data);
+      setBtwReport(reportRes.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
       toast.error('Fout bij laden gegevens');
     } finally {
       setLoading(false);
@@ -48,7 +47,7 @@ const BTWPage = () => {
   };
 
   const handleCreateCode = async () => {
-    if (!newCode.code || !newCode.naam) {
+    if (!newCode.code || !newCode.name) {
       toast.error('Vul code en naam in');
       return;
     }
@@ -57,10 +56,10 @@ const BTWPage = () => {
       await btwAPI.create(newCode);
       toast.success('BTW-code aangemaakt');
       setShowCodeDialog(false);
-      setNewCode({ code: '', naam: '', percentage: 0, type: 'beide' });
+      setNewCode({ code: '', name: '', percentage: 0, type: 'both' });
       fetchData();
     } catch (error) {
-      toast.error(error.message || 'Fout bij aanmaken');
+      toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
     } finally {
       setSaving(false);
     }
@@ -77,13 +76,13 @@ const BTWPage = () => {
     }
   };
 
-  const btwBalance = (btwReport?.btw_verkoop || 0) - (btwReport?.btw_inkoop || 0);
+  const btwBalance = (btwReport?.btw_sales || 0) - (btwReport?.btw_purchases || 0);
 
   return (
     <div className="space-y-6" data-testid="btw-page">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">BTW</h1>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">BTW</h1>
           <p className="text-slate-500 mt-1">Beheer BTW-tarieven en bekijk aangifteoverzicht</p>
         </div>
         <Dialog open={showCodeDialog} onOpenChange={setShowCodeDialog}>
@@ -122,9 +121,9 @@ const BTWPage = () => {
               <div className="space-y-2">
                 <Label>Naam *</Label>
                 <Input
-                  value={newCode.naam}
-                  onChange={(e) => setNewCode({...newCode, naam: e.target.value})}
-                  placeholder="Standaard tarief (10%)"
+                  value={newCode.name}
+                  onChange={(e) => setNewCode({...newCode, name: e.target.value})}
+                  placeholder="Standaard tarief (21%)"
                   data-testid="btw-name-input"
                 />
               </div>
@@ -135,9 +134,9 @@ const BTWPage = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="beide">Beide (Verkoop & Inkoop)</SelectItem>
-                    <SelectItem value="verkoop">Alleen Verkoop</SelectItem>
-                    <SelectItem value="inkoop">Alleen Inkoop</SelectItem>
+                    <SelectItem value="both">Beide (Verkoop & Inkoop)</SelectItem>
+                    <SelectItem value="sales">Alleen Verkoop</SelectItem>
+                    <SelectItem value="purchase">Alleen Inkoop</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -158,7 +157,7 @@ const BTWPage = () => {
               <div>
                 <p className="text-sm text-slate-500">BTW Verkoop</p>
                 <p className="text-2xl font-bold font-mono text-slate-900">
-                  {formatCurrency(btwReport?.btw_verkoop || 0)}
+                  {formatCurrency(btwReport?.btw_sales || 0)}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
@@ -173,7 +172,7 @@ const BTWPage = () => {
               <div>
                 <p className="text-sm text-slate-500">BTW Inkoop</p>
                 <p className="text-2xl font-bold font-mono text-slate-900">
-                  {formatCurrency(btwReport?.btw_inkoop || 0)}
+                  {formatCurrency(btwReport?.btw_purchases || 0)}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
@@ -219,58 +218,54 @@ const BTWPage = () => {
               <CardTitle className="text-lg">BTW-codes</CardTitle>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-slate-500">Laden...</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50">
-                      <TableHead className="w-24">Code</TableHead>
-                      <TableHead>Naam</TableHead>
-                      <TableHead className="w-24">Percentage</TableHead>
-                      <TableHead className="w-32">Type</TableHead>
-                      <TableHead className="w-20">Status</TableHead>
-                      <TableHead className="w-24">Acties</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="w-24">Code</TableHead>
+                    <TableHead>Naam</TableHead>
+                    <TableHead className="w-24">Percentage</TableHead>
+                    <TableHead className="w-32">Type</TableHead>
+                    <TableHead className="w-20">Status</TableHead>
+                    <TableHead className="w-24">Acties</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {btwCodes.map(code => (
+                    <TableRow key={code.id} data-testid={`btw-code-row-${code.code}`}>
+                      <TableCell className="font-mono font-medium">{code.code}</TableCell>
+                      <TableCell>{code.name}</TableCell>
+                      <TableCell className="font-mono">{formatPercentage(code.percentage)}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {code.type === 'both' ? 'Beide' : code.type === 'sales' ? 'Verkoop' : 'Inkoop'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={code.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}>
+                          {code.active ? 'Actief' : 'Inactief'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => handleDeleteCode(code.id)}
+                        >
+                          Verwijder
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {btwCodes.map(code => (
-                      <TableRow key={code.code} data-testid={`btw-code-row-${code.code}`}>
-                        <TableCell className="font-mono font-medium">{code.code}</TableCell>
-                        <TableCell>{code.naam}</TableCell>
-                        <TableCell className="font-mono">{formatPercentage(code.percentage)}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">
-                            {code.type === 'beide' ? 'Beide' : code.type === 'verkoop' ? 'Verkoop' : 'Inkoop'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={code.actief !== false ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}>
-                            {code.actief !== false ? 'Actief' : 'Inactief'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => handleDeleteCode(code.code)}
-                          >
-                            Verwijder
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {btwCodes.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                          Geen BTW-codes gevonden
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              )}
+                  ))}
+                  {btwCodes.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                        Geen BTW-codes gevonden
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
@@ -282,22 +277,22 @@ const BTWPage = () => {
             </CardHeader>
             <CardContent>
               <div className="bg-white border border-slate-200 rounded-xl p-8 max-w-2xl">
-                <h3 className="font-bold text-xl mb-6">BTW Aangifte</h3>
+                <h3 className="font-heading font-bold text-xl mb-6">BTW Aangifte</h3>
                 
                 <div className="space-y-4">
                   <div className="flex justify-between py-3 border-b border-slate-100">
                     <span className="text-slate-600">1a. Leveringen/diensten belast met hoog tarief</span>
-                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_verkoop || 0)}</span>
+                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_sales || 0)}</span>
                   </div>
                   
                   <div className="flex justify-between py-3 border-b border-slate-100">
                     <span className="text-slate-600">5a. Verschuldigde BTW (rubriek 1 t/m 4)</span>
-                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_verkoop || 0)}</span>
+                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_sales || 0)}</span>
                   </div>
                   
                   <div className="flex justify-between py-3 border-b border-slate-100">
                     <span className="text-slate-600">5b. Voorbelasting</span>
-                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_inkoop || 0)}</span>
+                    <span className="font-mono font-medium">{formatCurrency(btwReport?.btw_purchases || 0)}</span>
                   </div>
                   
                   <div className={`flex justify-between py-4 rounded-lg px-4 mt-4 ${btwBalance > 0 ? 'bg-red-50' : 'bg-green-50'}`}>

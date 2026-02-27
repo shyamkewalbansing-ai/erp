@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardAPI, exchangeRatesAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, formatDate, formatNumber } from '../../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Skeleton } from '../../components/ui/skeleton';
+import { dashboardAPI, exchangeRatesAPI } from '../lib/api';
+import { formatCurrency, formatDate, formatNumber } from '../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Skeleton } from '../components/ui/skeleton';
 import {
   TrendingUp,
   TrendingDown,
@@ -85,10 +85,10 @@ const DashboardPage = () => {
       try {
         const [summaryRes, ratesRes] = await Promise.all([
           dashboardAPI.getSummary(),
-          exchangeRatesAPI.getLatest().catch(() => ({ usd_srd: null, eur_srd: null }))
+          exchangeRatesAPI.getLatest()
         ]);
-        setSummary(summaryRes);
-        setRates(ratesRes);
+        setSummary(summaryRes.data);
+        setRates(ratesRes.data);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -116,41 +116,28 @@ const DashboardPage = () => {
     { name: '90+ dagen', value: 2000 },
   ];
 
-  // Map backend response to expected structure
-  const revenue = summary?.omzet?.deze_maand || 0;
-  const expenses = summary?.kosten?.deze_maand || 0;
-  const profit = summary?.winst?.deze_maand || (revenue - expenses);
-  const outstandingReceivables = summary?.openstaand?.debiteuren || 0;
-  const outstandingPayables = summary?.openstaand?.crediteuren || 0;
-  const bankSRD = summary?.liquiditeit?.bank_srd || 0;
-  const bankUSD = summary?.liquiditeit?.bank_usd || 0;
-  const bankEUR = summary?.liquiditeit?.bank_eur || 0;
-  const btwToBePaid = summary?.btw?.te_betalen || 0;
-  const btwToClaim = summary?.btw?.te_vorderen || 0;
-  const btwBalance = summary?.btw?.saldo || (btwToBePaid - btwToClaim);
-
   return (
-    <div className="space-y-6" data-testid="boekhouding-dashboard-page">
+    <div className="space-y-6" data-testid="dashboard-page">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Dashboard</h1>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Dashboard</h1>
           <p className="text-slate-500 mt-1">Welkom terug! Hier is uw financiële overzicht.</p>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          {rates?.usd_srd && (
+          {rates?.USD && (
             <div className="bg-white border border-slate-200 rounded-lg px-4 py-2">
               <span className="text-slate-500">USD/SRD:</span>
               <span className="font-mono font-medium text-slate-900 ml-2">
-                {formatNumber(rates.usd_srd, 2)}
+                {formatNumber(rates.USD.rate, 2)}
               </span>
             </div>
           )}
-          {rates?.eur_srd && (
+          {rates?.EUR && (
             <div className="bg-white border border-slate-200 rounded-lg px-4 py-2">
               <span className="text-slate-500">EUR/SRD:</span>
               <span className="font-mono font-medium text-slate-900 ml-2">
-                {formatNumber(rates.eur_srd, 2)}
+                {formatNumber(rates.EUR.rate, 2)}
               </span>
             </div>
           )}
@@ -161,7 +148,7 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Omzet"
-          value={formatCurrency(revenue)}
+          value={formatCurrency(summary?.revenue || 0)}
           subtitle="Deze periode"
           icon={TrendingUp}
           trend="up"
@@ -171,7 +158,7 @@ const DashboardPage = () => {
         />
         <MetricCard
           title="Kosten"
-          value={formatCurrency(expenses)}
+          value={formatCurrency(summary?.expenses || 0)}
           subtitle="Deze periode"
           icon={TrendingDown}
           loading={loading}
@@ -179,21 +166,21 @@ const DashboardPage = () => {
         />
         <MetricCard
           title="Winst"
-          value={formatCurrency(profit)}
+          value={formatCurrency(summary?.profit || 0)}
           subtitle="Netto resultaat"
           icon={Wallet}
-          trend={profit > 0 ? "up" : "down"}
-          trendValue={profit > 0 ? "Positief" : "Negatief"}
+          trend={summary?.profit > 0 ? "up" : "down"}
+          trendValue={summary?.profit > 0 ? "Positief" : "Negatief"}
           loading={loading}
-          color={profit > 0 ? "green" : "red"}
+          color={summary?.profit > 0 ? "green" : "red"}
         />
         <MetricCard
           title="Openstaande Facturen"
-          value={summary?.openstaand?.debiteuren_count || 0}
-          subtitle={`${summary?.openstaand?.verlopen || 0} vervallen`}
+          value={summary?.open_invoices || 0}
+          subtitle={`${summary?.overdue_invoices || 0} vervallen`}
           icon={Receipt}
           loading={loading}
-          color={(summary?.openstaand?.verlopen || 0) > 0 ? "amber" : "blue"}
+          color={summary?.overdue_invoices > 0 ? "amber" : "blue"}
         />
       </div>
 
@@ -201,31 +188,31 @@ const DashboardPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
           title="Debiteuren"
-          value={formatCurrency(outstandingReceivables)}
-          subtitle={`${summary?.debiteuren_count || 0} klanten`}
+          value={formatCurrency(summary?.outstanding_receivables || 0)}
+          subtitle={`${summary?.customer_count || 0} klanten`}
           icon={Users}
           loading={loading}
           color="blue"
         />
         <MetricCard
           title="Crediteuren"
-          value={formatCurrency(outstandingPayables)}
-          subtitle={`${summary?.crediteuren_count || 0} leveranciers`}
+          value={formatCurrency(summary?.outstanding_payables || 0)}
+          subtitle={`${summary?.supplier_count || 0} leveranciers`}
           icon={Truck}
           loading={loading}
           color="amber"
         />
         <MetricCard
           title="BTW te betalen"
-          value={formatCurrency(btwBalance > 0 ? btwBalance : 0)}
+          value={formatCurrency(summary?.btw_balance > 0 ? summary?.btw_balance : 0)}
           subtitle="Huidige periode"
           icon={Calculator}
           loading={loading}
-          color={btwBalance > 0 ? "red" : "green"}
+          color={summary?.btw_balance > 0 ? "red" : "green"}
         />
         <MetricCard
           title="BTW te vorderen"
-          value={formatCurrency(btwBalance < 0 ? Math.abs(btwBalance) : 0)}
+          value={formatCurrency(summary?.btw_balance < 0 ? Math.abs(summary?.btw_balance) : 0)}
           subtitle="Huidige periode"
           icon={Calculator}
           loading={loading}
@@ -247,7 +234,7 @@ const DashboardPage = () => {
               <Skeleton className="h-8 w-32" />
             ) : (
               <div className="font-mono text-2xl font-semibold text-slate-900">
-                {formatCurrency(bankSRD)}
+                {formatCurrency(summary?.bank_balances?.SRD || 0)}
               </div>
             )}
           </CardContent>
@@ -264,7 +251,7 @@ const DashboardPage = () => {
               <Skeleton className="h-8 w-32" />
             ) : (
               <div className="font-mono text-2xl font-semibold text-slate-900">
-                {formatCurrency(bankUSD, 'USD')}
+                {formatCurrency(summary?.bank_balances?.USD || 0, 'USD')}
               </div>
             )}
           </CardContent>
@@ -281,7 +268,7 @@ const DashboardPage = () => {
               <Skeleton className="h-8 w-32" />
             ) : (
               <div className="font-mono text-2xl font-semibold text-slate-900">
-                {formatCurrency(bankEUR, 'EUR')}
+                {formatCurrency(summary?.bank_balances?.EUR || 0, 'EUR')}
               </div>
             )}
           </CardContent>
@@ -293,7 +280,7 @@ const DashboardPage = () => {
         {/* Cashflow Chart */}
         <Card className="border-slate-200" data-testid="cashflow-chart">
           <CardHeader>
-            <CardTitle className="text-lg">Cashflow Overzicht</CardTitle>
+            <CardTitle className="text-lg font-heading">Cashflow Overzicht</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -336,7 +323,7 @@ const DashboardPage = () => {
         {/* Aging Chart */}
         <Card className="border-slate-200" data-testid="aging-chart">
           <CardHeader>
-            <CardTitle className="text-lg">Ouderdomsanalyse Debiteuren</CardTitle>
+            <CardTitle className="text-lg font-heading">Ouderdomsanalyse Debiteuren</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
@@ -363,7 +350,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Alerts */}
-      {(summary?.openstaand?.verlopen || 0) > 0 && (
+      {summary?.overdue_invoices > 0 && (
         <Card className="border-amber-200 bg-amber-50" data-testid="overdue-alert">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
@@ -372,7 +359,7 @@ const DashboardPage = () => {
               </div>
               <div>
                 <p className="font-medium text-amber-800">
-                  U heeft {summary.openstaand.verlopen} vervallen facturen
+                  U heeft {summary.overdue_invoices} vervallen facturen
                 </p>
                 <p className="text-sm text-amber-600">
                   Bekijk uw debiteuren voor meer details.

@@ -1,103 +1,215 @@
 import React, { useState, useEffect } from 'react';
-import { settingsAPI } from '../../lib/boekhoudingApi';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { settingsAPI } from '../lib/api';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { toast } from 'sonner';
-import { Building2, Hash, Loader2, Save } from 'lucide-react';
+import { Settings, Building2, Loader2, Save } from 'lucide-react';
 
 const InstellingenPage = () => {
-  const [bedrijf, setBedrijf] = useState({ naam: '', adres: '', stad: '', telefoon: '', email: '', btw_nummer: '', kvk_nummer: '' });
-  const [nummering, setNummering] = useState({ factuur_prefix: 'F', factuur_nummer: 1, inkoop_prefix: 'IF', inkoop_nummer: 1 });
+  const [settings, setSettings] = useState({
+    id: '',
+    name: '',
+    address: '',
+    phone: '',
+    email: '',
+    btw_number: '',
+    default_currency: 'SRD',
+    fiscal_year_start: 1
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchSettings();
+  }, []);
 
-  const fetchData = async () => {
+  const fetchSettings = async () => {
     try {
-      const [bedrijfRes, nummeringRes] = await Promise.all([
-        settingsAPI.getBedrijf().catch(() => ({})),
-        settingsAPI.getNummering().catch(() => ({}))
-      ]);
-      if (bedrijfRes) setBedrijf(prev => ({ ...prev, ...bedrijfRes }));
-      if (nummeringRes) setNummering(prev => ({ ...prev, ...nummeringRes }));
+      const response = await settingsAPI.getCompany();
+      setSettings(response.data);
     } catch (error) {
       toast.error('Fout bij laden instellingen');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSaveBedrijf = async () => {
+  const handleSave = async () => {
     setSaving(true);
     try {
-      await settingsAPI.updateBedrijf(bedrijf);
-      toast.success('Bedrijfsgegevens opgeslagen');
-    } catch (error) { toast.error(error.message || 'Fout bij opslaan'); }
-    finally { setSaving(false); }
+      await settingsAPI.updateCompany(settings);
+      toast.success('Instellingen opgeslagen');
+    } catch (error) {
+      toast.error('Fout bij opslaan');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSaveNummering = async () => {
-    setSaving(true);
-    try {
-      await settingsAPI.updateNummering(nummering);
-      toast.success('Nummering opgeslagen');
-    } catch (error) { toast.error(error.message || 'Fout bij opslaan'); }
-    finally { setSaving(false); }
-  };
-
-  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-slate-400" /></div>;
+  const months = [
+    { value: 1, label: 'Januari' },
+    { value: 2, label: 'Februari' },
+    { value: 3, label: 'Maart' },
+    { value: 4, label: 'April' },
+    { value: 5, label: 'Mei' },
+    { value: 6, label: 'Juni' },
+    { value: 7, label: 'Juli' },
+    { value: 8, label: 'Augustus' },
+    { value: 9, label: 'September' },
+    { value: 10, label: 'Oktober' },
+    { value: 11, label: 'November' },
+    { value: 12, label: 'December' }
+  ];
 
   return (
     <div className="space-y-6" data-testid="instellingen-page">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Instellingen</h1>
-        <p className="text-slate-500 mt-1">Configureer bedrijfsgegevens en systeem instellingen</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Instellingen</h1>
+          <p className="text-slate-500 mt-1">Beheer uw bedrijfsgegevens en voorkeuren</p>
+        </div>
       </div>
 
-      <Tabs defaultValue="bedrijf">
-        <TabsList>
-          <TabsTrigger value="bedrijf" data-testid="tab-bedrijf"><Building2 className="w-4 h-4 mr-2" />Bedrijfsgegevens</TabsTrigger>
-          <TabsTrigger value="nummering" data-testid="tab-nummering"><Hash className="w-4 h-4 mr-2" />Nummering</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="bedrijf" className="mt-4">
+      {loading ? (
+        <Card className="border-slate-200">
+          <CardContent className="p-8 text-center text-slate-500">
+            Laden...
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Company Info */}
           <Card className="border-slate-200">
-            <CardHeader><CardTitle className="text-lg">Bedrijfsgegevens</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl">
-                <div className="space-y-2"><Label>Bedrijfsnaam</Label><Input value={bedrijf.naam} onChange={(e) => setBedrijf({...bedrijf, naam: e.target.value})} placeholder="Uw bedrijfsnaam" /></div>
-                <div className="space-y-2"><Label>BTW-nummer</Label><Input value={bedrijf.btw_nummer} onChange={(e) => setBedrijf({...bedrijf, btw_nummer: e.target.value})} placeholder="BTW123456" /></div>
-                <div className="space-y-2 col-span-2"><Label>Adres</Label><Input value={bedrijf.adres} onChange={(e) => setBedrijf({...bedrijf, adres: e.target.value})} placeholder="Straat en nummer" /></div>
-                <div className="space-y-2"><Label>Stad</Label><Input value={bedrijf.stad} onChange={(e) => setBedrijf({...bedrijf, stad: e.target.value})} placeholder="Paramaribo" /></div>
-                <div className="space-y-2"><Label>Telefoon</Label><Input value={bedrijf.telefoon} onChange={(e) => setBedrijf({...bedrijf, telefoon: e.target.value})} placeholder="+597 123 4567" /></div>
-                <div className="space-y-2"><Label>E-mail</Label><Input type="email" value={bedrijf.email} onChange={(e) => setBedrijf({...bedrijf, email: e.target.value})} placeholder="info@bedrijf.sr" /></div>
-                <div className="space-y-2"><Label>KvK-nummer</Label><Input value={bedrijf.kvk_nummer} onChange={(e) => setBedrijf({...bedrijf, kvk_nummer: e.target.value})} placeholder="12345678" /></div>
-                <div className="col-span-2"><Button onClick={handleSaveBedrijf} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}Opslaan</Button></div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="nummering" className="mt-4">
-          <Card className="border-slate-200">
-            <CardHeader><CardTitle className="text-lg">Factuurnummering</CardTitle></CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-xl">
-                <div className="space-y-2"><Label>Verkoopfactuur Prefix</Label><Input value={nummering.factuur_prefix} onChange={(e) => setNummering({...nummering, factuur_prefix: e.target.value})} placeholder="F" /></div>
-                <div className="space-y-2"><Label>Volgend nummer</Label><Input type="number" value={nummering.factuur_nummer} onChange={(e) => setNummering({...nummering, factuur_nummer: parseInt(e.target.value) || 1})} /></div>
-                <div className="space-y-2"><Label>Inkoopfactuur Prefix</Label><Input value={nummering.inkoop_prefix} onChange={(e) => setNummering({...nummering, inkoop_prefix: e.target.value})} placeholder="IF" /></div>
-                <div className="space-y-2"><Label>Volgend nummer</Label><Input type="number" value={nummering.inkoop_nummer} onChange={(e) => setNummering({...nummering, inkoop_nummer: parseInt(e.target.value) || 1})} /></div>
-                <div className="col-span-2">
-                  <p className="text-sm text-slate-500 mb-4">Voorbeeld verkoopfactuur: {nummering.factuur_prefix}{String(nummering.factuur_nummer).padStart(4, '0')}</p>
-                  <Button onClick={handleSaveNummering} disabled={saving}>{saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}Opslaan</Button>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <Building2 className="w-5 h-5 text-blue-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Bedrijfsgegevens</CardTitle>
+                  <CardDescription>Algemene informatie over uw bedrijf</CardDescription>
                 </div>
               </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Bedrijfsnaam</Label>
+                <Input
+                  value={settings.name}
+                  onChange={(e) => setSettings({...settings, name: e.target.value})}
+                  placeholder="Uw bedrijfsnaam"
+                  data-testid="company-name-input"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Adres</Label>
+                <Input
+                  value={settings.address || ''}
+                  onChange={(e) => setSettings({...settings, address: e.target.value})}
+                  placeholder="Straat en nummer, Stad"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Telefoon</Label>
+                  <Input
+                    value={settings.phone || ''}
+                    onChange={(e) => setSettings({...settings, phone: e.target.value})}
+                    placeholder="+597 123 4567"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>E-mail</Label>
+                  <Input
+                    type="email"
+                    value={settings.email || ''}
+                    onChange={(e) => setSettings({...settings, email: e.target.value})}
+                    placeholder="info@bedrijf.sr"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>BTW-nummer</Label>
+                <Input
+                  value={settings.btw_number || ''}
+                  onChange={(e) => setSettings({...settings, btw_number: e.target.value})}
+                  placeholder="BTW123456789"
+                />
+              </div>
             </CardContent>
           </Card>
-        </TabsContent>
-      </Tabs>
+
+          {/* Financial Settings */}
+          <Card className="border-slate-200">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                  <Settings className="w-5 h-5 text-green-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Financiële Instellingen</CardTitle>
+                  <CardDescription>Valuta en boekjaar voorkeuren</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Standaard Valuta</Label>
+                <Select 
+                  value={settings.default_currency} 
+                  onValueChange={(v) => setSettings({...settings, default_currency: v})}
+                >
+                  <SelectTrigger data-testid="default-currency-select">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="SRD">SRD - Surinaamse Dollar</SelectItem>
+                    <SelectItem value="USD">USD - US Dollar</SelectItem>
+                    <SelectItem value="EUR">EUR - Euro</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Start Boekjaar</Label>
+                <Select 
+                  value={String(settings.fiscal_year_start)} 
+                  onValueChange={(v) => setSettings({...settings, fiscal_year_start: parseInt(v)})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map(m => (
+                      <SelectItem key={m.value} value={String(m.value)}>{m.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500">De maand waarin uw boekjaar begint</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Save Button */}
+          <div className="lg:col-span-2">
+            <Button 
+              onClick={handleSave} 
+              className="w-full md:w-auto"
+              disabled={saving}
+              data-testid="save-settings-btn"
+            >
+              {saving ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Instellingen Opslaan
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

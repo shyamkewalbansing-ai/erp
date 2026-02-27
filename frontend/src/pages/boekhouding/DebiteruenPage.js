@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { customersAPI, salesInvoicesAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Badge } from '../../components/ui/badge';
+import { customersAPI, invoicesAPI } from '../lib/api';
+import { formatCurrency, formatDate, getStatusColor, getStatusLabel } from '../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, Users, Receipt, Search, Loader2 } from 'lucide-react';
 
-const DebiteruenPage = () => {
+const DebiterenPage = () => {
   const [customers, setCustomers] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,15 +23,15 @@ const DebiteruenPage = () => {
 
   const [newCustomer, setNewCustomer] = useState({
     code: '',
-    naam: '',
-    adres: '',
-    stad: '',
-    telefoon: '',
+    name: '',
+    address: '',
+    city: '',
+    phone: '',
     email: '',
-    btw_nummer: '',
-    betalingstermijn: 30,
-    kredietlimiet: 0,
-    valuta: 'SRD'
+    btw_number: '',
+    payment_terms: 30,
+    credit_limit: 0,
+    currency: 'SRD'
   });
 
   useEffect(() => {
@@ -42,12 +42,11 @@ const DebiteruenPage = () => {
     try {
       const [customersRes, invoicesRes] = await Promise.all([
         customersAPI.getAll(),
-        salesInvoicesAPI.getAll()
+        invoicesAPI.getAll({ invoice_type: 'sales' })
       ]);
-      setCustomers(Array.isArray(customersRes) ? customersRes : customersRes.data || []);
-      setInvoices(Array.isArray(invoicesRes) ? invoicesRes : invoicesRes.data || []);
+      setCustomers(customersRes.data);
+      setInvoices(invoicesRes.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
       toast.error('Fout bij laden gegevens');
     } finally {
       setLoading(false);
@@ -55,7 +54,7 @@ const DebiteruenPage = () => {
   };
 
   const handleCreateCustomer = async () => {
-    if (!newCustomer.code || !newCustomer.naam) {
+    if (!newCustomer.code || !newCustomer.name) {
       toast.error('Vul code en naam in');
       return;
     }
@@ -65,30 +64,30 @@ const DebiteruenPage = () => {
       toast.success('Klant aangemaakt');
       setShowCustomerDialog(false);
       setNewCustomer({
-        code: '', naam: '', adres: '', stad: '', telefoon: '', email: '',
-        btw_nummer: '', betalingstermijn: 30, kredietlimiet: 0, valuta: 'SRD'
+        code: '', name: '', address: '', city: '', phone: '', email: '',
+        btw_number: '', payment_terms: 30, credit_limit: 0, currency: 'SRD'
       });
       fetchData();
     } catch (error) {
-      toast.error(error.message || 'Fout bij aanmaken');
+      toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
     } finally {
       setSaving(false);
     }
   };
 
   const filteredCustomers = customers.filter(c =>
-    (c.naam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.code || '').toLowerCase().includes(searchTerm.toLowerCase())
+    c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalOutstanding = customers.reduce((sum, c) => sum + (c.openstaand_saldo || 0), 0);
-  const overdueInvoices = invoices.filter(i => i.status === 'verlopen' || i.status === 'overdue').length;
+  const totalOutstanding = customers.reduce((sum, c) => sum + (c.balance || 0), 0);
+  const overdueInvoices = invoices.filter(i => i.status === 'overdue').length;
 
   return (
     <div className="space-y-6" data-testid="debiteuren-page">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Debiteuren</h1>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Debiteuren</h1>
           <p className="text-slate-500 mt-1">Beheer uw klanten en verkoopfacturen</p>
         </div>
         <Dialog open={showCustomerDialog} onOpenChange={setShowCustomerDialog}>
@@ -115,8 +114,8 @@ const DebiteruenPage = () => {
               <div className="space-y-2">
                 <Label>Naam *</Label>
                 <Input
-                  value={newCustomer.naam}
-                  onChange={(e) => setNewCustomer({...newCustomer, naam: e.target.value})}
+                  value={newCustomer.name}
+                  onChange={(e) => setNewCustomer({...newCustomer, name: e.target.value})}
                   placeholder="Bedrijfsnaam"
                   data-testid="customer-name-input"
                 />
@@ -124,24 +123,24 @@ const DebiteruenPage = () => {
               <div className="space-y-2 col-span-2">
                 <Label>Adres</Label>
                 <Input
-                  value={newCustomer.adres}
-                  onChange={(e) => setNewCustomer({...newCustomer, adres: e.target.value})}
+                  value={newCustomer.address}
+                  onChange={(e) => setNewCustomer({...newCustomer, address: e.target.value})}
                   placeholder="Straat en nummer"
                 />
               </div>
               <div className="space-y-2">
                 <Label>Stad</Label>
                 <Input
-                  value={newCustomer.stad}
-                  onChange={(e) => setNewCustomer({...newCustomer, stad: e.target.value})}
+                  value={newCustomer.city}
+                  onChange={(e) => setNewCustomer({...newCustomer, city: e.target.value})}
                   placeholder="Paramaribo"
                 />
               </div>
               <div className="space-y-2">
                 <Label>Telefoon</Label>
                 <Input
-                  value={newCustomer.telefoon}
-                  onChange={(e) => setNewCustomer({...newCustomer, telefoon: e.target.value})}
+                  value={newCustomer.phone}
+                  onChange={(e) => setNewCustomer({...newCustomer, phone: e.target.value})}
                   placeholder="+597 123 4567"
                 />
               </div>
@@ -157,8 +156,8 @@ const DebiteruenPage = () => {
               <div className="space-y-2">
                 <Label>BTW-nummer</Label>
                 <Input
-                  value={newCustomer.btw_nummer}
-                  onChange={(e) => setNewCustomer({...newCustomer, btw_nummer: e.target.value})}
+                  value={newCustomer.btw_number}
+                  onChange={(e) => setNewCustomer({...newCustomer, btw_number: e.target.value})}
                   placeholder="BTW123456"
                 />
               </div>
@@ -166,13 +165,13 @@ const DebiteruenPage = () => {
                 <Label>Betalingstermijn (dagen)</Label>
                 <Input
                   type="number"
-                  value={newCustomer.betalingstermijn}
-                  onChange={(e) => setNewCustomer({...newCustomer, betalingstermijn: parseInt(e.target.value) || 30})}
+                  value={newCustomer.payment_terms}
+                  onChange={(e) => setNewCustomer({...newCustomer, payment_terms: parseInt(e.target.value) || 30})}
                 />
               </div>
               <div className="space-y-2">
                 <Label>Valuta</Label>
-                <Select value={newCustomer.valuta} onValueChange={(v) => setNewCustomer({...newCustomer, valuta: v})}>
+                <Select value={newCustomer.currency} onValueChange={(v) => setNewCustomer({...newCustomer, currency: v})}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -267,45 +266,41 @@ const DebiteruenPage = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-slate-500">Laden...</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50">
-                      <TableHead className="w-24">Code</TableHead>
-                      <TableHead>Naam</TableHead>
-                      <TableHead>Stad</TableHead>
-                      <TableHead>Telefoon</TableHead>
-                      <TableHead className="w-20">Valuta</TableHead>
-                      <TableHead className="text-right w-32">Saldo</TableHead>
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-slate-50">
+                    <TableHead className="w-24">Code</TableHead>
+                    <TableHead>Naam</TableHead>
+                    <TableHead>Stad</TableHead>
+                    <TableHead>Telefoon</TableHead>
+                    <TableHead className="w-20">Valuta</TableHead>
+                    <TableHead className="text-right w-32">Saldo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredCustomers.map(customer => (
+                    <TableRow key={customer.id} data-testid={`customer-row-${customer.code}`}>
+                      <TableCell className="font-mono">{customer.code}</TableCell>
+                      <TableCell className="font-medium">{customer.name}</TableCell>
+                      <TableCell className="text-slate-500">{customer.city || '-'}</TableCell>
+                      <TableCell className="text-slate-500">{customer.phone || '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{customer.currency}</Badge>
+                      </TableCell>
+                      <TableCell className={`text-right font-mono ${customer.balance > 0 ? 'text-amber-600' : ''}`}>
+                        {formatCurrency(customer.balance || 0, customer.currency)}
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredCustomers.map(customer => (
-                      <TableRow key={customer.code} data-testid={`customer-row-${customer.code}`}>
-                        <TableCell className="font-mono">{customer.code}</TableCell>
-                        <TableCell className="font-medium">{customer.naam}</TableCell>
-                        <TableCell className="text-slate-500">{customer.stad || '-'}</TableCell>
-                        <TableCell className="text-slate-500">{customer.telefoon || '-'}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{customer.valuta}</Badge>
-                        </TableCell>
-                        <TableCell className={`text-right font-mono ${(customer.openstaand_saldo || 0) > 0 ? 'text-amber-600' : ''}`}>
-                          {formatCurrency(customer.openstaand_saldo || 0, customer.valuta)}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {filteredCustomers.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                          {searchTerm ? 'Geen klanten gevonden' : 'Geen klanten. Maak uw eerste klant aan.'}
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              )}
+                  ))}
+                  {filteredCustomers.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                        {searchTerm ? 'Geen klanten gevonden' : 'Geen klanten. Maak uw eerste klant aan.'}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
@@ -329,13 +324,13 @@ const DebiteruenPage = () => {
                 </TableHeader>
                 <TableBody>
                   {invoices.map(invoice => (
-                    <TableRow key={invoice.factuurnummer} data-testid={`invoice-row-${invoice.factuurnummer}`}>
-                      <TableCell className="font-mono">{invoice.factuurnummer}</TableCell>
-                      <TableCell>{formatDate(invoice.factuurdatum)}</TableCell>
-                      <TableCell className="font-medium">{invoice.debiteur_naam}</TableCell>
-                      <TableCell>{formatDate(invoice.vervaldatum)}</TableCell>
+                    <TableRow key={invoice.id} data-testid={`invoice-row-${invoice.invoice_number}`}>
+                      <TableCell className="font-mono">{invoice.invoice_number}</TableCell>
+                      <TableCell>{formatDate(invoice.date)}</TableCell>
+                      <TableCell className="font-medium">{invoice.customer_name}</TableCell>
+                      <TableCell>{formatDate(invoice.due_date)}</TableCell>
                       <TableCell className="text-right font-mono">
-                        {formatCurrency(invoice.totaal_bedrag, invoice.valuta)}
+                        {formatCurrency(invoice.total, invoice.currency)}
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(invoice.status)}>
@@ -361,4 +356,4 @@ const DebiteruenPage = () => {
   );
 };
 
-export default DebiteruenPage;
+export default DebiterenPage;

@@ -1,206 +1,142 @@
 import React, { useState, useEffect } from 'react';
-import { remindersAPI, salesInvoicesAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, formatDate } from '../../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
-import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
-import { Badge } from '../../components/ui/badge';
-import { Textarea } from '../../components/ui/textarea';
+import { remindersAPI } from '../lib/api';
+import { formatCurrency, formatDate } from '../lib/utils';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Badge } from '../components/ui/badge';
 import { toast } from 'sonner';
-import { Bell, Send, Clock, AlertTriangle, CheckCircle, Loader2, Mail, FileText, Plus } from 'lucide-react';
+import { RefreshCw, Mail, Check, FileText, Loader2, AlertTriangle, Clock } from 'lucide-react';
 
 const HerinneringenPage = () => {
-  const [herinneringen, setHerinneringen] = useState([]);
-  const [facturenVoorHerinnering, setFacturenVoorHerinnering] = useState([]);
+  const [reminders, setReminders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [selectedFactuur, setSelectedFactuur] = useState(null);
-  const [herinneringType, setHerinneringType] = useState('eerste');
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
-    fetchData();
+    fetchReminders();
   }, []);
 
-  const fetchData = async () => {
+  const fetchReminders = async () => {
     try {
-      const [herinneringenRes, facturenRes] = await Promise.all([
-        remindersAPI.getAll().catch(() => []),
-        remindersAPI.getFacturenVoorHerinnering().catch(() => [])
-      ]);
-      setHerinneringen(Array.isArray(herinneringenRes) ? herinneringenRes : herinneringenRes.data || []);
-      setFacturenVoorHerinnering(Array.isArray(facturenRes) ? facturenRes : facturenRes.data || []);
+      const response = await remindersAPI.getAll();
+      setReminders(response.data);
     } catch (error) {
-      console.error('Error fetching data:', error);
-      toast.error('Fout bij laden gegevens');
+      toast.error('Fout bij laden herinneringen');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreateHerinnering = async () => {
-    if (!selectedFactuur) {
-      toast.error('Selecteer een factuur');
-      return;
-    }
-    setSaving(true);
+  const handleGenerate = async () => {
+    setGenerating(true);
     try {
-      await remindersAPI.create({
-        debiteur_id: selectedFactuur.debiteur_id,
-        factuur_id: selectedFactuur.id,
-        type: herinneringType
-      });
-      toast.success('Herinnering aangemaakt');
-      setShowCreateDialog(false);
-      setSelectedFactuur(null);
-      setHerinneringType('eerste');
-      fetchData();
+      const response = await remindersAPI.generate();
+      toast.success(response.data.message);
+      fetchReminders();
     } catch (error) {
-      toast.error(error.message || 'Fout bij aanmaken');
+      toast.error('Fout bij genereren herinneringen');
     } finally {
-      setSaving(false);
+      setGenerating(false);
     }
   };
 
-  const handleMarkSent = async (herinneringId) => {
+  const handleMarkSent = async (id) => {
     try {
-      await remindersAPI.markSent(herinneringId);
+      await remindersAPI.markSent(id);
       toast.success('Herinnering gemarkeerd als verzonden');
-      fetchData();
+      fetchReminders();
     } catch (error) {
-      toast.error(error.message || 'Fout bij bijwerken');
+      toast.error('Fout bij bijwerken');
     }
   };
 
-  const getTypeLabel = (type) => {
-    switch (type) {
-      case 'eerste': return 'Eerste herinnering';
-      case 'tweede': return 'Tweede herinnering';
-      case 'aanmaning': return 'Aanmaning';
-      default: return type;
+  const handleAcknowledge = async (id) => {
+    try {
+      await remindersAPI.acknowledge(id);
+      toast.success('Herinnering afgehandeld');
+      fetchReminders();
+    } catch (error) {
+      toast.error('Fout bij bijwerken');
     }
   };
 
-  const getTypeColor = (type) => {
-    switch (type) {
-      case 'eerste': return 'bg-blue-100 text-blue-800';
-      case 'tweede': return 'bg-amber-100 text-amber-800';
-      case 'aanmaning': return 'bg-red-100 text-red-800';
-      default: return 'bg-slate-100 text-slate-800';
+  const handleDownloadLetter = async (id, invoiceNumber, level) => {
+    try {
+      const response = await remindersAPI.getLetter(id);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `herinnering_${invoiceNumber}_niveau${level}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast.error('Fout bij downloaden brief');
     }
   };
 
-  const verlopenFacturen = facturenVoorHerinnering.filter(f => {
-    const vervalDatum = new Date(f.vervaldatum);
-    return vervalDatum < new Date();
-  });
+  const getLevelBadge = (level) => {
+    const styles = {
+      1: 'bg-amber-100 text-amber-700',
+      2: 'bg-orange-100 text-orange-700',
+      3: 'bg-red-100 text-red-700'
+    };
+    const labels = {
+      1: '1e Herinnering',
+      2: '2e Herinnering',
+      3: 'Laatste Aanmaning'
+    };
+    return <Badge className={styles[level]}>{labels[level]}</Badge>;
+  };
 
-  const totalVerlopen = verlopenFacturen.reduce((sum, f) => sum + (f.openstaand_bedrag || 0), 0);
-  const verzonden = herinneringen.filter(h => h.verzonden).length;
-  const nietVerzonden = herinneringen.filter(h => !h.verzonden).length;
+  const getStatusBadge = (status) => {
+    const styles = {
+      pending: 'bg-slate-100 text-slate-700',
+      sent: 'bg-blue-100 text-blue-700',
+      acknowledged: 'bg-green-100 text-green-700'
+    };
+    const labels = {
+      pending: 'Te verzenden',
+      sent: 'Verzonden',
+      acknowledged: 'Afgehandeld'
+    };
+    return <Badge className={styles[status]}>{labels[status]}</Badge>;
+  };
+
+  const pendingCount = reminders.filter(r => r.status === 'pending').length;
+  const sentCount = reminders.filter(r => r.status === 'sent').length;
+  const totalOverdue = reminders.reduce((sum, r) => sum + (r.status !== 'acknowledged' ? r.amount_due : 0), 0);
 
   return (
     <div className="space-y-6" data-testid="herinneringen-page">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Betalingsherinneringen</h1>
+          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Betalingsherinneringen</h1>
           <p className="text-slate-500 mt-1">Beheer herinneringen voor vervallen facturen</p>
         </div>
-        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogTrigger asChild>
-            <Button data-testid="create-reminder-btn">
-              <Plus className="w-4 h-4 mr-2" />
-              Nieuwe Herinnering
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Nieuwe Betalingsherinnering</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label>Selecteer Factuur *</Label>
-                <Select value={selectedFactuur?.id || ''} onValueChange={(v) => setSelectedFactuur(facturenVoorHerinnering.find(f => f.id === v))}>
-                  <SelectTrigger><SelectValue placeholder="Selecteer factuur" /></SelectTrigger>
-                  <SelectContent>
-                    {facturenVoorHerinnering.map(f => (
-                      <SelectItem key={f.id} value={f.id}>
-                        {f.factuurnummer} - {f.debiteur_naam} ({formatCurrency(f.openstaand_bedrag)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              {selectedFactuur && (
-                <div className="p-4 bg-slate-50 rounded-lg space-y-2">
-                  <p className="text-sm"><strong>Klant:</strong> {selectedFactuur.debiteur_naam}</p>
-                  <p className="text-sm"><strong>Factuurnummer:</strong> {selectedFactuur.factuurnummer}</p>
-                  <p className="text-sm"><strong>Bedrag:</strong> {formatCurrency(selectedFactuur.openstaand_bedrag)}</p>
-                  <p className="text-sm"><strong>Vervaldatum:</strong> {formatDate(selectedFactuur.vervaldatum)}</p>
-                </div>
-              )}
-              <div className="space-y-2">
-                <Label>Type Herinnering</Label>
-                <Select value={herinneringType} onValueChange={setHerinneringType}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="eerste">Eerste herinnering</SelectItem>
-                    <SelectItem value="tweede">Tweede herinnering</SelectItem>
-                    <SelectItem value="aanmaning">Aanmaning</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleCreateHerinnering} className="w-full" disabled={saving || !selectedFactuur}>
-                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Bell className="w-4 h-4 mr-2" />}
-                Herinnering Aanmaken
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        <Button onClick={handleGenerate} disabled={generating} data-testid="generate-reminders-btn">
+          {generating ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <RefreshCw className="w-4 h-4 mr-2" />
+          )}
+          Herinneringen Genereren
+        </Button>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500">Verlopen Facturen</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{verlopenFacturen.length}</p>
-              </div>
-              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-slate-500">Totaal Verlopen</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{formatCurrency(totalVerlopen)}</p>
-              </div>
-              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-amber-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-slate-200">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Te Verzenden</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{nietVerzonden}</p>
+                <p className="text-2xl font-bold font-mono text-amber-600">{pendingCount}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Mail className="w-6 h-6 text-blue-600" />
+              <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-amber-600" />
               </div>
             </div>
           </CardContent>
@@ -210,154 +146,117 @@ const HerinneringenPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500">Verzonden</p>
-                <p className="text-2xl font-bold font-mono text-slate-900">{verzonden}</p>
+                <p className="text-2xl font-bold font-mono text-blue-600">{sentCount}</p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
+                <Clock className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-slate-200 bg-red-50">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-slate-500">Totaal Openstaand</p>
+                <p className="text-2xl font-bold font-mono text-red-600">{formatCurrency(totalOverdue)}</p>
+              </div>
+              <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs defaultValue="overzicht">
-        <TabsList>
-          <TabsTrigger value="overzicht" data-testid="tab-overzicht">
-            <Bell className="w-4 h-4 mr-2" />
-            Herinneringen
-          </TabsTrigger>
-          <TabsTrigger value="facturen" data-testid="tab-facturen-herinnering">
-            <FileText className="w-4 h-4 mr-2" />
-            Facturen voor Herinnering
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overzicht" className="mt-4">
-          <Card className="border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-lg">Betalingsherinneringen</CardTitle>
-              <CardDescription>Overzicht van alle aangemaakte herinneringen</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-slate-500">Laden...</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-slate-50">
-                      <TableHead className="w-28">Datum</TableHead>
-                      <TableHead>Klant</TableHead>
-                      <TableHead>Factuur</TableHead>
-                      <TableHead className="w-32">Type</TableHead>
-                      <TableHead className="text-right w-32">Bedrag</TableHead>
-                      <TableHead className="w-24">Status</TableHead>
-                      <TableHead className="w-24">Acties</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {herinneringen.map(herinnering => (
-                      <TableRow key={herinnering.id}>
-                        <TableCell>{formatDate(herinnering.created_at)}</TableCell>
-                        <TableCell className="font-medium">{herinnering.debiteur_naam || '-'}</TableCell>
-                        <TableCell className="font-mono">{herinnering.factuurnummer || '-'}</TableCell>
-                        <TableCell>
-                          <Badge className={getTypeColor(herinnering.type)}>{getTypeLabel(herinnering.type)}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-mono">{formatCurrency(herinnering.bedrag || 0)}</TableCell>
-                        <TableCell>
-                          {herinnering.verzonden ? (
-                            <Badge className="bg-green-100 text-green-800">Verzonden</Badge>
-                          ) : (
-                            <Badge className="bg-amber-100 text-amber-800">Te verzenden</Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {!herinnering.verzonden && (
-                            <Button variant="ghost" size="sm" onClick={() => handleMarkSent(herinnering.id)} title="Markeer als verzonden">
-                              <Send className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {herinneringen.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-slate-500">
-                          Geen herinneringen gevonden
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="facturen" className="mt-4">
-          <Card className="border-slate-200">
-            <CardHeader>
-              <CardTitle className="text-lg">Facturen voor Herinnering</CardTitle>
-              <CardDescription>Openstaande facturen die verlopen zijn of bijna verlopen</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="w-28">Factuurnummer</TableHead>
-                    <TableHead>Klant</TableHead>
-                    <TableHead className="w-28">Factuurdatum</TableHead>
-                    <TableHead className="w-28">Vervaldatum</TableHead>
-                    <TableHead className="w-24">Dagen Over</TableHead>
-                    <TableHead className="text-right w-32">Openstaand</TableHead>
-                    <TableHead className="w-24">Acties</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {facturenVoorHerinnering.map(factuur => {
-                    const vervalDatum = new Date(factuur.vervaldatum);
-                    const dagenOver = Math.floor((new Date() - vervalDatum) / (1000 * 60 * 60 * 24));
-                    return (
-                      <TableRow key={factuur.id}>
-                        <TableCell className="font-mono">{factuur.factuurnummer}</TableCell>
-                        <TableCell className="font-medium">{factuur.debiteur_naam}</TableCell>
-                        <TableCell>{formatDate(factuur.factuurdatum)}</TableCell>
-                        <TableCell>{formatDate(factuur.vervaldatum)}</TableCell>
-                        <TableCell>
-                          <Badge className={dagenOver > 30 ? 'bg-red-100 text-red-800' : dagenOver > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-800'}>
-                            {dagenOver > 0 ? `${dagenOver} dagen` : 'Nog niet verlopen'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-mono">{formatCurrency(factuur.openstaand_bedrag)}</TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            onClick={() => {
-                              setSelectedFactuur(factuur);
-                              setShowCreateDialog(true);
-                            }}
-                            title="Herinnering aanmaken"
+      {/* Reminders Table */}
+      <Card className="border-slate-200">
+        <CardHeader>
+          <CardTitle className="text-lg">Herinneringen Overzicht</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="text-center py-8 text-slate-500">Laden...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50">
+                  <TableHead className="w-28">Factuur</TableHead>
+                  <TableHead>Klant</TableHead>
+                  <TableHead className="w-24">Niveau</TableHead>
+                  <TableHead className="text-right w-24">Dagen</TableHead>
+                  <TableHead className="text-right w-32">Bedrag</TableHead>
+                  <TableHead className="w-28">Status</TableHead>
+                  <TableHead className="w-48">Acties</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {reminders.map(reminder => (
+                  <TableRow key={reminder.id} data-testid={`reminder-row-${reminder.invoice_number}`}>
+                    <TableCell className="font-mono">{reminder.invoice_number}</TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="font-medium">{reminder.customer_name}</span>
+                        {reminder.customer_email && (
+                          <p className="text-xs text-slate-500">{reminder.customer_email}</p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>{getLevelBadge(reminder.reminder_level)}</TableCell>
+                    <TableCell className="text-right font-mono text-red-600">
+                      {reminder.days_overdue}
+                    </TableCell>
+                    <TableCell className="text-right font-mono">
+                      {formatCurrency(reminder.amount_due, reminder.currency)}
+                    </TableCell>
+                    <TableCell>{getStatusBadge(reminder.status)}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadLetter(reminder.id, reminder.invoice_number, reminder.reminder_level)}
+                          title="Download brief"
+                        >
+                          <FileText className="w-4 h-4" />
+                        </Button>
+                        {reminder.status === 'pending' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleMarkSent(reminder.id)}
+                            title="Markeer als verzonden"
                           >
-                            <Bell className="w-4 h-4" />
+                            <Mail className="w-4 h-4" />
                           </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                  {facturenVoorHerinnering.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-slate-500">
-                        Geen openstaande facturen voor herinnering
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                        )}
+                        {reminder.status !== 'acknowledged' && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleAcknowledge(reminder.id)}
+                            title="Afhandelen"
+                            className="text-green-600 hover:text-green-700"
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {reminders.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                      Geen herinneringen. Klik op "Herinneringen Genereren" om te controleren op vervallen facturen.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
