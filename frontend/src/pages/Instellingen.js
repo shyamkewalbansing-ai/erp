@@ -580,8 +580,6 @@ export default function Instellingen() {
   const hasAddon = (slug) => {
     // Superadmin has access to all modules
     if (isSuperAdmin) return true;
-    // Boekhouding is always active (free module)
-    if (slug === 'boekhouding') return true;
     return activeAddons.includes(slug);
   };
 
