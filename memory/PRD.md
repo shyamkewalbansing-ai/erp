@@ -172,8 +172,18 @@ Dutch (Nederlands)
 - [ ] Backup en restore functionaliteit
 - [ ] Meer gedetailleerde audit logging
 - [ ] Integratie met Surinaamse banken (indien API beschikbaar)
-- [ ] Automatische wisselkoers updates
 - [ ] Dashboard widgets drag & drop
+
+### ✅ CME.sr Wisselkoers Integratie (Voltooid - December 2025)
+- Automatische wisselkoers synchronisatie van Central Money Exchange (cme.sr)
+- Inkoop én verkoop koersen apart opgeslagen
+- Handmatige sync knop op Wisselkoersen pagina
+- Automatische sync bij openen boekhouding module
+- Preview dialog met actuele CME koersen
+- Playwright-gebaseerde scraper voor JavaScript-gerenderde content
+- API endpoints:
+  - `POST /api/boekhouding/wisselkoersen/sync-cme`
+  - `GET /api/boekhouding/wisselkoersen/cme-preview`
 
 ---
 
