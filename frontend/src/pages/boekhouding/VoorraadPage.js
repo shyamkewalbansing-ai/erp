@@ -521,6 +521,7 @@ const VoorraadPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
+                    <TableHead className="w-16 text-xs font-medium text-slate-500">Foto</TableHead>
                     <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
                     <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
                     <TableHead className="w-20 text-xs font-medium text-slate-500">Eenheid</TableHead>
@@ -538,10 +539,24 @@ const VoorraadPage = () => {
                     const purchasePrice = product.inkoopprijs || product.purchase_price || 0;
                     const salesPrice = product.verkoopprijs || product.sales_price || 0;
                     const unit = product.eenheid || product.unit || '';
+                    const fotoUrl = product.foto_url || product.image_url;
                     const isLowStock = stockQty <= minStock && minStock > 0;
                     
                     return (
                     <TableRow key={product.id} data-testid={`product-row-${product.code}`}>
+                      <TableCell>
+                        {fotoUrl ? (
+                          <img 
+                            src={fotoUrl.startsWith('/') ? `${API_URL}${fotoUrl}` : fotoUrl} 
+                            alt={productName} 
+                            className="w-10 h-10 object-cover rounded-md border border-slate-200"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-slate-100 rounded-md flex items-center justify-center">
+                            <Package className="w-5 h-5 text-slate-400" />
+                          </div>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm text-slate-600">{product.code}</TableCell>
                       <TableCell className="text-sm font-medium text-slate-900">
                         {productName}
@@ -562,7 +577,7 @@ const VoorraadPage = () => {
                   )})}
                   {filteredProducts.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                      <TableCell colSpan={8} className="text-center py-8 text-slate-500">
                         {searchTerm ? 'Geen producten gevonden' : 'Geen producten. Maak uw eerste product aan.'}
                       </TableCell>
                     </TableRow>
