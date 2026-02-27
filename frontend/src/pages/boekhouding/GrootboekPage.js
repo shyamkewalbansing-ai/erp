@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { accountsAPI, journalAPI } from '../../lib/boekhoudingApi';
-import { formatCurrency, accountTypes, journalTypes, getStatusColor, getStatusLabel } from '../../lib/utils';
+import { accountTypes, journalTypes, getStatusColor, getStatusLabel } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -39,6 +39,18 @@ const GrootboekPage = () => {
       { rekening_id: '', rekening_code: '', rekening_naam: '', debet: 0, credit: 0 }
     ]
   });
+
+  // Format number with Dutch locale
+  const formatAmount = (amount, currency = 'SRD') => {
+    const formatted = new Intl.NumberFormat('nl-NL', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Math.abs(amount || 0));
+    
+    if (currency === 'USD') return `$ ${formatted}`;
+    if (currency === 'EUR') return `€ ${formatted}`;
+    return `SRD ${formatted}`;
+  };
 
   useEffect(() => {
     fetchData();
@@ -143,12 +155,21 @@ const GrootboekPage = () => {
     return acc;
   }, {});
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96" data-testid="grootboek-page">
+        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6" data-testid="grootboek-page">
+    <div className="space-y-6 max-w-7xl" data-testid="grootboek-page">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold font-heading text-slate-900">Grootboek</h1>
-          <p className="text-slate-500 mt-1">Beheer uw rekeningschema en journaalposten</p>
+          <h1 className="text-2xl font-semibold text-slate-900">Grootboek</h1>
+          <p className="text-slate-500 mt-0.5">Beheer uw rekeningschema en journaalposten</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={showAccountDialog} onOpenChange={setShowAccountDialog}>
@@ -270,13 +291,13 @@ const GrootboekPage = () => {
                   </div>
                 </div>
                 
-                <div className="border rounded-lg overflow-hidden">
+                <div className="border border-slate-200 rounded-lg overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-slate-50">
-                        <TableHead>Rekening</TableHead>
-                        <TableHead className="text-right w-32">Debet</TableHead>
-                        <TableHead className="text-right w-32">Credit</TableHead>
+                        <TableHead className="text-xs font-medium text-slate-500">Rekening</TableHead>
+                        <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Debet</TableHead>
+                        <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Credit</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -300,7 +321,7 @@ const GrootboekPage = () => {
                               step="0.01"
                               value={regel.debet || ''}
                               onChange={(e) => updateJournalLine(idx, 'debet', e.target.value)}
-                              className="text-right font-mono"
+                              className="text-right text-sm"
                             />
                           </TableCell>
                           <TableCell>
@@ -309,18 +330,18 @@ const GrootboekPage = () => {
                               step="0.01"
                               value={regel.credit || ''}
                               onChange={(e) => updateJournalLine(idx, 'credit', e.target.value)}
-                              className="text-right font-mono"
+                              className="text-right text-sm"
                             />
                           </TableCell>
                         </TableRow>
                       ))}
-                      <TableRow className="bg-slate-50 font-medium">
-                        <TableCell>Totaal</TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatCurrency(newJournal.regels.reduce((s, l) => s + (parseFloat(l.debet) || 0), 0), 'SRD', false)}
+                      <TableRow className="bg-slate-50">
+                        <TableCell className="text-sm font-medium text-slate-700">Totaal</TableCell>
+                        <TableCell className="text-right text-sm font-medium text-slate-900">
+                          {formatAmount(newJournal.regels.reduce((s, l) => s + (parseFloat(l.debet) || 0), 0), 'SRD')}
                         </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatCurrency(newJournal.regels.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0), 'SRD', false)}
+                        <TableCell className="text-right text-sm font-medium text-slate-900">
+                          {formatAmount(newJournal.regels.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0), 'SRD')}
                         </TableCell>
                       </TableRow>
                     </TableBody>
@@ -343,6 +364,36 @@ const GrootboekPage = () => {
         </div>
       </div>
 
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-500 mb-2">Totaal Rekeningen</p>
+                <p className="text-2xl font-semibold text-slate-900">{accounts.length}</p>
+              </div>
+              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-blue-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white border border-slate-100 shadow-sm">
+          <CardContent className="p-5">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-sm text-slate-500 mb-2">Journaalposten</p>
+                <p className="text-2xl font-semibold text-slate-900">{journalEntries.length}</p>
+              </div>
+              <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-emerald-500" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       <Tabs defaultValue="accounts">
         <TabsList>
           <TabsTrigger value="accounts" data-testid="tab-accounts">
@@ -356,10 +407,10 @@ const GrootboekPage = () => {
         </TabsList>
 
         <TabsContent value="accounts" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Rekeningschema</CardTitle>
+                <CardTitle className="text-base font-semibold text-slate-900">Rekeningschema</CardTitle>
                 <Select value={selectedType} onValueChange={setSelectedType}>
                   <SelectTrigger className="w-48">
                     <SelectValue />
@@ -374,83 +425,79 @@ const GrootboekPage = () => {
               </div>
             </CardHeader>
             <CardContent>
-              {loading ? (
-                <div className="text-center py-8 text-slate-500">Laden...</div>
-              ) : (
-                <div className="space-y-6">
-                  {Object.entries(groupedAccounts).map(([type, accs]) => (
-                    <div key={type}>
-                      <h3 className="font-medium text-slate-900 mb-2">{accountTypes[type]}</h3>
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="bg-slate-50">
-                            <TableHead className="w-24">Code</TableHead>
-                            <TableHead>Naam</TableHead>
-                            <TableHead>Categorie</TableHead>
-                            <TableHead className="w-20">Valuta</TableHead>
-                            <TableHead className="text-right w-32">Saldo</TableHead>
+              <div className="space-y-6">
+                {Object.entries(groupedAccounts).map(([type, accs]) => (
+                  <div key={type}>
+                    <h3 className="text-sm font-medium text-slate-700 mb-3">{accountTypes[type]}</h3>
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50">
+                          <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
+                          <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
+                          <TableHead className="text-xs font-medium text-slate-500">Categorie</TableHead>
+                          <TableHead className="w-20 text-xs font-medium text-slate-500">Valuta</TableHead>
+                          <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Saldo</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {accs.map(account => (
+                          <TableRow key={account.id} data-testid={`account-row-${account.code}`}>
+                            <TableCell className="text-sm text-slate-600">{account.code}</TableCell>
+                            <TableCell className="text-sm font-medium text-slate-900">{account.naam}</TableCell>
+                            <TableCell className="text-sm text-slate-500">{account.categorie}</TableCell>
+                            <TableCell>
+                              <Badge variant="outline" className="text-xs">{account.valuta}</Badge>
+                            </TableCell>
+                            <TableCell className={`text-right text-sm font-medium ${account.saldo < 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                              {formatAmount(account.saldo || 0, account.valuta)}
+                            </TableCell>
                           </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {accs.map(account => (
-                            <TableRow key={account.id} data-testid={`account-row-${account.code}`}>
-                              <TableCell className="font-mono">{account.code}</TableCell>
-                              <TableCell className="font-medium">{account.naam}</TableCell>
-                              <TableCell className="text-slate-500">{account.categorie}</TableCell>
-                              <TableCell>
-                                <Badge variant="outline">{account.valuta}</Badge>
-                              </TableCell>
-                              <TableCell className={`text-right font-mono ${account.saldo < 0 ? 'text-red-600' : ''}`}>
-                                {formatCurrency(account.saldo || 0, account.valuta)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  ))}
-                  {Object.keys(groupedAccounts).length === 0 && (
-                    <div className="text-center py-8 text-slate-500">
-                      Geen rekeningen gevonden. Maak uw eerste rekening aan.
-                    </div>
-                  )}
-                </div>
-              )}
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                ))}
+                {Object.keys(groupedAccounts).length === 0 && (
+                  <div className="text-center py-8 text-slate-500">
+                    Geen rekeningen gevonden. Maak uw eerste rekening aan.
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="journal" className="mt-4">
-          <Card className="border-slate-200">
+          <Card className="bg-white border border-slate-100 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg">Journaalposten</CardTitle>
+              <CardTitle className="text-base font-semibold text-slate-900">Journaalposten</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-28">Nummer</TableHead>
-                    <TableHead className="w-28">Datum</TableHead>
-                    <TableHead className="w-24">Dagboek</TableHead>
-                    <TableHead>Omschrijving</TableHead>
-                    <TableHead className="text-right w-32">Bedrag</TableHead>
-                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Nummer</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Dagboek</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Omschrijving</TableHead>
+                    <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Bedrag</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {journalEntries.map(entry => (
                     <TableRow key={entry.id} data-testid={`journal-row-${entry.volgnummer}`}>
-                      <TableCell className="font-mono">{entry.volgnummer}</TableCell>
-                      <TableCell>{new Date(entry.datum).toLocaleDateString('nl-NL')}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{entry.volgnummer}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{new Date(entry.datum).toLocaleDateString('nl-NL')}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{journalTypes[entry.dagboek_code] || entry.dagboek_code}</Badge>
+                        <Badge variant="outline" className="text-xs">{journalTypes[entry.dagboek_code] || entry.dagboek_code}</Badge>
                       </TableCell>
-                      <TableCell>{entry.omschrijving}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        {formatCurrency(entry.totaal_debet || 0, 'SRD')}
+                      <TableCell className="text-sm text-slate-900">{entry.omschrijving}</TableCell>
+                      <TableCell className="text-right text-sm font-medium text-slate-900">
+                        {formatAmount(entry.totaal_debet || 0, 'SRD')}
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(entry.status)}>
+                        <Badge className={`text-xs ${getStatusColor(entry.status)}`}>
                           {getStatusLabel(entry.status)}
                         </Badge>
                       </TableCell>
