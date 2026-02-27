@@ -279,16 +279,16 @@ const DebiterenPage = () => {
                 </TableHeader>
                 <TableBody>
                   {filteredCustomers.map(customer => (
-                    <TableRow key={customer.id} data-testid={`customer-row-${customer.code}`}>
-                      <TableCell className="font-mono">{customer.code}</TableCell>
-                      <TableCell className="font-medium">{customer.name}</TableCell>
-                      <TableCell className="text-slate-500">{customer.city || '-'}</TableCell>
-                      <TableCell className="text-slate-500">{customer.phone || '-'}</TableCell>
+                    <TableRow key={customer.id} data-testid={`customer-row-${customer.nummer}`}>
+                      <TableCell className="font-mono">{customer.nummer}</TableCell>
+                      <TableCell className="font-medium">{customer.naam}</TableCell>
+                      <TableCell className="text-slate-500">{customer.plaats || '-'}</TableCell>
+                      <TableCell className="text-slate-500">{customer.telefoon || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{customer.currency}</Badge>
+                        <Badge variant="outline">{customer.valuta}</Badge>
                       </TableCell>
-                      <TableCell className={`text-right font-mono ${customer.balance > 0 ? 'text-amber-600' : ''}`}>
-                        {formatCurrency(customer.balance || 0, customer.currency)}
+                      <TableCell className={`text-right font-mono ${customer.openstaand_bedrag > 0 ? 'text-amber-600' : ''}`}>
+                        {formatCurrency(customer.openstaand_bedrag || 0, customer.valuta)}
                       </TableCell>
                     </TableRow>
                   ))}
