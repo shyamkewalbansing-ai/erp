@@ -35,7 +35,7 @@ except ImportError:
 
 # Import email service
 try:
-    from services.boekhouding_email import email_service
+    from services.unified_email_service import email_service
     EMAIL_ENABLED = True
 except ImportError:
     EMAIL_ENABLED = False

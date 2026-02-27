@@ -67,7 +67,7 @@ from routers.beautyspa import router as beautyspa_router
 from routers.spa_booking import router as spa_booking_router
 from routers.suribet import router as suribet_router
 from routers.boekhouding import router as boekhouding_router
-from services.email_service import get_email_service, EMAIL_TEMPLATES
+from services.unified_email_service import get_email_service, EMAIL_TEMPLATES
 from services.scheduled_tasks import get_scheduled_tasks
 
 ROOT_DIR = Path(__file__).parent
