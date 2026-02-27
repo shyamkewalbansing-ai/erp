@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { exchangeRatesAPI } from '../../lib/boekhoudingApi';
 import { formatNumber, formatDate } from '../../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../../components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, ArrowLeftRight, Loader2, TrendingUp, DollarSign, Euro } from 'lucide-react';
+import { Plus, ArrowLeftRight, Loader2, TrendingUp, DollarSign, Euro, RefreshCw, ExternalLink, CheckCircle, Building2 } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -27,6 +27,10 @@ const WisselkoersenPage = () => {
   const [loading, setLoading] = useState(true);
   const [showRateDialog, setShowRateDialog] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [showCMEDialog, setShowCMEDialog] = useState(false);
+  const [cmePreview, setCmePreview] = useState(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
 
   const [newRate, setNewRate] = useState({
     datum: new Date().toISOString().split('T')[0],
@@ -38,6 +42,8 @@ const WisselkoersenPage = () => {
 
   useEffect(() => {
     fetchData();
+    // Auto-sync CME koersen bij openen van de pagina
+    handleAutoSync();
   }, []);
 
   const fetchData = async () => {
@@ -46,12 +52,63 @@ const WisselkoersenPage = () => {
         exchangeRatesAPI.getAll(),
         exchangeRatesAPI.getLatest()
       ]);
-      setRates(ratesRes.data);
+      setRates(ratesRes.data || []);
       setLatestRates(latestRes.data);
     } catch (error) {
       toast.error('Fout bij laden gegevens');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAutoSync = async () => {
+    // Controleer of er vandaag al koersen van CME zijn
+    const today = new Date().toISOString().split('T')[0];
+    try {
+      const ratesRes = await exchangeRatesAPI.getAll();
+      const todaysCMERates = (ratesRes.data || []).filter(
+        r => r.datum === today && r.bron === 'CME.sr'
+      );
+      
+      // Als er nog geen CME koersen van vandaag zijn, sync automatisch
+      if (todaysCMERates.length === 0) {
+        await handleSyncCME(true); // silent mode
+      }
+    } catch (error) {
+      console.log('Auto-sync check failed:', error);
+    }
+  };
+
+  const handleSyncCME = async (silent = false) => {
+    setSyncing(true);
+    try {
+      const response = await exchangeRatesAPI.syncCME();
+      if (!silent) {
+        toast.success(response.data?.message || 'Wisselkoersen gesynchroniseerd van CME.sr');
+      }
+      fetchData();
+      setShowCMEDialog(false);
+    } catch (error) {
+      const message = error?.response?.data?.detail || 'Fout bij synchroniseren met CME.sr';
+      if (!silent) {
+        toast.error(message);
+      }
+      console.error('CME sync error:', message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handlePreviewCME = async () => {
+    setLoadingPreview(true);
+    setCmePreview(null);
+    try {
+      const response = await exchangeRatesAPI.previewCME();
+      setCmePreview(response.data);
+    } catch (error) {
+      toast.error(error?.response?.data?.detail || 'Kon CME koersen niet ophalen');
+    } finally {
+      setLoadingPreview(false);
     }
   };
 
