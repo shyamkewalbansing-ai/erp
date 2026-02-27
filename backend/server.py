@@ -15081,4 +15081,12 @@ async def shutdown_db_client():
         scheduler.stop()
     except:
         pass
+    
+    # Stop wisselkoers scheduler
+    try:
+        from services.wisselkoers_scheduler import stop_scheduler as stop_wisselkoers_scheduler
+        stop_wisselkoers_scheduler()
+    except:
+        pass
+    
     client.close()
