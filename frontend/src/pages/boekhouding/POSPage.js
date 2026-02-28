@@ -101,8 +101,78 @@ const POSPage = () => {
   const html5QrCodeRef = useRef(null);
   const scannerContainerRef = useRef(null);
 
+  // Mobile scanner session state
+  const [showScannerLinkDialog, setShowScannerLinkDialog] = useState(false);
+  const [scannerSession, setScannerSession] = useState(null);
+  const [creatingSession, setCreatingSession] = useState(false);
+
   const getAuthHeader = () => {
     const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  // Create scanner session for mobile phones
+  const createScannerSession = async () => {
+    setCreatingSession(true);
+    try {
+      const response = await fetch(`${API_URL}/api/boekhouding/pos/scanner-session/create`, {
+        method: 'POST',
+        headers: { ...getAuthHeader() }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setScannerSession(data);
+        setShowScannerLinkDialog(true);
+      } else {
+        toast.error('Kon scanner sessie niet aanmaken');
+      }
+    } catch (error) {
+      toast.error('Fout bij aanmaken scanner sessie');
+    } finally {
+      setCreatingSession(false);
+    }
+  };
+
+  // Poll for scanned items
+  useEffect(() => {
+    if (!scannerSession?.code) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/boekhouding/pos/scanner-session/${scannerSession.code}/items`);
+        if (response.ok) {
+          const items = await response.json();
+          // Add new items to cart
+          for (const item of items) {
+            // Check if already in cart (by cart_item_id to prevent duplicates)
+            const alreadyInCart = cart.some(c => c.scan_id === item.id);
+            if (!alreadyInCart) {
+              const product = products.find(p => p.id === item.artikel_id);
+              if (product) {
+                setCart(prev => {
+                  const existing = prev.find(p => p.id === product.id);
+                  if (existing) {
+                    return prev.map(p => 
+                      p.id === product.id 
+                        ? { ...p, quantity: p.quantity + 1, scan_id: item.id }
+                        : p
+                    );
+                  }
+                  return [...prev, { ...product, quantity: 1, scan_id: item.id }];
+                });
+                toast.success(`📱 ${product.naam} gescand`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Poll error:', error);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [scannerSession?.code, cart, products]);
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
