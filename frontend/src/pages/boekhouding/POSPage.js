@@ -1152,36 +1152,112 @@ const POSPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Barcode Scanner Dialog */}
-      <Dialog open={showBarcodeDialog} onOpenChange={setShowBarcodeDialog}>
-        <DialogContent className="sm:max-w-sm">
+      {/* Barcode Scanner Dialog - With Camera Support */}
+      <Dialog open={showBarcodeDialog} onOpenChange={handleBarcodeDialogClose}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Barcode className="w-5 h-5" />
-              Barcode invoeren
+              <ScanLine className="w-5 h-5" />
+              Barcode Scanner
             </DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-4">
-            <div className="space-y-2">
-              <Label>Barcode of artikelcode</Label>
-              <Input
-                ref={barcodeInputRef}
-                value={barcodeQuery}
-                onChange={(e) => setBarcodeQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleBarcodeSearch()}
-                placeholder="Scan of typ barcode..."
-                autoFocus
-              />
+            {/* Camera Scanner Section */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2">
+                  <Camera className="w-4 h-4" />
+                  Camera Scanner
+                </Label>
+                {cameraActive ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={stopCameraScanner}
+                    className="text-red-500 border-red-200 hover:bg-red-50"
+                  >
+                    <CameraOff className="w-4 h-4 mr-1" />
+                    Stop
+                  </Button>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={startCameraScanner}
+                    className="text-emerald-600 border-emerald-200 hover:bg-emerald-50"
+                  >
+                    <Camera className="w-4 h-4 mr-1" />
+                    Start Camera
+                  </Button>
+                )}
+              </div>
+              
+              {/* Camera View */}
+              <div 
+                id="barcode-scanner-container" 
+                className={`relative rounded-lg overflow-hidden bg-slate-900 ${cameraActive ? 'h-64' : 'h-32'}`}
+              >
+                {!cameraActive && !cameraError && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                    <Camera className="w-12 h-12 mb-2 opacity-50" />
+                    <p className="text-sm">Klik "Start Camera" om te scannen</p>
+                    <p className="text-xs text-slate-500 mt-1">Werkt op telefoon en tablet</p>
+                  </div>
+                )}
+                {cameraError && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-red-400 p-4 text-center">
+                    <CameraOff className="w-12 h-12 mb-2 opacity-50" />
+                    <p className="text-sm">{cameraError}</p>
+                  </div>
+                )}
+              </div>
+              
+              {cameraActive && (
+                <p className="text-xs text-center text-emerald-600 animate-pulse">
+                  📷 Richt de camera op een barcode...
+                </p>
+              )}
             </div>
-            <p className="text-sm text-slate-500">
-              Tip: Je kunt ook direct scannen zonder dit dialoog - de barcode wordt automatisch herkend.
-            </p>
+
+            {/* Divider */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-3 bg-white text-sm text-slate-500">of typ handmatig</span>
+              </div>
+            </div>
+
+            {/* Manual Input Section */}
+            <div className="space-y-2">
+              <Label>Barcode / Artikelcode</Label>
+              <div className="flex gap-2">
+                <Input
+                  ref={barcodeInputRef}
+                  value={barcodeQuery}
+                  onChange={(e) => setBarcodeQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleBarcodeSearch()}
+                  placeholder="Typ barcode of artikelcode..."
+                  className="flex-1"
+                />
+                <Button onClick={handleBarcodeSearch} disabled={!barcodeQuery}>
+                  <Search className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Supported Formats */}
+            <div className="bg-slate-50 rounded-lg p-3">
+              <p className="text-xs text-slate-500 font-medium mb-1">Ondersteunde formaten:</p>
+              <p className="text-xs text-slate-400">
+                EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, QR Code, en meer
+              </p>
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowBarcodeDialog(false)}>Annuleren</Button>
-            <Button onClick={handleBarcodeSearch}>
-              <Search className="w-4 h-4 mr-2" />
-              Zoeken
+            <Button variant="outline" onClick={() => handleBarcodeDialogClose(false)}>
+              Sluiten
             </Button>
           </DialogFooter>
         </DialogContent>
