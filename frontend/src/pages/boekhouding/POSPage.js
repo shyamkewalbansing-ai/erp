@@ -746,13 +746,13 @@ const POSPage = () => {
               <Barcode className="w-5 h-5 text-slate-500" />
             </Button>
 
-            {/* Mobile Scanner Link */}
+            {/* Mobile Scanner Link - Now uses permanent scanner */}
             <Button 
               variant="outline"
-              onClick={createScannerSession}
+              onClick={getPermanentScannerCode}
               disabled={creatingSession}
               className="shrink-0 hidden sm:flex"
-              title="Open mobiele scanner op telefoon"
+              title="Open permanente scanner op telefoon"
             >
               {creatingSession ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
