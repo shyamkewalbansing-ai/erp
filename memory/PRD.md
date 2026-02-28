@@ -339,4 +339,45 @@ Aangepaste pagina's:
 
 ---
 
-*Laatste update: 27 december 2025 - Sidebar navigatie bugfix voltooid*
+*Laatste update: 28 februari 2026 - BTW, Bank/Kas en Grootboek pagina's gefixed*
+
+---
+
+## Recente Wijzigingen (Februari 2026)
+
+### ✅ BTW Pagina Bugfix (Voltooid)
+- Veldnaam-mismatch gefixed: `name` → `naam`, `active` → `actief`
+- BTW-codes worden nu correct weergegeven met naam en status
+- Alle 10 BTW-codes zijn nu zichtbaar en tonen de juiste informatie
+
+### ✅ Bank/Kas Pagina Bugfix (Voltooid)
+- Veldnaam-mismatch gefixed voor bankrekeningen: `name` → `naam`, `bank_name` → `bank`, `account_number` → `rekeningnummer`, `balance` → `huidig_saldo`, `currency` → `valuta`
+- Veldnaam-mismatch gefixed voor transacties: `date` → `datum`, `description` → `omschrijving`, `reference` → `referentie`, `amount` → `bedrag`
+- Totaal saldo's worden nu correct berekend en getoond
+- Bankrekening tabel toont nu alle kolommen correct
+
+### ✅ Betaling Toevoegen Formulier Redesign (Voltooid)
+- Popup vervangen door professioneel slide-out panel
+- Factuurgegevens card met factuurnummer, totaal, reeds betaald, openstaand
+- Nette formulier indeling met 2-kolom grid
+- Annuleren en Betaling Registreren knoppen
+
+### ✅ Grootboek Externe Code Functionaliteit (Voltooid)
+- Nieuwe "Externe Code" kolom in rekeningschema tabel
+- Nieuwe "Acties" kolom met koppel-knop
+- Dialog voor bewerken van externe codes
+- Backend endpoints:
+  - `POST /api/boekhouding/rekeningen/init-standaard` - Laad standaard Surinaams rekeningschema
+  - `PUT /api/boekhouding/rekeningen/{id}/externe-code` - Koppel externe code
+  - `GET /api/boekhouding/rekeningen/zoek-op-externe-code/{code}` - Zoek op externe code
+
+### ✅ Standaard Surinaams Rekeningschema (Voltooid)
+- 100+ rekeningen beschikbaar voor initialisatie
+- Structuur volgens Surinaamse boekhoudpraktijk:
+  - 1xxx: Activa (vaste activa, vlottende activa, liquide middelen)
+  - 2xxx: Passiva (eigen vermogen, langlopende/kortlopende schulden)
+  - 4xxx: Opbrengsten (omzet, overige opbrengsten)
+  - 5xxx-8xxx: Kosten (personeels-, huisvestings-, overige kosten)
+  - 9xxx: Tussenrekeningen
+- Lokale Surinaamse banken: DSB, Republic, Hakrinbank, Finabank
+- Surinaamse belasting rekeningen: AOV, loonheffing, inkomstenbelasting
