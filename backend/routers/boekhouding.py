@@ -2672,16 +2672,39 @@ async def update_inkoopfactuur(factuur_id: str, data: InkoopfactuurCreate, autho
 
 @router.put("/inkoopfacturen/{factuur_id}/status")
 async def update_inkoopfactuur_status(factuur_id: str, status: str, authorization: str = Header(None)):
-    """Update status van inkoopfactuur"""
+    """Update status van inkoopfactuur en boek automatisch naar grootboek"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
     
+    # Haal factuur op om te controleren of boeking nodig is
+    factuur = await db.boekhouding_inkoopfacturen.find_one({"id": factuur_id, "user_id": user_id})
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    oude_status = factuur.get("status", "nieuw")
+    
+    # Update status
     result = await db.boekhouding_inkoopfacturen.update_one(
         {"id": factuur_id, "user_id": user_id},
         {"$set": {"status": status, "updated_at": datetime.now(timezone.utc)}}
     )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Automatisch boeken naar grootboek wanneer status naar geboekt gaat
+    # (en nog niet eerder geboekt)
+    if oude_status in ["nieuw", "concept"] and status in ["geboekt", "gedeeltelijk_betaald"]:
+        try:
+            # Controleer of er al een boeking bestaat voor deze factuur
+            bestaande_boeking = await db.boekhouding_journaalposten.find_one({
+                "user_id": user_id, 
+                "document_ref": factuur_id,
+                "dagboek_code": "IK"
+            })
+            if not bestaande_boeking:
+                await boek_inkoopfactuur(user_id, factuur)
+        except Exception as e:
+            # Log error maar laat status update doorgaan
+            print(f"Fout bij boeken inkoopfactuur: {e}")
+    
     return {"message": f"Status gewijzigd naar {status}"}
 
 
