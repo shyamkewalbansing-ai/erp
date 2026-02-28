@@ -7,20 +7,13 @@ import { Button } from '../../components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import {
   TrendingUp,
-  TrendingDown,
-  ArrowUpRight,
-  ArrowDownRight,
-  Wallet,
-  CreditCard,
-  PiggyBank,
-  Send,
-  Download,
-  History,
-  Clock,
   ChevronDown,
-  Filter,
-  MoreVertical,
-  Wifi
+  Wallet,
+  Zap,
+  BarChart3,
+  ArrowRight,
+  MoreHorizontal,
+  Filter
 } from 'lucide-react';
 import {
   BarChart,
@@ -30,52 +23,202 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
+  ComposedChart,
+  Area
 } from 'recharts';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-// Stat Card Component (Total Income, Expense, Savings style)
-const StatCard = ({ title, value, trend, trendValue, icon: Icon, loading, variant = 'default' }) => {
+// My Balance Card
+const BalanceCard = ({ balance, earnedLastTime, bonus, loading }) => {
   if (loading) {
     return (
-      <Card className="bg-white border-0 shadow-sm rounded-2xl">
+      <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm">
         <CardContent className="p-6">
           <Skeleton className="h-4 w-24 mb-4" />
-          <Skeleton className="h-10 w-32 mb-2" />
-          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-12 w-40 mb-4" />
+          <Skeleton className="h-4 w-32" />
         </CardContent>
       </Card>
     );
   }
 
-  const isPositive = trend === 'up';
+  return (
+    <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm font-medium text-slate-700">My Balance</span>
+          <button className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
+            All time <ChevronDown className="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div className="mb-4">
+          <span className="text-sm text-slate-500">Total balance</span>
+          <div className="text-4xl font-bold text-slate-900">
+            {formatCurrency(balance, 'SRD')}<span className="text-2xl text-slate-400">.00</span>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Wallet className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-500">Total earned last time</span>
+            <span className="text-emerald-500 font-medium">+{formatCurrency(earnedLastTime, 'SRD')}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Zap className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-500">Total bonus</span>
+            <span className="text-emerald-500 font-medium">+{formatCurrency(bonus, 'SRD')}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// My Income Card with mini chart
+const IncomeCard = ({ totalIncome, salary, business, investment, loading }) => {
+  if (loading) {
+    return (
+      <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+        <CardContent className="p-6">
+          <Skeleton className="h-4 w-24 mb-4" />
+          <Skeleton className="h-10 w-36 mb-4" />
+          <Skeleton className="h-20 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Mini sparkline data
+  const sparkData = [3, 5, 4, 6, 5, 7, 6, 8, 7, 6, 8, 9];
 
   return (
-    <Card className={`border-0 shadow-sm rounded-2xl ${variant === 'savings' ? 'bg-emerald-50' : 'bg-white'}`}>
+    <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm">
       <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <span className="text-sm text-slate-500 font-medium">{title}</span>
-          {Icon && (
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-              variant === 'expense' ? 'bg-slate-100' : 
-              variant === 'savings' ? 'bg-emerald-100' : 
-              'bg-emerald-50'
-            }`}>
-              <Icon className={`w-5 h-5 ${
-                variant === 'expense' ? 'text-slate-600' : 'text-emerald-600'
-              }`} />
-            </div>
-          )}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-slate-700">My Income</span>
+          <span className="text-xs text-slate-400">July 2024</span>
         </div>
-        <div className="text-3xl font-bold text-slate-900 mb-2">{value}</div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-400">Since Last Week</span>
-          <span className={`flex items-center text-sm font-medium px-2 py-0.5 rounded ${
-            isPositive ? 'text-emerald-600 bg-emerald-50' : 'text-red-500 bg-red-50'
-          }`}>
-            {isPositive ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
-            {trendValue}
+        
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <span className="text-sm text-slate-500">Total Income</span>
+            <div className="text-3xl font-bold text-slate-900">
+              {formatCurrency(totalIncome, 'SRD')}<span className="text-xl text-slate-400">.00</span>
+            </div>
+          </div>
+          
+          {/* Mini Chart */}
+          <div className="flex gap-0.5 items-end h-12">
+            {sparkData.map((val, i) => (
+              <div 
+                key={i}
+                className={`w-2 rounded-sm ${i >= 8 ? 'bg-emerald-500' : 'bg-emerald-200'}`}
+                style={{ height: `${val * 5}px` }}
+              />
+            ))}
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-4 mb-4 text-sm">
+          <div className="flex items-center gap-1">
+            <BarChart3 className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-500">Min</span>
+            <span className="text-emerald-500">-2.4% APR</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Zap className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-500">Earned</span>
+            <span className="text-emerald-500">+$458.00</span>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-100">
+          <div>
+            <div className="text-xs text-slate-400 mb-1">Salary</div>
+            <div className="text-lg font-semibold text-slate-900">{formatNumber(salary / 1000, 1)}K</div>
+          </div>
+          <div>
+            <div className="text-xs text-slate-400 mb-1">Business</div>
+            <div className="text-lg font-semibold text-slate-900">{formatNumber(business / 1000, 1)}K</div>
+          </div>
+          <div>
+            <div className="text-xs text-slate-400 mb-1">Investment</div>
+            <div className="text-lg font-semibold text-slate-900">{formatNumber(investment / 1000, 1)}K</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+// Total Expense Card with progress
+const ExpenseCard = ({ totalExpense, minApr, earned, goalPercent, loading }) => {
+  if (loading) {
+    return (
+      <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+        <CardContent className="p-6">
+          <Skeleton className="h-4 w-24 mb-4" />
+          <Skeleton className="h-10 w-36 mb-4" />
+          <Skeleton className="h-20 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Progress bar data (daily spending)
+  const progressData = Array(20).fill(0).map(() => Math.random() * 100);
+
+  return (
+    <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-slate-400">July 2024</span>
+        </div>
+        
+        <div className="text-3xl font-bold text-slate-900 mb-4">
+          {formatCurrency(totalExpense, 'SRD')}<span className="text-xl text-slate-400">.00</span>
+        </div>
+        <div className="text-sm text-slate-500 mb-4">Total expense</div>
+        
+        <div className="flex items-center gap-6 mb-4 text-sm">
+          <div className="flex items-center gap-1">
+            <BarChart3 className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-500">Min</span>
+            <span className="text-emerald-500">{minApr}% APR</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Zap className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-500">Earned</span>
+            <span className="text-emerald-500">+{formatCurrency(earned, 'SRD')}</span>
+          </div>
+        </div>
+        
+        {/* Progress scale */}
+        <div className="flex items-center justify-between text-xs text-slate-400 mb-2">
+          <span>0</span>
+          <span>50</span>
+          <span>100</span>
+        </div>
+        
+        {/* Progress bars */}
+        <div className="flex gap-0.5 h-16 items-end mb-2">
+          {progressData.map((val, i) => (
+            <div 
+              key={i}
+              className={`flex-1 rounded-sm ${val > 70 ? 'bg-emerald-500' : val > 40 ? 'bg-emerald-300' : 'bg-emerald-100'}`}
+              style={{ height: `${Math.max(val, 20)}%` }}
+            />
+          ))}
+        </div>
+        
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-slate-400">July 2024</span>
+          <span className="flex items-center gap-1 text-emerald-500">
+            With a goal of {goalPercent}% <Zap className="w-4 h-4" />
           </span>
         </div>
       </CardContent>
@@ -83,91 +226,117 @@ const StatCard = ({ title, value, trend, trendValue, icon: Icon, loading, varian
   );
 };
 
-// Credit Card Component
-const CreditCardDisplay = ({ name, balance, expiry, cvv }) => (
-  <div className="bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 rounded-2xl p-5 text-white relative overflow-hidden">
-    {/* Wifi icon */}
-    <div className="absolute top-4 right-4">
-      <Wifi className="w-6 h-6 rotate-90 opacity-80" />
-    </div>
-    
-    {/* Card chip pattern */}
-    <div className="flex gap-1 mb-8">
-      <div className="w-8 h-6 bg-yellow-300/80 rounded-sm" />
-    </div>
-    
-    <div className="mb-6">
-      <div className="text-emerald-100 text-xs mb-1">Card Holder</div>
-      <div className="text-xl font-semibold">{name}</div>
-    </div>
-    
-    <div className="flex items-end justify-between">
-      <div>
-        <div className="text-emerald-100 text-xs mb-1">Balance Amount</div>
-        <div className="text-2xl font-bold">{balance}</div>
-      </div>
-      <div className="flex gap-4 text-sm">
-        <div>
-          <div className="text-emerald-100 text-xs">EXP</div>
-          <div className="font-medium">{expiry}</div>
-        </div>
-        <div>
-          <div className="text-emerald-100 text-xs">CVV</div>
-          <div className="font-medium">{cvv}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-);
+// Remaining Monthly Card
+const RemainingMonthlyCard = ({ percentage, needs, food, education, loading }) => {
+  if (loading) {
+    return (
+      <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm h-full">
+        <CardContent className="p-6">
+          <Skeleton className="h-4 w-32 mb-4" />
+          <Skeleton className="h-24 w-full" />
+        </CardContent>
+      </Card>
+    );
+  }
 
-// Quick Action Button
-const QuickActionButton = ({ icon: Icon, label, onClick }) => (
-  <button 
-    onClick={onClick}
-    className="flex flex-col items-center gap-2 p-3 hover:bg-slate-50 rounded-xl transition-colors"
-  >
-    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
-      <Icon className="w-5 h-5 text-slate-600" />
-    </div>
-    <span className="text-xs text-slate-600 font-medium">{label}</span>
-  </button>
-);
-
-// Activity Item
-const ActivityItem = ({ name, action, time, avatar }) => (
-  <div className="flex items-center gap-3 py-3">
-    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-600 font-medium text-sm">
-      {avatar || name?.charAt(0)}
-    </div>
-    <div className="flex-1 min-w-0">
-      <div className="text-sm font-medium text-slate-900">{name}</div>
-      <div className="text-xs text-slate-500 truncate">{action}</div>
-    </div>
-    <div className="text-xs text-slate-400">{time}</div>
-  </div>
-);
+  return (
+    <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm h-full">
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm font-medium text-slate-700">Remaining Monthly</span>
+          <button className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
+            Budget setting <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div className="flex items-start gap-6">
+          {/* Big percentage */}
+          <div>
+            <div className="text-6xl font-bold text-slate-900">{percentage}<span className="text-3xl">%</span></div>
+            <div className="flex items-center gap-1 text-sm text-slate-500 mt-1">
+              <BarChart3 className="w-4 h-4" />
+              Additional AVG <span className="text-emerald-500">2.4%</span>
+            </div>
+          </div>
+          
+          {/* Description */}
+          <div className="text-sm text-slate-500 mt-2">
+            You're in great shape—your monthly usage is still very safe
+          </div>
+        </div>
+        
+        {/* Category bars */}
+        <div className="flex gap-2 mt-6">
+          {/* Needs */}
+          <div className="flex-1 bg-emerald-100 rounded-xl p-4 relative overflow-hidden" style={{ minHeight: '120px' }}>
+            <div className="relative z-10">
+              <div className="text-2xl font-bold text-emerald-800">{needs}%</div>
+              <div className="text-sm text-emerald-700">Needs</div>
+            </div>
+            <div className="absolute bottom-2 left-2 right-2 text-xs text-emerald-600">
+              ${(7890).toLocaleString()}
+            </div>
+          </div>
+          
+          {/* Food */}
+          <div className="flex-1 bg-emerald-400 rounded-xl p-4 relative overflow-hidden" style={{ minHeight: '100px' }}>
+            <div className="relative z-10">
+              <div className="text-2xl font-bold text-white">{food}%</div>
+              <div className="text-sm text-emerald-100">Food</div>
+            </div>
+            <div className="absolute bottom-2 left-2 right-2 text-xs text-emerald-200">
+              ${(9500).toLocaleString()}
+            </div>
+          </div>
+          
+          {/* Education */}
+          <div className="flex-1 bg-emerald-500 rounded-xl p-4 relative overflow-hidden" style={{ minHeight: '80px' }}>
+            <div className="relative z-10">
+              <div className="text-2xl font-bold text-white">{education}%</div>
+              <div className="text-sm text-emerald-100">Education</div>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 // Transaction Row
-const TransactionRow = ({ name, category, date, time, amount, note, status }) => (
+const TransactionRow = ({ icon, name, date, type, amount, status }) => (
   <tr className="border-b border-slate-100 hover:bg-slate-50">
     <td className="py-4 px-4">
-      <div className="font-medium text-slate-900">{name}</div>
-      <div className="text-xs text-slate-500">{category}</div>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+          {icon}
+        </div>
+        <span className="font-medium text-slate-900">{name}</span>
+      </div>
     </td>
-    <td className="py-4 px-4 text-sm text-slate-600">
-      <div>{date}</div>
-      <div className="text-xs text-slate-400">{time}</div>
-    </td>
-    <td className="py-4 px-4 text-sm font-medium text-slate-900">{amount}</td>
-    <td className="py-4 px-4 text-sm text-slate-500">{note}</td>
+    <td className="py-4 px-4 text-sm text-slate-600">{date}</td>
     <td className="py-4 px-4">
-      {status === 'failed' ? (
-        <span className="px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-full">Failed</span>
-      ) : status === 'pending' ? (
-        <span className="px-2 py-1 text-xs font-medium text-amber-600 bg-amber-50 rounded-full">Pending</span>
-      ) : (
-        <span className="px-2 py-1 text-xs font-medium text-emerald-600 bg-emerald-50 rounded-full">Success</span>
-      )}
+      <div className="flex items-center gap-2">
+        <div className={`w-6 h-6 rounded flex items-center justify-center ${
+          type === 'Bank Transfer' ? 'bg-emerald-100' : 'bg-orange-100'
+        }`}>
+          <Wallet className={`w-3 h-3 ${type === 'Bank Transfer' ? 'text-emerald-600' : 'text-orange-600'}`} />
+        </div>
+        <span className="text-sm text-slate-600">{type}</span>
+      </div>
+    </td>
+    <td className="py-4 px-4 text-sm font-medium text-slate-900">{formatCurrency(amount, 'SRD')}</td>
+    <td className="py-4 px-4">
+      <span className={`text-sm font-medium ${
+        status === 'Completed' ? 'text-emerald-500' : 
+        status === 'Pending' ? 'text-amber-500' : 'text-red-500'
+      }`}>
+        {status}
+      </span>
+    </td>
+    <td className="py-4 px-4">
+      <button className="text-slate-400 hover:text-slate-600">
+        <MoreHorizontal className="w-5 h-5" />
+      </button>
     </td>
   </tr>
 );
@@ -177,12 +346,8 @@ const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-slate-800 text-white p-3 rounded-lg shadow-lg">
-        <p className="font-medium mb-1">{label} 2029</p>
-        {payload.map((entry, index) => (
-          <p key={index} className="text-sm">
-            {entry.name}: ${entry.value?.toLocaleString()}
-          </p>
-        ))}
+        <p className="font-medium mb-1">● Income</p>
+        <p className="text-lg font-bold">${payload[0]?.value?.toLocaleString()}.00</p>
       </div>
     );
   }
@@ -231,34 +396,36 @@ const DashboardPage = () => {
     }
   };
 
-  // Chart data for monthly Income/Expense
+  // Chart data for Money Flow
   const chartData = [
-    { name: 'Jan', Income: 800, Expense: 400 },
-    { name: 'Feb', Income: 600, Expense: 300 },
-    { name: 'Mar', Income: 400, Expense: 200 },
-    { name: 'Apr', Income: 900, Expense: 600 },
-    { name: 'May', Income: 1200, Expense: 500 },
-    { name: 'Jun', Income: 1800, Expense: 800 },
-    { name: 'Jul', Income: 2000, Expense: 900 },
-    { name: 'Aug', Income: 1600, Expense: 700 },
-    { name: 'Sep', Income: 2200, Expense: 1000 },
-    { name: 'Oct', Income: 1900, Expense: 850 },
-    { name: 'Nov', Income: 2400, Expense: 1100 },
-    { name: 'Dec', Income: 2100, Expense: 950 },
+    { name: 'Jan', Income: 4000, Expense: 2000, Space: 1500 },
+    { name: 'Feb', Income: 5500, Expense: 2800, Space: 2000 },
+    { name: 'Mar', Income: 4800, Expense: 2400, Space: 1800 },
+    { name: 'Apr', Income: 6000, Expense: 3200, Space: 2200 },
+    { name: 'May', Income: 7500, Expense: 3800, Space: 2800 },
+    { name: 'Jun', Income: 9560, Expense: 4500, Space: 3500 },
+    { name: 'Jul', Income: 8200, Expense: 4000, Space: 3000 },
+    { name: 'Aug', Income: 7800, Expense: 3600, Space: 2800 },
+    { name: 'Sep', Income: 6500, Expense: 3000, Space: 2400 },
+    { name: 'Oct', Income: 5800, Expense: 2600, Space: 2000 },
+    { name: 'Nov', Income: 6200, Expense: 2800, Space: 2200 },
+    { name: 'Dec', Income: 7000, Expense: 3200, Space: 2600 },
   ];
 
   // Calculate totals from dashboard data
-  const totalIncome = dashboardData?.totaal_verkoop || 78000;
-  const totalExpense = dashboardData?.totaal_inkoop || 43000;
-  const totalSavings = totalIncome - totalExpense;
-  const weeklyEarning = dashboardData?.week_verkoop || 678897;
+  const totalBalance = dashboardData?.kas_saldo || 74503;
+  const totalIncome = dashboardData?.totaal_verkoop || 101333;
+  const totalExpense = dashboardData?.totaal_inkoop || 26830;
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
+    <div className="min-h-screen bg-slate-50/30">
       {/* Top Header */}
       <div className="bg-white border-b border-slate-100 px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
+            <p className="text-sm text-slate-500">Keep Track, Assess, and Enhance Your Financial Performance</p>
+          </div>
           <div className="flex items-center gap-3">
             {rates?.USD_SRD && (
               <div className="bg-slate-50 rounded-lg px-3 py-1.5 text-sm">
@@ -276,70 +443,64 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      <div className="p-6">
-        <div className="flex gap-6">
-          {/* Main Content */}
-          <div className="flex-1 space-y-6">
-            {/* Stats Row */}
-            <div className="grid grid-cols-3 gap-6">
-              <StatCard
-                title="Total Income"
-                value={formatCurrency(totalIncome, 'SRD')}
-                trend="up"
-                trendValue="+1.78%"
-                icon={TrendingUp}
-                loading={loading}
-              />
-              <StatCard
-                title="Total Expense"
-                value={formatCurrency(totalExpense, 'SRD')}
-                trend="up"
-                trendValue="+1.78%"
-                icon={TrendingDown}
-                loading={loading}
-                variant="expense"
-              />
-              <StatCard
-                title="Total Savings"
-                value={formatCurrency(totalSavings, 'SRD')}
-                trend="up"
-                trendValue="+1.78%"
-                icon={PiggyBank}
-                loading={loading}
-                variant="savings"
-              />
-            </div>
+      <div className="p-6 space-y-6">
+        {/* Top Row - 3 Cards */}
+        <div className="grid grid-cols-3 gap-6">
+          <BalanceCard
+            balance={totalBalance}
+            earnedLastTime={14503}
+            bonus={700}
+            loading={loading}
+          />
+          <IncomeCard
+            totalIncome={totalIncome}
+            salary={28300}
+            business={38500}
+            investment={34400}
+            loading={loading}
+          />
+          <ExpenseCard
+            totalExpense={totalExpense}
+            minApr={7.4}
+            earned={800}
+            goalPercent={75}
+            loading={loading}
+          />
+        </div>
 
-            {/* Earning Section */}
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+        {/* Middle Row - Money Flow + Remaining Monthly */}
+        <div className="grid grid-cols-3 gap-6">
+          {/* Money Flow Chart - 2 columns */}
+          <div className="col-span-2">
+            <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <div className="text-sm text-slate-500 mb-1">Earning in The Last Week</div>
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-4xl font-bold text-slate-900">
-                        {formatCurrency(weeklyEarning, 'SRD')}
-                      </span>
-                      <span className="flex items-center text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                        <ArrowUpRight className="w-3 h-3 mr-0.5" />
-                        +1.78%
-                      </span>
+                  <div className="flex items-center gap-6">
+                    <span className="text-sm font-medium text-slate-700">Money Flow</span>
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                        <span className="text-slate-500">Income</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-emerald-300"></div>
+                        <span className="text-slate-500">Expense</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-emerald-100"></div>
+                        <span className="text-slate-500">Space</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="rounded-lg">
-                      This Year <ChevronDown className="w-4 h-4 ml-1" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="rounded-lg">
-                      <Filter className="w-4 h-4 mr-1" /> Filter
-                    </Button>
-                  </div>
+                  <button className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700">
+                    Monthly <ChevronDown className="w-4 h-4" />
+                  </button>
                 </div>
 
-                {/* Bar Chart */}
-                <div className="h-72">
+                {/* Stacked Bar Chart */}
+                <div className="h-80">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} barGap={4}>
+                    <ComposedChart data={chartData} barGap={0}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                       <XAxis 
                         dataKey="name" 
@@ -354,170 +515,124 @@ const DashboardPage = () => {
                         tickFormatter={(value) => `$${value}`}
                       />
                       <Tooltip content={<CustomTooltip />} />
-                      <Legend 
-                        verticalAlign="top" 
-                        align="right"
-                        iconType="circle"
-                        iconSize={8}
-                        wrapperStyle={{ paddingBottom: 20 }}
-                      />
                       <Bar 
-                        dataKey="Income" 
-                        fill="#10b981" 
-                        radius={[4, 4, 0, 0]} 
-                        maxBarSize={35}
+                        dataKey="Space" 
+                        stackId="a"
+                        fill="#d1fae5" 
+                        radius={[0, 0, 0, 0]} 
+                        maxBarSize={40}
                       />
                       <Bar 
                         dataKey="Expense" 
-                        fill="#fbbf24" 
-                        radius={[4, 4, 0, 0]} 
-                        maxBarSize={35}
+                        stackId="a"
+                        fill="#6ee7b7" 
+                        radius={[0, 0, 0, 0]} 
+                        maxBarSize={40}
                       />
-                    </BarChart>
+                      <Bar 
+                        dataKey="Income" 
+                        stackId="a"
+                        fill="#10b981" 
+                        radius={[4, 4, 0, 0]} 
+                        maxBarSize={40}
+                      />
+                    </ComposedChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Transaction History */}
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900">Transaction History</h3>
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <span>Status</span>
-                    <ChevronDown className="w-4 h-4" />
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Transaction Name</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Date & Time</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Amount</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Note</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {loading ? (
-                        [...Array(3)].map((_, i) => (
-                          <tr key={i} className="border-b border-slate-100">
-                            <td className="py-4 px-4"><Skeleton className="h-4 w-32" /></td>
-                            <td className="py-4 px-4"><Skeleton className="h-4 w-24" /></td>
-                            <td className="py-4 px-4"><Skeleton className="h-4 w-20" /></td>
-                            <td className="py-4 px-4"><Skeleton className="h-4 w-28" /></td>
-                            <td className="py-4 px-4"><Skeleton className="h-4 w-16" /></td>
-                          </tr>
-                        ))
-                      ) : transactions.length > 0 ? (
-                        transactions.map((trans, index) => (
-                          <TransactionRow
-                            key={trans.id || index}
-                            name={trans.klant_naam || trans.omschrijving || 'Verkoop'}
-                            category={trans.betaalmethode === 'contant' ? 'Contant' : 'Pin'}
-                            date={new Date(trans.datum || trans.created_at).toLocaleDateString('nl-NL')}
-                            time={new Date(trans.datum || trans.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                            amount={formatCurrency(trans.totaal || 0, 'SRD')}
-                            note={trans.omschrijving || 'POS Verkoop'}
-                            status={trans.status || 'success'}
-                          />
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={5} className="py-8 text-center text-slate-500">
-                            Geen recente transacties
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
-          {/* Right Sidebar */}
-          <div className="w-80 space-y-6">
-            {/* My Card Section */}
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900">My Card</h3>
-                  <Button variant="outline" size="sm" className="rounded-lg text-sm">
-                    + Add Card
-                  </Button>
-                </div>
-
-                <CreditCardDisplay
-                  name="Demo Gebruiker"
-                  balance={formatCurrency(dashboardData?.kas_saldo || 68000, 'SRD')}
-                  expiry="12/26"
-                  cvv="335"
-                />
-
-                {/* Quick Actions */}
-                <div className="grid grid-cols-4 gap-2 mt-6">
-                  <QuickActionButton icon={Wallet} label="Top Up" onClick={() => {}} />
-                  <QuickActionButton icon={Send} label="Transfer" onClick={() => {}} />
-                  <QuickActionButton icon={Download} label="Request" onClick={() => {}} />
-                  <QuickActionButton icon={History} label="History" onClick={() => navigate('/app/boekhouding/grootboek')} />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Daily Limit */}
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-slate-900">Daily Limit</h3>
-                  <button className="text-slate-400 hover:text-slate-600">
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="text-sm text-slate-500 mb-2">
-                  <span className="font-medium text-slate-900">SRD 2,500.00</span> spent of SRD 20,000.00
-                </div>
-
-                {/* Progress bar */}
-                <div className="relative h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className="absolute left-0 top-0 h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full"
-                    style={{ width: '57%' }}
-                  />
-                </div>
-                <div className="text-right text-sm text-slate-500 mt-1">57%</div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-slate-900 mb-4">Recent Activity</h3>
-                
-                <div className="text-xs font-medium text-slate-400 uppercase mb-2">Today</div>
-                
-                <div className="space-y-1">
-                  <ActivityItem
-                    name="Jamie Smith"
-                    action="updated account settings"
-                    time="16:05 am"
-                    avatar="JS"
-                  />
-                  <ActivityItem
-                    name="Taylor Green"
-                    action="reviewed recent transact..."
-                    time="21:05 pm"
-                    avatar="TG"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          {/* Remaining Monthly - 1 column */}
+          <RemainingMonthlyCard
+            percentage={69}
+            needs={89}
+            food={78}
+            education={42}
+            loading={loading}
+          />
         </div>
+
+        {/* Transaction History */}
+        <Card className="bg-white border border-slate-200 rounded-2xl shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-slate-900">Transaction History</h3>
+              <button className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700">
+                All Transaction <ChevronDown className="w-4 h-4" />
+                <Filter className="w-4 h-4 ml-2" />
+              </button>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-100">
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Name ↕</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Date ↕</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Transaction ↕</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Amount ↕</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Status ↕</th>
+                    <th className="text-left py-3 px-4 text-sm font-medium text-slate-500">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    [...Array(3)].map((_, i) => (
+                      <tr key={i} className="border-b border-slate-100">
+                        <td className="py-4 px-4"><Skeleton className="h-4 w-32" /></td>
+                        <td className="py-4 px-4"><Skeleton className="h-4 w-36" /></td>
+                        <td className="py-4 px-4"><Skeleton className="h-4 w-28" /></td>
+                        <td className="py-4 px-4"><Skeleton className="h-4 w-20" /></td>
+                        <td className="py-4 px-4"><Skeleton className="h-4 w-20" /></td>
+                        <td className="py-4 px-4"><Skeleton className="h-4 w-8" /></td>
+                      </tr>
+                    ))
+                  ) : transactions.length > 0 ? (
+                    transactions.map((trans, index) => (
+                      <TransactionRow
+                        key={trans.id || index}
+                        icon={<div className="w-6 h-6 rounded bg-red-500 flex items-center justify-center text-white text-xs font-bold">▶</div>}
+                        name={trans.klant_naam || trans.omschrijving || 'POS Verkoop'}
+                        date={`${new Date(trans.datum || trans.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })} - ${new Date(trans.datum || trans.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`}
+                        type={trans.betaalmethode === 'contant' ? 'Cash' : 'Bank Transfer'}
+                        amount={trans.totaal || 0}
+                        status={trans.status === 'pending' ? 'Pending' : 'Completed'}
+                      />
+                    ))
+                  ) : (
+                    <>
+                      <TransactionRow
+                        icon={<div className="w-6 h-6 rounded bg-red-500 flex items-center justify-center text-white text-xs font-bold">▶</div>}
+                        name="Youtube"
+                        date="Aug 02, 2024 - 11:00 AM"
+                        type="Bank Transfer"
+                        amount={850}
+                        status="Completed"
+                      />
+                      <TransactionRow
+                        icon={<div className="w-6 h-6 rounded bg-green-500 flex items-center justify-center text-white text-xs font-bold">♪</div>}
+                        name="Spotify Premium"
+                        date="Jun 01, 2024 - 01:58 PM"
+                        type="Credit Card"
+                        amount={15}
+                        status="Pending"
+                      />
+                      <TransactionRow
+                        icon={<div className="w-6 h-6 rounded bg-purple-500 flex items-center justify-center text-white text-xs font-bold">F</div>}
+                        name="Figma"
+                        date="May 24, 2024 - 09:11 AM"
+                        type="Bank Transfer"
+                        amount={1250.05}
+                        status="Completed"
+                      />
+                    </>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
