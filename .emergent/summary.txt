@@ -1,102 +1,111 @@
 <analysis>**original_problem_statement:**
 De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die specifiek is afgestemd op de Surinaamse markt. De kerninstructie is om de structuur en UI van een referentieproject  te volgen. De scope is uitgebreid met features zoals PDF-facturen met templates, MT940-import, Surinaamse belastingrapportages, Excel-exports, configureerbare SMTP-instellingen, multi-tenancy, en het automatisch ophalen van wisselkoersen. Recentelijk heeft de gebruiker een reeks zeer specifieke UI/UX-wijzigingen en bugfixes aangevraagd, met name voor de sidebar-navigatie en de functionaliteit van de Voorraad- en Verkoop-pagina's.
 
+De laatste sessie heeft de gebruiker een fundamenteel architectuurprobleem aangekaart: de verschillende modules (Dashboard, Debiteuren, BTW, Rapportages) waren niet met elkaar verbonden, waardoor data inconsistent was en financiële overzichten niet klopten.
+
 **PRODUCTVEREISTEN:**
 -   **Valuta:** SRD, USD, EUR.
 -   **Wisselkoersen:** Zowel handmatige invoer als automatische synchronisatie van .
--   **Thema & UI:** Clean en modern, gebaseerd op een Finance OS-afbeelding en een GitHub-repository. De gebruiker heeft de laatste sessie veel specifieke verzoeken gedaan voor de sidebar, waaronder een zoekbalk, een inklapfunctie en tooltips.
--   **Producten & Facturen:** Producten hebben een foto. Facturen gebruiken een product-dropdown en hebben volledige CRUD- en statusbeheerfunctionaliteit, inclusief het registreren van betalingen. Productfoto's moeten op de PDF's verschijnen.
+-   **Thema & UI:** Clean en modern, gebaseerd op een referentieproject.
 -   **Backend:** FastAPI met MongoDB.
 -   **Frontend:** React met TailwindCSS.
+-   **Kernfunctionaliteit:** Alle financiële transacties (verkoop, inkoop, betalingen) moeten automatisch leiden tot een journaalpost in het grootboek. Rapportages (Balans, Winst & Verlies) moeten worden gegenereerd op basis van de saldi in het grootboek.
 
 **User's preferred language**: Dutch
 
 **what currently exists?**
-De applicatie is een full-stack React/FastAPI-app. In deze sessie heeft de agent een groot aantal UI-verbeteringen en bugfixes doorgevoerd. De product-fotoupload en artikel-selectie op facturen zijn voltooid en de productfoto's worden nu ook op de PDF-facturen getoond. Er is een reeks bugs opgelost op de Voorraad- en Verkoop-pagina's, voornamelijk veroorzaakt door inconsistenties in veldnamen tussen de frontend (Engels) en backend (Nederlands). De sidebar is volledig herzien met een zoekfunctie, een inklapmechanisme, tooltips en een logica die de actieve module onthoudt. Er zijn CRUD-acties (bewerken/verwijderen) toegevoegd aan producten en mutaties, en de factuurworkflow is uitgebreid met statuswijzigingen en de mogelijkheid om betalingen te registreren.
+De applicatie is een full-stack React/FastAPI-app. In deze sessie is een fundamentele architecturale refactoring doorgevoerd. De verschillende boekhoudmodules zijn nu geïntegreerd met het Grootboek (journaalposten). Verkoopfacturen en betalingen genereren nu automatisch de juiste journaalposten, waardoor de data op het Dashboard, de Debiteuren-pagina, de BTW-aangifte en de rapportages (Balans, Winst & Verlies) nu correct en consistent is.
+
+Daarnaast zijn er diverse bugs opgelost op de BTW- en Bank/Kas-pagina's, die veroorzaakt werden door veldnaam-inconsistenties (Engels/Nederlands). Deze inconsistentie is nu structureel opgelost met centrale helper-functies. Ook is de Grootboek-pagina uitgebreid met de mogelijkheid om een standaard Surinaams rekeningschema te beheren.
 
 **Last working item**:
--   **Last item agent was working:** Een Betaling Toevoegen functionaliteit implementeren voor verkoopfacturen, inclusief een dialoogvenster om het bedrag, de datum en de betaalmethode vast te leggen.
+-   **Last item agent was working:** Implementeren van twee P2-taken: (1) Het automatisch boeken van inkoopfacturen naar het grootboek, en (2) het bouwen van de Winst & Verlies-rapportage, die zijn data haalt uit de (nu correcte) grootboeksaldi.
 -   **Status:** USER VERIFICATION PENDING
 -   **Agent Testing Done:** Y
--   **Which testing method agent to use?** both. De backend-endpoint () moet worden getest via  om te verifiëren dat een betaling correct wordt opgeslagen en de factuurstatus/openstaand bedrag bijwerkt. De frontend vereist een screenshot of E2E-test om het openen van de dialoog, het invullen en het verzenden van het formulier te valideren.
+-   **Which testing method agent to use?** Frontend testing agent. De agent heeft de backend-API's en de UI via screenshots getest. De gebruiker moet nu de functionaliteit op de Rapportages-pagina (Winst & Verlies tab) en de Inkoop-pagina verifiëren.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Inconsistentie in datamodel tussen frontend en backend (P0)**
-    -   **Beschrijving:** De frontend gebruikt Engelse veldnamen (, , Sat Feb 28 00:57:09 UTC 2026) terwijl de backend Nederlandse veldnamen verwacht (, , ). Dit is de hoofdoorzaak van bijna alle bugs die in de laatste sessie zijn opgelost (op de Voorraad- en Verkoop-pagina's). De agent heeft dit per geval opgelost door de data vlak voor de API-call te transformeren, maar er is geen structurele oplossing.
-    -   **Attempted fixes:** Ad-hoc data-objecten transformeren in  functies in  en . Dit lost het probleem lokaal op maar niet systematisch.
+-   **Issue 1: Kritiek groot  bestand (P1)**
+    -   **Beschrijving:** Het  bestand is nu meer dan 4700 regels lang en bevat bijna alle backend-logica, inclusief de nieuwe, complexe logica voor het boeken naar het grootboek. Dit maakt het onbeheersbaar, moeilijk te onderhouden en riskant om aan te passen.
+    -   **Attempted fixes:** Geen. Dit is een terugkerend technisch schuldprobleem.
     -   **Next debug checklist:**
-        1.  Inventariseer alle formulieren en API-calls binnen de boekhouding-module.
-        2.  Pas de  aan met centrale  en  helper-functies, zoals gesuggereerd in een eerdere handoff.
-        3.  Refactor alle API-calls om deze helpers te gebruiken, wat de code schoner maakt en toekomstige bugs voorkomt.
-    -   **Why fix this issue and what will be achieved with the fix?** Dit is een zeer terugkerend probleem dat bij elke nieuwe formulierimplementatie voor fouten zorgt. Een structurele oplossing bespaart veel ontwikkeltijd en verhoogt de stabiliteit van de applicatie.
-    -   **Status:** IN PROGRESS
+        1.  Maak een  directory in de  als die niet bestaat.
+        2.  Verplaats de boekhouding-router naar .
+        3.  Splits de logica uit  verder op in thematische bestanden: , , , .
+        4.  Splits de logica voor het creëren van journaalposten af naar een  laag, bijvoorbeeld in .
+        5.  Werk  bij om al deze nieuwe routers te importeren en te includeren.
+    -   **Why fix this issue and what will be achieved with the fix?** Verhoogt de onderhoudbaarheid, stabiliteit en schaalbaarheid van de backend. Maakt het eenvoudiger om nieuwe functies toe te voegen zonder bestaande te breken.
+    -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** both
+    -   **Should Test frontend/backend/both after fix?** both (grondige regressietest nodig).
 
 **In progress Task List**:
 -   Geen.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P1 - Systematische refactor van veldnaam-inconsistentie:** Los de problemen uit All Pending/In progress Issue list structureel op.
+    -   **P1 - Refactor :** Los de problemen uit All Pending/In progress Issue list structureel op. Dit is de hoogste prioriteit.
     -   **P1 - Verbeter Multi-tenancy:** Zorg ervoor dat *alle* databasequeries strikt gefilterd worden op .
     -   **P2 - Implementeer Logo Upload voor Facturen:** Voeg een UI toe in de Instellingen-pagina om een bedrijfslogo te uploaden dat op PDF-facturen wordt gebruikt.
-    -   **P2 - Breid Rapportages uit:** Bouw de Balans- en Winst-en-verliesrekening functionaliteit.
+    -   **P2 - Refactor Grote Frontend Componenten:**  (>800 regels) en  (>900 regels) moeten worden opgesplitst. Extraheer dialogen (Nieuw Product, Nieuwe Factuur, etc.) naar hun eigen componenten.
 
 -   **Future Tasks:**
-    -   **P2 - Refactor :** Het bestand is met >15.000 regels onbeheersbaar. Splits de logica op in modulaire routers (bijv.  bevat al een deel, maar meer kan worden afgesplitst).
-    -   **P3 - Extraheer Herbruikbare UI Componenten:** Maak een generiek  component om de UI-consistentie op alle dashboard-achtige pagina's af te dwingen.
+    -   **P3 - Extraheer Herbruikbare UI Componenten:** Maak een generiek  component voor consistentie op dashboards.
+    -   **P3 - Implementeer MT940-import.**
+    -   **P3 - Implementeer Excel-exports voor alle relevante data.**
 
 **Completed work in this session**
--   **Product & Factuur Functionaliteit:**
-    -   Product foto-upload en weergave in de voorraadlijst is voltooid ().
-    -   Productfoto's worden nu op PDF-facturen getoond ().
-    -   Factuurinvoer is omgezet naar een artikel-dropdown ().
--   **CRUD & Workflow op Voorraadpagina:**
-    -   Bugs opgelost m.b.t. voorraadweergave en het aanmaken van mutaties.
-    -   Acties (Bewerken, Verwijderen) toegevoegd aan de productentabel.
-    -   Actie (Verwijderen) toegevoegd aan de mutatietabel.
--   **CRUD & Workflow op Verkooppagina:**
-    -   Bug opgelost bij het aanmaken van een nieuwe factuur.
-    -   Dataweergave in de factuurlijst gecorrigeerd.
-    -   Actiemenu toegevoegd met opties voor statuswijziging (Verzenden, Betaald), verwijderen en het toevoegen van betalingen.
--   **Sidebar UI/UX Verbeteringen ():**
-    -   Bug opgelost waarbij de boekhouding-sidebar verdween op de instellingenpagina.
-    -   De user redirect-logica gefixt zodat de juiste module wordt getoond.
-    -   Een zoekbalk toegevoegd onder het logo.
-    -   De sidebar inklapbaar gemaakt met een knop.
-    -   Tooltips toegevoegd voor items in de ingeklapte sidebar.
-    -   Sidebar-headers vervangen door de modulenaam als klikbare dashboard-link.
+-   **Architecturale Integratie (Grootboek):**
+    -   Een  helper-functie gebouwd in  om automatisch journaalposten aan te maken.
+    -   Een intelligente  functie geïmplementeerd die de juiste grootboekrekening kan vinden op basis van naam en type, wat het systeem robuust maakt voor verschillende rekeningschema's.
+    -   **Verkoopfacturen** worden nu automatisch geboekt (Debiteuren aan Omzet & BTW) bij statuswijziging naar .
+    -   **Betalingen** op verkoopfacturen worden nu automatisch geboekt (Bank aan Debiteuren).
+    -   **Inkoopfacturen** worden nu automatisch geboekt bij statuswijziging.
+    -   **Balans rapportage** haalt nu data direct uit de grootboeksaldi en is daardoor accuraat.
+    -   **Winst & Verlies rapportage** gebouwd, die ook data uit het grootboek haalt.
+-   **Dashboard & Module Fixes:**
+    -   Dashboard-statistieken (Debiteuren, BTW te betalen, Openstaande facturen) zijn gefixt en tonen nu correcte, berekende data.
+    -   Debiteuren-pagina toont nu het correcte openstaande saldo per klant.
+    -   BTW-aangifte pagina toont nu de correcte, berekende BTW-bedragen.
+-   **Structurele Bugfix:**
+    -   De terugkerende veldnaam-inconsistentie (Engels vs. Nederlands) is structureel opgelost door centrale  en  helpers in  te implementeren en de  en  te refactoren.
+-   **Bugfixes & Features:**
+    -   Fouten op de **BTW-pagina** en **Bank/Kas-pagina** opgelost door de juiste veldnamen (, , etc.) te gebruiken in de frontend.
+    -   Functionaliteit toegevoegd aan de **Grootboek-pagina** om een standaard rekeningschema te initialiseren en externe codes te koppelen.
+    -   Het Betaling Toevoegen dialoogvenster aangepast naar een groter, slide-out paneel zoals de gebruiker had gevraagd.
 
 **Earlier issues found/mentioned but not fixed**
--   De veldnaam-inconsistentie is alleen lokaal opgelost, niet structureel.
--   Het  bestand is nog steeds niet gerefactord.
+-   Het  bestand is nog steeds niet gerefactord en is zelfs aanzienlijk groter geworden.
+-   De grote frontend componenten (, ) zijn niet gerefactord.
 
 **Known issue recurrence from previous fork**
 -   **Issue:** Inconsistentie tussen Engelse frontend veldnamen en Nederlandse backend veldnamen.
--   **Recurrence count:** Hoog (veroorzaakte 4-5 aparte bugfixes in deze sessie).
--   **Status:** IN PROGRESS (meerdere patches toegepast, geen structurele oplossing).
+-   **Recurrence count:** Hoog.
+-   **Status:** RESOLVED. Dit is structureel opgelost in deze sessie door centrale mapping-functies in  te implementeren.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
 -   **Backend:** FastAPI, Pydantic, MongoDB, ReportLab.
--   **Frontend:** React, TailwindCSS, State management met  en , conditionele rendering, Modals/Dialogs, Dropdown menus.
--   **Probleemoplossing:** De belangrijkste vaardigheid was het debuggen van mismatches tussen de datastructuur die de React-frontend verstuurt en de structuur die de Pydantic-modellen in de FastAPI-backend verwachten.
+-   **Frontend:** React, TailwindCSS.
+-   **Kernconcept:** **Double-entry bookkeeping (dubbel boekhouden).** Het systeem is nu gebouwd rond het principe dat elke financiële transactie leidt tot een gebalanceerde journaalpost (debet/credit) in het grootboek ( collectie).
+-   **Data Aggregation:** Gebruik van MongoDB aggregation pipelines om saldi en rapportages te berekenen (, , ).
+-   **Architectuur:** De applicatie is getransformeerd van een verzameling losse formulieren naar een geïntegreerd systeem waarbij het grootboek de centrale source of truth is voor financiële rapportages.
 
 **key DB schema**
--   ****: Bevat nu een  (payments) array. De status kan , , of  zijn.
--   ****: Heeft nu een  veld.
--   ****: Collectie voor voorraadmutaties (, , ).
+-   ****: Bevat de header van een journaalpost (datum, omschrijving, referentie).
+-   ****: Bevat de individuele boekingsregels (rekening, debet, credit) die bij een journaalpost horen.
+-   ****: Grootboekrekeningen. Bevat nu een  veld dat up-to-date wordt gehouden.
+-   ****, ****: Worden nu gebruikt als trigger voor het aanmaken van journaalposten.
 
 **changes in tech stack**
 -   Geen.
 
 **All files of reference**
--   
--   
+-    (De meest kritieke file, bevat alle nieuwe logica)
+-    (Bevat de structurele fix voor veldnamen)
 -   
 -   
 -   
@@ -105,62 +114,56 @@ De applicatie is een full-stack React/FastAPI-app. In deze sessie heeft de agent
 -   
 
 **Areas that need refactoring**:
--   **Veldnaam-vertaling:** De ad-hoc data transformaties in de  functies moeten worden vervangen door een centrale helper-functie in  om het Engels/Nederlands naamgevingsprobleem definitief op te lossen.
--   **:** Dringend opsplitsen in modulaire routers.
--   **Frontend Pagina's:**  (>800 regels) en  (>700 regels) zijn te groot geworden. De logica voor de verschillende dialogen (, , , , ) moet worden geëxtraheerd naar eigen componenten.
+-   **:** Dit bestand (voorheen in ) is met >4700 regels onhoudbaar. Het moet **dringend** opgesplitst worden in meerdere, thematische router-bestanden (e.g., , , , ). De boekingslogica moet naar een -laag verplaatst worden.
+-   **Frontend Pages:**  en  zijn te groot. De logica en UI voor de verschillende dialogen moeten worden geëxtraheerd naar eigen, herbruikbare componenten.
 
 **key api endpoints**
 -    (Nieuw)
 -    (Nieuw)
 -    (Nieuw)
 -    (Nieuw)
--    (Nieuw)
--    (Gebruikt)
+-    (Zwaar aangepast)
+-    (Zwaar aangepast)
+-    (Zwaar aangepast)
+-    (Zwaar aangepast)
 
 **Critical Info for New Agent**
--   **Prioriteit 1: Veldnaam-inconsistentie.** De meest voorkomende bug is de mismatch tussen Engelse frontend-veldnamen en Nederlandse backend-modellen. Het oplossen van dit probleem op een pagina vereist dat je de payload die naar de API wordt gestuurd handmatig aanpast. Wees hierop voorbereid voor elke nieuwe functie of bugfix met formulieren. Het voorstellen van een structurele oplossing is de hoogste prioriteit.
--   **Gebruikersinteractie:** De gebruiker is zeer direct, visueel georiënteerd en vraagt om veel specifieke UI-wijzigingen. Gebruik screenshots om elke UI-wijziging te valideren en wees voorbereid op iteratieve feedback.
--   **Sidebar logica:** De actieve module wordt nu bijgehouden in  via de  sleutel. Dit zorgt ervoor dat de juiste sidebar zichtbaar blijft, zelfs op algemene pagina's zoals .
+-   **Prioriteit 1: Refactor .** Voordat je nieuwe functies toevoegt, moet het enorme  bestand opgesplitst worden. Dit is cruciaal voor de stabiliteit en onderhoudbaarheid van het project.
+-   **Het Grootboek is Koning:** De kernarchitectuur is nu gebaseerd op het grootboek. Elke nieuwe functie die een financiële impact heeft (b.v. voorraadcorrecties, afschrijvingen) MOET een journaalpost genereren via de  helper. Rapportages MOETEN hun data uit de grootboeksaldi halen, niet rechtstreeks uit transactietabellen.
+-   **Robuuste Rekening-lookup:** Gebruik de  helper om de juiste grootboekrekening te vinden. Deze functie kan omgaan met variaties in rekeningschema's door te zoeken op code, naam en type.
+-   **Veldnaam-inconsistentie is opgelost:** Het structurele probleem met Engels/Nederlandse veldnamen is opgelost. Gebruik de  helper in  bij het versturen van data naar de backend om consistentie te waarborgen.
 
 **documents and test reports created in this job**
--   /app/test_reports/iteration_52.json
--   /app/memory/PRD.md (meerdere keren bijgewerkt)
+-   
+-    (significant bijgewerkt met de voltooiing van de module-integratie)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** De factuurstatus is Concept en ik kan er niets mee doen. (COMPLETED - Actiemenu toegevoegd).
-2.  **User:** Ik zie geen optie om een betaling aan de factuur toe te voegen. (COMPLETED - Betalingsfunctie toegevoegd).
-3.  **User:** Bij Voorraad werkt het aantal niet en Nieuwe Voorraadmutatie geeft een fout. (COMPLETED).
-4.  **User:** Ik zie geen bewerk/verwijder acties bij Producten. (COMPLETED).
-5.  **User:** Ik zie ook geen acties bij Mutaties. (COMPLETED).
-6.  **User:** De Factuur Aanmaken knop werkt niet. (COMPLETED).
-7.  **User:** Ik wil een zoekbalk onder het logo in de sidebar. (COMPLETED).
-8.  **User:** Ik wil de sidebar kunnen inklappen, zoals op de screenshot. (COMPLETED).
-9.  **User:** Als de sidebar is ingeklapt, wil ik de naam zien als ik over een icoon hover. (COMPLETED).
-10. **User:** De sidebar-headers moeten weg, de Dashboard-link moet de modulenaam zijn. (COMPLETED).
+1.  **User:** Gaf aan dat de Betaling Toevoegen popup eruit moest zien als een slide-out paneel. (COMPLETED)
+2.  **User:** Rapporteerde meerdere bugs: BTW-module, Bank/Kas-module, en dashboard toonden onjuiste gegevens. (COMPLETED - Oorzaak was veldnaam-inconsistentie, nu opgelost)
+3.  **User:** Vroeg om een standaard Surinaams rekeningschema en de mogelijkheid om eigen codes te koppelen. (COMPLETED)
+4.  **User:** Bevestigde dat de agent de veldnaam-inconsistentie structureel moest oplossen. (COMPLETED)
+5.  **User:** Rapporteerde het fundamentele probleem dat de modules niet met elkaar verbonden waren en het dashboard/rapportages niet klopten. (COMPLETED - Dit was de aanleiding voor de grote architecturale refactoring)
+6.  **User:** Bevestigde dat de agent door moest gaan met het implementeren van de automatische grootboekboekingen. (COMPLETED)
+7.  **User:** Bevestigde dat de P2-taken (inkoopfacturen boeken & Winst/Verlies rapport) moesten worden uitgevoerd. (IN PROGRESS - Agent heeft dit geïmplementeerd, wacht op verificatie)
 
 **Project Health Check:**
--   **Broken:** Geen. Alle recent gemelde problemen zijn opgelost. De onderliggende technische schuld (veldnaam-inconsistentie, groot  bestand) vormt echter een risico voor toekomstige stabiliteit.
+-   **Broken:** Geen. De applicatie is functioneel veel gezonder en correcter dan aan het begin van de sessie.
 -   **Mocked:** Geen.
+-   **Risks:** De enorme omvang van  is een significant technisch risico.
 
 **3rd Party Integrations**
--   **playwright:** (v1.44.0) Voor web scraping.
--   **APScheduler:** (v3.11.2) Voor achtergrondtaken.
--   **recharts:** (v3.7.0) Voor grafieken.
--   **mt940:** (v0.7.0) Voor bankbestanden.
--   **reportlab:** (v4.4.9) Voor PDF's.
--   **openpyxl:** (v3.1.5) Voor Excel.
--   **aiosmtplib:** (v5.1.0) Voor e-mail.
+-   Geen wijzigingen. De lijst uit de vorige handoff is nog steeds accuraat.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES
+-   **Testing agent used after significant changes:** YES, de testing agent is gebruikt na de structurele fix van de veldnaam-inconsistentie.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** []
--   **Known regressions:** Geen.
+-   **Known regressions:** Geen. De fixes hebben de kernfunctionaliteit juist hersteld.
 
 **Credentials to test flow:**
 -   **Gebruikersnaam:** 
 -   **Wachtwoord:** 
 
 **What agent forgot to execute**
--   De agent heeft geen structurele refactoring uitgevoerd om de terugkerende veldnaam-inconsistenties op te lossen. Er zijn alleen lokale patches toegepast.
--   De agent heeft de voorgestelde refactoring van het kritiek grote -bestand niet uitgevoerd.</analysis>
+-   De agent heeft de voorgestelde en zeer noodzakelijke refactoring van het  (nu ) bestand niet uitgevoerd. De technische schuld is hierdoor alleen maar groter geworden.
+-   De refactoring van grote frontend componenten is ook niet uitgevoerd.</analysis>
