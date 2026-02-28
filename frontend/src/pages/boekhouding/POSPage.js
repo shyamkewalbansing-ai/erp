@@ -179,26 +179,38 @@ const POSPage = () => {
         const response = await fetch(endpoint);
         if (response.ok) {
           const items = await response.json();
+          const processedIds = [];
+          
           // Add new items to cart
           for (const item of items) {
-            // Check if already in cart (by cart_item_id to prevent duplicates)
-            const alreadyInCart = cart.some(c => c.scan_id === item.id);
-            if (!alreadyInCart) {
-              const product = products.find(p => p.id === item.artikel_id);
-              if (product) {
-                setCart(prev => {
-                  const existing = prev.find(p => p.id === product.id);
-                  if (existing) {
-                    return prev.map(p => 
-                      p.id === product.id 
-                        ? { ...p, quantity: p.quantity + 1, scan_id: item.id }
-                        : p
-                    );
-                  }
-                  return [...prev, { ...product, quantity: 1, scan_id: item.id }];
-                });
-                toast.success(`📱 ${product.naam} gescand`);
-              }
+            const product = products.find(p => p.id === item.artikel_id);
+            if (product) {
+              setCart(prev => {
+                const existing = prev.find(p => p.id === product.id);
+                if (existing) {
+                  return prev.map(p => 
+                    p.id === product.id 
+                      ? { ...p, quantity: p.quantity + 1 }
+                      : p
+                  );
+                }
+                return [...prev, { ...product, quantity: 1 }];
+              });
+              toast.success(`📱 ${product.naam} gescand`);
+            }
+            processedIds.push(item.id);
+          }
+          
+          // Clear processed items from the scanner cart
+          if (processedIds.length > 0) {
+            const clearEndpoint = scannerMode === 'permanent'
+              ? `${API_URL}/api/boekhouding/pos/permanent-scanner/${sessionCode}/clear-cart`
+              : `${API_URL}/api/boekhouding/pos/scanner-session/${sessionCode}/clear-cart`;
+            
+            try {
+              await fetch(clearEndpoint, { method: 'DELETE' });
+            } catch (e) {
+              console.error('Error clearing scanner cart:', e);
             }
           }
         }
@@ -208,7 +220,7 @@ const POSPage = () => {
     }, 2000); // Poll every 2 seconds
 
     return () => clearInterval(pollInterval);
-  }, [scannerMode, permanentScanner?.code, scannerSession?.code, cart, products]);
+  }, [scannerMode, permanentScanner?.code, scannerSession?.code, products]);
 
   const fetchProducts = useCallback(async () => {
     try {
