@@ -309,17 +309,17 @@ const BTWPage = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between py-3 border-b border-slate-100">
                     <span className="text-sm text-slate-600">1a. Leveringen/diensten belast met hoog tarief</span>
-                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_sales || 0)}</span>
+                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_verkoop || btwReport?.btw_sales || 0)}</span>
                   </div>
                   
                   <div className="flex justify-between py-3 border-b border-slate-100">
                     <span className="text-sm text-slate-600">5a. Verschuldigde BTW (rubriek 1 t/m 4)</span>
-                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_sales || 0)}</span>
+                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_verkoop || btwReport?.btw_sales || 0)}</span>
                   </div>
                   
                   <div className="flex justify-between py-3 border-b border-slate-100">
                     <span className="text-sm text-slate-600">5b. Voorbelasting</span>
-                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_purchases || 0)}</span>
+                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_inkoop || btwReport?.btw_purchases || 0)}</span>
                   </div>
                   
                   <div className={`flex justify-between py-4 rounded-lg px-4 mt-4 ${btwBalance > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
