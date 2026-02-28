@@ -30,7 +30,8 @@ class TestBarcodeVoorraad:
             "password": "demo2024"
         })
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
-        token = login_response.json().get("token")
+        token = login_response.json().get("access_token")
+        assert token, "No access_token in login response"
         self.session.headers.update({"Authorization": f"Bearer {token}"})
         
         # Store created product IDs for cleanup
