@@ -720,6 +720,83 @@ const VerkoopPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Payment Dialog */}
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Betaling Toevoegen</DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-4 py-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <p className="text-sm text-slate-500">Factuur</p>
+                <p className="font-semibold">{selectedInvoice.factuurnummer || selectedInvoice.invoice_number}</p>
+                <p className="text-sm text-slate-500 mt-2">Totaal bedrag</p>
+                <p className="font-semibold">{formatAmount(selectedInvoice.totaal_incl_btw || selectedInvoice.total, selectedInvoice.valuta || selectedInvoice.currency)}</p>
+                {selectedInvoice.totaal_betaald > 0 && (
+                  <>
+                    <p className="text-sm text-slate-500 mt-2">Reeds betaald</p>
+                    <p className="font-semibold text-green-600">{formatAmount(selectedInvoice.totaal_betaald, selectedInvoice.valuta || selectedInvoice.currency)}</p>
+                  </>
+                )}
+                <p className="text-sm text-slate-500 mt-2">Openstaand</p>
+                <p className="font-semibold text-amber-600">{formatAmount(selectedInvoice.openstaand_bedrag || selectedInvoice.totaal_incl_btw || selectedInvoice.total, selectedInvoice.valuta || selectedInvoice.currency)}</p>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Bedrag *</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={newPayment.bedrag}
+                    onChange={(e) => setNewPayment({...newPayment, bedrag: parseFloat(e.target.value) || 0})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Datum *</Label>
+                  <Input
+                    type="date"
+                    value={newPayment.datum}
+                    onChange={(e) => setNewPayment({...newPayment, datum: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Betaalmethode</Label>
+                <Select value={newPayment.betaalmethode} onValueChange={(v) => setNewPayment({...newPayment, betaalmethode: v})}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bank">Bankoverschrijving</SelectItem>
+                    <SelectItem value="kas">Contant (Kas)</SelectItem>
+                    <SelectItem value="pin">PIN/Kaart</SelectItem>
+                    <SelectItem value="creditcard">Creditcard</SelectItem>
+                    <SelectItem value="anders">Anders</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Referentie/Omschrijving</Label>
+                <Input
+                  value={newPayment.referentie}
+                  onChange={(e) => setNewPayment({...newPayment, referentie: e.target.value})}
+                  placeholder="Bijv. transactienummer"
+                />
+              </div>
+              
+              <Button onClick={handleAddPayment} className="w-full" disabled={saving || newPayment.bedrag <= 0}>
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CreditCard className="w-4 h-4 mr-2" />}
+                Betaling Registreren
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
