@@ -94,7 +94,7 @@ const BTWPage = () => {
     }
   };
 
-  const btwBalance = (btwReport?.btw_sales || 0) - (btwReport?.btw_purchases || 0);
+  const btwBalance = (btwReport?.btw_verkoop || btwReport?.btw_sales || 0) - (btwReport?.btw_inkoop || btwReport?.btw_purchases || 0);
 
   if (loading) {
     return (
