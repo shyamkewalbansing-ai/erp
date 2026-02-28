@@ -796,6 +796,15 @@ function MainAppRoutes() {
           </ProtectedRoute>
         } />
         
+        {/* POS Mobile Scanner - Fullscreen Camera */}
+        <Route path="/app/boekhouding/pos/scanner" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoader />}>
+              <BoekhoudingPOSMobileScanner />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
         {/* Redirect old routes to new app routes */}
         <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
         <Route path="/tenants" element={<Navigate to="/app/tenants" replace />} />
