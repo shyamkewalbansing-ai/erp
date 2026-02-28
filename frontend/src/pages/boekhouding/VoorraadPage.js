@@ -1117,6 +1117,15 @@ const VoorraadPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Scanner Animation Styles */}
+      <style>{`
+        @keyframes scan {
+          0% { top: 0; }
+          50% { top: calc(100% - 2px); }
+          100% { top: 0; }
+        }
+      `}</style>
     </div>
   );
 };
