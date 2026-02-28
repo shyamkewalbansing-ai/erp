@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { purchaseOrdersAPI, invoicesAPI, suppliersAPI, productsAPI } from '../../lib/boekhoudingApi';
+import { purchaseOrdersAPI, purchaseInvoicesAPI, suppliersAPI, productsAPI } from '../../lib/boekhoudingApi';
 import { formatDate, getStatusColor, getStatusLabel } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
@@ -53,7 +53,7 @@ const InkoopPage = () => {
     try {
       const [ordersRes, invoicesRes, suppliersRes, productsRes] = await Promise.all([
         purchaseOrdersAPI.getAll(),
-        invoicesAPI.getAll({ invoice_type: 'purchase' }),
+        purchaseInvoicesAPI.getAll(),
         suppliersAPI.getAll(),
         productsAPI.getAll()
       ]);
@@ -107,7 +107,7 @@ const InkoopPage = () => {
     }
     setSaving(true);
     try {
-      await invoicesAPI.create(newInvoice);
+      await purchaseInvoicesAPI.create(newInvoice);
       toast.success('Inkoopfactuur aangemaakt');
       setShowInvoiceDialog(false);
       setNewInvoice({
