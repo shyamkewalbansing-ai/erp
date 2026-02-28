@@ -339,48 +339,48 @@ Aangepaste pagina's:
 
 ---
 
-*Laatste update: 28 februari 2026 - Veldnaam-inconsistentie structureel opgelost*
+*Laatste update: 28 februari 2026 - Module-integratie geïmplementeerd - Automatische grootboekboeking*
 
 ---
 
 ## Recente Wijzigingen (Februari 2026)
 
-### ✅ Structurele Veldnaam Conversie (Voltooid - P1)
-Centrale helper functies geïmplementeerd in `/app/frontend/src/lib/boekhoudingApi.js`:
-- `toBackendFormat(data)`: Converteert Engels → Nederlands voor API requests
-- `toFrontendFormat(data)`: Converteert Nederlands → Engels voor responses
-- `getDutchFieldName(field)`: Haalt Nederlandse veldnaam op
-- `getEnglishFieldName(field)`: Haalt Engelse veldnaam op
+### ✅ Automatische Grootboekboekingen (P0 - VOLTOOID)
+Wanneer een verkoopfactuur naar "verzonden" status gaat, worden automatisch journaalposten aangemaakt:
+- **Debet**: Debiteuren (rekening code wordt automatisch gevonden)
+- **Credit**: Omzet (type "omzet" wordt gebruikt, niet "kosten")
+- **Credit**: BTW te betalen
 
-**Volledige mapping voor 80+ velden:**
-- Common: name→naam, address→adres, description→omschrijving, etc.
-- Bank: bank_name→bank, account_number→rekeningnummer, balance→huidig_saldo
-- Invoice: customer_id→debiteur_id, invoice_date→factuurdatum, quantity→aantal
-- Product: sales_price→verkoopprijs, min_stock→minimum_voorraad, photo_url→foto_url
+Wanneer een betaling wordt geregistreerd:
+- **Debet**: Bank
+- **Credit**: Debiteuren
 
-### ✅ BTW Pagina Bugfix (Voltooid)
-- Veldnaam-mismatch gefixed: `name` → `naam`, `active` → `actief`
-- BTW-codes worden nu correct weergegeven met naam en status
-- Alle 10 BTW-codes zijn nu zichtbaar en tonen de juiste informatie
+**Implementatie:**
+- `boek_verkoopfactuur()` - Automatische boeking bij verzending
+- `boek_betaling_ontvangen()` - Automatische boeking bij betaling
+- `boek_inkoopfactuur()` - Automatische boeking bij inkoop
+- `get_rekening_voor_type()` - Slimme lookup die werkt met verschillende rekeningschema's
+- `update_rekening_saldo()` - Bijwerken van grootboek saldi
+- `POST /api/boekhouding/verkoopfacturen/boek-alle-verzonden` - Bulk boeking endpoint
 
-### ✅ Bank/Kas Pagina Bugfix (Voltooid)
-- Veldnaam-mismatch gefixed voor bankrekeningen en transacties
-- Totaal saldo's worden nu correct berekend en getoond
-- Bankrekening tabel toont nu alle kolommen correct
+### ✅ Dashboard Verbeteringen (VOLTOOID)
+- BTW te betalen wordt nu correct berekend
+- Openstaande facturen telt nu ook conceptfacturen
+- Debiteuren saldo wordt nu correct weergegeven
 
-### ✅ Betaling Toevoegen Formulier Redesign (Voltooid)
-- Popup vervangen door professioneel slide-out panel
-- Factuurgegevens card met factuurnummer, totaal, reeds betaald, openstaand
-- Nette formulier indeling met 2-kolom grid
+### ✅ Debiteuren/Crediteuren Pagina Verbeteringen (VOLTOOID)
+- Openstaand bedrag per klant/leverancier wordt nu automatisch berekend
+- Backend haalt saldi op uit verkoopfacturen/inkoopfacturen per relatie
 
-### ✅ Grootboek Externe Code Functionaliteit (Voltooid)
-- Nieuwe "Externe Code" kolom in rekeningschema tabel
-- Nieuwe "Acties" kolom met koppel-knop
-- Dialog voor bewerken van externe codes
-- Backend endpoints voor standaard schema en externe codes
+### ✅ Rapportages - Balans (VOLTOOID)
+- Balans haalt nu data uit grootboek rekening saldi
+- Frontend ondersteunt zowel Nederlandse als Engelse veldnamen
+- Activa en Passiva worden correct weergegeven
 
-### ✅ Standaard Surinaams Rekeningschema (Voltooid)
-- 100+ rekeningen beschikbaar voor initialisatie
-- Structuur: 1xxx Activa, 2xxx Passiva, 4xxx Opbrengsten, 5-8xxx Kosten, 9xxx Tussenrekeningen
-- Lokale banken: DSB, Republic, Hakrinbank, Finabank
-- Surinaamse belasting rekeningen: AOV, loonheffing, inkomstenbelasting
+### ✅ Structurele Veldnaam Conversie (VOLTOOID)
+Centrale helper functies in `boekhoudingApi.js`:
+- `toBackendFormat()`, `toFrontendFormat()`
+- 80+ veldmappings
+
+### ✅ BTW, Bank/Kas, Grootboek Bugfixes (VOLTOOID)
+- Alle veldnaam-mismatches opgelost
