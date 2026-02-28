@@ -732,6 +732,31 @@ const VoorraadPage = () => {
                       onChange={(e) => setEditingProduct({...editingProduct, min_stock: parseInt(e.target.value) || 0})}
                     />
                   </div>
+                  
+                  {/* Barcode in Edit Dialog */}
+                  <div className="space-y-2">
+                    <Label>Barcode / EAN</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        value={editingProduct.barcode || ''}
+                        onChange={(e) => setEditingProduct({...editingProduct, barcode: e.target.value})}
+                        placeholder="Barcode of EAN nummer"
+                        className="flex-1"
+                        data-testid="edit-product-barcode-input"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => openBarcodeScanner('edit')}
+                        className="flex items-center gap-1"
+                        data-testid="edit-scan-barcode-btn"
+                      >
+                        <ScanLine className="w-4 h-4" />
+                        Scan
+                      </Button>
+                    </div>
+                  </div>
+                  
                   <Button onClick={handleUpdateProduct} className="w-full" disabled={saving}>
                     {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                     Opslaan
