@@ -438,6 +438,9 @@ const POSPermanentScannerPage = () => {
         <p className="text-emerald-200 text-sm">
           📷 Altijd actief • Geen sessie limiet • Richt camera op barcode
         </p>
+        <p className="text-emerald-300/70 text-xs mt-1">
+          iPhone: Gebruik Safari • Sta camera toe in Instellingen
+        </p>
       </div>
 
       <style>{`
