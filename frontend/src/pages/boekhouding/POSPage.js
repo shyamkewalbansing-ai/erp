@@ -222,7 +222,7 @@ const POSPage = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate('/app/boekhouding/dashboard')}
+              onClick={() => navigate('/app/boekhouding')}
               className="shrink-0 w-10 h-10 rounded-full bg-slate-900 text-white hover:bg-slate-800"
               data-testid="pos-home-btn"
             >
