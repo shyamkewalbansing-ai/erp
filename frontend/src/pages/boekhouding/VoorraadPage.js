@@ -657,11 +657,38 @@ const VoorraadPage = () => {
                       <TableCell className="text-right text-sm font-medium text-slate-900">
                         {formatAmount(stockQty * purchasePrice)}
                       </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleEditProduct(product)}
+                            className="h-8 w-8 p-0 hover:bg-slate-100"
+                            data-testid={`edit-product-${product.code}`}
+                          >
+                            <Pencil className="w-4 h-4 text-slate-500" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDeleteProduct(product.id)}
+                            disabled={deleting === product.id}
+                            className="h-8 w-8 p-0 hover:bg-red-50"
+                            data-testid={`delete-product-${product.code}`}
+                          >
+                            {deleting === product.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                            ) : (
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   )})}
                   {filteredProducts.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-slate-500">
+                      <TableCell colSpan={9} className="text-center py-8 text-slate-500">
                         {searchTerm ? 'Geen producten gevonden' : 'Geen producten. Maak uw eerste product aan.'}
                       </TableCell>
                     </TableRow>
