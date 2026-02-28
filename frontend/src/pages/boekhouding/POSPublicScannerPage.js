@@ -101,24 +101,47 @@ const POSPublicScannerPage = () => {
   const startScanner = async () => {
     setCameraError(null);
     
+    // Detect iOS
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    
     try {
-      // First request camera permission
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-          stream.getTracks().forEach(track => track.stop());
-        } catch (permErr) {
-          if (permErr.name === 'NotAllowedError') {
+      // Check if mediaDevices API is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        setCameraError('Camera niet ondersteund. Gebruik Safari op iOS of Chrome op Android.');
+        return;
+      }
+
+      // Request camera permission first
+      try {
+        const testStream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' },
+          audio: false 
+        });
+        testStream.getTracks().forEach(track => track.stop());
+      } catch (permErr) {
+        if (permErr.name === 'NotAllowedError' || permErr.name === 'PermissionDeniedError') {
+          if (isIOSDevice) {
+            setCameraError('Camera toegang geweigerd.\n\nGa naar: Instellingen → Safari → Camera → Sta toe');
+          } else {
             setCameraError('Camera toegang geweigerd. Sta camera toe in je browser.');
+          }
+          return;
+        }
+        if (permErr.name === 'NotFoundError') {
+          setCameraError('Geen camera gevonden op dit apparaat.');
+          return;
+        }
+        // Try without facingMode for OverconstrainedError
+        if (permErr.name === 'OverconstrainedError') {
+          try {
+            const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            fallbackStream.getTracks().forEach(track => track.stop());
+          } catch (e) {
+            setCameraError('Camera niet beschikbaar.');
             return;
           }
         }
-      }
-
-      const devices = await Html5Qrcode.getCameras();
-      if (!devices || devices.length === 0) {
-        setCameraError('Geen camera gevonden');
-        return;
       }
 
       // Clean up existing scanner
@@ -127,17 +150,19 @@ const POSPublicScannerPage = () => {
         html5QrCodeRef.current = null;
       }
 
+      // Wait for iOS
+      await new Promise(resolve => setTimeout(resolve, isIOSDevice ? 800 : 300));
+
       const html5QrCode = new Html5Qrcode("public-scanner-view");
       html5QrCodeRef.current = html5QrCode;
 
-      // Try back camera first, then fall back
-      const cameraConfig = devices.length > 1 
-        ? { facingMode: "environment" }
-        : devices[0].id;
-
       await html5QrCode.start(
-        cameraConfig,
-        { fps: 10, qrbox: { width: 280, height: 180 } },
+        { facingMode: "environment" },
+        { 
+          fps: isIOSDevice ? 2 : 10, 
+          qrbox: { width: 250, height: 150 },
+          aspectRatio: 1.5
+        },
         (decodedText) => handleScannedBarcode(decodedText),
         () => {}
       );
@@ -145,32 +170,16 @@ const POSPublicScannerPage = () => {
       setIsScanning(true);
     } catch (err) {
       console.error("Scanner error:", err);
-      const errorMsg = err.toString();
+      const errorMsg = err.toString().toLowerCase();
       
-      if (errorMsg.includes('NotAllowedError')) {
-        setCameraError('Camera toegang geweigerd. Sta camera toe.');
-      } else if (errorMsg.includes('NotReadableError') || errorMsg.includes('could not start video source')) {
-        setCameraError('Camera is in gebruik. Sluit andere apps die de camera gebruiken.');
-      } else if (errorMsg.includes('OverconstrainedError')) {
-        // Retry with first available camera
-        try {
-          const devices = await Html5Qrcode.getCameras();
-          if (devices && devices.length > 0) {
-            const html5QrCode = new Html5Qrcode("public-scanner-view");
-            html5QrCodeRef.current = html5QrCode;
-            await html5QrCode.start(
-              devices[0].id,
-              { fps: 10, qrbox: { width: 250, height: 150 } },
-              (decodedText) => handleScannedBarcode(decodedText),
-              () => {}
-            );
-            setIsScanning(true);
-            return;
-          }
-        } catch (retryErr) {}
-        setCameraError('Camera niet ondersteund.');
+      if (errorMsg.includes('notallowed') || errorMsg.includes('permission')) {
+        setCameraError(isIOSDevice 
+          ? 'Camera geweigerd. Ga naar Instellingen → Safari → Camera' 
+          : 'Camera geweigerd. Sta toe in browser.');
+      } else if (errorMsg.includes('notreadable') || errorMsg.includes('could not start')) {
+        setCameraError('Camera in gebruik. Sluit andere apps.');
       } else {
-        setCameraError(`Camera error: ${err.message || err}`);
+        setCameraError(`Camera fout. Ververs de pagina.`);
       }
     }
   };
