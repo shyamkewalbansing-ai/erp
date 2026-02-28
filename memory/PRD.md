@@ -339,11 +339,24 @@ Aangepaste pagina's:
 
 ---
 
-*Laatste update: 28 februari 2026 - BTW, Bank/Kas en Grootboek pagina's gefixed*
+*Laatste update: 28 februari 2026 - Veldnaam-inconsistentie structureel opgelost*
 
 ---
 
 ## Recente Wijzigingen (Februari 2026)
+
+### ✅ Structurele Veldnaam Conversie (Voltooid - P1)
+Centrale helper functies geïmplementeerd in `/app/frontend/src/lib/boekhoudingApi.js`:
+- `toBackendFormat(data)`: Converteert Engels → Nederlands voor API requests
+- `toFrontendFormat(data)`: Converteert Nederlands → Engels voor responses
+- `getDutchFieldName(field)`: Haalt Nederlandse veldnaam op
+- `getEnglishFieldName(field)`: Haalt Engelse veldnaam op
+
+**Volledige mapping voor 80+ velden:**
+- Common: name→naam, address→adres, description→omschrijving, etc.
+- Bank: bank_name→bank, account_number→rekeningnummer, balance→huidig_saldo
+- Invoice: customer_id→debiteur_id, invoice_date→factuurdatum, quantity→aantal
+- Product: sales_price→verkoopprijs, min_stock→minimum_voorraad, photo_url→foto_url
 
 ### ✅ BTW Pagina Bugfix (Voltooid)
 - Veldnaam-mismatch gefixed: `name` → `naam`, `active` → `actief`
@@ -351,8 +364,7 @@ Aangepaste pagina's:
 - Alle 10 BTW-codes zijn nu zichtbaar en tonen de juiste informatie
 
 ### ✅ Bank/Kas Pagina Bugfix (Voltooid)
-- Veldnaam-mismatch gefixed voor bankrekeningen: `name` → `naam`, `bank_name` → `bank`, `account_number` → `rekeningnummer`, `balance` → `huidig_saldo`, `currency` → `valuta`
-- Veldnaam-mismatch gefixed voor transacties: `date` → `datum`, `description` → `omschrijving`, `reference` → `referentie`, `amount` → `bedrag`
+- Veldnaam-mismatch gefixed voor bankrekeningen en transacties
 - Totaal saldo's worden nu correct berekend en getoond
 - Bankrekening tabel toont nu alle kolommen correct
 
@@ -360,24 +372,15 @@ Aangepaste pagina's:
 - Popup vervangen door professioneel slide-out panel
 - Factuurgegevens card met factuurnummer, totaal, reeds betaald, openstaand
 - Nette formulier indeling met 2-kolom grid
-- Annuleren en Betaling Registreren knoppen
 
 ### ✅ Grootboek Externe Code Functionaliteit (Voltooid)
 - Nieuwe "Externe Code" kolom in rekeningschema tabel
 - Nieuwe "Acties" kolom met koppel-knop
 - Dialog voor bewerken van externe codes
-- Backend endpoints:
-  - `POST /api/boekhouding/rekeningen/init-standaard` - Laad standaard Surinaams rekeningschema
-  - `PUT /api/boekhouding/rekeningen/{id}/externe-code` - Koppel externe code
-  - `GET /api/boekhouding/rekeningen/zoek-op-externe-code/{code}` - Zoek op externe code
+- Backend endpoints voor standaard schema en externe codes
 
 ### ✅ Standaard Surinaams Rekeningschema (Voltooid)
 - 100+ rekeningen beschikbaar voor initialisatie
-- Structuur volgens Surinaamse boekhoudpraktijk:
-  - 1xxx: Activa (vaste activa, vlottende activa, liquide middelen)
-  - 2xxx: Passiva (eigen vermogen, langlopende/kortlopende schulden)
-  - 4xxx: Opbrengsten (omzet, overige opbrengsten)
-  - 5xxx-8xxx: Kosten (personeels-, huisvestings-, overige kosten)
-  - 9xxx: Tussenrekeningen
-- Lokale Surinaamse banken: DSB, Republic, Hakrinbank, Finabank
+- Structuur: 1xxx Activa, 2xxx Passiva, 4xxx Opbrengsten, 5-8xxx Kosten, 9xxx Tussenrekeningen
+- Lokale banken: DSB, Republic, Hakrinbank, Finabank
 - Surinaamse belasting rekeningen: AOV, loonheffing, inkomstenbelasting
