@@ -125,10 +125,64 @@ DEFAULT_REKENINGEN = {
     "voorraad": "1200"
 }
 
+# Alternatieve codes die ook geaccepteerd worden (voor verschillende schema's)
+ALTERNATIEVE_CODES = {
+    "debiteuren": ["1300", "1100"],
+    "crediteuren": ["2300", "1600", "1700"],
+    "btw_verkoop": ["2350", "2210", "1810"],
+    "btw_inkoop": ["1350", "1400", "1410"],
+    "omzet": ["4000", "8000", "8010", "8020"],
+    "inkoop": ["5000", "4000", "4100"],
+    "bank": ["1500", "1110", "1120"],
+    "kas": ["1400", "1000", "1100"],
+    "voorraad": ["1200", "3000", "3100"]
+}
+
 async def get_rekening_by_code(user_id: str, code: str) -> dict:
     """Zoek rekening op basis van code"""
     rekening = await db.boekhouding_rekeningen.find_one({"user_id": user_id, "code": code})
     return rekening
+
+async def get_rekening_voor_type(user_id: str, rekening_type: str) -> str:
+    """Zoek een geschikte rekeningcode voor een bepaald type boeking"""
+    # Probeer eerst de standaard code
+    standaard_code = DEFAULT_REKENINGEN.get(rekening_type)
+    if standaard_code:
+        rekening = await get_rekening_by_code(user_id, standaard_code)
+        if rekening:
+            return standaard_code
+    
+    # Probeer alternatieve codes
+    alternatieven = ALTERNATIEVE_CODES.get(rekening_type, [])
+    for code in alternatieven:
+        rekening = await get_rekening_by_code(user_id, code)
+        if rekening:
+            return code
+    
+    # Als geen rekening gevonden, zoek op basis van naam/type
+    naam_zoekterms = {
+        "debiteuren": ["debiteur"],
+        "crediteuren": ["crediteur"],
+        "btw_verkoop": ["btw te betalen", "btw af te dragen"],
+        "btw_inkoop": ["btw te vorderen", "voorbelasting"],
+        "omzet": ["omzet", "verkoop"],
+        "inkoop": ["inkoop"],
+        "bank": ["bank"],
+        "kas": ["kas"],
+        "voorraad": ["voorraad"]
+    }
+    
+    zoekterms = naam_zoekterms.get(rekening_type, [])
+    for term in zoekterms:
+        rekening = await db.boekhouding_rekeningen.find_one({
+            "user_id": user_id, 
+            "naam": {"$regex": term, "$options": "i"}
+        })
+        if rekening:
+            return rekening.get("code")
+    
+    # Fallback naar standaard code
+    return standaard_code
 
 async def update_rekening_saldo(user_id: str, code: str, bedrag: float, is_debet: bool = True):
     """Update het saldo van een grootboekrekening"""
