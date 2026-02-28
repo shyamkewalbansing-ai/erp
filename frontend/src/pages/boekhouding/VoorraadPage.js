@@ -133,57 +133,64 @@ const VoorraadPage = () => {
   const startBarcodeScanner = async () => {
     setCameraError(null);
     
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    
     try {
-      // First check if getUserMedia is supported
+      // Check if getUserMedia is supported
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        setCameraError('Camera wordt niet ondersteund door deze browser');
+        setCameraError('Camera wordt niet ondersteund. Gebruik Safari op iOS.');
         return;
       }
 
       // Request camera permission first
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        // Stop the stream immediately, we just needed permission
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment' } 
+        });
         stream.getTracks().forEach(track => track.stop());
       } catch (permErr) {
         if (permErr.name === 'NotAllowedError') {
-          setCameraError('Camera toegang geweigerd. Sta camera toe in je browser instellingen.');
+          setCameraError(isIOSDevice 
+            ? 'Camera geweigerd. Ga naar Instellingen → Safari → Camera' 
+            : 'Camera toegang geweigerd.');
         } else if (permErr.name === 'NotFoundError') {
-          setCameraError('Geen camera gevonden op dit apparaat.');
+          setCameraError('Geen camera gevonden.');
+        } else if (permErr.name === 'OverconstrainedError') {
+          // Try without constraints
+          try {
+            const fallback = await navigator.mediaDevices.getUserMedia({ video: true });
+            fallback.getTracks().forEach(track => track.stop());
+          } catch (e) {
+            setCameraError('Camera niet beschikbaar.');
+            return;
+          }
         } else {
-          setCameraError(`Camera permissie error: ${permErr.message}`);
+          setCameraError('Camera niet beschikbaar.');
         }
-        return;
-      }
-
-      const devices = await Html5Qrcode.getCameras();
-      if (!devices || devices.length === 0) {
-        setCameraError('Geen camera gevonden');
         return;
       }
 
       // Clean up any existing scanner
       if (html5QrCodeRef.current) {
-        try {
-          await html5QrCodeRef.current.stop();
-        } catch (e) {}
+        try { await html5QrCodeRef.current.stop(); } catch (e) {}
         html5QrCodeRef.current = null;
       }
+
+      // Wait for iOS
+      await new Promise(resolve => setTimeout(resolve, isIOSDevice ? 500 : 100));
 
       const html5QrCode = new Html5Qrcode("barcode-scanner-voorraad");
       html5QrCodeRef.current = html5QrCode;
 
-      // Try back camera first, then fall back to any camera
-      const cameraConfig = devices.length > 1 
-        ? { facingMode: "environment" }  // Back camera on phones
-        : devices[0].id;  // Use first available camera
-
       await html5QrCode.start(
-        cameraConfig,
+        { facingMode: "environment" },
         { 
-          fps: 10,  // Lower FPS for better compatibility
-          qrbox: { width: 250, height: 150 },
-          aspectRatio: 1.777  // 16:9 aspect ratio
+          fps: 10,
+          qrbox: function(viewfinderWidth, viewfinderHeight) {
+            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+            return { width: Math.floor(minEdge * 0.8), height: Math.floor(minEdge * 0.5) };
+          },
+          formatsToSupport: [0,3,4,5,8,9,10,14,15]
         },
         (decodedText) => handleScannedBarcode(decodedText),
         () => {}
@@ -192,32 +199,9 @@ const VoorraadPage = () => {
       setCameraActive(true);
     } catch (err) {
       console.error("Scanner error:", err);
-      const errorMsg = err.toString();
-      
-      if (errorMsg.includes('NotAllowedError')) {
-        setCameraError('Camera toegang geweigerd. Sta camera toe.');
-      } else if (errorMsg.includes('NotFoundError') || errorMsg.includes('DevicesNotFoundError')) {
-        setCameraError('Geen camera gevonden op dit apparaat.');
-      } else if (errorMsg.includes('NotReadableError') || errorMsg.includes('could not start video source')) {
-        setCameraError('Camera is in gebruik door een andere app. Sluit andere apps die de camera gebruiken.');
-      } else if (errorMsg.includes('OverconstrainedError')) {
-        // Try again with less strict constraints
-        try {
-          const devices = await Html5Qrcode.getCameras();
-          if (devices && devices.length > 0) {
-            const html5QrCode = new Html5Qrcode("barcode-scanner-voorraad");
-            html5QrCodeRef.current = html5QrCode;
-            
-            await html5QrCode.start(
-              devices[0].id,  // Use first camera directly
-              { fps: 10, qrbox: { width: 200, height: 120 } },
-              (decodedText) => handleScannedBarcode(decodedText),
-              () => {}
-            );
-            setCameraActive(true);
-            return;
-          }
-        } catch (retryErr) {
+      setCameraError('Kon scanner niet starten. Ververs de pagina.');
+    }
+  };
           setCameraError('Camera configuratie niet ondersteund.');
         }
       } else {
