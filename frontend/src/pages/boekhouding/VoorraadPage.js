@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { productsAPI, warehousesAPI, stockMovementsAPI, toBackendFormat } from '../../lib/boekhoudingApi';
 import { formatDate } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
@@ -6,12 +6,15 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../../components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Package, Warehouse, ArrowUpDown, Loader2, Search, AlertTriangle, ImagePlus, X, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Package, Warehouse, ArrowUpDown, Loader2, Search, AlertTriangle, ImagePlus, X, Pencil, Trash2, Camera, CameraOff, Barcode, ScanLine } from 'lucide-react';
+import { Html5Qrcode } from 'html5-qrcode';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const VoorraadPage = () => {
   const [products, setProducts] = useState([]);
