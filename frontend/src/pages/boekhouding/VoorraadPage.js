@@ -947,6 +947,7 @@ const VoorraadPage = () => {
                     const salesPrice = product.verkoopprijs || product.sales_price || 0;
                     const unit = product.eenheid || product.unit || '';
                     const fotoUrl = product.foto_url || product.image_url;
+                    const productBarcode = product.barcode || '';
                     const isLowStock = stockQty <= minStock && minStock > 0;
                     
                     return (
@@ -969,6 +970,16 @@ const VoorraadPage = () => {
                         {productName}
                         {isLowStock && (
                           <Badge className="ml-2 text-xs bg-amber-100 text-amber-700">Laag</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-slate-500">
+                        {productBarcode ? (
+                          <span className="flex items-center gap-1">
+                            <Barcode className="w-3 h-3" />
+                            <span className="font-mono text-xs">{productBarcode}</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-300">-</span>
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-slate-500">{unit}</TableCell>
@@ -1011,7 +1022,7 @@ const VoorraadPage = () => {
                   )})}
                   {filteredProducts.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8 text-slate-500">
+                      <TableCell colSpan={10} className="text-center py-8 text-slate-500">
                         {searchTerm ? 'Geen producten gevonden' : 'Geen producten. Maak uw eerste product aan.'}
                       </TableCell>
                     </TableRow>
