@@ -973,6 +973,175 @@ async def delete_rekening(rekening_id: str, authorization: str = Header(None)):
         raise HTTPException(status_code=404, detail="Rekening niet gevonden")
     return {"message": "Rekening verwijderd"}
 
+
+@router.post("/rekeningen/init-standaard")
+async def init_standaard_rekeningschema(authorization: str = Header(None)):
+    """Initialiseer standaard Surinaams rekeningschema"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Check if user already has accounts
+    existing_count = await db.boekhouding_rekeningen.count_documents({"user_id": user_id})
+    if existing_count > 0:
+        raise HTTPException(status_code=400, detail="Er zijn al rekeningen aanwezig. Verwijder eerst alle rekeningen om het standaard schema te laden.")
+    
+    # Standaard Surinaams Rekeningschema
+    standaard_rekeningen = [
+        # ACTIVA (1xxx)
+        {"code": "1000", "naam": "Vaste activa", "type": "activa", "categorie": "vaste_activa"},
+        {"code": "1010", "naam": "Gebouwen", "type": "activa", "categorie": "vaste_activa"},
+        {"code": "1011", "naam": "Afschrijving gebouwen", "type": "activa", "categorie": "vaste_activa"},
+        {"code": "1020", "naam": "Machines en installaties", "type": "activa", "categorie": "vaste_activa"},
+        {"code": "1021", "naam": "Afschrijving machines", "type": "activa", "categorie": "vaste_activa"},
+        {"code": "1030", "naam": "Inventaris", "type": "activa", "categorie": "vaste_activa"},
+        {"code": "1031", "naam": "Afschrijving inventaris", "type": "activa", "categorie": "vaste_activa"},
+        {"code": "1040", "naam": "Voertuigen", "type": "activa", "categorie": "vaste_activa"},
+        {"code": "1041", "naam": "Afschrijving voertuigen", "type": "activa", "categorie": "vaste_activa"},
+        {"code": "1050", "naam": "Computers en software", "type": "activa", "categorie": "vaste_activa"},
+        {"code": "1051", "naam": "Afschrijving computers", "type": "activa", "categorie": "vaste_activa"},
+        
+        # Vlottende activa (12xx-13xx)
+        {"code": "1200", "naam": "Voorraad goederen", "type": "activa", "categorie": "vlottende_activa"},
+        {"code": "1210", "naam": "Voorraad grondstoffen", "type": "activa", "categorie": "vlottende_activa"},
+        {"code": "1220", "naam": "Onderhanden werk", "type": "activa", "categorie": "vlottende_activa"},
+        {"code": "1300", "naam": "Debiteuren", "type": "activa", "categorie": "vorderingen"},
+        {"code": "1310", "naam": "Vooruitbetaalde kosten", "type": "activa", "categorie": "vorderingen"},
+        {"code": "1320", "naam": "Te ontvangen bedragen", "type": "activa", "categorie": "vorderingen"},
+        {"code": "1350", "naam": "BTW te vorderen", "type": "activa", "categorie": "vorderingen"},
+        
+        # Liquide middelen (14xx-15xx)
+        {"code": "1400", "naam": "Kas SRD", "type": "activa", "categorie": "liquide_middelen"},
+        {"code": "1410", "naam": "Kas USD", "type": "activa", "categorie": "liquide_middelen", "valuta": "USD"},
+        {"code": "1420", "naam": "Kas EUR", "type": "activa", "categorie": "liquide_middelen", "valuta": "EUR"},
+        {"code": "1500", "naam": "Bank DSB SRD", "type": "activa", "categorie": "liquide_middelen"},
+        {"code": "1510", "naam": "Bank DSB USD", "type": "activa", "categorie": "liquide_middelen", "valuta": "USD"},
+        {"code": "1520", "naam": "Bank Republic", "type": "activa", "categorie": "liquide_middelen"},
+        {"code": "1530", "naam": "Bank Hakrinbank", "type": "activa", "categorie": "liquide_middelen"},
+        {"code": "1540", "naam": "Bank Finabank", "type": "activa", "categorie": "liquide_middelen"},
+        
+        # PASSIVA (2xxx)
+        {"code": "2000", "naam": "Eigen vermogen", "type": "passiva", "categorie": "eigen_vermogen"},
+        {"code": "2010", "naam": "Startkapitaal", "type": "passiva", "categorie": "eigen_vermogen"},
+        {"code": "2020", "naam": "Privé-stortingen", "type": "passiva", "categorie": "eigen_vermogen"},
+        {"code": "2030", "naam": "Privé-opnames", "type": "passiva", "categorie": "eigen_vermogen"},
+        {"code": "2100", "naam": "Ingehouden winst", "type": "passiva", "categorie": "eigen_vermogen"},
+        {"code": "2200", "naam": "Lening langlopend", "type": "passiva", "categorie": "langlopende_schulden"},
+        {"code": "2210", "naam": "Hypotheek", "type": "passiva", "categorie": "langlopende_schulden"},
+        {"code": "2300", "naam": "Crediteuren", "type": "passiva", "categorie": "kortlopende_schulden"},
+        {"code": "2310", "naam": "Te betalen kosten", "type": "passiva", "categorie": "kortlopende_schulden"},
+        {"code": "2350", "naam": "BTW te betalen", "type": "passiva", "categorie": "kortlopende_schulden"},
+        {"code": "2360", "naam": "Loonheffing te betalen", "type": "passiva", "categorie": "kortlopende_schulden"},
+        {"code": "2370", "naam": "Pensioenpremie te betalen", "type": "passiva", "categorie": "kortlopende_schulden"},
+        {"code": "2380", "naam": "AOV te betalen", "type": "passiva", "categorie": "kortlopende_schulden"},
+        
+        # OPBRENGSTEN (4xxx)
+        {"code": "4000", "naam": "Omzet binnenland", "type": "opbrengsten", "categorie": "omzet"},
+        {"code": "4010", "naam": "Omzet export", "type": "opbrengsten", "categorie": "omzet"},
+        {"code": "4020", "naam": "Omzet diensten", "type": "opbrengsten", "categorie": "omzet"},
+        {"code": "4100", "naam": "Kortingen gegeven", "type": "opbrengsten", "categorie": "omzet"},
+        {"code": "4200", "naam": "Overige opbrengsten", "type": "opbrengsten", "categorie": "overige_opbrengsten"},
+        {"code": "4210", "naam": "Rente-inkomsten", "type": "opbrengsten", "categorie": "overige_opbrengsten"},
+        {"code": "4220", "naam": "Koerswinst", "type": "opbrengsten", "categorie": "overige_opbrengsten"},
+        
+        # KOSTEN (5xxx-8xxx)
+        {"code": "5000", "naam": "Inkoopwaarde omzet", "type": "kosten", "categorie": "kostprijs_omzet"},
+        {"code": "5010", "naam": "Inkoop goederen", "type": "kosten", "categorie": "kostprijs_omzet"},
+        {"code": "5020", "naam": "Kortingen ontvangen", "type": "kosten", "categorie": "kostprijs_omzet"},
+        {"code": "5100", "naam": "Directe loonkosten", "type": "kosten", "categorie": "kostprijs_omzet"},
+        
+        # Personeelskosten (6xxx)
+        {"code": "6000", "naam": "Salarissen", "type": "kosten", "categorie": "personeelskosten"},
+        {"code": "6010", "naam": "Vakantiegeld", "type": "kosten", "categorie": "personeelskosten"},
+        {"code": "6020", "naam": "Sociale lasten", "type": "kosten", "categorie": "personeelskosten"},
+        {"code": "6030", "naam": "Pensioenpremie", "type": "kosten", "categorie": "personeelskosten"},
+        {"code": "6040", "naam": "AOV premie", "type": "kosten", "categorie": "personeelskosten"},
+        {"code": "6050", "naam": "Reiskosten personeel", "type": "kosten", "categorie": "personeelskosten"},
+        {"code": "6060", "naam": "Opleidingskosten", "type": "kosten", "categorie": "personeelskosten"},
+        {"code": "6070", "naam": "Overige personeelskosten", "type": "kosten", "categorie": "personeelskosten"},
+        
+        # Huisvestingskosten (7xxx)
+        {"code": "7000", "naam": "Huur bedrijfspand", "type": "kosten", "categorie": "huisvestingskosten"},
+        {"code": "7010", "naam": "Energie en water", "type": "kosten", "categorie": "huisvestingskosten"},
+        {"code": "7020", "naam": "Onderhoud pand", "type": "kosten", "categorie": "huisvestingskosten"},
+        {"code": "7030", "naam": "Verzekering pand", "type": "kosten", "categorie": "huisvestingskosten"},
+        {"code": "7040", "naam": "Schoonmaakkosten", "type": "kosten", "categorie": "huisvestingskosten"},
+        
+        # Overige bedrijfskosten (8xxx)
+        {"code": "8000", "naam": "Kantoorkosten", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8010", "naam": "Telefoon en internet", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8020", "naam": "Portokosten", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8030", "naam": "Drukwerk en kantoorbenodigdheden", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8100", "naam": "Autokosten", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8110", "naam": "Brandstof", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8120", "naam": "Onderhoud voertuigen", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8130", "naam": "Verzekering voertuigen", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8200", "naam": "Accountantskosten", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8210", "naam": "Advieskosten", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8220", "naam": "Juridische kosten", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8300", "naam": "Reclame en marketing", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8310", "naam": "Representatiekosten", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8400", "naam": "Afschrijvingskosten", "type": "kosten", "categorie": "afschrijvingen"},
+        {"code": "8500", "naam": "Rentekosten", "type": "kosten", "categorie": "financiele_kosten"},
+        {"code": "8510", "naam": "Bankkosten", "type": "kosten", "categorie": "financiele_kosten"},
+        {"code": "8520", "naam": "Koersverlies", "type": "kosten", "categorie": "financiele_kosten"},
+        {"code": "8600", "naam": "Verzekeringen algemeen", "type": "kosten", "categorie": "overige_kosten"},
+        {"code": "8700", "naam": "Belastingen", "type": "kosten", "categorie": "belastingen"},
+        {"code": "8710", "naam": "Inkomstenbelasting", "type": "kosten", "categorie": "belastingen"},
+        {"code": "8720", "naam": "Vermogensbelasting", "type": "kosten", "categorie": "belastingen"},
+        {"code": "8900", "naam": "Diverse kosten", "type": "kosten", "categorie": "overige_kosten"},
+        
+        # Tussenrekeningen (9xxx)
+        {"code": "9000", "naam": "Kruisposten", "type": "activa", "categorie": "tussenrekeningen"},
+        {"code": "9100", "naam": "Vraagposten", "type": "activa", "categorie": "tussenrekeningen"},
+        {"code": "9900", "naam": "Resultaat lopend jaar", "type": "passiva", "categorie": "resultaat"},
+    ]
+    
+    # Insert all accounts
+    for rek in standaard_rekeningen:
+        rekening = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "code": rek["code"],
+            "naam": rek["naam"],
+            "type": rek["type"],
+            "categorie": rek["categorie"],
+            "valuta": rek.get("valuta", "SRD"),
+            "saldo": 0,
+            "externe_code": None,
+            "is_actief": True,
+            "created_at": datetime.now(timezone.utc)
+        }
+        await db.boekhouding_rekeningen.insert_one(rekening)
+    
+    return {"message": f"{len(standaard_rekeningen)} standaard rekeningen aangemaakt", "count": len(standaard_rekeningen)}
+
+@router.put("/rekeningen/{rekening_id}/externe-code")
+async def update_externe_code(rekening_id: str, externe_code: str = None, authorization: str = Header(None)):
+    """Koppel een externe code aan een rekening (voor integratie met externe systemen)"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    result = await db.boekhouding_rekeningen.update_one(
+        {"id": rekening_id, "user_id": user_id},
+        {"$set": {"externe_code": externe_code, "updated_at": datetime.now(timezone.utc)}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Rekening niet gevonden")
+    return {"message": "Externe code gekoppeld"}
+
+@router.get("/rekeningen/zoek-op-externe-code/{externe_code}")
+async def zoek_rekening_op_externe_code(externe_code: str, authorization: str = Header(None)):
+    """Zoek een rekening op basis van externe code"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    rekening = await db.boekhouding_rekeningen.find_one({"user_id": user_id, "externe_code": externe_code})
+    if not rekening:
+        raise HTTPException(status_code=404, detail=f"Geen rekening gevonden met externe code {externe_code}")
+    return clean_doc(rekening)
+
+
+
 # ==================== JOURNAALPOSTEN ====================
 
 @router.get("/journaalposten")
