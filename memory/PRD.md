@@ -345,6 +345,27 @@ Aangepaste pagina's:
 
 ## Recente Wijzigingen (Februari 2026)
 
+### ✅ Inkoopfacturen Automatisch Boeken (P2 - VOLTOOID)
+Wanneer een inkoopfactuur naar "geboekt" status gaat, worden automatisch journaalposten aangemaakt:
+- **Debet**: Inkoop (subtotaal)
+- **Debet**: BTW te vorderen (voorbelasting)
+- **Credit**: Crediteuren (totaal incl BTW)
+
+Wanneer een betaling wordt gedaan:
+- **Debet**: Crediteuren
+- **Credit**: Bank
+
+**Nieuwe endpoints:**
+- `POST /api/boekhouding/inkoopfacturen/{id}/betaling` - Betaling registreren
+- `POST /api/boekhouding/inkoopfacturen/boek-alle-geboekt` - Bulk boeking
+
+### ✅ Winst & Verlies uit Grootboek (P2 - VOLTOOID)
+De Winst & Verliesrekening haalt nu data uit de grootboek rekening saldi:
+- Omzet rekeningen (type: omzet/opbrengsten) worden opgeteld
+- Kosten rekeningen (type: kosten) worden opgeteld
+- Alleen rekeningen met saldo ≠ 0 worden getoond
+- Fallback naar facturen als geen grootboek saldi beschikbaar
+
 ### ✅ Automatische Grootboekboekingen (P0 - VOLTOOID)
 Wanneer een verkoopfactuur naar "verzonden" status gaat, worden automatisch journaalposten aangemaakt:
 - **Debet**: Debiteuren (rekening code wordt automatisch gevonden)
