@@ -148,7 +148,22 @@ const VerkoopPage = () => {
     }
     setSaving(true);
     try {
-      await invoicesAPI.create(newInvoice);
+      // Convert to backend format
+      const invoiceData = {
+        debiteur_id: newInvoice.customer_id,
+        factuurdatum: newInvoice.date,
+        vervaldatum: newInvoice.due_date,
+        valuta: newInvoice.currency,
+        regels: newInvoice.lines.map(line => ({
+          product_id: line.product_id,
+          omschrijving: line.description,
+          aantal: line.quantity,
+          eenheidsprijs: line.unit_price,
+          btw_percentage: line.btw_percentage
+        })),
+        opmerkingen: newInvoice.notes
+      };
+      await invoicesAPI.create(invoiceData);
       toast.success('Factuur aangemaakt');
       setShowInvoiceDialog(false);
       setNewInvoice({
@@ -161,7 +176,8 @@ const VerkoopPage = () => {
       });
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
+      console.error('Invoice creation error:', error);
+      toast.error(error.response?.data?.detail || error.message || 'Fout bij aanmaken');
     } finally {
       setSaving(false);
     }
