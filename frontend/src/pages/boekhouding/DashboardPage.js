@@ -454,44 +454,38 @@ const DashboardPage = () => {
                 </div>
 
                 <CreditCardDisplay
-                  name="Demo Gebruiker"
-                  balance={formatCurrency(dashboardData?.kas_saldo || 68000, 'SRD')}
-                  expiry="12/26"
-                  cvv="335"
+                  name="Kas Balans"
+                  balance={formatCurrency(kasBalance, 'SRD')}
+                  expiry=""
+                  cvv=""
                 />
 
                 {/* Quick Actions */}
                 <div className="grid grid-cols-4 gap-2 mt-6">
-                  <QuickActionButton icon={Wallet} label="Top Up" onClick={() => {}} />
-                  <QuickActionButton icon={Send} label="Transfer" onClick={() => {}} />
-                  <QuickActionButton icon={Download} label="Request" onClick={() => {}} />
-                  <QuickActionButton icon={History} label="History" onClick={() => navigate('/app/boekhouding/grootboek')} />
+                  <QuickActionButton icon={Wallet} label="POS" onClick={() => navigate('/app/boekhouding/pos')} />
+                  <QuickActionButton icon={Send} label="Factuur" onClick={() => navigate('/app/boekhouding/verkoop')} />
+                  <QuickActionButton icon={Download} label="Inkoop" onClick={() => navigate('/app/boekhouding/inkoop')} />
+                  <QuickActionButton icon={History} label="Grootboek" onClick={() => navigate('/app/boekhouding/grootboek')} />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Daily Limit */}
+            {/* Openstaand Debiteuren */}
             <Card className="bg-white border-0 shadow-sm rounded-2xl">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-slate-900">Daily Limit</h3>
-                  <button className="text-slate-400 hover:text-slate-600">
+                  <h3 className="font-semibold text-slate-900">Openstaand Debiteuren</h3>
+                  <button className="text-slate-400 hover:text-slate-600" onClick={() => navigate('/app/boekhouding/debiteuren')}>
                     <MoreVertical className="w-5 h-5" />
                   </button>
                 </div>
 
                 <div className="text-sm text-slate-500 mb-2">
-                  <span className="font-medium text-slate-900">SRD 2,500.00</span> spent of SRD 20,000.00
+                  <span className="font-medium text-slate-900 text-lg">{formatCurrency(openstaandDebiteuren, 'SRD')}</span>
                 </div>
-
-                {/* Progress bar */}
-                <div className="relative h-2 bg-slate-100 rounded-full overflow-hidden">
-                  <div 
-                    className="absolute left-0 top-0 h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full"
-                    style={{ width: '57%' }}
-                  />
+                <div className="text-xs text-slate-400">
+                  {dashboardData?.openstaand?.facturen_count || 0} openstaande facturen
                 </div>
-                <div className="text-right text-sm text-slate-500 mt-1">57%</div>
               </CardContent>
             </Card>
 
