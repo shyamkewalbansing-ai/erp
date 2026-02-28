@@ -202,13 +202,6 @@ const VoorraadPage = () => {
       setCameraError('Kon scanner niet starten. Ververs de pagina.');
     }
   };
-          setCameraError('Camera configuratie niet ondersteund.');
-        }
-      } else {
-        setCameraError(`Camera error: ${err.message || err}`);
-      }
-    }
-  };
 
   const stopBarcodeScanner = async () => {
     if (html5QrCodeRef.current) {
