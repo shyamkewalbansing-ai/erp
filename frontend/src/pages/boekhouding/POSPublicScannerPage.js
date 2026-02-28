@@ -158,16 +158,7 @@ const POSPublicScannerPage = () => {
 
       await html5QrCode.start(
         { facingMode: "environment" },
-        { 
-          fps: 10, 
-          qrbox: function(viewfinderWidth, viewfinderHeight) {
-            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-            const qrboxSize = Math.floor(minEdge * 0.8);
-            return { width: qrboxSize, height: Math.floor(qrboxSize * 0.6) };
-          },
-          aspectRatio: 1.5,
-          formatsToSupport: [0,3,4,5,8,9,10,14,15] // Common barcode formats
-        },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
         (decodedText) => handleScannedBarcode(decodedText),
         () => {}
       );
