@@ -260,7 +260,7 @@ const BTWPage = () => {
                   {btwCodes.map(code => (
                     <TableRow key={code.id} data-testid={`btw-code-row-${code.code}`}>
                       <TableCell className="text-sm font-medium text-slate-900">{code.code}</TableCell>
-                      <TableCell className="text-sm text-slate-600">{code.name}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{code.naam || code.name}</TableCell>
                       <TableCell className="text-sm text-slate-600">{formatPercentage(code.percentage)}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="text-xs">
@@ -268,8 +268,8 @@ const BTWPage = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={`text-xs ${code.active ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
-                          {code.active ? 'Actief' : 'Inactief'}
+                        <Badge className={`text-xs ${code.actief !== false ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                          {code.actief !== false ? 'Actief' : 'Inactief'}
                         </Badge>
                       </TableCell>
                       <TableCell>

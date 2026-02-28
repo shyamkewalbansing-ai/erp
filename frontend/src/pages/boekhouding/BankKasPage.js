@@ -486,15 +486,15 @@ const BankPage = () => {
                 </TableHeader>
                 <TableBody>
                   {bankAccounts.map(account => (
-                    <TableRow key={account.id} data-testid={`bank-account-row-${account.account_number}`}>
-                      <TableCell className="text-sm font-medium text-slate-900">{account.name}</TableCell>
-                      <TableCell className="text-sm text-slate-600">{account.bank_name}</TableCell>
-                      <TableCell className="text-sm text-slate-600">{account.account_number}</TableCell>
+                    <TableRow key={account.id} data-testid={`bank-account-row-${account.rekeningnummer || account.account_number}`}>
+                      <TableCell className="text-sm font-medium text-slate-900">{account.naam || account.name}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{account.bank || account.bank_name}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{account.rekeningnummer || account.account_number}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="text-xs">{account.currency}</Badge>
+                        <Badge variant="outline" className="text-xs">{account.valuta || account.currency}</Badge>
                       </TableCell>
-                      <TableCell className={`text-right text-sm font-medium ${account.balance < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {formatAmount(account.balance, account.currency)}
+                      <TableCell className={`text-right text-sm font-medium ${(account.huidig_saldo || account.balance || 0) < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {formatAmount(account.huidig_saldo || account.balance || 0, account.valuta || account.currency)}
                       </TableCell>
                     </TableRow>
                   ))}
