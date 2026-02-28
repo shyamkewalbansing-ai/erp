@@ -382,9 +382,24 @@ const POSPermanentScannerPage = () => {
         {/* Camera Error */}
         {cameraError && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
-            <div className="text-center p-6">
+            <div className="text-center p-6 max-w-sm">
               <CameraOff className="w-16 h-16 text-red-400 mx-auto mb-4" />
               <p className="text-white mb-4">{cameraError}</p>
+              
+              {/* iOS specific help */}
+              {/iPad|iPhone|iPod/.test(navigator.userAgent) && (
+                <div className="bg-slate-800 rounded-lg p-4 mb-4 text-left text-sm">
+                  <p className="text-emerald-400 font-medium mb-2">📱 iPhone Instructies:</p>
+                  <ol className="text-slate-300 space-y-1 list-decimal list-inside">
+                    <li>Open <strong>Instellingen</strong></li>
+                    <li>Ga naar <strong>Safari</strong></li>
+                    <li>Scroll naar <strong>Camera</strong></li>
+                    <li>Selecteer <strong>Toestaan</strong></li>
+                    <li>Kom terug en druk opnieuw</li>
+                  </ol>
+                </div>
+              )}
+              
               <Button onClick={startScanner} variant="outline" className="text-white border-white">
                 Opnieuw proberen
               </Button>
