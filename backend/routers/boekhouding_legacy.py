@@ -5510,6 +5510,19 @@ async def close_scanner_session(code: str, authorization: str = Header(None)):
     return {"success": True}
 
 
+@router.delete("/pos/scanner-session/{code}/clear-cart")
+async def clear_scanner_session_cart(code: str):
+    """Clear items from temporary scanner cart (NO AUTH REQUIRED)"""
+    session = await db.boekhouding_pos_scanner_sessions.find_one({"code": code})
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Sessie niet gevonden")
+    
+    await db.boekhouding_pos_cart_temp.delete_many({"session_code": code})
+    
+    return {"success": True}
+
+
 # ==================== PERMANENT SCANNER (NO EXPIRATION) ====================
 
 @router.get("/pos/permanent-scanner/code")
