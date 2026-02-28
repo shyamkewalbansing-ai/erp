@@ -10,7 +10,23 @@ Dutch (Nederlands)
 
 ## Wat is Voltooid (Maart 2026)
 
-### ✅ Barcode in Voorraad (NIEUW - 28 feb 2026)
+### ✅ Dashboard Live Data Koppeling (NIEUW - 28 feb 2026)
+- **Live financiële data:** Total Income, Expense, Savings nu gekoppeld aan backend API
+- **Live grafiekdata:** Omzet/Kosten per maand grafiek toont nu echte data uit `/dashboard/charts`
+- **Wisselkoersen:** USD/SRD en EUR/SRD worden live weergegeven
+- **Kas Balans:** Toont echte bank/kas saldo
+- **Openstaand Debiteuren:** Live bedrag en aantal facturen
+- **Top Klanten:** Dynamische lijst op basis van omzet
+- **Quick Actions:** Vernieuwd naar POS, Factuur, Inkoop, Grootboek
+
+### ✅ Debiteuren Page Redesign (NIEUW - 28 feb 2026)
+- **FinSight design:** Zelfde stijl als Grootboek pagina
+- **4 StatCards:** Totaal Debiteuren, Verkoopfacturen, Openstaand, Totaal Gefactureerd
+- **Moderne tabs:** Klanten / Verkoopfacturen met emerald accent
+- **Filter functionaliteit:** Zoeken en status filter op facturen
+- **Consistente UI:** Rounded-2xl cards, shadow-sm, slate kleuren
+
+### ✅ Barcode in Voorraad (28 feb 2026)
 - **Barcode veld** toegevoegd aan "Nieuw Product" formulier
 - **Barcode veld** toegevoegd aan "Product Bewerken" formulier
 - **Barcode kolom** zichtbaar in producten tabel met barcode icoon
