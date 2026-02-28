@@ -242,7 +242,7 @@ class MagazijnCreate(BaseModel):
 
 class VoorraadmutatieCreate(BaseModel):
     artikel_id: str
-    magazijn_id: str
+    magazijn_id: Optional[str] = "default"
     type: str
     aantal: int
     eenheidsprijs: Optional[float] = None
