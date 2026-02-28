@@ -592,6 +592,18 @@ function MainAppRoutes() {
         {/* Public Contract Signing Page (no auth required) */}
         <Route path="/onderteken/:token" element={<OndertekeningPage />} />
         
+        {/* PUBLIC POS Scanner - NO AUTH REQUIRED */}
+        <Route path="/scan/:sessionCode" element={
+          <Suspense fallback={<PageLoader />}>
+            <BoekhoudingPOSPublicScanner />
+          </Suspense>
+        } />
+        <Route path="/scan" element={
+          <Suspense fallback={<PageLoader />}>
+            <BoekhoudingPOSPublicScanner />
+          </Suspense>
+        } />
+        
         {/* Protected Routes - with Layout */}
         <Route path="/app" element={
           <ProtectedRoute><Layout /></ProtectedRoute>
