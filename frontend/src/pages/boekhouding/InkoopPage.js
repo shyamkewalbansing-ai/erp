@@ -107,7 +107,22 @@ const InkoopPage = () => {
     }
     setSaving(true);
     try {
-      await purchaseInvoicesAPI.create(newInvoice);
+      // Convert to Dutch field names for backend
+      const invoiceData = {
+        crediteur_id: newInvoice.supplier_id,
+        extern_factuurnummer: newInvoice.external_number || `INK-${Date.now()}`,
+        factuurdatum: newInvoice.date,
+        vervaldatum: newInvoice.due_date,
+        valuta: newInvoice.currency,
+        regels: newInvoice.lines.map(l => ({
+          omschrijving: l.description,
+          aantal: parseFloat(l.quantity) || 1,
+          prijs_per_stuk: parseFloat(l.unit_price) || 0,
+          btw_percentage: parseFloat(l.btw_percentage) || 0,
+        })),
+        opmerkingen: newInvoice.notes
+      };
+      await purchaseInvoicesAPI.create(invoiceData);
       toast.success('Inkoopfactuur aangemaakt');
       setShowInvoiceDialog(false);
       setNewInvoice({
@@ -116,7 +131,8 @@ const InkoopPage = () => {
         due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         currency: 'SRD',
         lines: [{ description: '', quantity: 1, unit_price: 0, btw_percentage: 10, btw_amount: 0, total: 0 }],
-        notes: ''
+        notes: '',
+        external_number: ''
       });
       fetchData();
     } catch (error) {
