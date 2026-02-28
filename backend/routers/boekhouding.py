@@ -1740,6 +1740,68 @@ async def delete_verkoopfactuur(factuur_id: str, authorization: str = Header(Non
     await db.boekhouding_verkoopfacturen.delete_one({"id": factuur_id, "user_id": user_id})
     return {"message": "Factuur verwijderd"}
 
+class BetalingCreate(BaseModel):
+    bedrag: float
+    datum: str
+    betaalmethode: str = "bank"
+    referentie: Optional[str] = None
+
+@router.post("/verkoopfacturen/{factuur_id}/betaling")
+async def add_betaling_to_factuur(factuur_id: str, data: BetalingCreate, authorization: str = Header(None)):
+    """Voeg een betaling toe aan een factuur"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    factuur = await db.boekhouding_verkoopfacturen.find_one({"id": factuur_id, "user_id": user_id})
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Haal bestaande betalingen op of maak lege lijst
+    betalingen = factuur.get('betalingen', [])
+    
+    # Voeg nieuwe betaling toe
+    nieuwe_betaling = {
+        "id": str(uuid.uuid4()),
+        "bedrag": data.bedrag,
+        "datum": data.datum,
+        "betaalmethode": data.betaalmethode,
+        "referentie": data.referentie,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    betalingen.append(nieuwe_betaling)
+    
+    # Bereken totaal betaald en openstaand bedrag
+    totaal_betaald = sum(b['bedrag'] for b in betalingen)
+    totaal_factuur = factuur.get('totaal_incl_btw', 0)
+    openstaand = max(0, totaal_factuur - totaal_betaald)
+    
+    # Bepaal nieuwe status
+    if openstaand <= 0:
+        nieuwe_status = 'betaald'
+    elif totaal_betaald > 0:
+        nieuwe_status = 'deelbetaling'
+    else:
+        nieuwe_status = factuur.get('status', 'concept')
+    
+    # Update factuur
+    await db.boekhouding_verkoopfacturen.update_one(
+        {"id": factuur_id, "user_id": user_id},
+        {"$set": {
+            "betalingen": betalingen,
+            "totaal_betaald": totaal_betaald,
+            "openstaand_bedrag": openstaand,
+            "status": nieuwe_status,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {
+        "message": "Betaling toegevoegd",
+        "totaal_betaald": totaal_betaald,
+        "openstaand_bedrag": openstaand,
+        "status": nieuwe_status
+    }
+
 @router.get("/verkoopfacturen/{factuur_id}/pdf")
 async def get_verkoopfactuur_pdf(factuur_id: str, authorization: str = Header(None)):
     """Download factuur als professionele PDF"""
