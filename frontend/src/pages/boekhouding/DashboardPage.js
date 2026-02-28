@@ -195,6 +195,8 @@ const DashboardPage = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [rates, setRates] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [chartData, setChartData] = useState([]);
+  const [topKlanten, setTopKlanten] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -206,13 +208,29 @@ const DashboardPage = () => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
 
-      const [dashRes, ratesRes] = await Promise.all([
+      const [dashRes, ratesRes, chartsRes] = await Promise.all([
         dashboardAPI.getSummary().catch(() => ({ data: {} })),
-        exchangeRatesAPI.getLatest().catch(() => ({ data: {} }))
+        exchangeRatesAPI.getLatest().catch(() => ({ data: {} })),
+        dashboardAPI.getChartData().catch(() => ({ data: {} }))
       ]);
 
       setDashboardData(dashRes.data || {});
       setRates(ratesRes.data || {});
+      
+      // Process chart data from backend
+      if (chartsRes.data?.omzet_kosten) {
+        const formattedChartData = chartsRes.data.omzet_kosten.map(item => ({
+          name: item.maand,
+          Income: item.omzet || 0,
+          Expense: item.kosten || 0
+        }));
+        setChartData(formattedChartData);
+      }
+      
+      // Top customers
+      if (chartsRes.data?.top_klanten) {
+        setTopKlanten(chartsRes.data.top_klanten);
+      }
 
       // Fetch recent transactions
       try {
@@ -230,22 +248,6 @@ const DashboardPage = () => {
       setLoading(false);
     }
   };
-
-  // Chart data for monthly Income/Expense
-  const chartData = [
-    { name: 'Jan', Income: 800, Expense: 400 },
-    { name: 'Feb', Income: 600, Expense: 300 },
-    { name: 'Mar', Income: 400, Expense: 200 },
-    { name: 'Apr', Income: 900, Expense: 600 },
-    { name: 'May', Income: 1200, Expense: 500 },
-    { name: 'Jun', Income: 1800, Expense: 800 },
-    { name: 'Jul', Income: 2000, Expense: 900 },
-    { name: 'Aug', Income: 1600, Expense: 700 },
-    { name: 'Sep', Income: 2200, Expense: 1000 },
-    { name: 'Oct', Income: 1900, Expense: 850 },
-    { name: 'Nov', Income: 2400, Expense: 1100 },
-    { name: 'Dec', Income: 2100, Expense: 950 },
-  ];
 
   // Calculate totals from dashboard data
   const totalIncome = dashboardData?.totaal_verkoop || 78000;
