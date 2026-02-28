@@ -4775,10 +4775,17 @@ async def initialiseer_boekhouding(authorization: str = Header(None)):
 
 class POSVerkoopCreate(BaseModel):
     betaalmethode: str = "contant"  # contant, pin, creditcard
+    klant_id: Optional[str] = None
+    klant_naam: Optional[str] = None
     regels: List[Dict[str, Any]]
     subtotaal: float
+    korting_type: Optional[str] = None  # 'percentage' or 'fixed'
+    korting_waarde: float = 0
+    korting_bedrag: float = 0
     btw_bedrag: float
     totaal: float
+    ontvangen_bedrag: Optional[float] = None
+    wisselgeld: float = 0
     opmerkingen: Optional[str] = None
 
 
@@ -4812,15 +4819,22 @@ async def create_pos_sale(data: POSVerkoopCreate, authorization: str = Header(No
         "id": str(uuid.uuid4()),
         "user_id": user_id,
         "bonnummer": bonnummer,
-        "datum": datetime.now(timezone.utc),
+        "datum": datetime.now(timezone.utc).isoformat(),
         "betaalmethode": data.betaalmethode,
+        "klant_id": data.klant_id,
+        "klant_naam": data.klant_naam,
         "regels": data.regels,
         "subtotaal": data.subtotaal,
+        "korting_type": data.korting_type,
+        "korting_waarde": data.korting_waarde,
+        "korting_bedrag": data.korting_bedrag,
         "btw_bedrag": data.btw_bedrag,
         "totaal": data.totaal,
+        "ontvangen_bedrag": data.ontvangen_bedrag or data.totaal,
+        "wisselgeld": data.wisselgeld,
         "opmerkingen": data.opmerkingen,
         "status": "betaald",
-        "created_at": datetime.now(timezone.utc)
+        "created_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.boekhouding_pos_verkopen.insert_one(sale)
@@ -4844,8 +4858,8 @@ async def create_pos_sale(data: POSVerkoopCreate, authorization: str = Header(No
                 "aantal": -aantal,
                 "referentie": bonnummer,
                 "opmerkingen": f"POS verkoop {bonnummer}",
-                "datum": datetime.now(timezone.utc),
-                "created_at": datetime.now(timezone.utc)
+                "datum": datetime.now(timezone.utc).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat()
             }
             await db.boekhouding_voorraadmutaties.insert_one(mutatie)
     
