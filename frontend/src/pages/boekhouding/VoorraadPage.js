@@ -765,6 +765,83 @@ const VoorraadPage = () => {
               )}
             </DialogContent>
           </Dialog>
+
+          {/* Barcode Scanner Dialog */}
+          <Dialog open={showBarcodeScanDialog} onOpenChange={(open) => {
+            if (!open) closeBarcodeScanner();
+          }}>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <ScanLine className="w-5 h-5" />
+                  Barcode Scannen
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                {/* Camera View */}
+                <div className="relative bg-slate-900 rounded-lg overflow-hidden" style={{ minHeight: '250px' }}>
+                  <div id="barcode-scanner-voorraad" className="w-full" />
+                  
+                  {/* Scanning overlay */}
+                  {cameraActive && (
+                    <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                      <div className="w-64 h-40 border-2 border-emerald-400 rounded-lg relative">
+                        <div className="absolute -top-1 -left-1 w-5 h-5 border-t-4 border-l-4 border-emerald-400 rounded-tl-lg" />
+                        <div className="absolute -top-1 -right-1 w-5 h-5 border-t-4 border-r-4 border-emerald-400 rounded-tr-lg" />
+                        <div className="absolute -bottom-1 -left-1 w-5 h-5 border-b-4 border-l-4 border-emerald-400 rounded-bl-lg" />
+                        <div className="absolute -bottom-1 -right-1 w-5 h-5 border-b-4 border-r-4 border-emerald-400 rounded-br-lg" />
+                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-emerald-400 animate-pulse" 
+                             style={{ animation: 'scan 2s ease-in-out infinite' }} />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Camera Error */}
+                  {cameraError && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+                      <div className="text-center p-4">
+                        <CameraOff className="w-12 h-12 text-red-400 mx-auto mb-3" />
+                        <p className="text-white text-sm mb-3">{cameraError}</p>
+                        <Button 
+                          onClick={startBarcodeScanner} 
+                          variant="outline" 
+                          size="sm"
+                          className="text-white border-white hover:bg-slate-800"
+                        >
+                          Opnieuw proberen
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Start camera prompt */}
+                  {!cameraActive && !cameraError && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center p-4">
+                        <Camera className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                        <Button 
+                          onClick={startBarcodeScanner} 
+                          className="bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          <Camera className="w-4 h-4 mr-2" />
+                          Start Camera
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                <p className="text-center text-sm text-slate-500">
+                  Richt de camera op de barcode. Deze wordt automatisch gescand.
+                </p>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={closeBarcodeScanner}>
+                  Annuleren
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
