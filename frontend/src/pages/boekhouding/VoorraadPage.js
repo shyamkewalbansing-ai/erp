@@ -146,17 +146,22 @@ const VoorraadPage = () => {
     }
     setSaving(true);
     try {
-      const productData = {
+      // Use central helper for field name conversion
+      const productData = toBackendFormat({
         code: newProduct.code,
-        naam: newProduct.name,
-        omschrijving: newProduct.description,
+        name: newProduct.name,
+        description: newProduct.description,
         type: newProduct.type,
-        eenheid: newProduct.unit,
-        inkoopprijs: newProduct.purchase_price,
-        verkoopprijs: newProduct.sales_price,
-        minimum_voorraad: newProduct.min_stock,
-        foto_url: newProduct.image_url || null
-      };
+        unit: newProduct.unit,
+        purchase_price: newProduct.purchase_price,
+        sales_price: newProduct.sales_price,
+        min_stock: newProduct.min_stock,
+        photo_url: newProduct.image_url || null
+      });
+      // Manual overrides for non-standard field names
+      productData.eenheid = newProduct.unit;
+      productData.minimum_voorraad = newProduct.min_stock;
+      
       await productsAPI.create(productData);
       toast.success('Product aangemaakt');
       setShowProductDialog(false);
