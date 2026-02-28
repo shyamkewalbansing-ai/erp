@@ -606,6 +606,17 @@ const POSPage = () => {
               <Barcode className="w-5 h-5 text-slate-500" />
             </Button>
 
+            {/* Mobile Scanner Link */}
+            <Button 
+              variant="outline"
+              onClick={() => window.open('/app/boekhouding/pos/scanner', '_blank')}
+              className="shrink-0 hidden sm:flex"
+              title="Open mobiele scanner op telefoon"
+            >
+              <Camera className="w-4 h-4 mr-2" />
+              <span className="text-sm">Telefoon Scanner</span>
+            </Button>
+
             {/* Customer Button */}
             <Button 
               variant={selectedCustomer ? "default" : "outline"}
