@@ -9,13 +9,14 @@ De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die spec
 - Bank/Kas (Bank/Cash)
 - BTW-module (VAT module)
 - Rapportages (Financial Reports)
+- **Point of Sale (POS)** - NIEUW
 - En andere
 
 ## Productvereisten
 - **Valuta:** Ondersteuning voor SRD, USD, en EUR
 - **Wisselkoersen:** Handmatige invoer van wisselkoersen
 - **Thema:** Clean/Modern (licht thema)
-- **Structuur & UI:** Exact conform referentie-repository `https://github.com/shyamkewalbansing-ai/sr.git`
+- **Structuur & UI:** Exact conform referentie-repository
 
 ## User's Preferred Language
 Dutch (Nederlands)
@@ -55,12 +56,31 @@ Dutch (Nederlands)
 - `boekhouding_voorraadmutaties` - Stock movements
 - `boekhouding_documenten` - Documents
 - `boekhouding_herinneringen` - Payment reminders
+- **`boekhouding_pos_verkopen`** - POS Sales (NIEUW)
 
 ---
 
 ## Wat is Voltooid (Maart 2026)
 
-### ✅ Logo Upload Functionaliteit (P2 - Nieuw)
+### ✅ Point of Sale (POS) Module - NIEUW
+- **Fullscreen Interface:** Opent zonder sidebar, exact zoals de gebruiker vroeg
+- **Productgrid:** Links, met categorieën, zoekfunctie en productafbeeldingen
+- **Winkelwagen/Kassabon:** Rechts, met aantallen, prijzen en totalen
+- **Afrekenen Flow:**
+  - Subtotaal en BTW (10%) berekening
+  - Betaaldialoog met "Contant" en "Pin/Kaart" opties
+  - Succes dialoog na betaling
+  - "Volgende klant" knop om te resetten
+- **Home Knop:** Navigeert terug naar Boekhouding Dashboard
+- **Sidebar Integratie:** POS link toegevoegd in boekhouding navigatie
+- **Dashboard Knop:** "Point of Sale" quick access knop op dashboard
+- **Automatische Boekingen:**
+  - Voorraad wordt automatisch verminderd na verkoop
+  - Journaalpost wordt automatisch aangemaakt
+  - Voorraadmutatie wordt gelogd
+- **POS Dagoverzicht API:** Aggregeert verkopen per betaalmethode
+
+### ✅ Logo Upload Functionaliteit
 - Nieuwe logo upload sectie in Instellingen pagina
 - Ondersteunt JPG, PNG, GIF, WEBP (max 5MB)
 - Preview van huidige logo
@@ -68,7 +88,7 @@ Dutch (Nederlands)
 - Alternatief: URL invoer
 - Logo wordt gebruikt op facturen en documenten
 
-### ✅ Backend Refactoring Voorbereiding (P1 - Gedeeltelijk)
+### ✅ Backend Refactoring Voorbereiding
 - `/app/backend/routers/boekhouding.py` verplaatst naar `boekhouding_legacy.py`
 - Nieuwe modulaire structuur voorbereid in `/app/backend/routers/boekhouding/`
 - `grootboek_service.py` geëxtraheerd naar `/app/backend/services/`
@@ -76,17 +96,12 @@ Dutch (Nederlands)
 
 ### ✅ InkoopPage Bugfix
 - Correcte API gebruikt (`purchaseInvoicesAPI` i.p.v. `invoicesAPI`)
-- Nederlandse veldnamen support (factuurnummer, crediteur_naam, etc.)
+- Nederlandse veldnamen support
 - Extern factuurnummer veld toegevoegd
 
 ### ✅ Architecturale Integratie (Grootboek) - Vorige Sessie
-- `_create_journal_entry` helper-functie voor automatische journaalposten
-- `_find_rekening` functie voor robuuste rekening-lookup
-- **Verkoopfacturen** worden automatisch geboekt bij statuswijziging naar `verzonden`
-- **Betalingen** worden automatisch geboekt (Bank aan Debiteuren)
-- **Inkoopfacturen** worden automatisch geboekt bij statuswijziging
-- **Balans rapportage** haalt data direct uit grootboeksaldi
-- **Winst & Verlies rapportage** haalt data uit grootboek
+- Automatische journaalposten voor verkoop, inkoop en betalingen
+- Rapportages halen data uit grootboeksaldi
 
 ### ✅ Alle Eerdere Features
 - MT940 Bankimport
@@ -101,30 +116,68 @@ Dutch (Nederlands)
 
 ---
 
+## POS Technische Details
+
+### Backend Endpoints
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| `/api/boekhouding/pos/producten` | GET | Haal actieve producten op |
+| `/api/boekhouding/pos/verkopen` | POST | Maak POS verkoop aan |
+| `/api/boekhouding/pos/verkopen` | GET | Haal POS verkopen op |
+| `/api/boekhouding/pos/dagoverzicht` | GET | Dag-overzicht per betaalmethode |
+
+### Frontend Files
+- `/app/frontend/src/pages/boekhouding/POSPage.js` - Hoofdcomponent
+- `/app/frontend/src/App.js` - Route (buiten Layout voor fullscreen)
+- `/app/frontend/src/components/Layout.js` - Sidebar link
+
+### POS Verkoop Data Model
+```javascript
+{
+  id: "uuid",
+  user_id: "user_id",
+  bonnummer: "POS-202602-00001",
+  datum: "2026-02-28T03:00:00Z",
+  betaalmethode: "contant" | "pin",
+  regels: [
+    {
+      artikel_id: "uuid",
+      artikel_naam: "Product naam",
+      aantal: 2,
+      prijs_per_stuk: 275.00,
+      btw_percentage: 10,
+      totaal: 550.00
+    }
+  ],
+  subtotaal: 500.00,
+  btw_bedrag: 50.00,
+  totaal: 550.00,
+  status: "betaald"
+}
+```
+
+---
+
 ## Backlog / Toekomstige Taken
 
 ### P1 - Hoog Prioriteit
-- [ ] **Complete Backend Refactoring:** `boekhouding_legacy.py` verder opsplitsen in:
-  - `dashboard.py` - Dashboard endpoints
-  - `grootboek.py` - Rekeningen, BTW-codes, Journaalposten
-  - `relaties.py` - Debiteuren, Crediteuren
-  - `bank.py` - Bankrekeningen, Transacties, Import
-  - `verkoop.py` - Verkoopfacturen, Offertes, Orders
-  - `inkoop.py` - Inkoopfacturen, Orders
-  - `rapportages.py` - Alle rapporten
-  - `instellingen.py` - Instellingen, Bedrijven
+- [ ] **Complete Backend Refactoring:** `boekhouding_legacy.py` verder opsplitsen
 - [ ] **Multi-tenancy Verbeteren:** Alle queries strikt filteren op `bedrijf_id`
 
 ### P2 - Middel Prioriteit
-- [ ] **Frontend Refactoring:** `VerkoopPage.js` (836 regels) en `VoorraadPage.js` (908 regels) opsplitsen
-- [ ] **InstellingenPage.js Refactoring:** (1207 regels) opsplitsen per tab
+- [ ] **Frontend Refactoring:** `VerkoopPage.js` en `VoorraadPage.js` opsplitsen
+- [ ] **POS Verbeteringen:**
+  - [ ] Kassalade openen (hardware integratie)
+  - [ ] Bonprinter ondersteuning
+  - [ ] Barcode scanner
+  - [ ] Korting toepassen
+  - [ ] Klant koppelen aan verkoop
 
 ### P3 - Laag Prioriteit
 - [ ] Herbruikbare UI componenten (MetricCard)
 - [ ] MT940-import verbeteren
 - [ ] Excel-exports uitbreiden
 - [ ] API rate limiting en caching
-- [ ] Backup en restore functionaliteit
 
 ---
 
@@ -135,48 +188,26 @@ Dutch (Nederlands)
 - Wachtwoord: demo2024
 
 ### Recent Test Rapport
-- `/app/test_reports/iteration_54.json`
-- Backend: 100% (21/21 tests passed)
-- Frontend: 100% (6/6 pages verified)
+- `/app/test_reports/iteration_55.json`
+- Backend: 100% (8/8 tests passed)
+- Frontend: 100% (11/11 features verified)
 
 ---
 
 ## Belangrijke Bestanden
 
 ### Backend
-- `/app/backend/routers/boekhouding/__init__.py` - Module entry point
-- `/app/backend/routers/boekhouding_legacy.py` - Hoofdrouter (4771 regels)
-- `/app/backend/services/grootboek_service.py` - Automatische boeking logica
-- `/app/backend/server.py` - Server configuratie
+- `/app/backend/routers/boekhouding/__init__.py`
+- `/app/backend/routers/boekhouding_legacy.py` (4900+ regels)
+- `/app/backend/services/grootboek_service.py`
+- `/app/backend/tests/test_pos_boekhouding.py` (NIEUW)
 
 ### Frontend
-- `/app/frontend/src/pages/boekhouding/*.js` - Alle pagina's
-- `/app/frontend/src/lib/boekhoudingApi.js` - API client
-- `/app/frontend/src/lib/utils.js` - Helpers
+- `/app/frontend/src/pages/boekhouding/POSPage.js` (NIEUW)
+- `/app/frontend/src/pages/boekhouding/DashboardPage.js`
+- `/app/frontend/src/pages/boekhouding/InstellingenPage.js`
+- `/app/frontend/src/lib/boekhoudingApi.js`
 
 ---
 
-## API Endpoints Overzicht
-
-| Endpoint | Methode | Beschrijving |
-|----------|---------|--------------|
-| `/api/boekhouding/dashboard` | GET | Dashboard KPIs |
-| `/api/boekhouding/upload-image` | POST | Logo/afbeelding uploaden |
-| `/api/boekhouding/instellingen` | GET/PUT | Bedrijfsinstellingen |
-| `/api/boekhouding/rekeningen` | GET/POST | Grootboekrekeningen |
-| `/api/boekhouding/journaalposten` | GET/POST | Journaalposten |
-| `/api/boekhouding/debiteuren` | GET/POST | Klanten |
-| `/api/boekhouding/crediteuren` | GET/POST | Leveranciers |
-| `/api/boekhouding/bankrekeningen` | GET/POST | Bankrekeningen |
-| `/api/boekhouding/banktransacties` | GET/POST | Transacties |
-| `/api/boekhouding/btw-codes` | GET/POST | BTW codes |
-| `/api/boekhouding/wisselkoersen` | GET/POST | Wisselkoersen |
-| `/api/boekhouding/verkoopfacturen` | GET/POST | Verkoopfacturen |
-| `/api/boekhouding/inkoopfacturen` | GET/POST | Inkoopfacturen |
-| `/api/boekhouding/artikelen` | GET/POST | Producten/Diensten |
-| `/api/boekhouding/rapportages/*` | GET | Diverse rapporten |
-| `/api/boekhouding/bedrijven` | GET/POST | Multi-tenant bedrijven |
-
----
-
-*Laatste update: 28 februari 2026 - Logo upload geïmplementeerd, InkoopPage bugfix*
+*Laatste update: 28 februari 2026 - Point of Sale module volledig geïmplementeerd*
