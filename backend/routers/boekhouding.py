@@ -2707,6 +2707,106 @@ async def update_inkoopfactuur_status(factuur_id: str, status: str, authorizatio
     
     return {"message": f"Status gewijzigd naar {status}"}
 
+@router.post("/inkoopfacturen/{factuur_id}/betaling")
+async def add_betaling_to_inkoopfactuur(factuur_id: str, data: BetalingCreate, authorization: str = Header(None)):
+    """Voeg een betaling toe aan een inkoopfactuur en boek naar grootboek"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    factuur = await db.boekhouding_inkoopfacturen.find_one({"id": factuur_id, "user_id": user_id})
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Haal bestaande betalingen op of maak lege lijst
+    betalingen = factuur.get('betalingen', [])
+    
+    # Voeg nieuwe betaling toe
+    nieuwe_betaling = {
+        "id": str(uuid.uuid4()),
+        "bedrag": data.bedrag,
+        "datum": data.datum,
+        "betaalmethode": data.betaalmethode,
+        "referentie": data.referentie,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    betalingen.append(nieuwe_betaling)
+    
+    # Bereken totaal betaald en openstaand bedrag
+    totaal_betaald = sum(b['bedrag'] for b in betalingen)
+    totaal_factuur = factuur.get('totaal_incl_btw', 0)
+    openstaand = max(0, totaal_factuur - totaal_betaald)
+    
+    # Bepaal nieuwe status
+    if openstaand <= 0:
+        nieuwe_status = 'betaald'
+    elif totaal_betaald > 0:
+        nieuwe_status = 'gedeeltelijk_betaald'
+    else:
+        nieuwe_status = factuur.get('status', 'nieuw')
+    
+    # Update factuur
+    await db.boekhouding_inkoopfacturen.update_one(
+        {"id": factuur_id, "user_id": user_id},
+        {"$set": {
+            "betalingen": betalingen,
+            "totaal_betaald": totaal_betaald,
+            "openstaand_bedrag": openstaand,
+            "status": nieuwe_status,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Automatisch boeken naar grootboek
+    try:
+        await boek_betaling_uitgaand(user_id, factuur, nieuwe_betaling)
+    except Exception as e:
+        print(f"Fout bij boeken betaling: {e}")
+    
+    return {
+        "message": "Betaling toegevoegd",
+        "totaal_betaald": totaal_betaald,
+        "openstaand_bedrag": openstaand,
+        "status": nieuwe_status
+    }
+
+@router.post("/inkoopfacturen/boek-alle-geboekt")
+async def boek_alle_geboekte_inkoopfacturen(authorization: str = Header(None)):
+    """Boek alle geboekte inkoopfacturen die nog niet naar grootboek zijn geboekt"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Vind alle geboekte facturen
+    facturen = await db.boekhouding_inkoopfacturen.find({
+        "user_id": user_id,
+        "status": {"$in": ["geboekt", "gedeeltelijk_betaald", "betaald"]}
+    }).to_list(500)
+    
+    geboekt = 0
+    overgeslagen = 0
+    
+    for factuur in facturen:
+        # Controleer of er al een boeking bestaat
+        bestaande_boeking = await db.boekhouding_journaalposten.find_one({
+            "user_id": user_id,
+            "document_ref": factuur["id"],
+            "dagboek_code": "IK"
+        })
+        
+        if not bestaande_boeking:
+            try:
+                await boek_inkoopfactuur(user_id, factuur)
+                geboekt += 1
+            except Exception as e:
+                print(f"Fout bij boeken factuur {factuur.get('factuurnummer')}: {e}")
+                overgeslagen += 1
+        else:
+            overgeslagen += 1
+    
+    return {
+        "message": f"{geboekt} facturen geboekt, {overgeslagen} overgeslagen",
+        "geboekt": geboekt,
+        "overgeslagen": overgeslagen
+    }
 
 
 # ==================== IMAGE UPLOAD ====================
