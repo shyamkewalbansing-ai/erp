@@ -10,15 +10,28 @@ Dutch (Nederlands)
 
 ## Wat is Voltooid (Maart 2026)
 
+### ✅ Barcode in Voorraad (NIEUW - 28 feb 2026)
+- **Barcode veld** toegevoegd aan "Nieuw Product" formulier
+- **Barcode veld** toegevoegd aan "Product Bewerken" formulier
+- **Barcode kolom** zichtbaar in producten tabel met barcode icoon
+- **Camera scanner dialoog** voor barcode scannen met telefoon/webcam
+- **Backend ondersteuning** - ArtikelCreate model uitgebreid met barcode field
+- **POS integratie** - Producten kunnen gevonden worden via barcode scan
+
 ### ✅ Point of Sale (POS) - Volledig Uitgebreid
 
-#### Camera Barcode Scanner (NIEUW)
+#### Camera Barcode Scanner
 - **html5-qrcode library** geïntegreerd
 - **Start/Stop Camera** knoppen
 - **Ondersteunde formaten**: EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, QR Code, etc.
 - **Automatisch toevoegen**: Product wordt direct aan winkelwagen toegevoegd na scan
 - **Error handling**: Duidelijke foutmeldingen bij camera problemen
 - **Cross-platform**: Werkt op telefoon, tablet en laptop
+
+#### Publieke Mobiele Scanner
+- **Login-vrije** scanner pagina op `/scan/:sessionCode`
+- **QR-code generatie** vanuit POS om mobiele scanner te koppelen
+- **Real-time sync** - Gescande producten verschijnen direct in hoofd-POS winkelwagen
 
 #### Wisselgeld Berekening
 - Bedrag invoeren met snelle knoppen ($5-$500 + Exact)
@@ -54,14 +67,19 @@ Dutch (Nederlands)
 ## Backlog / Toekomstige Taken
 
 ### P1 - Hoog Prioriteit
-- [ ] **Backend Refactoring:** `boekhouding_legacy.py` (5200+ regels) opsplitsen
+- [ ] **Backend Refactoring:** `boekhouding_legacy.py` (5300+ regels) opsplitsen
+- [ ] **Verifieer POS-Grootboek Koppeling:** Controleer of contante/pin betalingen correct worden geboekt
 - [ ] **Multi-tenancy:** Alle queries filteren op `bedrijf_id`
 
 ### P2 - Middel Prioriteit
-- [ ] **Frontend Refactoring:** `VerkoopPage.js` en `VoorraadPage.js` opsplitsen
+- [ ] **Frontend Refactoring:** `POSPage.js` (1400+ regels), `VerkoopPage.js` en `VoorraadPage.js` opsplitsen
 - [ ] **POS Hardware:** Kassalade, thermische printer, betaalterminal
+- [ ] **Kassarapport:** Dagomzet per betaalmethode
 
 ### P3 - Laag Prioriteit
+- [ ] MT940 bankimport implementeren
+- [ ] Excel exports voor alle relevante data
+- [ ] Logo verificatie op PDF facturen
 - [ ] API rate limiting en caching
 
 ---
@@ -73,21 +91,23 @@ Dutch (Nederlands)
 - Wachtwoord: demo2024
 
 ### Recent Test Rapport
-- `/app/test_reports/iteration_56.json`
-- Backend: 100% (14/14 tests)
-- Frontend: 100% (16/16 features)
+- `/app/test_reports/iteration_57.json`
+- Backend: 100% (7/7 tests - barcode functionaliteit)
+- Frontend: 100% (9/9 features geverifieerd)
 
 ---
 
 ## Belangrijke Bestanden
 
 ### Frontend
-- `/app/frontend/src/pages/boekhouding/POSPage.js` (1200+ regels)
-- Camera scanner gebruikt `html5-qrcode` library
+- `/app/frontend/src/pages/boekhouding/POSPage.js` (1400+ regels)
+- `/app/frontend/src/pages/boekhouding/VoorraadPage.js` - met barcode functionaliteit
+- `/app/frontend/src/pages/boekhouding/POSPublicScannerPage.js` - publieke scanner
 
 ### Backend
-- `/app/backend/routers/boekhouding_legacy.py` (5200+ regels)
+- `/app/backend/routers/boekhouding_legacy.py` (5300+ regels)
+- ArtikelCreate model met barcode field (regel 526)
 
 ---
 
-*Laatste update: 28 februari 2026 - Camera barcode scanner toegevoegd aan POS*
+*Laatste update: 28 februari 2026 - Barcode veld toegevoegd aan Voorraadpagina*
