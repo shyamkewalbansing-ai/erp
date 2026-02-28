@@ -39,8 +39,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { toast } from 'sonner';
 import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
+import QRCode from 'react-qr-code';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
+const APP_URL = window.location.origin;
 
 // Categorie iconen mapping
 const categoryIcons = {
