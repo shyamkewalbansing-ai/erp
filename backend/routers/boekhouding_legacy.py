@@ -5508,3 +5508,146 @@ async def close_scanner_session(code: str, authorization: str = Header(None)):
         raise HTTPException(status_code=404, detail="Sessie niet gevonden")
     
     return {"success": True}
+
+
+# ==================== PERMANENT SCANNER (NO EXPIRATION) ====================
+
+@router.get("/pos/permanent-scanner/code")
+async def get_permanent_scanner_code(authorization: str = Header(None)):
+    """Get or create a permanent scanner code for the user (requires auth)"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Check if permanent scanner already exists
+    existing = await db.boekhouding_pos_permanent_scanners.find_one({"user_id": user_id})
+    
+    if existing:
+        return {
+            "code": existing["code"],
+            "scanner_url": f"/scan/p/{existing['code']}",
+            "permanent": True
+        }
+    
+    # Generate a unique 8-character permanent code
+    import random
+    import string
+    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    
+    # Create permanent scanner
+    scanner = {
+        "id": str(uuid.uuid4()),
+        "code": code,
+        "user_id": user_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "scan_count": 0,
+        "active": True
+    }
+    
+    await db.boekhouding_pos_permanent_scanners.insert_one(scanner)
+    
+    return {
+        "code": code,
+        "scanner_url": f"/scan/p/{code}",
+        "permanent": True
+    }
+
+
+@router.get("/pos/permanent-scanner/{code}/validate")
+async def validate_permanent_scanner(code: str):
+    """Validate a permanent scanner (NO AUTH REQUIRED)"""
+    scanner = await db.boekhouding_pos_permanent_scanners.find_one({
+        "code": code,
+        "active": True
+    })
+    
+    if not scanner:
+        return {"valid": False, "reason": "Scanner niet gevonden"}
+    
+    return {"valid": True, "permanent": True, "scan_count": scanner.get("scan_count", 0)}
+
+
+@router.post("/pos/permanent-scanner/{code}/scan")
+async def permanent_scanner_scan(code: str, data: PublicScanRequest):
+    """Scan a barcode via permanent scanner (NO AUTH REQUIRED) - goes directly to POS"""
+    # Find permanent scanner
+    scanner = await db.boekhouding_pos_permanent_scanners.find_one({
+        "code": code,
+        "active": True
+    })
+    
+    if not scanner:
+        raise HTTPException(status_code=404, detail="Scanner niet gevonden")
+    
+    user_id = scanner["user_id"]
+    
+    # Find product by barcode
+    product = await db.boekhouding_artikelen.find_one({
+        "user_id": user_id,
+        "$or": [
+            {"code": {"$regex": f"^{data.barcode}$", "$options": "i"}},
+            {"barcode": {"$regex": f"^{data.barcode}$", "$options": "i"}},
+            {"ean": {"$regex": f"^{data.barcode}$", "$options": "i"}}
+        ]
+    })
+    
+    if not product:
+        return {"success": False, "message": "Product niet gevonden", "barcode": data.barcode}
+    
+    # Add to permanent scanner cart (uses scanner code as session)
+    cart_item = {
+        "id": str(uuid.uuid4()),
+        "session_code": f"perm_{code}",
+        "user_id": user_id,
+        "artikel_id": product["id"],
+        "artikel_naam": product.get("naam"),
+        "barcode": data.barcode,
+        "prijs": product.get("verkoopprijs", 0),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.boekhouding_pos_cart_temp.insert_one(cart_item)
+    
+    # Update scan count
+    await db.boekhouding_pos_permanent_scanners.update_one(
+        {"code": code},
+        {"$inc": {"scan_count": 1}}
+    )
+    
+    return {
+        "success": True,
+        "product": {
+            "id": product["id"],
+            "naam": product.get("naam"),
+            "code": product.get("code"),
+            "verkoopprijs": product.get("verkoopprijs", 0)
+        },
+        "barcode": data.barcode
+    }
+
+
+@router.get("/pos/permanent-scanner/{code}/items")
+async def get_permanent_scanner_items(code: str):
+    """Get items scanned via permanent scanner (NO AUTH REQUIRED)"""
+    scanner = await db.boekhouding_pos_permanent_scanners.find_one({"code": code})
+    
+    if not scanner:
+        raise HTTPException(status_code=404, detail="Scanner niet gevonden")
+    
+    items = await db.boekhouding_pos_cart_temp.find({
+        "session_code": f"perm_{code}"
+    }).sort("timestamp", -1).to_list(100)
+    
+    return [clean_doc(item) for item in items]
+
+
+@router.delete("/pos/permanent-scanner/{code}/clear-cart")
+async def clear_permanent_scanner_cart(code: str):
+    """Clear items from permanent scanner cart (NO AUTH REQUIRED)"""
+    scanner = await db.boekhouding_pos_permanent_scanners.find_one({"code": code})
+    
+    if not scanner:
+        raise HTTPException(status_code=404, detail="Scanner niet gevonden")
+    
+    await db.boekhouding_pos_cart_temp.delete_many({"session_code": f"perm_{code}"})
+    
+    return {"success": True}
