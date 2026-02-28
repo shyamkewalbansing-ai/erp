@@ -4773,6 +4773,48 @@ async def initialiseer_boekhouding(authorization: str = Header(None)):
 
 # ==================== POINT OF SALE ====================
 
+# Helper functions for POS
+async def _find_rekening(user_id: str, naam_zoek: str, type_filter: str = None) -> dict:
+    """Find a rekening by name search and optional type filter"""
+    query = {"user_id": user_id, "naam": {"$regex": naam_zoek, "$options": "i"}}
+    if type_filter:
+        query["type"] = type_filter
+    rekening = await db.boekhouding_rekeningen.find_one(query)
+    return clean_doc(rekening) if rekening else None
+
+async def _create_journal_entry(user_id: str, dagboek_code: str, regels: list, document_ref: str, omschrijving: str):
+    """Create a journal entry for POS sale"""
+    totaal_debet = sum(r.get("debet", 0) for r in regels)
+    totaal_credit = sum(r.get("credit", 0) for r in regels)
+    
+    # Check balance
+    if abs(totaal_debet - totaal_credit) > 0.01:
+        print(f"Warning: Journal entry not balanced: debet={totaal_debet}, credit={totaal_credit}")
+        return None
+    
+    count = await db.boekhouding_journaalposten.count_documents({"user_id": user_id, "dagboek_code": dagboek_code})
+    volgnummer = f"{dagboek_code}{datetime.now().year}-{count + 1:05d}"
+    
+    journaalpost = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "volgnummer": volgnummer,
+        "dagboek_code": dagboek_code,
+        "datum": datetime.now(timezone.utc).isoformat()[:10],
+        "omschrijving": omschrijving,
+        "regels": regels,
+        "document_ref": document_ref,
+        "totaal_debet": totaal_debet,
+        "totaal_credit": totaal_credit,
+        "status": "geboekt",
+        "created_at": datetime.now(timezone.utc),
+        "auto_generated": True
+    }
+    
+    await db.boekhouding_journaalposten.insert_one(journaalpost)
+    return journaalpost
+
+
 class POSVerkoopCreate(BaseModel):
     betaalmethode: str = "contant"  # contant, pin, creditcard
     klant_id: Optional[str] = None
