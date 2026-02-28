@@ -2315,6 +2315,45 @@ async def add_betaling_to_factuur(factuur_id: str, data: BetalingCreate, authori
         "status": nieuwe_status
     }
 
+@router.post("/verkoopfacturen/boek-alle-verzonden")
+async def boek_alle_verzonden_facturen(authorization: str = Header(None)):
+    """Boek alle verzonden facturen die nog niet geboekt zijn naar het grootboek"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Vind alle verzonden facturen
+    facturen = await db.boekhouding_verkoopfacturen.find({
+        "user_id": user_id,
+        "status": {"$in": ["verzonden", "herinnering", "betaald", "deelbetaling"]}
+    }).to_list(500)
+    
+    geboekt = 0
+    overgeslagen = 0
+    
+    for factuur in facturen:
+        # Controleer of er al een boeking bestaat
+        bestaande_boeking = await db.boekhouding_journaalposten.find_one({
+            "user_id": user_id,
+            "document_ref": factuur["id"],
+            "dagboek_code": "VK"
+        })
+        
+        if not bestaande_boeking:
+            try:
+                await boek_verkoopfactuur(user_id, factuur)
+                geboekt += 1
+            except Exception as e:
+                print(f"Fout bij boeken factuur {factuur.get('factuurnummer')}: {e}")
+                overgeslagen += 1
+        else:
+            overgeslagen += 1
+    
+    return {
+        "message": f"{geboekt} facturen geboekt, {overgeslagen} overgeslagen",
+        "geboekt": geboekt,
+        "overgeslagen": overgeslagen
+    }
+
 @router.get("/verkoopfacturen/{factuur_id}/pdf")
 async def get_verkoopfactuur_pdf(factuur_id: str, authorization: str = Header(None)):
     """Download factuur als professionele PDF"""
