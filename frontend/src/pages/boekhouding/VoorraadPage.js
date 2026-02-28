@@ -177,9 +177,9 @@ const VoorraadPage = () => {
       toast.success('Mutatie aangemaakt');
       setShowMovementDialog(false);
       setNewMovement({
-        product_id: '', warehouse_id: '',
-        date: new Date().toISOString().split('T')[0],
-        type: 'in', quantity: 0, description: ''
+        artikel_id: '', magazijn_id: '',
+        datum: new Date().toISOString().split('T')[0],
+        type: 'inkoop', aantal: 0, opmerkingen: ''
       });
       fetchData();
     } catch (error) {
