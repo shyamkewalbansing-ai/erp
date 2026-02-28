@@ -158,21 +158,28 @@ const VerkoopPage = () => {
     }
     setSaving(true);
     try {
-      // Convert to backend format
-      const invoiceData = {
-        debiteur_id: newInvoice.customer_id,
-        factuurdatum: newInvoice.date,
-        vervaldatum: newInvoice.due_date,
-        valuta: newInvoice.currency,
-        regels: newInvoice.lines.map(line => ({
-          product_id: line.product_id,
-          omschrijving: line.description,
-          aantal: line.quantity,
-          eenheidsprijs: line.unit_price,
-          btw_percentage: line.btw_percentage
-        })),
-        opmerkingen: newInvoice.notes
-      };
+      // Use central helper for field name conversion
+      const invoiceData = toBackendFormat({
+        customer_id: newInvoice.customer_id,
+        invoice_date: newInvoice.date,
+        due_date: newInvoice.due_date,
+        currency: newInvoice.currency,
+        notes: newInvoice.notes
+      });
+      // Add lines with converted field names
+      invoiceData.regels = newInvoice.lines.map(line => toBackendFormat({
+        product_id: line.product_id,
+        description: line.description,
+        quantity: line.quantity,
+        unit_price: line.unit_price,
+        btw_percentage: line.btw_percentage
+      }));
+      // Manual override for non-standard field
+      invoiceData.regels = invoiceData.regels.map(l => ({
+        ...l,
+        eenheidsprijs: l.eenheidsprijs || l.unit_price
+      }));
+      
       await invoicesAPI.create(invoiceData);
       toast.success('Factuur aangemaakt');
       setShowInvoiceDialog(false);
