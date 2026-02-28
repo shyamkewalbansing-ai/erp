@@ -489,26 +489,29 @@ const DashboardPage = () => {
               </CardContent>
             </Card>
 
-            {/* Recent Activity */}
+            {/* Top Klanten */}
             <Card className="bg-white border-0 shadow-sm rounded-2xl">
               <CardContent className="p-6">
-                <h3 className="font-semibold text-slate-900 mb-4">Recent Activity</h3>
+                <h3 className="font-semibold text-slate-900 mb-4">Top Klanten</h3>
                 
-                <div className="text-xs font-medium text-slate-400 uppercase mb-2">Today</div>
+                <div className="text-xs font-medium text-slate-400 uppercase mb-2">Op basis van omzet</div>
                 
                 <div className="space-y-1">
-                  <ActivityItem
-                    name="Jamie Smith"
-                    action="updated account settings"
-                    time="16:05 am"
-                    avatar="JS"
-                  />
-                  <ActivityItem
-                    name="Taylor Green"
-                    action="reviewed recent transact..."
-                    time="21:05 pm"
-                    avatar="TG"
-                  />
+                  {topKlanten.length > 0 ? (
+                    topKlanten.slice(0, 5).map((klant, idx) => (
+                      <ActivityItem
+                        key={idx}
+                        name={klant.naam || 'Onbekend'}
+                        action={`${klant.facturen || 0} facturen`}
+                        time={formatCurrency(klant.omzet || 0, 'SRD')}
+                        avatar={klant.naam?.charAt(0) || '?'}
+                      />
+                    ))
+                  ) : (
+                    <div className="text-sm text-slate-400 text-center py-4">
+                      Nog geen klantdata
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
