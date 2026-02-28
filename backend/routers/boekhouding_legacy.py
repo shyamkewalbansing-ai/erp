@@ -5263,3 +5263,93 @@ async def get_pos_kassa_status(authorization: str = Header(None)):
         },
         "aantal_transacties": sum(v['aantal'] for v in dag_verkopen)
     }
+
+
+
+# POS Mobile Scanner - Cart management via session
+# Stores cart items temporarily for mobile scanner sync
+
+class POSCartAddRequest(BaseModel):
+    artikel_id: str
+    barcode: Optional[str] = None
+
+
+@router.post("/pos/cart/add")
+async def add_to_pos_cart(data: POSCartAddRequest, authorization: str = Header(None)):
+    """Add item to POS cart (for mobile scanner sync)"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Find the product
+    product = await db.boekhouding_artikelen.find_one({
+        "id": data.artikel_id,
+        "user_id": user_id
+    })
+    
+    if not product:
+        raise HTTPException(status_code=404, detail="Product niet gevonden")
+    
+    # Store in temporary cart collection (will be synced to POS)
+    cart_item = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "artikel_id": data.artikel_id,
+        "artikel_naam": product.get('naam'),
+        "barcode": data.barcode,
+        "prijs": product.get('verkoopprijs', 0),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.boekhouding_pos_cart_temp.insert_one(cart_item)
+    
+    return {
+        "success": True,
+        "product": clean_doc(product),
+        "cart_item_id": cart_item["id"]
+    }
+
+
+@router.get("/pos/cart")
+async def get_pos_cart(authorization: str = Header(None)):
+    """Get current POS cart items (for sync between devices)"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Get items from last hour
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    
+    items = await db.boekhouding_pos_cart_temp.find({
+        "user_id": user_id,
+        "timestamp": {"$gte": one_hour_ago}
+    }).sort("timestamp", -1).to_list(100)
+    
+    return [clean_doc(item) for item in items]
+
+
+@router.delete("/pos/cart")
+async def clear_pos_cart(authorization: str = Header(None)):
+    """Clear POS cart"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    await db.boekhouding_pos_cart_temp.delete_many({"user_id": user_id})
+    
+    return {"success": True}
+
+
+# Update artikel to support barcode field
+@router.put("/artikelen/{artikel_id}/barcode")
+async def update_artikel_barcode(artikel_id: str, barcode: str, authorization: str = Header(None)):
+    """Update barcode for an artikel"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    result = await db.boekhouding_artikelen.update_one(
+        {"id": artikel_id, "user_id": user_id},
+        {"$set": {"barcode": barcode, "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Artikel niet gevonden")
+    
+    return {"success": True, "barcode": barcode}
