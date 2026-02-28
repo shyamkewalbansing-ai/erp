@@ -199,7 +199,7 @@ const BTWPage = () => {
               <div>
                 <p className="text-sm text-slate-500 mb-2">BTW Inkoop</p>
                 <p className="text-2xl font-semibold text-slate-900">
-                  {formatAmount(btwReport?.btw_purchases || 0)}
+                  {formatAmount(btwReport?.btw_inkoop || btwReport?.btw_purchases || 0)}
                 </p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
