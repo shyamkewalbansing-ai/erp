@@ -684,12 +684,19 @@ const VerkoopPage = () => {
                                   Verzenden
                                 </DropdownMenuItem>
                               )}
+                              {invoice.status !== 'betaald' && (
+                                <DropdownMenuItem onClick={() => openPaymentDialog(invoice)}>
+                                  <CreditCard className="w-4 h-4 mr-2" />
+                                  Betaling Toevoegen
+                                </DropdownMenuItem>
+                              )}
                               {(invoice.status === 'concept' || invoice.status === 'verzonden' || invoice.status === 'open') && (
                                 <DropdownMenuItem onClick={() => handleUpdateStatus(invoice.id, 'betaald')}>
                                   <CheckCircle className="w-4 h-4 mr-2" />
                                   Markeer als Betaald
                                 </DropdownMenuItem>
                               )}
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => handleDeleteInvoice(invoice.id)} className="text-red-600">
                                 <Trash2 className="w-4 h-4 mr-2" />
                                 Verwijderen
