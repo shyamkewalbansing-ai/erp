@@ -94,6 +94,10 @@ const POSPage = () => {
   
   // Barcode scanner state
   const [showBarcodeDialog, setShowBarcodeDialog] = useState(false);
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const html5QrCodeRef = useRef(null);
+  const scannerContainerRef = useRef(null);
 
   const getAuthHeader = () => {
     const token = localStorage.getItem('token');
