@@ -95,6 +95,54 @@ const InstellingenPage = () => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Alleen JPG, PNG, GIF of WEBP bestanden zijn toegestaan');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Bestand is te groot (max 5MB)');
+      return;
+    }
+
+    setUploadingLogo(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch(`${API_URL}/api/boekhouding/upload-image`, {
+        method: 'POST',
+        headers: { ...getAuthHeader() },
+        body: formData
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSettings({ ...settings, logo_url: data.url });
+        toast.success('Logo geüpload');
+      } else {
+        const error = await response.json();
+        toast.error(error.detail || 'Fout bij uploaden logo');
+      }
+    } catch (error) {
+      toast.error('Fout bij uploaden logo');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setSettings({ ...settings, logo_url: '' });
+    toast.info('Logo verwijderd (sla instellingen op om te bevestigen)');
+  };
+
   const fetchSchedulerStatus = async () => {
     try {
       const response = await fetch(`${API_URL}/api/boekhouding/herinneringen/scheduler-status`, {
