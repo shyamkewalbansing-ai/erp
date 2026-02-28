@@ -20,7 +20,10 @@ const VoorraadPage = () => {
   const [loading, setLoading] = useState(true);
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [showMovementDialog, setShowMovementDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const [newProduct, setNewProduct] = useState({
