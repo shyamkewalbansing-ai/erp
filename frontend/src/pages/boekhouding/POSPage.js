@@ -423,10 +423,33 @@ const POSPage = () => {
       setCameraActive(true);
     } catch (err) {
       console.error("Camera scanner error:", err);
-      if (err.toString().includes('NotAllowedError')) {
+      const errorMsg = err.toString();
+      
+      if (errorMsg.includes('NotAllowedError')) {
         setCameraError('Camera toegang geweigerd. Sta camera toegang toe in je browser instellingen.');
-      } else if (err.toString().includes('NotFoundError')) {
+      } else if (errorMsg.includes('NotFoundError') || errorMsg.includes('DevicesNotFoundError')) {
         setCameraError('Geen camera gevonden op dit apparaat.');
+      } else if (errorMsg.includes('NotReadableError') || errorMsg.includes('could not start video source')) {
+        setCameraError('Camera is in gebruik door een andere app. Sluit andere apps die de camera gebruiken en probeer opnieuw.');
+      } else if (errorMsg.includes('OverconstrainedError')) {
+        // Try with first available camera
+        try {
+          const devices = await Html5Qrcode.getCameras();
+          if (devices && devices.length > 0) {
+            const html5QrCode = new Html5Qrcode("barcode-scanner-container");
+            html5QrCodeRef.current = html5QrCode;
+            await html5QrCode.start(
+              devices[0].id,
+              { fps: 10, qrbox: { width: 200, height: 120 } },
+              (decodedText) => handleScannedBarcode(decodedText),
+              () => {}
+            );
+            setCameraActive(true);
+            return;
+          }
+        } catch (retryErr) {
+          setCameraError('Camera configuratie niet ondersteund.');
+        }
       } else {
         setCameraError(`Kon camera niet starten: ${err.message || err}`);
       }
