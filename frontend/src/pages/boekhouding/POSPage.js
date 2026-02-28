@@ -26,7 +26,10 @@ import {
   Barcode,
   Calculator,
   ArrowLeft,
-  Users
+  Users,
+  Camera,
+  CameraOff,
+  ScanLine
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -35,6 +38,7 @@ import { Badge } from '../../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { toast } from 'sonner';
+import { Html5QrcodeScanner, Html5Qrcode } from 'html5-qrcode';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
