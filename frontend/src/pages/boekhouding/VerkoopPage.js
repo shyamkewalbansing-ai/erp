@@ -588,7 +588,7 @@ const VerkoopPage = () => {
                     <TableHead className="w-28 text-xs font-medium text-slate-500">Vervaldatum</TableHead>
                     <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Bedrag</TableHead>
                     <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
-                    <TableHead className="w-20 text-xs font-medium text-slate-500">PDF</TableHead>
+                    <TableHead className="w-32 text-xs font-medium text-slate-500 text-center">Acties</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -607,15 +607,46 @@ const VerkoopPage = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadPdf(invoice.id, invoice.invoice_number)}
-                          title="Download PDF"
-                          data-testid={`download-pdf-${invoice.invoice_number}`}
-                        >
-                          <Download className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadPdf(invoice.id, invoice.invoice_number)}
+                            title="Download PDF"
+                            className="h-8 w-8 p-0"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={updatingStatus === invoice.id}>
+                                {updatingStatus === invoice.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <MoreHorizontal className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {invoice.status === 'concept' && (
+                                <DropdownMenuItem onClick={() => handleUpdateStatus(invoice.id, 'verzonden')}>
+                                  <Send className="w-4 h-4 mr-2" />
+                                  Verzenden
+                                </DropdownMenuItem>
+                              )}
+                              {(invoice.status === 'concept' || invoice.status === 'verzonden' || invoice.status === 'open') && (
+                                <DropdownMenuItem onClick={() => handleUpdateStatus(invoice.id, 'betaald')}>
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Markeer als Betaald
+                                </DropdownMenuItem>
+                              )}
+                              <DropdownMenuItem onClick={() => handleDeleteInvoice(invoice.id)} className="text-red-600">
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Verwijderen
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
