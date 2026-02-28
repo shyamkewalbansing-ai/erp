@@ -592,14 +592,23 @@ const VerkoopPage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {invoices.map(invoice => (
-                    <TableRow key={invoice.id} data-testid={`sales-invoice-row-${invoice.invoice_number}`}>
-                      <TableCell className="text-sm text-slate-600">{invoice.invoice_number}</TableCell>
-                      <TableCell className="text-sm text-slate-500">{formatDate(invoice.date)}</TableCell>
-                      <TableCell className="text-sm font-medium text-slate-900">{invoice.customer_name}</TableCell>
-                      <TableCell className="text-sm text-slate-500">{formatDate(invoice.due_date)}</TableCell>
+                  {invoices.map(invoice => {
+                    // Map Dutch field names to display values
+                    const invoiceNumber = invoice.factuurnummer || invoice.invoice_number || '-';
+                    const invoiceDate = invoice.factuurdatum || invoice.date;
+                    const customerName = invoice.debiteur_naam || invoice.customer_name || '-';
+                    const dueDate = invoice.vervaldatum || invoice.due_date;
+                    const total = invoice.totaal_incl_btw || invoice.total || 0;
+                    const currency = invoice.valuta || invoice.currency || 'SRD';
+                    
+                    return (
+                    <TableRow key={invoice.id} data-testid={`sales-invoice-row-${invoiceNumber}`}>
+                      <TableCell className="text-sm text-slate-600">{invoiceNumber}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatDate(invoiceDate)}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{customerName}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatDate(dueDate)}</TableCell>
                       <TableCell className="text-right text-sm font-medium text-slate-900">
-                        {formatAmount(invoice.total, invoice.currency)}
+                        {formatAmount(total, currency)}
                       </TableCell>
                       <TableCell>
                         <Badge className={`text-xs ${getStatusColor(invoice.status)}`}>
@@ -611,7 +620,7 @@ const VerkoopPage = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDownloadPdf(invoice.id, invoice.invoice_number)}
+                            onClick={() => handleDownloadPdf(invoice.id, invoiceNumber)}
                             title="Download PDF"
                             className="h-8 w-8 p-0"
                           >
@@ -649,7 +658,7 @@ const VerkoopPage = () => {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  )})}
                   {invoices.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-slate-500">
