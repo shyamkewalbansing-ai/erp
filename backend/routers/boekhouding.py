@@ -3388,7 +3388,7 @@ async def get_winst_verlies(jaar: int = None, authorization: str = Header(None))
     
     jaar = jaar or datetime.now().year
     
-    # Haal alle rekeningen op met saldi
+    # Haal alle rekeningen op met saldi (alleen niet-nul)
     rekeningen = await db.boekhouding_rekeningen.find({
         "user_id": user_id,
         "saldo": {"$ne": 0}
@@ -3403,6 +3403,9 @@ async def get_winst_verlies(jaar: int = None, authorization: str = Header(None))
     
     for r in rekeningen:
         saldo = r.get("saldo", 0)
+        if saldo == 0:  # Skip rekeningen zonder saldo
+            continue
+            
         rekening_type = r.get("type", "")
         item = {
             "code": r.get("code", ""),
