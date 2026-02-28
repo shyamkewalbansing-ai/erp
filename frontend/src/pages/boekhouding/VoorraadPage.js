@@ -835,7 +835,7 @@ const VoorraadPage = () => {
                 <TableBody>
                   {movements.map(movement => {
                     const product = products.find(p => p.id === (movement.artikel_id || movement.product_id));
-                    const movementDate = movement.datum || movement.date;
+                    const movementDate = movement.datum || movement.date || movement.created_at;
                     const movementQty = movement.aantal || movement.quantity || 0;
                     const movementType = movement.type;
                     const movementDesc = movement.opmerkingen || movement.description || '-';
