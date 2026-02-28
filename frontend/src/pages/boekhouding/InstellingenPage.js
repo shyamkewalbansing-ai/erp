@@ -74,6 +74,7 @@ const InstellingenPage = () => {
   const [emailTestResult, setEmailTestResult] = useState(null);
   const [schedulerStatus, setSchedulerStatus] = useState(null);
   const [triggeringCheck, setTriggeringCheck] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   
   // Multi-tenant state
   const [bedrijven, setBedrijven] = useState([]);
