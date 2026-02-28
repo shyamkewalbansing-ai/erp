@@ -681,11 +681,16 @@ const POSPage = () => {
             {/* Mobile Scanner Link */}
             <Button 
               variant="outline"
-              onClick={() => window.open('/app/boekhouding/pos/scanner', '_blank')}
+              onClick={createScannerSession}
+              disabled={creatingSession}
               className="shrink-0 hidden sm:flex"
               title="Open mobiele scanner op telefoon"
             >
-              <Camera className="w-4 h-4 mr-2" />
+              {creatingSession ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Camera className="w-4 h-4 mr-2" />
+              )}
               <span className="text-sm">Telefoon Scanner</span>
             </Button>
 
