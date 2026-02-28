@@ -168,9 +168,9 @@ const BankPage = () => {
     ? transactions
     : transactions.filter(t => t.bank_account_id === selectedAccount);
 
-  const totalSRD = bankAccounts.filter(a => a.currency === 'SRD').reduce((s, a) => s + a.balance, 0);
-  const totalUSD = bankAccounts.filter(a => a.currency === 'USD').reduce((s, a) => s + a.balance, 0);
-  const totalEUR = bankAccounts.filter(a => a.currency === 'EUR').reduce((s, a) => s + a.balance, 0);
+  const totalSRD = bankAccounts.filter(a => (a.valuta || a.currency) === 'SRD').reduce((s, a) => s + (a.huidig_saldo || a.balance || 0), 0);
+  const totalUSD = bankAccounts.filter(a => (a.valuta || a.currency) === 'USD').reduce((s, a) => s + (a.huidig_saldo || a.balance || 0), 0);
+  const totalEUR = bankAccounts.filter(a => (a.valuta || a.currency) === 'EUR').reduce((s, a) => s + (a.huidig_saldo || a.balance || 0), 0);
 
   if (loading) {
     return (
