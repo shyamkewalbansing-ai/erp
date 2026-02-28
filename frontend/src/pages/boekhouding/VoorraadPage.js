@@ -284,7 +284,8 @@ const VoorraadPage = () => {
       purchase_price: product.inkoopprijs || product.purchase_price || 0,
       sales_price: product.verkoopprijs || product.sales_price || 0,
       min_stock: product.minimum_voorraad || product.min_stock || 0,
-      image_url: product.foto_url || product.image_url || ''
+      image_url: product.foto_url || product.image_url || '',
+      barcode: product.barcode || ''
     });
     setShowEditDialog(true);
   };
