@@ -133,6 +133,7 @@ const BoekhoudingVerkoop = lazy(() => import("./pages/boekhouding/VerkoopPage"))
 const BoekhoudingInkoop = lazy(() => import("./pages/boekhouding/InkoopPage"));
 const BoekhoudingPOS = lazy(() => import("./pages/boekhouding/POSPage"));
 const BoekhoudingPOSMobileScanner = lazy(() => import("./pages/boekhouding/POSMobileScannerPage"));
+const BoekhoudingPOSPublicScanner = lazy(() => import("./pages/boekhouding/POSPublicScannerPage"));
 const BoekhoudingVoorraad = lazy(() => import("./pages/boekhouding/VoorraadPage"));
 const BoekhoudingVasteActiva = lazy(() => import("./pages/boekhouding/VasteActivaPage"));
 const BoekhoudingProjecten = lazy(() => import("./pages/boekhouding/ProjectenPage"));
