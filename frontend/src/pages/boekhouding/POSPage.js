@@ -100,6 +100,8 @@ const POSPage = () => {
   const [cameraError, setCameraError] = useState(null);
   const html5QrCodeRef = useRef(null);
   const scannerContainerRef = useRef(null);
+  const lastScannedRef = useRef({ barcode: null, time: 0 });
+  const scanCooldown = 2000; // 2 seconds cooldown between same barcode scans
 
   // Mobile scanner session state
   const [showScannerLinkDialog, setShowScannerLinkDialog] = useState(false);
