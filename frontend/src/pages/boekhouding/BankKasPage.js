@@ -543,16 +543,16 @@ const BankPage = () => {
                 <TableBody>
                   {filteredTransactions.map(tx => (
                     <TableRow key={tx.id}>
-                      <TableCell className="text-sm text-slate-600">{formatDate(tx.date)}</TableCell>
-                      <TableCell className="text-sm font-medium text-slate-900">{tx.description}</TableCell>
-                      <TableCell className="text-sm text-slate-500">{tx.reference || '-'}</TableCell>
+                      <TableCell className="text-sm text-slate-600">{formatDate(tx.datum || tx.date)}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{tx.omschrijving || tx.description}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{tx.referentie || tx.reference || '-'}</TableCell>
                       <TableCell className={`text-right text-sm font-medium flex items-center justify-end gap-1 ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
                         {tx.type === 'credit' ? (
                           <ArrowUpRight className="w-4 h-4" />
                         ) : (
                           <ArrowDownRight className="w-4 h-4" />
                         )}
-                        {formatAmount(tx.amount, 'SRD')}
+                        {formatAmount(tx.bedrag || tx.amount, 'SRD')}
                       </TableCell>
                       <TableCell>
                         <Badge className={`text-xs ${getStatusColor(tx.status)}`}>
