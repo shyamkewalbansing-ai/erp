@@ -417,6 +417,48 @@ const GrootboekPage = () => {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* External Code Dialog */}
+          <Dialog open={showExterneCodeDialog} onOpenChange={setShowExterneCodeDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Externe Code Koppelen</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Rekening</Label>
+                  <div className="text-sm text-slate-600">
+                    {selectedAccount?.code} - {selectedAccount?.naam}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Externe Code</Label>
+                  <Input
+                    value={externeCode}
+                    onChange={(e) => setExterneCode(e.target.value)}
+                    placeholder="Voer externe code in"
+                    data-testid="externe-code-input"
+                  />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowExterneCodeDialog(false)}
+                  >
+                    Annuleren
+                  </Button>
+                  <Button 
+                    onClick={handleSaveExterneCode} 
+                    disabled={saving}
+                    data-testid="save-externe-code-btn"
+                  >
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Opslaan
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
