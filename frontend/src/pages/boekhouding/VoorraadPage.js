@@ -41,10 +41,16 @@ const VoorraadPage = () => {
     purchase_price: 0,
     sales_price: 0,
     min_stock: 0,
-    image_url: ''
+    image_url: '',
+    barcode: ''
   });
 
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [showBarcodeScanDialog, setShowBarcodeScanDialog] = useState(false);
+  const [barcodeScanTarget, setBarcodeScanTarget] = useState('new'); // 'new' or 'edit'
+  const [cameraActive, setCameraActive] = useState(false);
+  const [cameraError, setCameraError] = useState(null);
+  const html5QrCodeRef = useRef(null);
 
   const [newMovement, setNewMovement] = useState({
     artikel_id: '',
