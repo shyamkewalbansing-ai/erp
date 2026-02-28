@@ -272,6 +272,7 @@ const apiFetchSmart = async (endpoint, options = {}, convertRequest = true, conv
 // Dashboard
 export const dashboardAPI = {
   getSummary: () => apiFetch('/boekhouding/dashboard'),
+  getChartData: () => apiFetch('/boekhouding/dashboard/charts'),
 };
 
 // Exchange Rates
