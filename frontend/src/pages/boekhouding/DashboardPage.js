@@ -318,23 +318,22 @@ const DashboardPage = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <div className="text-sm text-slate-500 mb-1">Earning in The Last Week</div>
+                    <div className="text-sm text-slate-500 mb-1">Omzet & Kosten Overzicht</div>
                     <div className="flex items-baseline gap-3">
                       <span className="text-4xl font-bold text-slate-900">
-                        {formatCurrency(weeklyEarning, 'SRD')}
+                        {formatCurrency(totalIncome, 'SRD')}
                       </span>
-                      <span className="flex items-center text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                        <ArrowUpRight className="w-3 h-3 mr-0.5" />
-                        +1.78%
-                      </span>
+                      {totalIncome > 0 && (
+                        <span className="flex items-center text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                          <ArrowUpRight className="w-3 h-3 mr-0.5" />
+                          Omzet
+                        </span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="outline" size="sm" className="rounded-lg">
-                      This Year <ChevronDown className="w-4 h-4 ml-1" />
-                    </Button>
-                    <Button variant="outline" size="sm" className="rounded-lg">
-                      <Filter className="w-4 h-4 mr-1" /> Filter
+                      Dit Jaar <ChevronDown className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
                 </div>
