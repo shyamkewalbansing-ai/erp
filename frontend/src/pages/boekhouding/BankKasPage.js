@@ -166,7 +166,7 @@ const BankPage = () => {
 
   const filteredTransactions = selectedAccount === 'all'
     ? transactions
-    : transactions.filter(t => t.bank_account_id === selectedAccount);
+    : transactions.filter(t => (t.bankrekening_id || t.bank_account_id) === selectedAccount);
 
   const totalSRD = bankAccounts.filter(a => (a.valuta || a.currency) === 'SRD').reduce((s, a) => s + (a.huidig_saldo || a.balance || 0), 0);
   const totalUSD = bankAccounts.filter(a => (a.valuta || a.currency) === 'USD').reduce((s, a) => s + (a.huidig_saldo || a.balance || 0), 0);
