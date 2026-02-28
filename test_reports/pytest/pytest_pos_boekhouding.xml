@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="8" skipped="0" tests="8" time="3.414" timestamp="2026-02-28T03:13:37.677650+00:00" hostname="agent-env-e373affa-c835-4541-8d4c-d5a8db9dc459"><testcase classname="backend.tests.test_pos_boekhouding.TestPOSModule" name="test_auth_login" time="0.388"><failure message="AssertionError: Token should not be None&#10;assert None is not None&#10; +  where None = &lt;test_pos_boekhouding.TestPOSModule object at 0xfd6e7c66ef50&gt;.token">backend/tests/test_pos_boekhouding.py:38: in test_auth_login
+    assert self.token is not None, "Token should not be None"
+E   AssertionError: Token should not be None
+E   assert None is not None
+E    +  where None = &lt;test_pos_boekhouding.TestPOSModule object at 0xfd6e7c66ef50&gt;.token</failure></testcase><testcase classname="backend.tests.test_pos_boekhouding.TestPOSModule" name="test_get_pos_products" time="0.437"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_pos_boekhouding.py:45: in test_get_pos_products
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_pos_boekhouding.TestPOSModule" name="test_get_artikelen" time="0.428"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_pos_boekhouding.py:62: in test_get_artikelen
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_pos_boekhouding.TestPOSModule" name="test_create_pos_sale_contant" time="0.390"><failure message="AttributeError: 'str' object has no attribute 'get'">backend/tests/test_pos_boekhouding.py:83: in test_create_pos_sale_contant
+    if p.get('verkoopprijs', 0) &gt; 0 and p.get('type') != 'dienst':
+       ^^^^^
+E   AttributeError: 'str' object has no attribute 'get'</failure></testcase><testcase classname="backend.tests.test_pos_boekhouding.TestPOSModule" name="test_create_pos_sale_pin" time="0.456"><failure message="AttributeError: 'str' object has no attribute 'get'">backend/tests/test_pos_boekhouding.py:140: in test_create_pos_sale_pin
+    if p.get('verkoopprijs', 0) &gt; 0 and p.get('type') != 'dienst':
+       ^^^^^
+E   AttributeError: 'str' object has no attribute 'get'</failure></testcase><testcase classname="backend.tests.test_pos_boekhouding.TestPOSModule" name="test_dashboard_endpoint" time="0.406"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_pos_boekhouding.py:187: in test_dashboard_endpoint
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_pos_boekhouding.TestPOSModule" name="test_boekhouding_instellingen" time="0.375"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Ongeldige token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">backend/tests/test_pos_boekhouding.py:197: in test_boekhouding_instellingen
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Ongeldige token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="backend.tests.test_pos_boekhouding.TestPOSDataPersistence" name="test_pos_sale_creates_voorraadmutatie" time="0.383"><failure message="AttributeError: 'str' object has no attribute 'get'">backend/tests/test_pos_boekhouding.py:237: in test_pos_sale_creates_voorraadmutatie
+    if p.get('verkoopprijs', 0) &gt; 0 and p.get('type') != 'dienst':
+       ^^^^^
+E   AttributeError: 'str' object has no attribute 'get'</failure></testcase></testsuite></testsuites>
