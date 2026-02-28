@@ -479,6 +479,31 @@ const VoorraadPage = () => {
                   </div>
                 </div>
                 
+                {/* Barcode */}
+                <div className="space-y-2">
+                  <Label>Barcode / EAN</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newProduct.barcode}
+                      onChange={(e) => setNewProduct({...newProduct, barcode: e.target.value})}
+                      placeholder="Barcode of EAN nummer"
+                      className="flex-1"
+                      data-testid="product-barcode-input"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => openBarcodeScanner('new')}
+                      className="flex items-center gap-1"
+                      data-testid="scan-barcode-btn"
+                    >
+                      <ScanLine className="w-4 h-4" />
+                      Scan
+                    </Button>
+                  </div>
+                  <p className="text-xs text-slate-500">Gebruik de camera om een barcode te scannen</p>
+                </div>
+
                 {/* Product Foto Upload */}
                 <div className="space-y-2">
                   <Label>Product Foto</Label>
