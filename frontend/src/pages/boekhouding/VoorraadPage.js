@@ -383,7 +383,7 @@ const VoorraadPage = () => {
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label>Product *</Label>
-                  <Select value={newMovement.product_id} onValueChange={(v) => setNewMovement({...newMovement, product_id: v})}>
+                  <Select value={newMovement.artikel_id} onValueChange={(v) => setNewMovement({...newMovement, artikel_id: v})}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecteer product" />
                     </SelectTrigger>
@@ -394,13 +394,28 @@ const VoorraadPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-2">
+                  <Label>Magazijn *</Label>
+                  <Select value={newMovement.magazijn_id} onValueChange={(v) => setNewMovement({...newMovement, magazijn_id: v})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecteer magazijn" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {warehouses.length > 0 ? warehouses.map(w => (
+                        <SelectItem key={w.id} value={w.id}>{w.naam || w.name}</SelectItem>
+                      )) : (
+                        <SelectItem value="default">Hoofdmagazijn</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Datum</Label>
                     <Input
                       type="date"
-                      value={newMovement.date}
-                      onChange={(e) => setNewMovement({...newMovement, date: e.target.value})}
+                      value={newMovement.datum}
+                      onChange={(e) => setNewMovement({...newMovement, datum: e.target.value})}
                     />
                   </div>
                   <div className="space-y-2">
@@ -410,30 +425,31 @@ const VoorraadPage = () => {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="in">Inkomend</SelectItem>
-                        <SelectItem value="out">Uitgaand</SelectItem>
-                        <SelectItem value="adjustment">Correctie</SelectItem>
+                        <SelectItem value="inkoop">Inkoop</SelectItem>
+                        <SelectItem value="verkoop">Verkoop</SelectItem>
+                        <SelectItem value="correctie_plus">Correctie +</SelectItem>
+                        <SelectItem value="correctie_min">Correctie -</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Hoeveelheid *</Label>
+                  <Label>Aantal *</Label>
                   <Input
                     type="number"
-                    value={newMovement.quantity}
-                    onChange={(e) => setNewMovement({...newMovement, quantity: parseFloat(e.target.value) || 0})}
+                    value={newMovement.aantal}
+                    onChange={(e) => setNewMovement({...newMovement, aantal: parseInt(e.target.value) || 0})}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Omschrijving</Label>
+                  <Label>Opmerkingen</Label>
                   <Input
-                    value={newMovement.description}
-                    onChange={(e) => setNewMovement({...newMovement, description: e.target.value})}
+                    value={newMovement.opmerkingen}
+                    onChange={(e) => setNewMovement({...newMovement, opmerkingen: e.target.value})}
                     placeholder="Reden van mutatie"
                   />
                 </div>
-                <Button onClick={handleCreateMovement} className="w-full" disabled={saving}>
+                <Button onClick={handleCreateMovement} className="w-full" disabled={saving || !newMovement.artikel_id || !newMovement.magazijn_id || newMovement.aantal <= 0}>
                   {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
                   Opslaan
                 </Button>
