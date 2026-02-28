@@ -189,6 +189,14 @@ const InkoopPage = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
+                  <Label>Extern Factuurnr *</Label>
+                  <Input
+                    value={newInvoice.external_number || ''}
+                    onChange={(e) => setNewInvoice({...newInvoice, external_number: e.target.value})}
+                    placeholder="Factuurnummer leverancier"
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label>Factuurdatum</Label>
                   <Input
                     type="date"
