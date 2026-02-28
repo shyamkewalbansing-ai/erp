@@ -240,15 +240,25 @@ const DashboardPage = () => {
             Point of Sale
           </Button>
           
-          {/* Exchange Rate */}
-          {rates?.EUR_SRD && (
-            <div className="bg-white border border-slate-200 rounded-lg px-4 py-2 text-sm">
-              <span className="text-slate-500">EUR/SRD:</span>
-              <span className="font-mono font-medium text-slate-900 ml-2">
-                {formatNumber(rates.EUR_SRD.koers, 2)}
-              </span>
-            </div>
-          )}
+          {/* Exchange Rates */}
+          <div className="flex items-center gap-2">
+            {rates?.USD_SRD && (
+              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                <span className="text-slate-500">USD/SRD:</span>
+                <span className="font-mono font-medium text-slate-900 ml-1">
+                  {formatNumber(rates.USD_SRD.koers, 2)}
+                </span>
+              </div>
+            )}
+            {rates?.EUR_SRD && (
+              <div className="bg-white border border-slate-200 rounded-lg px-3 py-2 text-sm">
+                <span className="text-slate-500">EUR/SRD:</span>
+                <span className="font-mono font-medium text-slate-900 ml-1">
+                  {formatNumber(rates.EUR_SRD.koers, 2)}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
