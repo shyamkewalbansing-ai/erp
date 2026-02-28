@@ -27,7 +27,8 @@ Dutch (Nederlands)
 ### Backend
 - **Framework:** FastAPI
 - **Database:** MongoDB
-- **Router:** `/app/backend/routers/boekhouding.py`
+- **Router:** `/app/backend/routers/boekhouding/__init__.py` (import van `boekhouding_legacy.py`)
+- **Services:** `/app/backend/services/grootboek_service.py` (automatische journaalpost logica)
 
 ### Frontend
 - **Framework:** React
@@ -57,225 +58,73 @@ Dutch (Nederlands)
 
 ---
 
-## Wat is Voltooid (December 2025)
+## Wat is Voltooid (Maart 2026)
 
-### ✅ Backend - Volledig Gerefactored
-- Complete `/api/boekhouding/*` router met 80+ endpoints
-- Alle endpoints gebruiken Nederlandse veldnamen conform referentie
-- CRUD operaties voor alle entiteiten
-- Dashboard KPIs
-- Rapportages (Balans, Winst/Verlies, BTW, Ouderdomsanalyse)
-- Bank import (CSV, MT940)
-- Documenten upload/download
-- Herinneringen genereren
+### ✅ Logo Upload Functionaliteit (P2 - Nieuw)
+- Nieuwe logo upload sectie in Instellingen pagina
+- Ondersteunt JPG, PNG, GIF, WEBP (max 5MB)
+- Preview van huidige logo
+- Verwijder knop
+- Alternatief: URL invoer
+- Logo wordt gebruikt op facturen en documenten
 
-### ✅ MT940 Bankimport (P1 - Voltooid)
-- Verbeterde MT940 parser met `mt940` library
-- Fallback naar handmatige parsing voor non-standard formaten
-- Parsing van: datum, bedrag, tegenrekening, tegenpartij, omschrijving
-- Automatische saldo-update van bankrekening
+### ✅ Backend Refactoring Voorbereiding (P1 - Gedeeltelijk)
+- `/app/backend/routers/boekhouding.py` verplaatst naar `boekhouding_legacy.py`
+- Nieuwe modulaire structuur voorbereid in `/app/backend/routers/boekhouding/`
+- `grootboek_service.py` geëxtraheerd naar `/app/backend/services/`
+- Backward compatible via `__init__.py` import
 
-### ✅ PDF Generatie (P1 - Voltooid)
-- Professionele factuur PDFs met `reportlab` library
-- Volledig bedrijfslogo-ondersteuning
-- Gedetailleerde factuurregels met BTW berekening
-- Betalingsgegevens sectie
-- Herinnering brieven in PDF formaat
+### ✅ InkoopPage Bugfix
+- Correcte API gebruikt (`purchaseInvoicesAPI` i.p.v. `invoicesAPI`)
+- Nederlandse veldnamen support (factuurnummer, crediteur_naam, etc.)
+- Extern factuurnummer veld toegevoegd
 
-### ✅ Automatische Reconciliatie (P1 - Voltooid)
-- Intelligente matching van banktransacties met facturen
-- Confidence score gebaseerd op:
-  - Bedrag matching (50 punten voor exact, 40 voor <1%, 20 voor <5%)
-  - Factuurnummer in omschrijving (30 punten)
-  - Klantnaam matching (20 punten)
-- API endpoint: `/api/boekhouding/banktransacties/{id}/reconciliatie-suggesties`
-- API endpoint: `/api/boekhouding/banktransacties/{id}/reconcilieer`
+### ✅ Architecturale Integratie (Grootboek) - Vorige Sessie
+- `_create_journal_entry` helper-functie voor automatische journaalposten
+- `_find_rekening` functie voor robuuste rekening-lookup
+- **Verkoopfacturen** worden automatisch geboekt bij statuswijziging naar `verzonden`
+- **Betalingen** worden automatisch geboekt (Bank aan Debiteuren)
+- **Inkoopfacturen** worden automatisch geboekt bij statuswijziging
+- **Balans rapportage** haalt data direct uit grootboeksaldi
+- **Winst & Verlies rapportage** haalt data uit grootboek
 
-### ✅ E-mail Verzending (P2 - Voltooid)
-- Email service module met HTML templates
-- Betalingsherinneringen per email
-- Professionele HTML templates voor eerste, tweede herinnering en aanmaning
-- API endpoint: `/api/boekhouding/herinneringen/{id}/email`
-- SMTP configureerbaar via environment variables
-
-### ✅ Excel Export (P3 - Voltooid)
-- Export grootboek naar Excel (rekeningschema + journaalposten)
-- Export debiteuren naar Excel (klanten + facturen)
-- Export crediteuren naar Excel (leveranciers + facturen)
-- Export BTW aangifte naar Excel
-- Export Winst & Verlies naar Excel
-- Export Balans naar Excel
-- Export Ouderdomsanalyse naar Excel
-- API endpoints: `/api/boekhouding/export/*`
-
-### ✅ Surinaamse Belastingrapportages (P3 - Voltooid)
-- **BTW Aangifte Suriname**: Per maand, per tarief (25%, 10%, 0%), voorbelasting
-- **Loonbelasting Overzicht**: Geschatte berekening volgens Surinaamse schijven
-- **Inkomstenbelasting Overzicht**: Jaaroverzicht met belastingschijven
-- API endpoints: `/api/boekhouding/rapportages/suriname/*`
-
-### ✅ Frontend - Alle Pagina's Werkend
-1. **Dashboard** (`/app/boekhouding`) - KPI overzicht + Interactieve Grafieken
-2. **Grootboek** (`/app/boekhouding/grootboek`) - Rekeningschema & Journaalposten
-3. **Debiteuren** (`/app/boekhouding/debiteuren`) - Klanten & Verkoopfacturen
-4. **Crediteuren** (`/app/boekhouding/crediteuren`) - Leveranciers & Inkoopfacturen
-5. **Bank/Kas** (`/app/boekhouding/bank-kas`) - Bankrekeningen & Transacties
-6. **BTW** (`/app/boekhouding/btw`) - BTW codes & Aangiftes
-7. **Verkoop** (`/app/boekhouding/verkoop`) - Offertes, Orders & Facturen
-8. **Inkoop** (`/app/boekhouding/inkoop`) - Inkooporders & Facturen
-9. **Wisselkoersen** (`/app/boekhouding/wisselkoersen`) - Koersen beheer
-10. **Instellingen** (`/app/boekhouding/instellingen`) - 4 tabs: Bedrijf, E-mail SMTP, Factuur, Bedrijven
-
-### ✅ Testing
-- Backend API tests: 10/10 passed (100%) - iteration 48
-- Frontend UI tests: 11/11 pages passed (100%) - iteration 49
-- P0/P1 Feature tests: 7/7 backend + all frontend passed (100%) - iteration 50
-- P2/P3 Feature tests: 11/11 backend + all frontend passed (100%) - iteration 51
-- Test credentials: demo@facturatie.sr / demo2024
-
-### ✅ Automatische Herinneringen Scheduler (Voltooid - December 2025)
-- Nieuwe `HerinneringScheduler` in `/app/backend/services/herinnering_scheduler.py`
-- Dagelijkse controle om 08:00 SRT (Suriname tijd) op vervallen facturen
-- Escalatie: eerste herinnering → tweede herinnering → aanmaning
-- Configureerbaar per gebruiker:
-  - Dagen voor eerste herinnering (standaard: 7)
-  - Dagen tussen herinneringen (standaard: 7)
-  - Maximum aantal herinneringen (standaard: 3)
-- Automatisch e-mail versturen als SMTP geconfigureerd is
-- Frontend UI in Instellingen > Herinneringen tab
-- API endpoints:
-  - `GET /api/boekhouding/herinneringen/scheduler-status`
-  - `POST /api/boekhouding/herinneringen/trigger-check`
-
-### ✅ E-mail Services Samenvoegen (Voltooid - December 2025)
-- Nieuwe `UnifiedEmailService` in `/app/backend/services/unified_email_service.py`
-- Combineert functionaliteit van `email_service.py` en `boekhouding_email.py`
-- **Oude services verwijderd:** `email_service.py` en `boekhouding_email.py` zijn nu vervangen
-- Ondersteunt gebruiker-specifieke SMTP-instellingen uit `boekhouding_instellingen`
-- Methoden: `send_email`, `generate_reminder_html`, `generate_invoice_html`
-- System templates: welcome, password_reset, module_expiring, module_expired
-
-### ✅ Vastgoed Dashboard 500-Error Fix (Voltooid - December 2025)
-- Probleem: `KeyError: 'apartment_id'` door ontbrekende velden in payments
-- Oplossing: `.get()` met fallbacks voor `apartment_id` en `tenant_id`
-- Dashboard laadt nu correct met alle statistieken
-
-### ✅ Factuur Template Ontwerpen (Voltooid - December 2025)
-Drie template stijlen beschikbaar in PDF generator:
-1. **Standaard:** Klassiek professioneel ontwerp, lichte kleuren
-2. **Modern:** Strak en minimalistisch, donkere header met blauw accent
-3. **Kleurrijk:** Levendige kleuren, paars met amber accent, alternerende rijen
-
-### ✅ Product Foto Upload & Artikel Selectie (Voltooid - December 2025)
-Twee nieuwe features voor de Voorraad en Verkoop modules:
-
-**Product Foto Upload:**
-- Nieuw `foto_url` veld in ArtikelCreate model
-- Image upload endpoint: `POST /api/boekhouding/upload-image`
-- Image serving endpoint: `GET /api/boekhouding/images/{filename}`
-- Max 5MB, ondersteunt JPG, PNG, GIF, WEBP
-- VoorraadPage toont nu een "Foto" kolom met productafbeeldingen
-- Upload UI met preview en verwijder-knop in Nieuw Product dialog
-
-**Artikel Selectie op Facturen:**
-- VerkoopPage factuur dialog heeft nu een "Artikel" dropdown
-- Dropdown toont producten met naam én verkoopprijs
-- Automatische prijs-invulling bij selectie van een artikel
-- Automatische omschrijving-invulling met productnaam
-- Fallback tekstveld voor handmatige invoer ("Of typ handmatig...")
-
-**Product Foto's op PDF Facturen:**
-- PDF generator toont productafbeeldingen in de factuurregels tabel
-- Dynamische kolombreedte: foto-kolom verschijnt alleen als er foto's zijn
-- Afbeeldingsvalidatie: alleen geldige afbeeldingen (min 10x10 pixels) worden getoond
-- Graceful fallback: lege cel bij ontbrekende of ongeldige afbeeldingen
-
-Test resultaten: 100% backend (10/10 tests), 100% frontend (alle features verified)
-
-### ✅ Finance OS UI Refactoring (Voltooid - December 2025)
-Complete visuele herziening van alle boekhouding pagina's naar "Finance OS" stijl:
-- **Getalnotatie:** Nederlandse notatie (nl-NL) - bv. `SRD 2.500,00`
-- **Kaarten:** `bg-white border border-slate-100 shadow-sm`
-- **Icoon containers:** `w-11 h-11 rounded-xl bg-{color}-50` met `text-{color}-500`
-- **Headers:** `text-2xl font-semibold text-slate-900`
-- **Subtitels:** `text-slate-500 mt-0.5`
-- **Tabel headers:** `text-xs font-medium text-slate-500`
-
-Aangepaste pagina's:
-1. DashboardPage.js
-2. DebiteruenPage.js
-3. CrediteruenPage.js
-4. GrootboekPage.js
-5. BTWPage.js
-6. BankKasPage.js
-7. VoorraadPage.js
-8. RapportagesPage.js
-9. WisselkoersenPage.js
-10. DocumentenPage.js
-11. VerkoopPage.js
-12. InkoopPage.js
-13. VasteActivaPage.js
-14. ProjectenPage.js
-15. HerinneringenPage.js
-16. AuditTrailPage.js
-17. InstellingenPage.js
+### ✅ Alle Eerdere Features
+- MT940 Bankimport
+- PDF Generatie (3 templates)
+- Automatische Reconciliatie
+- E-mail Verzending
+- Excel Export
+- Surinaamse Belastingrapportages
+- CME.sr Wisselkoers Integratie
+- Multi-tenant Ondersteuning
+- Automatische Herinneringen Scheduler
 
 ---
 
 ## Backlog / Toekomstige Taken
 
-### Alle P0, P1, P2, P3 en P4 taken zijn voltooid! 🎉
+### P1 - Hoog Prioriteit
+- [ ] **Complete Backend Refactoring:** `boekhouding_legacy.py` verder opsplitsen in:
+  - `dashboard.py` - Dashboard endpoints
+  - `grootboek.py` - Rekeningen, BTW-codes, Journaalposten
+  - `relaties.py` - Debiteuren, Crediteuren
+  - `bank.py` - Bankrekeningen, Transacties, Import
+  - `verkoop.py` - Verkoopfacturen, Offertes, Orders
+  - `inkoop.py` - Inkoopfacturen, Orders
+  - `rapportages.py` - Alle rapporten
+  - `instellingen.py` - Instellingen, Bedrijven
+- [ ] **Multi-tenancy Verbeteren:** Alle queries strikt filteren op `bedrijf_id`
 
-### ✅ Laatste Implementaties (P4 - December 2025)
+### P2 - Middel Prioriteit
+- [ ] **Frontend Refactoring:** `VerkoopPage.js` (836 regels) en `VoorraadPage.js` (908 regels) opsplitsen
+- [ ] **InstellingenPage.js Refactoring:** (1207 regels) opsplitsen per tab
 
-#### SMTP Instellingen (Voltooid)
-- Gebruikers kunnen eigen SMTP-server configureren
-- Velden: host, poort, gebruikersnaam, wachtwoord, afzender email/naam
-- Test e-mail versturen functionaliteit
-- Gmail configuratie hulp informatie
-
-#### Dashboard Grafieken (Voltooid)
-- Interactieve grafieken met Recharts library
-- Omzet vs Kosten per Maand (BarChart)
-- Cashflow Overzicht (AreaChart)
-- Ouderdomsanalyse Debiteuren (PieChart/Donut)
-- Top 5 Klanten sectie
-- API endpoint: `/api/boekhouding/dashboard/charts`
-
-#### Multi-Tenant Ondersteuning (Voltooid)
-- Bedrijven beheer vanuit één account
-- Nieuw bedrijf toevoegen dialoog
-- Bedrijf activeren/deactiveren
-- Data filtering per actief bedrijf
-- Race condition fix met atomaire MongoDB upsert
-- API endpoints: `/api/boekhouding/bedrijven`, `/api/boekhouding/bedrijven/actief`
-
-#### Custom Factuur Templates (Voltooid)
-- Template keuze (Standaard, Modern, Kleurrijk)
-- Primaire en secundaire kleur picker
-- Live preview van factuur styling
-- Factuur voorwaarden tekstveld
-
-### Mogelijke Toekomstige Verbeteringen (P5)
+### P3 - Laag Prioriteit
+- [ ] Herbruikbare UI componenten (MetricCard)
+- [ ] MT940-import verbeteren
+- [ ] Excel-exports uitbreiden
 - [ ] API rate limiting en caching
 - [ ] Backup en restore functionaliteit
-- [ ] Meer gedetailleerde audit logging
-- [ ] Integratie met Surinaamse banken (indien API beschikbaar)
-- [ ] Dashboard widgets drag & drop
-
-### ✅ CME.sr Wisselkoers Integratie (Voltooid - December 2025)
-- Automatische wisselkoers synchronisatie van Central Money Exchange (cme.sr)
-- Inkoop én verkoop koersen apart opgeslagen
-- Handmatige sync knop op Wisselkoersen pagina
-- Automatische sync bij openen boekhouding module
-- Preview dialog met actuele CME koersen
-- Playwright-gebaseerde scraper voor JavaScript-gerenderde content
-- **Automatische scheduler**: Dagelijkse sync om 09:00, 10:00 en 11:00 Surinaamse tijd (UTC-3)
-- Status indicator op Wisselkoersen pagina toont actieve scheduler
-- API endpoints:
-  - `POST /api/boekhouding/wisselkoersen/sync-cme`
-  - `GET /api/boekhouding/wisselkoersen/cme-preview`
-  - `GET /api/boekhouding/wisselkoersen/scheduler-status`
 
 ---
 
@@ -285,27 +134,25 @@ Aangepaste pagina's:
 - Email: demo@facturatie.sr
 - Wachtwoord: demo2024
 
-### Seed Data
-- 1 Debiteur: Test Klant N.V. (DEB00001)
-- 1 Crediteur: Test Leverancier N.V. (CRE00001)
-- Volledig rekeningschema (1000-2200 series)
-- 10 BTW codes (EX, I0, I10, I25, IM, IV, V0, V10, V25, VV)
-- 1 Wisselkoers: USD/SRD = 35,50
+### Recent Test Rapport
+- `/app/test_reports/iteration_54.json`
+- Backend: 100% (21/21 tests passed)
+- Frontend: 100% (6/6 pages verified)
 
 ---
 
 ## Belangrijke Bestanden
 
 ### Backend
-- `/app/backend/routers/boekhouding.py` - Hoofdrouter
+- `/app/backend/routers/boekhouding/__init__.py` - Module entry point
+- `/app/backend/routers/boekhouding_legacy.py` - Hoofdrouter (4771 regels)
+- `/app/backend/services/grootboek_service.py` - Automatische boeking logica
 - `/app/backend/server.py` - Server configuratie
-- `/app/backend/tests/test_boekhouding_api.py` - API tests
 
 ### Frontend
 - `/app/frontend/src/pages/boekhouding/*.js` - Alle pagina's
 - `/app/frontend/src/lib/boekhoudingApi.js` - API client
-- `/app/frontend/src/lib/utils.js` - Helpers (formatCurrency, etc.)
-- `/app/frontend/src/App.js` - Routing
+- `/app/frontend/src/lib/utils.js` - Helpers
 
 ---
 
@@ -314,6 +161,8 @@ Aangepaste pagina's:
 | Endpoint | Methode | Beschrijving |
 |----------|---------|--------------|
 | `/api/boekhouding/dashboard` | GET | Dashboard KPIs |
+| `/api/boekhouding/upload-image` | POST | Logo/afbeelding uploaden |
+| `/api/boekhouding/instellingen` | GET/PUT | Bedrijfsinstellingen |
 | `/api/boekhouding/rekeningen` | GET/POST | Grootboekrekeningen |
 | `/api/boekhouding/journaalposten` | GET/POST | Journaalposten |
 | `/api/boekhouding/debiteuren` | GET/POST | Klanten |
@@ -325,83 +174,9 @@ Aangepaste pagina's:
 | `/api/boekhouding/verkoopfacturen` | GET/POST | Verkoopfacturen |
 | `/api/boekhouding/inkoopfacturen` | GET/POST | Inkoopfacturen |
 | `/api/boekhouding/artikelen` | GET/POST | Producten/Diensten |
-| `/api/boekhouding/upload-image` | POST | Product afbeelding uploaden |
-| `/api/boekhouding/images/{filename}` | GET | Geüploade afbeelding ophalen |
-| `/api/boekhouding/vaste-activa` | GET/POST | Vaste activa |
-| `/api/boekhouding/projecten` | GET/POST | Projecten |
 | `/api/boekhouding/rapportages/*` | GET | Diverse rapporten |
-| `/api/boekhouding/instellingen` | GET/PUT | Bedrijfsinstellingen |
-| `/api/boekhouding/instellingen/test-email` | POST | Test SMTP configuratie |
 | `/api/boekhouding/bedrijven` | GET/POST | Multi-tenant bedrijven |
-| `/api/boekhouding/bedrijven/actief` | GET | Actief bedrijf |
-| `/api/boekhouding/bedrijven/{id}/activeer` | PUT | Activeer bedrijf |
-| `/api/boekhouding/dashboard/charts` | GET | Dashboard grafieken data |
 
 ---
 
-*Laatste update: 28 februari 2026 - Module-integratie geïmplementeerd - Automatische grootboekboeking*
-
----
-
-## Recente Wijzigingen (Februari 2026)
-
-### ✅ Inkoopfacturen Automatisch Boeken (P2 - VOLTOOID)
-Wanneer een inkoopfactuur naar "geboekt" status gaat, worden automatisch journaalposten aangemaakt:
-- **Debet**: Inkoop (subtotaal)
-- **Debet**: BTW te vorderen (voorbelasting)
-- **Credit**: Crediteuren (totaal incl BTW)
-
-Wanneer een betaling wordt gedaan:
-- **Debet**: Crediteuren
-- **Credit**: Bank
-
-**Nieuwe endpoints:**
-- `POST /api/boekhouding/inkoopfacturen/{id}/betaling` - Betaling registreren
-- `POST /api/boekhouding/inkoopfacturen/boek-alle-geboekt` - Bulk boeking
-
-### ✅ Winst & Verlies uit Grootboek (P2 - VOLTOOID)
-De Winst & Verliesrekening haalt nu data uit de grootboek rekening saldi:
-- Omzet rekeningen (type: omzet/opbrengsten) worden opgeteld
-- Kosten rekeningen (type: kosten) worden opgeteld
-- Alleen rekeningen met saldo ≠ 0 worden getoond
-- Fallback naar facturen als geen grootboek saldi beschikbaar
-
-### ✅ Automatische Grootboekboekingen (P0 - VOLTOOID)
-Wanneer een verkoopfactuur naar "verzonden" status gaat, worden automatisch journaalposten aangemaakt:
-- **Debet**: Debiteuren (rekening code wordt automatisch gevonden)
-- **Credit**: Omzet (type "omzet" wordt gebruikt, niet "kosten")
-- **Credit**: BTW te betalen
-
-Wanneer een betaling wordt geregistreerd:
-- **Debet**: Bank
-- **Credit**: Debiteuren
-
-**Implementatie:**
-- `boek_verkoopfactuur()` - Automatische boeking bij verzending
-- `boek_betaling_ontvangen()` - Automatische boeking bij betaling
-- `boek_inkoopfactuur()` - Automatische boeking bij inkoop
-- `get_rekening_voor_type()` - Slimme lookup die werkt met verschillende rekeningschema's
-- `update_rekening_saldo()` - Bijwerken van grootboek saldi
-- `POST /api/boekhouding/verkoopfacturen/boek-alle-verzonden` - Bulk boeking endpoint
-
-### ✅ Dashboard Verbeteringen (VOLTOOID)
-- BTW te betalen wordt nu correct berekend
-- Openstaande facturen telt nu ook conceptfacturen
-- Debiteuren saldo wordt nu correct weergegeven
-
-### ✅ Debiteuren/Crediteuren Pagina Verbeteringen (VOLTOOID)
-- Openstaand bedrag per klant/leverancier wordt nu automatisch berekend
-- Backend haalt saldi op uit verkoopfacturen/inkoopfacturen per relatie
-
-### ✅ Rapportages - Balans (VOLTOOID)
-- Balans haalt nu data uit grootboek rekening saldi
-- Frontend ondersteunt zowel Nederlandse als Engelse veldnamen
-- Activa en Passiva worden correct weergegeven
-
-### ✅ Structurele Veldnaam Conversie (VOLTOOID)
-Centrale helper functies in `boekhoudingApi.js`:
-- `toBackendFormat()`, `toFrontendFormat()`
-- 80+ veldmappings
-
-### ✅ BTW, Bank/Kas, Grootboek Bugfixes (VOLTOOID)
-- Alle veldnaam-mismatches opgelost
+*Laatste update: 28 februari 2026 - Logo upload geïmplementeerd, InkoopPage bugfix*
