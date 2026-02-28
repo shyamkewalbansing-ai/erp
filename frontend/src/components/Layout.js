@@ -607,7 +607,7 @@ export default function Layout() {
                           {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-40" />}
                           {/* Tooltip for collapsed sidebar */}
                           {isCollapsed && (
-                            <div className="absolute left-full ml-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+                            <div className="fixed ml-16 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none" style={{ zIndex: 9999 }}>
                               {displayLabel}
                               <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                             </div>
@@ -625,7 +625,7 @@ export default function Layout() {
                           {!isCollapsed && <span>{displayLabel}</span>}
                           {/* Tooltip for collapsed sidebar */}
                           {isCollapsed && (
-                            <div className="absolute left-full ml-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+                            <div className="fixed ml-16 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none" style={{ zIndex: 9999 }}>
                               {displayLabel}
                               <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                             </div>
