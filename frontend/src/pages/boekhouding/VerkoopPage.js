@@ -207,6 +207,39 @@ const VerkoopPage = () => {
     }
   };
 
+  // Open payment dialog
+  const openPaymentDialog = (invoice) => {
+    const openstaand = invoice.openstaand_bedrag || invoice.totaal_incl_btw || invoice.total || 0;
+    setSelectedInvoice(invoice);
+    setNewPayment({
+      bedrag: openstaand,
+      datum: new Date().toISOString().split('T')[0],
+      betaalmethode: 'bank',
+      referentie: ''
+    });
+    setShowPaymentDialog(true);
+  };
+
+  // Add payment to invoice
+  const handleAddPayment = async () => {
+    if (!selectedInvoice || newPayment.bedrag <= 0) {
+      toast.error('Vul een geldig bedrag in');
+      return;
+    }
+    setSaving(true);
+    try {
+      await invoicesAPI.addPayment(selectedInvoice.id, newPayment);
+      toast.success('Betaling toegevoegd');
+      setShowPaymentDialog(false);
+      setSelectedInvoice(null);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij toevoegen betaling');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Delete invoice
   const handleDeleteInvoice = async (invoiceId) => {
     if (!window.confirm('Weet u zeker dat u deze factuur wilt verwijderen?')) {
