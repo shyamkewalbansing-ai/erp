@@ -1426,7 +1426,61 @@ const POSPage = () => {
             <DialogTitle className="text-center">📱 Telefoon Scanner</DialogTitle>
           </DialogHeader>
           <div className="py-6 space-y-6">
-            {scannerSession && (
+            {/* Permanent Scanner */}
+            {scannerMode === 'permanent' && permanentScanner && (
+              <>
+                {/* QR Code */}
+                <div className="flex justify-center">
+                  <div className="bg-white p-4 rounded-xl shadow-inner">
+                    <QRCode 
+                      value={`${APP_URL}/scan/p/${permanentScanner.code}`}
+                      size={200}
+                      level="M"
+                    />
+                  </div>
+                </div>
+
+                {/* Badge */}
+                <div className="flex justify-center">
+                  <span className="bg-emerald-100 text-emerald-700 text-xs font-medium px-3 py-1 rounded-full">
+                    ✓ Permanente link - verloopt nooit
+                  </span>
+                </div>
+
+                {/* Instructions */}
+                <div className="text-center space-y-2">
+                  <p className="text-slate-700 font-medium">
+                    Scan deze QR code met je telefoon
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    Sla deze link op - je kunt hem altijd gebruiken!
+                  </p>
+                </div>
+
+                {/* Link */}
+                <div className="bg-slate-100 rounded-lg p-3">
+                  <p className="text-xs text-slate-500 mb-1">Jouw permanente scanner link:</p>
+                  <p className="text-sm font-mono break-all text-slate-700">
+                    {APP_URL}/scan/p/{permanentScanner.code}
+                  </p>
+                </div>
+
+                {/* Copy Button */}
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${APP_URL}/scan/p/${permanentScanner.code}`);
+                    toast.success('Link gekopieerd!');
+                  }}
+                >
+                  📋 Kopieer Link
+                </Button>
+              </>
+            )}
+
+            {/* Temporary Session (fallback) */}
+            {scannerMode === 'temporary' && scannerSession && (
               <>
                 {/* QR Code */}
                 <div className="flex justify-center">
