@@ -550,7 +550,7 @@ const VoorraadPage = () => {
                 <TableBody>
                   {filteredProducts.map(product => {
                     const productName = product.naam || product.name || '';
-                    const stockQty = product.voorraad_aantal || product.stock_quantity || 0;
+                    const stockQty = product.voorraad || product.voorraad_aantal || product.stock_quantity || 0;
                     const minStock = product.minimum_voorraad || product.min_stock || 0;
                     const purchasePrice = product.inkoopprijs || product.purchase_price || 0;
                     const salesPrice = product.verkoopprijs || product.sales_price || 0;
