@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Package, Warehouse, ArrowUpDown, Loader2, Search, AlertTriangle, ImagePlus, X } from 'lucide-react';
+import { Plus, Package, Warehouse, ArrowUpDown, Loader2, Search, AlertTriangle, ImagePlus, X, Pencil, Trash2 } from 'lucide-react';
 
 const VoorraadPage = () => {
   const [products, setProducts] = useState([]);
