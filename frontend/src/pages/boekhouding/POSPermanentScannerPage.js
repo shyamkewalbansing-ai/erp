@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet';
 import { 
   Camera,
   CameraOff,
@@ -11,7 +12,9 @@ import {
   Loader2,
   Wifi,
   WifiOff,
-  ScanLine
+  ScanLine,
+  Download,
+  Share2
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { toast, Toaster } from 'sonner';
@@ -33,6 +36,64 @@ const POSPermanentScannerPage = () => {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [scanCount, setScanCount] = useState(0);
   const [connected, setConnected] = useState(true);
+  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  // Check if running as standalone PWA
+  useEffect(() => {
+    const isInStandaloneMode = window.matchMedia('(display-mode: standalone)').matches 
+      || window.navigator.standalone 
+      || document.referrer.includes('android-app://');
+    setIsStandalone(isInStandaloneMode);
+    
+    // Show install prompt if not in standalone mode and not dismissed
+    if (!isInStandaloneMode && !localStorage.getItem('scanner_install_dismissed')) {
+      setTimeout(() => setShowInstallPrompt(true), 3000);
+    }
+  }, []);
+
+  // Listen for PWA install prompt
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
+
+  // Handle PWA install
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        toast.success('Scanner wordt geïnstalleerd!');
+      }
+      setDeferredPrompt(null);
+    } else {
+      // For iOS - show instructions
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      if (isIOS) {
+        toast.info(
+          <div className="text-sm">
+            <p className="font-bold mb-1">Toevoegen aan beginscherm:</p>
+            <p>1. Tik op het Deel icoon <Share2 className="w-4 h-4 inline" /></p>
+            <p>2. Scroll en tik op "Zet op beginscherm"</p>
+          </div>,
+          { duration: 10000 }
+        );
+      }
+    }
+    setShowInstallPrompt(false);
+  };
+
+  const dismissInstallPrompt = () => {
+    setShowInstallPrompt(false);
+    localStorage.setItem('scanner_install_dismissed', 'true');
+  };
 
   // Validate scanner on load
   useEffect(() => {
