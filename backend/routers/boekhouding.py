@@ -1243,11 +1243,44 @@ async def boek_journaalpost(post_id: str, authorization: str = Header(None)):
 
 @router.get("/debiteuren")
 async def get_debiteuren(authorization: str = Header(None)):
-    """Haal alle debiteuren op"""
+    """Haal alle debiteuren op met hun actuele openstaand saldo"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
+    
+    # Haal alle debiteuren op
     debiteuren = await db.boekhouding_debiteuren.find({"user_id": user_id}).sort("naam", 1).to_list(500)
-    return [clean_doc(d) for d in debiteuren]
+    
+    # Bereken openstaand bedrag per debiteur uit verkoopfacturen
+    openstaand_per_debiteur = await db.boekhouding_verkoopfacturen.aggregate([
+        {"$match": {
+            "user_id": user_id, 
+            "status": {"$nin": ["betaald", "geannuleerd"]},
+            "openstaand_bedrag": {"$gt": 0}
+        }},
+        {"$group": {
+            "_id": "$debiteur_id", 
+            "openstaand": {"$sum": "$openstaand_bedrag"},
+            "aantal_facturen": {"$sum": 1}
+        }}
+    ]).to_list(500)
+    
+    # Maak lookup dict
+    openstaand_dict = {o["_id"]: o for o in openstaand_per_debiteur}
+    
+    # Voeg openstaand bedrag toe aan elke debiteur
+    result = []
+    for d in debiteuren:
+        debiteur = clean_doc(d)
+        debiteur_id = debiteur.get("id")
+        if debiteur_id in openstaand_dict:
+            debiteur["openstaand_bedrag"] = openstaand_dict[debiteur_id]["openstaand"]
+            debiteur["aantal_openstaande_facturen"] = openstaand_dict[debiteur_id]["aantal_facturen"]
+        else:
+            debiteur["openstaand_bedrag"] = 0
+            debiteur["aantal_openstaande_facturen"] = 0
+        result.append(debiteur)
+    
+    return result
 
 @router.get("/debiteuren/{debiteur_id}")
 async def get_debiteur(debiteur_id: str, authorization: str = Header(None)):
