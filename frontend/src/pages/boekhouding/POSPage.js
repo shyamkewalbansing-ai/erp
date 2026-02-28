@@ -103,6 +103,11 @@ const POSPage = () => {
   const lastScannedRef = useRef({ barcode: null, time: 0 });
   const scanCooldown = 2000; // 2 seconds cooldown between same barcode scans
 
+  // Hardware barcode scanner support (USB scanners that act as keyboard)
+  const hardwareScannerBuffer = useRef('');
+  const hardwareScannerTimeout = useRef(null);
+  const lastKeyTime = useRef(0);
+
   // Mobile scanner session state
   const [showScannerLinkDialog, setShowScannerLinkDialog] = useState(false);
   const [scannerSession, setScannerSession] = useState(null);
