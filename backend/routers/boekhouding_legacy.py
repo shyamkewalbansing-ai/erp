@@ -4768,3 +4768,219 @@ async def initialiseer_boekhouding(authorization: str = Header(None)):
         await db.boekhouding_btw_codes.insert_one(btw)
     
     return {"message": "Boekhouding geïnitialiseerd", "rekeningen": len(rekeningen), "btw_codes": len(btw_codes)}
+
+
+
+# ==================== POINT OF SALE ====================
+
+class POSVerkoopCreate(BaseModel):
+    betaalmethode: str = "contant"  # contant, pin, creditcard
+    regels: List[Dict[str, Any]]
+    subtotaal: float
+    btw_bedrag: float
+    totaal: float
+    opmerkingen: Optional[str] = None
+
+
+@router.get("/pos/producten")
+async def get_pos_products(authorization: str = Header(None)):
+    """Haal alle actieve producten op voor POS"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    products = await db.boekhouding_artikelen.find({
+        "user_id": user_id,
+        "type": {"$ne": "dienst"},
+        "is_actief": {"$ne": False}
+    }).to_list(1000)
+    
+    return [clean_doc(p) for p in products]
+
+
+@router.post("/pos/verkopen")
+async def create_pos_sale(data: POSVerkoopCreate, authorization: str = Header(None)):
+    """Maak een POS verkoop aan"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Genereer bonnummer
+    count = await db.boekhouding_pos_verkopen.count_documents({"user_id": user_id})
+    bonnummer = f"POS-{datetime.now().year}{datetime.now().month:02d}-{count + 1:05d}"
+    
+    # Maak verkoop record
+    sale = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "bonnummer": bonnummer,
+        "datum": datetime.now(timezone.utc),
+        "betaalmethode": data.betaalmethode,
+        "regels": data.regels,
+        "subtotaal": data.subtotaal,
+        "btw_bedrag": data.btw_bedrag,
+        "totaal": data.totaal,
+        "opmerkingen": data.opmerkingen,
+        "status": "betaald",
+        "created_at": datetime.now(timezone.utc)
+    }
+    
+    await db.boekhouding_pos_verkopen.insert_one(sale)
+    
+    # Update voorraad voor elk artikel
+    for regel in data.regels:
+        artikel_id = regel.get("artikel_id")
+        aantal = regel.get("aantal", 1)
+        if artikel_id:
+            # Verminder voorraad
+            await db.boekhouding_artikelen.update_one(
+                {"id": artikel_id, "user_id": user_id},
+                {"$inc": {"voorraad": -aantal}}
+            )
+            # Maak voorraadmutatie
+            mutatie = {
+                "id": str(uuid.uuid4()),
+                "user_id": user_id,
+                "artikel_id": artikel_id,
+                "type": "verkoop",
+                "aantal": -aantal,
+                "referentie": bonnummer,
+                "opmerkingen": f"POS verkoop {bonnummer}",
+                "datum": datetime.now(timezone.utc),
+                "created_at": datetime.now(timezone.utc)
+            }
+            await db.boekhouding_voorraadmutaties.insert_one(mutatie)
+    
+    # Maak automatische journaalpost voor de verkoop
+    try:
+        # Bepaal betaalrekening op basis van betaalmethode
+        if data.betaalmethode == "contant":
+            betaal_rekening = await _find_rekening(user_id, "kas", "activa")
+        else:  # pin, creditcard
+            betaal_rekening = await _find_rekening(user_id, "bank", "activa")
+        
+        omzet_rekening = await _find_rekening(user_id, "omzet", "omzet")
+        btw_rekening = await _find_rekening(user_id, "btw te betalen", "passiva")
+        
+        if betaal_rekening and omzet_rekening:
+            regels_jp = [
+                {
+                    "rekening_code": betaal_rekening.get("code"),
+                    "omschrijving": f"POS verkoop {bonnummer}",
+                    "debet": data.totaal,
+                    "credit": 0
+                },
+                {
+                    "rekening_code": omzet_rekening.get("code"),
+                    "omschrijving": f"Omzet POS {bonnummer}",
+                    "debet": 0,
+                    "credit": data.subtotaal
+                }
+            ]
+            
+            if data.btw_bedrag > 0 and btw_rekening:
+                regels_jp.append({
+                    "rekening_code": btw_rekening.get("code"),
+                    "omschrijving": f"BTW POS {bonnummer}",
+                    "debet": 0,
+                    "credit": data.btw_bedrag
+                })
+            
+            await _create_journal_entry(user_id, "POS", regels_jp, bonnummer, f"POS verkoop {bonnummer}")
+    except Exception as e:
+        print(f"Warning: Could not create journal entry for POS sale: {e}")
+    
+    # Log audit
+    await log_audit(user_id, "create", "boekhouding", "pos_verkoop", sale["id"], {
+        "bonnummer": bonnummer,
+        "totaal": data.totaal,
+        "betaalmethode": data.betaalmethode
+    })
+    
+    return clean_doc(sale)
+
+
+@router.get("/pos/verkopen")
+async def get_pos_sales(
+    skip: int = 0,
+    limit: int = 100,
+    datum_van: Optional[str] = None,
+    datum_tot: Optional[str] = None,
+    authorization: str = Header(None)
+):
+    """Haal POS verkopen op"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    query = {"user_id": user_id}
+    
+    if datum_van:
+        query["datum"] = {"$gte": datum_van}
+    if datum_tot:
+        if "datum" in query:
+            query["datum"]["$lte"] = datum_tot
+        else:
+            query["datum"] = {"$lte": datum_tot}
+    
+    sales = await db.boekhouding_pos_verkopen.find(query).sort("datum", -1).skip(skip).limit(limit).to_list(limit)
+    
+    return [clean_doc(s) for s in sales]
+
+
+@router.get("/pos/dagoverzicht")
+async def get_pos_daily_summary(datum: Optional[str] = None, authorization: str = Header(None)):
+    """Haal dagoverzicht POS verkopen op"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Als geen datum, gebruik vandaag
+    if not datum:
+        datum = datetime.now().strftime("%Y-%m-%d")
+    
+    start = f"{datum}T00:00:00"
+    end = f"{datum}T23:59:59"
+    
+    # Aggregeer verkopen per betaalmethode
+    pipeline = [
+        {"$match": {
+            "user_id": user_id,
+            "datum": {"$gte": start, "$lte": end}
+        }},
+        {"$group": {
+            "_id": "$betaalmethode",
+            "aantal": {"$sum": 1},
+            "totaal": {"$sum": "$totaal"},
+            "btw": {"$sum": "$btw_bedrag"}
+        }}
+    ]
+    
+    per_methode = await db.boekhouding_pos_verkopen.aggregate(pipeline).to_list(10)
+    
+    # Totaal overzicht
+    totaal_pipeline = [
+        {"$match": {
+            "user_id": user_id,
+            "datum": {"$gte": start, "$lte": end}
+        }},
+        {"$group": {
+            "_id": None,
+            "aantal_transacties": {"$sum": 1},
+            "totaal_omzet": {"$sum": "$totaal"},
+            "totaal_btw": {"$sum": "$btw_bedrag"},
+            "gem_transactie": {"$avg": "$totaal"}
+        }}
+    ]
+    
+    totaal = await db.boekhouding_pos_verkopen.aggregate(totaal_pipeline).to_list(1)
+    
+    return {
+        "datum": datum,
+        "per_betaalmethode": [
+            {"methode": p["_id"], "aantal": p["aantal"], "totaal": p["totaal"], "btw": p["btw"]}
+            for p in per_methode
+        ],
+        "totaal": totaal[0] if totaal else {
+            "aantal_transacties": 0,
+            "totaal_omzet": 0,
+            "totaal_btw": 0,
+            "gem_transactie": 0
+        }
+    }
