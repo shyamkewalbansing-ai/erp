@@ -9,7 +9,7 @@ De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die spec
 - Bank/Kas (Bank/Cash)
 - BTW-module (VAT module)
 - Rapportages (Financial Reports)
-- **Point of Sale (POS)** - NIEUW
+- **Point of Sale (POS)** - VOLLEDIG UITGEBREID
 - En andere
 
 ## Productvereisten
@@ -56,56 +56,66 @@ Dutch (Nederlands)
 - `boekhouding_voorraadmutaties` - Stock movements
 - `boekhouding_documenten` - Documents
 - `boekhouding_herinneringen` - Payment reminders
-- **`boekhouding_pos_verkopen`** - POS Sales (NIEUW)
+- **`boekhouding_pos_verkopen`** - POS Sales
 
 ---
 
 ## Wat is Voltooid (Maart 2026)
 
-### ✅ Point of Sale (POS) Module - NIEUW
-- **Fullscreen Interface:** Opent zonder sidebar, exact zoals de gebruiker vroeg
-- **Productgrid:** Links, met categorieën, zoekfunctie en productafbeeldingen
-- **Winkelwagen/Kassabon:** Rechts, met aantallen, prijzen en totalen
-- **Afrekenen Flow:**
-  - Subtotaal en BTW (10%) berekening
-  - Betaaldialoog met "Contant" en "Pin/Kaart" opties
-  - Succes dialoog na betaling
-  - "Volgende klant" knop om te resetten
-- **Home Knop:** Navigeert terug naar Boekhouding Dashboard
-- **Sidebar Integratie:** POS link toegevoegd in boekhouding navigatie
-- **Dashboard Knop:** "Point of Sale" quick access knop op dashboard
-- **Automatische Boekingen:**
-  - Voorraad wordt automatisch verminderd na verkoop
-  - Journaalpost wordt automatisch aangemaakt
-  - Voorraadmutatie wordt gelogd
-- **POS Dagoverzicht API:** Aggregeert verkopen per betaalmethode
+### ✅ Point of Sale (POS) - Volledig Uitgebreid
+
+#### Wisselgeld Berekening
+- **Bedrag invoeren**: Groot invoerveld voor ontvangen bedrag
+- **Snelle bedragen**: $5, $10, $20, $50, $100, $200, $500 knoppen + "Exact" knop
+- **Automatische berekening**: Wisselgeld wordt direct getoond in groene box
+- **Validatie**: Knop pas actief als bedrag >= totaal
+
+#### Korting Toepassen
+- **Percentage korting**: Bijv. 10% van subtotaal
+- **Vast bedrag korting**: Bijv. $25 korting
+- **Preview**: Toont hoeveel korting wordt toegepast
+- **Verwijderbaar**: Korting kan worden verwijderd met X knop
+
+#### Klant Koppelen
+- **Klant selecteren**: Dialoog met alle debiteuren
+- **Klant tonen**: Geselecteerde klant wordt getoond in winkelwagen
+- **Klant verwijderen**: Kan worden losgekoppeld
+- **Opslaan bij verkoop**: Klant ID en naam worden opgeslagen
+
+#### Bon Printen
+- **PDF generatie**: Kassabon in 80mm formaat
+- **Inhoud**: Bedrijfsnaam, adres, datum, items, BTW, korting, totaal, wisselgeld
+- **Download**: Direct downloaden als PDF
+
+#### Barcode Scanner
+- **Automatisch scannen**: Luistert naar keyboard input (voor echte scanners)
+- **Handmatig invoeren**: Dialoog voor barcode/artikelcode invoer
+- **Zoeken**: Zoekt op code of barcode veld
+
+#### Correcte Grootboek Koppeling
+- **Contant**: Geld gaat naar Kas rekening (activa)
+- **Pin/Kaart**: Geld gaat naar Bank rekening (activa)
+- **Omzet**: Automatisch geboekt naar Omzet rekening
+- **BTW**: Automatisch geboekt naar BTW te betalen rekening
+
+#### Nieuwe API Endpoints
+| Endpoint | Methode | Beschrijving |
+|----------|---------|--------------|
+| `/api/boekhouding/pos/verkopen/{id}/bon` | GET | PDF kassabon downloaden |
+| `/api/boekhouding/pos/kassa-status` | GET | Kas saldo, dagomzet, transacties |
+| `/api/boekhouding/pos/dagoverzicht` | GET | Overzicht per betaalmethode |
 
 ### ✅ Logo Upload Functionaliteit
-- Nieuwe logo upload sectie in Instellingen pagina
+- Logo upload sectie in Instellingen pagina
 - Ondersteunt JPG, PNG, GIF, WEBP (max 5MB)
-- Preview van huidige logo
-- Verwijder knop
-- Alternatief: URL invoer
-- Logo wordt gebruikt op facturen en documenten
 
 ### ✅ Backend Refactoring Voorbereiding
-- `/app/backend/routers/boekhouding.py` verplaatst naar `boekhouding_legacy.py`
-- Nieuwe modulaire structuur voorbereid in `/app/backend/routers/boekhouding/`
-- `grootboek_service.py` geëxtraheerd naar `/app/backend/services/`
-- Backward compatible via `__init__.py` import
-
-### ✅ InkoopPage Bugfix
-- Correcte API gebruikt (`purchaseInvoicesAPI` i.p.v. `invoicesAPI`)
-- Nederlandse veldnamen support
-- Extern factuurnummer veld toegevoegd
-
-### ✅ Architecturale Integratie (Grootboek) - Vorige Sessie
-- Automatische journaalposten voor verkoop, inkoop en betalingen
-- Rapportages halen data uit grootboeksaldi
+- Modulaire structuur voorbereid
+- `grootboek_service.py` geëxtraheerd
 
 ### ✅ Alle Eerdere Features
 - MT940 Bankimport
-- PDF Generatie (3 templates)
+- PDF Factuur Generatie (3 templates)
 - Automatische Reconciliatie
 - E-mail Verzending
 - Excel Export
@@ -118,19 +128,6 @@ Dutch (Nederlands)
 
 ## POS Technische Details
 
-### Backend Endpoints
-| Endpoint | Methode | Beschrijving |
-|----------|---------|--------------|
-| `/api/boekhouding/pos/producten` | GET | Haal actieve producten op |
-| `/api/boekhouding/pos/verkopen` | POST | Maak POS verkoop aan |
-| `/api/boekhouding/pos/verkopen` | GET | Haal POS verkopen op |
-| `/api/boekhouding/pos/dagoverzicht` | GET | Dag-overzicht per betaalmethode |
-
-### Frontend Files
-- `/app/frontend/src/pages/boekhouding/POSPage.js` - Hoofdcomponent
-- `/app/frontend/src/App.js` - Route (buiten Layout voor fullscreen)
-- `/app/frontend/src/components/Layout.js` - Sidebar link
-
 ### POS Verkoop Data Model
 ```javascript
 {
@@ -139,6 +136,8 @@ Dutch (Nederlands)
   bonnummer: "POS-202602-00001",
   datum: "2026-02-28T03:00:00Z",
   betaalmethode: "contant" | "pin",
+  klant_id: "uuid" | null,
+  klant_naam: "Klant Naam" | null,
   regels: [
     {
       artikel_id: "uuid",
@@ -150,8 +149,13 @@ Dutch (Nederlands)
     }
   ],
   subtotaal: 500.00,
-  btw_bedrag: 50.00,
-  totaal: 550.00,
+  korting_type: "percentage" | "fixed" | null,
+  korting_waarde: 10,
+  korting_bedrag: 50.00,
+  btw_bedrag: 45.00,
+  totaal: 495.00,
+  ontvangen_bedrag: 500.00,
+  wisselgeld: 5.00,
   status: "betaald"
 }
 ```
@@ -161,17 +165,15 @@ Dutch (Nederlands)
 ## Backlog / Toekomstige Taken
 
 ### P1 - Hoog Prioriteit
-- [ ] **Complete Backend Refactoring:** `boekhouding_legacy.py` verder opsplitsen
+- [ ] **Complete Backend Refactoring:** `boekhouding_legacy.py` (5200+ regels) opsplitsen
 - [ ] **Multi-tenancy Verbeteren:** Alle queries strikt filteren op `bedrijf_id`
 
 ### P2 - Middel Prioriteit
 - [ ] **Frontend Refactoring:** `VerkoopPage.js` en `VoorraadPage.js` opsplitsen
-- [ ] **POS Verbeteringen:**
-  - [ ] Kassalade openen (hardware integratie)
-  - [ ] Bonprinter ondersteuning
-  - [ ] Barcode scanner
-  - [ ] Korting toepassen
-  - [ ] Klant koppelen aan verkoop
+- [ ] **POS Hardware Integratie:**
+  - [ ] Kassalade openen (hardware signaal)
+  - [ ] Thermische bonprinter ondersteuning
+  - [ ] Betaalterminal integratie
 
 ### P3 - Laag Prioriteit
 - [ ] Herbruikbare UI componenten (MetricCard)
@@ -188,9 +190,9 @@ Dutch (Nederlands)
 - Wachtwoord: demo2024
 
 ### Recent Test Rapport
-- `/app/test_reports/iteration_55.json`
-- Backend: 100% (8/8 tests passed)
-- Frontend: 100% (11/11 features verified)
+- `/app/test_reports/iteration_56.json`
+- Backend: 100% (14/14 tests passed)
+- Frontend: 100% (16/16 features verified)
 
 ---
 
@@ -198,16 +200,16 @@ Dutch (Nederlands)
 
 ### Backend
 - `/app/backend/routers/boekhouding/__init__.py`
-- `/app/backend/routers/boekhouding_legacy.py` (4900+ regels)
+- `/app/backend/routers/boekhouding_legacy.py` (5200+ regels)
 - `/app/backend/services/grootboek_service.py`
-- `/app/backend/tests/test_pos_boekhouding.py` (NIEUW)
+- `/app/backend/tests/test_pos_extended_features.py`
 
 ### Frontend
-- `/app/frontend/src/pages/boekhouding/POSPage.js` (NIEUW)
+- `/app/frontend/src/pages/boekhouding/POSPage.js` (850+ regels)
 - `/app/frontend/src/pages/boekhouding/DashboardPage.js`
 - `/app/frontend/src/pages/boekhouding/InstellingenPage.js`
 - `/app/frontend/src/lib/boekhoudingApi.js`
 
 ---
 
-*Laatste update: 28 februari 2026 - Point of Sale module volledig geïmplementeerd*
+*Laatste update: 28 februari 2026 - POS volledig uitgebreid met wisselgeld, korting, klant, barcode en bon printen*
