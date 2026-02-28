@@ -319,7 +319,8 @@ async def boek_betaling_ontvangen(user_id: str, factuur: dict, betaling: dict, b
     Debet: Bank/Kas
     Credit: Debiteuren
     """
-    bank_code = bankrekening_code or DEFAULT_REKENINGEN["bank"]
+    bank_code = bankrekening_code or await get_rekening_voor_type(user_id, "bank")
+    debiteuren_code = await get_rekening_voor_type(user_id, "debiteuren")
     
     regels = [
         {
@@ -329,7 +330,7 @@ async def boek_betaling_ontvangen(user_id: str, factuur: dict, betaling: dict, b
             "credit": 0
         },
         {
-            "rekening_code": DEFAULT_REKENINGEN["debiteuren"],
+            "rekening_code": debiteuren_code,
             "omschrijving": f"Afboeking debiteur: {factuur.get('debiteur_naam', 'Onbekend')}",
             "debet": 0,
             "credit": betaling.get("bedrag", 0)
