@@ -266,45 +266,101 @@ const POSPage = () => {
     fetchCustomers();
   }, [fetchProducts, fetchCustomers]);
 
-  // Barcode scanner - listen for keyboard input
+  // Hardware barcode scanner - listen for keyboard input from USB scanners
+  // USB scanners typically "type" the barcode very fast and end with Enter
   useEffect(() => {
-    let barcodeBuffer = '';
-    let lastKeyTime = Date.now();
-    
-    const handleKeyPress = (e) => {
-      // Only process if no dialog is open and not in an input field
-      if (showPaymentDialog || showDiscountDialog || showCustomerDialog) return;
-      if (e.target.tagName === 'INPUT') return;
-      
+    const handleKeyDown = (e) => {
       const currentTime = Date.now();
+      const timeDiff = currentTime - lastKeyTime.current;
       
-      // If more than 100ms since last key, reset buffer (barcode scanners are fast)
-      if (currentTime - lastKeyTime > 100) {
-        barcodeBuffer = '';
+      // If more than 50ms since last key, reset buffer (barcode scanners type very fast, usually <30ms between chars)
+      if (timeDiff > 50) {
+        hardwareScannerBuffer.current = '';
       }
-      lastKeyTime = currentTime;
+      lastKeyTime.current = currentTime;
       
-      if (e.key === 'Enter' && barcodeBuffer.length > 3) {
+      // Clear any existing timeout
+      if (hardwareScannerTimeout.current) {
+        clearTimeout(hardwareScannerTimeout.current);
+      }
+      
+      // Handle Enter key - process the barcode
+      if (e.key === 'Enter' && hardwareScannerBuffer.current.length >= 3) {
+        e.preventDefault();
+        const scannedBarcode = hardwareScannerBuffer.current;
+        hardwareScannerBuffer.current = '';
+        
         // Search for product by barcode/code
         const product = products.find(p => 
-          p.code?.toLowerCase() === barcodeBuffer.toLowerCase() ||
-          p.barcode?.toLowerCase() === barcodeBuffer.toLowerCase()
+          p.code?.toLowerCase() === scannedBarcode.toLowerCase() ||
+          p.barcode?.toLowerCase() === scannedBarcode.toLowerCase() ||
+          p.ean?.toLowerCase() === scannedBarcode.toLowerCase()
         );
+        
         if (product) {
           addToCart(product);
-          toast.success(`${product.naam} toegevoegd`);
+          toast.success(
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🔊</span>
+              <span><strong>{product.naam}</strong> gescand</span>
+            </div>
+          );
+          // Play a beep sound for successful scan
+          try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = 1000;
+            gainNode.gain.value = 0.1;
+            oscillator.start();
+            setTimeout(() => { oscillator.stop(); audioContext.close(); }, 100);
+          } catch (e) {}
         } else {
-          toast.error(`Product niet gevonden: ${barcodeBuffer}`);
+          toast.error(`Product niet gevonden: ${scannedBarcode}`);
+          // Error beep
+          try {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            oscillator.frequency.value = 300;
+            gainNode.gain.value = 0.1;
+            oscillator.start();
+            setTimeout(() => { oscillator.stop(); audioContext.close(); }, 200);
+          } catch (e) {}
         }
-        barcodeBuffer = '';
-      } else if (e.key.length === 1 && /[a-zA-Z0-9]/.test(e.key)) {
-        barcodeBuffer += e.key;
+        return;
+      }
+      
+      // Only capture alphanumeric characters (barcode characters)
+      if (e.key.length === 1 && /[a-zA-Z0-9\-]/.test(e.key)) {
+        // Don't capture if user is typing in an input field slowly (human typing)
+        // But DO capture if it's fast typing (scanner)
+        const isScanner = timeDiff < 50;
+        const isInInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA';
+        
+        if (isScanner || !isInInput) {
+          hardwareScannerBuffer.current += e.key;
+          
+          // Set a timeout to clear the buffer if no more keys come (partial scan cleanup)
+          hardwareScannerTimeout.current = setTimeout(() => {
+            hardwareScannerBuffer.current = '';
+          }, 100);
+        }
       }
     };
     
-    window.addEventListener('keypress', handleKeyPress);
-    return () => window.removeEventListener('keypress', handleKeyPress);
-  }, [products, showPaymentDialog, showDiscountDialog, showCustomerDialog]);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (hardwareScannerTimeout.current) {
+        clearTimeout(hardwareScannerTimeout.current);
+      }
+    };
+  }, [products]);
 
   const filteredProducts = products.filter(p => {
     const matchesCategory = selectedCategory === 'all' || 
