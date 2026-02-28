@@ -237,6 +237,18 @@ const VoorraadPage = () => {
   };
 
   const handleScannedBarcode = (barcode) => {
+    const now = Date.now();
+    
+    // Prevent duplicate scans of the same barcode within cooldown period
+    if (lastScannedRef.current.barcode === barcode && 
+        now - lastScannedRef.current.time < scanCooldown) {
+      return; // Ignore duplicate scan
+    }
+    
+    // Update last scanned reference
+    lastScannedRef.current = { barcode, time: now };
+    
+    // Stop scanner immediately after successful scan
     stopBarcodeScanner();
     
     if (barcodeScanTarget === 'new') {
