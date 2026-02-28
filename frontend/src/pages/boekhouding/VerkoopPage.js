@@ -12,7 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from '../../components/ui/badge';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
-import { Plus, FileText, ShoppingCart, Receipt, Loader2, Trash2, Download } from 'lucide-react';
+import { Plus, FileText, ShoppingCart, Receipt, Loader2, Trash2, Download, Send, CheckCircle, MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/dropdown-menu';
 
 const VerkoopPage = () => {
   const [quotes, setQuotes] = useState([]);
