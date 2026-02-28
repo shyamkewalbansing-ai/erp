@@ -510,6 +510,108 @@ const InstellingenPage = () => {
               </CardContent>
             </Card>
           </div>
+
+          {/* Bedrijfslogo Card */}
+          <Card className="bg-white border border-slate-100 shadow-sm">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center">
+                  <Image className="w-5 h-5 text-indigo-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-base font-semibold text-slate-900">Bedrijfslogo</CardTitle>
+                  <CardDescription className="text-sm text-slate-500">Upload uw logo voor facturen en documenten</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start gap-6">
+                {/* Logo Preview */}
+                <div className="flex-shrink-0">
+                  {settings.logo_url ? (
+                    <div className="relative group">
+                      <img 
+                        src={settings.logo_url.startsWith('http') ? settings.logo_url : `${API_URL}${settings.logo_url}`}
+                        alt="Bedrijfslogo"
+                        className="w-40 h-40 object-contain border border-slate-200 rounded-lg bg-white p-2"
+                        data-testid="company-logo-preview"
+                      />
+                      <button
+                        onClick={handleRemoveLogo}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="Logo verwijderen"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-40 h-40 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-slate-50">
+                      <div className="text-center text-slate-400">
+                        <Image className="w-10 h-10 mx-auto mb-2" />
+                        <span className="text-xs">Geen logo</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Upload Controls */}
+                <div className="flex-1 space-y-4">
+                  <div>
+                    <Label className="text-slate-700">Logo uploaden</Label>
+                    <p className="text-sm text-slate-500 mt-1 mb-3">
+                      Upload een logo (JPG, PNG, GIF of WEBP, max 5MB). Dit logo verschijnt op uw facturen en andere documenten.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <Button 
+                        variant="outline" 
+                        disabled={uploadingLogo}
+                        onClick={() => document.getElementById('logo-upload-input').click()}
+                        data-testid="upload-logo-btn"
+                      >
+                        {uploadingLogo ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4 mr-2" />
+                        )}
+                        {uploadingLogo ? 'Uploaden...' : 'Logo Kiezen'}
+                      </Button>
+                      <input
+                        id="logo-upload-input"
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        className="hidden"
+                        onChange={handleLogoUpload}
+                      />
+                      {settings.logo_url && (
+                        <Button 
+                          variant="ghost" 
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={handleRemoveLogo}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Verwijderen
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Of URL invoeren */}
+                  <div className="pt-4 border-t border-slate-100">
+                    <Label className="text-slate-700">Of voer een URL in</Label>
+                    <div className="flex gap-2 mt-2">
+                      <Input
+                        value={settings.logo_url || ''}
+                        onChange={(e) => setSettings({...settings, logo_url: e.target.value})}
+                        placeholder="https://example.com/logo.png"
+                        className="flex-1"
+                        data-testid="logo-url-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* E-mail (SMTP) Tab */}
