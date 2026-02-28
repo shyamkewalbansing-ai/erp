@@ -250,10 +250,11 @@ const DashboardPage = () => {
   };
 
   // Calculate totals from dashboard data
-  const totalIncome = dashboardData?.totaal_verkoop || 78000;
-  const totalExpense = dashboardData?.totaal_inkoop || 43000;
-  const totalSavings = totalIncome - totalExpense;
-  const weeklyEarning = dashboardData?.week_verkoop || 678897;
+  const totalIncome = dashboardData?.omzet?.deze_maand || 0;
+  const totalExpense = dashboardData?.kosten?.deze_maand || 0;
+  const totalSavings = dashboardData?.winst?.deze_maand || (totalIncome - totalExpense);
+  const openstaandDebiteuren = dashboardData?.openstaand?.debiteuren || 0;
+  const kasBalance = dashboardData?.liquiditeit?.bank_srd || 0;
 
   return (
     <div className="min-h-screen bg-slate-50/50">
