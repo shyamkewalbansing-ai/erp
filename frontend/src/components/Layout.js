@@ -152,6 +152,7 @@ const suribetNavItems = [
 // Boekhouding Module navigation - Complete Finance OS sidebar
 const boekhoudingNavItems = [
   { to: '/app/boekhouding', icon: LayoutDashboard, label: 'Dashboard', addon: 'boekhouding' },
+  { to: '/app/boekhouding/pos', icon: Store, label: 'Point of Sale', addon: 'boekhouding', fullscreen: true },
   { to: '/app/boekhouding/grootboek', icon: BookOpen, label: 'Grootboek', addon: 'boekhouding' },
   { to: '/app/boekhouding/debiteuren', icon: Users, label: 'Debiteuren', addon: 'boekhouding' },
   { to: '/app/boekhouding/crediteuren', icon: Building2, label: 'Crediteuren', addon: 'boekhouding' },
