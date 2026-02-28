@@ -1,17 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import { accountsAPI, journalAPI } from '../../lib/boekhoudingApi';
 import { accountTypes, journalTypes, getStatusColor, getStatusLabel } from '../../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
+import { Skeleton } from '../../components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '../../components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../../components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, BookOpen, FileText, Loader2, RefreshCw, Link2, Edit } from 'lucide-react';
+import { 
+  Plus, 
+  BookOpen, 
+  FileText, 
+  Loader2, 
+  RefreshCw, 
+  Link2, 
+  ChevronDown,
+  ArrowUpRight,
+  TrendingUp,
+  Wallet,
+  Filter,
+  Search
+} from 'lucide-react';
+
+// Stat Card Component matching Dashboard style
+const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'default' }) => {
+  if (loading) {
+    return (
+      <Card className="bg-white border-0 shadow-sm rounded-2xl">
+        <CardContent className="p-6">
+          <Skeleton className="h-4 w-24 mb-4" />
+          <Skeleton className="h-10 w-32 mb-2" />
+          <Skeleton className="h-4 w-20" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className={`border-0 shadow-sm rounded-2xl ${
+      variant === 'primary' ? 'bg-emerald-50' : 'bg-white'
+    }`}>
+      <CardContent className="p-6">
+        <div className="flex items-start justify-between mb-4">
+          <span className="text-sm text-slate-500 font-medium">{title}</span>
+          {Icon && (
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+              variant === 'primary' ? 'bg-emerald-100' : 'bg-slate-100'
+            }`}>
+              <Icon className={`w-5 h-5 ${
+                variant === 'primary' ? 'text-emerald-600' : 'text-slate-600'
+              }`} />
+            </div>
+          )}
+        </div>
+        <div className="text-3xl font-bold text-slate-900 mb-2">{value}</div>
+        {subtitle && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-slate-400">{subtitle}</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
 
 const GrootboekPage = () => {
   const [accounts, setAccounts] = useState([]);
@@ -25,6 +81,7 @@ const GrootboekPage = () => {
   const [saving, setSaving] = useState(false);
   const [initializingSchema, setInitializingSchema] = useState(false);
   const [selectedType, setSelectedType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [newAccount, setNewAccount] = useState({
     code: '',
@@ -94,9 +151,8 @@ const GrootboekPage = () => {
     }
   };
 
-  // Initialize standard Surinamese chart of accounts
   const handleInitStandaardSchema = async () => {
-    if (!window.confirm('Weet u zeker dat u het standaard Surinaamse rekeningschema wilt laden? Dit werkt alleen als er nog geen rekeningen zijn.')) {
+    if (!window.confirm('Weet u zeker dat u het standaard Surinaamse rekeningschema wilt laden?')) {
       return;
     }
     setInitializingSchema(true);
@@ -111,14 +167,12 @@ const GrootboekPage = () => {
     }
   };
 
-  // Open dialog to edit external code for an account
   const openExterneCodeDialog = (account) => {
     setSelectedAccount(account);
     setExterneCode(account.externe_code || '');
     setShowExterneCodeDialog(true);
   };
 
-  // Save external code
   const handleSaveExterneCode = async () => {
     if (!selectedAccount) return;
     setSaving(true);
@@ -189,9 +243,17 @@ const GrootboekPage = () => {
     });
   };
 
-  const filteredAccounts = selectedType === 'all' 
+  // Filter accounts
+  let filteredAccounts = selectedType === 'all' 
     ? accounts 
     : accounts.filter(a => a.type === selectedType);
+  
+  if (searchTerm) {
+    filteredAccounts = filteredAccounts.filter(a => 
+      a.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.naam?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
 
   const groupedAccounts = filteredAccounts.reduce((acc, account) => {
     const type = account.type;
@@ -200,63 +262,304 @@ const GrootboekPage = () => {
     return acc;
   }, {});
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96" data-testid="grootboek-page">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-      </div>
-    );
-  }
+  // Calculate totals
+  const totalDebet = accounts.reduce((sum, acc) => sum + (acc.saldo > 0 ? acc.saldo : 0), 0);
+  const totalCredit = accounts.reduce((sum, acc) => sum + (acc.saldo < 0 ? Math.abs(acc.saldo) : 0), 0);
 
   return (
-    <div className="space-y-6 " data-testid="grootboek-page">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Grootboek</h1>
-          <p className="text-slate-500 mt-0.5">Beheer uw rekeningschema en journaalposten</p>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          {accounts.length === 0 && (
-            <Button 
-              variant="outline" 
-              onClick={handleInitStandaardSchema} 
-              disabled={initializingSchema}
-              data-testid="init-standaard-btn"
-            >
-              {initializingSchema ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-              Standaard Schema Laden
-            </Button>
-          )}
-          <Dialog open={showAccountDialog} onOpenChange={setShowAccountDialog}>
-            <DialogTrigger asChild>
-              <Button variant="outline" data-testid="add-account-btn">
-                <Plus className="w-4 h-4 mr-2" />
-                Rekening
+    <div className="min-h-screen bg-slate-50/50" data-testid="grootboek-page">
+      {/* Top Header */}
+      <div className="bg-white border-b border-slate-100 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">Grootboek</h1>
+            <p className="text-sm text-slate-500">Beheer uw rekeningschema en journaalposten</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {accounts.length === 0 && (
+              <Button 
+                variant="outline" 
+                onClick={handleInitStandaardSchema} 
+                disabled={initializingSchema}
+                className="rounded-lg"
+                data-testid="init-standaard-btn"
+              >
+                {initializingSchema ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                Standaard Schema
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Nieuwe Rekening</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Code *</Label>
-                    <Input
-                      value={newAccount.code}
-                      onChange={(e) => setNewAccount({...newAccount, code: e.target.value})}
-                      placeholder="1000"
-                      data-testid="account-code-input"
-                    />
+            )}
+            <Dialog open={showAccountDialog} onOpenChange={setShowAccountDialog}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="rounded-lg" data-testid="add-account-btn">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Rekening
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Nieuwe Rekening</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Code *</Label>
+                      <Input
+                        value={newAccount.code}
+                        onChange={(e) => setNewAccount({...newAccount, code: e.target.value})}
+                        placeholder="1000"
+                        data-testid="account-code-input"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Valuta</Label>
+                      <Select value={newAccount.valuta} onValueChange={(v) => setNewAccount({...newAccount, valuta: v})}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="SRD">SRD</SelectItem>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div className="space-y-2">
-                    <Label>Type *</Label>
-                    <Select value={newAccount.type} onValueChange={(v) => setNewAccount({...newAccount, type: v})}>
-                      <SelectTrigger data-testid="account-type-select">
+                    <Label>Naam *</Label>
+                    <Input
+                      value={newAccount.naam}
+                      onChange={(e) => setNewAccount({...newAccount, naam: e.target.value})}
+                      placeholder="Kas"
+                      data-testid="account-name-input"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Type *</Label>
+                      <Select value={newAccount.type} onValueChange={(v) => setNewAccount({...newAccount, type: v})}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(accountTypes).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Categorie *</Label>
+                      <Input
+                        value={newAccount.categorie}
+                        onChange={(e) => setNewAccount({...newAccount, categorie: e.target.value})}
+                        placeholder="Liquide middelen"
+                        data-testid="account-category-input"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowAccountDialog(false)}>Annuleren</Button>
+                  <Button onClick={handleCreateAccount} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Opslaan
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={showJournalDialog} onOpenChange={setShowJournalDialog}>
+              <DialogTrigger asChild>
+                <Button className="rounded-lg bg-emerald-600 hover:bg-emerald-700" data-testid="add-journal-btn">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Journaalpost
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Nieuwe Journaalpost</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Datum</Label>
+                      <Input
+                        type="date"
+                        value={newJournal.datum}
+                        onChange={(e) => setNewJournal({...newJournal, datum: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Dagboek</Label>
+                      <Select value={newJournal.dagboek_code} onValueChange={(v) => setNewJournal({...newJournal, dagboek_code: v})}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(journalTypes).map(([key, label]) => (
+                            <SelectItem key={key} value={key}>{label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Omschrijving</Label>
+                      <Input
+                        value={newJournal.omschrijving}
+                        onChange={(e) => setNewJournal({...newJournal, omschrijving: e.target.value})}
+                        placeholder="Omschrijving"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="border rounded-xl overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-slate-50">
+                          <TableHead className="text-xs">Rekening</TableHead>
+                          <TableHead className="w-32 text-xs text-right">Debet</TableHead>
+                          <TableHead className="w-32 text-xs text-right">Credit</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {newJournal.regels.map((regel, idx) => (
+                          <TableRow key={idx}>
+                            <TableCell>
+                              <Select value={regel.rekening_id} onValueChange={(v) => updateJournalLine(idx, 'rekening_id', v)}>
+                                <SelectTrigger className="text-sm">
+                                  <SelectValue placeholder="Selecteer rekening" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {accounts.map(acc => (
+                                    <SelectItem key={acc.id} value={acc.id}>
+                                      {acc.code} - {acc.naam}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={regel.debet || ''}
+                                onChange={(e) => updateJournalLine(idx, 'debet', e.target.value)}
+                                className="text-right text-sm"
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                type="number"
+                                step="0.01"
+                                value={regel.credit || ''}
+                                onChange={(e) => updateJournalLine(idx, 'credit', e.target.value)}
+                                className="text-right text-sm"
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        <TableRow className="bg-emerald-50">
+                          <TableCell className="text-sm font-medium text-slate-700">Totaal</TableCell>
+                          <TableCell className="text-right text-sm font-bold text-emerald-700">
+                            {formatAmount(newJournal.regels.reduce((s, l) => s + (parseFloat(l.debet) || 0), 0), 'SRD')}
+                          </TableCell>
+                          <TableCell className="text-right text-sm font-bold text-emerald-700">
+                            {formatAmount(newJournal.regels.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0), 'SRD')}
+                          </TableCell>
+                        </TableRow>
+                      </TableBody>
+                    </Table>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button variant="outline" onClick={addJournalLine} className="rounded-lg">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Regel toevoegen
+                    </Button>
+                    <Button onClick={handleCreateJournal} className="ml-auto bg-emerald-600 hover:bg-emerald-700 rounded-lg" disabled={saving}>
+                      {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                      Opslaan
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-6 space-y-6">
+        {/* Stats Row */}
+        <div className="grid grid-cols-4 gap-6">
+          <StatCard
+            title="Totaal Rekeningen"
+            value={accounts.length}
+            subtitle="Actieve rekeningen"
+            icon={BookOpen}
+            loading={loading}
+          />
+          <StatCard
+            title="Journaalposten"
+            value={journalEntries.length}
+            subtitle="Totale boekingen"
+            icon={FileText}
+            loading={loading}
+          />
+          <StatCard
+            title="Totaal Debet"
+            value={formatAmount(totalDebet, 'SRD')}
+            subtitle="Alle rekeningen"
+            icon={TrendingUp}
+            loading={loading}
+            variant="primary"
+          />
+          <StatCard
+            title="Totaal Credit"
+            value={formatAmount(totalCredit, 'SRD')}
+            subtitle="Alle rekeningen"
+            icon={Wallet}
+            loading={loading}
+          />
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="accounts" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <TabsList className="bg-white border border-slate-200 rounded-xl p-1">
+              <TabsTrigger 
+                value="accounts" 
+                className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700"
+                data-testid="tab-accounts"
+              >
+                <BookOpen className="w-4 h-4 mr-2" />
+                Rekeningschema
+              </TabsTrigger>
+              <TabsTrigger 
+                value="journal"
+                className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700"
+                data-testid="tab-journal"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Journaalposten
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="accounts">
+            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+              <CardContent className="p-6">
+                {/* Filter Bar */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        placeholder="Zoek rekening..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 w-64 rounded-lg"
+                      />
+                    </div>
+                    <Select value={selectedType} onValueChange={setSelectedType}>
+                      <SelectTrigger className="w-48 rounded-lg">
+                        <Filter className="w-4 h-4 mr-2" />
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem value="all">Alle types</SelectItem>
                         {Object.entries(accountTypes).map(([key, label]) => (
                           <SelectItem key={key} value={key}>{label}</SelectItem>
                         ))}
@@ -264,384 +567,151 @@ const GrootboekPage = () => {
                     </Select>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Naam *</Label>
-                  <Input
-                    value={newAccount.naam}
-                    onChange={(e) => setNewAccount({...newAccount, naam: e.target.value})}
-                    placeholder="Kas"
-                    data-testid="account-name-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Categorie *</Label>
-                  <Input
-                    value={newAccount.categorie}
-                    onChange={(e) => setNewAccount({...newAccount, categorie: e.target.value})}
-                    placeholder="Liquide middelen"
-                    data-testid="account-category-input"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Valuta</Label>
-                  <Select value={newAccount.valuta} onValueChange={(v) => setNewAccount({...newAccount, valuta: v})}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="SRD">SRD</SelectItem>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button onClick={handleCreateAccount} className="w-full" disabled={saving} data-testid="save-account-btn">
-                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                  Opslaan
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
 
-          <Dialog open={showJournalDialog} onOpenChange={setShowJournalDialog}>
-            <DialogTrigger asChild>
-              <Button data-testid="add-journal-btn">
-                <Plus className="w-4 h-4 mr-2" />
-                Journaalpost
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-3xl">
-              <DialogHeader>
-                <DialogTitle>Nieuwe Journaalpost</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Datum</Label>
-                    <Input
-                      type="date"
-                      value={newJournal.datum}
-                      onChange={(e) => setNewJournal({...newJournal, datum: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Dagboek</Label>
-                    <Select value={newJournal.dagboek_code} onValueChange={(v) => setNewJournal({...newJournal, dagboek_code: v})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(journalTypes).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Omschrijving</Label>
-                    <Input
-                      value={newJournal.omschrijving}
-                      onChange={(e) => setNewJournal({...newJournal, omschrijving: e.target.value})}
-                      placeholder="Omschrijving"
-                    />
-                  </div>
+                {/* Accounts Table */}
+                <div className="space-y-6">
+                  {Object.entries(groupedAccounts).map(([type, accs]) => (
+                    <div key={type}>
+                      <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                        {accountTypes[type]}
+                        <Badge variant="outline" className="ml-2 text-xs">{accs.length}</Badge>
+                      </h3>
+                      <div className="border border-slate-100 rounded-xl overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="bg-slate-50/50">
+                              <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
+                              <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
+                              <TableHead className="text-xs font-medium text-slate-500">Categorie</TableHead>
+                              <TableHead className="w-28 text-xs font-medium text-slate-500">Externe Code</TableHead>
+                              <TableHead className="w-20 text-xs font-medium text-slate-500">Valuta</TableHead>
+                              <TableHead className="text-right w-36 text-xs font-medium text-slate-500">Saldo</TableHead>
+                              <TableHead className="w-16"></TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {accs.map(account => (
+                              <TableRow key={account.id} className="hover:bg-slate-50/50" data-testid={`account-row-${account.code}`}>
+                                <TableCell className="text-sm font-mono text-slate-600">{account.code}</TableCell>
+                                <TableCell className="text-sm font-medium text-slate-900">{account.naam}</TableCell>
+                                <TableCell className="text-sm text-slate-500">{account.categorie}</TableCell>
+                                <TableCell className="text-sm text-slate-400 font-mono">
+                                  {account.externe_code || '-'}
+                                </TableCell>
+                                <TableCell>
+                                  <Badge variant="outline" className="text-xs rounded-md">{account.valuta}</Badge>
+                                </TableCell>
+                                <TableCell className={`text-right text-sm font-semibold ${
+                                  account.saldo < 0 ? 'text-red-600' : 'text-emerald-600'
+                                }`}>
+                                  {formatAmount(account.saldo || 0, account.valuta)}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openExterneCodeDialog(account)}
+                                    className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
+                                    title="Externe code koppelen"
+                                  >
+                                    <Link2 className="w-4 h-4 text-slate-400" />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+                  ))}
+                  {Object.keys(groupedAccounts).length === 0 && (
+                    <div className="text-center py-16 text-slate-500">
+                      <BookOpen className="w-16 h-16 mx-auto mb-4 text-slate-200" />
+                      <p className="text-lg font-medium mb-2">Geen rekeningen gevonden</p>
+                      <p className="text-sm mb-6">Klik op "Standaard Schema" om het Surinaamse rekeningschema te laden.</p>
+                      <Button onClick={handleInitStandaardSchema} disabled={initializingSchema} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                        {initializingSchema ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                        Standaard Schema Laden
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="journal">
+            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-slate-900">Journaalposten</h3>
+                  <Button variant="outline" size="sm" className="rounded-lg">
+                    Status <ChevronDown className="w-4 h-4 ml-1" />
+                  </Button>
                 </div>
                 
-                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                <div className="border border-slate-100 rounded-xl overflow-hidden">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead className="text-xs font-medium text-slate-500">Rekening</TableHead>
-                        <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Debet</TableHead>
-                        <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Credit</TableHead>
+                      <TableRow className="bg-slate-50/50">
+                        <TableHead className="w-28 text-xs font-medium text-slate-500">Nummer</TableHead>
+                        <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
+                        <TableHead className="w-24 text-xs font-medium text-slate-500">Dagboek</TableHead>
+                        <TableHead className="text-xs font-medium text-slate-500">Omschrijving</TableHead>
+                        <TableHead className="text-right w-36 text-xs font-medium text-slate-500">Bedrag</TableHead>
+                        <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {newJournal.regels.map((regel, idx) => (
-                        <TableRow key={idx}>
+                      {journalEntries.map(entry => (
+                        <TableRow key={entry.id} className="hover:bg-slate-50/50" data-testid={`journal-row-${entry.volgnummer}`}>
+                          <TableCell className="text-sm font-mono text-slate-600">{entry.volgnummer}</TableCell>
+                          <TableCell className="text-sm text-slate-500">{new Date(entry.datum).toLocaleDateString('nl-NL')}</TableCell>
                           <TableCell>
-                            <Select value={regel.rekening_id} onValueChange={(v) => updateJournalLine(idx, 'rekening_id', v)}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Kies rekening" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {accounts.map(a => (
-                                  <SelectItem key={a.id} value={a.id}>{a.code} - {a.naam}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <Badge variant="outline" className="text-xs rounded-md">{journalTypes[entry.dagboek_code] || entry.dagboek_code}</Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-slate-900">{entry.omschrijving}</TableCell>
+                          <TableCell className="text-right text-sm font-semibold text-emerald-600">
+                            {formatAmount(entry.totaal_debet || 0, 'SRD')}
                           </TableCell>
                           <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={regel.debet || ''}
-                              onChange={(e) => updateJournalLine(idx, 'debet', e.target.value)}
-                              className="text-right text-sm"
-                            />
-                          </TableCell>
-                          <TableCell>
-                            <Input
-                              type="number"
-                              step="0.01"
-                              value={regel.credit || ''}
-                              onChange={(e) => updateJournalLine(idx, 'credit', e.target.value)}
-                              className="text-right text-sm"
-                            />
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              entry.status === 'geboekt' ? 'bg-emerald-50 text-emerald-600' : 
+                              entry.status === 'concept' ? 'bg-amber-50 text-amber-600' : 
+                              'bg-slate-50 text-slate-600'
+                            }`}>
+                              {getStatusLabel(entry.status)}
+                            </span>
                           </TableCell>
                         </TableRow>
                       ))}
-                      <TableRow className="bg-slate-50">
-                        <TableCell className="text-sm font-medium text-slate-700">Totaal</TableCell>
-                        <TableCell className="text-right text-sm font-medium text-slate-900">
-                          {formatAmount(newJournal.regels.reduce((s, l) => s + (parseFloat(l.debet) || 0), 0), 'SRD')}
-                        </TableCell>
-                        <TableCell className="text-right text-sm font-medium text-slate-900">
-                          {formatAmount(newJournal.regels.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0), 'SRD')}
-                        </TableCell>
-                      </TableRow>
+                      {journalEntries.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center py-12 text-slate-500">
+                            <FileText className="w-12 h-12 mx-auto mb-3 text-slate-200" />
+                            <p>Geen journaalposten gevonden</p>
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>
-                
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={addJournalLine}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Regel toevoegen
-                  </Button>
-                  <Button onClick={handleCreateJournal} className="ml-auto" disabled={saving}>
-                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Opslaan
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          {/* External Code Dialog */}
-          <Dialog open={showExterneCodeDialog} onOpenChange={setShowExterneCodeDialog}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Externe Code Koppelen</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label>Rekening</Label>
-                  <div className="text-sm text-slate-600">
-                    {selectedAccount?.code} - {selectedAccount?.naam}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Externe Code</Label>
-                  <Input
-                    value={externeCode}
-                    onChange={(e) => setExterneCode(e.target.value)}
-                    placeholder="Voer externe code in"
-                    data-testid="externe-code-input"
-                  />
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setShowExterneCodeDialog(false)}
-                  >
-                    Annuleren
-                  </Button>
-                  <Button 
-                    onClick={handleSaveExterneCode} 
-                    disabled={saving}
-                    data-testid="save-externe-code-btn"
-                  >
-                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Opslaan
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="bg-white border border-slate-100 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500 mb-2">Totaal Rekeningen</p>
-                <p className="text-2xl font-semibold text-slate-900">{accounts.length}</p>
-              </div>
-              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-blue-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-white border border-slate-100 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500 mb-2">Journaalposten</p>
-                <p className="text-2xl font-semibold text-slate-900">{journalEntries.length}</p>
-              </div>
-              <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-emerald-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="accounts">
-        <TabsList>
-          <TabsTrigger value="accounts" data-testid="tab-accounts">
-            <BookOpen className="w-4 h-4 mr-2" />
-            Rekeningschema
-          </TabsTrigger>
-          <TabsTrigger value="journal" data-testid="tab-journal">
-            <FileText className="w-4 h-4 mr-2" />
-            Journaalposten
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="accounts" className="mt-4">
-          <Card className="bg-white border border-slate-100 shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold text-slate-900">Rekeningschema</CardTitle>
-                <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle types</SelectItem>
-                    {Object.entries(accountTypes).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {Object.entries(groupedAccounts).map(([type, accs]) => (
-                  <div key={type}>
-                    <h3 className="text-sm font-medium text-slate-700 mb-3">{accountTypes[type]}</h3>
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-slate-50">
-                          <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
-                          <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
-                          <TableHead className="text-xs font-medium text-slate-500">Categorie</TableHead>
-                          <TableHead className="w-28 text-xs font-medium text-slate-500">Externe Code</TableHead>
-                          <TableHead className="w-20 text-xs font-medium text-slate-500">Valuta</TableHead>
-                          <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Saldo</TableHead>
-                          <TableHead className="w-20 text-xs font-medium text-slate-500">Acties</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {accs.map(account => (
-                          <TableRow key={account.id} data-testid={`account-row-${account.code}`}>
-                            <TableCell className="text-sm text-slate-600">{account.code}</TableCell>
-                            <TableCell className="text-sm font-medium text-slate-900">{account.naam}</TableCell>
-                            <TableCell className="text-sm text-slate-500">{account.categorie}</TableCell>
-                            <TableCell className="text-sm text-slate-500">
-                              {account.externe_code || '-'}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline" className="text-xs">{account.valuta}</Badge>
-                            </TableCell>
-                            <TableCell className={`text-right text-sm font-medium ${account.saldo < 0 ? 'text-red-600' : 'text-slate-900'}`}>
-                              {formatAmount(account.saldo || 0, account.valuta)}
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => openExterneCodeDialog(account)}
-                                className="h-8 w-8 p-0"
-                                title="Externe code koppelen"
-                              >
-                                <Link2 className="w-4 h-4" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                ))}
-                {Object.keys(groupedAccounts).length === 0 && (
-                  <div className="text-center py-12 text-slate-500">
-                    <BookOpen className="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                    <p className="mb-2">Geen rekeningen gevonden.</p>
-                    <p className="text-sm">Klik op "Standaard Schema Laden" om het Surinaamse rekeningschema te initialiseren.</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="journal" className="mt-4">
-          <Card className="bg-white border border-slate-100 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-base font-semibold text-slate-900">Journaalposten</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="w-28 text-xs font-medium text-slate-500">Nummer</TableHead>
-                    <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
-                    <TableHead className="w-24 text-xs font-medium text-slate-500">Dagboek</TableHead>
-                    <TableHead className="text-xs font-medium text-slate-500">Omschrijving</TableHead>
-                    <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Bedrag</TableHead>
-                    <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {journalEntries.map(entry => (
-                    <TableRow key={entry.id} data-testid={`journal-row-${entry.volgnummer}`}>
-                      <TableCell className="text-sm text-slate-600">{entry.volgnummer}</TableCell>
-                      <TableCell className="text-sm text-slate-500">{new Date(entry.datum).toLocaleDateString('nl-NL')}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-xs">{journalTypes[entry.dagboek_code] || entry.dagboek_code}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-slate-900">{entry.omschrijving}</TableCell>
-                      <TableCell className="text-right text-sm font-medium text-slate-900">
-                        {formatAmount(entry.totaal_debet || 0, 'SRD')}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={`text-xs ${getStatusColor(entry.status)}`}>
-                          {getStatusLabel(entry.status)}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {journalEntries.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-slate-500">
-                        Geen journaalposten gevonden
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Dialog voor Externe Code */}
+      {/* External Code Dialog */}
       <Dialog open={showExterneCodeDialog} onOpenChange={setShowExterneCodeDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Externe Code Koppelen</DialogTitle>
           </DialogHeader>
           {selectedAccount && (
             <div className="space-y-4 py-4">
-              <div className="bg-slate-50 p-4 rounded-lg">
+              <div className="bg-slate-50 p-4 rounded-xl">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <span className="text-slate-500">Rekening:</span>
                   <span className="font-medium">{selectedAccount.code} - {selectedAccount.naam}</span>
@@ -654,24 +724,25 @@ const GrootboekPage = () => {
                 <Input
                   value={externeCode}
                   onChange={(e) => setExterneCode(e.target.value)}
-                  placeholder="Bijv. EXT-001 of uw eigen code"
+                  placeholder="Bijv. EXT-001"
+                  className="rounded-lg"
                   data-testid="externe-code-input"
                 />
                 <p className="text-xs text-slate-500">
-                  Gebruik dit veld om uw eigen rekeningcode te koppelen voor integratie met externe systemen.
+                  Koppel uw eigen code voor integratie met externe systemen.
                 </p>
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button variant="outline" onClick={() => setShowExterneCodeDialog(false)}>
-                  Annuleren
-                </Button>
-                <Button onClick={handleSaveExterneCode} disabled={saving}>
-                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Link2 className="w-4 h-4 mr-2" />}
-                  Opslaan
-                </Button>
               </div>
             </div>
           )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowExterneCodeDialog(false)} className="rounded-lg">
+              Annuleren
+            </Button>
+            <Button onClick={handleSaveExterneCode} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Link2 className="w-4 h-4 mr-2" />}
+              Opslaan
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
