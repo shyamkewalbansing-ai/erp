@@ -185,6 +185,34 @@ const VerkoopPage = () => {
     }
   };
 
+  // Update invoice status
+  const handleUpdateStatus = async (invoiceId, newStatus) => {
+    setUpdatingStatus(invoiceId);
+    try {
+      await invoicesAPI.updateStatus(invoiceId, newStatus);
+      toast.success(`Factuur status gewijzigd naar ${getStatusLabel(newStatus)}`);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij status wijzigen');
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
+  // Delete invoice
+  const handleDeleteInvoice = async (invoiceId) => {
+    if (!window.confirm('Weet u zeker dat u deze factuur wilt verwijderen?')) {
+      return;
+    }
+    try {
+      await invoicesAPI.delete(invoiceId);
+      toast.success('Factuur verwijderd');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
+    }
+  };
+
   const subtotal = newInvoice.lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
   const btwTotal = newInvoice.lines.reduce((s, l) => s + (l.btw_amount || 0), 0);
   const total = subtotal + btwTotal;
