@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { productsAPI, warehousesAPI, stockMovementsAPI } from '../../lib/boekhoudingApi';
+import { productsAPI, warehousesAPI, stockMovementsAPI, toBackendFormat } from '../../lib/boekhoudingApi';
 import { formatDate } from '../../lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
