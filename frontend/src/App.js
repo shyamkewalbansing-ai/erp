@@ -786,6 +786,15 @@ function MainAppRoutes() {
           <Route path="boekhouding/audit-trail" element={<BoekhoudingAuditTrail />} />
         </Route>
         
+        {/* POS Fullscreen Route - Outside Layout */}
+        <Route path="/app/boekhouding/pos" element={
+          <ProtectedRoute>
+            <Suspense fallback={<PageLoader />}>
+              <BoekhoudingPOS />
+            </Suspense>
+          </ProtectedRoute>
+        } />
+        
         {/* Redirect old routes to new app routes */}
         <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
         <Route path="/tenants" element={<Navigate to="/app/tenants" replace />} />
