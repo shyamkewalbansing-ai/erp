@@ -259,6 +259,23 @@ const VoorraadPage = () => {
     }
   };
 
+  // Delete movement
+  const handleDeleteMovement = async (movementId) => {
+    if (!window.confirm('Weet u zeker dat u deze mutatie wilt verwijderen? De voorraad wordt NIET automatisch aangepast.')) {
+      return;
+    }
+    setDeletingMovement(movementId);
+    try {
+      await stockMovementsAPI.delete(movementId);
+      toast.success('Mutatie verwijderd');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
+    } finally {
+      setDeletingMovement(null);
+    }
+  };
+
   const filteredProducts = products.filter(p =>
     (p.naam || p.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
     (p.code || '').toLowerCase().includes(searchTerm.toLowerCase())
