@@ -225,6 +225,48 @@ const apiFetch = async (endpoint, options = {}) => {
   return { data: await response.json() };
 };
 
+/**
+ * Smart API fetch that automatically converts field names
+ * - Converts request body from English to Dutch before sending
+ * - Converts response from Dutch to English after receiving
+ * @param {string} endpoint - API endpoint
+ * @param {Object} options - Fetch options
+ * @param {boolean} convertRequest - Whether to convert request body to Dutch (default: true)
+ * @param {boolean} convertResponse - Whether to convert response to English (default: false for backward compat)
+ */
+const apiFetchSmart = async (endpoint, options = {}, convertRequest = true, convertResponse = false) => {
+  // Convert request body to Dutch format if needed
+  let body = options.body;
+  if (convertRequest && body) {
+    const parsedBody = typeof body === 'string' ? JSON.parse(body) : body;
+    body = JSON.stringify(toBackendFormat(parsedBody));
+  }
+  
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    body,
+    headers: {
+      'Content-Type': 'application/json',
+      ...getAuthHeader(),
+      ...options.headers,
+    },
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+    throw { response: { data: error, status: response.status } };
+  }
+  
+  let data = await response.json();
+  
+  // Convert response to English format if needed
+  if (convertResponse) {
+    data = toFrontendFormat(data);
+  }
+  
+  return { data };
+};
+
 // Dashboard
 export const dashboardAPI = {
   getSummary: () => apiFetch('/boekhouding/dashboard'),
