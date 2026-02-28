@@ -306,7 +306,8 @@ const VoorraadPage = () => {
         inkoopprijs: editingProduct.purchase_price,
         verkoopprijs: editingProduct.sales_price,
         minimum_voorraad: editingProduct.min_stock,
-        foto_url: editingProduct.image_url || null
+        foto_url: editingProduct.image_url || null,
+        barcode: editingProduct.barcode || null
       };
       await productsAPI.update(editingProduct.id, productData);
       toast.success('Product bijgewerkt');
