@@ -94,6 +94,47 @@ const GrootboekPage = () => {
     }
   };
 
+  // Initialize standard Surinamese chart of accounts
+  const handleInitStandaardSchema = async () => {
+    if (!window.confirm('Weet u zeker dat u het standaard Surinaamse rekeningschema wilt laden? Dit werkt alleen als er nog geen rekeningen zijn.')) {
+      return;
+    }
+    setInitializingSchema(true);
+    try {
+      const response = await accountsAPI.initStandaard();
+      toast.success(response.data.message || 'Standaard rekeningschema geladen');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij laden standaard schema');
+    } finally {
+      setInitializingSchema(false);
+    }
+  };
+
+  // Open dialog to edit external code for an account
+  const openExterneCodeDialog = (account) => {
+    setSelectedAccount(account);
+    setExterneCode(account.externe_code || '');
+    setShowExterneCodeDialog(true);
+  };
+
+  // Save external code
+  const handleSaveExterneCode = async () => {
+    if (!selectedAccount) return;
+    setSaving(true);
+    try {
+      await accountsAPI.updateExterneCode(selectedAccount.id, externeCode);
+      toast.success('Externe code opgeslagen');
+      setShowExterneCodeDialog(false);
+      setSelectedAccount(null);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij opslaan externe code');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleCreateJournal = async () => {
     const totalDebit = newJournal.regels.reduce((sum, l) => sum + (parseFloat(l.debet) || 0), 0);
     const totalCredit = newJournal.regels.reduce((sum, l) => sum + (parseFloat(l.credit) || 0), 0);
