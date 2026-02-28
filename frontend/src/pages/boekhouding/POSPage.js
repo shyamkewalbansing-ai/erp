@@ -162,13 +162,21 @@ const POSPage = () => {
     }
   };
 
-  // Poll for scanned items
+  // Poll for scanned items (works for both permanent and temporary sessions)
   useEffect(() => {
-    if (!scannerSession?.code) return;
+    const sessionCode = scannerMode === 'permanent' 
+      ? permanentScanner?.code 
+      : scannerSession?.code;
+    
+    if (!sessionCode) return;
 
     const pollInterval = setInterval(async () => {
       try {
-        const response = await fetch(`${API_URL}/api/boekhouding/pos/scanner-session/${scannerSession.code}/items`);
+        const endpoint = scannerMode === 'permanent'
+          ? `${API_URL}/api/boekhouding/pos/permanent-scanner/${sessionCode}/items`
+          : `${API_URL}/api/boekhouding/pos/scanner-session/${sessionCode}/items`;
+        
+        const response = await fetch(endpoint);
         if (response.ok) {
           const items = await response.json();
           // Add new items to cart
@@ -200,7 +208,7 @@ const POSPage = () => {
     }, 2000); // Poll every 2 seconds
 
     return () => clearInterval(pollInterval);
-  }, [scannerSession?.code, cart, products]);
+  }, [scannerMode, permanentScanner?.code, scannerSession?.code, cart, products]);
 
   const fetchProducts = useCallback(async () => {
     try {
