@@ -632,6 +632,48 @@ const GrootboekPage = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog voor Externe Code */}
+      <Dialog open={showExterneCodeDialog} onOpenChange={setShowExterneCodeDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Externe Code Koppelen</DialogTitle>
+          </DialogHeader>
+          {selectedAccount && (
+            <div className="space-y-4 py-4">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <span className="text-slate-500">Rekening:</span>
+                  <span className="font-medium">{selectedAccount.code} - {selectedAccount.naam}</span>
+                  <span className="text-slate-500">Type:</span>
+                  <span className="font-medium">{accountTypes[selectedAccount.type] || selectedAccount.type}</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Externe Code</Label>
+                <Input
+                  value={externeCode}
+                  onChange={(e) => setExterneCode(e.target.value)}
+                  placeholder="Bijv. EXT-001 of uw eigen code"
+                  data-testid="externe-code-input"
+                />
+                <p className="text-xs text-slate-500">
+                  Gebruik dit veld om uw eigen rekeningcode te koppelen voor integratie met externe systemen.
+                </p>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button variant="outline" onClick={() => setShowExterneCodeDialog(false)}>
+                  Annuleren
+                </Button>
+                <Button onClick={handleSaveExterneCode} disabled={saving}>
+                  {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Link2 className="w-4 h-4 mr-2" />}
+                  Opslaan
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
