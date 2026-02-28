@@ -3382,34 +3382,74 @@ async def create_verkooporder(data: VerkooporderCreate, authorization: str = Hea
 
 @router.get("/rapportages/winst-verlies")
 async def get_winst_verlies(jaar: int = None, authorization: str = Header(None)):
-    """Haal winst & verlies rekening op"""
+    """Haal winst & verlies rekening op uit grootboek rekening saldi"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
     
     jaar = jaar or datetime.now().year
     
-    # Omzet
-    omzet = await db.boekhouding_verkoopfacturen.aggregate([
-        {"$match": {"user_id": user_id, "status": {"$ne": "concept"}}},
-        {"$group": {"_id": None, "totaal": {"$sum": "$subtotaal"}}}
-    ]).to_list(1)
-    totaal_omzet = omzet[0]["totaal"] if omzet else 0
+    # Haal alle rekeningen op met saldi
+    rekeningen = await db.boekhouding_rekeningen.find({
+        "user_id": user_id,
+        "saldo": {"$ne": 0}
+    }).to_list(500)
     
-    # Kosten
-    kosten = await db.boekhouding_inkoopfacturen.aggregate([
-        {"$match": {"user_id": user_id, "status": {"$ne": "nieuw"}}},
-        {"$group": {"_id": None, "totaal": {"$sum": "$subtotaal"}}}
-    ]).to_list(1)
-    totaal_kosten = kosten[0]["totaal"] if kosten else 0
+    # Categoriseer in opbrengsten en kosten
+    omzet_items = []
+    kosten_items = []
+    
+    totaal_omzet = 0
+    totaal_kosten = 0
+    
+    for r in rekeningen:
+        saldo = r.get("saldo", 0)
+        rekening_type = r.get("type", "")
+        item = {
+            "code": r.get("code", ""),
+            "naam": r.get("naam", ""),
+            "bedrag": abs(saldo)
+        }
+        
+        # Omzet rekeningen (type: omzet of opbrengsten)
+        if rekening_type in ["omzet", "opbrengsten"]:
+            omzet_items.append(item)
+            totaal_omzet += abs(saldo)
+        # Kosten rekeningen
+        elif rekening_type == "kosten":
+            kosten_items.append(item)
+            totaal_kosten += abs(saldo)
+    
+    # Fallback naar facturen als geen grootboek saldi
+    if totaal_omzet == 0:
+        omzet = await db.boekhouding_verkoopfacturen.aggregate([
+            {"$match": {"user_id": user_id, "status": {"$nin": ["concept", "geannuleerd"]}}},
+            {"$group": {"_id": None, "totaal": {"$sum": "$subtotaal"}}}
+        ]).to_list(1)
+        fallback_omzet = omzet[0]["totaal"] if omzet else 0
+        if fallback_omzet > 0:
+            omzet_items.append({"code": "8000", "naam": "Omzet (uit facturen)", "bedrag": fallback_omzet})
+            totaal_omzet = fallback_omzet
+    
+    if totaal_kosten == 0:
+        kosten = await db.boekhouding_inkoopfacturen.aggregate([
+            {"$match": {"user_id": user_id, "status": {"$nin": ["nieuw", "geannuleerd"]}}},
+            {"$group": {"_id": None, "totaal": {"$sum": "$subtotaal"}}}
+        ]).to_list(1)
+        fallback_kosten = kosten[0]["totaal"] if kosten else 0
+        if fallback_kosten > 0:
+            kosten_items.append({"code": "4000", "naam": "Kosten (uit facturen)", "bedrag": fallback_kosten})
+            totaal_kosten = fallback_kosten
+    
+    bruto_winst = totaal_omzet - totaal_kosten
     
     return {
         "jaar": jaar,
-        "omzet": [{"naam": "Totale omzet", "bedrag": totaal_omzet}],
-        "kosten": [{"naam": "Totale kosten", "bedrag": totaal_kosten}],
+        "omzet": omzet_items,
+        "kosten": kosten_items,
         "totaal_omzet": totaal_omzet,
         "totaal_kosten": totaal_kosten,
-        "bruto_winst": totaal_omzet - totaal_kosten,
-        "netto_winst": totaal_omzet - totaal_kosten
+        "bruto_winst": bruto_winst,
+        "netto_winst": bruto_winst  # In basis versie gelijk aan bruto
     }
 
 @router.get("/rapportages/balans")
