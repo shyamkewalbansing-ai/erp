@@ -3257,49 +3257,98 @@ async def get_winst_verlies(jaar: int = None, authorization: str = Header(None))
 
 @router.get("/rapportages/balans")
 async def get_balans(authorization: str = Header(None)):
-    """Haal balans op"""
+    """Haal balans op uit grootboek rekening saldi"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
     
-    # Bank saldi
-    bank_saldo = await db.boekhouding_bankrekeningen.aggregate([
-        {"$match": {"user_id": user_id}},
-        {"$group": {"_id": None, "totaal": {"$sum": "$huidig_saldo"}}}
-    ]).to_list(1)
-    liquide_middelen = bank_saldo[0]["totaal"] if bank_saldo else 0
+    # Haal alle rekeningen met saldi op, gegroepeerd per type
+    rekeningen = await db.boekhouding_rekeningen.find({
+        "user_id": user_id,
+        "saldo": {"$ne": 0}
+    }).to_list(500)
     
-    # Debiteuren
-    debiteuren = await db.boekhouding_verkoopfacturen.aggregate([
-        {"$match": {"user_id": user_id, "status": {"$in": ["verzonden", "herinnering"]}}},
-        {"$group": {"_id": None, "totaal": {"$sum": "$openstaand_bedrag"}}}
-    ]).to_list(1)
-    debiteuren_totaal = debiteuren[0]["totaal"] if debiteuren else 0
+    # Groepeer per type
+    activa = []
+    passiva = []
+    eigen_vermogen = []
     
-    # Crediteuren
-    crediteuren = await db.boekhouding_inkoopfacturen.aggregate([
-        {"$match": {"user_id": user_id, "status": {"$in": ["geboekt", "gedeeltelijk_betaald"]}}},
-        {"$group": {"_id": None, "totaal": {"$sum": "$openstaand_bedrag"}}}
-    ]).to_list(1)
-    crediteuren_totaal = crediteuren[0]["totaal"] if crediteuren else 0
+    totaal_activa = 0
+    totaal_passiva = 0
+    totaal_eigen_vermogen = 0
     
-    activa = [
-        {"code": "1500", "naam": "Liquide middelen", "saldo": liquide_middelen},
-        {"code": "1300", "naam": "Debiteuren", "saldo": debiteuren_totaal}
-    ]
+    for r in rekeningen:
+        saldo = r.get("saldo", 0)
+        rekening_type = r.get("type", "")
+        item = {
+            "code": r.get("code", ""),
+            "naam": r.get("naam", ""),
+            "saldo": abs(saldo)
+        }
+        
+        if rekening_type == "activa":
+            if saldo > 0:  # Positief saldo = actief
+                activa.append(item)
+                totaal_activa += saldo
+        elif rekening_type == "passiva":
+            if saldo > 0:  # Positief saldo = schuld
+                passiva.append(item)
+                totaal_passiva += saldo
+        elif rekening_type in ["eigen_vermogen", "reserves"]:
+            eigen_vermogen.append(item)
+            totaal_eigen_vermogen += saldo
     
-    passiva = [
-        {"code": "2200", "naam": "Crediteuren", "saldo": crediteuren_totaal}
-    ]
+    # Fallback: Haal ook data uit facturen (voor backward compatibility)
+    if not activa:
+        # Bank saldi
+        bank_saldo = await db.boekhouding_bankrekeningen.aggregate([
+            {"$match": {"user_id": user_id}},
+            {"$group": {"_id": None, "totaal": {"$sum": "$huidig_saldo"}}}
+        ]).to_list(1)
+        liquide_middelen = bank_saldo[0]["totaal"] if bank_saldo else 0
+        
+        # Debiteuren
+        debiteuren = await db.boekhouding_verkoopfacturen.aggregate([
+            {"$match": {"user_id": user_id, "status": {"$nin": ["betaald", "geannuleerd", "concept"]}}},
+            {"$group": {"_id": None, "totaal": {"$sum": "$openstaand_bedrag"}}}
+        ]).to_list(1)
+        debiteuren_totaal = debiteuren[0]["totaal"] if debiteuren else 0
+        
+        if liquide_middelen > 0:
+            activa.append({"code": "1500", "naam": "Liquide middelen", "saldo": liquide_middelen})
+            totaal_activa += liquide_middelen
+        if debiteuren_totaal > 0:
+            activa.append({"code": "1300", "naam": "Debiteuren", "saldo": debiteuren_totaal})
+            totaal_activa += debiteuren_totaal
     
-    totaal_activa = sum(a["saldo"] for a in activa)
-    totaal_passiva = sum(p["saldo"] for p in passiva)
+    if not passiva:
+        # Crediteuren
+        crediteuren = await db.boekhouding_inkoopfacturen.aggregate([
+            {"$match": {"user_id": user_id, "status": {"$in": ["geboekt", "gedeeltelijk_betaald"]}}},
+            {"$group": {"_id": None, "totaal": {"$sum": "$openstaand_bedrag"}}}
+        ]).to_list(1)
+        crediteuren_totaal = crediteuren[0]["totaal"] if crediteuren else 0
+        
+        # BTW te betalen
+        btw_passiva = await db.boekhouding_rekeningen.find_one({
+            "user_id": user_id,
+            "code": {"$in": ["2210", "2350"]},
+            "saldo": {"$gt": 0}
+        })
+        if btw_passiva:
+            passiva.append({"code": btw_passiva["code"], "naam": btw_passiva["naam"], "saldo": btw_passiva["saldo"]})
+            totaal_passiva += btw_passiva["saldo"]
+        
+        if crediteuren_totaal > 0:
+            passiva.append({"code": "2200", "naam": "Crediteuren", "saldo": crediteuren_totaal})
+            totaal_passiva += crediteuren_totaal
     
     return {
         "datum": datetime.now().strftime('%Y-%m-%d'),
         "activa": activa,
         "passiva": passiva,
+        "eigen_vermogen": eigen_vermogen,
         "totaal_activa": totaal_activa,
-        "totaal_passiva": totaal_passiva
+        "totaal_passiva": totaal_passiva + totaal_eigen_vermogen
     }
 
 @router.get("/rapportages/btw")
