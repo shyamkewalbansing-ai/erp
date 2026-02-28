@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/ta
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, BookOpen, FileText, Loader2 } from 'lucide-react';
+import { Plus, BookOpen, FileText, Loader2, RefreshCw, Link2, Edit } from 'lucide-react';
 
 const GrootboekPage = () => {
   const [accounts, setAccounts] = useState([]);
@@ -19,7 +19,11 @@ const GrootboekPage = () => {
   const [loading, setLoading] = useState(true);
   const [showAccountDialog, setShowAccountDialog] = useState(false);
   const [showJournalDialog, setShowJournalDialog] = useState(false);
+  const [showExterneCodeDialog, setShowExterneCodeDialog] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [externeCode, setExterneCode] = useState('');
   const [saving, setSaving] = useState(false);
+  const [initializingSchema, setInitializingSchema] = useState(false);
   const [selectedType, setSelectedType] = useState('all');
 
   const [newAccount, setNewAccount] = useState({
