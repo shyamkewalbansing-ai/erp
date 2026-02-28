@@ -2380,6 +2380,20 @@ async def create_voorraadmutatie(data: VoorraadmutatieCreate, authorization: str
     
     return clean_doc(mutatie)
 
+@router.delete("/voorraadmutaties/{mutatie_id}")
+async def delete_voorraadmutatie(mutatie_id: str, authorization: str = Header(None)):
+    """Verwijder een voorraadmutatie"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    mutatie = await db.boekhouding_voorraadmutaties.find_one({"id": mutatie_id, "user_id": user_id})
+    if not mutatie:
+        raise HTTPException(status_code=404, detail="Mutatie niet gevonden")
+    
+    await db.boekhouding_voorraadmutaties.delete_one({"id": mutatie_id, "user_id": user_id})
+    
+    return {"message": "Mutatie verwijderd"}
+
 # ==================== INKOOPORDERS ====================
 
 @router.get("/inkooporders")
