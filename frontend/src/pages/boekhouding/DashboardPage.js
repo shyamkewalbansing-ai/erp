@@ -153,6 +153,7 @@ const BankCard = ({ title, currency, value, loading }) => {
 const COLORS = ['#3b82f6', '#f59e0b', '#f97316', '#dc2626'];
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
   const [rates, setRates] = useState(null);
   const [chartData, setChartData] = useState(null);
