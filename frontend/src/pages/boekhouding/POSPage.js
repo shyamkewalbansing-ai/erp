@@ -291,9 +291,119 @@ const POSPage = () => {
       toast.success(`${product.naam} toegevoegd`);
       setBarcodeQuery('');
       setShowBarcodeDialog(false);
+      stopCameraScanner();
     } else {
       toast.error(`Product niet gevonden: ${barcodeQuery}`);
     }
+  };
+
+  // Camera barcode scanner functions
+  const startCameraScanner = async () => {
+    setCameraError(null);
+    
+    try {
+      // Check if camera is available
+      const devices = await Html5Qrcode.getCameras();
+      if (devices && devices.length === 0) {
+        setCameraError('Geen camera gevonden op dit apparaat');
+        return;
+      }
+
+      const html5QrCode = new Html5Qrcode("barcode-scanner-container");
+      html5QrCodeRef.current = html5QrCode;
+
+      const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 150 },
+        aspectRatio: 1.777778,
+        formatsToSupport: [
+          0,  // QR_CODE
+          1,  // AZTEC
+          2,  // CODABAR
+          3,  // CODE_39
+          4,  // CODE_93
+          5,  // CODE_128
+          6,  // DATA_MATRIX
+          7,  // MAXICODE
+          8,  // ITF
+          9,  // EAN_13
+          10, // EAN_8
+          11, // PDF_417
+          12, // RSS_14
+          13, // RSS_EXPANDED
+          14, // UPC_A
+          15, // UPC_E
+          16  // UPC_EAN_EXTENSION
+        ]
+      };
+
+      await html5QrCode.start(
+        { facingMode: "environment" }, // Use back camera
+        config,
+        (decodedText, decodedResult) => {
+          // Barcode successfully scanned
+          console.log("Scanned barcode:", decodedText);
+          handleScannedBarcode(decodedText);
+        },
+        (errorMessage) => {
+          // Ignore scan errors (happens constantly while searching)
+        }
+      );
+
+      setCameraActive(true);
+    } catch (err) {
+      console.error("Camera scanner error:", err);
+      if (err.toString().includes('NotAllowedError')) {
+        setCameraError('Camera toegang geweigerd. Sta camera toegang toe in je browser instellingen.');
+      } else if (err.toString().includes('NotFoundError')) {
+        setCameraError('Geen camera gevonden op dit apparaat.');
+      } else {
+        setCameraError(`Kon camera niet starten: ${err.message || err}`);
+      }
+    }
+  };
+
+  const stopCameraScanner = async () => {
+    if (html5QrCodeRef.current) {
+      try {
+        await html5QrCodeRef.current.stop();
+        html5QrCodeRef.current = null;
+      } catch (err) {
+        console.error("Error stopping scanner:", err);
+      }
+    }
+    setCameraActive(false);
+  };
+
+  const handleScannedBarcode = (barcode) => {
+    // Stop scanner after successful scan
+    stopCameraScanner();
+    
+    // Search for product
+    const product = products.find(p => 
+      p.code?.toLowerCase() === barcode.toLowerCase() ||
+      p.barcode?.toLowerCase() === barcode.toLowerCase() ||
+      p.ean?.toLowerCase() === barcode.toLowerCase()
+    );
+    
+    if (product) {
+      addToCart(product);
+      toast.success(`${product.naam} gescand en toegevoegd!`);
+      setShowBarcodeDialog(false);
+    } else {
+      // Show the scanned code in the input field
+      setBarcodeQuery(barcode);
+      toast.error(`Product niet gevonden voor barcode: ${barcode}`);
+    }
+  };
+
+  // Cleanup camera on dialog close
+  const handleBarcodeDialogClose = (open) => {
+    if (!open) {
+      stopCameraScanner();
+      setBarcodeQuery('');
+    }
+    setShowBarcodeDialog(open);
   };
 
   const startPayment = (method) => {
