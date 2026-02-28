@@ -360,7 +360,7 @@ const BankPage = () => {
                     <SelectContent>
                       {bankAccounts.map(acc => (
                         <SelectItem key={acc.id} value={acc.id}>
-                          {acc.name} ({acc.currency})
+                          {acc.naam || acc.name} ({acc.valuta || acc.currency})
                         </SelectItem>
                       ))}
                     </SelectContent>
