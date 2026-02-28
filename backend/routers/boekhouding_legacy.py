@@ -4998,3 +4998,226 @@ async def get_pos_daily_summary(datum: Optional[str] = None, authorization: str 
             "gem_transactie": 0
         }
     }
+
+
+
+@router.get("/pos/verkopen/{sale_id}/bon")
+async def get_pos_receipt(sale_id: str, authorization: str = Header(None)):
+    """Genereer een PDF bon voor een POS verkoop"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Haal de verkoop op
+    sale = await db.boekhouding_pos_verkopen.find_one({"id": sale_id, "user_id": user_id})
+    if not sale:
+        raise HTTPException(status_code=404, detail="Verkoop niet gevonden")
+    
+    # Haal bedrijfsinstellingen op
+    instellingen = await db.boekhouding_instellingen.find_one({"user_id": user_id})
+    
+    # Genereer PDF bon
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import mm
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, HRFlowable
+        from reportlab.lib.units import mm as unit_mm
+        
+        # Bon formaat (80mm breed, variabele hoogte)
+        page_width = 80 * unit_mm
+        page_height = 297 * unit_mm  # A4 height, will be trimmed
+        
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=(page_width, page_height),
+            leftMargin=3*unit_mm,
+            rightMargin=3*unit_mm,
+            topMargin=5*unit_mm,
+            bottomMargin=5*unit_mm
+        )
+        
+        styles = getSampleStyleSheet()
+        styles.add(ParagraphStyle(
+            name='ReceiptTitle',
+            fontSize=12,
+            alignment=1,  # Center
+            spaceAfter=2*unit_mm,
+            fontName='Helvetica-Bold'
+        ))
+        styles.add(ParagraphStyle(
+            name='ReceiptNormal',
+            fontSize=9,
+            alignment=0,
+            spaceAfter=1*unit_mm,
+            fontName='Helvetica'
+        ))
+        styles.add(ParagraphStyle(
+            name='ReceiptCenter',
+            fontSize=9,
+            alignment=1,
+            spaceAfter=1*unit_mm,
+            fontName='Helvetica'
+        ))
+        styles.add(ParagraphStyle(
+            name='ReceiptBold',
+            fontSize=10,
+            alignment=0,
+            spaceAfter=1*unit_mm,
+            fontName='Helvetica-Bold'
+        ))
+        
+        elements = []
+        
+        # Header - Bedrijfsnaam
+        bedrijfsnaam = instellingen.get('bedrijfsnaam', 'Facturatie.sr') if instellingen else 'Facturatie.sr'
+        elements.append(Paragraph(bedrijfsnaam, styles['ReceiptTitle']))
+        
+        if instellingen:
+            if instellingen.get('adres'):
+                elements.append(Paragraph(instellingen['adres'], styles['ReceiptCenter']))
+            if instellingen.get('telefoon'):
+                elements.append(Paragraph(f"Tel: {instellingen['telefoon']}", styles['ReceiptCenter']))
+        
+        elements.append(Spacer(1, 3*unit_mm))
+        elements.append(HRFlowable(width="100%", thickness=0.5, color=colors.black))
+        elements.append(Spacer(1, 2*unit_mm))
+        
+        # Bon details
+        elements.append(Paragraph(f"<b>Bon:</b> {sale.get('bonnummer', '')}", styles['ReceiptNormal']))
+        datum_str = sale.get('datum', '')
+        if isinstance(datum_str, str):
+            try:
+                datum_obj = datetime.fromisoformat(datum_str.replace('Z', '+00:00'))
+                datum_str = datum_obj.strftime("%d-%m-%Y %H:%M")
+            except:
+                pass
+        elements.append(Paragraph(f"<b>Datum:</b> {datum_str}", styles['ReceiptNormal']))
+        elements.append(Paragraph(f"<b>Betaling:</b> {sale.get('betaalmethode', '').capitalize()}", styles['ReceiptNormal']))
+        
+        if sale.get('klant_naam'):
+            elements.append(Paragraph(f"<b>Klant:</b> {sale['klant_naam']}", styles['ReceiptNormal']))
+        
+        elements.append(Spacer(1, 2*unit_mm))
+        elements.append(HRFlowable(width="100%", thickness=0.5, color=colors.black))
+        elements.append(Spacer(1, 2*unit_mm))
+        
+        # Items
+        for regel in sale.get('regels', []):
+            item_naam = regel.get('artikel_naam', 'Item')
+            aantal = regel.get('aantal', 1)
+            prijs = regel.get('prijs_per_stuk', 0)
+            totaal = regel.get('totaal', prijs * aantal)
+            
+            item_text = f"{aantal}x {item_naam}"
+            prijs_text = f"SRD {totaal:,.2f}"
+            
+            elements.append(Paragraph(item_text, styles['ReceiptNormal']))
+            elements.append(Paragraph(f"<para alignment='right'>{prijs_text}</para>", styles['ReceiptNormal']))
+        
+        elements.append(Spacer(1, 2*unit_mm))
+        elements.append(HRFlowable(width="100%", thickness=0.5, color=colors.black))
+        elements.append(Spacer(1, 2*unit_mm))
+        
+        # Totalen
+        subtotaal = sale.get('subtotaal', 0)
+        korting = sale.get('korting_bedrag', 0)
+        btw = sale.get('btw_bedrag', 0)
+        totaal = sale.get('totaal', 0)
+        
+        totals_data = [
+            ['Subtotaal:', f"SRD {subtotaal:,.2f}"],
+        ]
+        
+        if korting > 0:
+            totals_data.append(['Korting:', f"-SRD {korting:,.2f}"])
+        
+        totals_data.append(['BTW:', f"SRD {btw:,.2f}"])
+        totals_data.append(['', ''])
+        totals_data.append(['<b>TOTAAL:</b>', f"<b>SRD {totaal:,.2f}</b>"])
+        
+        if sale.get('betaalmethode') == 'contant':
+            ontvangen = sale.get('ontvangen_bedrag', totaal)
+            wisselgeld = sale.get('wisselgeld', 0)
+            totals_data.append(['', ''])
+            totals_data.append(['Ontvangen:', f"SRD {ontvangen:,.2f}"])
+            totals_data.append(['<b>Wisselgeld:</b>', f"<b>SRD {wisselgeld:,.2f}</b>"])
+        
+        totals_table = Table(totals_data, colWidths=[40*unit_mm, 30*unit_mm])
+        totals_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('TOPPADDING', (0, 0), (-1, -1), 1),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
+        ]))
+        elements.append(totals_table)
+        
+        elements.append(Spacer(1, 4*unit_mm))
+        elements.append(HRFlowable(width="100%", thickness=0.5, color=colors.black))
+        elements.append(Spacer(1, 3*unit_mm))
+        
+        # Footer
+        elements.append(Paragraph("Bedankt voor uw aankoop!", styles['ReceiptCenter']))
+        elements.append(Paragraph("Tot ziens!", styles['ReceiptCenter']))
+        
+        doc.build(elements)
+        
+        buffer.seek(0)
+        return Response(
+            content=buffer.read(),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'attachment; filename="bon-{sale.get("bonnummer", "")}.pdf"'
+            }
+        )
+        
+    except ImportError:
+        raise HTTPException(status_code=500, detail="PDF generatie niet beschikbaar")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fout bij genereren bon: {str(e)}")
+
+
+@router.get("/pos/kassa-status")
+async def get_pos_kassa_status(authorization: str = Header(None)):
+    """Haal de huidige kassa status op (kas saldo, dagomzet)"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Haal kas rekening op
+    kas_rekening = await _find_rekening(user_id, "kas", "activa")
+    bank_rekening = await _find_rekening(user_id, "bank", "activa")
+    
+    kas_saldo = kas_rekening.get('saldo', 0) if kas_rekening else 0
+    bank_saldo = bank_rekening.get('saldo', 0) if bank_rekening else 0
+    
+    # Dagomzet
+    today = datetime.now().strftime("%Y-%m-%d")
+    start = f"{today}T00:00:00"
+    end = f"{today}T23:59:59"
+    
+    dag_verkopen = await db.boekhouding_pos_verkopen.aggregate([
+        {"$match": {
+            "user_id": user_id,
+            "datum": {"$gte": start, "$lte": end}
+        }},
+        {"$group": {
+            "_id": "$betaalmethode",
+            "aantal": {"$sum": 1},
+            "totaal": {"$sum": "$totaal"}
+        }}
+    ]).to_list(10)
+    
+    contant_vandaag = next((v['totaal'] for v in dag_verkopen if v['_id'] == 'contant'), 0)
+    pin_vandaag = next((v['totaal'] for v in dag_verkopen if v['_id'] == 'pin'), 0)
+    
+    return {
+        "kas_saldo": kas_saldo,
+        "bank_saldo": bank_saldo,
+        "dag_omzet": {
+            "contant": contant_vandaag,
+            "pin": pin_vandaag,
+            "totaal": contant_vandaag + pin_vandaag
+        },
+        "aantal_transacties": sum(v['aantal'] for v in dag_verkopen)
+    }
