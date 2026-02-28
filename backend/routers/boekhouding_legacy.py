@@ -5353,3 +5353,157 @@ async def update_artikel_barcode(artikel_id: str, barcode: str, authorization: s
         raise HTTPException(status_code=404, detail="Artikel niet gevonden")
     
     return {"success": True, "barcode": barcode}
+
+
+
+# ==================== PUBLIC SCANNER SESSION ====================
+# These endpoints do NOT require authentication - they use session codes
+
+@router.post("/pos/scanner-session/create")
+async def create_scanner_session(authorization: str = Header(None)):
+    """Create a new public scanner session (requires auth)"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Generate a unique 6-character code
+    import random
+    import string
+    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    
+    # Create session (valid for 4 hours)
+    session = {
+        "id": str(uuid.uuid4()),
+        "code": code,
+        "user_id": user_id,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "expires_at": (datetime.now(timezone.utc) + timedelta(hours=4)).isoformat(),
+        "scan_count": 0,
+        "active": True
+    }
+    
+    await db.boekhouding_pos_scanner_sessions.insert_one(session)
+    
+    return {
+        "code": code,
+        "expires_at": session["expires_at"],
+        "scanner_url": f"/scan/{code}"
+    }
+
+
+@router.get("/pos/scanner-session/{code}/validate")
+async def validate_scanner_session(code: str):
+    """Validate a scanner session (NO AUTH REQUIRED)"""
+    session = await db.boekhouding_pos_scanner_sessions.find_one({
+        "code": code,
+        "active": True
+    })
+    
+    if not session:
+        return {"valid": False, "reason": "Session not found"}
+    
+    # Check if expired
+    expires_at = datetime.fromisoformat(session["expires_at"].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) > expires_at:
+        return {"valid": False, "reason": "Session expired"}
+    
+    return {"valid": True, "scan_count": session.get("scan_count", 0)}
+
+
+class PublicScanRequest(BaseModel):
+    barcode: str
+
+
+@router.post("/pos/scanner-session/{code}/scan")
+async def public_scanner_scan(code: str, data: PublicScanRequest):
+    """Scan a barcode via public scanner (NO AUTH REQUIRED)"""
+    # Find session
+    session = await db.boekhouding_pos_scanner_sessions.find_one({
+        "code": code,
+        "active": True
+    })
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Sessie niet gevonden")
+    
+    # Check if expired
+    expires_at = datetime.fromisoformat(session["expires_at"].replace('Z', '+00:00'))
+    if datetime.now(timezone.utc) > expires_at:
+        raise HTTPException(status_code=400, detail="Sessie verlopen")
+    
+    user_id = session["user_id"]
+    
+    # Find product by barcode
+    product = await db.boekhouding_artikelen.find_one({
+        "user_id": user_id,
+        "$or": [
+            {"code": {"$regex": f"^{data.barcode}$", "$options": "i"}},
+            {"barcode": {"$regex": f"^{data.barcode}$", "$options": "i"}},
+            {"ean": {"$regex": f"^{data.barcode}$", "$options": "i"}}
+        ]
+    })
+    
+    if not product:
+        return {"success": False, "message": "Product niet gevonden", "barcode": data.barcode}
+    
+    # Add to cart
+    cart_item = {
+        "id": str(uuid.uuid4()),
+        "session_code": code,
+        "user_id": user_id,
+        "artikel_id": product["id"],
+        "artikel_naam": product.get("naam"),
+        "barcode": data.barcode,
+        "prijs": product.get("verkoopprijs", 0),
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.boekhouding_pos_cart_temp.insert_one(cart_item)
+    
+    # Update scan count
+    await db.boekhouding_pos_scanner_sessions.update_one(
+        {"code": code},
+        {"$inc": {"scan_count": 1}}
+    )
+    
+    return {
+        "success": True,
+        "product": {
+            "id": product["id"],
+            "naam": product.get("naam"),
+            "code": product.get("code"),
+            "verkoopprijs": product.get("verkoopprijs", 0)
+        },
+        "barcode": data.barcode
+    }
+
+
+@router.get("/pos/scanner-session/{code}/items")
+async def get_scanner_session_items(code: str):
+    """Get items scanned in this session (NO AUTH REQUIRED)"""
+    session = await db.boekhouding_pos_scanner_sessions.find_one({"code": code})
+    
+    if not session:
+        raise HTTPException(status_code=404, detail="Sessie niet gevonden")
+    
+    items = await db.boekhouding_pos_cart_temp.find({
+        "session_code": code
+    }).sort("timestamp", -1).to_list(100)
+    
+    return [clean_doc(item) for item in items]
+
+
+@router.delete("/pos/scanner-session/{code}")
+async def close_scanner_session(code: str, authorization: str = Header(None)):
+    """Close a scanner session (requires auth)"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    result = await db.boekhouding_pos_scanner_sessions.update_one(
+        {"code": code, "user_id": user_id},
+        {"$set": {"active": False}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Sessie niet gevonden")
+    
+    return {"success": True}
