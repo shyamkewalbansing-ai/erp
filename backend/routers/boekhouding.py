@@ -342,7 +342,7 @@ async def get_dashboard(authorization: str = Header(None)):
     start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     start_of_year = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
     
-    # Omzet deze maand
+    # Omzet deze maand (alle facturen behalve concept)
     omzet_maand = await db.boekhouding_verkoopfacturen.aggregate([
         {"$match": {"user_id": user_id, "status": {"$ne": "concept"}}},
         {"$group": {"_id": None, "totaal": {"$sum": "$totaal_incl_btw"}}}
@@ -356,19 +356,42 @@ async def get_dashboard(authorization: str = Header(None)):
     ]).to_list(1)
     kosten_maand_val = kosten_maand[0]["totaal"] if kosten_maand else 0
     
-    # Openstaande debiteuren
+    # Openstaande debiteuren (alle niet-betaalde facturen inclusief concept)
     openstaand_debiteuren = await db.boekhouding_verkoopfacturen.aggregate([
-        {"$match": {"user_id": user_id, "status": {"$in": ["verzonden", "herinnering", "gedeeltelijk_betaald"]}}},
+        {"$match": {"user_id": user_id, "status": {"$nin": ["betaald", "geannuleerd"]}, "openstaand_bedrag": {"$gt": 0}}},
         {"$group": {"_id": None, "totaal": {"$sum": "$openstaand_bedrag"}}}
     ]).to_list(1)
     openstaand_deb = openstaand_debiteuren[0]["totaal"] if openstaand_debiteuren else 0
     
-    # Openstaande crediteuren
+    # Openstaande crediteuren (alle niet-betaalde facturen)
     openstaand_crediteuren = await db.boekhouding_inkoopfacturen.aggregate([
-        {"$match": {"user_id": user_id, "status": {"$in": ["geboekt", "gedeeltelijk_betaald"]}}},
+        {"$match": {"user_id": user_id, "status": {"$nin": ["betaald", "geannuleerd"]}, "openstaand_bedrag": {"$gt": 0}}},
         {"$group": {"_id": None, "totaal": {"$sum": "$openstaand_bedrag"}}}
     ]).to_list(1)
     openstaand_cred = openstaand_crediteuren[0]["totaal"] if openstaand_crediteuren else 0
+    
+    # Aantal openstaande facturen
+    facturen_openstaand_count = await db.boekhouding_verkoopfacturen.count_documents({
+        "user_id": user_id, 
+        "status": {"$nin": ["betaald", "geannuleerd"]},
+        "openstaand_bedrag": {"$gt": 0}
+    })
+    
+    # BTW berekening - verkoop BTW (alle facturen behalve concept voor echte aangifte)
+    btw_verkoop = await db.boekhouding_verkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "geannuleerd"}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$btw_bedrag"}}}
+    ]).to_list(1)
+    btw_verkoop_val = btw_verkoop[0]["totaal"] if btw_verkoop else 0
+    
+    # BTW inkoop (voorbelasting)
+    btw_inkoop = await db.boekhouding_inkoopfacturen.aggregate([
+        {"$match": {"user_id": user_id, "status": {"$ne": "geannuleerd"}}},
+        {"$group": {"_id": None, "totaal": {"$sum": "$btw_bedrag"}}}
+    ]).to_list(1)
+    btw_inkoop_val = btw_inkoop[0]["totaal"] if btw_inkoop else 0
+    
+    btw_te_betalen = btw_verkoop_val - btw_inkoop_val
     
     # Bank- en kaspositie
     bank_saldo = await db.boekhouding_bankrekeningen.aggregate([
