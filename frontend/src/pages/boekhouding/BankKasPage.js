@@ -523,7 +523,7 @@ const BankPage = () => {
                   <SelectContent>
                     <SelectItem value="all">Alle rekeningen</SelectItem>
                     {bankAccounts.map(acc => (
-                      <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                      <SelectItem key={acc.id} value={acc.id}>{acc.naam || acc.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
