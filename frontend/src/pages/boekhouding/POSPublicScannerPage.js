@@ -102,18 +102,42 @@ const POSPublicScannerPage = () => {
     setCameraError(null);
     
     try {
+      // First request camera permission
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          stream.getTracks().forEach(track => track.stop());
+        } catch (permErr) {
+          if (permErr.name === 'NotAllowedError') {
+            setCameraError('Camera toegang geweigerd. Sta camera toe in je browser.');
+            return;
+          }
+        }
+      }
+
       const devices = await Html5Qrcode.getCameras();
       if (!devices || devices.length === 0) {
         setCameraError('Geen camera gevonden');
         return;
       }
 
+      // Clean up existing scanner
+      if (html5QrCodeRef.current) {
+        try { await html5QrCodeRef.current.stop(); } catch (e) {}
+        html5QrCodeRef.current = null;
+      }
+
       const html5QrCode = new Html5Qrcode("public-scanner-view");
       html5QrCodeRef.current = html5QrCode;
 
+      // Try back camera first, then fall back
+      const cameraConfig = devices.length > 1 
+        ? { facingMode: "environment" }
+        : devices[0].id;
+
       await html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 15, qrbox: { width: 280, height: 180 } },
+        cameraConfig,
+        { fps: 10, qrbox: { width: 280, height: 180 } },
         (decodedText) => handleScannedBarcode(decodedText),
         () => {}
       );
@@ -121,8 +145,30 @@ const POSPublicScannerPage = () => {
       setIsScanning(true);
     } catch (err) {
       console.error("Scanner error:", err);
-      if (err.toString().includes('NotAllowedError')) {
+      const errorMsg = err.toString();
+      
+      if (errorMsg.includes('NotAllowedError')) {
         setCameraError('Camera toegang geweigerd. Sta camera toe.');
+      } else if (errorMsg.includes('NotReadableError') || errorMsg.includes('could not start video source')) {
+        setCameraError('Camera is in gebruik. Sluit andere apps die de camera gebruiken.');
+      } else if (errorMsg.includes('OverconstrainedError')) {
+        // Retry with first available camera
+        try {
+          const devices = await Html5Qrcode.getCameras();
+          if (devices && devices.length > 0) {
+            const html5QrCode = new Html5Qrcode("public-scanner-view");
+            html5QrCodeRef.current = html5QrCode;
+            await html5QrCode.start(
+              devices[0].id,
+              { fps: 10, qrbox: { width: 250, height: 150 } },
+              (decodedText) => handleScannedBarcode(decodedText),
+              () => {}
+            );
+            setIsScanning(true);
+            return;
+          }
+        } catch (retryErr) {}
+        setCameraError('Camera niet ondersteund.');
       } else {
         setCameraError(`Camera error: ${err.message || err}`);
       }
