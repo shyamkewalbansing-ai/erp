@@ -642,16 +642,22 @@ export default function Layout() {
           {/* Settings dropdown */}
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
             <button
-              onClick={() => setSettingsOpen(!settingsOpen)}
-              className={`nav-item w-full ${(location.pathname === '/app/instellingen' || location.pathname === '/app/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed ? 'justify-center' : 'justify-between'}`}
+              onClick={() => !isCollapsed && setSettingsOpen(!settingsOpen)}
+              className={`nav-item w-full group relative ${(location.pathname === '/app/instellingen' || location.pathname === '/app/abonnement' || location.pathname === '/app/workspace' || location.pathname === '/app/betaalmethodes') ? 'active' : ''} ${isCollapsed ? 'justify-center' : 'justify-between'}`}
               data-testid="nav-instellingen-dropdown"
-              title="Instellingen"
             >
               <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
                 <Settings className="w-5 h-5 flex-shrink-0" />
                 {!isCollapsed && <span>Instellingen</span>}
               </div>
               {!isCollapsed && <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${settingsOpen ? 'rotate-180' : ''}`} />}
+              {/* Tooltip for collapsed sidebar */}
+              {isCollapsed && (
+                <div className="absolute left-full ml-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+                  Instellingen
+                  <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                </div>
+              )}
             </button>
             
             {/* Dropdown items */}
