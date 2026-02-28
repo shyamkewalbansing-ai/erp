@@ -2199,16 +2199,39 @@ async def update_verkoopfactuur(factuur_id: str, data: VerkoopfactuurCreate, aut
 
 @router.put("/verkoopfacturen/{factuur_id}/status")
 async def update_verkoopfactuur_status(factuur_id: str, status: str, authorization: str = Header(None)):
-    """Update status van verkoopfactuur"""
+    """Update status van verkoopfactuur en boek automatisch naar grootboek"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
     
+    # Haal factuur op om te controleren of boeking nodig is
+    factuur = await db.boekhouding_verkoopfacturen.find_one({"id": factuur_id, "user_id": user_id})
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    oude_status = factuur.get("status", "concept")
+    
+    # Update status
     result = await db.boekhouding_verkoopfacturen.update_one(
         {"id": factuur_id, "user_id": user_id},
         {"$set": {"status": status, "updated_at": datetime.now(timezone.utc)}}
     )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Automatisch boeken naar grootboek wanneer status naar verzonden gaat
+    # (en nog niet eerder geboekt)
+    if oude_status == "concept" and status in ["verzonden", "herinnering"]:
+        try:
+            # Controleer of er al een boeking bestaat voor deze factuur
+            bestaande_boeking = await db.boekhouding_journaalposten.find_one({
+                "user_id": user_id, 
+                "document_ref": factuur_id,
+                "dagboek_code": "VK"
+            })
+            if not bestaande_boeking:
+                await boek_verkoopfactuur(user_id, factuur)
+        except Exception as e:
+            # Log error maar laat status update doorgaan
+            print(f"Fout bij boeken factuur: {e}")
+    
     return {"message": f"Status gewijzigd naar {status}"}
 
 @router.delete("/verkoopfacturen/{factuur_id}")
