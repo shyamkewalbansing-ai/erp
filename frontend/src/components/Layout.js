@@ -599,25 +599,37 @@ export default function Layout() {
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={() => setSidebarOpen(false)}
-                          className={`nav-item ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
+                          className={`nav-item group relative ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
                           data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
-                          title={displayLabel}
                         >
                           <item.icon className="w-5 h-5 flex-shrink-0" />
                           {!isCollapsed && <span>{displayLabel}</span>}
                           {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-40" />}
+                          {/* Tooltip for collapsed sidebar */}
+                          {isCollapsed && (
+                            <div className="absolute left-full ml-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+                              {displayLabel}
+                              <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                            </div>
+                          )}
                         </a>
                       ) : (
                         <NavLink
                           key={item.to}
                           to={item.to}
                           onClick={() => setSidebarOpen(false)}
-                          className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isDashboard ? 'font-semibold' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
+                          className={({ isActive }) => `nav-item group relative ${isActive ? 'active' : ''} ${isDashboard ? 'font-semibold' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
                           data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
-                          title={displayLabel}
                         >
                           <item.icon className="w-5 h-5 flex-shrink-0" />
                           {!isCollapsed && <span>{displayLabel}</span>}
+                          {/* Tooltip for collapsed sidebar */}
+                          {isCollapsed && (
+                            <div className="absolute left-full ml-2 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap z-50">
+                              {displayLabel}
+                              <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                            </div>
+                          )}
                         </NavLink>
                       );
                     })}
