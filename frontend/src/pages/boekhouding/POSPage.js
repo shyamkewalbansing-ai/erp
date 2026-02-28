@@ -1443,22 +1443,28 @@ const POSPage = () => {
               </div>
 
               {/* Actions */}
-              <div className="grid grid-cols-2 gap-3">
-                <Button
-                  variant="outline"
-                  onClick={printReceipt}
-                  className="h-12"
-                >
-                  <Printer className="w-4 h-4 mr-2" />
-                  Bon printen
-                </Button>
-                <Button
-                  onClick={closePaymentAndReset}
-                  className="h-12 bg-emerald-600 hover:bg-emerald-700"
-                  data-testid="pos-success-close-btn"
-                >
-                  Volgende klant
-                </Button>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={printReceipt}
+                    className="h-12"
+                    data-testid="pos-print-receipt-btn"
+                  >
+                    <Printer className="w-4 h-4 mr-2" />
+                    Bon printen
+                  </Button>
+                  <Button
+                    onClick={closePaymentAndReset}
+                    className="h-12 bg-emerald-600 hover:bg-emerald-700"
+                    data-testid="pos-success-close-btn"
+                  >
+                    Volgende klant
+                  </Button>
+                </div>
+                <p className="text-xs text-center text-slate-400">
+                  💡 Tip: Selecteer je thermische printer (80mm) in het print dialoog
+                </p>
               </div>
             </div>
           )}
