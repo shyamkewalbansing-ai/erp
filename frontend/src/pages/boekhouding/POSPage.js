@@ -107,13 +107,38 @@ const POSPage = () => {
   const [showScannerLinkDialog, setShowScannerLinkDialog] = useState(false);
   const [scannerSession, setScannerSession] = useState(null);
   const [creatingSession, setCreatingSession] = useState(false);
+  const [permanentScanner, setPermanentScanner] = useState(null);
+  const [scannerMode, setScannerMode] = useState('permanent'); // 'permanent' or 'temporary'
 
   const getAuthHeader = () => {
     const token = localStorage.getItem('token');
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
-  // Create scanner session for mobile phones
+  // Get or create permanent scanner code
+  const getPermanentScannerCode = async () => {
+    setCreatingSession(true);
+    try {
+      const response = await fetch(`${API_URL}/api/boekhouding/pos/permanent-scanner/code`, {
+        headers: { ...getAuthHeader() }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setPermanentScanner(data);
+        setScannerMode('permanent');
+        setShowScannerLinkDialog(true);
+      } else {
+        toast.error('Kon permanente scanner niet ophalen');
+      }
+    } catch (error) {
+      toast.error('Fout bij ophalen permanente scanner');
+    } finally {
+      setCreatingSession(false);
+    }
+  };
+
+  // Create temporary scanner session for mobile phones
   const createScannerSession = async () => {
     setCreatingSession(true);
     try {
@@ -125,6 +150,7 @@ const POSPage = () => {
       if (response.ok) {
         const data = await response.json();
         setScannerSession(data);
+        setScannerMode('temporary');
         setShowScannerLinkDialog(true);
       } else {
         toast.error('Kon scanner sessie niet aanmaken');
