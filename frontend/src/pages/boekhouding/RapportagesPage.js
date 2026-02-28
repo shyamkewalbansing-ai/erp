@@ -212,18 +212,18 @@ const RapportagesPage = () => {
                 <h3 className="text-sm font-semibold text-slate-700 mb-4 pb-2 border-b">Omzet</h3>
                 <Table>
                   <TableBody>
-                    {profitLoss?.revenue?.accounts?.map(acc => (
-                      <TableRow key={acc.id}>
-                        <TableCell className="text-sm text-slate-600">{acc.code} - {acc.name}</TableCell>
+                    {(profitLoss?.omzet || profitLoss?.revenue?.accounts || []).map((acc, idx) => (
+                      <TableRow key={acc.id || idx}>
+                        <TableCell className="text-sm text-slate-600">{acc.code ? `${acc.code} - ` : ''}{acc.naam || acc.name}</TableCell>
                         <TableCell className="text-right text-sm font-medium text-green-600">
-                          {formatAmount(Math.abs(acc.balance), acc.currency)}
+                          {formatAmount(Math.abs(acc.bedrag || acc.balance || 0), acc.valuta || acc.currency)}
                         </TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="bg-green-50">
                       <TableCell className="text-sm font-semibold text-slate-900">Totaal Omzet</TableCell>
                       <TableCell className="text-right text-sm font-semibold text-green-600">
-                        {formatAmount(profitLoss?.revenue?.total || 0)}
+                        {formatAmount(profitLoss?.totaal_omzet || profitLoss?.revenue?.total || 0)}
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -233,29 +233,29 @@ const RapportagesPage = () => {
                 <h3 className="text-sm font-semibold text-slate-700 mb-4 pb-2 border-b mt-8">Kosten</h3>
                 <Table>
                   <TableBody>
-                    {profitLoss?.expenses?.accounts?.map(acc => (
-                      <TableRow key={acc.id}>
-                        <TableCell className="text-sm text-slate-600">{acc.code} - {acc.name}</TableCell>
+                    {(profitLoss?.kosten || profitLoss?.expenses?.accounts || []).map((acc, idx) => (
+                      <TableRow key={acc.id || idx}>
+                        <TableCell className="text-sm text-slate-600">{acc.code ? `${acc.code} - ` : ''}{acc.naam || acc.name}</TableCell>
                         <TableCell className="text-right text-sm font-medium text-red-600">
-                          {formatAmount(Math.abs(acc.balance), acc.currency)}
+                          {formatAmount(Math.abs(acc.bedrag || acc.balance || 0), acc.valuta || acc.currency)}
                         </TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="bg-red-50">
                       <TableCell className="text-sm font-semibold text-slate-900">Totaal Kosten</TableCell>
                       <TableCell className="text-right text-sm font-semibold text-red-600">
-                        {formatAmount(profitLoss?.expenses?.total || 0)}
+                        {formatAmount(profitLoss?.totaal_kosten || profitLoss?.expenses?.total || 0)}
                       </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
 
                 {/* Net Profit */}
-                <div className={`mt-8 p-5 rounded-xl ${(profitLoss?.net_profit || 0) >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                <div className={`mt-8 p-5 rounded-xl ${(profitLoss?.netto_winst || profitLoss?.net_profit || 0) >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
                   <div className="flex justify-between items-center">
                     <span className="text-base font-semibold text-slate-900">Netto Resultaat</span>
-                    <span className={`text-xl font-semibold ${(profitLoss?.net_profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      {formatAmount(profitLoss?.net_profit || 0)}
+                    <span className={`text-xl font-semibold ${(profitLoss?.netto_winst || profitLoss?.net_profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatAmount(profitLoss?.netto_winst || profitLoss?.net_profit || 0)}
                     </span>
                   </div>
                 </div>
