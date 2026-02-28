@@ -1,143 +1,150 @@
 <analysis>**original_problem_statement:**
-De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die specifiek is afgestemd op de Surinaamse markt. De kerninstructie is om de structuur en UI van een referentieproject  te volgen. De scope is uitgebreid met features zoals PDF-facturen met templates, MT940-import, Surinaamse belastingrapportages, Excel-exports, configureerbare SMTP-instellingen, multi-tenancy, en het automatisch ophalen van wisselkoersen. Recentelijk heeft de gebruiker gevraagd om een product-fotouploadfunctie toe te voegen en de factuurinvoer te wijzigen van Omschrijving naar een Artikel dropdown. De gebruiker is zeer specifiek en wispelturig over de UI/UX, en heeft meerdere keren om ontwerprevisies en terugdraaiingen gevraagd.
+De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die specifiek is afgestemd op de Surinaamse markt. De kerninstructie is om de structuur en UI van een referentieproject  te volgen. De scope is uitgebreid met features zoals PDF-facturen met templates, MT940-import, Surinaamse belastingrapportages, Excel-exports, configureerbare SMTP-instellingen, multi-tenancy, en het automatisch ophalen van wisselkoersen. Recentelijk heeft de gebruiker een reeks zeer specifieke UI/UX-wijzigingen en bugfixes aangevraagd, met name voor de sidebar-navigatie en de functionaliteit van de Voorraad- en Verkoop-pagina's.
 
 **PRODUCTVEREISTEN:**
 -   **Valuta:** SRD, USD, EUR.
 -   **Wisselkoersen:** Zowel handmatige invoer als automatische synchronisatie van .
--   **Thema & UI:** Clean en modern. De gebruiker heeft meerdere, soms tegenstrijdige, ontwerpvoorkeuren geuit, gebaseerd op een Finance OS-afbeelding en een GitHub-repository. De laatste goedgekeurde stijl heeft consistente statistiekkaarten.
--   **Producten & Facturen:** Producten moeten een foto-upload-optie hebben. Bij het aanmaken van een factuur moet een Artikel uit een lijst worden geselecteerd in plaats van een vrije Omschrijving.
+-   **Thema & UI:** Clean en modern, gebaseerd op een Finance OS-afbeelding en een GitHub-repository. De gebruiker heeft de laatste sessie veel specifieke verzoeken gedaan voor de sidebar, waaronder een zoekbalk, een inklapfunctie en tooltips.
+-   **Producten & Facturen:** Producten hebben een foto. Facturen gebruiken een product-dropdown en hebben volledige CRUD- en statusbeheerfunctionaliteit, inclusief het registreren van betalingen. Productfoto's moeten op de PDF's verschijnen.
 -   **Backend:** FastAPI met MongoDB.
 -   **Frontend:** React met TailwindCSS.
 
 **User's preferred language**: Dutch
 
 **what currently exists?**
-De applicatie is een full-stack React/FastAPI-app met een grotendeels functionele boekhoudmodule. In deze sessie zijn diverse taken voltooid: de UI van de boekhoudpagina's is verder gestandaardiseerd, een 500-serverfout op het vastgoed-dashboard is opgelost, de e-maildiensten zijn samengevoegd, en een nieuwe scheduler voor automatische betalingsherinneringen is geïmplementeerd. Er is ook een hardnekkige Unknown error bij het testen van de SMTP-instellingen opgelost door de timeout- en fouthantering te verbeteren. De agent is recentelijk begonnen met de implementatie van een fotoupload voor producten en het aanpassen van de factuurpagina om een product-dropdown te gebruiken.
+De applicatie is een full-stack React/FastAPI-app. In deze sessie heeft de agent een groot aantal UI-verbeteringen en bugfixes doorgevoerd. De product-fotoupload en artikel-selectie op facturen zijn voltooid en de productfoto's worden nu ook op de PDF-facturen getoond. Er is een reeks bugs opgelost op de Voorraad- en Verkoop-pagina's, voornamelijk veroorzaakt door inconsistenties in veldnamen tussen de frontend (Engels) en backend (Nederlands). De sidebar is volledig herzien met een zoekfunctie, een inklapmechanisme, tooltips en een logica die de actieve module onthoudt. Er zijn CRUD-acties (bewerken/verwijderen) toegevoegd aan producten en mutaties, en de factuurworkflow is uitgebreid met statuswijzigingen en de mogelijkheid om betalingen te registreren.
 
 **Last working item**:
--   **Last item agent was working:** Implementatie van twee gerelateerde features:
-    1.  Een foto-uploadmogelijkheid toevoegen aan het Nieuw Product-formulier ().
-    2.  De factuurinvoer op de  wijzigen van een tekstveld Omschrijving naar een Artikel-dropdown die producten selecteert.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** N
--   **Which testing method agent to use?** both. De nieuwe backend-endpoint  moet worden getest (bv. met ). De frontend vereist een end-to-end test om de UI voor het uploaden van afbeeldingen en de functionaliteit van de product-dropdown op de factuurpagina te valideren.
+-   **Last item agent was working:** Een Betaling Toevoegen functionaliteit implementeren voor verkoopfacturen, inclusief een dialoogvenster om het bedrag, de datum en de betaalmethode vast te leggen.
+-   **Status:** USER VERIFICATION PENDING
+-   **Agent Testing Done:** Y
+-   **Which testing method agent to use?** both. De backend-endpoint () moet worden getest via  om te verifiëren dat een betaling correct wordt opgeslagen en de factuurstatus/openstaand bedrag bijwerkt. De frontend vereist een screenshot of E2E-test om het openen van de dialoog, het invullen en het verzenden van het formulier te valideren.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Inconsistentie in datamodel tussen frontend en backend (P1)**
-    -   **Beschrijving:** De frontend gebruikt soms Engelse veldnamen (), terwijl de backend Nederlandse () verwacht. Dit is een terugkerend probleem dat bugs veroorzaakt.
-    -   **Status:** IN PROGRESS. Er zijn centrale vertaalfuncties (, ) gemaakt in , maar deze zijn nog niet systematisch doorgevoerd in de hele codebase. Het risico blijft bestaan.
+-   **Issue 1: Inconsistentie in datamodel tussen frontend en backend (P0)**
+    -   **Beschrijving:** De frontend gebruikt Engelse veldnamen (, , Sat Feb 28 00:57:09 UTC 2026) terwijl de backend Nederlandse veldnamen verwacht (, , ). Dit is de hoofdoorzaak van bijna alle bugs die in de laatste sessie zijn opgelost (op de Voorraad- en Verkoop-pagina's). De agent heeft dit per geval opgelost door de data vlak voor de API-call te transformeren, maar er is geen structurele oplossing.
+    -   **Attempted fixes:** Ad-hoc data-objecten transformeren in  functies in  en . Dit lost het probleem lokaal op maar niet systematisch.
+    -   **Next debug checklist:**
+        1.  Inventariseer alle formulieren en API-calls binnen de boekhouding-module.
+        2.  Pas de  aan met centrale  en  helper-functies, zoals gesuggereerd in een eerdere handoff.
+        3.  Refactor alle API-calls om deze helpers te gebruiken, wat de code schoner maakt en toekomstige bugs voorkomt.
+    -   **Why fix this issue and what will be achieved with the fix?** Dit is een zeer terugkerend probleem dat bij elke nieuwe formulierimplementatie voor fouten zorgt. Een structurele oplossing bespaart veel ontwikkeltijd en verhoogt de stabiliteit van de applicatie.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** both
 
 **In progress Task List**:
--   **Task 1: Voltooi product-fotoupload en artikel-selectie op facturen (P0)**
-    -   **Where to resume:** De agent heeft de backend-endpoint  aangemaakt en wijzigingen doorgevoerd in  en . De volgende stap is het volledig testen en afronden van de implementatie.
-    -   **What will be achieved with this?** Voldoet aan een expliciete gebruikerswens voor een meer visuele productcatalogus en een gestructureerdere facturatie.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on something:** Nee
+-   Geen.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **Verbeter Multi-tenancy (P1):** Zorg ervoor dat *alle* databasequeries strikt gefilterd worden op het actieve  om data-isolatie te garanderen.
-    -   **Implementeer Logo Upload voor Facturen (P2):** Voeg een UI toe om een bedrijfslogo te uploaden dat op PDF-facturen wordt gebruikt.
-    -   **Breid Rapportages uit (P2):** Bouw de functionaliteit voor Balans- en Winst-en-verliesrekeningen.
+    -   **P1 - Systematische refactor van veldnaam-inconsistentie:** Los de problemen uit All Pending/In progress Issue list structureel op.
+    -   **P1 - Verbeter Multi-tenancy:** Zorg ervoor dat *alle* databasequeries strikt gefilterd worden op .
+    -   **P2 - Implementeer Logo Upload voor Facturen:** Voeg een UI toe in de Instellingen-pagina om een bedrijfslogo te uploaden dat op PDF-facturen wordt gebruikt.
+    -   **P2 - Breid Rapportages uit:** Bouw de Balans- en Winst-en-verliesrekening functionaliteit.
+
 -   **Future Tasks:**
-    -   **Refactor  (P2):** Het -bestand is met meer dan 15.000 regels onbeheersbaar geworden. Splits de logica op in modulaire routers (bijv. , ).
-    -   **Extraheer Herbruikbare UI Componenten (P3):** De statistiek-kaarten (, ) zijn op de  consistent gemaakt, maar deze styling moet worden geëxtraheerd naar een herbruikbaar component om consistentie op alle andere pagina's (Debiteuren, Crediteuren, etc.) af te dwingen.
+    -   **P2 - Refactor :** Het bestand is met >15.000 regels onbeheersbaar. Splits de logica op in modulaire routers (bijv.  bevat al een deel, maar meer kan worden afgesplitst).
+    -   **P3 - Extraheer Herbruikbare UI Componenten:** Maak een generiek  component om de UI-consistentie op alle dashboard-achtige pagina's af te dwingen.
 
 **Completed work in this session**
--   **UI Refactoring & Fixes:**
-    -   De  en  zijn bijgewerkt naar de Finance OS stijl.
-    -   Layout-probleem met ongewenste zijmarges () op alle boekhoudpagina's is opgelost.
-    -   Dashboard-kaarten in  zijn visueel consistent gemaakt na feedback van de gebruiker.
--   **Sidebar Refactoring:**
-    -   De hoofdsidebar in  is aangepast: de inklapfunctie en de module-headers zijn verwijderd en de navigatie toont nu alleen items die relevant zijn voor de huidige module.
--   **Bug Fixes:**
-    -   Een 500 server error op het vastgoed-dashboard (), veroorzaakt door een , is opgelost in .
-    -   Een hardnekkige Unknown error bij het testen van SMTP-instellingen is opgelost door de backend-fouthantering (met  timeouts) en frontend-error-parsing te verbeteren.
--   **Feature Implementations:**
-    -   **Custom PDF Templates:** De PDF-generator is uitgebreid om template-instellingen (kleuren, stijlen voor 'Modern' & 'Kleurrijk') te ondersteunen.
-    -   **Automatische Herinneringen:** Een scheduler () is gebouwd om dagelijks op vervallen facturen te controleren, inclusief een UI in de Instellingen-pagina om dit te configureren.
--   **Code Refactoring:**
-    -   De twee aparte e-maildiensten (, ) zijn samengevoegd tot één , en alle imports zijn bijgewerkt.
+-   **Product & Factuur Functionaliteit:**
+    -   Product foto-upload en weergave in de voorraadlijst is voltooid ().
+    -   Productfoto's worden nu op PDF-facturen getoond ().
+    -   Factuurinvoer is omgezet naar een artikel-dropdown ().
+-   **CRUD & Workflow op Voorraadpagina:**
+    -   Bugs opgelost m.b.t. voorraadweergave en het aanmaken van mutaties.
+    -   Acties (Bewerken, Verwijderen) toegevoegd aan de productentabel.
+    -   Actie (Verwijderen) toegevoegd aan de mutatietabel.
+-   **CRUD & Workflow op Verkooppagina:**
+    -   Bug opgelost bij het aanmaken van een nieuwe factuur.
+    -   Dataweergave in de factuurlijst gecorrigeerd.
+    -   Actiemenu toegevoegd met opties voor statuswijziging (Verzenden, Betaald), verwijderen en het toevoegen van betalingen.
+-   **Sidebar UI/UX Verbeteringen ():**
+    -   Bug opgelost waarbij de boekhouding-sidebar verdween op de instellingenpagina.
+    -   De user redirect-logica gefixt zodat de juiste module wordt getoond.
+    -   Een zoekbalk toegevoegd onder het logo.
+    -   De sidebar inklapbaar gemaakt met een knop.
+    -   Tooltips toegevoegd voor items in de ingeklapte sidebar.
+    -   Sidebar-headers vervangen door de modulenaam als klikbare dashboard-link.
 
 **Earlier issues found/mentioned but not fixed**
--   Het structureel oplossen van de veldnaam-inconsistentie door de hele codebase te refactoren is nog niet gebeurd.
+-   De veldnaam-inconsistentie is alleen lokaal opgelost, niet structureel.
+-   Het  bestand is nog steeds niet gerefactord.
 
 **Known issue recurrence from previous fork**
 -   **Issue:** Inconsistentie tussen Engelse frontend veldnamen en Nederlandse backend veldnamen.
--   **Recurrence count:** Hoog
--   **Status:** IN PROGRESS. Een patch is gemaakt, maar het onderliggende probleem is niet structureel opgelost.
+-   **Recurrence count:** Hoog (veroorzaakte 4-5 aparte bugfixes in deze sessie).
+-   **Status:** IN PROGRESS (meerdere patches toegepast, geen structurele oplossing).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend:** FastAPI, MongoDB, APScheduler, ReportLab, aiosmtplib
--   **Frontend:** React, TailwindCSS, Recharts
--   **Bestands-upload:** Implementatie van een nieuw endpoint voor het uploaden van binaire bestanden (afbeeldingen).
+-   **Backend:** FastAPI, Pydantic, MongoDB, ReportLab.
+-   **Frontend:** React, TailwindCSS, State management met  en , conditionele rendering, Modals/Dialogs, Dropdown menus.
+-   **Probleemoplossing:** De belangrijkste vaardigheid was het debuggen van mismatches tussen de datastructuur die de React-frontend verstuurt en de structuur die de Pydantic-modellen in de FastAPI-backend verwachten.
 
 **key DB schema**
--   ****: Dit model moet worden uitgebreid met een  veld om de locatie van de geüploade afbeelding op te slaan.
--   ****: De  in dit document bevatten nu configuratie voor de herinneringen-scheduler (, etc.).
+-   ****: Bevat nu een  (payments) array. De status kan , , of  zijn.
+-   ****: Heeft nu een  veld.
+-   ****: Collectie voor voorraadmutaties (, , ).
 
 **changes in tech stack**
 -   Geen.
 
 **All files of reference**
--    (Nieuw, vervangt oude e-mail services)
--    (Nieuw, voor automatische herinneringen)
--    (Aangepast voor uploads, herinneringen, en template-instellingen)
--    (Aangepast voor bugfix en scheduler-startup)
--    (Aangepast voor foto-upload UI)
--    (Aangepast voor artikel-selectie dropdown)
--    (Aangepast voor de nieuwe sidebar-logica)
--    (Aangepast met vertaalfuncties en verbeterde fouthantering)
+-   
+-   
+-   
+-   
+-   
+-   
+-   
 -   
 
 **Areas that need refactoring**:
--   **:** Dit bestand is met >15.000 regels onhoudbaar en moet dringend worden opgesplitst in afzonderlijke routers per functionele module.
--   **Veldnaam-vertaling:** De gecreëerde helper-functies moeten proactief worden toegepast op de gehele boekhouding-module om de Engelse/Nederlandse naamgevingsproblemen definitief op te lossen.
--   **Frontend Componenten:** De styling voor statistiek-kaarten moet worden geëxtraheerd naar een herbruikbaar component om duplicatie te voorkomen en consistentie over alle pagina's te garanderen.
+-   **Veldnaam-vertaling:** De ad-hoc data transformaties in de  functies moeten worden vervangen door een centrale helper-functie in  om het Engels/Nederlands naamgevingsprobleem definitief op te lossen.
+-   **:** Dringend opsplitsen in modulaire routers.
+-   **Frontend Pagina's:**  (>800 regels) en  (>700 regels) zijn te groot geworden. De logica voor de verschillende dialogen (, , , , ) moet worden geëxtraheerd naar eigen componenten.
 
 **key api endpoints**
 -    (Nieuw)
--    (Gefixed en verbeterd)
--    (Gefixed)
 -    (Nieuw)
--    (Uitgebreid met scheduler-instellingen)
+-    (Nieuw)
+-    (Nieuw)
+-    (Nieuw)
+-    (Gebruikt)
 
 **Critical Info for New Agent**
--   **Prioriteit 1: Voltooi de product-foto en artikel-selectie feature.** Dit is de laatste onvoltooide taak die direct door de gebruiker is aangevraagd. Test de backend en frontend grondig.
--   **De gebruiker is zeer visueel en wispelturig.** Na het afronden van de huidige taak, presenteer het resultaat met een screenshot en vraag expliciet om goedkeuring voordat u verdergaat met een volgende taak. Verwijs niet naar eerdere, afgekeurde ontwerpen.
--   **Technische schuld is hoog.** Het  bestand is een groot risico. Stel na de huidige taak voor om dit als prioriteit aan te pakken.
+-   **Prioriteit 1: Veldnaam-inconsistentie.** De meest voorkomende bug is de mismatch tussen Engelse frontend-veldnamen en Nederlandse backend-modellen. Het oplossen van dit probleem op een pagina vereist dat je de payload die naar de API wordt gestuurd handmatig aanpast. Wees hierop voorbereid voor elke nieuwe functie of bugfix met formulieren. Het voorstellen van een structurele oplossing is de hoogste prioriteit.
+-   **Gebruikersinteractie:** De gebruiker is zeer direct, visueel georiënteerd en vraagt om veel specifieke UI-wijzigingen. Gebruik screenshots om elke UI-wijziging te valideren en wees voorbereid op iteratieve feedback.
+-   **Sidebar logica:** De actieve module wordt nu bijgehouden in  via de  sleutel. Dit zorgt ervoor dat de juiste sidebar zichtbaar blijft, zelfs op algemene pagina's zoals .
 
 **documents and test reports created in this job**
--   /app/test_reports/iteration_49.json
--   /app/test_reports/iteration_50.json
--   /app/test_reports/iteration_51.json
+-   /app/test_reports/iteration_52.json
 -   /app/memory/PRD.md (meerdere keren bijgewerkt)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Vroeg om een product-fotoupload en een artikel-dropdown op de factuurpagina. (IN PROGRESS)
-2.  **User:** Bevestigde (jha) dat de consistente styling van de dashboardkaarten correct is. (COMPLETED)
-3.  **User:** Rapporteerde inconsistente styling op de dashboardkaarten. (COMPLETED)
-4.  **User:** Vroeg om een ontwerpwijziging terug te draaien. (COMPLETED)
-5.  **User:** Klaagde dat het huidige ontwerp afwijkt van de referentie op GitHub. (COMPLETED, na discussie en revert)
-6.  **User:** Bevestigde (Ja) dat de SMTP-foutmelding nu duidelijker is. (VERIFICATION PENDING - onduidelijk of het probleem helemaal is opgelost)
-7.  **User:** Rapporteerde dat de SMTP-test nog steeds een Unknown error geeft na lang laden. (COMPLETED)
-8.  **User:** Rapporteerde een Unknown error bij het testen van de SMTP-verbinding. (COMPLETED)
-9.  **User:** Rapporteerde een Unknown error op de instellingenpagina. (COMPLETED, bleek een tijdelijk probleem)
-10. **User:** Bevestigde (Jha) de suggestie om een automatische herinneringen-scheduler te bouwen. (COMPLETED)
+1.  **User:** De factuurstatus is Concept en ik kan er niets mee doen. (COMPLETED - Actiemenu toegevoegd).
+2.  **User:** Ik zie geen optie om een betaling aan de factuur toe te voegen. (COMPLETED - Betalingsfunctie toegevoegd).
+3.  **User:** Bij Voorraad werkt het aantal niet en Nieuwe Voorraadmutatie geeft een fout. (COMPLETED).
+4.  **User:** Ik zie geen bewerk/verwijder acties bij Producten. (COMPLETED).
+5.  **User:** Ik zie ook geen acties bij Mutaties. (COMPLETED).
+6.  **User:** De Factuur Aanmaken knop werkt niet. (COMPLETED).
+7.  **User:** Ik wil een zoekbalk onder het logo in de sidebar. (COMPLETED).
+8.  **User:** Ik wil de sidebar kunnen inklappen, zoals op de screenshot. (COMPLETED).
+9.  **User:** Als de sidebar is ingeklapt, wil ik de naam zien als ik over een icoon hover. (COMPLETED).
+10. **User:** De sidebar-headers moeten weg, de Dashboard-link moet de modulenaam zijn. (COMPLETED).
 
 **Project Health Check:**
--   **Broken:** De nieuwe features voor product-fotoupload en artikel-selectie zijn half geïmplementeerd en werken nog niet. De technische schuld in  is kritiek en vormt een risico voor toekomstige ontwikkeling.
+-   **Broken:** Geen. Alle recent gemelde problemen zijn opgelost. De onderliggende technische schuld (veldnaam-inconsistentie, groot  bestand) vormt echter een risico voor toekomstige stabiliteit.
 -   **Mocked:** Geen.
 
 **3rd Party Integrations**
 -   **playwright:** (v1.44.0) Voor web scraping.
--   **APScheduler:** (v3.11.2) Voor achtergrondtaken (wisselkoersen, herinneringen).
+-   **APScheduler:** (v3.11.2) Voor achtergrondtaken.
 -   **recharts:** (v3.7.0) Voor grafieken.
 -   **mt940:** (v0.7.0) Voor bankbestanden.
 -   **reportlab:** (v4.4.9) Voor PDF's.
@@ -145,16 +152,15 @@ De applicatie is een full-stack React/FastAPI-app met een grotendeels functionel
 -   **aiosmtplib:** (v5.1.0) Voor e-mail.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (voor backend-features en refactoring).
+-   **Testing agent used after significant changes:** YES
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** []
--   **Known regressions:** Geen bekende regressies, maar de nieuwe, ongeteste product-upload feature is per definitie defect.
+-   **Known regressions:** Geen.
 
 **Credentials to test flow:**
 -   **Gebruikersnaam:** 
 -   **Wachtwoord:** 
 
 **What agent forgot to execute**
--   De agent heeft de implementatie van de product-fotoupload en artikel-selectie niet voltooid. De taak is halverwege achtergelaten.
--   De agent heeft de voorgestelde refactoring van het  bestand niet uitgevoerd, ondanks de kritieke omvang ervan.
--   De agent heeft de helper-functies voor de veldnaam-inconsistentie wel aangemaakt, maar geen structurele refactoring uitgevoerd om ze overal toe te passen.</analysis>
+-   De agent heeft geen structurele refactoring uitgevoerd om de terugkerende veldnaam-inconsistenties op te lossen. Er zijn alleen lokale patches toegepast.
+-   De agent heeft de voorgestelde refactoring van het kritiek grote -bestand niet uitgevoerd.</analysis>
