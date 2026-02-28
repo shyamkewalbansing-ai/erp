@@ -354,9 +354,13 @@ async def boek_inkoopfactuur(user_id: str, factuur: dict):
     Debet: BTW te vorderen (BTW bedrag)
     Credit: Crediteuren (totaal incl BTW)
     """
+    inkoop_code = await get_rekening_voor_type(user_id, "inkoop")
+    btw_code = await get_rekening_voor_type(user_id, "btw_inkoop")
+    crediteuren_code = await get_rekening_voor_type(user_id, "crediteuren")
+    
     regels = [
         {
-            "rekening_code": DEFAULT_REKENINGEN["inkoop"],
+            "rekening_code": inkoop_code,
             "omschrijving": f"Inkoop factuur {factuur.get('factuurnummer', '')}",
             "debet": factuur.get("subtotaal", 0),
             "credit": 0
@@ -367,14 +371,14 @@ async def boek_inkoopfactuur(user_id: str, factuur: dict):
     btw_bedrag = factuur.get("btw_bedrag", 0)
     if btw_bedrag > 0:
         regels.append({
-            "rekening_code": DEFAULT_REKENINGEN["btw_inkoop"],
+            "rekening_code": btw_code,
             "omschrijving": f"Voorbelasting factuur {factuur.get('factuurnummer', '')}",
             "debet": btw_bedrag,
             "credit": 0
         })
     
     regels.append({
-        "rekening_code": DEFAULT_REKENINGEN["crediteuren"],
+        "rekening_code": crediteuren_code,
         "omschrijving": f"Crediteur: {factuur.get('crediteur_naam', 'Onbekend')}",
         "debet": 0,
         "credit": factuur.get("totaal_incl_btw", 0)
