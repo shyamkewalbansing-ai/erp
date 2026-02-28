@@ -2255,7 +2255,7 @@ class BetalingCreate(BaseModel):
 
 @router.post("/verkoopfacturen/{factuur_id}/betaling")
 async def add_betaling_to_factuur(factuur_id: str, data: BetalingCreate, authorization: str = Header(None)):
-    """Voeg een betaling toe aan een factuur"""
+    """Voeg een betaling toe aan een factuur en boek naar grootboek"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
     
@@ -2301,6 +2301,12 @@ async def add_betaling_to_factuur(factuur_id: str, data: BetalingCreate, authori
             "updated_at": datetime.now(timezone.utc)
         }}
     )
+    
+    # Automatisch boeken naar grootboek
+    try:
+        await boek_betaling_ontvangen(user_id, factuur, nieuwe_betaling)
+    except Exception as e:
+        print(f"Fout bij boeken betaling: {e}")
     
     return {
         "message": "Betaling toegevoegd",
