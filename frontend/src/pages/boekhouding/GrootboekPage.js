@@ -216,7 +216,18 @@ const GrootboekPage = () => {
           <h1 className="text-2xl font-semibold text-slate-900">Grootboek</h1>
           <p className="text-slate-500 mt-0.5">Beheer uw rekeningschema en journaalposten</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {accounts.length === 0 && (
+            <Button 
+              variant="outline" 
+              onClick={handleInitStandaardSchema} 
+              disabled={initializingSchema}
+              data-testid="init-standaard-btn"
+            >
+              {initializingSchema ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+              Standaard Schema Laden
+            </Button>
+          )}
           <Dialog open={showAccountDialog} onOpenChange={setShowAccountDialog}>
             <DialogTrigger asChild>
               <Button variant="outline" data-testid="add-account-btn">
