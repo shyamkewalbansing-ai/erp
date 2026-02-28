@@ -708,27 +708,217 @@ const POSPage = () => {
   const printReceipt = async () => {
     if (!lastSale) return;
     
-    try {
-      const response = await fetch(`${API_URL}/api/boekhouding/pos/verkopen/${lastSale.id}/bon`, {
-        headers: { ...getAuthHeader() }
-      });
+    // Create receipt HTML for thermal printer (80mm width)
+    const receiptContent = generateReceiptHTML(lastSale);
+    
+    // Open print window
+    const printWindow = window.open('', '_blank', 'width=302,height=600');
+    if (printWindow) {
+      printWindow.document.write(receiptContent);
+      printWindow.document.close();
       
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `bon-${lastSale.bonnummer}.pdf`;
-        link.click();
-        window.URL.revokeObjectURL(url);
-        toast.success('Bon gedownload');
-      } else {
-        // Fallback: open print window
-        window.print();
-      }
-    } catch (error) {
-      toast.error('Fout bij printen bon');
+      // Wait for content to load then print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+          // Close window after print dialog closes
+          printWindow.onafterprint = () => printWindow.close();
+        }, 250);
+      };
+    } else {
+      toast.error('Pop-up geblokkeerd. Sta pop-ups toe voor printen.');
     }
+  };
+
+  // Generate receipt HTML for thermal printer (80mm = ~302px at 96dpi)
+  const generateReceiptHTML = (sale) => {
+    const date = new Date(sale.datum || sale.created_at);
+    const dateStr = date.toLocaleDateString('nl-NL');
+    const timeStr = date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+    
+    const items = sale.items || sale.regels || [];
+    const subtotal = sale.subtotaal || items.reduce((sum, item) => sum + (item.aantal * item.prijs), 0);
+    const discount = sale.korting || 0;
+    const total = sale.totaal || (subtotal - discount);
+    
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bon ${sale.bonnummer || ''}</title>
+  <style>
+    @page {
+      size: 80mm auto;
+      margin: 0;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      width: 80mm;
+      max-width: 80mm;
+      padding: 5mm;
+      background: white;
+      color: black;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 10px;
+      border-bottom: 1px dashed #000;
+      padding-bottom: 10px;
+    }
+    .header h1 {
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    .header p {
+      font-size: 11px;
+    }
+    .info {
+      margin-bottom: 10px;
+      font-size: 11px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+    }
+    .items {
+      border-top: 1px dashed #000;
+      border-bottom: 1px dashed #000;
+      padding: 10px 0;
+      margin-bottom: 10px;
+    }
+    .item {
+      margin-bottom: 5px;
+    }
+    .item-name {
+      font-weight: bold;
+    }
+    .item-details {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding-left: 10px;
+    }
+    .totals {
+      margin-bottom: 10px;
+    }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 3px;
+    }
+    .total-row.grand {
+      font-size: 14px;
+      font-weight: bold;
+      border-top: 1px solid #000;
+      padding-top: 5px;
+      margin-top: 5px;
+    }
+    .payment {
+      text-align: center;
+      margin-bottom: 10px;
+      padding: 5px;
+      background: #f0f0f0;
+    }
+    .footer {
+      text-align: center;
+      font-size: 10px;
+      margin-top: 15px;
+      padding-top: 10px;
+      border-top: 1px dashed #000;
+    }
+    .barcode {
+      text-align: center;
+      font-family: 'Libre Barcode 39', monospace;
+      font-size: 30px;
+      margin: 10px 0;
+    }
+    @media print {
+      body {
+        width: 80mm;
+        max-width: 80mm;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>KASSABON</h1>
+    <p>Demo Bedrijf</p>
+  </div>
+  
+  <div class="info">
+    <div class="info-row">
+      <span>Bon:</span>
+      <span>${sale.bonnummer || sale.id?.slice(0,8) || '-'}</span>
+    </div>
+    <div class="info-row">
+      <span>Datum:</span>
+      <span>${dateStr}</span>
+    </div>
+    <div class="info-row">
+      <span>Tijd:</span>
+      <span>${timeStr}</span>
+    </div>
+    ${sale.klant_naam ? `
+    <div class="info-row">
+      <span>Klant:</span>
+      <span>${sale.klant_naam}</span>
+    </div>
+    ` : ''}
+  </div>
+  
+  <div class="items">
+    ${items.map(item => `
+    <div class="item">
+      <div class="item-name">${item.artikel_naam || item.naam || 'Product'}</div>
+      <div class="item-details">
+        <span>${item.aantal} x SRD ${(item.prijs || 0).toFixed(2)}</span>
+        <span>SRD ${((item.aantal || 1) * (item.prijs || 0)).toFixed(2)}</span>
+      </div>
+    </div>
+    `).join('')}
+  </div>
+  
+  <div class="totals">
+    <div class="total-row">
+      <span>Subtotaal:</span>
+      <span>SRD ${subtotal.toFixed(2)}</span>
+    </div>
+    ${discount > 0 ? `
+    <div class="total-row">
+      <span>Korting:</span>
+      <span>- SRD ${discount.toFixed(2)}</span>
+    </div>
+    ` : ''}
+    <div class="total-row grand">
+      <span>TOTAAL:</span>
+      <span>SRD ${total.toFixed(2)}</span>
+    </div>
+  </div>
+  
+  <div class="payment">
+    ${sale.betaalmethode === 'contant' ? '💵 Contant' : '💳 Pin'}
+    ${sale.betaalmethode === 'contant' && sale.ontvangen ? `
+    <br>Ontvangen: SRD ${sale.ontvangen.toFixed(2)}
+    <br>Wisselgeld: SRD ${(sale.ontvangen - total).toFixed(2)}
+    ` : ''}
+  </div>
+  
+  <div class="footer">
+    <p>Bedankt voor uw aankoop!</p>
+    <p style="margin-top: 5px;">* * * * *</p>
+  </div>
+</body>
+</html>
+    `;
   };
 
   const formatCurrency = (amount) => {
