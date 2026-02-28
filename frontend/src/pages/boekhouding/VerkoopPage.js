@@ -24,6 +24,7 @@ const VerkoopPage = () => {
   const [loading, setLoading] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(null);
 
   const [newInvoice, setNewInvoice] = useState({
     type: 'sales',
