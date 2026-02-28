@@ -523,6 +523,102 @@ const VoorraadPage = () => {
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Edit Product Dialog */}
+          <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Product Bewerken</DialogTitle>
+              </DialogHeader>
+              {editingProduct && (
+                <div className="space-y-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Code *</Label>
+                      <Input
+                        value={editingProduct.code}
+                        onChange={(e) => setEditingProduct({...editingProduct, code: e.target.value})}
+                        placeholder="PRD001"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Type</Label>
+                      <Select value={editingProduct.type} onValueChange={(v) => setEditingProduct({...editingProduct, type: v})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="product">Product</SelectItem>
+                          <SelectItem value="dienst">Dienst</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Naam *</Label>
+                    <Input
+                      value={editingProduct.name}
+                      onChange={(e) => setEditingProduct({...editingProduct, name: e.target.value})}
+                      placeholder="Productnaam"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Omschrijving</Label>
+                    <Input
+                      value={editingProduct.description}
+                      onChange={(e) => setEditingProduct({...editingProduct, description: e.target.value})}
+                      placeholder="Korte beschrijving"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="space-y-2">
+                      <Label>Eenheid</Label>
+                      <Select value={editingProduct.unit} onValueChange={(v) => setEditingProduct({...editingProduct, unit: v})}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="stuk">Stuk</SelectItem>
+                          <SelectItem value="kg">Kilogram</SelectItem>
+                          <SelectItem value="liter">Liter</SelectItem>
+                          <SelectItem value="meter">Meter</SelectItem>
+                          <SelectItem value="uur">Uur</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Inkoopprijs</Label>
+                      <Input
+                        type="number"
+                        value={editingProduct.purchase_price}
+                        onChange={(e) => setEditingProduct({...editingProduct, purchase_price: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Verkoopprijs</Label>
+                      <Input
+                        type="number"
+                        value={editingProduct.sales_price}
+                        onChange={(e) => setEditingProduct({...editingProduct, sales_price: parseFloat(e.target.value) || 0})}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Minimum Voorraad</Label>
+                    <Input
+                      type="number"
+                      value={editingProduct.min_stock}
+                      onChange={(e) => setEditingProduct({...editingProduct, min_stock: parseInt(e.target.value) || 0})}
+                    />
+                  </div>
+                  <Button onClick={handleUpdateProduct} className="w-full" disabled={saving}>
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Opslaan
+                  </Button>
+                </div>
+              )}
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
