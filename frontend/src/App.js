@@ -605,6 +605,13 @@ function MainAppRoutes() {
           </Suspense>
         } />
         
+        {/* PERMANENT POS Scanner - NO AUTH REQUIRED, NEVER EXPIRES */}
+        <Route path="/scan/p/:code" element={
+          <Suspense fallback={<PageLoader />}>
+            <BoekhoudingPOSPermanentScanner />
+          </Suspense>
+        } />
+        
         {/* Protected Routes - with Layout */}
         <Route path="/app" element={
           <ProtectedRoute><Layout /></ProtectedRoute>
