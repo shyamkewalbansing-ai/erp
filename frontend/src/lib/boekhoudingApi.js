@@ -268,6 +268,7 @@ export const stockMovementsAPI = {
     return apiFetch(`/boekhouding/voorraadmutaties${query ? `?${query}` : ''}`);
   },
   create: (data) => apiFetch('/boekhouding/voorraadmutaties', { method: 'POST', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/boekhouding/voorraadmutaties/${id}`, { method: 'DELETE' }),
 };
 
 // Purchase Orders
