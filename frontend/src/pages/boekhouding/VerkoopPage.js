@@ -12,8 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from '../../components/ui/badge';
 import { Textarea } from '../../components/ui/textarea';
 import { toast } from 'sonner';
-import { Plus, FileText, ShoppingCart, Receipt, Loader2, Trash2, Download, Send, CheckCircle, MoreHorizontal } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/dropdown-menu';
+import { Plus, FileText, ShoppingCart, Receipt, Loader2, Trash2, Download, Send, CheckCircle, MoreHorizontal, CreditCard } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../../components/ui/dropdown-menu';
 
 const VerkoopPage = () => {
   const [quotes, setQuotes] = useState([]);
@@ -23,8 +23,16 @@ const VerkoopPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [saving, setSaving] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(null);
+  const [newPayment, setNewPayment] = useState({
+    bedrag: 0,
+    datum: new Date().toISOString().split('T')[0],
+    betaalmethode: 'bank',
+    referentie: ''
+  });
 
   const [newInvoice, setNewInvoice] = useState({
     type: 'sales',
