@@ -415,6 +415,40 @@ async def boek_inkoopfactuur(user_id: str, factuur: dict):
         document_ref=factuur.get("id")
     )
 
+async def boek_betaling_uitgaand(user_id: str, factuur: dict, betaling: dict, bankrekening_code: str = None):
+    """
+    Boek een uitgaande betaling naar het grootboek
+    
+    Debet: Crediteuren
+    Credit: Bank/Kas
+    """
+    bank_code = bankrekening_code or await get_rekening_voor_type(user_id, "bank")
+    crediteuren_code = await get_rekening_voor_type(user_id, "crediteuren")
+    
+    regels = [
+        {
+            "rekening_code": crediteuren_code,
+            "omschrijving": f"Afboeking crediteur: {factuur.get('crediteur_naam', 'Onbekend')}",
+            "debet": betaling.get("bedrag", 0),
+            "credit": 0
+        },
+        {
+            "rekening_code": bank_code,
+            "omschrijving": f"Betaling uitgaand {factuur.get('factuurnummer', '')}",
+            "debet": 0,
+            "credit": betaling.get("bedrag", 0)
+        }
+    ]
+    
+    await create_auto_journaalpost(
+        user_id=user_id,
+        dagboek_code="BK",  # Bank dagboek
+        datum=betaling.get("datum", date.today()),
+        omschrijving=f"Betaling factuur {factuur.get('factuurnummer', '')} - {factuur.get('crediteur_naam', '')}",
+        regels=regels,
+        document_ref=factuur.get("id")
+    )
+
 # ==================== PYDANTIC MODELS ====================
 
 class RekeningCreate(BaseModel):
