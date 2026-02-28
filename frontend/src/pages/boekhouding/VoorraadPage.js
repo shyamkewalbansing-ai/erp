@@ -184,14 +184,7 @@ const VoorraadPage = () => {
 
       await html5QrCode.start(
         { facingMode: "environment" },
-        { 
-          fps: 10,
-          qrbox: function(viewfinderWidth, viewfinderHeight) {
-            const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-            return { width: Math.floor(minEdge * 0.8), height: Math.floor(minEdge * 0.5) };
-          },
-          formatsToSupport: [0,3,4,5,8,9,10,14,15]
-        },
+        { fps: 10, qrbox: { width: 250, height: 150 } },
         (decodedText) => handleScannedBarcode(decodedText),
         () => {}
       );
