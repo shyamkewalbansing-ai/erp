@@ -15,20 +15,27 @@ TEST_EMAIL = "demo@facturatie.sr"
 TEST_PASSWORD = "demo2024"
 
 
+def get_auth_token():
+    """Get authentication token"""
+    response = requests.post(f"{BASE_URL}/api/auth/login", json={
+        "email": TEST_EMAIL,
+        "password": TEST_PASSWORD
+    })
+    if response.status_code == 200:
+        data = response.json()
+        # API returns access_token, not token
+        return data.get("access_token") or data.get("token")
+    return None
+
+
+def get_auth_headers():
+    """Get auth headers"""
+    token = get_auth_token()
+    return {"Authorization": f"Bearer {token}"} if token else {}
+
+
 class TestAuthentication:
     """Authentication tests"""
-    
-    @pytest.fixture(scope="class")
-    def auth_token(self):
-        """Get authentication token"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        assert response.status_code == 200, f"Login failed: {response.text}"
-        data = response.json()
-        assert "token" in data, "No token in response"
-        return data["token"]
     
     def test_login_success(self):
         """Test successful login"""
@@ -38,7 +45,8 @@ class TestAuthentication:
         })
         assert response.status_code == 200
         data = response.json()
-        assert "token" in data
+        # API returns access_token
+        assert "access_token" in data or "token" in data, f"No token in response: {data.keys()}"
         assert "user" in data
         print(f"✓ Login successful for {TEST_EMAIL}")
 
@@ -46,19 +54,10 @@ class TestAuthentication:
 class TestDashboard:
     """Dashboard KPI tests"""
     
-    @pytest.fixture(scope="class")
-    def auth_headers(self):
-        """Get auth headers"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        token = response.json().get("token")
-        return {"Authorization": f"Bearer {token}"}
-    
-    def test_dashboard_kpis(self, auth_headers):
+    def test_dashboard_kpis(self):
         """Test dashboard KPIs endpoint"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/dashboard", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/dashboard", headers=headers)
         assert response.status_code == 200, f"Dashboard failed: {response.text}"
         data = response.json()
         
@@ -71,9 +70,10 @@ class TestDashboard:
         
         print(f"✓ Dashboard KPIs loaded - Omzet: {data['omzet']}")
     
-    def test_dashboard_charts(self, auth_headers):
+    def test_dashboard_charts(self):
         """Test dashboard charts endpoint"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/dashboard/charts", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/dashboard/charts", headers=headers)
         assert response.status_code == 200, f"Dashboard charts failed: {response.text}"
         data = response.json()
         
@@ -85,18 +85,10 @@ class TestDashboard:
 class TestLogoUpload:
     """Logo upload functionality tests"""
     
-    @pytest.fixture(scope="class")
-    def auth_headers(self):
-        """Get auth headers"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        token = response.json().get("token")
-        return {"Authorization": f"Bearer {token}"}
-    
-    def test_upload_image_endpoint_exists(self, auth_headers):
+    def test_upload_image_endpoint_exists(self):
         """Test that upload-image endpoint exists"""
+        headers = get_auth_headers()
+        
         # Create a simple test image (1x1 pixel PNG)
         png_data = bytes([
             0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,  # PNG signature
@@ -113,7 +105,7 @@ class TestLogoUpload:
         files = {'file': ('test_logo.png', io.BytesIO(png_data), 'image/png')}
         response = requests.post(
             f"{BASE_URL}/api/boekhouding/upload-image",
-            headers=auth_headers,
+            headers=headers,
             files=files
         )
         
@@ -123,48 +115,41 @@ class TestLogoUpload:
         assert "filename" in data, "No filename in upload response"
         print(f"✓ Logo upload successful - URL: {data['url']}")
     
-    def test_upload_invalid_file_type(self, auth_headers):
+    def test_upload_invalid_file_type(self):
         """Test that invalid file types are rejected"""
+        headers = get_auth_headers()
         files = {'file': ('test.txt', io.BytesIO(b'test content'), 'text/plain')}
         response = requests.post(
             f"{BASE_URL}/api/boekhouding/upload-image",
-            headers=auth_headers,
+            headers=headers,
             files=files
         )
         
-        assert response.status_code == 400, "Should reject non-image files"
+        assert response.status_code == 400, f"Should reject non-image files, got {response.status_code}"
         print(f"✓ Invalid file type correctly rejected")
 
 
 class TestInstellingen:
     """Instellingen (Settings) tests"""
     
-    @pytest.fixture(scope="class")
-    def auth_headers(self):
-        """Get auth headers"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        token = response.json().get("token")
-        return {"Authorization": f"Bearer {token}"}
-    
-    def test_get_instellingen(self, auth_headers):
+    def test_get_instellingen(self):
         """Test getting company settings"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/instellingen", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/instellingen", headers=headers)
         assert response.status_code == 200, f"Get settings failed: {response.text}"
         data = response.json()
         print(f"✓ Settings loaded - Company: {data.get('bedrijfsnaam', 'N/A')}")
     
-    def test_update_instellingen(self, auth_headers):
+    def test_update_instellingen(self):
         """Test updating company settings"""
+        headers = get_auth_headers()
         update_data = {
             "bedrijfsnaam": "Test Bedrijf",
             "standaard_betalingstermijn": 30
         }
         response = requests.put(
             f"{BASE_URL}/api/boekhouding/instellingen",
-            headers=auth_headers,
+            headers=headers,
             json=update_data
         )
         assert response.status_code == 200, f"Update settings failed: {response.text}"
@@ -174,27 +159,19 @@ class TestInstellingen:
 class TestBedrijven:
     """Multi-tenant bedrijven tests"""
     
-    @pytest.fixture(scope="class")
-    def auth_headers(self):
-        """Get auth headers"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        token = response.json().get("token")
-        return {"Authorization": f"Bearer {token}"}
-    
-    def test_get_bedrijven(self, auth_headers):
+    def test_get_bedrijven(self):
         """Test getting all companies"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/bedrijven", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/bedrijven", headers=headers)
         assert response.status_code == 200, f"Get bedrijven failed: {response.text}"
         data = response.json()
         assert isinstance(data, list), "Bedrijven should be a list"
         print(f"✓ Bedrijven loaded - Count: {len(data)}")
     
-    def test_get_actief_bedrijf(self, auth_headers):
+    def test_get_actief_bedrijf(self):
         """Test getting active company"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/bedrijven/actief", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/bedrijven/actief", headers=headers)
         assert response.status_code == 200, f"Get actief bedrijf failed: {response.text}"
         data = response.json()
         assert "id" in data, "Active company should have id"
@@ -204,27 +181,19 @@ class TestBedrijven:
 class TestVerkoopfacturen:
     """Verkoop (Sales) tests"""
     
-    @pytest.fixture(scope="class")
-    def auth_headers(self):
-        """Get auth headers"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        token = response.json().get("token")
-        return {"Authorization": f"Bearer {token}"}
-    
-    def test_get_verkoopfacturen(self, auth_headers):
+    def test_get_verkoopfacturen(self):
         """Test getting sales invoices"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/verkoopfacturen", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/verkoopfacturen", headers=headers)
         assert response.status_code == 200, f"Get verkoopfacturen failed: {response.text}"
         data = response.json()
         assert isinstance(data, list), "Verkoopfacturen should be a list"
         print(f"✓ Verkoopfacturen loaded - Count: {len(data)}")
     
-    def test_get_debiteuren(self, auth_headers):
+    def test_get_debiteuren(self):
         """Test getting customers (debiteuren)"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/debiteuren", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/debiteuren", headers=headers)
         assert response.status_code == 200, f"Get debiteuren failed: {response.text}"
         data = response.json()
         assert isinstance(data, list), "Debiteuren should be a list"
@@ -234,27 +203,19 @@ class TestVerkoopfacturen:
 class TestInkoopfacturen:
     """Inkoop (Purchase) tests"""
     
-    @pytest.fixture(scope="class")
-    def auth_headers(self):
-        """Get auth headers"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        token = response.json().get("token")
-        return {"Authorization": f"Bearer {token}"}
-    
-    def test_get_inkoopfacturen(self, auth_headers):
+    def test_get_inkoopfacturen(self):
         """Test getting purchase invoices"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/inkoopfacturen", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/inkoopfacturen", headers=headers)
         assert response.status_code == 200, f"Get inkoopfacturen failed: {response.text}"
         data = response.json()
         assert isinstance(data, list), "Inkoopfacturen should be a list"
         print(f"✓ Inkoopfacturen loaded - Count: {len(data)}")
     
-    def test_get_crediteuren(self, auth_headers):
+    def test_get_crediteuren(self):
         """Test getting suppliers (crediteuren)"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/crediteuren", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/crediteuren", headers=headers)
         assert response.status_code == 200, f"Get crediteuren failed: {response.text}"
         data = response.json()
         assert isinstance(data, list), "Crediteuren should be a list"
@@ -264,40 +225,34 @@ class TestInkoopfacturen:
 class TestRapportages:
     """Rapportages (Reports) tests"""
     
-    @pytest.fixture(scope="class")
-    def auth_headers(self):
-        """Get auth headers"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        token = response.json().get("token")
-        return {"Authorization": f"Bearer {token}"}
-    
-    def test_balans_report(self, auth_headers):
+    def test_balans_report(self):
         """Test balance sheet report"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/rapportages/balans", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/rapportages/balans", headers=headers)
         assert response.status_code == 200, f"Balans report failed: {response.text}"
         data = response.json()
         print(f"✓ Balans report loaded")
     
-    def test_winst_verlies_report(self, auth_headers):
+    def test_winst_verlies_report(self):
         """Test profit/loss report"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/rapportages/winst-verlies", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/rapportages/winst-verlies", headers=headers)
         assert response.status_code == 200, f"Winst/Verlies report failed: {response.text}"
         data = response.json()
         print(f"✓ Winst/Verlies report loaded")
     
-    def test_btw_report(self, auth_headers):
+    def test_btw_report(self):
         """Test BTW report"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/rapportages/btw", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/rapportages/btw", headers=headers)
         assert response.status_code == 200, f"BTW report failed: {response.text}"
         data = response.json()
         print(f"✓ BTW report loaded")
     
-    def test_ouderdom_debiteuren(self, auth_headers):
+    def test_ouderdom_debiteuren(self):
         """Test aging receivables report"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/rapportages/ouderdom/debiteuren", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/rapportages/ouderdom?type=debiteuren", headers=headers)
         assert response.status_code == 200, f"Ouderdom debiteuren failed: {response.text}"
         data = response.json()
         print(f"✓ Ouderdom debiteuren report loaded")
@@ -306,27 +261,19 @@ class TestRapportages:
 class TestGrootboek:
     """Grootboek (General Ledger) tests"""
     
-    @pytest.fixture(scope="class")
-    def auth_headers(self):
-        """Get auth headers"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        token = response.json().get("token")
-        return {"Authorization": f"Bearer {token}"}
-    
-    def test_get_rekeningen(self, auth_headers):
+    def test_get_rekeningen(self):
         """Test getting chart of accounts"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/rekeningen", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/rekeningen", headers=headers)
         assert response.status_code == 200, f"Get rekeningen failed: {response.text}"
         data = response.json()
         assert isinstance(data, list), "Rekeningen should be a list"
         print(f"✓ Rekeningen loaded - Count: {len(data)}")
     
-    def test_get_journaalposten(self, auth_headers):
+    def test_get_journaalposten(self):
         """Test getting journal entries"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/journaalposten", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/journaalposten", headers=headers)
         assert response.status_code == 200, f"Get journaalposten failed: {response.text}"
         data = response.json()
         assert isinstance(data, list), "Journaalposten should be a list"
@@ -336,19 +283,10 @@ class TestGrootboek:
 class TestBTW:
     """BTW (VAT) tests"""
     
-    @pytest.fixture(scope="class")
-    def auth_headers(self):
-        """Get auth headers"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        token = response.json().get("token")
-        return {"Authorization": f"Bearer {token}"}
-    
-    def test_get_btw_codes(self, auth_headers):
+    def test_get_btw_codes(self):
         """Test getting BTW codes"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/btw-codes", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/btw-codes", headers=headers)
         assert response.status_code == 200, f"Get BTW codes failed: {response.text}"
         data = response.json()
         assert isinstance(data, list), "BTW codes should be a list"
@@ -358,19 +296,10 @@ class TestBTW:
 class TestArtikelen:
     """Artikelen (Products) tests"""
     
-    @pytest.fixture(scope="class")
-    def auth_headers(self):
-        """Get auth headers"""
-        response = requests.post(f"{BASE_URL}/api/auth/login", json={
-            "email": TEST_EMAIL,
-            "password": TEST_PASSWORD
-        })
-        token = response.json().get("token")
-        return {"Authorization": f"Bearer {token}"}
-    
-    def test_get_artikelen(self, auth_headers):
+    def test_get_artikelen(self):
         """Test getting products"""
-        response = requests.get(f"{BASE_URL}/api/boekhouding/artikelen", headers=auth_headers)
+        headers = get_auth_headers()
+        response = requests.get(f"{BASE_URL}/api/boekhouding/artikelen", headers=headers)
         assert response.status_code == 200, f"Get artikelen failed: {response.text}"
         data = response.json()
         assert isinstance(data, list), "Artikelen should be a list"
