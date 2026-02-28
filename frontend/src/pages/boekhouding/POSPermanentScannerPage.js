@@ -395,7 +395,45 @@ const POSPermanentScannerPage = () => {
 
   return (
     <div className="fixed inset-0 bg-slate-900 flex flex-col" data-testid="pos-permanent-scanner">
+      {/* PWA Meta Tags */}
+      <Helmet>
+        <title>Scanner - POS</title>
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="Scanner" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#059669" />
+        <link rel="apple-touch-icon" href="/scanner-icon-192.png" />
+        <link rel="manifest" href="/scanner-manifest.json" />
+      </Helmet>
+      
       <Toaster position="top-center" richColors />
+      
+      {/* Install Prompt Banner */}
+      {showInstallPrompt && !isStandalone && (
+        <div className="bg-emerald-600 px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3 text-white">
+            <Download className="w-5 h-5" />
+            <span className="text-sm">Installeer als app op je telefoon</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              size="sm" 
+              variant="secondary"
+              onClick={handleInstallClick}
+              className="bg-white text-emerald-700 hover:bg-emerald-50 text-xs px-3"
+            >
+              Installeer
+            </Button>
+            <button 
+              onClick={dismissInstallPrompt}
+              className="text-white/70 hover:text-white p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
       
       {/* Header */}
       <div className="bg-emerald-700 px-4 py-3 flex items-center justify-between">
@@ -405,7 +443,9 @@ const POSPermanentScannerPage = () => {
           ) : (
             <WifiOff className="w-5 h-5 text-red-400" />
           )}
-          <span className="text-emerald-100 text-sm font-medium">Permanente Scanner</span>
+          <span className="text-emerald-100 text-sm font-medium">
+            {isStandalone ? 'Scanner' : 'Permanente Scanner'}
+          </span>
         </div>
         
         <div className="flex items-center gap-2">
