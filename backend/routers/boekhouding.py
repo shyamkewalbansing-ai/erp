@@ -109,6 +109,226 @@ async def log_audit(user_id: str, action: str, module: str, entity_type: str, en
         "timestamp": datetime.now(timezone.utc)
     })
 
+# ==================== AUTOMATISCHE GROOTBOEKBOEKING ====================
+# Deze functies zorgen voor automatische journaalposten bij transacties
+
+# Standaard rekeningcodes (kunnen worden geconfigureerd per bedrijf)
+DEFAULT_REKENINGEN = {
+    "debiteuren": "1300",
+    "crediteuren": "2300",
+    "btw_verkoop": "2350",
+    "btw_inkoop": "1350",
+    "omzet": "4000",
+    "inkoop": "5000",
+    "bank": "1500",
+    "kas": "1400",
+    "voorraad": "1200"
+}
+
+async def get_rekening_by_code(user_id: str, code: str) -> dict:
+    """Zoek rekening op basis van code"""
+    rekening = await db.boekhouding_rekeningen.find_one({"user_id": user_id, "code": code})
+    return rekening
+
+async def update_rekening_saldo(user_id: str, code: str, bedrag: float, is_debet: bool = True):
+    """Update het saldo van een grootboekrekening"""
+    rekening = await get_rekening_by_code(user_id, code)
+    if not rekening:
+        return False
+    
+    # Bij activa en kosten: debet verhoogt, credit verlaagt
+    # Bij passiva en opbrengsten: credit verhoogt, debet verlaagt
+    rekening_type = rekening.get("type", "")
+    
+    if rekening_type in ["activa", "kosten"]:
+        saldo_wijziging = bedrag if is_debet else -bedrag
+    else:  # passiva, opbrengsten
+        saldo_wijziging = -bedrag if is_debet else bedrag
+    
+    await db.boekhouding_rekeningen.update_one(
+        {"user_id": user_id, "code": code},
+        {"$inc": {"saldo": saldo_wijziging}}
+    )
+    return True
+
+async def create_auto_journaalpost(
+    user_id: str,
+    dagboek_code: str,
+    datum: date,
+    omschrijving: str,
+    regels: list,
+    document_ref: str = None,
+    auto_boeken: bool = True
+):
+    """
+    Maak automatisch een journaalpost aan
+    
+    regels = [
+        {"rekening_code": "1300", "omschrijving": "Debiteur X", "debet": 1100, "credit": 0},
+        {"rekening_code": "4000", "omschrijving": "Omzet", "debet": 0, "credit": 1000},
+        {"rekening_code": "2350", "omschrijving": "BTW", "debet": 0, "credit": 100},
+    ]
+    """
+    totaal_debet = sum(r.get("debet", 0) for r in regels)
+    totaal_credit = sum(r.get("credit", 0) for r in regels)
+    
+    # Controleer balans
+    if abs(totaal_debet - totaal_credit) > 0.01:
+        raise HTTPException(status_code=400, detail=f"Journaalpost niet in balans: debet={totaal_debet}, credit={totaal_credit}")
+    
+    # Genereer volgnummer
+    count = await db.boekhouding_journaalposten.count_documents({"user_id": user_id, "dagboek_code": dagboek_code})
+    volgnummer = f"{dagboek_code}{datetime.now().year}-{count + 1:05d}"
+    
+    journaalpost = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "volgnummer": volgnummer,
+        "dagboek_code": dagboek_code,
+        "datum": datum.isoformat() if isinstance(datum, date) else datum,
+        "omschrijving": omschrijving,
+        "regels": regels,
+        "document_ref": document_ref,
+        "totaal_debet": totaal_debet,
+        "totaal_credit": totaal_credit,
+        "status": "geboekt" if auto_boeken else "concept",
+        "created_at": datetime.now(timezone.utc),
+        "auto_generated": True
+    }
+    
+    await db.boekhouding_journaalposten.insert_one(journaalpost)
+    
+    # Update rekening saldi als auto_boeken
+    if auto_boeken:
+        for regel in regels:
+            code = regel.get("rekening_code")
+            debet = regel.get("debet", 0)
+            credit = regel.get("credit", 0)
+            if debet > 0:
+                await update_rekening_saldo(user_id, code, debet, is_debet=True)
+            if credit > 0:
+                await update_rekening_saldo(user_id, code, credit, is_debet=False)
+    
+    return journaalpost
+
+async def boek_verkoopfactuur(user_id: str, factuur: dict):
+    """
+    Boek een verkoopfactuur naar het grootboek
+    
+    Debet: Debiteuren (totaal incl BTW)
+    Credit: Omzet (subtotaal excl BTW)
+    Credit: BTW te betalen (BTW bedrag)
+    """
+    regels = [
+        {
+            "rekening_code": DEFAULT_REKENINGEN["debiteuren"],
+            "omschrijving": f"Debiteur: {factuur.get('debiteur_naam', 'Onbekend')}",
+            "debet": factuur.get("totaal_incl_btw", 0),
+            "credit": 0
+        },
+        {
+            "rekening_code": DEFAULT_REKENINGEN["omzet"],
+            "omschrijving": f"Omzet factuur {factuur.get('factuurnummer', '')}",
+            "debet": 0,
+            "credit": factuur.get("subtotaal", 0)
+        }
+    ]
+    
+    # Voeg BTW regel alleen toe als er BTW is
+    btw_bedrag = factuur.get("btw_bedrag", 0)
+    if btw_bedrag > 0:
+        regels.append({
+            "rekening_code": DEFAULT_REKENINGEN["btw_verkoop"],
+            "omschrijving": f"BTW factuur {factuur.get('factuurnummer', '')}",
+            "debet": 0,
+            "credit": btw_bedrag
+        })
+    
+    await create_auto_journaalpost(
+        user_id=user_id,
+        dagboek_code="VK",  # Verkoop dagboek
+        datum=factuur.get("factuurdatum", date.today()),
+        omschrijving=f"Verkoopfactuur {factuur.get('factuurnummer', '')} - {factuur.get('debiteur_naam', '')}",
+        regels=regels,
+        document_ref=factuur.get("id")
+    )
+
+async def boek_betaling_ontvangen(user_id: str, factuur: dict, betaling: dict, bankrekening_code: str = None):
+    """
+    Boek een ontvangen betaling naar het grootboek
+    
+    Debet: Bank/Kas
+    Credit: Debiteuren
+    """
+    bank_code = bankrekening_code or DEFAULT_REKENINGEN["bank"]
+    
+    regels = [
+        {
+            "rekening_code": bank_code,
+            "omschrijving": f"Betaling ontvangen {factuur.get('factuurnummer', '')}",
+            "debet": betaling.get("bedrag", 0),
+            "credit": 0
+        },
+        {
+            "rekening_code": DEFAULT_REKENINGEN["debiteuren"],
+            "omschrijving": f"Afboeking debiteur: {factuur.get('debiteur_naam', 'Onbekend')}",
+            "debet": 0,
+            "credit": betaling.get("bedrag", 0)
+        }
+    ]
+    
+    await create_auto_journaalpost(
+        user_id=user_id,
+        dagboek_code="BK",  # Bank dagboek
+        datum=betaling.get("datum", date.today()),
+        omschrijving=f"Betaling factuur {factuur.get('factuurnummer', '')} - {factuur.get('debiteur_naam', '')}",
+        regels=regels,
+        document_ref=factuur.get("id")
+    )
+
+async def boek_inkoopfactuur(user_id: str, factuur: dict):
+    """
+    Boek een inkoopfactuur naar het grootboek
+    
+    Debet: Inkoop (subtotaal excl BTW)
+    Debet: BTW te vorderen (BTW bedrag)
+    Credit: Crediteuren (totaal incl BTW)
+    """
+    regels = [
+        {
+            "rekening_code": DEFAULT_REKENINGEN["inkoop"],
+            "omschrijving": f"Inkoop factuur {factuur.get('factuurnummer', '')}",
+            "debet": factuur.get("subtotaal", 0),
+            "credit": 0
+        }
+    ]
+    
+    # Voeg BTW regel alleen toe als er BTW is
+    btw_bedrag = factuur.get("btw_bedrag", 0)
+    if btw_bedrag > 0:
+        regels.append({
+            "rekening_code": DEFAULT_REKENINGEN["btw_inkoop"],
+            "omschrijving": f"Voorbelasting factuur {factuur.get('factuurnummer', '')}",
+            "debet": btw_bedrag,
+            "credit": 0
+        })
+    
+    regels.append({
+        "rekening_code": DEFAULT_REKENINGEN["crediteuren"],
+        "omschrijving": f"Crediteur: {factuur.get('crediteur_naam', 'Onbekend')}",
+        "debet": 0,
+        "credit": factuur.get("totaal_incl_btw", 0)
+    })
+    
+    await create_auto_journaalpost(
+        user_id=user_id,
+        dagboek_code="IK",  # Inkoop dagboek
+        datum=factuur.get("factuurdatum", date.today()),
+        omschrijving=f"Inkoopfactuur {factuur.get('factuurnummer', '')} - {factuur.get('crediteur_naam', '')}",
+        regels=regels,
+        document_ref=factuur.get("id")
+    )
+
 # ==================== PYDANTIC MODELS ====================
 
 class RekeningCreate(BaseModel):
