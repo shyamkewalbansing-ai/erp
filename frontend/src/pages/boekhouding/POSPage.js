@@ -1350,6 +1350,72 @@ const POSPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Scanner Link / QR Code Dialog */}
+      <Dialog open={showScannerLinkDialog} onOpenChange={setShowScannerLinkDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-center">📱 Telefoon Scanner</DialogTitle>
+          </DialogHeader>
+          <div className="py-6 space-y-6">
+            {scannerSession && (
+              <>
+                {/* QR Code */}
+                <div className="flex justify-center">
+                  <div className="bg-white p-4 rounded-xl shadow-inner">
+                    <QRCode 
+                      value={`${APP_URL}/scan/${scannerSession.code}`}
+                      size={200}
+                      level="M"
+                    />
+                  </div>
+                </div>
+
+                {/* Instructions */}
+                <div className="text-center space-y-2">
+                  <p className="text-slate-700 font-medium">
+                    Scan deze QR code met je telefoon
+                  </p>
+                  <p className="text-sm text-slate-500">
+                    Of open de link hieronder
+                  </p>
+                </div>
+
+                {/* Link */}
+                <div className="bg-slate-100 rounded-lg p-3">
+                  <p className="text-xs text-slate-500 mb-1">Link:</p>
+                  <p className="text-sm font-mono break-all text-slate-700">
+                    {APP_URL}/scan/{scannerSession.code}
+                  </p>
+                </div>
+
+                {/* Copy Button */}
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${APP_URL}/scan/${scannerSession.code}`);
+                    toast.success('Link gekopieerd!');
+                  }}
+                >
+                  📋 Kopieer Link
+                </Button>
+
+                {/* Session Info */}
+                <div className="text-center text-xs text-slate-400">
+                  <p>Sessie code: <span className="font-mono font-bold">{scannerSession.code}</span></p>
+                  <p>Geldig tot: {new Date(scannerSession.expires_at).toLocaleTimeString('nl-NL')}</p>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowScannerLinkDialog(false)}>
+              Sluiten
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
