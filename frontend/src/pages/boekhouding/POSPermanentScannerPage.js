@@ -326,37 +326,6 @@ const POSPermanentScannerPage = () => {
       }
     }
   };
-      } else if (errorMsg.includes('NotReadableError') || errorMsg.includes('could not start video source')) {
-        setCameraError('Camera is in gebruik door een andere app. Sluit andere apps en probeer opnieuw.');
-      } else if (errorMsg.includes('OverconstrainedError') || errorMsg.includes('Constraints')) {
-        // Retry with less strict constraints
-        try {
-          if (html5QrCodeRef.current) {
-            try { await html5QrCodeRef.current.stop(); } catch (e) {}
-          }
-          const html5QrCode = new Html5Qrcode("permanent-scanner-view");
-          html5QrCodeRef.current = html5QrCode;
-          
-          // Try with just facingMode, no other constraints
-          await html5QrCode.start(
-            { facingMode: "environment" },
-            { fps: 5, qrbox: { width: 200, height: 120 } },
-            (decodedText) => handleScannedBarcode(decodedText),
-            () => {}
-          );
-          setIsScanning(true);
-          return;
-        } catch (retryErr) {
-          console.error("Retry failed:", retryErr);
-          setCameraError('Camera configuratie niet ondersteund. Probeer een andere browser.');
-        }
-      } else if (errorMsg.includes('NotFoundError')) {
-        setCameraError('Geen camera gevonden op dit apparaat.');
-      } else {
-        setCameraError(`Camera error: ${err.message || 'Onbekende fout'}. ${isIOS ? 'Probeer Safari te herstarten.' : ''}`);
-      }
-    }
-  };
 
   const stopScanner = async () => {
     if (html5QrCodeRef.current) {
