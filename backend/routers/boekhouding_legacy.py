@@ -535,6 +535,7 @@ class ArtikelCreate(BaseModel):
     minimum_voorraad: int = 0
     leverancier_id: Optional[str] = None
     foto_url: Optional[str] = None
+    barcode: Optional[str] = None
 
 class VastActivumCreate(BaseModel):
     naam: str
