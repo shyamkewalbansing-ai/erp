@@ -160,32 +160,32 @@ const RapportagesPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {balanceSheet?.liabilities?.accounts?.map(acc => (
-                        <TableRow key={acc.id}>
-                          <TableCell className="text-sm text-slate-600">{acc.code} - {acc.name}</TableCell>
+                      {(balanceSheet?.passiva || balanceSheet?.liabilities?.accounts || []).map((acc, idx) => (
+                        <TableRow key={acc.id || idx}>
+                          <TableCell className="text-sm text-slate-600">{acc.code} - {acc.naam || acc.name}</TableCell>
                           <TableCell className="text-right text-sm font-medium text-slate-900">
-                            {formatAmount(acc.balance, acc.currency)}
+                            {formatAmount(acc.saldo || acc.balance, acc.valuta || acc.currency)}
                           </TableCell>
                         </TableRow>
                       ))}
                       <TableRow className="bg-slate-50">
                         <TableCell className="text-sm font-medium text-slate-700">Totaal Vreemd Vermogen</TableCell>
                         <TableCell className="text-right text-sm font-medium text-slate-700">
-                          {formatAmount(balanceSheet?.liabilities?.total || 0)}
+                          {formatAmount(balanceSheet?.totaal_passiva || balanceSheet?.liabilities?.total || 0)}
                         </TableCell>
                       </TableRow>
-                      {balanceSheet?.equity?.accounts?.map(acc => (
-                        <TableRow key={acc.id}>
-                          <TableCell className="text-sm text-slate-600">{acc.code} - {acc.name}</TableCell>
+                      {(balanceSheet?.eigen_vermogen || balanceSheet?.equity?.accounts || []).map((acc, idx) => (
+                        <TableRow key={acc.id || `ev-${idx}`}>
+                          <TableCell className="text-sm text-slate-600">{acc.code} - {acc.naam || acc.name}</TableCell>
                           <TableCell className="text-right text-sm font-medium text-slate-900">
-                            {formatAmount(acc.balance, acc.currency)}
+                            {formatAmount(acc.saldo || acc.balance, acc.valuta || acc.currency)}
                           </TableCell>
                         </TableRow>
                       ))}
                       <TableRow className="bg-slate-100">
                         <TableCell className="text-sm font-semibold text-slate-900">Totaal Passiva</TableCell>
                         <TableCell className="text-right text-sm font-semibold text-slate-900">
-                          {formatAmount((balanceSheet?.liabilities?.total || 0) + (balanceSheet?.equity?.total || 0))}
+                          {formatAmount(balanceSheet?.totaal_passiva || ((balanceSheet?.liabilities?.total || 0) + (balanceSheet?.equity?.total || 0)))}
                         </TableCell>
                       </TableRow>
                     </TableBody>
