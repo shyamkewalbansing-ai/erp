@@ -1341,11 +1341,44 @@ async def delete_debiteur(debiteur_id: str, authorization: str = Header(None)):
 
 @router.get("/crediteuren")
 async def get_crediteuren(authorization: str = Header(None)):
-    """Haal alle crediteuren op"""
+    """Haal alle crediteuren op met hun actuele openstaand saldo"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
+    
+    # Haal alle crediteuren op
     crediteuren = await db.boekhouding_crediteuren.find({"user_id": user_id}).sort("naam", 1).to_list(500)
-    return [clean_doc(c) for c in crediteuren]
+    
+    # Bereken openstaand bedrag per crediteur uit inkoopfacturen
+    openstaand_per_crediteur = await db.boekhouding_inkoopfacturen.aggregate([
+        {"$match": {
+            "user_id": user_id, 
+            "status": {"$nin": ["betaald", "geannuleerd"]},
+            "openstaand_bedrag": {"$gt": 0}
+        }},
+        {"$group": {
+            "_id": "$crediteur_id", 
+            "openstaand": {"$sum": "$openstaand_bedrag"},
+            "aantal_facturen": {"$sum": 1}
+        }}
+    ]).to_list(500)
+    
+    # Maak lookup dict
+    openstaand_dict = {o["_id"]: o for o in openstaand_per_crediteur}
+    
+    # Voeg openstaand bedrag toe aan elke crediteur
+    result = []
+    for c in crediteuren:
+        crediteur = clean_doc(c)
+        crediteur_id = crediteur.get("id")
+        if crediteur_id in openstaand_dict:
+            crediteur["openstaand_bedrag"] = openstaand_dict[crediteur_id]["openstaand"]
+            crediteur["aantal_openstaande_facturen"] = openstaand_dict[crediteur_id]["aantal_facturen"]
+        else:
+            crediteur["openstaand_bedrag"] = 0
+            crediteur["aantal_openstaande_facturen"] = 0
+        result.append(crediteur)
+    
+    return result
 
 @router.get("/crediteuren/{crediteur_id}")
 async def get_crediteur(crediteur_id: str, authorization: str = Header(None)):
