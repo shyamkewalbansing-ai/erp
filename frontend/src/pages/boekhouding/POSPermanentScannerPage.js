@@ -409,27 +409,92 @@ const POSPermanentScannerPage = () => {
       
       <Toaster position="top-center" richColors />
       
-      {/* Install Prompt Banner */}
-      {showInstallPrompt && !isStandalone && (
-        <div className="bg-emerald-600 px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-white">
-            <Download className="w-5 h-5" />
-            <span className="text-sm">Installeer als app op je telefoon</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              size="sm" 
-              variant="secondary"
-              onClick={handleInstallClick}
-              className="bg-white text-emerald-700 hover:bg-emerald-50 text-xs px-3"
-            >
-              Installeer
-            </Button>
+      {/* Full-screen Install Instructions Overlay */}
+      {showInstallInstructions && !isStandalone && (
+        <div className="fixed inset-0 bg-slate-900/95 z-50 flex flex-col items-center justify-center p-6">
+          <div className="max-w-sm w-full bg-slate-800 rounded-2xl p-6 shadow-2xl">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-20 h-20 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <ScanLine className="w-10 h-10 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-2">Scanner Installeren</h2>
+              <p className="text-slate-400 text-sm">Installeer als app voor de beste ervaring</p>
+            </div>
+            
+            {/* iOS Instructions */}
+            {isIOS ? (
+              <div className="space-y-4">
+                <div className="bg-slate-700/50 rounded-xl p-4">
+                  <div className="flex items-start gap-3 mb-3">
+                    <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">1</div>
+                    <div>
+                      <p className="text-white font-medium">Tik op Delen</p>
+                      <p className="text-slate-400 text-sm">Het vierkant met pijl omhoog onderaan</p>
+                      <div className="mt-2 flex justify-center">
+                        <div className="bg-slate-600 rounded-lg p-2">
+                          <Share2 className="w-8 h-8 text-blue-400" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-slate-700/50 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">2</div>
+                    <div>
+                      <p className="text-white font-medium">Tik op "Zet op beginscherm"</p>
+                      <p className="text-slate-400 text-sm">Scroll naar beneden in het menu</p>
+                      <div className="mt-2 bg-slate-600 rounded-lg p-3 flex items-center gap-3">
+                        <div className="w-6 h-6 bg-slate-500 rounded flex items-center justify-center">
+                          <span className="text-white text-xs">+</span>
+                        </div>
+                        <span className="text-white text-sm">Zet op beginscherm</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-slate-700/50 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">3</div>
+                    <div>
+                      <p className="text-white font-medium">Tik op "Voeg toe"</p>
+                      <p className="text-slate-400 text-sm">De app verschijnt op je beginscherm</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Android - Show install button */
+              <div className="space-y-4">
+                {deferredPrompt ? (
+                  <Button 
+                    onClick={handleInstallClick}
+                    className="w-full h-14 text-lg bg-emerald-600 hover:bg-emerald-700"
+                  >
+                    <Download className="w-5 h-5 mr-2" />
+                    Installeer Scanner App
+                  </Button>
+                ) : (
+                  <div className="bg-slate-700/50 rounded-xl p-4">
+                    <p className="text-white text-center mb-3">Tik op het menu (⋮) en kies:</p>
+                    <div className="bg-slate-600 rounded-lg p-3 flex items-center gap-3">
+                      <Download className="w-5 h-5 text-white" />
+                      <span className="text-white text-sm">"App installeren" of "Toevoegen aan startscherm"</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Skip Button */}
             <button 
               onClick={dismissInstallPrompt}
-              className="text-white/70 hover:text-white p-1"
+              className="w-full mt-6 py-3 text-slate-400 hover:text-white transition-colors text-sm"
             >
-              <X className="w-4 h-4" />
+              Overslaan en direct scannen →
             </button>
           </div>
         </div>
