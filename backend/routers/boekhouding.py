@@ -145,33 +145,21 @@ async def get_rekening_by_code(user_id: str, code: str) -> dict:
 
 async def get_rekening_voor_type(user_id: str, rekening_type: str) -> str:
     """Zoek een geschikte rekeningcode voor een bepaald type boeking"""
-    # Probeer eerst de standaard code
-    standaard_code = DEFAULT_REKENINGEN.get(rekening_type)
-    if standaard_code:
-        rekening = await get_rekening_by_code(user_id, standaard_code)
-        if rekening:
-            return standaard_code
     
-    # Probeer alternatieve codes
-    alternatieven = ALTERNATIEVE_CODES.get(rekening_type, [])
-    for code in alternatieven:
-        rekening = await get_rekening_by_code(user_id, code)
-        if rekening:
-            return code
-    
-    # Als geen rekening gevonden, zoek op basis van naam EN type
+    # Type mapping met verwacht grootboek type en zoektermen
     type_mapping = {
         "debiteuren": ("activa", ["debiteur"]),
         "crediteuren": ("passiva", ["crediteur"]),
         "btw_verkoop": ("passiva", ["btw te betalen", "btw af te dragen"]),
         "btw_inkoop": ("activa", ["btw te vorderen", "voorbelasting", "btw voorheffing"]),
-        "omzet": ("opbrengsten", ["omzet", "verkoop"]),  # Belangrijk: type moet 'opbrengsten' zijn
+        "omzet": ("opbrengsten", ["omzet verkop", "omzet dienst", "omzet export"]),  # Type moet 'opbrengsten' zijn
         "inkoop": ("kosten", ["inkoop", "inkoopwaarde"]),
         "bank": ("activa", ["bank"]),
         "kas": ("activa", ["kas"]),
         "voorraad": ("activa", ["voorraad"])
     }
     
+    # STAP 1: Zoek eerst op basis van naam EN type (meest nauwkeurig)
     if rekening_type in type_mapping:
         verwacht_type, zoekterms = type_mapping[rekening_type]
         for term in zoekterms:
@@ -183,7 +171,39 @@ async def get_rekening_voor_type(user_id: str, rekening_type: str) -> str:
             if rekening:
                 return rekening.get("code")
     
-    # Fallback naar standaard code
+    # STAP 2: Probeer de standaard code (werkt alleen als rekening bestaat)
+    standaard_code = DEFAULT_REKENINGEN.get(rekening_type)
+    if standaard_code:
+        rekening = await get_rekening_by_code(user_id, standaard_code)
+        if rekening:
+            # Controleer of het type klopt
+            if rekening_type in type_mapping:
+                verwacht_type = type_mapping[rekening_type][0]
+                if rekening.get("type") == verwacht_type:
+                    return standaard_code
+    
+    # STAP 3: Probeer alternatieve codes
+    alternatieven = ALTERNATIEVE_CODES.get(rekening_type, [])
+    for code in alternatieven:
+        rekening = await get_rekening_by_code(user_id, code)
+        if rekening:
+            # Controleer of het type klopt
+            if rekening_type in type_mapping:
+                verwacht_type = type_mapping[rekening_type][0]
+                if rekening.get("type") == verwacht_type:
+                    return code
+    
+    # STAP 4: Fallback - zoek op type alleen
+    if rekening_type in type_mapping:
+        verwacht_type = type_mapping[rekening_type][0]
+        rekening = await db.boekhouding_rekeningen.find_one({
+            "user_id": user_id, 
+            "type": verwacht_type
+        })
+        if rekening:
+            return rekening.get("code")
+    
+    # Laatste fallback
     return standaard_code
 
 async def update_rekening_saldo(user_id: str, code: str, bedrag: float, is_debet: bool = True):
