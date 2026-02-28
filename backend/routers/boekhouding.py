@@ -152,7 +152,7 @@ async def get_rekening_voor_type(user_id: str, rekening_type: str) -> str:
         "crediteuren": ("passiva", ["crediteur"]),
         "btw_verkoop": ("passiva", ["btw te betalen", "btw af te dragen"]),
         "btw_inkoop": ("activa", ["btw te vorderen", "voorbelasting", "btw voorheffing"]),
-        "omzet": ("opbrengsten", ["omzet verkop", "omzet dienst", "omzet export"]),  # Type moet 'opbrengsten' zijn
+        "omzet": ("omzet", ["omzet verkop", "omzet dienst", "omzet export"]),  # Type moet 'omzet' zijn (niet 'opbrengsten')
         "inkoop": ("kosten", ["inkoop", "inkoopwaarde"]),
         "bank": ("activa", ["bank"]),
         "kas": ("activa", ["kas"]),
