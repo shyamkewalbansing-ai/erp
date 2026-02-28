@@ -612,6 +612,7 @@ const VoorraadPage = () => {
                     <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Inkoopprijs</TableHead>
                     <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Verkoopprijs</TableHead>
                     <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Waarde</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-slate-500 text-center">Acties</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
