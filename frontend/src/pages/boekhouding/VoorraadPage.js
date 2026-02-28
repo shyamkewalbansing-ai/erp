@@ -170,8 +170,8 @@ const VoorraadPage = () => {
   };
 
   const handleCreateMovement = async () => {
-    if (!newMovement.product_id || !newMovement.quantity) {
-      toast.error('Selecteer product en vul hoeveelheid in');
+    if (!newMovement.artikel_id || !newMovement.aantal) {
+      toast.error('Selecteer product en vul aantal in');
       return;
     }
     setSaving(true);
@@ -189,6 +189,70 @@ const VoorraadPage = () => {
       toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Edit product
+  const handleEditProduct = (product) => {
+    setEditingProduct({
+      id: product.id,
+      code: product.code || '',
+      name: product.naam || product.name || '',
+      description: product.omschrijving || product.description || '',
+      type: product.type || 'product',
+      unit: product.eenheid || product.unit || 'stuk',
+      purchase_price: product.inkoopprijs || product.purchase_price || 0,
+      sales_price: product.verkoopprijs || product.sales_price || 0,
+      min_stock: product.minimum_voorraad || product.min_stock || 0,
+      image_url: product.foto_url || product.image_url || ''
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleUpdateProduct = async () => {
+    if (!editingProduct.code || !editingProduct.name) {
+      toast.error('Vul code en naam in');
+      return;
+    }
+    setSaving(true);
+    try {
+      const productData = {
+        code: editingProduct.code,
+        naam: editingProduct.name,
+        omschrijving: editingProduct.description,
+        type: editingProduct.type,
+        eenheid: editingProduct.unit,
+        inkoopprijs: editingProduct.purchase_price,
+        verkoopprijs: editingProduct.sales_price,
+        minimum_voorraad: editingProduct.min_stock,
+        foto_url: editingProduct.image_url || null
+      };
+      await productsAPI.update(editingProduct.id, productData);
+      toast.success('Product bijgewerkt');
+      setShowEditDialog(false);
+      setEditingProduct(null);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij bijwerken');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Delete product
+  const handleDeleteProduct = async (productId) => {
+    if (!window.confirm('Weet u zeker dat u dit product wilt verwijderen?')) {
+      return;
+    }
+    setDeleting(productId);
+    try {
+      await productsAPI.delete(productId);
+      toast.success('Product verwijderd');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
+    } finally {
+      setDeleting(null);
     }
   };
 
