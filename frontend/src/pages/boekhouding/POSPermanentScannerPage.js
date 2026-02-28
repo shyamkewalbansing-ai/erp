@@ -258,55 +258,23 @@ const POSPermanentScannerPage = () => {
       const html5QrCode = new Html5Qrcode(scannerId);
       html5QrCodeRef.current = html5QrCode;
 
-      // Configure scanner - optimized for barcode detection
+      // Simple config that works
       const qrConfig = {
-        fps: 10,  // Higher FPS for better detection
-        qrbox: function(viewfinderWidth, viewfinderHeight) {
-          // Make scan area larger on mobile for easier scanning
-          const minEdge = Math.min(viewfinderWidth, viewfinderHeight);
-          const qrboxSize = Math.floor(minEdge * 0.8);
-          return {
-            width: qrboxSize,
-            height: Math.floor(qrboxSize * 0.6)
-          };
-        },
-        aspectRatio: 1.5,
-        disableFlip: false,
-        // Supported barcode formats
-        formatsToSupport: [
-          0,  // QR_CODE
-          1,  // AZTEC
-          2,  // CODABAR
-          3,  // CODE_39
-          4,  // CODE_93
-          5,  // CODE_128
-          6,  // DATA_MATRIX
-          7,  // MAXICODE
-          8,  // ITF
-          9,  // EAN_13
-          10, // EAN_8
-          11, // PDF_417
-          12, // RSS_14
-          13, // RSS_EXPANDED
-          14, // UPC_A
-          15, // UPC_E
-          16  // UPC_EAN_EXTENSION
-        ]
+        fps: 10,
+        qrbox: { width: 250, height: 150 }
       };
 
       // Start scanner
-      console.log('Starting scanner with config:', qrConfig);
+      console.log('Starting scanner...');
       
       await html5QrCode.start(
         { facingMode: "environment" },
         qrConfig,
-        (decodedText, decodedResult) => {
-          console.log('Barcode detected:', decodedText, decodedResult);
+        (decodedText) => {
+          console.log('Barcode detected:', decodedText);
           handleScannedBarcode(decodedText);
         },
-        (errorMessage) => {
-          // Silent - no barcode in frame
-        }
+        () => {}
       );
 
       console.log('Scanner started successfully');
