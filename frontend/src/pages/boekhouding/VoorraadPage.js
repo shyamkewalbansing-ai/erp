@@ -156,11 +156,8 @@ const VoorraadPage = () => {
         purchase_price: newProduct.purchase_price,
         sales_price: newProduct.sales_price,
         min_stock: newProduct.min_stock,
-        photo_url: newProduct.image_url || null
+        image_url: newProduct.image_url || null
       });
-      // Manual overrides for non-standard field names
-      productData.eenheid = newProduct.unit;
-      productData.minimum_voorraad = newProduct.min_stock;
       
       await productsAPI.create(productData);
       toast.success('Product aangemaakt');
