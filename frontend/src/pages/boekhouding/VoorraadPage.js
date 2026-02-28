@@ -38,12 +38,12 @@ const VoorraadPage = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
 
   const [newMovement, setNewMovement] = useState({
-    product_id: '',
-    warehouse_id: '',
-    date: new Date().toISOString().split('T')[0],
-    type: 'in',
-    quantity: 0,
-    description: ''
+    artikel_id: '',
+    magazijn_id: '',
+    datum: new Date().toISOString().split('T')[0],
+    type: 'inkoop',
+    aantal: 0,
+    opmerkingen: ''
   });
 
   // Format number with Dutch locale
