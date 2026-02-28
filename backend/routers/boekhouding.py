@@ -427,7 +427,13 @@ async def get_dashboard(authorization: str = Header(None)):
         },
         "openstaand": {
             "debiteuren": openstaand_deb,
-            "crediteuren": openstaand_cred
+            "crediteuren": openstaand_cred,
+            "facturen_count": facturen_openstaand_count
+        },
+        "btw": {
+            "verkoop": btw_verkoop_val,
+            "inkoop": btw_inkoop_val,
+            "te_betalen": btw_te_betalen
         },
         "liquiditeit": {
             "bank_srd": liquiditeit["SRD"],
