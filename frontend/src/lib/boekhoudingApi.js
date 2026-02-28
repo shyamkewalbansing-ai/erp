@@ -202,6 +202,7 @@ export const invoicesAPI = {
   create: (data) => apiFetch('/boekhouding/verkoopfacturen', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) => apiFetch(`/boekhouding/verkoopfacturen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   updateStatus: (id, status) => apiFetch(`/boekhouding/verkoopfacturen/${id}/status?status=${status}`, { method: 'PUT' }),
+  addPayment: (id, data) => apiFetch(`/boekhouding/verkoopfacturen/${id}/betaling`, { method: 'POST', body: JSON.stringify(data) }),
   delete: (id) => apiFetch(`/boekhouding/verkoopfacturen/${id}`, { method: 'DELETE' }),
 };
 
