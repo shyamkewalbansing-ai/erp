@@ -828,35 +828,67 @@ const VoorraadPage = () => {
                     <TableHead className="text-xs font-medium text-slate-500">Product</TableHead>
                     <TableHead className="w-28 text-xs font-medium text-slate-500">Type</TableHead>
                     <TableHead className="text-right w-24 text-xs font-medium text-slate-500">Aantal</TableHead>
-                    <TableHead className="text-xs font-medium text-slate-500">Omschrijving</TableHead>
+                    <TableHead className="text-xs font-medium text-slate-500">Opmerkingen</TableHead>
+                    <TableHead className="w-20 text-xs font-medium text-slate-500 text-center">Acties</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {movements.map(movement => {
-                    const product = products.find(p => p.id === movement.product_id);
+                    const product = products.find(p => p.id === (movement.artikel_id || movement.product_id));
+                    const movementDate = movement.datum || movement.date;
+                    const movementQty = movement.aantal || movement.quantity || 0;
+                    const movementType = movement.type;
+                    const movementDesc = movement.opmerkingen || movement.description || '-';
+                    
+                    // Determine display type based on actual type values
+                    const getTypeDisplay = (type) => {
+                      switch(type) {
+                        case 'inkoop': return { label: 'Inkoop', color: 'bg-green-100 text-green-700', sign: '+' };
+                        case 'verkoop': return { label: 'Verkoop', color: 'bg-red-100 text-red-700', sign: '-' };
+                        case 'correctie_plus': return { label: 'Correctie +', color: 'bg-blue-100 text-blue-700', sign: '+' };
+                        case 'correctie_min': return { label: 'Correctie -', color: 'bg-orange-100 text-orange-700', sign: '-' };
+                        case 'in': return { label: 'Inkomend', color: 'bg-green-100 text-green-700', sign: '+' };
+                        case 'out': return { label: 'Uitgaand', color: 'bg-red-100 text-red-700', sign: '-' };
+                        default: return { label: type, color: 'bg-slate-100 text-slate-700', sign: '' };
+                      }
+                    };
+                    const typeInfo = getTypeDisplay(movementType);
+                    
                     return (
                       <TableRow key={movement.id}>
-                        <TableCell className="text-sm text-slate-600">{formatDate(movement.date)}</TableCell>
+                        <TableCell className="text-sm text-slate-600">{formatDate(movementDate)}</TableCell>
                         <TableCell className="text-sm font-medium text-slate-900">{product?.naam || product?.name || '-'}</TableCell>
                         <TableCell>
-                          <Badge className={`text-xs ${
-                            movement.type === 'in' ? 'bg-green-100 text-green-700' :
-                            movement.type === 'out' ? 'bg-red-100 text-red-700' :
-                            'bg-blue-100 text-blue-700'
-                          }`}>
-                            {movement.type === 'in' ? 'Inkomend' : movement.type === 'out' ? 'Uitgaand' : 'Correctie'}
+                          <Badge className={`text-xs ${typeInfo.color}`}>
+                            {typeInfo.label}
                           </Badge>
                         </TableCell>
-                        <TableCell className={`text-right text-sm font-medium ${movement.type === 'in' ? 'text-green-600' : movement.type === 'out' ? 'text-red-600' : 'text-slate-900'}`}>
-                          {movement.type === 'in' ? '+' : movement.type === 'out' ? '-' : ''}{formatNumber(movement.quantity, 0)}
+                        <TableCell className={`text-right text-sm font-medium ${typeInfo.sign === '+' ? 'text-green-600' : typeInfo.sign === '-' ? 'text-red-600' : 'text-slate-900'}`}>
+                          {typeInfo.sign}{formatNumber(movementQty, 0)}
                         </TableCell>
-                        <TableCell className="text-sm text-slate-500">{movement.description || '-'}</TableCell>
+                        <TableCell className="text-sm text-slate-500">{movementDesc}</TableCell>
+                        <TableCell className="text-center">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDeleteMovement(movement.id)}
+                            disabled={deletingMovement === movement.id}
+                            className="h-8 w-8 p-0 hover:bg-red-50"
+                            data-testid={`delete-movement-${movement.id}`}
+                          >
+                            {deletingMovement === movement.id ? (
+                              <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                            ) : (
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            )}
+                          </Button>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
                   {movements.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                      <TableCell colSpan={6} className="text-center py-8 text-slate-500">
                         Geen mutaties gevonden
                       </TableCell>
                     </TableRow>
