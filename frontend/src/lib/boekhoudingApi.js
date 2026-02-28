@@ -118,6 +118,9 @@ export const accountsAPI = {
   create: (data) => apiFetch('/boekhouding/rekeningen', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) => apiFetch(`/boekhouding/rekeningen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => apiFetch(`/boekhouding/rekeningen/${id}`, { method: 'DELETE' }),
+  initStandaard: () => apiFetch('/boekhouding/rekeningen/init-standaard', { method: 'POST' }),
+  updateExterneCode: (id, externeCode) => apiFetch(`/boekhouding/rekeningen/${id}/externe-code?externe_code=${externeCode}`, { method: 'PUT' }),
+  zoekOpExterneCode: (externeCode) => apiFetch(`/boekhouding/rekeningen/zoek-op-externe-code/${externeCode}`),
 };
 
 // Journal Entries
