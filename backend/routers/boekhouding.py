@@ -159,27 +159,29 @@ async def get_rekening_voor_type(user_id: str, rekening_type: str) -> str:
         if rekening:
             return code
     
-    # Als geen rekening gevonden, zoek op basis van naam/type
-    naam_zoekterms = {
-        "debiteuren": ["debiteur"],
-        "crediteuren": ["crediteur"],
-        "btw_verkoop": ["btw te betalen", "btw af te dragen"],
-        "btw_inkoop": ["btw te vorderen", "voorbelasting"],
-        "omzet": ["omzet", "verkoop"],
-        "inkoop": ["inkoop"],
-        "bank": ["bank"],
-        "kas": ["kas"],
-        "voorraad": ["voorraad"]
+    # Als geen rekening gevonden, zoek op basis van naam EN type
+    type_mapping = {
+        "debiteuren": ("activa", ["debiteur"]),
+        "crediteuren": ("passiva", ["crediteur"]),
+        "btw_verkoop": ("passiva", ["btw te betalen", "btw af te dragen"]),
+        "btw_inkoop": ("activa", ["btw te vorderen", "voorbelasting", "btw voorheffing"]),
+        "omzet": ("opbrengsten", ["omzet", "verkoop"]),  # Belangrijk: type moet 'opbrengsten' zijn
+        "inkoop": ("kosten", ["inkoop", "inkoopwaarde"]),
+        "bank": ("activa", ["bank"]),
+        "kas": ("activa", ["kas"]),
+        "voorraad": ("activa", ["voorraad"])
     }
     
-    zoekterms = naam_zoekterms.get(rekening_type, [])
-    for term in zoekterms:
-        rekening = await db.boekhouding_rekeningen.find_one({
-            "user_id": user_id, 
-            "naam": {"$regex": term, "$options": "i"}
-        })
-        if rekening:
-            return rekening.get("code")
+    if rekening_type in type_mapping:
+        verwacht_type, zoekterms = type_mapping[rekening_type]
+        for term in zoekterms:
+            rekening = await db.boekhouding_rekeningen.find_one({
+                "user_id": user_id, 
+                "naam": {"$regex": term, "$options": "i"},
+                "type": verwacht_type
+            })
+            if rekening:
+                return rekening.get("code")
     
     # Fallback naar standaard code
     return standaard_code
