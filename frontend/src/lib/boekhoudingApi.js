@@ -7,68 +7,204 @@ const getAuthHeader = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
-// Field name translations: English <-> Dutch
-// This helps maintain consistency between frontend (English) and backend (Dutch)
+// ============================================================================
+// FIELD NAME MAPPINGS: English (Frontend) <-> Dutch (Backend)
+// ============================================================================
+// This central mapping ensures consistent data transformation across the app
+
 const fieldMappings = {
-  // Common fields
+  // === Common fields ===
   name: 'naam',
   address: 'adres',
   city: 'plaats',
+  postal_code: 'postcode',
   country: 'land',
   phone: 'telefoon',
+  email: 'email',
   description: 'omschrijving',
   currency: 'valuta',
+  amount: 'bedrag',
+  balance: 'saldo',
+  date: 'datum',
+  type: 'type',
+  status: 'status',
+  active: 'actief',
+  notes: 'notities',
+  reference: 'referentie',
   
-  // Bank/Account fields
+  // === Bank/Account fields ===
   bank_name: 'bank',
   account_number: 'rekeningnummer',
+  current_balance: 'huidig_saldo',
+  bank_account_id: 'bankrekening_id',
   
-  // Customer/Supplier fields
+  // === Customer/Supplier fields ===
+  customer_id: 'debiteur_id',
+  supplier_id: 'crediteur_id',
+  contact_person: 'contactpersoon',
   btw_number: 'btw_nummer',
+  kvk_number: 'kvk_nummer',
   payment_terms: 'betalingstermijn',
+  credit_limit: 'kredietlimiet',
   
-  // Project fields
-  customer_id: 'klant_id',
+  // === Invoice fields ===
+  invoice_number: 'factuurnummer',
+  invoice_date: 'factuurdatum',
+  due_date: 'vervaldatum',
+  subtotal: 'subtotaal',
+  total: 'totaal',
+  total_incl_btw: 'totaal_incl_btw',
+  total_excl_btw: 'totaal_excl_btw',
+  total_paid: 'totaal_betaald',
+  outstanding_amount: 'openstaand_bedrag',
+  payment_status: 'betaalstatus',
+  
+  // === Invoice line fields ===
+  line_number: 'regelnummer',
+  quantity: 'aantal',
+  unit_price: 'eenheidsprijs',
+  unit: 'eenheid',
+  discount: 'korting',
+  discount_percentage: 'korting_percentage',
+  btw_code: 'btw_code',
+  btw_percentage: 'btw_percentage',
+  btw_amount: 'btw_bedrag',
+  line_total: 'regeltotaal',
+  
+  // === Product/Article fields ===
+  product_id: 'artikel_id',
+  article_id: 'artikel_id',
+  product_name: 'artikelnaam',
+  sku: 'artikelcode',
+  purchase_price: 'inkoopprijs',
+  sales_price: 'verkoopprijs',
+  stock_quantity: 'voorraad',
+  min_stock: 'min_voorraad',
+  photo_url: 'foto_url',
+  
+  // === Stock/Inventory fields ===
+  warehouse_id: 'magazijn_id',
+  mutation_type: 'mutatie_type',
+  previous_stock: 'vorige_voorraad',
+  new_stock: 'nieuwe_voorraad',
+  
+  // === Project fields ===
+  project_id: 'project_id',
+  client_id: 'klant_id',
   start_date: 'startdatum',
   end_date: 'einddatum',
   hours_budget: 'uren_budget',
-  
-  // Invoice fields
-  invoice_date: 'factuur_datum',
-  due_date: 'vervaldatum',
-  
-  // Time entry fields
-  project_id: 'project_id',
   hourly_rate: 'uurtarief',
+  
+  // === Payment fields ===
+  payment_date: 'betaaldatum',
+  payment_method: 'betaalmethode',
+  
+  // === BTW/VAT fields ===
+  percentage: 'percentage',
+  
+  // === Journal entry fields ===
+  journal_number: 'volgnummer',
+  journal_code: 'dagboek_code',
+  debit: 'debet',
+  credit: 'credit',
+  account_code: 'rekening_code',
+  
+  // === Fixed assets fields ===
+  purchase_date: 'aankoopdatum',
+  purchase_value: 'aankoopwaarde',
+  residual_value: 'restwaarde',
+  depreciation_years: 'afschrijvingsjaren',
+  depreciation_method: 'afschrijvingsmethode',
+  
+  // === Settings fields ===
+  company_name: 'bedrijfsnaam',
+  company_address: 'bedrijfsadres',
+  company_city: 'bedrijfsplaats',
+  company_postal: 'bedrijfspostcode',
+  company_country: 'bedrijfsland',
+  company_phone: 'bedrijfstelefoon',
+  company_email: 'bedrijfsemail',
+  company_website: 'bedrijfswebsite',
+  company_kvk: 'bedrijfskvk',
+  company_btw: 'bedrijfsbtw',
+  company_iban: 'bedrijfsiban',
+  logo_url: 'logo_url',
 };
 
-// Convert English field names to Dutch for backend
-export const toBackendFormat = (data) => {
-  if (!data || typeof data !== 'object') return data;
+// Create reverse mapping (Dutch -> English)
+const reverseMappings = Object.fromEntries(
+  Object.entries(fieldMappings).map(([eng, nl]) => [nl, eng])
+);
+
+/**
+ * Convert object with English field names to Dutch for backend API
+ * @param {Object} data - Object with English field names
+ * @param {boolean} deep - Whether to recursively convert nested objects/arrays
+ * @returns {Object} Object with Dutch field names
+ */
+export const toBackendFormat = (data, deep = true) => {
+  if (!data) return data;
+  if (Array.isArray(data)) {
+    return deep ? data.map(item => toBackendFormat(item, deep)) : data;
+  }
+  if (typeof data !== 'object') return data;
   
   const converted = {};
   for (const [key, value] of Object.entries(data)) {
     const dutchKey = fieldMappings[key] || key;
-    converted[dutchKey] = value;
+    // Recursively convert nested objects and arrays if deep=true
+    if (deep && value && typeof value === 'object') {
+      converted[dutchKey] = toBackendFormat(value, deep);
+    } else {
+      converted[dutchKey] = value;
+    }
   }
   return converted;
 };
 
-// Convert Dutch field names to English for frontend
-export const toFrontendFormat = (data) => {
-  if (!data || typeof data !== 'object') return data;
-  
-  const reverseMappings = {};
-  for (const [eng, nl] of Object.entries(fieldMappings)) {
-    reverseMappings[nl] = eng;
+/**
+ * Convert object with Dutch field names to English for frontend
+ * @param {Object} data - Object with Dutch field names
+ * @param {boolean} deep - Whether to recursively convert nested objects/arrays
+ * @returns {Object} Object with English field names
+ */
+export const toFrontendFormat = (data, deep = true) => {
+  if (!data) return data;
+  if (Array.isArray(data)) {
+    return deep ? data.map(item => toFrontendFormat(item, deep)) : data;
   }
+  if (typeof data !== 'object') return data;
   
   const converted = {};
   for (const [key, value] of Object.entries(data)) {
     const englishKey = reverseMappings[key] || key;
-    converted[englishKey] = value;
+    // Recursively convert nested objects and arrays if deep=true
+    if (deep && value && typeof value === 'object') {
+      converted[englishKey] = toFrontendFormat(value, deep);
+    } else {
+      converted[englishKey] = value;
+    }
   }
   return converted;
+};
+
+/**
+ * Helper to get Dutch field name from English
+ * @param {string} englishField - English field name
+ * @returns {string} Dutch field name
+ */
+export const getDutchFieldName = (englishField) => {
+  return fieldMappings[englishField] || englishField;
+};
+
+/**
+ * Helper to get English field name from Dutch
+ * @param {string} dutchField - Dutch field name
+ * @returns {string} English field name
+ */
+export const getEnglishFieldName = (dutchField) => {
+  return reverseMappings[dutchField] || dutchField;
 };
 
 const apiFetch = async (endpoint, options = {}) => {
