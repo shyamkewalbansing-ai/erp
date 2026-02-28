@@ -131,18 +131,18 @@ const RapportagesPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {balanceSheet?.assets?.accounts?.map(acc => (
-                        <TableRow key={acc.id}>
-                          <TableCell className="text-sm text-slate-600">{acc.code} - {acc.name}</TableCell>
+                      {(balanceSheet?.activa || balanceSheet?.assets?.accounts || []).map((acc, idx) => (
+                        <TableRow key={acc.id || idx}>
+                          <TableCell className="text-sm text-slate-600">{acc.code} - {acc.naam || acc.name}</TableCell>
                           <TableCell className="text-right text-sm font-medium text-slate-900">
-                            {formatAmount(acc.balance, acc.currency)}
+                            {formatAmount(acc.saldo || acc.balance, acc.valuta || acc.currency)}
                           </TableCell>
                         </TableRow>
                       ))}
                       <TableRow className="bg-slate-100">
                         <TableCell className="text-sm font-semibold text-slate-900">Totaal Activa</TableCell>
                         <TableCell className="text-right text-sm font-semibold text-slate-900">
-                          {formatAmount(balanceSheet?.assets?.total || 0)}
+                          {formatAmount(balanceSheet?.totaal_activa || balanceSheet?.assets?.total || 0)}
                         </TableCell>
                       </TableRow>
                     </TableBody>
