@@ -3,9 +3,12 @@ Boekhouding Module - Modulaire Structuur
 =========================================
 Dit pakket bevat alle boekhouding routers.
 
-De refactoring is stapsgewijs:
+HUIDIGE STATUS: Legacy mode (backward compatible)
+De originele monolithische router wordt nog gebruikt voor stabiliteit.
+
+STRUCTUUR (voor toekomstige refactoring):
 - common.py: Gedeelde imports, helpers en models
-- dashboard.py: Dashboard endpoints
+- dashboard.py: Dashboard endpoints (KLAAR)
 - grootboek.py: Rekeningen, BTW-codes, Journaalposten
 - relaties.py: Debiteuren, Crediteuren
 - bank.py: Bankrekeningen, Transacties, Import
@@ -16,11 +19,11 @@ De refactoring is stapsgewijs:
 - instellingen.py: Instellingen, Bedrijven, Herinneringen
 - overig.py: Documenten, Projecten, Uren, Vaste Activa, Audit
 
-Voor nu exporteren we de originele monolithische router.
+SERVICES:
+- /services/grootboek_service.py: Automatische journaalpost logica (KLAAR)
 """
 
 # Import de volledige originele router voor backward compatibility
-# Deze wordt geleidelijk vervangen door de modulaire versie
 from routers.boekhouding_legacy import router
 
 __all__ = ['router']
