@@ -186,8 +186,8 @@ const POSPublicScannerPage = () => {
   };
 
   const handleScannedBarcode = async (barcode) => {
-    // Prevent duplicate scans
-    if (lastScanned?.barcode === barcode && Date.now() - lastScanned.time < 2000) {
+    // Prevent duplicate scans - 3 second cooldown
+    if (lastScanned?.barcode === barcode && Date.now() - lastScanned.time < 3000) {
       return;
     }
 
