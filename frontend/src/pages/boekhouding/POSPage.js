@@ -173,8 +173,6 @@ const POSPage = () => {
 
     return () => clearInterval(pollInterval);
   }, [scannerSession?.code, cart, products]);
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  };
 
   const fetchProducts = useCallback(async () => {
     try {
