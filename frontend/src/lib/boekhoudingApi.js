@@ -79,8 +79,10 @@ const fieldMappings = {
   purchase_price: 'inkoopprijs',
   sales_price: 'verkoopprijs',
   stock_quantity: 'voorraad',
-  min_stock: 'min_voorraad',
+  min_stock: 'minimum_voorraad',
   photo_url: 'foto_url',
+  image_url: 'foto_url',
+  unit: 'eenheid',
   
   // === Stock/Inventory fields ===
   warehouse_id: 'magazijn_id',
