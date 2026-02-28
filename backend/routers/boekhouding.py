@@ -273,15 +273,20 @@ async def boek_verkoopfactuur(user_id: str, factuur: dict):
     Credit: Omzet (subtotaal excl BTW)
     Credit: BTW te betalen (BTW bedrag)
     """
+    # Zoek de juiste rekeningcodes voor deze gebruiker
+    debiteuren_code = await get_rekening_voor_type(user_id, "debiteuren")
+    omzet_code = await get_rekening_voor_type(user_id, "omzet")
+    btw_code = await get_rekening_voor_type(user_id, "btw_verkoop")
+    
     regels = [
         {
-            "rekening_code": DEFAULT_REKENINGEN["debiteuren"],
+            "rekening_code": debiteuren_code,
             "omschrijving": f"Debiteur: {factuur.get('debiteur_naam', 'Onbekend')}",
             "debet": factuur.get("totaal_incl_btw", 0),
             "credit": 0
         },
         {
-            "rekening_code": DEFAULT_REKENINGEN["omzet"],
+            "rekening_code": omzet_code,
             "omschrijving": f"Omzet factuur {factuur.get('factuurnummer', '')}",
             "debet": 0,
             "credit": factuur.get("subtotaal", 0)
@@ -292,7 +297,7 @@ async def boek_verkoopfactuur(user_id: str, factuur: dict):
     btw_bedrag = factuur.get("btw_bedrag", 0)
     if btw_bedrag > 0:
         regels.append({
-            "rekening_code": DEFAULT_REKENINGEN["btw_verkoop"],
+            "rekening_code": btw_code,
             "omschrijving": f"BTW factuur {factuur.get('factuurnummer', '')}",
             "debet": 0,
             "credit": btw_bedrag
