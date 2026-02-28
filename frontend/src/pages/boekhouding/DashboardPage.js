@@ -215,8 +215,8 @@ const DashboardPage = () => {
   const debiteuren = summary?.openstaand?.debiteuren || 0;
   const crediteuren = summary?.openstaand?.crediteuren || 0;
   const btwBetalen = summary?.btw?.te_betalen || 0;
-  const btwVorderen = summary?.btw?.te_vorderen || 0;
-  const openstaandeFacturen = summary?.openstaande_facturen || 0;
+  const btwVorderen = summary?.btw?.inkoop || 0; // Voorbelasting = BTW inkoop
+  const openstaandeFacturen = summary?.openstaand?.facturen_count || 0;
 
   return (
     <div className="space-y-6" data-testid="dashboard-page">
