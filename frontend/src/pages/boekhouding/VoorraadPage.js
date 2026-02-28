@@ -51,6 +51,8 @@ const VoorraadPage = () => {
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState(null);
   const html5QrCodeRef = useRef(null);
+  const lastScannedRef = useRef({ barcode: null, time: 0 });
+  const scanCooldown = 3000; // 3 seconds cooldown between same barcode scans
 
   const [newMovement, setNewMovement] = useState({
     artikel_id: '',
