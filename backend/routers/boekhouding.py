@@ -1727,6 +1727,19 @@ async def update_verkoopfactuur_status(factuur_id: str, status: str, authorizati
         raise HTTPException(status_code=404, detail="Factuur niet gevonden")
     return {"message": f"Status gewijzigd naar {status}"}
 
+@router.delete("/verkoopfacturen/{factuur_id}")
+async def delete_verkoopfactuur(factuur_id: str, authorization: str = Header(None)):
+    """Verwijder een verkoopfactuur"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    factuur = await db.boekhouding_verkoopfacturen.find_one({"id": factuur_id, "user_id": user_id})
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    await db.boekhouding_verkoopfacturen.delete_one({"id": factuur_id, "user_id": user_id})
+    return {"message": "Factuur verwijderd"}
+
 @router.get("/verkoopfacturen/{factuur_id}/pdf")
 async def get_verkoopfactuur_pdf(factuur_id: str, authorization: str = Header(None)):
     """Download factuur als professionele PDF"""
