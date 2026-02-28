@@ -194,9 +194,9 @@ const VoorraadPage = () => {
     (p.code || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const totalValue = products.reduce((sum, p) => sum + ((p.voorraad_aantal || p.stock_quantity || 0) * (p.inkoopprijs || p.purchase_price || 0)), 0);
+  const totalValue = products.reduce((sum, p) => sum + ((p.voorraad || p.voorraad_aantal || p.stock_quantity || 0) * (p.inkoopprijs || p.purchase_price || 0)), 0);
   const lowStockProducts = products.filter(p => {
-    const stock = p.voorraad_aantal || p.stock_quantity || 0;
+    const stock = p.voorraad || p.voorraad_aantal || p.stock_quantity || 0;
     const minStock = p.minimum_voorraad || p.min_stock || 0;
     return stock <= minStock && minStock > 0;
   });
