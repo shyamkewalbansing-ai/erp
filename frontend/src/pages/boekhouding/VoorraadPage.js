@@ -230,7 +230,8 @@ const VoorraadPage = () => {
         purchase_price: newProduct.purchase_price,
         sales_price: newProduct.sales_price,
         min_stock: newProduct.min_stock,
-        image_url: newProduct.image_url || null
+        image_url: newProduct.image_url || null,
+        barcode: newProduct.barcode || null
       });
       
       await productsAPI.create(productData);
@@ -238,7 +239,7 @@ const VoorraadPage = () => {
       setShowProductDialog(false);
       setNewProduct({
         code: '', name: '', description: '', type: 'product',
-        unit: 'stuk', purchase_price: 0, sales_price: 0, min_stock: 0, image_url: ''
+        unit: 'stuk', purchase_price: 0, sales_price: 0, min_stock: 0, image_url: '', barcode: ''
       });
       fetchData();
     } catch (error) {
