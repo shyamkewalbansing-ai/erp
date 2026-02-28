@@ -422,13 +422,13 @@ const InkoopPage = () => {
                 </TableHeader>
                 <TableBody>
                   {invoices.map(invoice => (
-                    <TableRow key={invoice.id} data-testid={`purchase-invoice-row-${invoice.invoice_number}`}>
-                      <TableCell className="text-sm text-slate-600">{invoice.invoice_number}</TableCell>
-                      <TableCell className="text-sm text-slate-500">{formatDate(invoice.date)}</TableCell>
-                      <TableCell className="text-sm font-medium text-slate-900">{invoice.supplier_name}</TableCell>
-                      <TableCell className="text-sm text-slate-500">{formatDate(invoice.due_date)}</TableCell>
+                    <TableRow key={invoice.id} data-testid={`purchase-invoice-row-${invoice.factuurnummer || invoice.invoice_number}`}>
+                      <TableCell className="text-sm text-slate-600">{invoice.factuurnummer || invoice.invoice_number || '-'}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatDate(invoice.factuurdatum || invoice.date)}</TableCell>
+                      <TableCell className="text-sm font-medium text-slate-900">{invoice.crediteur_naam || invoice.supplier_name || '-'}</TableCell>
+                      <TableCell className="text-sm text-slate-500">{formatDate(invoice.vervaldatum || invoice.due_date)}</TableCell>
                       <TableCell className="text-right text-sm font-medium text-slate-900">
-                        {formatAmount(invoice.total, invoice.currency)}
+                        {formatAmount(invoice.totaal_incl_btw || invoice.total, invoice.valuta || invoice.currency)}
                       </TableCell>
                       <TableCell>
                         <Badge className={`text-xs ${getStatusColor(invoice.status)}`}>
