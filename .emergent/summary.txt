@@ -1,172 +1,165 @@
 <analysis>**original_problem_statement:**
-De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die specifiek is afgestemd op de Surinaamse markt. De kerninstructie is om de structuur en UI van een referentieproject  te volgen. De scope is uitgebreid met features zoals PDF-facturen met templates, MT940-import, Surinaamse belastingrapportages, Excel-exports, configureerbare SMTP-instellingen en multi-tenancy.
+De gebruiker wil een uitgebreide Boekhouding (Accounting) module bouwen die specifiek is afgestemd op de Surinaamse markt. De kerninstructie is om de structuur en UI van referentieprojecten te volgen. De scope is uitgebreid met features zoals PDF-facturen, MT940-import, Surinaamse belastingrapportages, en een volledig functioneel Point of Sale (POS) systeem.
 
-Recentelijk heeft de gebruiker de focus verlegd naar de implementatie van een volledig functioneel Point of Sale (POS) systeem, geïnspireerd door een afbeelding van een SumUp-achtige interface. Deze POS-module moest fullscreen zijn, een productgrid, een winkelwagen, en de mogelijkheid hebben om betalingen te verwerken. De meest recente verzoeken waren gericht op het uitbreiden van de POS-functionaliteit met een camera-gebaseerde barcode scanner, specifiek een versie die op een mobiel apparaat kan worden gebruikt via een openbare link, zonder dat een login vereist is.
+Recente verzoeken waren gericht op het uitbreiden van de POS-functionaliteit met een camera-gebaseerde barcode scanner (voor mobiel, zonder login), ondersteuning voor USB-scanners, en integratie van bonprinters. Daarnaast heeft de gebruiker meerdere UI-redesigns voor het dashboard en andere pagina's aangevraagd op basis van verstrekte afbeeldingen.
 
 **PRODUCTVEREISTEN:**
--   **Valuta:** SRD, USD, EUR.
--   **Wisselkoersen:** Zowel handmatige invoer als automatische synchronisatie.
--   **Thema & UI:** Clean en modern.
+-   **Valuta:** SRD, USD, EUR, met weergave van wisselkoersen.
 -   **Backend:** FastAPI met MongoDB.
 -   **Frontend:** React met TailwindCSS.
+-   **UI:** Modern, gebaseerd op door de gebruiker verstrekte designs (FinSight, Fundcy).
 -   **Kernfunctionaliteit:**
-    -   Alle financiële transacties (verkoop, inkoop, betalingen, POS) moeten automatisch leiden tot een journaalpost in het grootboek.
-    -   Rapportages (Balans, Winst & Verlies) moeten worden gegenereerd op basis van de saldi in het grootboek.
-    -   Een volledig POS-systeem met productbeheer, winkelwagen, betalingsverwerking (inclusief wisselgeld), kortingen en klantkoppeling.
-    -   Een camera-gebaseerde barcode scanner, inclusief een openbaar toegankelijke mobiele scanner-pagina die kan synchroniseren met de hoofd-POS-terminal.
-    -   Producten in de voorraad moeten een barcodeveld hebben dat ingevuld kan worden (ook via camera-scan).
+    -   Een volledig POS-systeem met productbeheer, winkelwagen, betalingsverwerking, kortingen, en klantkoppeling.
+    -   Een camera-gebaseerde barcode scanner die werkt op zowel Android als **iPhone**.
+    -   Een permanente, altijd-actieve mobiele scanner-pagina die kan worden geïnstalleerd op het startscherm van een telefoon (PWA).
+    -   Ondersteuning voor standaard USB-hardware barcode scanners.
+    -   Mogelijkheid om bonnen te printen op 80mm thermische printers.
+    -   Producten in de voorraad moeten een barcodeveld hebben.
 
 **User's preferred language**: Dutch
 
 **what currently exists?**
-De applicatie is een full-stack React/FastAPI-app met een geïntegreerde boekhoudmodule waarbij het grootboek de centrale source of truth is. Een uitgebreide Point of Sale (POS) module is geïmplementeerd met een fullscreen interface, productgrid, winkelwagen, en verwerking van betalingen (contant/pin) inclusief wisselgeldberekening en kortingen.
-
-Een van de meest geavanceerde features is de camera-gebaseerde barcode scanner. Dit omvat een **openbare, login-vrije mobiele scanner pagina**. De hoofd-POS terminal kan een tijdelijke, unieke sessielink via een QR-code genereren. Wanneer deze link op een telefoon wordt geopend, kan de gebruiker producten scannen die vervolgens direct in de winkelwagen van de hoofd-POS verschijnen.
+De applicatie is een full-stack React/FastAPI-app. Een uitgebreide POS-module is geïmplementeerd, inclusief productgrid, winkelwagen, en betalingsverwerking. Er is een camera-scanner voor het toevoegen van producten, met ondersteuning voor zowel een tijdelijke als een permanente, login-vrije mobiele scanner-pagina die als PWA kan worden geïnstalleerd. Ook is er ondersteuning voor USB-scanners en het printen van bonnen. Het dashboard is herontworpen naar de FinSight stijl en toont nu zowel USD/SRD als EUR/SRD wisselkoersen. De agent was bezig met het herontwerpen van de Grootboek (Ledger) pagina om bij het nieuwe dashboard te passen.
 
 **Last working item**:
--   **Last item agent was working:** De agent was bezig met het implementeren van de mogelijkheid om een barcode op te slaan bij een product op de 'Voorraad' (Inventory) pagina. Dit omvat het toevoegen van een barcode-invoerveld en een knop om de camera te gebruiken voor het scannen van de barcode in het Product toevoegen/bewerken formulier.
--   **Status:** IN PROGRESS
+-   **Last item agent was working:** De agent was bezig met het herontwerpen van de  om deze visueel aan te laten sluiten bij het nieuwe FinSight dashboard design, zoals gevraagd door de gebruiker.
+-   **Status:** USER VERIFICATION PENDING
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Frontend testing agent. De test moet verifiëren dat een barcode kan worden toegevoegd/bewerkt (handmatig en via camera) op de Voorraadpagina, correct wordt opgeslagen, en dat het product vervolgens kan worden gevonden met de POS-scanner.
+-   **Which testing method agent to use?** screenshot tool. De agent moet een screenshot maken van de  pagina om het nieuwe ontwerp aan de gebruiker te tonen en goedkeuring te vragen.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Kritiek groot  bestand (P1)**
-    -   **Beschrijving:** Het  bestand is hernoemd naar  en is met meer dan 5300 regels onbeheersbaar. Alle nieuwe backend-logica (POS, scanner sessies) is hieraan toegevoegd, waardoor de technische schuld ernstig is toegenomen. Een eerdere poging tot refactoring is vastgelopen.
-    -   **Attempted fixes:** Een nieuwe modulaire directorystructuur () is aangemaakt, maar de agent is teruggevallen op het aanpassen van het legacy-bestand om nieuwe features sneller te leveren.
+-   **Issue 1: iPhone scanner werkt niet (P0)**
+-   **Issue 2: Kritiek groot  bestand (P1)**
+
+**Issues Detail:**
+-   **Issue 1: iPhone scanner werkt niet (P0)**
+    -   **Beschrijving:** De gebruiker heeft herhaaldelijk gemeld dat de mobiele camera-scanner niet werkt op iPhone (specifiek: de camera start wel, maar detecteert geen barcodes). Dit is een kritieke bug die een kernfunctionaliteit onbruikbaar maakt voor iOS-gebruikers.
+    -   **Attempted fixes:** Meerdere pogingen zijn gedaan: iOS-specifieke camera-instellingen (), aanpassen van  en , toevoegen en verwijderen van , en verbeterde foutmeldingen. Een recente wijziging die de scanner overal brak, is teruggedraaid.
     -   **Next debug checklist:**
-        1.  Hervat het refactoringplan.
-        2.  Verplaats business logic (zoals ) naar een  laag.
-        3.  Verdeel de endpoints uit  stapsgewijs over thematische bestanden: , , , en een nieuw .
-        4.  Werk  bij om de nieuwe, kleinere routers te gebruiken en de verwijzing naar  te elimineren.
-    -   **Why fix this issue and what will be achieved with the fix?** Verhoogt de onderhoudbaarheid, stabiliteit en schaalbaarheid van de backend. Dit is cruciaal om toekomstige ontwikkeling mogelijk te maken.
-    -   **Status:** IN PROGRESS (Stalled)
+        1.  Verifieer dat de scanner na de terugdraai-actie nog steeds werkt op Android.
+        2.  Vervang de  bibliotheek op een testpagina door een alternatief zoals  of , die bekend staan om betere iOS-compatibiliteit.
+        3.  Implementeer de nieuwe bibliotheek (indien succesvol) in ,  en .
+        4.  Log gedetailleerde foutmeldingen en de camera-eigenschappen () van het iOS-apparaat naar de console om het probleem beter te diagnosticeren.
+    -   **Why fix this issue and what will be achieved with the fix?** De mobiele scanner is een door de gebruiker gevraagde kernfeature. Zonder iPhone-ondersteuning is deze feature incompleet en onbruikbaar voor een groot deel van de eindgebruikers.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** both (een grondige regressietest is absoluut noodzakelijk).
+    -   **Should Test frontend/backend/both after fix?** Frontend.
+-   **Issue 2: Kritiek groot  bestand (P1)**
+    -   **Beschrijving:** Het  bestand is nu meer dan 5600 regels lang en bevat bijna alle backend-logica. Dit is een enorme bron van technische schuld, vertraagt ontwikkeling en verhoogt het risico op bugs.
+    -   **Attempted fixes:** Een eerdere poging tot refactoring is vastgelopen. De agent blijft nieuwe endpoints aan dit bestand toevoegen.
+    -   **Next debug checklist:**
+        1.  Hervat het refactoringplan. Begin met het verplaatsen van de nieuwe POS-gerelateerde endpoints (permanent scanner, clear cart) naar een nieuw  routerbestand.
+        2.  Verplaats stapsgewijs andere endpoints naar thematische bestanden (, , ).
+        3.  Werk  bij om de nieuwe routers te gebruiken en de verwijzing naar  te elimineren.
+    -   **Why fix this issue and what will be achieved with the fix?** Verhoogt de onderhoudbaarheid, stabiliteit en schaalbaarheid van de backend. Dit is cruciaal om toekomstige ontwikkeling mogelijk te maken.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** both (grondige regressietest is absoluut noodzakelijk).
 
 **In progress Task List**:
--   **Task 1: Barcode veld toevoegen aan Voorraad (P0)**
-    -   **Where to resume:** De agent was bezig met het aanpassen van . De volgende stappen zijn: het toevoegen van de UI voor het barcodeveld (input + camera-knop) aan het productformulier, het implementeren van de camera-scanlogica, en het bijwerken van de  functie om de barcode mee te sturen naar de backend.
-    -   **What will be achieved with this?** Gebruikers kunnen barcodes aan hun producten koppelen, wat essentieel is voor een betrouwbare werking van de POS-scanner.
+-   **Task 1: Voltooi verificatie Grootboek Redesign (P1)**
+    -   **Where to resume:** De agent heeft  overschreven. De volgende stap is het maken van een screenshot van de pagina  om het resultaat aan de gebruiker te tonen.
+    -   **What will be achieved with this?** De Grootboek-pagina krijgt een moderne UI die consistent is met de rest van de applicatie.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on something:** Nee.
+    -   **Should Test frontend/backend/both after fix?** Frontend (Screenshot).
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **P1 - Refactor :** Zie All Pending/In progress Issue list. Dit heeft de hoogste prioriteit na het voltooien van de huidige taak.
-    -   **P1 - Verifieer POS-Grootboek Koppeling:** De gebruiker heeft expliciet zijn zorg geuit dat POS-transacties mogelijk niet correct worden geboekt. Er moet grondig worden geverifieerd of contante en pin-betalingen de saldi van 'Kas' en 'Bank' en de omzetrekeningen correct bijwerken.
-    -   **P2 - Refactor Grote Frontend Componenten:**  (nu >1400 regels), , en  moeten worden opgesplitst. Extraheer dialogen (betaling, korting, scanner) en andere logische delen naar hun eigen, herbruikbare componenten.
+    -   **P1 - Verbind Dashboard met Live Data:** Het huidige FinSight-dashboard toont hardgecodeerde, statische data. Dit moet worden gekoppeld aan de daadwerkelijke backend API's om live financiële data weer te geven.
+    -   **P1 - Verifieer POS-Grootboek Koppeling:** Een eerdere zorg van de gebruiker was dat POS-transacties mogelijk niet correct in het grootboek worden geboekt. Dit vereist een grondige verificatietest.
+    -   **P2 - Refactor Grote Frontend Componenten:**  (>1500 regels),  en  moeten worden opgesplitst in kleinere, herbruikbare componenten.
 
 -   **Future Tasks:**
-    -   **P3 - Kassarapport:** Een rapport om aan het einde van de dag de kas op te maken en de dagomzet per betaalmethode te tonen.
+    -   **P3 - Kassarapport:** Een rapport om aan het einde van de dag de kas op te maken.
     -   **P3 - Implementeer MT940-import.**
-    -   **P3 - Implementeer Excel-exports voor alle relevante data.**
-    -   **P3 - Verifieer logo op PDF-facturen:** De UI voor het uploaden van een logo is gebouwd, maar er moet nog worden gecontroleerd of dit logo daadwerkelijk op de gegenereerde PDF-facturen wordt weergegeven.
+    -   **P3 - Implementeer Excel-exports.**
+    -   **P3 - Verifieer logo op PDF-facturen.**
 
 **Completed work in this session**
--   **Point of Sale (POS) Module:**
-    -   Een volledig nieuwe, fullscreen POS-interface () gebouwd.
-    -   Functionaliteit geïmplementeerd voor het toevoegen van producten aan een winkelwagen.
--   **POS Uitbreidingen:**
-    -   Een betaaldialoog met een **wisselgeldcalculator** voor contante betalingen.
-    -   Functionaliteit om kortingen toe te passen op de hele winkelwagen.
-    -   Mogelijkheid om een klant aan een verkoop te koppelen.
--   **Camera Barcode Scanner:**
-    -   De  bibliotheek geïnstalleerd en geïntegreerd.
-    -   Een camera-scanner toegevoegd aan de POS-pagina om producten te scannen en toe te voegen.
--   **Publieke Mobiele Scanner:**
-    -   Een aparte, publieke pagina () gemaakt die **zonder login** werkt.
-    -   Backend-logica geïmplementeerd om tijdelijke scanner-sessies te beheren.
-    -   De hoofd-POS kan een QR-code genereren die, wanneer gescand met een telefoon, de mobiele scanner opent en deze koppelt aan de winkelwagen van de hoofd-POS.
--   **Bugfix:** Een bug op de  opgelost die werd veroorzaakt door het gebruik van een verkeerde API en incorrecte veldnamen.
-
-**Earlier issues found/mentioned but not fixed**
--   Het  bestand is niet gerefactord en is alleen maar groter en complexer geworden.
--   De grote frontend componenten (, , en nu ook ) zijn niet opgesplitst.
-
-**Known issue recurrence from previous fork**
--   Geen.
+-   **Barcode in Voorraad:** Volledig geïmplementeerd. Gebruikers kunnen barcodes toevoegen/bewerken op de  via handmatige invoer of camera-scan.
+-   **Permanente Mobiele Scanner:** Een permanente, niet-verlopende scanner-link () is gemaakt die als PWA op een telefoon geïnstalleerd kan worden.
+-   **Scanner Bugs Opgelost:** Een debounce is toegevoegd om meervoudige scans te voorkomen en een synchronisatieprobleem waarbij verwijderde items opnieuw verschenen, is opgelost.
+-   **Hardware Integraties:** Ondersteuning voor USB-scanners en 80mm thermische bonprinters (via browser print) is toegevoegd aan de POS-pagina.
+-   **Dashboard Redesign:** Het dashboard is volledig herontworpen naar de FinSight stijl, en de USD/SRD wisselkoers is toegevoegd.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Public Session Management:** De backend creëert een unieke  met een vervaltijd. De hoofd-POS genereert een QR-code voor een link (). De mobiele scanner-pagina gebruikt deze  om gescande producten via de backend naar de juiste winkelwagen te sturen.
--   **Camera API:** Gebruik van de  bibliotheek om toegang te krijgen tot de camera van het apparaat voor het scannen van barcodes.
--   **QR Code Generation:** Gebruik van de  bibliotheek om de sessie-link als een scanbare QR-code weer te geven.
+-   **PWA (Progressive Web App):** Gebruik van  en  om de scannerpagina installeerbaar te maken op mobiele telefoons.
+-   **Direct-to-Printer Receipts:** Gebruik van  en een specifieke print-stylesheet () om een kassabon-layout te creëren voor 80mm printers.
+-   **Permanent Scanner Sessie:** Backend-logica die een permanente code (gekoppeld aan de gebruiker) gebruikt in plaats van een tijdelijke sessie, opgeslagen in een  collectie.
 
 **key DB schema**
 -   ** (Nieuw):** 
--   ** (Aanpassing nodig):** Moet een  veld krijgen.
-
-**changes in tech stack**
--   **Frontend Dependencies (nieuw):**
-    -   
-    -   
+-   ** (Aangepast):** Heeft nu een functioneel  veld.
 
 **All files of reference**
--    (Het meest kritieke backend-bestand)
--    (Het hart van de nieuwe POS-functionaliteit)
--    (Bestand dat momenteel wordt bewerkt)
--    (De publieke scanner-pagina)
--    (Hier zijn de nieuwe routes gedefinieerd)
--    (Bijgewerkt met de nieuwe features)
+-   
+-   
+-   
+-   
+-   
+-   
 
 **Areas that need refactoring**:
--   **:** **CRITICAL**. Moet met hoogste prioriteit worden opgesplitst.
--   **:** Dit bestand is onhoudbaar groot. De logica voor de verschillende dialogen (betaling, korting, scanner, QR-code) moet worden geëxtraheerd naar aparte, herbruikbare componenten.
+-   **:** **CRITICAL**. Moet met de hoogste prioriteit worden opgesplitst.
+-   **:** **CRITICAL**. Het bestand is onhoudbaar groot en moet worden opgesplitst in kleinere componenten (bv. voor de betaaldialoog, hardware scanner logica, etc.).
+-   ****: **HIGH**. De UI is vernieuwd maar de databronnen zijn hardgecodeerd. Dit moet worden gekoppeld aan de backend.
 
 **key api endpoints**
 -   
 -   
--    (Publiek, geen authenticatie)
--    (Publiek, geen authenticatie)
--    (Moet worden bijgewerkt om het -veld te accepteren)
+-   
+-    (Publiek, voor permanente scanner)
+-   
 
 **Critical Info for New Agent**
--   **PRIORITEIT 1: Voltooi Barcode in Voorraad.** Maak de huidige taak af: voeg het barcodeveld met camera-scanmogelijkheid toe aan de . Test dit end-to-end.
--   **PRIORITEIT 2: Refactor **. Dit is een enorme technische schuld en een groot risico. Begin hieraan direct na de voorraad-taak. Voeg geen nieuwe features meer toe aan dit bestand. Gebruik de al bestaande modulaire structuur in .
--   **Publieke Scanner Werking:** Onthoud dat de publieke scanner asynchroon werkt via een  in de database. De hoofd-POS genereert de sessie, de telefoon scant en voegt items toe via de backend, en de hoofd-POS haalt de bijgewerkte winkelwagen op.
+-   **PRIORITEIT 0: Los de iPhone-scannerbug op.** De gebruiker heeft dit meermaals aangegeven. Dit is de meest urgente bug. Onderzoek alternatieve bibliotheken zoals  omdat configuratieaanpassingen niet hebben gewerkt.
+-   **PRIORITEIT 1: Rond de  redesign af.** Maak een screenshot en vraag de gebruiker om goedkeuring.
+-   **PRIORITEIT 2: Begin de refactoring van **. Voeg GEEN nieuwe features meer toe aan dit bestand. Dit is een enorme technische schuld en een risico voor de stabiliteit.
+-   Het dashboard () is visueel vernieuwd, maar alle data is hardgecodeerd. Een volgende logische stap is om dit aan te sluiten op de backend.
 
 **documents and test reports created in this job**
 -   
+-    (is bijgewerkt)
 -   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** jhaa - **Status:** COMPLETED. Bevestiging om door te gaan met het toevoegen van het barcodeveld aan de Voorraadpagina.
-2.  **User:** Ik wil niet ingelogd zijn maak een aparte page met scanner en een link waar ik op kan gaan en dan word het gescant en gelijk gescant zonder inloggen - **Status:** COMPLETED. Dit leidde tot de creatie van de succesvolle publieke scanner-pagina.
-3.  **User:** Telefoon Scanner werkt niet wat is link dan zo dat ik via een andere telefoon kan gaan - **Status:** COMPLETED. De verwarring van de gebruiker leidde tot de verbetering (de publieke scanner).
-4.  **User:** Jha maar ik wil een link waarop je kan gaan op je telefoon en dan scann je en dan word het product gescant - **Status:** COMPLETED. Verzoek voor een mobiel-specifieke scannerlink.
-5.  **User:** Barcode scanner kan je iets maken zo dat je via een telefoon camera product kan scannen - **Status:** COMPLETED. Dit was het initiële verzoek voor de camera-scanner.
-6.  **User:** ...en ik mis iets om bedrag in te toetsen en wisseld geld te zien... en als je POS gebruikt waar gaat dat geld heen ik zie dat het niet goed gekopeld is aan de systeem - **Status:** IN PROGRESS. De wisselgeldfunctie is gebouwd, maar de verificatie van de boekhoudkundige koppeling is nog een openstaand punt (P1 Upcoming Task).
-7.  **User:** P2 (om POS uit te breiden) - **Status:** COMPLETED.
-8.  **User:** Verzoek om POS functie toe te voegen (met afbeelding) - **Status:** COMPLETED.
-9.  **User:** p1 en p2 - **Status:** COMPLETED. Akkoord met het plan om te refactoren en P2-taken uit te voeren (hoewel de refactoring is uitgesteld).
-10. **Agent:** Initiële planning.
+1.  **maak deze nu dashbord zelfde**: Verzoek om dashboard te wijzigen naar Fundcy design. (Voltooid)
+2.  **zet terug hoe het eerst was**: Verzoek om dashboard terug te zetten naar FinSight design. (Voltooid)
+3.  **Kan je de Grootboek zelfde look geven het moet wel matchen**: Verzoek om Grootboek pagina te redesignen. (In uitvoering)
+4.  **telefoonscanner werkt niet op iphone zie ik**: Melding dat scanner niet werkt op iPhone. (Openstaand probleem)
+5.  **Ik wil deze functie ook ... site gelijk als app op de home scherm geinstalleerd worden**: Verzoek om PWA-functionaliteit. (Voltooid)
+6.  **Ik wil dat het automatish gelijk op het scherm komt**: Verzoek om volautomatische PWA-installatie (niet mogelijk). (Beantwoord)
+7.  **Op iphone werkt de scanner niet maar wel op android**: Herbevestiging dat scanner kapot is op iPhone. (Openstaand probleem)
+8.  **scanner pakt niet**: Details over de scanner-bug: camera werkt, maar detecteert geen code. (Openstaand probleem)
+9.  **bar code word niet meer gescant**: Melding dat recente wijziging de scanner overal heeft gebroken. (Opgelost door terugdraaien)
+10. **(Image) Kan je de dashboard precies zo maken exact het zelfde**: Initieel verzoek om dashboard te redesignen naar FinSight. (Voltooid)
 
 **Project Health Check:**
--   **Broken:** Geen. De applicatie is functioneel.
--   **Mocked:** Geen.
+-   **Broken:** De mobiele barcode scanner op **iPhones** is kapot, wat een kritiek probleem is.
+-   **Mocked:** Het nieuwe dashboard () is puur een UI-schil met **hardgecodeerde data** en is niet aangesloten op de backend.
 -   **Risks:**
-    -   **CRITICAL:** De  is een tikkende tijdbom die de stabiliteit en toekomstige ontwikkeling van de hele applicatie in gevaar brengt.
-    -   **HIGH:** De frontend componenten (, ) worden te groot, wat leidt tot slechte onderhoudbaarheid en een verhoogd risico op bugs.
-    -   **MEDIUM:** De correcte financiële boeking van POS-transacties is nog niet door de gebruiker geverifieerd en was een expliciet punt van zorg.
+    -   **CRITICAL:** De  is een tikkende tijdbom.
+    -   **HIGH:** De  en  componenten zijn te groot en complex.
 
 **3rd Party Integrations**
--   
--   
+-    (voor camera scanner)
+-    (voor QR-codes)
+-    (voor PWA)
 
 **Testing status**
--   **Testing agent used after significant changes:** YES, na de eerste POS-uitbreidingen (). Echter, de camera-scanner en publieke scanner-functies zijn daarna toegevoegd **zonder** een nieuwe testcyclus.
--   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Testing agent used after significant changes:** JA, voor de barcode-voorraad feature.
 -   **Test files created:** []
--   **Known regressions:** Geen.
+-   **Known regressions:** De iPhone-scanner werkt consistent niet. Een poging tot reparatie brak de scanner tijdelijk overal, maar dat is teruggedraaid.
 
 **Credentials to test flow:**
 -   **Gebruikersnaam:** 
 -   **Wachtwoord:** 
 
 **What agent forgot to execute**
--   De agent heeft de cruciale refactoring van  (nu ) niet voltooid. In plaats daarvan werd prioriteit gegeven aan nieuwe features, waardoor de technische schuld aanzienlijk is toegenomen.
--   De refactoring van grote frontend-componenten is ook niet uitgevoerd.</analysis>
+-   De agent heeft het nieuwe dashboard niet aangesloten op live data; het is momenteel een statische weergave.
+-   De cruciale refactoring van  is opnieuw uitgesteld en de technische schuld is verder toegenomen.
+-   De agent is er na meerdere pogingen niet in geslaagd de terugkerende bug met de iPhone-scanner op te lossen.</analysis>
