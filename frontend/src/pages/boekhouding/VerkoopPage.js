@@ -174,11 +174,6 @@ const VerkoopPage = () => {
         unit_price: line.unit_price,
         btw_percentage: line.btw_percentage
       }));
-      // Manual override for non-standard field
-      invoiceData.regels = invoiceData.regels.map(l => ({
-        ...l,
-        eenheidsprijs: l.eenheidsprijs || l.unit_price
-      }));
       
       await invoicesAPI.create(invoiceData);
       toast.success('Factuur aangemaakt');
