@@ -491,8 +491,10 @@ const GrootboekPage = () => {
                           <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
                           <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
                           <TableHead className="text-xs font-medium text-slate-500">Categorie</TableHead>
+                          <TableHead className="w-28 text-xs font-medium text-slate-500">Externe Code</TableHead>
                           <TableHead className="w-20 text-xs font-medium text-slate-500">Valuta</TableHead>
                           <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Saldo</TableHead>
+                          <TableHead className="w-20 text-xs font-medium text-slate-500">Acties</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -501,11 +503,25 @@ const GrootboekPage = () => {
                             <TableCell className="text-sm text-slate-600">{account.code}</TableCell>
                             <TableCell className="text-sm font-medium text-slate-900">{account.naam}</TableCell>
                             <TableCell className="text-sm text-slate-500">{account.categorie}</TableCell>
+                            <TableCell className="text-sm text-slate-500">
+                              {account.externe_code || '-'}
+                            </TableCell>
                             <TableCell>
                               <Badge variant="outline" className="text-xs">{account.valuta}</Badge>
                             </TableCell>
                             <TableCell className={`text-right text-sm font-medium ${account.saldo < 0 ? 'text-red-600' : 'text-slate-900'}`}>
                               {formatAmount(account.saldo || 0, account.valuta)}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openExterneCodeDialog(account)}
+                                className="h-8 w-8 p-0"
+                                title="Externe code koppelen"
+                              >
+                                <Link2 className="w-4 h-4" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -514,8 +530,10 @@ const GrootboekPage = () => {
                   </div>
                 ))}
                 {Object.keys(groupedAccounts).length === 0 && (
-                  <div className="text-center py-8 text-slate-500">
-                    Geen rekeningen gevonden. Maak uw eerste rekening aan.
+                  <div className="text-center py-12 text-slate-500">
+                    <BookOpen className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                    <p className="mb-2">Geen rekeningen gevonden.</p>
+                    <p className="text-sm">Klik op "Standaard Schema Laden" om het Surinaamse rekeningschema te initialiseren.</p>
                   </div>
                 )}
               </div>
