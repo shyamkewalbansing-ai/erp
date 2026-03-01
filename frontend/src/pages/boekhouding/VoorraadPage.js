@@ -553,7 +553,7 @@ const VoorraadPage = () => {
                       Scan
                     </Button>
                   </div>
-                  <p className="text-xs text-slate-500">Gebruik de camera om een barcode te scannen</p>
+                  <p className="text-xs text-gray-500">Gebruik de camera om een barcode te scannen</p>
                 </div>
 
                 {/* Product Foto Upload */}
@@ -578,11 +578,11 @@ const VoorraadPage = () => {
                     ) : (
                       <label className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
                         {uploadingImage ? (
-                          <Loader2 className="w-6 h-6 text-slate-400 animate-spin" />
+                          <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
                         ) : (
                           <>
-                            <ImagePlus className="w-6 h-6 text-slate-400" />
-                            <span className="text-xs text-slate-500 mt-1">Upload</span>
+                            <ImagePlus className="w-6 h-6 text-gray-400" />
+                            <span className="text-xs text-gray-500 mt-1">Upload</span>
                           </>
                         )}
                         <input
@@ -594,7 +594,7 @@ const VoorraadPage = () => {
                         />
                       </label>
                     )}
-                    <div className="text-xs text-slate-500">
+                    <div className="text-xs text-gray-500">
                       <p>Max. 5MB</p>
                       <p>JPG, PNG of GIF</p>
                     </div>
@@ -870,7 +870,7 @@ const VoorraadPage = () => {
                   {!cameraActive && !cameraError && (
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center p-4">
-                        <Camera className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                        <Camera className="w-12 h-12 text-gray-500 mx-auto mb-3" />
                         <Button 
                           onClick={startBarcodeScanner} 
                           className="bg-emerald-600 hover:bg-emerald-700"
@@ -883,7 +883,7 @@ const VoorraadPage = () => {
                   )}
                 </div>
                 
-                <p className="text-center text-sm text-slate-500">
+                <p className="text-center text-sm text-gray-500">
                   Richt de camera op de barcode. Deze wordt automatisch gescand.
                 </p>
               </div>
@@ -1029,18 +1029,18 @@ const VoorraadPage = () => {
                           />
                         ) : (
                           <div className="w-10 h-10 bg-slate-100 rounded-md flex items-center justify-center">
-                            <Package className="w-5 h-5 text-slate-400" />
+                            <Package className="w-5 h-5 text-gray-400" />
                           </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-slate-600">{product.code}</TableCell>
-                      <TableCell className="text-sm font-medium text-slate-900">
+                      <TableCell className="text-sm text-gray-600">{product.code}</TableCell>
+                      <TableCell className="text-sm font-medium text-gray-900">
                         {productName}
                         {isLowStock && (
                           <Badge className="ml-2 text-xs bg-amber-100 text-amber-700">Laag</Badge>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-slate-500">
+                      <TableCell className="text-sm text-gray-500">
                         {productBarcode ? (
                           <span className="flex items-center gap-1">
                             <Barcode className="w-3 h-3" />
@@ -1050,13 +1050,13 @@ const VoorraadPage = () => {
                           <span className="text-slate-300">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-sm text-slate-500">{unit}</TableCell>
-                      <TableCell className={`text-right text-sm font-medium ${isLowStock ? 'text-amber-600' : 'text-slate-900'}`}>
+                      <TableCell className="text-sm text-gray-500">{unit}</TableCell>
+                      <TableCell className={`text-right text-sm font-medium ${isLowStock ? 'text-amber-600' : 'text-gray-900'}`}>
                         {formatNumber(stockQty, 0)}
                       </TableCell>
-                      <TableCell className="text-right text-sm text-slate-600">{formatAmount(purchasePrice)}</TableCell>
-                      <TableCell className="text-right text-sm text-slate-600">{formatAmount(salesPrice)}</TableCell>
-                      <TableCell className="text-right text-sm font-medium text-slate-900">
+                      <TableCell className="text-right text-sm text-gray-600">{formatAmount(purchasePrice)}</TableCell>
+                      <TableCell className="text-right text-sm text-gray-600">{formatAmount(salesPrice)}</TableCell>
+                      <TableCell className="text-right text-sm font-medium text-gray-900">
                         {formatAmount(stockQty * purchasePrice)}
                       </TableCell>
                       <TableCell className="text-center">
@@ -1068,7 +1068,7 @@ const VoorraadPage = () => {
                             className="h-8 w-8 p-0 hover:bg-slate-100"
                             data-testid={`edit-product-${product.code}`}
                           >
-                            <Pencil className="w-4 h-4 text-slate-500" />
+                            <Pencil className="w-4 h-4 text-gray-500" />
                           </Button>
                           <Button 
                             variant="ghost" 
@@ -1090,7 +1090,7 @@ const VoorraadPage = () => {
                   )})}
                   {filteredProducts.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center py-8 text-slate-500">
+                      <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                         {searchTerm ? 'Geen producten gevonden' : 'Geen producten. Maak uw eerste product aan.'}
                       </TableCell>
                     </TableRow>
@@ -1102,20 +1102,20 @@ const VoorraadPage = () => {
         </TabsContent>
 
         <TabsContent value="movements" className="mt-4">
-          <Card className="bg-white border border-slate-100 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-base font-semibold text-slate-900">Voorraadmutaties</CardTitle>
+              <CardTitle className="text-base font-semibold text-gray-900">Voorraadmutaties</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
                 <TableHeader>
                   <TableRow className="bg-slate-50">
-                    <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
-                    <TableHead className="text-xs font-medium text-slate-500">Product</TableHead>
-                    <TableHead className="w-28 text-xs font-medium text-slate-500">Type</TableHead>
-                    <TableHead className="text-right w-24 text-xs font-medium text-slate-500">Aantal</TableHead>
-                    <TableHead className="text-xs font-medium text-slate-500">Opmerkingen</TableHead>
-                    <TableHead className="w-20 text-xs font-medium text-slate-500 text-center">Acties</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-gray-500">Datum</TableHead>
+                    <TableHead className="text-xs font-medium text-gray-500">Product</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-gray-500">Type</TableHead>
+                    <TableHead className="text-right w-24 text-xs font-medium text-gray-500">Aantal</TableHead>
+                    <TableHead className="text-xs font-medium text-gray-500">Opmerkingen</TableHead>
+                    <TableHead className="w-20 text-xs font-medium text-gray-500 text-center">Acties</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -1135,24 +1135,24 @@ const VoorraadPage = () => {
                         case 'correctie_min': return { label: 'Correctie -', color: 'bg-orange-100 text-orange-700', sign: '-' };
                         case 'in': return { label: 'Inkomend', color: 'bg-green-100 text-green-700', sign: '+' };
                         case 'out': return { label: 'Uitgaand', color: 'bg-red-100 text-red-700', sign: '-' };
-                        default: return { label: type, color: 'bg-slate-100 text-slate-700', sign: '' };
+                        default: return { label: type, color: 'bg-slate-100 text-gray-700', sign: '' };
                       }
                     };
                     const typeInfo = getTypeDisplay(movementType);
                     
                     return (
                       <TableRow key={movement.id}>
-                        <TableCell className="text-sm text-slate-600">{formatDate(movementDate)}</TableCell>
-                        <TableCell className="text-sm font-medium text-slate-900">{product?.naam || product?.name || '-'}</TableCell>
+                        <TableCell className="text-sm text-gray-600">{formatDate(movementDate)}</TableCell>
+                        <TableCell className="text-sm font-medium text-gray-900">{product?.naam || product?.name || '-'}</TableCell>
                         <TableCell>
                           <Badge className={`text-xs ${typeInfo.color}`}>
                             {typeInfo.label}
                           </Badge>
                         </TableCell>
-                        <TableCell className={`text-right text-sm font-medium ${typeInfo.sign === '+' ? 'text-green-600' : typeInfo.sign === '-' ? 'text-red-600' : 'text-slate-900'}`}>
+                        <TableCell className={`text-right text-sm font-medium ${typeInfo.sign === '+' ? 'text-green-600' : typeInfo.sign === '-' ? 'text-red-600' : 'text-gray-900'}`}>
                           {typeInfo.sign}{formatNumber(movementQty, 0)}
                         </TableCell>
-                        <TableCell className="text-sm text-slate-500">{movementDesc}</TableCell>
+                        <TableCell className="text-sm text-gray-500">{movementDesc}</TableCell>
                         <TableCell className="text-center">
                           <Button 
                             variant="ghost" 
@@ -1174,7 +1174,7 @@ const VoorraadPage = () => {
                   })}
                   {movements.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                      <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                         Geen mutaties gevonden
                       </TableCell>
                     </TableRow>
