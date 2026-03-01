@@ -50,7 +50,7 @@ const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'defa
           <span className="text-sm text-gray-500 font-medium">{title}</span>
           {Icon && (
             <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-              variant === 'primary' ? 'bg-emerald-100' : 'bg-slate-100'
+              variant === 'primary' ? 'bg-emerald-100' : 'bg-gray-100'
             }`}>
               <Icon className={`w-5 h-5 ${
                 variant === 'primary' ? 'text-emerald-600' : 'text-gray-600'
@@ -518,7 +518,7 @@ const GrootboekPage = () => {
         {/* Tabs */}
         <Tabs defaultValue="accounts" className="space-y-6">
           <div className="flex items-center justify-between">
-            <TabsList className="bg-white border border-slate-200 rounded-2xl p-1">
+            <TabsList className="bg-white border border-gray-200 rounded-2xl p-1">
               <TabsTrigger 
                 value="accounts" 
                 className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700"
@@ -545,7 +545,7 @@ const GrootboekPage = () => {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
                         placeholder="Zoek rekening..."
                         value={searchTerm}
@@ -612,7 +612,7 @@ const GrootboekPage = () => {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => openExterneCodeDialog(account)}
-                                    className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
+                                    className="h-8 w-8 p-0 hover:bg-gray-100 rounded-lg"
                                     title="Externe code koppelen"
                                   >
                                     <Link2 className="w-4 h-4 text-gray-400" />
@@ -627,7 +627,7 @@ const GrootboekPage = () => {
                   ))}
                   {Object.keys(groupedAccounts).length === 0 && (
                     <div className="text-center py-16 text-gray-500">
-                      <BookOpen className="w-16 h-16 mx-auto mb-4 text-slate-200" />
+                      <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-200" />
                       <p className="text-lg font-medium mb-2">Geen rekeningen gevonden</p>
                       <p className="text-sm mb-6">Klik op "Standaard Schema" om het Surinaamse rekeningschema te laden.</p>
                       <Button onClick={handleInitStandaardSchema} disabled={initializingSchema} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
@@ -689,7 +689,7 @@ const GrootboekPage = () => {
                       {journalEntries.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center py-12 text-gray-500">
-                            <FileText className="w-12 h-12 mx-auto mb-3 text-slate-200" />
+                            <FileText className="w-12 h-12 mx-auto mb-3 text-gray-200" />
                             <p>Geen journaalposten gevonden</p>
                           </TableCell>
                         </TableRow>

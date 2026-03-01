@@ -495,7 +495,7 @@ const ProjectenPage = () => {
                         <TableCell className="text-sm text-gray-500">{entry.description}</TableCell>
                         <TableCell className="text-right text-sm font-medium text-gray-900">{formatNumber(entry.hours, 1)}</TableCell>
                         <TableCell>
-                          <Badge className={`text-xs ${entry.billable ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-gray-500'}`}>
+                          <Badge className={`text-xs ${entry.billable ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                             {entry.billable ? 'Ja' : 'Nee'}
                           </Badge>
                         </TableCell>

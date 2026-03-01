@@ -201,30 +201,30 @@ const NieuweFactuurPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50/50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50/50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50" data-testid="nieuwe-factuur-page">
+    <div className="min-h-screen bg-gray-50/50" data-testid="nieuwe-factuur-page">
       {/* Top Header */}
-      <div className="bg-white border-b border-slate-100 px-6 py-4 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate('/app/boekhouding/verkoop')}
-              className="rounded-lg hover:bg-slate-100"
+              className="rounded-lg hover:bg-gray-100"
               data-testid="back-button"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div className="flex items-center gap-3">
-              <h1 className="text-xl font-semibold text-slate-900">Factuur</h1>
-              <span className="text-xl font-mono text-slate-500">{tempInvoiceNumber}</span>
+              <h1 className="text-xl font-semibold text-gray-900">Factuur</h1>
+              <span className="text-xl font-mono text-gray-500">{tempInvoiceNumber}</span>
             </div>
           </div>
           
@@ -288,8 +288,8 @@ const NieuweFactuurPage = () => {
               <div className="space-y-6">
                 {/* Customer Selection */}
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-slate-400" />
+                  <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-gray-400" />
                     Klant
                   </Label>
                   <Select 
@@ -312,31 +312,31 @@ const NieuweFactuurPage = () => {
                 {/* Customer Address */}
                 {selectedCustomer && (
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-slate-700 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400" />
+                    <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-gray-400" />
                       Factuuradres
                     </Label>
-                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
-                      <p className="font-medium text-slate-900">{selectedCustomer.naam || selectedCustomer.name}</p>
-                      {selectedCustomer.adres && <p className="text-sm text-slate-600 mt-1">{selectedCustomer.adres}</p>}
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                      <p className="font-medium text-gray-900">{selectedCustomer.naam || selectedCustomer.name}</p>
+                      {selectedCustomer.adres && <p className="text-sm text-gray-600 mt-1">{selectedCustomer.adres}</p>}
                       {selectedCustomer.postcode && selectedCustomer.plaats && (
-                        <p className="text-sm text-slate-600">{selectedCustomer.postcode} {selectedCustomer.plaats}</p>
+                        <p className="text-sm text-gray-600">{selectedCustomer.postcode} {selectedCustomer.plaats}</p>
                       )}
-                      {selectedCustomer.land && <p className="text-sm text-slate-600">{selectedCustomer.land}</p>}
+                      {selectedCustomer.land && <p className="text-sm text-gray-600">{selectedCustomer.land}</p>}
                       {selectedCustomer.kvk && (
-                        <p className="text-xs text-slate-400 mt-2">KVK: {selectedCustomer.kvk}</p>
+                        <p className="text-xs text-gray-400 mt-2">KVK: {selectedCustomer.kvk}</p>
                       )}
                       {selectedCustomer.btw_nummer && (
-                        <p className="text-xs text-slate-400">BTW: {selectedCustomer.btw_nummer}</p>
+                        <p className="text-xs text-gray-400">BTW: {selectedCustomer.btw_nummer}</p>
                       )}
                     </div>
                   </div>
                 )}
 
                 {!selectedCustomer && (
-                  <div className="bg-slate-50 rounded-xl p-6 border border-dashed border-slate-200 text-center">
-                    <Building2 className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                    <p className="text-sm text-slate-400">Selecteer een klant om het factuuradres te tonen</p>
+                  <div className="bg-gray-50 rounded-xl p-6 border border-dashed border-gray-200 text-center">
+                    <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                    <p className="text-sm text-gray-400">Selecteer een klant om het factuuradres te tonen</p>
                   </div>
                 )}
               </div>
@@ -348,8 +348,8 @@ const NieuweFactuurPage = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm font-medium text-slate-700">Factuurgegevens</span>
+                  <Calendar className="w-4 h-4 text-gray-400" />
+                  <span className="text-sm font-medium text-gray-700">Factuurgegevens</span>
                 </div>
                 <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50">
                   Concept
@@ -358,7 +358,7 @@ const NieuweFactuurPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Factuurdatum</Label>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Factuurdatum</Label>
                   <Input
                     type="date"
                     value={invoice.date}
@@ -368,7 +368,7 @@ const NieuweFactuurPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Vervaldatum (30 dagen)</Label>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Vervaldatum (30 dagen)</Label>
                   <Input
                     type="date"
                     value={invoice.due_date}
@@ -378,7 +378,7 @@ const NieuweFactuurPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Leveringsdatum</Label>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Leveringsdatum</Label>
                   <Input
                     type="date"
                     value={invoice.delivery_date}
@@ -388,7 +388,7 @@ const NieuweFactuurPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Valuta</Label>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Valuta</Label>
                   <Select value={invoice.currency} onValueChange={(v) => setInvoice({...invoice, currency: v})}>
                     <SelectTrigger className="rounded-lg">
                       <SelectValue />
@@ -404,7 +404,7 @@ const NieuweFactuurPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Specificatie</Label>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Specificatie</Label>
                   <Input
                     value={invoice.specification}
                     onChange={(e) => setInvoice({...invoice, specification: e.target.value})}
@@ -413,7 +413,7 @@ const NieuweFactuurPage = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs font-medium text-slate-500 uppercase tracking-wide">Referentie</Label>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Referentie</Label>
                   <Input
                     value={invoice.reference}
                     onChange={(e) => setInvoice({...invoice, reference: e.target.value})}
@@ -432,7 +432,7 @@ const NieuweFactuurPage = () => {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-emerald-50/50 border-b border-slate-100">
+                  <TableRow className="bg-emerald-50/50 border-b border-gray-100">
                     <TableHead className="text-xs font-semibold text-emerald-800 uppercase tracking-wide py-4 px-4 w-[40%]">
                       Omschrijving
                     </TableHead>
@@ -455,7 +455,7 @@ const NieuweFactuurPage = () => {
                 </TableHeader>
                 <TableBody>
                   {invoice.lines.map((line, idx) => (
-                    <TableRow key={idx} className="border-b border-slate-50 hover:bg-slate-50/50">
+                    <TableRow key={idx} className="border-b border-gray-50 hover:bg-gray-50/50">
                       <TableCell className="py-3 px-4">
                         {line.isTextLine ? (
                           <Input
@@ -532,7 +532,7 @@ const NieuweFactuurPage = () => {
                         )}
                       </TableCell>
                       <TableCell className="py-3 px-4 text-right">
-                        <span className="font-medium text-slate-900">
+                        <span className="font-medium text-gray-900">
                           {formatAmount(line.total || 0, invoice.currency)}
                         </span>
                       </TableCell>
@@ -554,7 +554,7 @@ const NieuweFactuurPage = () => {
             </div>
 
             {/* Add Line Buttons */}
-            <div className="p-4 border-t border-slate-100 flex gap-2">
+            <div className="p-4 border-t border-gray-100 flex gap-2">
               <Button 
                 variant="outline" 
                 onClick={addLine} 
@@ -567,7 +567,7 @@ const NieuweFactuurPage = () => {
               <Button 
                 variant="outline" 
                 onClick={addTextLine} 
-                className="rounded-lg text-slate-600 hover:bg-slate-50"
+                className="rounded-lg text-gray-600 hover:bg-gray-50"
               >
                 <FileText className="w-4 h-4 mr-2" />
                 Tekstregel toevoegen
@@ -581,7 +581,7 @@ const NieuweFactuurPage = () => {
           {/* Notes */}
           <Card className="bg-white border-0 shadow-sm rounded-2xl">
             <CardContent className="p-6">
-              <Label className="text-sm font-medium text-slate-700 mb-2 block">Notities</Label>
+              <Label className="text-sm font-medium text-gray-700 mb-2 block">Notities</Label>
               <Textarea
                 value={invoice.notes}
                 onChange={(e) => setInvoice({...invoice, notes: e.target.value})}
@@ -597,16 +597,16 @@ const NieuweFactuurPage = () => {
             <CardContent className="p-6">
               <div className="space-y-3">
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-slate-500">Subtotaal</span>
-                  <span className="text-sm font-medium text-slate-900">{formatAmount(subtotal, invoice.currency)}</span>
+                  <span className="text-sm text-gray-500">Subtotaal</span>
+                  <span className="text-sm font-medium text-gray-900">{formatAmount(subtotal, invoice.currency)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-slate-500">BTW</span>
-                  <span className="text-sm font-medium text-slate-900">{formatAmount(btwTotal, invoice.currency)}</span>
+                  <span className="text-sm text-gray-500">BTW</span>
+                  <span className="text-sm font-medium text-gray-900">{formatAmount(btwTotal, invoice.currency)}</span>
                 </div>
-                <div className="border-t border-slate-200 pt-3 mt-3">
+                <div className="border-t border-gray-200 pt-3 mt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-base font-semibold text-slate-900">Totaal</span>
+                    <span className="text-base font-semibold text-gray-900">Totaal</span>
                     <span className="text-xl font-bold text-emerald-600" data-testid="invoice-total">
                       {formatAmount(total, invoice.currency)}
                     </span>

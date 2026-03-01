@@ -105,7 +105,7 @@ const HerinneringenPage = () => {
 
   const getStatusBadge = (status) => {
     const styles = {
-      pending: 'bg-slate-100 text-gray-700',
+      pending: 'bg-gray-100 text-gray-700',
       sent: 'bg-blue-100 text-blue-700',
       acknowledged: 'bg-green-100 text-green-700'
     };
@@ -184,7 +184,7 @@ const HerinneringenPage = () => {
                   {formatAmount(totalOverdue)}
                 </p>
               </div>
-              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${totalOverdue > 0 ? 'bg-red-100' : 'bg-slate-100'}`}>
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${totalOverdue > 0 ? 'bg-red-100' : 'bg-gray-100'}`}>
                 <AlertTriangle className={`w-5 h-5 ${totalOverdue > 0 ? 'text-red-500' : 'text-gray-400'}`} />
               </div>
             </div>

@@ -316,7 +316,7 @@ const ActivaPage = () => {
                       <Badge className={`text-xs ${
                         asset.status === 'active' ? 'bg-green-100 text-green-700' :
                         asset.status === 'sold' ? 'bg-blue-100 text-blue-700' :
-                        'bg-slate-100 text-gray-700'
+                        'bg-gray-100 text-gray-700'
                       }`}>
                         {asset.status === 'active' ? 'Actief' : asset.status === 'sold' ? 'Verkocht' : 'Afgeschreven'}
                       </Badge>

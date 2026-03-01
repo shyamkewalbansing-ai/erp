@@ -112,12 +112,12 @@ const AuditTrailPage = () => {
       'create': 'bg-green-100 text-green-700',
       'update': 'bg-blue-100 text-blue-700',
       'delete': 'bg-red-100 text-red-700',
-      'view': 'bg-slate-100 text-gray-700',
+      'view': 'bg-gray-100 text-gray-700',
       'verzenden': 'bg-green-100 text-green-700',
       'betaling': 'bg-blue-100 text-blue-700',
       'boeken': 'bg-purple-100 text-purple-700'
     };
-    return colors[action] || 'bg-slate-100 text-gray-700';
+    return colors[action] || 'bg-gray-100 text-gray-700';
   };
 
   const getModuleLabel = (module) => {
@@ -244,7 +244,7 @@ const AuditTrailPage = () => {
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -323,7 +323,7 @@ const AuditTrailPage = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
                         <User className="w-4 h-4 text-gray-500" />
                       </div>
                       <div>

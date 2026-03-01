@@ -485,7 +485,7 @@ const WisselkoersenPage = () => {
                       <Badge className={`text-xs ${
                         rate.koers_type === 'inkoop' ? 'bg-orange-100 text-orange-700' :
                         rate.koers_type === 'verkoop' ? 'bg-purple-100 text-purple-700' :
-                        'bg-slate-100 text-gray-700'
+                        'bg-gray-100 text-gray-700'
                       }`}>
                         {rate.koers_type === 'inkoop' ? 'Inkoop' : rate.koers_type === 'verkoop' ? 'Verkoop' : rate.koers_type}
                       </Badge>
@@ -501,7 +501,7 @@ const WisselkoersenPage = () => {
                       rate.bron === 'CME.sr' ? 'bg-green-100 text-green-700' :
                       rate.bron === 'central_bank' ? 'bg-blue-100 text-blue-700' :
                       rate.bron === 'bank' ? 'bg-cyan-100 text-cyan-700' :
-                      'bg-slate-100 text-gray-700'
+                      'bg-gray-100 text-gray-700'
                     }`}>
                       {rate.bron === 'CME.sr' ? 'CME.sr' :
                        rate.bron === 'central_bank' ? 'Centrale Bank' : 

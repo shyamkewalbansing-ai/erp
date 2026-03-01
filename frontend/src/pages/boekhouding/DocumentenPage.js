@@ -133,8 +133,8 @@ const DocumentenPage = () => {
       customer: 'bg-green-100 text-green-700',
       supplier: 'bg-amber-100 text-amber-700',
       project: 'bg-purple-100 text-purple-700',
-      journal: 'bg-slate-100 text-gray-700',
-      general: 'bg-slate-100 text-gray-500'
+      journal: 'bg-gray-100 text-gray-700',
+      general: 'bg-gray-100 text-gray-500'
     };
     return <Badge className={`text-xs ${colors[type]}`}>{labels[type] || type}</Badge>;
   };
@@ -181,7 +181,7 @@ const DocumentenPage = () => {
               <div className="space-y-2">
                 <Label>Bestand *</Label>
                 <div 
-                  className="border-2 border-dashed border-slate-200 rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+                  className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
                   onClick={() => fileInputRef.current?.click()}
                 >
                   <input
@@ -294,7 +294,7 @@ const DocumentenPage = () => {
             <CardTitle className="text-base font-semibold text-gray-900">Documenten</CardTitle>
             <div className="flex gap-2">
               <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder="Zoeken..."
                   value={searchTerm}

@@ -352,7 +352,7 @@ const InstellingenPage = () => {
       </div>
 
       <Tabs defaultValue="bedrijf" className="space-y-6">
-        <TabsList className="bg-slate-100/80">
+        <TabsList className="bg-gray-100/80">
           <TabsTrigger value="bedrijf" className="gap-2">
             <Building2 className="w-4 h-4" />
             Bedrijf
@@ -533,7 +533,7 @@ const InstellingenPage = () => {
                       <img 
                         src={settings.logo_url.startsWith('http') ? settings.logo_url : `${API_URL}${settings.logo_url}`}
                         alt="Bedrijfslogo"
-                        className="w-40 h-40 object-contain border border-slate-200 rounded-lg bg-white p-2"
+                        className="w-40 h-40 object-contain border border-gray-200 rounded-lg bg-white p-2"
                         data-testid="company-logo-preview"
                       />
                       <button
@@ -545,7 +545,7 @@ const InstellingenPage = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="w-40 h-40 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-gray-50">
+                    <div className="w-40 h-40 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
                       <div className="text-center text-gray-400">
                         <Image className="w-10 h-10 mx-auto mb-2" />
                         <span className="text-xs">Geen logo</span>
@@ -688,7 +688,7 @@ const InstellingenPage = () => {
                 </div>
               </div>
 
-              <div className="border-t border-slate-200 pt-6">
+              <div className="border-t border-gray-200 pt-6">
                 <h4 className="font-medium text-gray-900 mb-4">Afzender Gegevens</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -718,7 +718,7 @@ const InstellingenPage = () => {
               </div>
 
               {/* Test E-mail Section */}
-              <div className="border-t border-slate-200 pt-6">
+              <div className="border-t border-gray-200 pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h4 className="font-medium text-gray-900">Test E-mail Versturen</h4>
@@ -760,7 +760,7 @@ const InstellingenPage = () => {
               </div>
 
               {/* Gmail Help */}
-              <div className="bg-gray-50 border border-slate-200 rounded-lg p-4">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <h5 className="font-medium text-gray-900 mb-2">Gmail Configuratie Hulp</h5>
                 <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
                   <li>Ga naar uw Google Account Instellingen</li>
@@ -993,7 +993,7 @@ const InstellingenPage = () => {
                       className={`flex items-center gap-4 p-4 rounded-lg border-2 cursor-pointer transition-all ${
                         settings.factuur_template === template.value 
                           ? 'border-primary bg-primary/5' 
-                          : 'border-slate-200 hover:border-slate-300'
+                          : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
                       <input
@@ -1035,7 +1035,7 @@ const InstellingenPage = () => {
                       type="color"
                       value={settings.factuur_primaire_kleur || '#1e293b'}
                       onChange={(e) => setSettings({...settings, factuur_primaire_kleur: e.target.value})}
-                      className="w-12 h-10 rounded border border-slate-200 cursor-pointer"
+                      className="w-12 h-10 rounded border border-gray-200 cursor-pointer"
                     />
                     <Input
                       value={settings.factuur_primaire_kleur || '#1e293b'}
@@ -1053,7 +1053,7 @@ const InstellingenPage = () => {
                       type="color"
                       value={settings.factuur_secundaire_kleur || '#f1f5f9'}
                       onChange={(e) => setSettings({...settings, factuur_secundaire_kleur: e.target.value})}
-                      className="w-12 h-10 rounded border border-slate-200 cursor-pointer"
+                      className="w-12 h-10 rounded border border-gray-200 cursor-pointer"
                     />
                     <Input
                       value={settings.factuur_secundaire_kleur || '#f1f5f9'}
@@ -1066,7 +1066,7 @@ const InstellingenPage = () => {
                 </div>
 
                 {/* Voorbeeld */}
-                <div className="mt-6 pt-4 border-t border-slate-200">
+                <div className="mt-6 pt-4 border-t border-gray-200">
                   <Label className="mb-3 block">Voorbeeld</Label>
                   <div 
                     className="rounded-lg p-4 border"
@@ -1210,13 +1210,13 @@ const InstellingenPage = () => {
                       className={`flex items-center justify-between p-4 rounded-lg border-2 transition-all ${
                         bedrijf.is_actief 
                           ? 'border-primary bg-primary/5' 
-                          : 'border-slate-200 hover:border-slate-300'
+                          : 'border-gray-200 hover:border-gray-300'
                       }`}
                       data-testid={`bedrijf-item-${bedrijf.id}`}
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          bedrijf.is_actief ? 'bg-primary text-white' : 'bg-slate-100 text-gray-600'
+                          bedrijf.is_actief ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'
                         }`}>
                           <Building2 className="w-5 h-5" />
                         </div>
@@ -1229,7 +1229,7 @@ const InstellingenPage = () => {
                               </span>
                             )}
                             {bedrijf.is_default && (
-                              <span className="px-2 py-0.5 bg-slate-100 text-gray-600 text-xs rounded-full">
+                              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
                                 Standaard
                               </span>
                             )}
@@ -1286,7 +1286,7 @@ const InstellingenPage = () => {
       </Tabs>
 
       {/* Bottom Save Button */}
-      <div className="flex justify-end pt-4 border-t border-slate-200">
+      <div className="flex justify-end pt-4 border-t border-gray-200">
         <Button 
           onClick={handleSave} 
           disabled={saving}

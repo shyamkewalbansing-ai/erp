@@ -139,7 +139,7 @@ const RapportagesPage = () => {
                           </TableCell>
                         </TableRow>
                       ))}
-                      <TableRow className="bg-slate-100">
+                      <TableRow className="bg-gray-100">
                         <TableCell className="text-sm font-semibold text-gray-900">Totaal Activa</TableCell>
                         <TableCell className="text-right text-sm font-semibold text-gray-900">
                           {formatAmount(balanceSheet?.totaal_activa || balanceSheet?.assets?.total || 0)}
@@ -182,7 +182,7 @@ const RapportagesPage = () => {
                           </TableCell>
                         </TableRow>
                       ))}
-                      <TableRow className="bg-slate-100">
+                      <TableRow className="bg-gray-100">
                         <TableCell className="text-sm font-semibold text-gray-900">Totaal Passiva</TableCell>
                         <TableCell className="text-right text-sm font-semibold text-gray-900">
                           {formatAmount(balanceSheet?.totaal_passiva || ((balanceSheet?.liabilities?.total || 0) + (balanceSheet?.equity?.total || 0)))}
@@ -275,7 +275,7 @@ const RapportagesPage = () => {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="max-w-2xl bg-white border border-slate-200 rounded-2xl p-6">
+              <div className="max-w-2xl bg-white border border-gray-200 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">BTW Aangifte Suriname</h3>
                 
                 <div className="space-y-4">
@@ -304,7 +304,7 @@ const RapportagesPage = () => {
                   </div>
                 </div>
                 
-                <div className="mt-6 pt-4 border-t border-slate-200">
+                <div className="mt-6 pt-4 border-t border-gray-200">
                   <p className="text-xs text-gray-500">
                     Dit is een indicatief overzicht. Raadpleeg uw accountant voor de officiële BTW-aangifte.
                   </p>
@@ -374,7 +374,7 @@ const RapportagesPage = () => {
                         {formatAmount(agingReceivables?.aging?.over_90 || 0)}
                       </TableCell>
                     </TableRow>
-                    <TableRow className="bg-slate-100">
+                    <TableRow className="bg-gray-100">
                       <TableCell className="text-sm font-semibold text-gray-900">Totaal</TableCell>
                       <TableCell className="text-right text-sm font-semibold text-gray-900">
                         {formatAmount(agingReceivables?.total || 0)}
@@ -423,7 +423,7 @@ const RapportagesPage = () => {
                         {formatAmount(agingPayables?.aging?.over_90 || 0)}
                       </TableCell>
                     </TableRow>
-                    <TableRow className="bg-slate-100">
+                    <TableRow className="bg-gray-100">
                       <TableCell className="text-sm font-semibold text-gray-900">Totaal</TableCell>
                       <TableCell className="text-right text-sm font-semibold text-gray-900">
                         {formatAmount(agingPayables?.total || 0)}
