@@ -556,30 +556,25 @@ export default function Layout() {
                                            location.pathname === '/app/workspace' ||
                                            location.pathname === '/app/betaalmethodes';
                 
-                // Boekhouding has a special full-page experience
-                // When on boekhouding, only show boekhouding. When not on boekhouding, don't show boekhouding in sidebar
-                // All other modules (including schuldbeheer) show normally in sidebar
+                // ONLY boekhouding has special full-page experience
+                // All other modules (vastgoed, hrm, schuldbeheer, etc.) show normally
                 if (moduleSlug === 'boekhouding') {
-                  // Only show boekhouding when ON boekhouding pages
+                  // Only show boekhouding when ON boekhouding pages or coming from boekhouding in settings
                   if (!isOnBoekhouding && !isOnSystemSettings) return null;
                   if (isOnSystemSettings) {
                     const previousModule = localStorage.getItem('lastActiveModule');
                     if (previousModule !== 'boekhouding') return null;
                   }
-                } else {
-                  // For all other modules (vastgoed, hrm, schuldbeheer, etc.)
-                  // Hide them when on boekhouding pages
-                  if (isOnBoekhouding) return null;
+                  // Store that we're on boekhouding
+                  if (isOnBoekhouding) {
+                    localStorage.setItem('lastActiveModule', 'boekhouding');
+                  }
+                } else if (isOnBoekhouding) {
+                  // When on boekhouding pages, hide all other modules
+                  return null;
                 }
                 
-                // Store the current module for later use
-                if (isOnBoekhouding) {
-                  localStorage.setItem('lastActiveModule', 'boekhouding');
-                } else if (hasAddon(moduleSlug)) {
-                  localStorage.setItem('lastActiveModule', moduleSlug);
-                }
-                
-                // Check if module should be shown
+                // Check if module should be shown based on addon
                 const shouldShow = config.alwaysShow || hasAddon(moduleSlug);
                 if (!shouldShow) return null;
                 
