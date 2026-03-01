@@ -388,6 +388,7 @@ export const invoicesAPI = {
   updateStatus: (id, status) => apiFetch(`/boekhouding/verkoopfacturen/${id}/status?status=${status}`, { method: 'PUT' }),
   addPayment: (id, data) => apiFetch(`/boekhouding/verkoopfacturen/${id}/betaling`, { method: 'POST', body: JSON.stringify(data) }),
   delete: (id) => apiFetch(`/boekhouding/verkoopfacturen/${id}`, { method: 'DELETE' }),
+  sendEmail: (id, data) => apiFetch(`/boekhouding/verkoopfacturen/${id}/send-email`, { method: 'POST', body: JSON.stringify(data) }),
 };
 
 // Purchase Invoices
