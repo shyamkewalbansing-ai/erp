@@ -10,8 +10,7 @@ import {
   Truck,
   FileText,
   Landmark,
-  DollarSign,
-  Euro
+  DollarSign
 } from 'lucide-react';
 import {
   AreaChart,
@@ -21,13 +20,13 @@ import {
   ResponsiveContainer
 } from 'recharts';
 
-// Stat Card - Exact style from photo
+// Stat Card - Exact style from photo with icon on LEFT
 const StatCard = ({ title, value, subtitle, icon: Icon, iconBg, iconColor }) => {
   return (
     <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
       <CardContent className="p-4">
         <div className="flex items-start gap-3">
-          {/* Icon in circle - left side */}
+          {/* Icon in circle - LEFT side */}
           <div className={`w-10 h-10 rounded-full ${iconBg} flex items-center justify-center flex-shrink-0`}>
             <Icon className={`w-5 h-5 ${iconColor}`} />
           </div>
@@ -61,7 +60,7 @@ const LoadingStatCard = () => (
 
 // Ouderdom Row
 const OuderdomRow = ({ label, value, color }) => (
-  <div className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
+  <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
     <div className="flex items-center gap-2">
       <div className={`w-2.5 h-2.5 rounded-full ${color}`} />
       <span className="text-sm text-gray-600">{label}</span>
@@ -92,7 +91,6 @@ const DashboardPage = () => {
       setDashboardData(dashRes.data || {});
       setRates(ratesRes.data || {});
       
-      // Process chart data
       if (chartsRes.data?.omzet_kosten) {
         setChartData(chartsRes.data.omzet_kosten.map(item => ({
           name: item.maand,
@@ -103,8 +101,8 @@ const DashboardPage = () => {
           { name: 'Jan', value: 0 },
           { name: 'Feb', value: 50 },
           { name: 'Mrt', value: 165 },
-          { name: 'Apr', value: 110 },
-          { name: 'Mei', value: 0 },
+          { name: 'Apr', value: 220 },
+          { name: 'Mei', value: 110 },
           { name: 'Jun', value: 0 }
         ]);
       }
@@ -123,12 +121,9 @@ const DashboardPage = () => {
   const debiteurenKlanten = dashboardData?.openstaand?.debiteuren_count || 0;
   const crediteuren = dashboardData?.openstaand?.crediteuren || 0;
   const crediteurenLeveranciers = dashboardData?.openstaand?.crediteuren_count || 0;
-  const btwTeBetalen = dashboardData?.btw?.te_betalen || 0;
   const btwTeVorderen = dashboardData?.btw?.te_vorderen || 0;
   const bankSRD = dashboardData?.liquiditeit?.bank_srd || 0;
   const bankUSD = dashboardData?.liquiditeit?.bank_usd || 0;
-  const bankEUR = dashboardData?.liquiditeit?.bank_eur || 0;
-  const openstaandeFacturen = dashboardData?.openstaand?.facturen_count || 0;
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="boekhouding-dashboard">
@@ -145,7 +140,7 @@ const DashboardPage = () => {
       </div>
 
       <div className="p-6">
-        {/* Row 1: Omzet, Kosten, Winst */}
+        {/* Row 1: Omzet, Kosten, Winst - 3 columns */}
         <div className="grid grid-cols-3 gap-4 mb-4">
           {loading ? (
             <>
@@ -183,11 +178,10 @@ const DashboardPage = () => {
           )}
         </div>
 
-        {/* Row 2: Debiteuren, Crediteuren, BTW te betalen, BTW te vorderen */}
-        <div className="grid grid-cols-4 gap-4 mb-4">
+        {/* Row 2: Debiteuren, Crediteuren, BTW te vorderen - 3 columns */}
+        <div className="grid grid-cols-3 gap-4 mb-4">
           {loading ? (
             <>
-              <LoadingStatCard />
               <LoadingStatCard />
               <LoadingStatCard />
               <LoadingStatCard />
@@ -211,14 +205,6 @@ const DashboardPage = () => {
                 iconColor="text-orange-500"
               />
               <StatCard
-                title="BTW te betalen"
-                value={formatCurrency(btwTeBetalen, 'SRD')}
-                subtitle="Deze periode"
-                icon={FileText}
-                iconBg="bg-green-100"
-                iconColor="text-green-600"
-              />
-              <StatCard
                 title="BTW te vorderen"
                 value={formatCurrency(btwTeVorderen, 'SRD')}
                 subtitle="Deze periode"
@@ -230,14 +216,20 @@ const DashboardPage = () => {
           )}
         </div>
 
-        {/* Row 3: Bank SRD, Bank USD, Bank EUR, Openstaande Facturen */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
+        {/* Row 3: Bank SRD, Bank USD + Ouderdomsanalyse - 3 columns */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
           {loading ? (
             <>
               <LoadingStatCard />
               <LoadingStatCard />
-              <LoadingStatCard />
-              <LoadingStatCard />
+              <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
+                <CardContent className="p-4">
+                  <Skeleton className="h-6 w-48 mb-4" />
+                  <Skeleton className="h-8 w-full mb-2" />
+                  <Skeleton className="h-8 w-full mb-2" />
+                  <Skeleton className="h-8 w-full" />
+                </CardContent>
+              </Card>
             </>
           ) : (
             <>
@@ -257,101 +249,73 @@ const DashboardPage = () => {
                 iconBg="bg-blue-100"
                 iconColor="text-blue-600"
               />
-              <StatCard
-                title="Bank EUR"
-                value={formatCurrency(bankEUR, 'EUR')}
-                subtitle="Saldo"
-                icon={Euro}
-                iconBg="bg-blue-100"
-                iconColor="text-blue-600"
-              />
-              <StatCard
-                title="Openstaande Facturen"
-                value={openstaandeFacturen.toString()}
-                subtitle="0 vervallen"
-                icon={FileText}
-                iconBg="bg-amber-100"
-                iconColor="text-amber-600"
-              />
+              {/* Ouderdomsanalyse Debiteuren */}
+              <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
+                <CardContent className="p-4">
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">Ouderdomsanalyse Debiteuren</h3>
+                  <div>
+                    <OuderdomRow 
+                      label="0-30 dagen" 
+                      value={formatCurrency(0, 'SRD')} 
+                      color="bg-green-500" 
+                    />
+                    <OuderdomRow 
+                      label="31-60 dagen" 
+                      value={formatCurrency(0, 'SRD')} 
+                      color="bg-amber-500" 
+                    />
+                    <OuderdomRow 
+                      label="61-90 dagen" 
+                      value={formatCurrency(0, 'SRD')} 
+                      color="bg-red-500" 
+                    />
+                  </div>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>
 
-        {/* Bottom Section: Cashflow + Ouderdomsanalyse */}
-        <div className="grid grid-cols-3 gap-4">
-          {/* Cashflow Overzicht */}
-          <Card className="bg-white border border-gray-100 shadow-sm rounded-xl col-span-2">
-            <CardContent className="p-5">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Cashflow Overzicht</h3>
-              <div className="h-48">
-                {loading ? (
-                  <Skeleton className="w-full h-full" />
-                ) : (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                      <defs>
-                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
-                          <stop offset="95%" stopColor="#22c55e" stopOpacity={0.05}/>
-                        </linearGradient>
-                      </defs>
-                      <XAxis 
-                        dataKey="name" 
-                        axisLine={false} 
-                        tickLine={false}
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
-                      />
-                      <YAxis 
-                        axisLine={false} 
-                        tickLine={false}
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
-                      />
-                      <Area 
-                        type="monotone" 
-                        dataKey="value" 
-                        stroke="#22c55e" 
-                        strokeWidth={2}
-                        fill="url(#colorValue)" 
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Ouderdomsanalyse Debiteuren */}
-          <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
-            <CardContent className="p-5">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Ouderdomsanalyse Debiteuren</h3>
+        {/* Cashflow Overzicht - Full width */}
+        <Card className="bg-white border border-gray-100 shadow-sm rounded-xl">
+          <CardContent className="p-5">
+            <h3 className="text-base font-semibold text-gray-900 mb-4">Cashflow Overzicht</h3>
+            <div className="h-48">
               {loading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                  <Skeleton className="h-8 w-full" />
-                </div>
+                <Skeleton className="w-full h-full" />
               ) : (
-                <div>
-                  <OuderdomRow 
-                    label="0-30 dagen" 
-                    value={formatCurrency(0, 'SRD')} 
-                    color="bg-green-500" 
-                  />
-                  <OuderdomRow 
-                    label="31-60 dagen" 
-                    value={formatCurrency(0, 'SRD')} 
-                    color="bg-amber-500" 
-                  />
-                  <OuderdomRow 
-                    label="61-90 dagen" 
-                    value={formatCurrency(0, 'SRD')} 
-                    color="bg-red-500" 
-                  />
-                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={chartData}>
+                    <defs>
+                      <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#22c55e" stopOpacity={0.05}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false}
+                      tick={{ fill: '#9ca3af', fontSize: 12 }}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false}
+                      tick={{ fill: '#9ca3af', fontSize: 12 }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="value" 
+                      stroke="#22c55e" 
+                      strokeWidth={2}
+                      fill="url(#colorValue)" 
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
               )}
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
