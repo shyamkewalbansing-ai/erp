@@ -50,22 +50,19 @@ const StatusBadge = ({ status }) => {
 
 // Stat Card - Matching Dashboard design exactly with proper number display
 const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, iconColor, onClick }) => {
-  // Check if value is long (more than 12 characters) to reduce font size
-  const isLongValue = value && value.length > 12;
-  
   return (
     <Card className={`bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''}`} onClick={onClick}>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-gray-500 font-medium">{title}</p>
-            <p className={`font-bold text-gray-900 mt-2 whitespace-nowrap ${isLongValue ? 'text-lg' : 'text-2xl'}`}>{value}</p>
+      <CardContent className="p-4 lg:p-5">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1">
+            <p className="text-xs lg:text-sm text-gray-500 font-medium truncate">{title}</p>
+            <p className="text-base lg:text-xl xl:text-2xl font-bold text-gray-900 mt-1 lg:mt-2">{value}</p>
             {subtitle && (
               <p className={`text-xs mt-1 ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
             )}
           </div>
-          <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
-            <Icon className={`w-6 h-6 ${iconColor}`} />
+          <div className={`w-10 h-10 lg:w-12 lg:h-12 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
+            <Icon className={`w-5 h-5 lg:w-6 lg:h-6 ${iconColor}`} />
           </div>
         </div>
       </CardContent>
