@@ -44,7 +44,7 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState([
     { 
       id: 1, 
-      text: 'Hallo! 👋 Welkom bij Facturatie.sr. Ik ben uw virtuele assistent. Hoe kan ik u vandaag helpen?', 
+      text: 'Hallo! 👋 Welkom bij Facturatie.sr. Ik ben uw assistent. Hoe kan ik u vandaag helpen?', 
       isBot: true 
     }
   ]);
