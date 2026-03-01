@@ -204,52 +204,6 @@ const VerkoopPage = () => {
     }
   };
 
-  const handleCreateInvoice = async () => {
-    if (!newInvoice.customer_id) {
-      toast.error('Selecteer een klant');
-      return;
-    }
-    if (newInvoice.lines.some(l => !l.description || l.unit_price <= 0)) {
-      toast.error('Vul alle regels correct in');
-      return;
-    }
-    setSaving(true);
-    try {
-      const invoiceData = toBackendFormat({
-        customer_id: newInvoice.customer_id,
-        invoice_date: newInvoice.date,
-        due_date: newInvoice.due_date,
-        currency: newInvoice.currency,
-        notes: newInvoice.notes
-      });
-      invoiceData.regels = newInvoice.lines.map(line => toBackendFormat({
-        product_id: line.product_id,
-        description: line.description,
-        quantity: line.quantity,
-        unit_price: line.unit_price,
-        btw_percentage: line.btw_percentage
-      }));
-      
-      await invoicesAPI.create(invoiceData);
-      toast.success('Factuur aangemaakt');
-      setShowInvoiceDialog(false);
-      setNewInvoice({
-        type: 'sales', customer_id: '',
-        date: new Date().toISOString().split('T')[0],
-        due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        currency: 'SRD',
-        lines: [{ product_id: '', description: '', quantity: 1, unit_price: 0, btw_percentage: 10, btw_amount: 0, total: 0 }],
-        notes: ''
-      });
-      fetchData();
-    } catch (error) {
-      console.error('Invoice creation error:', error);
-      toast.error(error.response?.data?.detail || error.message || 'Fout bij aanmaken');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleUpdateStatus = async (invoiceId, newStatus) => {
     setUpdatingStatus(invoiceId);
     try {
