@@ -50,13 +50,16 @@ const StatusBadge = ({ status }) => {
 
 // Stat Card - Matching Dashboard design exactly with proper number display
 const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, iconColor, onClick }) => {
+  // Check if value is long (more than 12 characters) to reduce font size
+  const isLongValue = value && value.length > 12;
+  
   return (
     <Card className={`bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''}`} onClick={onClick}>
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-500 font-medium">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2 whitespace-nowrap overflow-hidden text-ellipsis">{value}</p>
+            <p className={`font-bold text-gray-900 mt-2 whitespace-nowrap ${isLongValue ? 'text-lg' : 'text-2xl'}`}>{value}</p>
             {subtitle && (
               <p className={`text-xs mt-1 ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
             )}
