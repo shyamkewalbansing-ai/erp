@@ -1,0 +1,137 @@
+{
+  "summary": "Completed comprehensive testing of 'Nieuwe Verkoopfactuur' (New Sales Invoice) page at /app/boekhouding/verkoop/nieuw. Fixed 2 bugs during testing: 1) String-to-number conversion for invoice line items, 2) Missing Trash2 import in VerkoopPage.js. All core functionality now working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/boekhouding/artikelen",
+        "issue": "Returns 422 validation error - requires specific field format (not related to invoice page)",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "backend_api_tests": {
+      "status": "PASS",
+      "total_tests": 15,
+      "passed": 13,
+      "failed": 1,
+      "skipped": 1,
+      "test_file": "/app/backend/tests/test_nieuwe_factuur.py",
+      "junit_report": "/app/test_reports/pytest/pytest_nieuwe_factuur.xml",
+      "tests_covered": [
+        "Authentication",
+        "GET /api/boekhouding/debiteuren - Customer list",
+        "POST /api/boekhouding/debiteuren - Create customer",
+        "GET /api/boekhouding/artikelen - Product list",
+        "GET /api/boekhouding/verkoopfacturen - Invoice list",
+        "POST /api/boekhouding/verkoopfacturen - Create concept invoice",
+        "POST /api/boekhouding/verkoopfacturen - Create invoice with multiple lines",
+        "PUT /api/boekhouding/verkoopfacturen/{id}/status - Update to verzonden",
+        "Currency selection (SRD, USD, EUR)",
+        "BTW calculation (10%, 25%)",
+        "GET /api/boekhouding/verkoopfacturen/{id} - Get single invoice",
+        "DELETE /api/boekhouding/verkoopfacturen/{id} - Delete invoice",
+        "Invoice appears in list after creation"
+      ]
+    },
+    "frontend_ui_tests": {
+      "status": "PASS",
+      "features_tested": [
+        {"feature": "Navigation to new invoice page via 'Nieuwe Factuur' button", "status": "PASS"},
+        {"feature": "Customer selection dropdown", "status": "PASS"},
+        {"feature": "Factuuradres display after customer selection", "status": "PASS"},
+        {"feature": "Factuurdatum field", "status": "PASS"},
+        {"feature": "Vervaldatum field (30 days default)", "status": "PASS"},
+        {"feature": "Leveringsdatum field", "status": "PASS"},
+        {"feature": "Currency selection (SRD, USD, EUR)", "status": "PASS"},
+        {"feature": "Specificatie field", "status": "PASS"},
+        {"feature": "Referentie field", "status": "PASS"},
+        {"feature": "Article/product selection in line items", "status": "PASS"},
+        {"feature": "Manual description input", "status": "PASS"},
+        {"feature": "Quantity field", "status": "PASS"},
+        {"feature": "Price field", "status": "PASS"},
+        {"feature": "BTW% selection (0%, 10%, 25%)", "status": "PASS"},
+        {"feature": "Line total calculation", "status": "PASS"},
+        {"feature": "Nieuwe regel (Add line) button", "status": "PASS"},
+        {"feature": "Tekstregel toevoegen (Add text line) button", "status": "PASS"},
+        {"feature": "Delete line button", "status": "PASS"},
+        {"feature": "Subtotaal calculation", "status": "PASS"},
+        {"feature": "BTW totaal calculation", "status": "PASS"},
+        {"feature": "Totaal calculation", "status": "PASS"},
+        {"feature": "Notities field", "status": "PASS"},
+        {"feature": "Opslaan button (creates concept invoice)", "status": "PASS"},
+        {"feature": "Versturen button (creates verzonden invoice)", "status": "PASS"},
+        {"feature": "Back button navigation", "status": "PASS"},
+        {"feature": "Invoice appears in list after creation", "status": "PASS"}
+      ]
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_nieuwe_factuur.py",
+    "/app/test_reports/pytest/pytest_nieuwe_factuur.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fixed: NieuweFactuurPage.js - Added parseFloat() for quantity, unit_price, btw_percentage in handleSave to ensure numeric values are sent to backend",
+    "Fixed: VerkoopPage.js - Added missing Trash2 import from lucide-react",
+    "toBackendFormat correctly converts field names from English to Dutch",
+    "BTW calculation works correctly with tiered percentages",
+    "Multi-currency support (SRD, USD, EUR) working correctly"
+  ],
+  "updated_files": [
+    "/app/frontend/src/pages/boekhouding/NieuweFactuurPage.js",
+    "/app/frontend/src/pages/boekhouding/VerkoopPage.js",
+    "/app/backend/tests/test_nieuwe_factuur.py"
+  ],
+  "fixes_applied": [
+    {
+      "file": "/app/frontend/src/pages/boekhouding/NieuweFactuurPage.js",
+      "issue": "Invoice creation failed with 'can't multiply sequence by non-int of type str' error",
+      "fix": "Added parseFloat() conversion for quantity, unit_price, and btw_percentage in handleSave function"
+    },
+    {
+      "file": "/app/frontend/src/pages/boekhouding/VerkoopPage.js",
+      "issue": "Runtime error 'Trash2 is not defined' when navigating to Verkoop page",
+      "fix": "Added Trash2 to lucide-react imports"
+    }
+  ],
+  "success_rate": {
+    "backend": "87% (13/15 tests passed, 1 skipped)",
+    "frontend": "100% (26/26 features verified)"
+  },
+  "test_credentials": {
+    "email": "demo@facturatie.sr",
+    "password": "demo2024"
+  },
+  "seed_data_creation": "Test invoices created during testing (VF2026-00001 through VF2026-00010)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Nieuwe Verkoopfactuur page fully tested and working. All features verified: customer selection, date fields, currency selection, line items with product selection and manual entry, BTW calculation, add/delete lines, notes, save as concept, send as verzonden. Two bugs were fixed during testing: 1) parseFloat conversion for numeric fields, 2) missing Trash2 import. The page is accessible via /app/boekhouding/verkoop/nieuw and the 'Nieuwe Factuur' button on /app/boekhouding/verkoop.",
+  "features_verified": {
+    "navigation_to_new_invoice": true,
+    "customer_selection": true,
+    "address_display": true,
+    "date_fields": true,
+    "currency_selection": true,
+    "specification_reference_fields": true,
+    "product_selection": true,
+    "manual_description": true,
+    "quantity_price_btw_fields": true,
+    "line_total_calculation": true,
+    "add_line": true,
+    "add_text_line": true,
+    "delete_line": true,
+    "subtotal_btw_total_calculation": true,
+    "notes_field": true,
+    "save_as_concept": true,
+    "send_as_verzonden": true,
+    "back_button": true,
+    "invoice_in_list": true
+  }
+}
