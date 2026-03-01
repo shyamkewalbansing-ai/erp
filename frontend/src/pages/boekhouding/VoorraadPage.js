@@ -897,45 +897,64 @@ const VoorraadPage = () => {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border border-slate-100 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500 mb-2">Totaal Producten</p>
-                <p className="text-2xl font-semibold text-slate-900">{products.length}</p>
+      {/* Summary Cards - matching VerkoopPage style */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 font-medium truncate">Totaal Producten</p>
+                <p className="text-sm lg:text-base font-bold text-gray-900 mt-1 whitespace-nowrap">{products.length}</p>
+                <p className="text-xs mt-1 text-gray-400">In catalogus</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
-                <Package className="w-5 h-5 text-blue-500" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="bg-white border border-slate-100 shadow-sm">
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500 mb-2">Voorraadwaarde</p>
-                <p className="text-2xl font-semibold text-slate-900">{formatAmount(totalValue)}</p>
-              </div>
-              <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
-                <Warehouse className="w-5 h-5 text-green-500" />
+              <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0">
+                <Package className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className={`bg-white border border-slate-100 shadow-sm ${lowStockProducts.length > 0 ? 'bg-amber-50' : ''}`}>
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-slate-500 mb-2">Lage Voorraad</p>
-                <p className={`text-2xl font-semibold ${lowStockProducts.length > 0 ? 'text-amber-600' : 'text-slate-900'}`}>
+        <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 font-medium truncate">Voorraadwaarde</p>
+                <p className="text-sm lg:text-base font-bold text-gray-900 mt-1 whitespace-nowrap">{formatAmount(totalValue)}</p>
+                <p className="text-xs mt-1 text-emerald-600">Totale waarde</p>
+              </div>
+              <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <Warehouse className="w-4 h-4 lg:w-5 lg:h-5 text-emerald-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 font-medium truncate">Mutaties</p>
+                <p className="text-sm lg:text-base font-bold text-gray-900 mt-1 whitespace-nowrap">{movements.length}</p>
+                <p className="text-xs mt-1 text-gray-400">Deze periode</p>
+              </div>
+              <div className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
+                <ArrowUpDown className="w-4 h-4 lg:w-5 lg:h-5 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 font-medium truncate">Lage Voorraad</p>
+                <p className={`text-sm lg:text-base font-bold mt-1 whitespace-nowrap ${lowStockProducts.length > 0 ? 'text-amber-600' : 'text-gray-900'}`}>
                   {lowStockProducts.length}
                 </p>
+                <p className={`text-xs mt-1 ${lowStockProducts.length > 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                  {lowStockProducts.length > 0 ? 'Actie vereist' : 'Alles op voorraad'}
+                </p>
               </div>
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${lowStockProducts.length > 0 ? 'bg-amber-100' : 'bg-slate-100'}`}>
-                <AlertTriangle className={`w-5 h-5 ${lowStockProducts.length > 0 ? 'text-amber-500' : 'text-slate-400'}`} />
+              <div className={`w-9 h-9 lg:w-10 lg:h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${lowStockProducts.length > 0 ? 'bg-amber-100' : 'bg-gray-100'}`}>
+                <AlertTriangle className={`w-4 h-4 lg:w-5 lg:h-5 ${lowStockProducts.length > 0 ? 'text-amber-600' : 'text-gray-400'}`} />
               </div>
             </div>
           </CardContent>
