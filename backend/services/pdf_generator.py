@@ -291,12 +291,6 @@ def generate_invoice_pdf(
         ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
     ]))
     
-    # Klant + Details naast elkaar
-    klant_table_data = [[
-        klant_content[0] if klant_content else Paragraph('', styles['Normal']),
-        details_table
-    ]]
-    
     # Bouw klant info als losse paragraphs
     info_left = Paragraph('<br/>'.join([
         f"<font color='{text_light}' size='7'>Aan:</font>",
