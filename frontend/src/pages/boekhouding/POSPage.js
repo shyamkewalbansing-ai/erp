@@ -1318,82 +1318,130 @@ const POSPage = () => {
             </>
           )}
 
-          {/* Step: Cash Payment - Enter Amount */}
+          {/* Step: Cash Payment - Numpad Interface */}
           {paymentStep === 'cash' && (
             <>
-              <DialogHeader>
+              <DialogHeader className="pb-2">
                 <div className="flex items-center gap-2">
                   <button onClick={() => setPaymentStep('method')} className="text-gray-400 hover:text-gray-600">
                     <ArrowLeft className="w-5 h-5" />
                   </button>
-                  <DialogTitle className="text-xl">Contante betaling</DialogTitle>
+                  <DialogTitle className="text-lg">Contante Betaling</DialogTitle>
                 </div>
               </DialogHeader>
-              <div className="py-4 space-y-6">
-                {/* Amount to pay */}
-                <div className="text-center p-4 bg-gray-50 rounded-xl">
-                  <p className="text-sm text-gray-500">Te betalen</p>
-                  <p className="text-3xl font-bold text-gray-900">{formatCurrency(total)}</p>
+              <div className="space-y-3">
+                {/* Amount Display Section */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Te betalen */}
+                  <div className="bg-gray-900 text-white p-3 rounded-xl text-center">
+                    <p className="text-xs text-gray-400 uppercase tracking-wide">Te Betalen</p>
+                    <p className="text-2xl font-bold font-mono">{formatCurrency(total)}</p>
+                  </div>
+                  {/* Ontvangen */}
+                  <div className="bg-emerald-600 text-white p-3 rounded-xl text-center">
+                    <p className="text-xs text-emerald-200 uppercase tracking-wide">Ontvangen</p>
+                    <p className="text-2xl font-bold font-mono">{formatCurrency(cashReceivedNum || 0)}</p>
+                  </div>
                 </div>
 
-                {/* Cash received input */}
-                <div className="space-y-2">
-                  <Label>Ontvangen bedrag</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={cashReceived}
-                    onChange={(e) => setCashReceived(e.target.value)}
-                    placeholder="0.00"
-                    className="text-2xl h-14 text-center font-mono"
-                    autoFocus
-                    data-testid="pos-cash-input"
-                  />
+                {/* Wisselgeld Display - Always visible */}
+                <div className={`p-4 rounded-xl text-center ${
+                  cashReceivedNum >= total 
+                    ? 'bg-emerald-50 border-2 border-emerald-200' 
+                    : 'bg-amber-50 border-2 border-amber-200'
+                }`}>
+                  <p className={`text-xs uppercase tracking-wide ${
+                    cashReceivedNum >= total ? 'text-emerald-600' : 'text-amber-600'
+                  }`}>
+                    {cashReceivedNum >= total ? 'Wisselgeld Terug' : 'Nog Te Ontvangen'}
+                  </p>
+                  <p className={`text-4xl font-bold font-mono ${
+                    cashReceivedNum >= total ? 'text-emerald-600' : 'text-amber-600'
+                  }`}>
+                    {formatCurrency(Math.abs(changeAmount))}
+                  </p>
                 </div>
 
-                {/* Quick amounts */}
-                <div className="grid grid-cols-4 gap-2">
-                  {QUICK_AMOUNTS.map(amount => (
+                {/* Numpad */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[7, 8, 9, 4, 5, 6, 1, 2, 3].map(num => (
                     <button
-                      key={amount}
-                      onClick={() => setCashReceived(amount.toString())}
-                      className="py-2 px-3 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors"
+                      key={num}
+                      onClick={() => setCashReceived(prev => (prev === '0' ? String(num) : prev + String(num)))}
+                      className="h-14 text-2xl font-bold bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-xl transition-colors"
                     >
-                      {formatCurrency(amount)}
+                      {num}
                     </button>
                   ))}
                   <button
-                    onClick={() => setCashReceived(Math.ceil(total).toString())}
-                    className="py-2 px-3 bg-emerald-100 hover:bg-emerald-200 rounded-lg text-sm font-medium text-emerald-700 transition-colors"
+                    onClick={() => setCashReceived(prev => prev + '00')}
+                    className="h-14 text-xl font-bold bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-xl transition-colors"
                   >
-                    Exact
+                    00
+                  </button>
+                  <button
+                    onClick={() => setCashReceived(prev => (prev === '0' ? '0' : prev + '0'))}
+                    className="h-14 text-2xl font-bold bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-xl transition-colors"
+                  >
+                    0
+                  </button>
+                  <button
+                    onClick={() => setCashReceived(prev => {
+                      if (prev.includes('.')) return prev;
+                      return prev + '.';
+                    })}
+                    className="h-14 text-2xl font-bold bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-xl transition-colors"
+                  >
+                    .
                   </button>
                 </div>
 
-                {/* Change calculation */}
-                {cashReceivedNum > 0 && (
-                  <div className={`p-4 rounded-xl ${changeAmount >= 0 ? 'bg-emerald-50' : 'bg-red-50'}`}>
-                    <div className="flex justify-between items-center">
-                      <span className={`font-medium ${changeAmount >= 0 ? 'text-emerald-700' : 'text-red-700'}`}>
-                        {changeAmount >= 0 ? 'Wisselgeld terug' : 'Nog te ontvangen'}
-                      </span>
-                      <span className={`text-2xl font-bold ${changeAmount >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                        {formatCurrency(Math.abs(changeAmount))}
-                      </span>
-                    </div>
-                  </div>
-                )}
+                {/* Quick Amount Buttons + Clear */}
+                <div className="grid grid-cols-4 gap-2">
+                  {[10, 20, 50, 100].map(amount => (
+                    <button
+                      key={amount}
+                      onClick={() => setCashReceived(amount.toString())}
+                      className="py-2 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 rounded-lg text-sm font-bold text-blue-700 transition-colors"
+                    >
+                      {amount}
+                    </button>
+                  ))}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={() => setCashReceived(Math.ceil(total).toString())}
+                    className="py-2 bg-emerald-100 hover:bg-emerald-200 rounded-lg text-sm font-bold text-emerald-700 transition-colors"
+                  >
+                    Exact
+                  </button>
+                  <button
+                    onClick={() => setCashReceived(prev => prev.slice(0, -1) || '0')}
+                    className="py-2 bg-amber-100 hover:bg-amber-200 rounded-lg text-sm font-bold text-amber-700 transition-colors flex items-center justify-center gap-1"
+                  >
+                    <ArrowLeft className="w-4 h-4" /> Wis
+                  </button>
+                  <button
+                    onClick={() => setCashReceived('0')}
+                    className="py-2 bg-red-100 hover:bg-red-200 rounded-lg text-sm font-bold text-red-700 transition-colors"
+                  >
+                    Reset
+                  </button>
+                </div>
 
-                {/* Confirm button */}
+                {/* Confirm Button */}
                 <Button
                   onClick={handleCashPayment}
                   disabled={cashReceivedNum < total}
-                  className="w-full h-14 text-lg bg-emerald-600 hover:bg-emerald-700"
+                  className={`w-full h-14 text-lg font-bold transition-all ${
+                    cashReceivedNum >= total 
+                      ? 'bg-emerald-600 hover:bg-emerald-700' 
+                      : 'bg-gray-300 cursor-not-allowed'
+                  }`}
                   data-testid="pos-confirm-cash-btn"
                 >
-                  <Check className="w-5 h-5 mr-2" />
-                  Betaling bevestigen
+                  <Check className="w-6 h-6 mr-2" />
+                  {cashReceivedNum >= total ? 'Betaling Bevestigen' : `Nog ${formatCurrency(total - cashReceivedNum)} nodig`}
                 </Button>
               </div>
             </>
