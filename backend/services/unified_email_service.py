@@ -179,13 +179,18 @@ class UnifiedEmailService:
             if bcc:
                 all_recipients.extend(bcc)
             
+            # Determine SSL settings based on port
+            use_tls = settings['smtp_port'] == 465  # Port 465 uses implicit SSL
+            start_tls = settings['smtp_port'] in [587, 25]  # Port 587/25 uses STARTTLS
+            
             await aiosmtplib.send(
                 msg,
                 hostname=settings['smtp_host'],
                 port=settings['smtp_port'],
                 username=settings['smtp_user'],
                 password=settings['smtp_password'],
-                start_tls=True
+                use_tls=use_tls,
+                start_tls=start_tls
             )
             
             return {
