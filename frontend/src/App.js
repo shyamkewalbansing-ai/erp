@@ -586,6 +586,10 @@ function MainAppRoutes() {
         {/* Public Spa Booking Portal - Always available */}
         <Route path="/booking/spa/:workspaceId" element={<SpaBookingPage />} />
         
+        {/* AI Assistant Standalone Page - Always available */}
+        <Route path="/ai" element={<AIAssistantPage />} />
+        <Route path="/assistent" element={<AIAssistantPage />} />
+        
         {/* Public Suribet Werknemer Portal - Always available */}
         <Route path="/portal/suribet/:userId" element={<SuribetWerknemerPortaal />} />
         
