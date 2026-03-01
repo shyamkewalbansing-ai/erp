@@ -936,28 +936,28 @@ const POSPage = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-slate-100 flex items-center justify-center" data-testid="pos-page">
+      <div className="fixed inset-0 bg-gray-100 flex items-center justify-center" data-testid="pos-page">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-slate-400 mx-auto mb-4" />
-          <p className="text-slate-500">POS laden...</p>
+          <Loader2 className="w-12 h-12 animate-spin text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-500">POS laden...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-100 flex" data-testid="pos-page">
+    <div className="fixed inset-0 bg-gray-100 flex" data-testid="pos-page">
       {/* Left Side - Products */}
       <div className="flex-1 flex flex-col">
         {/* Header with Categories */}
-        <div className="bg-white border-b border-slate-200 px-4 py-3">
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
           <div className="flex items-center gap-4">
             {/* Home Button */}
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate('/app/boekhouding')}
-              className="shrink-0 w-10 h-10 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+              className="shrink-0 w-10 h-10 rounded-full bg-gray-900 text-white hover:bg-gray-800"
               data-testid="pos-home-btn"
             >
               <Home className="w-5 h-5" />
@@ -974,8 +974,8 @@ const POSPage = () => {
                     onClick={() => setSelectedCategory(cat)}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${
                       isActive 
-                        ? 'bg-slate-900 text-white' 
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        ? 'bg-gray-900 text-white' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                     data-testid={`pos-category-${cat}`}
                   >
@@ -988,12 +988,12 @@ const POSPage = () => {
 
             {/* Search */}
             <div className="relative ml-auto w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Zoeken of scan barcode..."
-                className="pl-10 bg-slate-50 border-slate-200"
+                className="pl-10 bg-gray-50 border-gray-200"
                 data-testid="pos-search-input"
               />
             </div>
@@ -1006,7 +1006,7 @@ const POSPage = () => {
               className="shrink-0"
               title="Barcode invoeren"
             >
-              <Barcode className="w-5 h-5 text-slate-500" />
+              <Barcode className="w-5 h-5 text-gray-500" />
             </Button>
 
             {/* Mobile Scanner Link - Now uses permanent scanner */}
@@ -1045,11 +1045,11 @@ const POSPage = () => {
               <button
                 key={product.id}
                 onClick={() => addToCart(product)}
-                className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-slate-100 hover:border-slate-200"
+                className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100 hover:border-gray-200"
                 data-testid={`pos-product-${product.code || product.id}`}
               >
                 {/* Product Image */}
-                <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center overflow-hidden">
+                <div className="aspect-square bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center overflow-hidden">
                   {product.foto_url ? (
                     <img 
                       src={product.foto_url.startsWith('http') ? product.foto_url : `${API_URL}${product.foto_url}`}
@@ -1057,22 +1057,22 @@ const POSPage = () => {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                     />
                   ) : (
-                    <Package className="w-12 h-12 text-slate-300" />
+                    <Package className="w-12 h-12 text-gray-300" />
                   )}
                 </div>
                 
                 {/* Product Info */}
                 <div className="p-3">
-                  <h3 className="text-sm font-medium text-slate-900 truncate">{product.naam}</h3>
-                  <p className="text-xs text-slate-400">{product.code}</p>
-                  <p className="text-sm font-bold text-slate-700 mt-1">
+                  <h3 className="text-sm font-medium text-gray-900 truncate">{product.naam}</h3>
+                  <p className="text-xs text-gray-400">{product.code}</p>
+                  <p className="text-sm font-bold text-gray-700 mt-1">
                     {formatCurrency(product.verkoopprijs)}
                   </p>
                 </div>
 
                 {/* Quantity Badge (if in cart) */}
                 {cart.find(item => item.id === product.id) && (
-                  <div className="absolute top-2 right-2 w-6 h-6 bg-slate-900 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                  <div className="absolute top-2 right-2 w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-bold">
                     {cart.find(item => item.id === product.id).quantity}
                   </div>
                 )}
@@ -1081,7 +1081,7 @@ const POSPage = () => {
           </div>
 
           {filteredProducts.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
               <Package className="w-16 h-16 mb-4" />
               <p className="text-lg">Geen producten gevonden</p>
               <p className="text-sm">Pas je filters aan of voeg producten toe in Voorraad</p>
@@ -1090,25 +1090,25 @@ const POSPage = () => {
         </div>
 
         {/* Left Sidebar Icons */}
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 bg-white rounded-r-xl shadow-lg py-2 border border-l-0 border-slate-200">
+        <div className="absolute left-0 top-1/2 -trangray-y-1/2 bg-white rounded-r-xl shadow-lg py-2 border border-l-0 border-gray-200">
           <div className="flex flex-col gap-1 px-2">
             <button 
               onClick={() => setShowBarcodeDialog(true)}
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               title="Barcode scanner"
             >
               <Barcode className="w-5 h-5" />
             </button>
             <button 
               onClick={() => setShowDiscountDialog(true)}
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               title="Korting toevoegen"
             >
               <Percent className="w-5 h-5" />
             </button>
             <button 
               onClick={() => setShowCustomerDialog(true)}
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              className="w-10 h-10 rounded-lg flex items-center justify-center text-gray-400 hover:bg-gray-100 hover:text-gray-600"
               title="Klant selecteren"
             >
               <UserPlus className="w-5 h-5" />
@@ -1118,17 +1118,17 @@ const POSPage = () => {
       </div>
 
       {/* Right Side - Cart/Receipt */}
-      <div className="w-80 lg:w-96 bg-white border-l border-slate-200 flex flex-col">
+      <div className="w-80 lg:w-96 bg-white border-l border-gray-200 flex flex-col">
         {/* Cart Header */}
-        <div className="p-4 border-b border-slate-100">
+        <div className="p-4 border-b border-gray-100">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-slate-400" />
-              <span className="text-sm font-medium text-slate-700">{cart.reduce((sum, i) => sum + i.quantity, 0)} items</span>
+              <ShoppingCart className="w-5 h-5 text-gray-400" />
+              <span className="text-sm font-medium text-gray-700">{cart.reduce((sum, i) => sum + i.quantity, 0)} items</span>
             </div>
             <button 
               onClick={clearCart}
-              className="text-sm text-slate-400 hover:text-red-500 transition-colors"
+              className="text-sm text-gray-400 hover:text-red-500 transition-colors"
               data-testid="pos-clear-cart-btn"
             >
               Wissen
@@ -1155,7 +1155,7 @@ const POSPage = () => {
         {/* Cart Items */}
         <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+            <div className="flex flex-col items-center justify-center h-full text-gray-400">
               <ShoppingCart className="w-12 h-12 mb-3" />
               <p className="text-sm">Winkelwagen is leeg</p>
               <p className="text-xs mt-1">Scan een barcode of selecteer producten</p>
@@ -1164,23 +1164,23 @@ const POSPage = () => {
             cart.map(item => (
               <div 
                 key={item.id} 
-                className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 group"
+                className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 group"
                 data-testid={`pos-cart-item-${item.id}`}
               >
                 {/* Quantity Controls */}
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => updateQuantity(item.id, -1)}
-                    className="w-6 h-6 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-100"
+                    className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100"
                   >
                     <Minus className="w-3 h-3" />
                   </button>
-                  <div className="w-8 h-8 rounded-full border-2 border-slate-200 flex items-center justify-center text-sm font-medium text-slate-700">
+                  <div className="w-8 h-8 rounded-full border-2 border-gray-200 flex items-center justify-center text-sm font-medium text-gray-700">
                     {item.quantity}
                   </div>
                   <button
                     onClick={() => updateQuantity(item.id, 1)}
-                    className="w-6 h-6 rounded-full border border-slate-200 flex items-center justify-center text-slate-400 hover:bg-slate-100"
+                    className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-100"
                   >
                     <Plus className="w-3 h-3" />
                   </button>
@@ -1188,13 +1188,13 @@ const POSPage = () => {
 
                 {/* Item Info */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">{item.naam}</p>
-                  <p className="text-xs text-slate-400">{formatCurrency(item.verkoopprijs)} per stuk</p>
+                  <p className="text-sm font-medium text-gray-900 truncate">{item.naam}</p>
+                  <p className="text-xs text-gray-400">{formatCurrency(item.verkoopprijs)} per stuk</p>
                 </div>
 
                 {/* Item Total */}
                 <div className="text-right">
-                  <p className="text-sm font-semibold text-slate-900">
+                  <p className="text-sm font-semibold text-gray-900">
                     {formatCurrency(item.verkoopprijs * item.quantity)}
                   </p>
                 </div>
@@ -1202,7 +1202,7 @@ const POSPage = () => {
                 {/* Remove Button */}
                 <button
                   onClick={() => removeFromCart(item.id)}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 transition-all"
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all"
                 >
                   <X className="w-4 h-4" />
                 </button>
@@ -1212,10 +1212,10 @@ const POSPage = () => {
         </div>
 
         {/* Cart Footer - Totals & Charge Button */}
-        <div className="border-t border-slate-100 p-4 space-y-3">
+        <div className="border-t border-gray-100 p-4 space-y-3">
           {/* Subtotals */}
           <div className="space-y-2 text-sm">
-            <div className="flex justify-between text-slate-500">
+            <div className="flex justify-between text-gray-500">
               <span>Subtotaal</span>
               <span>{formatCurrency(subtotal)}</span>
             </div>
@@ -1234,7 +1234,7 @@ const POSPage = () => {
               </div>
             )}
             
-            <div className="flex justify-between text-slate-500">
+            <div className="flex justify-between text-gray-500">
               <span>BTW ({btwPercentage}%)</span>
               <span>{formatCurrency(btwAmount)}</span>
             </div>
@@ -1243,7 +1243,7 @@ const POSPage = () => {
             {!appliedDiscount && cart.length > 0 && (
               <button
                 onClick={() => setShowDiscountDialog(true)}
-                className="w-full py-2 text-sm text-slate-500 hover:text-emerald-600 border border-dashed border-slate-200 rounded-lg hover:border-emerald-300 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-2 text-sm text-gray-500 hover:text-emerald-600 border border-dashed border-gray-200 rounded-lg hover:border-emerald-300 transition-colors flex items-center justify-center gap-2"
               >
                 <Percent className="w-4 h-4" />
                 Korting toevoegen
@@ -1252,9 +1252,9 @@ const POSPage = () => {
           </div>
 
           {/* Total */}
-          <div className="flex justify-between items-center pt-2 border-t border-slate-100">
-            <span className="text-lg font-semibold text-slate-900">Totaal</span>
-            <span className="text-2xl font-bold text-slate-900">{formatCurrency(total)}</span>
+          <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+            <span className="text-lg font-semibold text-gray-900">Totaal</span>
+            <span className="text-2xl font-bold text-gray-900">{formatCurrency(total)}</span>
           </div>
 
           {/* Charge Button */}
@@ -1264,7 +1264,7 @@ const POSPage = () => {
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all flex items-center justify-center gap-3 ${
               cart.length > 0
                 ? 'bg-emerald-600 text-white hover:bg-emerald-700'
-                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
             data-testid="pos-charge-btn"
           >
@@ -1290,8 +1290,8 @@ const POSPage = () => {
               </DialogHeader>
               <div className="py-6">
                 <div className="text-center mb-6">
-                  <p className="text-4xl font-bold text-slate-900">{formatCurrency(total)}</p>
-                  <p className="text-sm text-slate-500 mt-1">
+                  <p className="text-4xl font-bold text-gray-900">{formatCurrency(total)}</p>
+                  <p className="text-sm text-gray-500 mt-1">
                     {cart.reduce((sum, i) => sum + i.quantity, 0)} items
                     {appliedDiscount && ` • Korting: ${formatCurrency(discountAmount)}`}
                   </p>
@@ -1299,19 +1299,19 @@ const POSPage = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     onClick={() => startPayment('contant')}
-                    className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-slate-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all"
+                    className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 transition-all"
                     data-testid="pos-pay-cash-btn"
                   >
                     <Banknote className="w-12 h-12 text-emerald-600" />
-                    <span className="font-semibold text-slate-700">Contant</span>
+                    <span className="font-semibold text-gray-700">Contant</span>
                   </button>
                   <button
                     onClick={() => startPayment('pin')}
-                    className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all"
+                    className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all"
                     data-testid="pos-pay-card-btn"
                   >
                     <CreditCard className="w-12 h-12 text-blue-600" />
-                    <span className="font-semibold text-slate-700">Pin/Kaart</span>
+                    <span className="font-semibold text-gray-700">Pin/Kaart</span>
                   </button>
                 </div>
               </div>
@@ -1323,7 +1323,7 @@ const POSPage = () => {
             <>
               <DialogHeader>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => setPaymentStep('method')} className="text-slate-400 hover:text-slate-600">
+                  <button onClick={() => setPaymentStep('method')} className="text-gray-400 hover:text-gray-600">
                     <ArrowLeft className="w-5 h-5" />
                   </button>
                   <DialogTitle className="text-xl">Contante betaling</DialogTitle>
@@ -1331,9 +1331,9 @@ const POSPage = () => {
               </DialogHeader>
               <div className="py-4 space-y-6">
                 {/* Amount to pay */}
-                <div className="text-center p-4 bg-slate-50 rounded-xl">
-                  <p className="text-sm text-slate-500">Te betalen</p>
-                  <p className="text-3xl font-bold text-slate-900">{formatCurrency(total)}</p>
+                <div className="text-center p-4 bg-gray-50 rounded-xl">
+                  <p className="text-sm text-gray-500">Te betalen</p>
+                  <p className="text-3xl font-bold text-gray-900">{formatCurrency(total)}</p>
                 </div>
 
                 {/* Cash received input */}
@@ -1358,7 +1358,7 @@ const POSPage = () => {
                     <button
                       key={amount}
                       onClick={() => setCashReceived(amount.toString())}
-                      className="py-2 px-3 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-medium text-slate-700 transition-colors"
+                      className="py-2 px-3 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-colors"
                     >
                       {formatCurrency(amount)}
                     </button>
@@ -1402,8 +1402,8 @@ const POSPage = () => {
           {/* Step: Processing */}
           {paymentStep === 'processing' && (
             <div className="py-12 text-center">
-              <Loader2 className="w-16 h-16 animate-spin text-slate-400 mx-auto mb-4" />
-              <p className="text-lg text-slate-600">Betaling verwerken...</p>
+              <Loader2 className="w-16 h-16 animate-spin text-gray-400 mx-auto mb-4" />
+              <p className="text-lg text-gray-600">Betaling verwerken...</p>
             </div>
           )}
 
@@ -1414,27 +1414,27 @@ const POSPage = () => {
                 <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Check className="w-10 h-10 text-emerald-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-900 mb-2">Betaling Succesvol!</h2>
-                <p className="text-slate-500">{lastSale?.bonnummer}</p>
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">Betaling Succesvol!</h2>
+                <p className="text-gray-500">{lastSale?.bonnummer}</p>
               </div>
               
               {/* Summary */}
-              <div className="bg-slate-50 rounded-xl p-4 space-y-2 text-sm mb-6">
+              <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm mb-6">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Betaalmethode</span>
+                  <span className="text-gray-500">Betaalmethode</span>
                   <span className="font-medium">{paymentMethod === 'contant' ? 'Contant' : 'Pin/Kaart'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Totaal</span>
+                  <span className="text-gray-500">Totaal</span>
                   <span className="font-medium">{formatCurrency(lastSale?.totaal || total)}</span>
                 </div>
                 {paymentMethod === 'contant' && lastSale?.wisselgeld > 0 && (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Ontvangen</span>
+                      <span className="text-gray-500">Ontvangen</span>
                       <span className="font-medium">{formatCurrency(lastSale?.ontvangen_bedrag || cashReceivedNum)}</span>
                     </div>
-                    <div className="flex justify-between text-emerald-600 font-semibold pt-2 border-t border-slate-200">
+                    <div className="flex justify-between text-emerald-600 font-semibold pt-2 border-t border-gray-200">
                       <span>Wisselgeld</span>
                       <span className="text-lg">{formatCurrency(lastSale?.wisselgeld)}</span>
                     </div>
@@ -1462,7 +1462,7 @@ const POSPage = () => {
                     Volgende klant
                   </Button>
                 </div>
-                <p className="text-xs text-center text-slate-400">
+                <p className="text-xs text-center text-gray-400">
                   💡 Tip: Selecteer je thermische printer (80mm) in het print dialoog
                 </p>
               </div>
@@ -1532,7 +1532,7 @@ const POSPage = () => {
           <div className="py-4">
             <div className="space-y-2 max-h-80 overflow-y-auto">
               {customers.length === 0 ? (
-                <p className="text-center text-slate-500 py-8">Geen klanten gevonden</p>
+                <p className="text-center text-gray-500 py-8">Geen klanten gevonden</p>
               ) : (
                 customers.map(customer => (
                   <button
@@ -1541,15 +1541,15 @@ const POSPage = () => {
                     className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all text-left ${
                       selectedCustomer?.id === customer.id 
                         ? 'border-blue-500 bg-blue-50' 
-                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center">
-                      <User className="w-5 h-5 text-slate-500" />
+                    <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                      <User className="w-5 h-5 text-gray-500" />
                     </div>
                     <div>
-                      <p className="font-medium text-slate-900">{customer.naam}</p>
-                      <p className="text-sm text-slate-500">{customer.email || customer.telefoon || 'Geen contactgegevens'}</p>
+                      <p className="font-medium text-gray-900">{customer.naam}</p>
+                      <p className="text-sm text-gray-500">{customer.email || customer.telefoon || 'Geen contactgegevens'}</p>
                     </div>
                     {selectedCustomer?.id === customer.id && (
                       <Check className="w-5 h-5 text-blue-500 ml-auto" />
@@ -1620,13 +1620,13 @@ const POSPage = () => {
               {/* Camera View */}
               <div 
                 id="barcode-scanner-container" 
-                className={`relative rounded-lg overflow-hidden bg-slate-900 ${cameraActive ? 'h-64' : 'h-32'}`}
+                className={`relative rounded-lg overflow-hidden bg-gray-900 ${cameraActive ? 'h-64' : 'h-32'}`}
               >
                 {!cameraActive && !cameraError && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400">
                     <Camera className="w-12 h-12 mb-2 opacity-50" />
                     <p className="text-sm">Klik "Start Camera" om te scannen</p>
-                    <p className="text-xs text-slate-500 mt-1">Werkt op telefoon en tablet</p>
+                    <p className="text-xs text-gray-500 mt-1">Werkt op telefoon en tablet</p>
                   </div>
                 )}
                 {cameraError && (
@@ -1647,10 +1647,10 @@ const POSPage = () => {
             {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200"></div>
+                <div className="w-full border-t border-gray-200"></div>
               </div>
               <div className="relative flex justify-center">
-                <span className="px-3 bg-white text-sm text-slate-500">of typ handmatig</span>
+                <span className="px-3 bg-white text-sm text-gray-500">of typ handmatig</span>
               </div>
             </div>
 
@@ -1673,9 +1673,9 @@ const POSPage = () => {
             </div>
 
             {/* Supported Formats */}
-            <div className="bg-slate-50 rounded-lg p-3">
-              <p className="text-xs text-slate-500 font-medium mb-1">Ondersteunde formaten:</p>
-              <p className="text-xs text-slate-400">
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-500 font-medium mb-1">Ondersteunde formaten:</p>
+              <p className="text-xs text-gray-400">
                 EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, QR Code, en meer
               </p>
             </div>
@@ -1718,18 +1718,18 @@ const POSPage = () => {
 
                 {/* Instructions */}
                 <div className="text-center space-y-2">
-                  <p className="text-slate-700 font-medium">
+                  <p className="text-gray-700 font-medium">
                     Scan deze QR code met je telefoon
                   </p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-gray-500">
                     Sla deze link op - je kunt hem altijd gebruiken!
                   </p>
                 </div>
 
                 {/* Link */}
-                <div className="bg-slate-100 rounded-lg p-3">
-                  <p className="text-xs text-slate-500 mb-1">Jouw permanente scanner link:</p>
-                  <p className="text-sm font-mono break-all text-slate-700">
+                <div className="bg-gray-100 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Jouw permanente scanner link:</p>
+                  <p className="text-sm font-mono break-all text-gray-700">
                     {APP_URL}/scan/p/{permanentScanner.code}
                   </p>
                 </div>
@@ -1764,18 +1764,18 @@ const POSPage = () => {
 
                 {/* Instructions */}
                 <div className="text-center space-y-2">
-                  <p className="text-slate-700 font-medium">
+                  <p className="text-gray-700 font-medium">
                     Scan deze QR code met je telefoon
                   </p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-gray-500">
                     Of open de link hieronder
                   </p>
                 </div>
 
                 {/* Link */}
-                <div className="bg-slate-100 rounded-lg p-3">
-                  <p className="text-xs text-slate-500 mb-1">Link:</p>
-                  <p className="text-sm font-mono break-all text-slate-700">
+                <div className="bg-gray-100 rounded-lg p-3">
+                  <p className="text-xs text-gray-500 mb-1">Link:</p>
+                  <p className="text-sm font-mono break-all text-gray-700">
                     {APP_URL}/scan/{scannerSession.code}
                   </p>
                 </div>
@@ -1793,7 +1793,7 @@ const POSPage = () => {
                 </Button>
 
                 {/* Session Info */}
-                <div className="text-center text-xs text-slate-400">
+                <div className="text-center text-xs text-gray-400">
                   <p>Sessie code: <span className="font-mono font-bold">{scannerSession.code}</span></p>
                   <p>Geldig tot: {new Date(scannerSession.expires_at).toLocaleTimeString('nl-NL')}</p>
                 </div>

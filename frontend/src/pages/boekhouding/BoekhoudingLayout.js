@@ -67,7 +67,7 @@ export default function BoekhoudingLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-gray-50">
       {/* Sidebar - Fixed width, no collapse */}
       <div className="w-56 bg-white border-r border-gray-200 flex flex-col">
         {/* Logo */}

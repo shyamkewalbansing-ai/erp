@@ -209,7 +209,7 @@ const POSMobileScannerPage = () => {
             <Check className="w-5 h-5 text-emerald-500" />
             <div>
               <p className="font-medium">{product.naam}</p>
-              <p className="text-sm text-slate-500">Toegevoegd aan kassa</p>
+              <p className="text-sm text-gray-500">Toegevoegd aan kassa</p>
             </div>
           </div>
         );
@@ -235,7 +235,7 @@ const POSMobileScannerPage = () => {
           <X className="w-5 h-5 text-red-500" />
           <div>
             <p className="font-medium">Product niet gevonden</p>
-            <p className="text-sm text-slate-500">Barcode: {barcode}</p>
+            <p className="text-sm text-gray-500">Barcode: {barcode}</p>
           </div>
         </div>
       );
@@ -244,7 +244,7 @@ const POSMobileScannerPage = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" />
           <p>Scanner laden...</p>
@@ -254,16 +254,16 @@ const POSMobileScannerPage = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900 flex flex-col" data-testid="pos-mobile-scanner">
+    <div className="fixed inset-0 bg-gray-900 flex flex-col" data-testid="pos-mobile-scanner">
       <Toaster position="top-center" richColors />
       
       {/* Header */}
-      <div className="bg-slate-800 px-4 py-3 flex items-center justify-between">
+      <div className="bg-gray-800 px-4 py-3 flex items-center justify-between">
         <Button
           variant="ghost"
           size="icon"
           onClick={() => navigate('/app/boekhouding/pos')}
-          className="text-white hover:bg-slate-700"
+          className="text-white hover:bg-gray-700"
         >
           <Home className="w-5 h-5" />
         </Button>
@@ -283,12 +283,12 @@ const POSMobileScannerPage = () => {
             variant="ghost"
             size="icon"
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className="text-white hover:bg-slate-700"
+            className="text-white hover:bg-gray-700"
           >
             {soundEnabled ? (
               <Volume2 className="w-5 h-5" />
             ) : (
-              <VolumeX className="w-5 h-5 text-slate-500" />
+              <VolumeX className="w-5 h-5 text-gray-500" />
             )}
           </Button>
         </div>
@@ -322,7 +322,7 @@ const POSMobileScannerPage = () => {
 
         {/* Camera Error */}
         {cameraError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
             <div className="text-center p-6">
               <CameraOff className="w-16 h-16 text-red-400 mx-auto mb-4" />
               <p className="text-white mb-4">{cameraError}</p>
@@ -337,8 +337,8 @@ const POSMobileScannerPage = () => {
         {!isScanning && !cameraError && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center p-6">
-              <Camera className="w-16 h-16 text-slate-500 mx-auto mb-4" />
-              <p className="text-slate-400 mb-4">Camera niet actief</p>
+              <Camera className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+              <p className="text-gray-400 mb-4">Camera niet actief</p>
               <Button onClick={startScanner} className="bg-emerald-600 hover:bg-emerald-700">
                 <Camera className="w-4 h-4 mr-2" />
                 Start Scanner
@@ -376,7 +376,7 @@ const POSMobileScannerPage = () => {
       )}
 
       {/* Bottom Bar */}
-      <div className="bg-slate-800 px-4 py-4 safe-area-inset-bottom">
+      <div className="bg-gray-800 px-4 py-4 safe-area-inset-bottom">
         <Button
           onClick={() => navigate('/app/boekhouding/pos')}
           className="w-full h-14 text-lg bg-emerald-600 hover:bg-emerald-700"

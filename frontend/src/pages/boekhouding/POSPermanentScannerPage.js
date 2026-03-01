@@ -385,11 +385,11 @@ const POSPermanentScannerPage = () => {
   // No code provided
   if (!code) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center p-6">
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center p-6">
         <div className="text-center text-white max-w-sm">
-          <ScanLine className="w-20 h-20 mx-auto mb-6 text-slate-500" />
+          <ScanLine className="w-20 h-20 mx-auto mb-6 text-gray-500" />
           <h1 className="text-2xl font-bold mb-4">Scanner Code Nodig</h1>
-          <p className="text-slate-400 mb-6">
+          <p className="text-gray-400 mb-6">
             Open de POS op de computer en klik op "Permanente Scanner" om je persoonlijke scanner link te krijgen.
           </p>
         </div>
@@ -399,7 +399,7 @@ const POSPermanentScannerPage = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" />
           <p>Verbinden...</p>
@@ -411,11 +411,11 @@ const POSPermanentScannerPage = () => {
   // Invalid scanner
   if (!scannerValid) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center p-6">
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center p-6">
         <div className="text-center text-white max-w-sm">
           <X className="w-20 h-20 mx-auto mb-6 text-red-500" />
           <h1 className="text-2xl font-bold mb-4">Scanner Niet Gevonden</h1>
-          <p className="text-slate-400 mb-6">
+          <p className="text-gray-400 mb-6">
             Deze scanner link is ongeldig. Vraag een nieuwe link aan via de POS.
           </p>
           <Button 
@@ -431,7 +431,7 @@ const POSPermanentScannerPage = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900 flex flex-col" data-testid="pos-permanent-scanner">
+    <div className="fixed inset-0 bg-gray-900 flex flex-col" data-testid="pos-permanent-scanner">
       {/* PWA Meta Tags */}
       <Helmet>
         <title>Scanner - POS</title>
@@ -448,28 +448,28 @@ const POSPermanentScannerPage = () => {
       
       {/* Full-screen Install Instructions Overlay */}
       {showInstallInstructions && !isStandalone && (
-        <div className="fixed inset-0 bg-slate-900/95 z-50 flex flex-col items-center justify-center p-6">
-          <div className="max-w-sm w-full bg-slate-800 rounded-2xl p-6 shadow-2xl">
+        <div className="fixed inset-0 bg-gray-900/95 z-50 flex flex-col items-center justify-center p-6">
+          <div className="max-w-sm w-full bg-gray-800 rounded-2xl p-6 shadow-2xl">
             {/* Header */}
             <div className="text-center mb-6">
               <div className="w-20 h-20 bg-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <ScanLine className="w-10 h-10 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">Scanner Installeren</h2>
-              <p className="text-slate-400 text-sm">Installeer als app voor de beste ervaring</p>
+              <p className="text-gray-400 text-sm">Installeer als app voor de beste ervaring</p>
             </div>
             
             {/* iOS Instructions */}
             {isIOS ? (
               <div className="space-y-4">
-                <div className="bg-slate-700/50 rounded-xl p-4">
+                <div className="bg-gray-700/50 rounded-xl p-4">
                   <div className="flex items-start gap-3 mb-3">
                     <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">1</div>
                     <div>
                       <p className="text-white font-medium">Tik op Delen</p>
-                      <p className="text-slate-400 text-sm">Het vierkant met pijl omhoog onderaan</p>
+                      <p className="text-gray-400 text-sm">Het vierkant met pijl omhoog onderaan</p>
                       <div className="mt-2 flex justify-center">
-                        <div className="bg-slate-600 rounded-lg p-2">
+                        <div className="bg-gray-600 rounded-lg p-2">
                           <Share2 className="w-8 h-8 text-blue-400" />
                         </div>
                       </div>
@@ -477,14 +477,14 @@ const POSPermanentScannerPage = () => {
                   </div>
                 </div>
                 
-                <div className="bg-slate-700/50 rounded-xl p-4">
+                <div className="bg-gray-700/50 rounded-xl p-4">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">2</div>
                     <div>
                       <p className="text-white font-medium">Tik op "Zet op beginscherm"</p>
-                      <p className="text-slate-400 text-sm">Scroll naar beneden in het menu</p>
-                      <div className="mt-2 bg-slate-600 rounded-lg p-3 flex items-center gap-3">
-                        <div className="w-6 h-6 bg-slate-500 rounded flex items-center justify-center">
+                      <p className="text-gray-400 text-sm">Scroll naar beneden in het menu</p>
+                      <div className="mt-2 bg-gray-600 rounded-lg p-3 flex items-center gap-3">
+                        <div className="w-6 h-6 bg-gray-500 rounded flex items-center justify-center">
                           <span className="text-white text-xs">+</span>
                         </div>
                         <span className="text-white text-sm">Zet op beginscherm</span>
@@ -493,12 +493,12 @@ const POSPermanentScannerPage = () => {
                   </div>
                 </div>
                 
-                <div className="bg-slate-700/50 rounded-xl p-4">
+                <div className="bg-gray-700/50 rounded-xl p-4">
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">3</div>
                     <div>
                       <p className="text-white font-medium">Tik op "Voeg toe"</p>
-                      <p className="text-slate-400 text-sm">De app verschijnt op je beginscherm</p>
+                      <p className="text-gray-400 text-sm">De app verschijnt op je beginscherm</p>
                     </div>
                   </div>
                 </div>
@@ -515,9 +515,9 @@ const POSPermanentScannerPage = () => {
                     Installeer Scanner App
                   </Button>
                 ) : (
-                  <div className="bg-slate-700/50 rounded-xl p-4">
+                  <div className="bg-gray-700/50 rounded-xl p-4">
                     <p className="text-white text-center mb-3">Tik op het menu (⋮) en kies:</p>
-                    <div className="bg-slate-600 rounded-lg p-3 flex items-center gap-3">
+                    <div className="bg-gray-600 rounded-lg p-3 flex items-center gap-3">
                       <Download className="w-5 h-5 text-white" />
                       <span className="text-white text-sm">"App installeren" of "Toevoegen aan startscherm"</span>
                     </div>
@@ -529,7 +529,7 @@ const POSPermanentScannerPage = () => {
             {/* Skip Button */}
             <button 
               onClick={dismissInstallPrompt}
-              className="w-full mt-6 py-3 text-slate-400 hover:text-white transition-colors text-sm"
+              className="w-full mt-6 py-3 text-gray-400 hover:text-white transition-colors text-sm"
             >
               Overslaan en direct scannen →
             </button>
@@ -584,16 +584,16 @@ const POSPermanentScannerPage = () => {
 
         {/* Camera Error */}
         {cameraError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
             <div className="text-center p-6 max-w-sm">
               <CameraOff className="w-16 h-16 text-red-400 mx-auto mb-4" />
               <p className="text-white mb-4">{cameraError}</p>
               
               {/* iOS specific help */}
               {/iPad|iPhone|iPod/.test(navigator.userAgent) && (
-                <div className="bg-slate-800 rounded-lg p-4 mb-4 text-left text-sm">
+                <div className="bg-gray-800 rounded-lg p-4 mb-4 text-left text-sm">
                   <p className="text-emerald-400 font-medium mb-2">📱 iPhone Instructies:</p>
-                  <ol className="text-slate-300 space-y-1 list-decimal list-inside">
+                  <ol className="text-gray-300 space-y-1 list-decimal list-inside">
                     <li>Open <strong>Instellingen</strong></li>
                     <li>Ga naar <strong>Safari</strong></li>
                     <li>Scroll naar <strong>Camera</strong></li>
@@ -614,7 +614,7 @@ const POSPermanentScannerPage = () => {
         {!isScanning && !cameraError && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center p-6">
-              <Camera className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+              <Camera className="w-16 h-16 text-gray-500 mx-auto mb-4" />
               <Button onClick={startScanner} className="bg-emerald-600 hover:bg-emerald-700">
                 <Camera className="w-4 h-4 mr-2" />
                 Start Scanner

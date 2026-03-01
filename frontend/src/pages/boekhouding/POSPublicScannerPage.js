@@ -242,14 +242,14 @@ const POSPublicScannerPage = () => {
   // No session code provided
   if (!sessionCode) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center p-6">
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center p-6">
         <div className="text-center text-white max-w-sm">
-          <QrCode className="w-20 h-20 mx-auto mb-6 text-slate-500" />
+          <QrCode className="w-20 h-20 mx-auto mb-6 text-gray-500" />
           <h1 className="text-2xl font-bold mb-4">Scanner Code Nodig</h1>
-          <p className="text-slate-400 mb-6">
+          <p className="text-gray-400 mb-6">
             Open de POS op de computer en klik op "Telefoon Scanner" om een QR code te krijgen.
           </p>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-gray-500">
             Scan de QR code of open de link die je krijgt.
           </p>
         </div>
@@ -259,7 +259,7 @@ const POSPublicScannerPage = () => {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" />
           <p>Verbinden...</p>
@@ -271,11 +271,11 @@ const POSPublicScannerPage = () => {
   // Invalid session
   if (!sessionValid) {
     return (
-      <div className="fixed inset-0 bg-slate-900 flex items-center justify-center p-6">
+      <div className="fixed inset-0 bg-gray-900 flex items-center justify-center p-6">
         <div className="text-center text-white max-w-sm">
           <X className="w-20 h-20 mx-auto mb-6 text-red-500" />
           <h1 className="text-2xl font-bold mb-4">Sessie Verlopen</h1>
-          <p className="text-slate-400 mb-6">
+          <p className="text-gray-400 mb-6">
             Deze scanner link is verlopen of ongeldig. Vraag een nieuwe link aan op de kassa.
           </p>
           <Button 
@@ -291,18 +291,18 @@ const POSPublicScannerPage = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900 flex flex-col" data-testid="pos-public-scanner">
+    <div className="fixed inset-0 bg-gray-900 flex flex-col" data-testid="pos-public-scanner">
       <Toaster position="top-center" richColors />
       
       {/* Header */}
-      <div className="bg-slate-800 px-4 py-3 flex items-center justify-between">
+      <div className="bg-gray-800 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {connected ? (
             <Wifi className="w-5 h-5 text-emerald-400" />
           ) : (
             <WifiOff className="w-5 h-5 text-red-400" />
           )}
-          <span className="text-slate-400 text-sm">Verbonden</span>
+          <span className="text-gray-400 text-sm">Verbonden</span>
         </div>
         
         <div className="flex items-center gap-2">
@@ -314,9 +314,9 @@ const POSPublicScannerPage = () => {
           variant="ghost"
           size="icon"
           onClick={() => setSoundEnabled(!soundEnabled)}
-          className="text-white hover:bg-slate-700"
+          className="text-white hover:bg-gray-700"
         >
-          {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5 text-slate-500" />}
+          {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5 text-gray-500" />}
         </Button>
       </div>
 
@@ -339,7 +339,7 @@ const POSPublicScannerPage = () => {
 
         {/* Camera Error */}
         {cameraError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+          <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
             <div className="text-center p-6">
               <CameraOff className="w-16 h-16 text-red-400 mx-auto mb-4" />
               <p className="text-white mb-4">{cameraError}</p>
@@ -354,7 +354,7 @@ const POSPublicScannerPage = () => {
         {!isScanning && !cameraError && (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center p-6">
-              <Camera className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+              <Camera className="w-16 h-16 text-gray-500 mx-auto mb-4" />
               <Button onClick={startScanner} className="bg-emerald-600 hover:bg-emerald-700">
                 <Camera className="w-4 h-4 mr-2" />
                 Start Scanner
@@ -392,7 +392,7 @@ const POSPublicScannerPage = () => {
       )}
 
       {/* Instructions */}
-      <div className="bg-slate-800 px-4 py-4 text-center">
+      <div className="bg-gray-800 px-4 py-4 text-center">
         <p className="text-emerald-400 text-sm">
           📷 Richt camera op barcode • Product wordt automatisch toegevoegd
         </p>

@@ -1061,7 +1061,7 @@ const VerkoopPage = () => {
           {/* Search & Filter */}
           <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-4">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
               <Input placeholder="Zoeken op nummer of klant..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-9" />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
