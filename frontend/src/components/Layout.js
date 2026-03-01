@@ -943,6 +943,9 @@ export default function Layout() {
 
       {/* AI Assistant - only for customers */}
       {!isSuperAdmin() && <AIAssistant />}
+      
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
 
       {/* Workspace Management Dialog */}
       <Dialog open={workspaceDialogOpen} onOpenChange={setWorkspaceDialogOpen}>
