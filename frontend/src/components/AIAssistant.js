@@ -470,21 +470,21 @@ export default function AIAssistant() {
           )}
 
           {/* Input */}
-          <form onSubmit={handleSubmit} className="p-3 border-t border-border/50">
+          <form onSubmit={handleSubmit} className="p-3 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
             <div className="flex gap-2">
               <Input
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Typ een bericht..."
-                className="flex-1 h-10 bg-muted/50 border-transparent focus:border-primary"
+                className="flex-1 h-10 bg-gray-50 border-gray-200 focus:border-emerald-500"
                 disabled={isLoading}
                 data-testid="ai-chat-input"
               />
               <Button
                 type="submit"
                 size="icon"
-                className="h-10 w-10 shrink-0"
+                className="h-10 w-10 shrink-0 bg-emerald-500 hover:bg-emerald-600"
                 disabled={isLoading || !input.trim()}
                 data-testid="ai-chat-send"
               >
