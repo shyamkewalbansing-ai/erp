@@ -1033,7 +1033,7 @@ const VerkoopPage = () => {
         onClose={() => setDetailOpen(false)}
         onAction={handleAction}
         onSave={handleSaveInvoice}
-        onRefresh={fetchData}
+        onRefresh={refreshDetailItem}
       />
 
       {/* Payment Dialog */}
