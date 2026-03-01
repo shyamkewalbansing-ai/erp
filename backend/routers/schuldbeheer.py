@@ -25,7 +25,7 @@ from routers.deps import get_current_user, get_db
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/schuldbeheer", tags=["Schuldbeheer"])
+router = APIRouter(prefix="/schuldbeheer", tags=["Schuldbeheer"])
 
 # ==================== PYDANTIC MODELS ====================
 
