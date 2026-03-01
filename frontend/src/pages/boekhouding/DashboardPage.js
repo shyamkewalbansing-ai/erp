@@ -83,6 +83,7 @@ const LoadingStatCard = () => (
 );
 
 const DashboardPage = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [rates, setRates] = useState(null);
