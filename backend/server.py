@@ -1276,6 +1276,7 @@ class AddonUpdate(BaseModel):
     description: Optional[str] = None
     price: Optional[float] = None
     is_active: Optional[bool] = None
+    admin_only: Optional[bool] = None
     category: Optional[str] = None
     icon_name: Optional[str] = None
     hero_image_url: Optional[str] = None
