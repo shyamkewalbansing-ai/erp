@@ -1408,6 +1408,427 @@ class SuriRentalsAPITester:
             return True
         return False
 
+    # ==================== SCHULDBEHEER MODULE TESTING ====================
+    
+    def test_schuldbeheer_dashboard(self):
+        """Test Schuldbeheer dashboard endpoint"""
+        success, response = self.run_test(
+            "Schuldbeheer Dashboard",
+            "GET",
+            "schuldbeheer/dashboard",
+            200
+        )
+        
+        if success:
+            print(f"   Totale schuld: €{response.get('totale_schuld', 0)}")
+            print(f"   Afgelost: €{response.get('totaal_afgelost', 0)}")
+            print(f"   Maandelijkse verplichtingen: €{response.get('maandelijkse_verplichtingen', 0)}")
+            print(f"   Beschikbaar saldo: €{response.get('beschikbaar_saldo', 0)}")
+            print(f"   Aantal schulden: {response.get('aantal_schulden', 0)}")
+            print(f"   Aantal relaties: {response.get('aantal_relaties', 0)}")
+            return True
+        return False
+
+    def test_create_bankrekening_schuldbeheer(self):
+        """Test creating a bank account in Schuldbeheer"""
+        bankrekening_data = {
+            "rekeningnummer": "NL91ABNA0417164300",
+            "bank": "ABN AMRO",
+            "type": "betaalrekening",
+            "saldo": 2500.0,
+            "naam": "Hoofdrekening",
+            "actief": True
+        }
+        
+        success, response = self.run_test(
+            "Create Bankrekening (Schuldbeheer)",
+            "POST",
+            "schuldbeheer/rekeningen",
+            200,
+            data=bankrekening_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('schuldbeheer_rekeningen', []).append(response['id'])
+            print(f"   Created bankrekening ID: {response['id']}")
+            print(f"   Rekeningnummer: {response.get('rekeningnummer')}")
+            print(f"   Bank: {response.get('bank')}")
+            print(f"   Saldo: €{response.get('saldo')}")
+            return True
+        return False
+
+    def test_get_bankrekeningen_schuldbeheer(self):
+        """Test getting all bank accounts in Schuldbeheer"""
+        success, response = self.run_test(
+            "Get Bankrekeningen (Schuldbeheer)",
+            "GET",
+            "schuldbeheer/rekeningen",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} bankrekeningen")
+            for rekening in response:
+                print(f"   - {rekening.get('bank')}: €{rekening.get('saldo')} ({rekening.get('type')})")
+            return True
+        return False
+
+    def test_create_relatie_schuldbeheer(self):
+        """Test creating a relation (schuldeiser) in Schuldbeheer"""
+        relatie_data = {
+            "naam": "Belastingdienst",
+            "iban": "NL20INGB0001234567",
+            "telefoon": "0800-0543",
+            "email": "info@belastingdienst.nl",
+            "type": "belasting",
+            "notities": "Inkomstenbelasting achterstand"
+        }
+        
+        success, response = self.run_test(
+            "Create Relatie (Schuldbeheer)",
+            "POST",
+            "schuldbeheer/relaties",
+            200,
+            data=relatie_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('schuldbeheer_relaties', []).append(response['id'])
+            print(f"   Created relatie ID: {response['id']}")
+            print(f"   Naam: {response.get('naam')}")
+            print(f"   Type: {response.get('type')}")
+            print(f"   IBAN: {response.get('iban')}")
+            return True
+        return False
+
+    def test_get_relaties_schuldbeheer(self):
+        """Test getting all relations in Schuldbeheer"""
+        success, response = self.run_test(
+            "Get Relaties (Schuldbeheer)",
+            "GET",
+            "schuldbeheer/relaties",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} relaties")
+            for relatie in response:
+                print(f"   - {relatie.get('naam')} ({relatie.get('type')}): €{relatie.get('totale_schuld', 0)}")
+            return True
+        return False
+
+    def test_create_schuld_schuldbeheer(self):
+        """Test creating a debt (schuld) in Schuldbeheer"""
+        if not self.created_resources.get('schuldbeheer_relaties'):
+            print("⚠️  Skipping schuld creation - no relatie created")
+            return True
+            
+        relatie_id = self.created_resources['schuldbeheer_relaties'][0]
+        
+        schuld_data = {
+            "relatie_id": relatie_id,
+            "omschrijving": "Inkomstenbelasting 2023",
+            "startdatum": "2024-01-15",
+            "oorspronkelijk_bedrag": 5000.0,
+            "rente_percentage": 4.0,
+            "maandbedrag": 250.0,
+            "status": "regeling",
+            "prioriteit": "hoog",
+            "notities": "Betaalregeling afgesproken"
+        }
+        
+        success, response = self.run_test(
+            "Create Schuld (Schuldbeheer)",
+            "POST",
+            "schuldbeheer/schulden",
+            200,
+            data=schuld_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('schuldbeheer_schulden', []).append(response['id'])
+            print(f"   Created schuld ID: {response['id']}")
+            print(f"   Dossiernummer: {response.get('dossiernummer')}")
+            print(f"   Omschrijving: {response.get('omschrijving')}")
+            print(f"   Oorspronkelijk bedrag: €{response.get('oorspronkelijk_bedrag')}")
+            print(f"   Openstaand saldo: €{response.get('openstaand_saldo')}")
+            print(f"   Status: {response.get('status')}")
+            return True
+        return False
+
+    def test_get_schulden_schuldbeheer(self):
+        """Test getting all debts in Schuldbeheer"""
+        success, response = self.run_test(
+            "Get Schulden (Schuldbeheer)",
+            "GET",
+            "schuldbeheer/schulden",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} schulden")
+            for schuld in response:
+                print(f"   - {schuld.get('dossiernummer')}: €{schuld.get('openstaand_saldo')} ({schuld.get('status')})")
+            return True
+        return False
+
+    def test_create_betaling_schuldbeheer(self):
+        """Test creating a payment in Schuldbeheer"""
+        if not self.created_resources.get('schuldbeheer_schulden'):
+            print("⚠️  Skipping betaling creation - no schuld created")
+            return True
+            
+        schuld_id = self.created_resources['schuldbeheer_schulden'][0]
+        
+        betaling_data = {
+            "schuld_id": schuld_id,
+            "datum": "2025-02-01",
+            "bedrag": 250.0,
+            "omschrijving": "Maandelijkse betaling februari",
+            "referentie": "BET-2025-001",
+            "betaalmethode": "bank"
+        }
+        
+        success, response = self.run_test(
+            "Create Betaling (Schuldbeheer)",
+            "POST",
+            "schuldbeheer/betalingen",
+            200,
+            data=betaling_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('schuldbeheer_betalingen', []).append(response['id'])
+            print(f"   Created betaling ID: {response['id']}")
+            print(f"   Bedrag: €{response.get('bedrag')}")
+            print(f"   Datum: {response.get('datum')}")
+            print(f"   Betaalmethode: {response.get('betaalmethode')}")
+            return True
+        return False
+
+    def test_get_betalingen_schuldbeheer(self):
+        """Test getting all payments in Schuldbeheer"""
+        success, response = self.run_test(
+            "Get Betalingen (Schuldbeheer)",
+            "GET",
+            "schuldbeheer/betalingen",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} betalingen")
+            for betaling in response:
+                print(f"   - {betaling.get('datum')}: €{betaling.get('bedrag')} ({betaling.get('relatie_naam')})")
+            return True
+        return False
+
+    def test_verify_schuld_saldo_update(self):
+        """Test that schuld saldo is automatically updated after payment"""
+        if not self.created_resources.get('schuldbeheer_schulden'):
+            print("⚠️  Skipping saldo verification - no schuld created")
+            return True
+            
+        schuld_id = self.created_resources['schuldbeheer_schulden'][0]
+        
+        success, response = self.run_test(
+            "Verify Schuld Saldo Update",
+            "GET",
+            f"schuldbeheer/schulden/{schuld_id}",
+            200
+        )
+        
+        if success:
+            oorspronkelijk = response.get('oorspronkelijk_bedrag', 0)
+            totaal_betaald = response.get('totaal_betaald', 0)
+            openstaand = response.get('openstaand_saldo', 0)
+            
+            print(f"   Oorspronkelijk bedrag: €{oorspronkelijk}")
+            print(f"   Totaal betaald: €{totaal_betaald}")
+            print(f"   Openstaand saldo: €{openstaand}")
+            
+            # Verify calculation: openstaand = oorspronkelijk - totaal_betaald
+            expected_openstaand = oorspronkelijk - totaal_betaald
+            if abs(openstaand - expected_openstaand) < 0.01:
+                print(f"   ✅ Saldo calculation correct")
+                return True
+            else:
+                print(f"   ❌ Saldo calculation incorrect: expected €{expected_openstaand}")
+                return False
+        return False
+
+    def test_create_inkomst_schuldbeheer(self):
+        """Test creating income in Schuldbeheer"""
+        inkomst_data = {
+            "datum": "2025-02-01",
+            "bron": "salaris",
+            "bedrag": 3500.0,
+            "vast": True,
+            "omschrijving": "Maandsalaris februari",
+            "frequentie": "maandelijks"
+        }
+        
+        success, response = self.run_test(
+            "Create Inkomst (Schuldbeheer)",
+            "POST",
+            "schuldbeheer/inkomsten",
+            200,
+            data=inkomst_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('schuldbeheer_inkomsten', []).append(response['id'])
+            print(f"   Created inkomst ID: {response['id']}")
+            print(f"   Bron: {response.get('bron')}")
+            print(f"   Bedrag: €{response.get('bedrag')}")
+            print(f"   Frequentie: {response.get('frequentie')}")
+            return True
+        return False
+
+    def test_get_inkomsten_schuldbeheer(self):
+        """Test getting all income in Schuldbeheer"""
+        success, response = self.run_test(
+            "Get Inkomsten (Schuldbeheer)",
+            "GET",
+            "schuldbeheer/inkomsten",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} inkomsten")
+            for inkomst in response:
+                print(f"   - {inkomst.get('bron')}: €{inkomst.get('bedrag')} ({inkomst.get('frequentie')})")
+            return True
+        return False
+
+    def test_create_uitgave_schuldbeheer(self):
+        """Test creating expense in Schuldbeheer"""
+        uitgave_data = {
+            "datum": "2025-02-01",
+            "categorie": "wonen",
+            "bedrag": 1200.0,
+            "omschrijving": "Huur februari",
+            "vast": True,
+            "frequentie": "maandelijks"
+        }
+        
+        success, response = self.run_test(
+            "Create Uitgave (Schuldbeheer)",
+            "POST",
+            "schuldbeheer/uitgaven",
+            200,
+            data=uitgave_data
+        )
+        
+        if success and 'id' in response:
+            self.created_resources.setdefault('schuldbeheer_uitgaven', []).append(response['id'])
+            print(f"   Created uitgave ID: {response['id']}")
+            print(f"   Categorie: {response.get('categorie')}")
+            print(f"   Bedrag: €{response.get('bedrag')}")
+            print(f"   Frequentie: {response.get('frequentie')}")
+            return True
+        return False
+
+    def test_get_uitgaven_schuldbeheer(self):
+        """Test getting all expenses in Schuldbeheer"""
+        success, response = self.run_test(
+            "Get Uitgaven (Schuldbeheer)",
+            "GET",
+            "schuldbeheer/uitgaven",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} uitgaven")
+            for uitgave in response:
+                print(f"   - {uitgave.get('categorie')}: €{uitgave.get('bedrag')} ({uitgave.get('frequentie')})")
+            return True
+        return False
+
+    def test_schuldbeheer_planning(self):
+        """Test Schuldbeheer planning endpoint"""
+        success, response = self.run_test(
+            "Schuldbeheer Planning",
+            "GET",
+            "schuldbeheer/planning",
+            200
+        )
+        
+        if success:
+            print(f"   Maand: {response.get('maand', 'N/A')}")
+            print(f"   Totaal inkomsten: €{response.get('totaal_inkomsten', 0)}")
+            print(f"   Vaste lasten: €{response.get('vaste_lasten', 0)}")
+            print(f"   Schuld betalingen: €{response.get('schuld_betalingen', 0)}")
+            print(f"   Vrij besteedbaar: €{response.get('vrij_besteedbaar', 0)}")
+            return True
+        return False
+
+    def test_schuldbeheer_rapportage_schuld_per_schuldeiser(self):
+        """Test Schuldbeheer rapport schuld per schuldeiser"""
+        success, response = self.run_test(
+            "Rapportage Schuld per Schuldeiser",
+            "GET",
+            "schuldbeheer/rapportages/schuld-per-schuldeiser",
+            200
+        )
+        
+        if success:
+            print(f"   Found {len(response)} schuldeisers in rapport")
+            for item in response:
+                print(f"   - {item.get('relatie_naam')}: €{item.get('totaal_schuld')} ({item.get('aantal_dossiers')} dossiers)")
+            return True
+        return False
+
+    def test_schuldbeheer_rapportage_cashflow(self):
+        """Test Schuldbeheer cashflow rapport"""
+        success, response = self.run_test(
+            "Rapportage Cashflow",
+            "GET",
+            "schuldbeheer/rapportages/cashflow",
+            200
+        )
+        
+        if success:
+            print(f"   Periode: {response.get('periode', 'N/A')}")
+            print(f"   Totaal inkomsten: €{response.get('totaal_inkomsten', 0)}")
+            print(f"   Totaal uitgaven: €{response.get('totaal_uitgaven', 0)}")
+            print(f"   Netto cashflow: €{response.get('netto_cashflow', 0)}")
+            return True
+        return False
+
+    def test_schuldbeheer_rapportage_jaaroverzicht(self):
+        """Test Schuldbeheer jaaroverzicht rapport"""
+        success, response = self.run_test(
+            "Rapportage Jaaroverzicht",
+            "GET",
+            "schuldbeheer/rapportages/jaaroverzicht",
+            200
+        )
+        
+        if success:
+            print(f"   Jaar: {response.get('jaar', 'N/A')}")
+            print(f"   Totaal afgelost: €{response.get('totaal_afgelost', 0)}")
+            print(f"   Gemiddelde maandelijkse betaling: €{response.get('gemiddelde_maandelijkse_betaling', 0)}")
+            maandelijkse_data = response.get('maandelijkse_data', [])
+            print(f"   Maandelijkse data punten: {len(maandelijkse_data)}")
+            return True
+        return False
+
+    def test_schuldbeheer_statistieken(self):
+        """Test Schuldbeheer statistieken endpoint"""
+        success, response = self.run_test(
+            "Schuldbeheer Statistieken",
+            "GET",
+            "schuldbeheer/statistieken",
+            200
+        )
+        
+        if success:
+            print(f"   Schuldontwikkeling data punten: {len(response.get('schuldontwikkeling', []))}")
+            print(f"   Huidige totale schuld: €{response.get('huidige_totale_schuld', 0)}")
+            print(f"   Totaal afgelost dit jaar: €{response.get('totaal_afgelost_dit_jaar', 0)}")
+            return True
+        return False
+
     def test_demo_account_login(self):
         """Test login with demo account"""
         login_data = {
