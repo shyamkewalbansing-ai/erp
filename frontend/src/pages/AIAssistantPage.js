@@ -44,7 +44,29 @@ export default function AIAssistantPage() {
     checkAuth();
     const handleBeforeInstall = (e) => { e.preventDefault(); setDeferredPrompt(e); };
     window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    
+    // Set PWA manifest for AI Assistant
+    const manifestLink = document.querySelector('link[rel="manifest"]');
+    if (manifestLink) {
+      manifestLink.href = '/ai-manifest.json';
+    }
+    
+    // Update theme color for AI Assistant
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    if (themeColor) {
+      themeColor.content = '#10b981';
+    }
+    
+    // Update document title
+    document.title = 'AI Assistent - Facturatie.sr';
+    
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+      // Restore original manifest on unmount
+      if (manifestLink) {
+        manifestLink.href = '/manifest.json';
+      }
+    };
   }, []);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
