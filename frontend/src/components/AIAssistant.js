@@ -416,11 +416,11 @@ export default function AIAssistant() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-primary/80 text-white shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:scale-105 transition-all duration-300 flex items-center justify-center group"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-105 transition-all duration-300 flex items-center justify-center group"
         data-testid="ai-chat-button"
       >
         <MessageCircle className="w-6 h-6 group-hover:scale-110 transition-transform" />
-        <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-background animate-pulse ${
+        <span className={`absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white animate-pulse ${
           activeModules.length > 0 ? 'bg-green-500' : 'bg-orange-500'
         }`} />
       </button>
@@ -429,21 +429,23 @@ export default function AIAssistant() {
 
   return (
     <div 
-      className={`fixed bottom-6 right-6 z-50 flex flex-col bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl transition-all duration-300 ${
-        isMinimized ? 'w-72 h-14' : 'w-96 h-[550px]'
+      className={`fixed z-50 flex flex-col bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 ${
+        isMinimized 
+          ? 'bottom-6 right-6 w-72 h-14 rounded-2xl border border-gray-200 dark:border-gray-700' 
+          : 'inset-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:w-96 sm:h-[550px] sm:rounded-2xl sm:border sm:border-gray-200 sm:dark:border-gray-700'
       }`}
       data-testid="ai-chat-window"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-emerald-500 rounded-t-2xl">
+      <div className={`flex items-center justify-between p-3 sm:p-3 border-b border-gray-200 dark:border-gray-700 bg-emerald-500 ${isMinimized ? 'rounded-t-2xl' : 'sm:rounded-t-2xl'}`}>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-            <span className="text-emerald-600 font-bold text-sm">
+          <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center">
+            <span className="text-emerald-600 font-bold text-base sm:text-sm">
               {companyName ? companyName.substring(0, 2).toUpperCase() : 'AI'}
             </span>
           </div>
           <div>
-            <h3 className="font-semibold text-sm text-white">{companyName || 'AI Assistent'}</h3>
+            <h3 className="font-semibold text-base sm:text-sm text-white">{companyName || 'AI Assistent'}</h3>
             {!isMinimized && (
               <p className="text-xs text-emerald-100 flex items-center gap-1">
                 <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></span>
@@ -457,17 +459,18 @@ export default function AIAssistant() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 hover:bg-white/20 text-white"
+              className="h-9 w-9 sm:h-7 sm:w-7 hover:bg-white/20 text-white"
               onClick={handleClearChat}
               title="Chat wissen"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-4 h-4 sm:w-3.5 sm:h-3.5" />
             </Button>
           )}
+          {/* Hide minimize button on mobile */}
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 hover:bg-white/20 text-white"
+            className="hidden sm:flex h-7 w-7 hover:bg-white/20 text-white"
             onClick={() => setIsMinimized(!isMinimized)}
           >
             {isMinimized ? (
