@@ -163,8 +163,8 @@ export default function ChatWidget() {
             
             {loading && (
               <div className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-emerald-600" />
+                <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">SK</span>
                 </div>
                 <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
                   <div className="flex gap-1">
