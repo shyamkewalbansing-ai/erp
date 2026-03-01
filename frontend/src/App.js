@@ -145,6 +145,18 @@ const BoekhoudingHerinneringen = lazy(() => import("./pages/boekhouding/Herinner
 const BoekhoudingDocumenten = lazy(() => import("./pages/boekhouding/DocumentenPage"));
 const BoekhoudingAuditTrail = lazy(() => import("./pages/boekhouding/AuditTrailPage"));
 
+// Schuldbeheer Module (Persoonlijke Boekhouding & Schuldenbeheer)
+const SchuldbeheerDashboard = lazy(() => import("./pages/schuldbeheer/DashboardPage"));
+const SchuldbeheerRelaties = lazy(() => import("./pages/schuldbeheer/RelatiesPage"));
+const SchuldbeheerSchulden = lazy(() => import("./pages/schuldbeheer/SchuldenPage"));
+const SchuldbeheerBetalingen = lazy(() => import("./pages/schuldbeheer/BetalingenPage"));
+const SchuldbeheerInkomsten = lazy(() => import("./pages/schuldbeheer/InkomstenPage"));
+const SchuldbeheerUitgaven = lazy(() => import("./pages/schuldbeheer/UitgavenPage"));
+const SchuldbeheerRekeningen = lazy(() => import("./pages/schuldbeheer/RekeningenPage"));
+const SchuldbeheerPlanning = lazy(() => import("./pages/schuldbeheer/PlanningPage"));
+const SchuldbeheerRapportages = lazy(() => import("./pages/schuldbeheer/RapportagesPage"));
+const SchuldbeheerDocumenten = lazy(() => import("./pages/schuldbeheer/DocumentenPage"));
+
 // Suribet Module
 const SuribetDashboard = lazy(() => import("./pages/suribet/DashboardPage"));
 const SuribetMachines = lazy(() => import("./pages/suribet/MachinesPage"));
