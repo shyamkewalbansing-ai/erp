@@ -133,9 +133,9 @@ Dutch (Nederlands)
 - Wachtwoord: demo2024
 
 ### Recent Test Rapport
-- `/app/test_reports/iteration_57.json`
-- Backend: 100% (7/7 tests - barcode functionaliteit)
-- Frontend: 100% (9/9 features geverifieerd)
+- `/app/test_reports/iteration_60.json`
+- Frontend: 100% (8/8 Boekhouding pagina's geverifieerd)
+- Alle pagina's hebben consistente design met 4 stat cards, gray kleuren, rounded-2xl borders
 
 ---
 
