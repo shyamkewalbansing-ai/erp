@@ -176,7 +176,7 @@ const DashboardPage = () => {
             </div>
             <button 
               className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors"
-              onClick={() => window.location.href = '/app/pos'}
+              onClick={() => navigate('/app/boekhouding/pos')}
             >
               <Receipt className="w-4 h-4" />
               Point of Sale
