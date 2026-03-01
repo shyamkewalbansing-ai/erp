@@ -309,6 +309,7 @@ export default function Layout() {
     beauty: { name: 'Beauty Spa', items: beautySpaItems, icon: Sparkles },
     suribet: { name: 'Suribet', items: suribetNavItems, icon: Gamepad2 },
     boekhouding: { name: 'Boekhouding', items: boekhoudingNavItems, icon: Calculator },
+    schuldbeheer: { name: 'Schuldbeheer', items: schuldbeheerNavItems, icon: Wallet },
   };
 
   // Get modules in the correct order based on user preference
