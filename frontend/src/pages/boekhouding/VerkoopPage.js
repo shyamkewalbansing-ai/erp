@@ -677,8 +677,34 @@ const VerkoopPage = () => {
           toast.success('PDF gedownload');
         } catch { toast.error('Download mislukt'); }
         break;
-      case 'email': toast.success('E-mail verstuurd naar klant'); break;
-      case 'print': window.print(); break;
+      case 'email':
+        // Open email dialog with pre-filled data
+        setEmailInvoice(item);
+        setEmailData({
+          to: item.debiteur_email || item.customer_email || '',
+          subject: `Factuur ${item.factuurnummer || item.invoice_number}`,
+          message: `Geachte ${item.debiteur_naam || item.customer_name || 'klant'},\n\nHierbij ontvangt u factuur ${item.factuurnummer || item.invoice_number} ter hoogte van ${formatCurrency(item.totaal_incl_btw || item.total || 0, item.valuta || 'SRD')}.\n\nDe vervaldatum is ${formatDate(item.vervaldatum || item.due_date)}.\n\nMet vriendelijke groet`
+        });
+        setShowEmailDialog(true);
+        break;
+      case 'print':
+        // Generate PDF and open print dialog
+        try {
+          toast.info('PDF wordt voorbereid...');
+          const res = await pdfAPI.getInvoicePdf(item.id);
+          const blob = new Blob([res.data], { type: 'application/pdf' });
+          const url = window.URL.createObjectURL(blob);
+          
+          // Open PDF in new window and trigger print
+          const printWindow = window.open(url, '_blank');
+          if (printWindow) {
+            printWindow.onload = () => {
+              printWindow.print();
+            };
+          }
+          toast.success('Print dialoog geopend');
+        } catch { toast.error('Print mislukt'); }
+        break;
       case 'reminder': toast.success('Herinnering verstuurd'); break;
       case 'payment':
         setSelectedInvoice(item);
