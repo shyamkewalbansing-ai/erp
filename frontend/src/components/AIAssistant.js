@@ -420,8 +420,8 @@ export default function AIAssistant() {
                   message.role === 'user'
                     ? 'bg-emerald-500 text-white rounded-tr-sm'
                     : message.isError
-                      ? 'bg-destructive/10 text-destructive rounded-tl-sm'
-                      : 'bg-muted rounded-tl-sm'
+                      ? 'bg-red-100 text-red-600 rounded-tl-sm'
+                      : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm'
                 }`}>
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   {message.actionExecuted && (
@@ -435,11 +435,13 @@ export default function AIAssistant() {
             ))}
             {isLoading && (
               <div className="flex gap-2">
-                <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
-                  <Bot className="w-4 h-4 text-primary" />
+                <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center">
+                  <span className="text-white font-bold text-xs">
+                    {companyName ? companyName.substring(0, 2).toUpperCase() : 'AI'}
+                  </span>
                 </div>
-                <div className="bg-muted rounded-xl rounded-tl-sm px-3 py-2">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <div className="bg-white border border-gray-200 rounded-xl rounded-tl-sm px-3 py-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Even denken...
                   </div>
@@ -451,7 +453,7 @@ export default function AIAssistant() {
 
           {/* Quick Actions */}
           {messages.length <= 2 && (
-            <div className="px-4 pb-2 flex flex-wrap gap-2">
+            <div className="px-4 pb-2 flex flex-wrap gap-2 bg-white dark:bg-gray-900">
               {quickActions.map((action, index) => (
                 <button
                   key={index}
@@ -459,7 +461,7 @@ export default function AIAssistant() {
                     setInput(action.message);
                     inputRef.current?.focus();
                   }}
-                  className="px-3 py-1.5 text-xs bg-muted hover:bg-muted/80 rounded-full text-muted-foreground hover:text-foreground transition-colors"
+                  className="px-3 py-1.5 text-xs bg-emerald-50 hover:bg-emerald-100 rounded-full text-emerald-700 transition-colors"
                 >
                   {action.label}
                 </button>
