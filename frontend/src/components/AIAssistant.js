@@ -313,7 +313,7 @@ export default function AIAssistant() {
   const handleClearChat = () => {
     setMessages([{
       role: 'assistant',
-      content: getWelcomeMessage(activeModules)
+      content: getWelcomeMessageWithCompany(activeModules, companyName)
     }]);
   };
 
@@ -336,21 +336,26 @@ export default function AIAssistant() {
 
   return (
     <div 
-      className={`fixed bottom-6 right-6 z-50 flex flex-col bg-background border border-border rounded-2xl shadow-2xl transition-all duration-300 ${
+      className={`fixed bottom-6 right-6 z-50 flex flex-col bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-2xl transition-all duration-300 ${
         isMinimized ? 'w-72 h-14' : 'w-96 h-[550px]'
       }`}
       data-testid="ai-chat-window"
     >
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-border/50 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-t-2xl">
+      <div className="flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 bg-emerald-500 rounded-t-2xl">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-primary" />
+          <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
+            <span className="text-emerald-600 font-bold text-sm">
+              {companyName ? companyName.substring(0, 2).toUpperCase() : 'AI'}
+            </span>
           </div>
           <div>
-            <h3 className="font-semibold text-sm text-foreground">AI Assistent</h3>
+            <h3 className="font-semibold text-sm text-white">{companyName || 'AI Assistent'}</h3>
             {!isMinimized && (
-              <p className="text-xs text-muted-foreground">Facturatie N.V.</p>
+              <p className="text-xs text-emerald-100 flex items-center gap-1">
+                <span className="w-2 h-2 bg-green-300 rounded-full animate-pulse"></span>
+                Online
+              </p>
             )}
           </div>
         </div>
@@ -359,7 +364,7 @@ export default function AIAssistant() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 hover:bg-muted"
+              className="h-7 w-7 hover:bg-white/20 text-white"
               onClick={handleClearChat}
               title="Chat wissen"
             >
