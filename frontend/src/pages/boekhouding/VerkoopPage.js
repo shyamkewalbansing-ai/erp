@@ -86,13 +86,13 @@ const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'defa
 };
 
 const VerkoopPage = () => {
+  const navigate = useNavigate();
   const [quotes, setQuotes] = useState([]);
   const [orders, setOrders] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -105,16 +105,6 @@ const VerkoopPage = () => {
     datum: new Date().toISOString().split('T')[0],
     betaalmethode: 'bank',
     referentie: ''
-  });
-
-  const [newInvoice, setNewInvoice] = useState({
-    type: 'sales',
-    customer_id: '',
-    date: new Date().toISOString().split('T')[0],
-    due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    currency: 'SRD',
-    lines: [{ product_id: '', description: '', quantity: 1, unit_price: 0, btw_percentage: 10, btw_amount: 0, total: 0 }],
-    notes: ''
   });
 
   // Format number with Dutch locale
