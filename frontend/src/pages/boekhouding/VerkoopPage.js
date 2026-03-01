@@ -26,12 +26,51 @@ import {
   Search,
   Filter,
   Trash2,
-  ArrowUpRight,
+  TrendingUp,
   Wallet,
   Clock,
-  ChevronRight
+  Users
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../../components/ui/dropdown-menu';
+
+// Stat Card - Matching Dashboard style with icon on RIGHT
+const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, iconColor, loading }) => {
+  if (loading) {
+    return (
+      <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <Skeleton className="h-4 w-20 mb-3" />
+              <Skeleton className="h-8 w-28 mb-2" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+            <Skeleton className="w-12 h-12 rounded-xl" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <p className="text-sm text-gray-500 font-medium">{title}</p>
+            <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+            {subtitle && (
+              <p className={`text-xs mt-1 ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
+            )}
+          </div>
+          <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center`}>
+            <Icon className={`w-6 h-6 ${iconColor}`} />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 const VerkoopPage = () => {
   const navigate = useNavigate();
@@ -191,155 +230,110 @@ const VerkoopPage = () => {
   const totalInvoiced = invoices.reduce((sum, i) => sum + (i.totaal_incl_btw || i.total || 0), 0);
   const totalPaid = invoices.reduce((sum, i) => sum + (i.totaal_betaald || 0), 0);
   const totalOutstanding = invoices.reduce((sum, i) => sum + (i.openstaand_bedrag || 0), 0);
+  const paidCount = invoices.filter(i => i.status === 'betaald').length;
+  const openCount = invoices.filter(i => i.status !== 'betaald').length;
 
   const getStatusStyle = (status) => {
     switch(status) {
       case 'betaald': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'verzonden': return 'bg-sky-50 text-sky-700 border-sky-200';
+      case 'verzonden': return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'herinnering': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'geaccepteerd': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'geleverd': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      default: return 'bg-slate-100 text-slate-600 border-slate-200';
+      default: return 'bg-gray-100 text-gray-600 border-gray-200';
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50" data-testid="verkoop-page">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="px-8 py-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold text-slate-800">Verkoop</h1>
-              <p className="text-sm text-slate-500 mt-0.5">Beheer uw offertes, orders en facturen</p>
-            </div>
-            <Button 
-              className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm" 
-              data-testid="add-invoice-btn"
-              onClick={() => navigate('/app/boekhouding/verkoop/nieuw')}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Nieuwe Factuur
-            </Button>
+    <div className="min-h-screen bg-gray-50" data-testid="verkoop-page">
+      {/* Header - Matching Dashboard style */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="px-8 py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Verkoop</h1>
+            <p className="text-gray-500 mt-1">Beheer uw offertes, orders en facturen</p>
           </div>
+          <Button 
+            className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium" 
+            data-testid="add-invoice-btn"
+            onClick={() => navigate('/app/boekhouding/verkoop/nieuw')}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Nieuwe Factuur
+          </Button>
         </div>
       </div>
 
-      <div className="px-8 py-6 max-w-[1600px] mx-auto">
-        {/* Stats */}
+      <div className="p-8">
+        {/* Stats Row - 4 columns matching Dashboard */}
         <div className="grid grid-cols-4 gap-5 mb-6">
-          {/* Total Invoiced */}
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">Gefactureerd</p>
-                  <p className="text-2xl font-bold text-slate-800 mt-2">
-                    {loading ? <Skeleton className="h-8 w-28" /> : formatAmount(totalInvoiced)}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-2 flex items-center">
-                    <Receipt className="w-3 h-3 mr-1" />
-                    {invoices.length} facturen
-                  </p>
-                </div>
-                <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center">
-                  <Receipt className="w-5 h-5 text-slate-500" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Received */}
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">Ontvangen</p>
-                  <p className="text-2xl font-bold text-emerald-600 mt-2">
-                    {loading ? <Skeleton className="h-8 w-28" /> : formatAmount(totalPaid)}
-                  </p>
-                  <p className="text-xs text-emerald-600 mt-2 flex items-center">
-                    <ArrowUpRight className="w-3 h-3 mr-1" />
-                    Betaald
-                  </p>
-                </div>
-                <div className="w-11 h-11 rounded-xl bg-emerald-50 flex items-center justify-center">
-                  <Wallet className="w-5 h-5 text-emerald-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Outstanding */}
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">Openstaand</p>
-                  <p className="text-2xl font-bold text-amber-600 mt-2">
-                    {loading ? <Skeleton className="h-8 w-28" /> : formatAmount(totalOutstanding)}
-                  </p>
-                  <p className="text-xs text-amber-600 mt-2 flex items-center">
-                    <Clock className="w-3 h-3 mr-1" />
-                    Te ontvangen
-                  </p>
-                </div>
-                <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-amber-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Quotes */}
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">Offertes</p>
-                  <p className="text-2xl font-bold text-slate-800 mt-2">
-                    {loading ? <Skeleton className="h-8 w-16" /> : quotes.length}
-                  </p>
-                  <p className="text-xs text-slate-400 mt-2 flex items-center">
-                    <FileText className="w-3 h-3 mr-1" />
-                    Actief
-                  </p>
-                </div>
-                <div className="w-11 h-11 rounded-xl bg-sky-50 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-sky-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <StatCard
+            title="Gefactureerd"
+            value={formatAmount(totalInvoiced)}
+            subtitle={`${invoices.length} facturen`}
+            icon={Receipt}
+            iconBg="bg-blue-50"
+            iconColor="text-blue-500"
+            loading={loading}
+          />
+          <StatCard
+            title="Ontvangen"
+            value={formatAmount(totalPaid)}
+            subtitle={`${paidCount} betaald`}
+            subtitleColor="text-emerald-600"
+            icon={Wallet}
+            iconBg="bg-emerald-50"
+            iconColor="text-emerald-500"
+            loading={loading}
+          />
+          <StatCard
+            title="Openstaand"
+            value={formatAmount(totalOutstanding)}
+            subtitle={`${openCount} openstaand`}
+            subtitleColor="text-amber-600"
+            icon={Clock}
+            iconBg="bg-amber-50"
+            iconColor="text-amber-500"
+            loading={loading}
+          />
+          <StatCard
+            title="Offertes"
+            value={quotes.length.toString()}
+            subtitle="Actieve offertes"
+            icon={FileText}
+            iconBg="bg-rose-50"
+            iconColor="text-rose-500"
+            loading={loading}
+          />
         </div>
 
-        {/* Main Content */}
-        <Card className="bg-white border-0 shadow-sm">
+        {/* Main Content Card */}
+        <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
           <Tabs defaultValue="invoices">
             {/* Tab Header */}
-            <div className="border-b border-slate-100 px-6">
+            <div className="border-b border-gray-100 px-6">
               <TabsList className="bg-transparent p-0 h-auto">
                 <TabsTrigger 
                   value="quotes" 
-                  className="relative px-4 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-slate-500 hover:text-slate-700 font-medium"
+                  className="relative px-4 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-gray-500 hover:text-gray-700 font-medium"
                   data-testid="tab-quotes"
                 >
                   <FileText className="w-4 h-4 mr-2 inline" />
                   Offertes
-                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">{quotes.length}</span>
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">{quotes.length}</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="orders"
-                  className="relative px-4 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-slate-500 hover:text-slate-700 font-medium"
+                  className="relative px-4 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-gray-500 hover:text-gray-700 font-medium"
                   data-testid="tab-sales-orders"
                 >
                   <ShoppingCart className="w-4 h-4 mr-2 inline" />
                   Orders
-                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600">{orders.length}</span>
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600">{orders.length}</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="invoices"
-                  className="relative px-4 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-slate-500 hover:text-slate-700 font-medium"
+                  className="relative px-4 py-4 rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-500 data-[state=active]:text-emerald-600 data-[state=active]:bg-transparent data-[state=active]:shadow-none text-gray-500 hover:text-gray-700 font-medium"
                   data-testid="tab-sales-invoices"
                 >
                   <Receipt className="w-4 h-4 mr-2 inline" />
@@ -351,27 +345,26 @@ const VerkoopPage = () => {
 
             {/* Quotes Tab */}
             <TabsContent value="quotes" className="m-0">
-              <div className="p-4 border-b border-slate-100">
+              <div className="p-5 border-b border-gray-100">
                 <div className="relative w-80">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     placeholder="Zoeken op nummer of klant..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-slate-50 border-slate-200 focus:bg-white"
+                    className="pl-10 bg-gray-50 border-gray-200 rounded-lg focus:bg-white"
                   />
                 </div>
               </div>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-3">Nummer</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Datum</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Klant</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Geldig tot</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Bedrag</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</TableHead>
-                    <TableHead className="w-10"></TableHead>
+                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider py-4">Nummer</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Datum</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Klant</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Geldig tot</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Bedrag</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -384,17 +377,16 @@ const VerkoopPage = () => {
                         <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                        <TableCell></TableCell>
                       </TableRow>
                     ))
                   ) : filteredQuotes.length > 0 ? (
                     filteredQuotes.map(quote => (
-                      <TableRow key={quote.id} className="hover:bg-slate-50/50 cursor-pointer group">
-                        <TableCell className="font-medium text-slate-800">{quote.quote_number}</TableCell>
-                        <TableCell className="text-slate-600">{formatDate(quote.date)}</TableCell>
-                        <TableCell className="text-slate-800 font-medium">{quote.customer_name}</TableCell>
-                        <TableCell className="text-slate-500">{formatDate(quote.valid_until)}</TableCell>
-                        <TableCell className="text-right font-semibold text-slate-800">
+                      <TableRow key={quote.id} className="hover:bg-gray-50/50">
+                        <TableCell className="font-medium text-gray-900">{quote.quote_number}</TableCell>
+                        <TableCell className="text-gray-600">{formatDate(quote.date)}</TableCell>
+                        <TableCell className="text-gray-900 font-medium">{quote.customer_name}</TableCell>
+                        <TableCell className="text-gray-500">{formatDate(quote.valid_until)}</TableCell>
+                        <TableCell className="text-right font-semibold text-gray-900">
                           {formatAmount(quote.total, quote.currency)}
                         </TableCell>
                         <TableCell>
@@ -402,17 +394,14 @@ const VerkoopPage = () => {
                             {getStatusLabel(quote.status)}
                           </span>
                         </TableCell>
-                        <TableCell>
-                          <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-16">
-                        <FileText className="w-12 h-12 mx-auto text-slate-200 mb-3" />
-                        <p className="text-slate-500 font-medium">Geen offertes gevonden</p>
-                        <p className="text-slate-400 text-sm mt-1">Maak een nieuwe offerte aan</p>
+                      <TableCell colSpan={6} className="text-center py-16">
+                        <FileText className="w-12 h-12 mx-auto text-gray-200 mb-3" />
+                        <p className="text-gray-500 font-medium">Geen offertes gevonden</p>
+                        <p className="text-gray-400 text-sm mt-1">Maak een nieuwe offerte aan</p>
                       </TableCell>
                     </TableRow>
                   )}
@@ -422,27 +411,26 @@ const VerkoopPage = () => {
 
             {/* Orders Tab */}
             <TabsContent value="orders" className="m-0">
-              <div className="p-4 border-b border-slate-100">
+              <div className="p-5 border-b border-gray-100">
                 <div className="relative w-80">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     placeholder="Zoeken op nummer of klant..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-slate-50 border-slate-200 focus:bg-white"
+                    className="pl-10 bg-gray-50 border-gray-200 rounded-lg focus:bg-white"
                   />
                 </div>
               </div>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-3">Nummer</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Datum</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Klant</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Leverdatum</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Bedrag</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</TableHead>
-                    <TableHead className="w-10"></TableHead>
+                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider py-4">Nummer</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Datum</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Klant</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Leverdatum</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Bedrag</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -455,17 +443,16 @@ const VerkoopPage = () => {
                         <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                        <TableCell></TableCell>
                       </TableRow>
                     ))
                   ) : filteredOrders.length > 0 ? (
                     filteredOrders.map(order => (
-                      <TableRow key={order.id} className="hover:bg-slate-50/50 cursor-pointer group">
-                        <TableCell className="font-medium text-slate-800">{order.order_number}</TableCell>
-                        <TableCell className="text-slate-600">{formatDate(order.date)}</TableCell>
-                        <TableCell className="text-slate-800 font-medium">{order.customer_name}</TableCell>
-                        <TableCell className="text-slate-500">{formatDate(order.delivery_date)}</TableCell>
-                        <TableCell className="text-right font-semibold text-slate-800">
+                      <TableRow key={order.id} className="hover:bg-gray-50/50">
+                        <TableCell className="font-medium text-gray-900">{order.order_number}</TableCell>
+                        <TableCell className="text-gray-600">{formatDate(order.date)}</TableCell>
+                        <TableCell className="text-gray-900 font-medium">{order.customer_name}</TableCell>
+                        <TableCell className="text-gray-500">{formatDate(order.delivery_date)}</TableCell>
+                        <TableCell className="text-right font-semibold text-gray-900">
                           {formatAmount(order.total, order.currency)}
                         </TableCell>
                         <TableCell>
@@ -473,17 +460,14 @@ const VerkoopPage = () => {
                             {getStatusLabel(order.status)}
                           </span>
                         </TableCell>
-                        <TableCell>
-                          <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors" />
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-16">
-                        <ShoppingCart className="w-12 h-12 mx-auto text-slate-200 mb-3" />
-                        <p className="text-slate-500 font-medium">Geen orders gevonden</p>
-                        <p className="text-slate-400 text-sm mt-1">Orders verschijnen hier na acceptatie</p>
+                      <TableCell colSpan={6} className="text-center py-16">
+                        <ShoppingCart className="w-12 h-12 mx-auto text-gray-200 mb-3" />
+                        <p className="text-gray-500 font-medium">Geen orders gevonden</p>
+                        <p className="text-gray-400 text-sm mt-1">Orders verschijnen hier na acceptatie</p>
                       </TableCell>
                     </TableRow>
                   )}
@@ -493,20 +477,20 @@ const VerkoopPage = () => {
 
             {/* Invoices Tab */}
             <TabsContent value="invoices" className="m-0">
-              <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <div className="p-5 border-b border-gray-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="relative w-80">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <Input
                       placeholder="Zoeken op nummer of klant..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 bg-slate-50 border-slate-200 focus:bg-white"
+                      className="pl-10 bg-gray-50 border-gray-200 rounded-lg focus:bg-white"
                     />
                   </div>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-44 bg-slate-50 border-slate-200">
-                      <Filter className="w-4 h-4 mr-2 text-slate-400" />
+                    <SelectTrigger className="w-44 bg-gray-50 border-gray-200 rounded-lg">
+                      <Filter className="w-4 h-4 mr-2 text-gray-400" />
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -518,18 +502,18 @@ const VerkoopPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <p className="text-sm text-slate-500">{filteredInvoices.length} resultaten</p>
+                <p className="text-sm text-gray-500">{filteredInvoices.length} resultaten</p>
               </div>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-3 pl-6">Nummer</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Datum</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Klant</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Vervaldatum</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Bedrag</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Status</TableHead>
-                    <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider text-right pr-6">Acties</TableHead>
+                  <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider py-4 pl-6">Nummer</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Datum</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Klant</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Vervaldatum</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-right">Bedrag</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Status</TableHead>
+                    <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wider text-right pr-6">Acties</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -555,15 +539,15 @@ const VerkoopPage = () => {
                       const currency = invoice.valuta || invoice.currency || 'SRD';
                       
                       return (
-                        <TableRow key={invoice.id} className="hover:bg-emerald-50/30 transition-colors group" data-testid={`sales-invoice-row-${invoiceNumber}`}>
+                        <TableRow key={invoice.id} className="hover:bg-emerald-50/30 transition-colors" data-testid={`sales-invoice-row-${invoiceNumber}`}>
                           <TableCell className="pl-6">
-                            <span className="font-semibold text-emerald-700">{invoiceNumber}</span>
+                            <span className="font-semibold text-emerald-600">{invoiceNumber}</span>
                           </TableCell>
-                          <TableCell className="text-slate-600">{formatDate(invoiceDate)}</TableCell>
-                          <TableCell className="text-slate-800 font-medium">{customerName}</TableCell>
-                          <TableCell className="text-slate-500">{formatDate(dueDate)}</TableCell>
+                          <TableCell className="text-gray-600">{formatDate(invoiceDate)}</TableCell>
+                          <TableCell className="text-gray-900 font-medium">{customerName}</TableCell>
+                          <TableCell className="text-gray-500">{formatDate(dueDate)}</TableCell>
                           <TableCell className="text-right">
-                            <span className="font-semibold text-slate-800">{formatAmount(totalAmount, currency)}</span>
+                            <span className="font-semibold text-gray-900">{formatAmount(totalAmount, currency)}</span>
                           </TableCell>
                           <TableCell className="text-center">
                             <span className={`inline-flex px-2.5 py-1 text-xs font-medium rounded-md border ${getStatusStyle(invoice.status)}`}>
@@ -576,13 +560,13 @@ const VerkoopPage = () => {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleDownloadPdf(invoice.id, invoiceNumber)}
-                                className="h-8 w-8 p-0 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
+                                className="h-8 w-8 p-0 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg"
                               >
                                 <Download className="w-4 h-4" />
                               </Button>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-slate-400 hover:text-slate-600" disabled={updatingStatus === invoice.id}>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 rounded-lg" disabled={updatingStatus === invoice.id}>
                                     {updatingStatus === invoice.id ? (
                                       <Loader2 className="w-4 h-4 animate-spin" />
                                     ) : (
@@ -629,9 +613,9 @@ const VerkoopPage = () => {
                   ) : (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-16">
-                        <Receipt className="w-12 h-12 mx-auto text-slate-200 mb-3" />
-                        <p className="text-slate-500 font-medium">Geen facturen gevonden</p>
-                        <p className="text-slate-400 text-sm mt-1">Maak een nieuwe factuur of pas de filters aan</p>
+                        <Receipt className="w-12 h-12 mx-auto text-gray-200 mb-3" />
+                        <p className="text-gray-500 font-medium">Geen facturen gevonden</p>
+                        <p className="text-gray-400 text-sm mt-1">Maak een nieuwe factuur of pas de filters aan</p>
                       </TableCell>
                     </TableRow>
                   )}
@@ -644,20 +628,20 @@ const VerkoopPage = () => {
 
       {/* Payment Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md rounded-2xl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-semibold text-slate-800">Betaling Toevoegen</DialogTitle>
+            <DialogTitle className="text-lg font-semibold text-gray-900">Betaling Toevoegen</DialogTitle>
           </DialogHeader>
           {selectedInvoice && (
             <div className="space-y-5 py-2">
-              <div className="bg-slate-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-xl p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-slate-500 uppercase tracking-wide">Factuur</p>
-                    <p className="font-semibold text-emerald-700 mt-0.5">{selectedInvoice.factuurnummer || selectedInvoice.invoice_number}</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Factuur</p>
+                    <p className="font-semibold text-emerald-600 mt-0.5">{selectedInvoice.factuurnummer || selectedInvoice.invoice_number}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs text-slate-500 uppercase tracking-wide">Openstaand</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wide">Openstaand</p>
                     <p className="font-semibold text-amber-600 mt-0.5">{formatAmount(selectedInvoice.openstaand_bedrag || selectedInvoice.totaal_incl_btw || selectedInvoice.total, selectedInvoice.valuta || selectedInvoice.currency)}</p>
                   </div>
                 </div>
@@ -665,23 +649,23 @@ const VerkoopPage = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-slate-700">Bedrag *</Label>
+                  <Label className="text-sm font-medium text-gray-700">Bedrag *</Label>
                   <Input
                     type="number"
                     step="0.01"
                     value={newPayment.bedrag}
                     onChange={(e) => setNewPayment({...newPayment, bedrag: parseFloat(e.target.value) || 0})}
-                    className="bg-slate-50 border-slate-200 focus:bg-white"
+                    className="bg-gray-50 border-gray-200 rounded-lg focus:bg-white"
                     data-testid="payment-amount-input"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-slate-700">Datum *</Label>
+                  <Label className="text-sm font-medium text-gray-700">Datum *</Label>
                   <Input
                     type="date"
                     value={newPayment.datum}
                     onChange={(e) => setNewPayment({...newPayment, datum: e.target.value})}
-                    className="bg-slate-50 border-slate-200 focus:bg-white"
+                    className="bg-gray-50 border-gray-200 rounded-lg focus:bg-white"
                     data-testid="payment-date-input"
                   />
                 </div>
@@ -689,9 +673,9 @@ const VerkoopPage = () => {
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-slate-700">Methode</Label>
+                  <Label className="text-sm font-medium text-gray-700">Methode</Label>
                   <Select value={newPayment.betaalmethode} onValueChange={(v) => setNewPayment({...newPayment, betaalmethode: v})}>
-                    <SelectTrigger className="bg-slate-50 border-slate-200" data-testid="payment-method-select">
+                    <SelectTrigger className="bg-gray-50 border-gray-200 rounded-lg" data-testid="payment-method-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -703,12 +687,12 @@ const VerkoopPage = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-slate-700">Referentie</Label>
+                  <Label className="text-sm font-medium text-gray-700">Referentie</Label>
                   <Input
                     value={newPayment.referentie}
                     onChange={(e) => setNewPayment({...newPayment, referentie: e.target.value})}
                     placeholder="Optioneel"
-                    className="bg-slate-50 border-slate-200 focus:bg-white"
+                    className="bg-gray-50 border-gray-200 rounded-lg focus:bg-white"
                     data-testid="payment-reference-input"
                   />
                 </div>
@@ -716,10 +700,10 @@ const VerkoopPage = () => {
             </div>
           )}
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setShowPaymentDialog(false)} data-testid="payment-cancel-btn">
+            <Button variant="outline" onClick={() => setShowPaymentDialog(false)} className="rounded-lg" data-testid="payment-cancel-btn">
               Annuleren
             </Button>
-            <Button onClick={handleAddPayment} disabled={saving || newPayment.bedrag <= 0} className="bg-emerald-600 hover:bg-emerald-700" data-testid="payment-submit-btn">
+            <Button onClick={handleAddPayment} disabled={saving || newPayment.bedrag <= 0} className="bg-emerald-500 hover:bg-emerald-600 rounded-lg" data-testid="payment-submit-btn">
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Opslaan
             </Button>
