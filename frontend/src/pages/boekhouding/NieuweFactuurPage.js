@@ -36,6 +36,8 @@ const NieuweFactuurPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [bedrijf, setBedrijf] = useState(null);
 
   const [invoice, setInvoice] = useState({
     customer_id: '',
