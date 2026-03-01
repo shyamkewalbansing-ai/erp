@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { dashboardAPI, exchangeRatesAPI } from '../../lib/boekhoudingApi';
 import { formatCurrency, formatNumber } from '../../lib/utils';
 import { Card, CardContent } from '../../components/ui/card';
