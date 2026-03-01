@@ -145,6 +145,25 @@ const getWelcomeMessage = (activeModules) => {
   return message;
 };
 
+const getWelcomeMessageWithCompany = (activeModules, companyName) => {
+  if (activeModules.length === 0) {
+    return `Hallo! 👋 Ik ben uw AI assistent voor ${companyName}.\n\n⚠️ U heeft nog geen modules geactiveerd. Ga naar **Instellingen > Abonnement** om modules te activeren.\n\nZodra u een module activeert, kan ik u helpen met het beheren van uw bedrijf!`;
+  }
+  
+  let message = `Hallo! 👋 Ik ben uw AI assistent voor ${companyName}.\n\n`;
+  message += '**Actieve modules:**\n';
+  
+  activeModules.forEach(slug => {
+    const module = moduleCapabilities[slug];
+    if (module) {
+      message += `• ${module.name}\n`;
+    }
+  });
+  
+  message += '\nWat kan ik voor u doen?';
+  return message;
+};
+
 export default function AIAssistant() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
