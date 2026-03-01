@@ -549,30 +549,8 @@ export default function Layout() {
                 const config = moduleConfigs[moduleSlug];
                 if (!config) return null;
                 
-                // Detect current module context based on URL
-                const isOnBoekhouding = location.pathname.startsWith('/app/boekhouding');
-                const isOnSystemSettings = location.pathname === '/app/instellingen' || 
-                                           location.pathname === '/app/abonnement' || 
-                                           location.pathname === '/app/workspace' ||
-                                           location.pathname === '/app/betaalmethodes';
-                
-                // ONLY boekhouding has special full-page experience
-                // All other modules (vastgoed, hrm, schuldbeheer, etc.) show normally
-                if (moduleSlug === 'boekhouding') {
-                  // Only show boekhouding when ON boekhouding pages or coming from boekhouding in settings
-                  if (!isOnBoekhouding && !isOnSystemSettings) return null;
-                  if (isOnSystemSettings) {
-                    const previousModule = localStorage.getItem('lastActiveModule');
-                    if (previousModule !== 'boekhouding') return null;
-                  }
-                  // Store that we're on boekhouding
-                  if (isOnBoekhouding) {
-                    localStorage.setItem('lastActiveModule', 'boekhouding');
-                  }
-                } else if (isOnBoekhouding) {
-                  // When on boekhouding pages, hide all other modules
-                  return null;
-                }
+                // ALL modules show in sidebar normally
+                // No special filtering - users can navigate between all their active modules
                 
                 // Check if module should be shown based on addon
                 const shouldShow = config.alwaysShow || hasAddon(moduleSlug);
