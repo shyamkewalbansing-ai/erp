@@ -1290,6 +1290,7 @@ class AddonResponse(BaseModel):
     description: Optional[str] = None
     price: float
     is_active: bool
+    admin_only: bool = False
     created_at: str
     category: Optional[str] = None
     icon_name: Optional[str] = None
