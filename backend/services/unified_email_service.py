@@ -320,13 +320,22 @@ class UnifiedEmailService:
         bedrijf: Dict[str, Any],
         debiteur: Dict[str, Any] = None
     ) -> str:
-        """Generate HTML for invoice email"""
+        """Generate HTML for invoice email - Matching the PDF design"""
         
-        # Get template colors
-        primary_color = bedrijf.get('factuur_primaire_kleur', '#1e293b')
-        secondary_color = bedrijf.get('factuur_secundaire_kleur', '#f1f5f9')
+        # Get template colors - using green accent like in PDF
+        accent_color = bedrijf.get('factuur_primaire_kleur', '#22c55e')  # Emerald green
         
         klant_naam = debiteur.get('naam', '') if debiteur else factuur.get('debiteur_naam', '')
+        factuurnummer = factuur.get('factuurnummer', '')
+        totaal = factuur.get('totaal_incl_btw', 0)
+        valuta = factuur.get('valuta', 'SRD')
+        
+        # Format currency
+        def format_amount(amount):
+            formatted = f"{abs(amount):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+            prefix = "-" if amount < 0 else ""
+            symbols = {"SRD": "SRD", "USD": "$", "EUR": "€"}
+            return f"{prefix}{symbols.get(valuta, valuta)} {formatted}"
         
         html = f"""
 <!DOCTYPE html>
@@ -334,26 +343,176 @@ class UnifiedEmailService:
 <head>
     <meta charset="UTF-8">
     <style>
-        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }}
-        .header {{ background: {primary_color}; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }}
-        .content {{ background: {secondary_color}; padding: 30px; border: 1px solid #e2e8f0; }}
-        .footer {{ background: {primary_color}; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; border-radius: 0 0 8px 8px; }}
-        .amount {{ font-size: 24px; font-weight: bold; color: {primary_color}; text-align: center; padding: 20px; background: white; border-radius: 8px; margin: 20px 0; }}
+        body {{ 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; 
+            line-height: 1.6; 
+            color: #1e293b; 
+            max-width: 600px; 
+            margin: 0 auto; 
+            padding: 0;
+            background: #f1f5f9;
+        }}
+        .container {{
+            background: white;
+            margin: 20px auto;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }}
+        .accent-bar {{
+            height: 4px;
+            background: {accent_color};
+        }}
+        .header {{ 
+            padding: 30px;
+            text-align: right;
+        }}
+        .company-name {{
+            font-size: 18px;
+            font-weight: bold;
+            color: {accent_color};
+            margin-bottom: 5px;
+        }}
+        .company-info {{
+            font-size: 12px;
+            color: #64748b;
+            line-height: 1.5;
+        }}
+        .content {{ 
+            padding: 30px; 
+        }}
+        .title {{
+            font-size: 24px;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 20px;
+        }}
+        .info-grid {{
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }}
+        .client-info {{
+            flex: 1;
+        }}
+        .client-label {{
+            font-size: 10px;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }}
+        .client-name {{
+            font-size: 14px;
+            font-weight: bold;
+            color: #1e293b;
+        }}
+        .invoice-details {{
+            text-align: right;
+        }}
+        .detail-label {{
+            font-size: 10px;
+            color: {accent_color};
+            font-weight: bold;
+        }}
+        .detail-value {{
+            font-size: 13px;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }}
+        .amount-box {{ 
+            background: #f8fafc;
+            border-left: 4px solid {accent_color};
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
+        }}
+        .amount-label {{
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 5px;
+        }}
+        .amount-value {{ 
+            font-size: 28px; 
+            font-weight: bold; 
+            color: {accent_color};
+        }}
+        .message {{
+            font-size: 14px;
+            color: #475569;
+            margin: 20px 0;
+        }}
+        .footer {{ 
+            background: #f8fafc; 
+            padding: 20px 30px; 
+            text-align: center; 
+            font-size: 11px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }}
+        .button {{
+            display: inline-block;
+            background: {accent_color};
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            margin: 15px 0;
+        }}
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Factuur {factuur.get('factuurnummer', '')}</h1>
-    </div>
-    <div class="content">
-        <p>Geachte {klant_naam},</p>
-        <p>Hierbij ontvangt u onze factuur. In de bijlage vindt u het PDF-bestand.</p>
-        <div class="amount">Totaal: {factuur.get('valuta', 'SRD')} {factuur.get('totaal_incl_btw', 0):,.2f}</div>
-        <p>Wij verzoeken u vriendelijk het bedrag binnen {bedrijf.get('standaard_betalingstermijn', 30)} dagen over te maken.</p>
-        <p>Met vriendelijke groet,<br><strong>{bedrijf.get('bedrijfsnaam', '')}</strong></p>
-    </div>
-    <div class="footer">
-        <p>{bedrijf.get('bedrijfsnaam', '')} | {bedrijf.get('adres', '')} | {bedrijf.get('plaats', '')}</p>
+    <div class="container">
+        <div class="accent-bar"></div>
+        <div class="header">
+            <div class="company-name">{bedrijf.get('bedrijfsnaam', 'Uw Bedrijf')}</div>
+            <div class="company-info">
+                {bedrijf.get('adres', '')}<br>
+                {bedrijf.get('postcode', '')} {bedrijf.get('plaats', '')}<br>
+                {bedrijf.get('email', '')}
+            </div>
+        </div>
+        <div class="content">
+            <div class="title">Factuur {factuurnummer}</div>
+            
+            <div class="info-grid">
+                <div class="client-info">
+                    <div class="client-label">Aan</div>
+                    <div class="client-name">{klant_naam}</div>
+                </div>
+                <div class="invoice-details">
+                    <div class="detail-label">Factuurnummer</div>
+                    <div class="detail-value">{factuurnummer}</div>
+                    <div class="detail-label">Factuurdatum</div>
+                    <div class="detail-value">{factuur.get('factuurdatum', '')}</div>
+                    <div class="detail-label">Vervaldatum</div>
+                    <div class="detail-value">{factuur.get('vervaldatum', '')}</div>
+                </div>
+            </div>
+            
+            <p class="message">Geachte {klant_naam},</p>
+            <p class="message">Hierbij ontvangt u onze factuur. In de bijlage vindt u het PDF-bestand met alle details.</p>
+            
+            <div class="amount-box">
+                <div class="amount-label">Te betalen bedrag</div>
+                <div class="amount-value">{format_amount(totaal)}</div>
+            </div>
+            
+            <p class="message">
+                Wij verzoeken u vriendelijk het bedrag binnen {bedrijf.get('standaard_betalingstermijn', 30)} dagen over te maken 
+                onder vermelding van factuurnummer <strong>{factuurnummer}</strong>.
+            </p>
+            
+            <p class="message">
+                Met vriendelijke groet,<br>
+                <strong>{bedrijf.get('bedrijfsnaam', '')}</strong>
+            </p>
+        </div>
+        <div class="footer">
+            <p>{bedrijf.get('bedrijfsnaam', '')} | {bedrijf.get('adres', '')} | {bedrijf.get('plaats', '')}</p>
+            {f"<p>KvK: {bedrijf.get('kvk_nummer', '')} | BTW: {bedrijf.get('btw_nummer', '')}</p>" if bedrijf.get('kvk_nummer') else ''}
+        </div>
     </div>
 </body>
 </html>
