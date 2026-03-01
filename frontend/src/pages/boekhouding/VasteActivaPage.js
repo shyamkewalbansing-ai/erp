@@ -115,7 +115,7 @@ const ActivaPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96" data-testid="activa-page">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -125,8 +125,8 @@ const ActivaPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Vaste Activa</h1>
-          <p className="text-slate-500 mt-0.5">Beheer uw vaste activa en afschrijvingen</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Vaste Activa</h1>
+          <p className="text-gray-500 mt-0.5">Beheer uw vaste activa en afschrijvingen</p>
         </div>
         <Dialog open={showAssetDialog} onOpenChange={setShowAssetDialog}>
           <DialogTrigger asChild>
@@ -230,12 +230,12 @@ const ActivaPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Totaal Aankoopwaarde</p>
-                <p className="text-2xl font-semibold text-slate-900">{formatAmount(totalPurchaseValue)}</p>
+                <p className="text-sm text-gray-500 mb-2">Totaal Aankoopwaarde</p>
+                <p className="text-2xl font-semibold text-gray-900">{formatAmount(totalPurchaseValue)}</p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
                 <Building className="w-5 h-5 text-blue-500" />
@@ -243,12 +243,12 @@ const ActivaPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Totaal Boekwaarde</p>
-                <p className="text-2xl font-semibold text-slate-900">{formatAmount(totalBookValue)}</p>
+                <p className="text-sm text-gray-500 mb-2">Totaal Boekwaarde</p>
+                <p className="text-2xl font-semibold text-gray-900">{formatAmount(totalBookValue)}</p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
                 <Landmark className="w-5 h-5 text-green-500" />
@@ -256,12 +256,12 @@ const ActivaPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Totaal Afgeschreven</p>
-                <p className="text-2xl font-semibold text-slate-900">{formatAmount(totalDepreciation)}</p>
+                <p className="text-sm text-gray-500 mb-2">Totaal Afgeschreven</p>
+                <p className="text-2xl font-semibold text-gray-900">{formatAmount(totalDepreciation)}</p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
                 <Calculator className="w-5 h-5 text-amber-500" />
@@ -272,23 +272,23 @@ const ActivaPage = () => {
       </div>
 
       {/* Assets Table */}
-      <Card className="bg-white border border-slate-100 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base font-semibold text-slate-900">Activaregister</CardTitle>
+          <CardTitle className="text-base font-semibold text-gray-900">Activaregister</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Aankoopdatum</TableHead>
-                <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Aankoopwaarde</TableHead>
-                <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Afgeschreven</TableHead>
-                <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Boekwaarde</TableHead>
-                <TableHead className="w-32 text-xs font-medium text-slate-500">Voortgang</TableHead>
-                <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Acties</TableHead>
+              <TableRow className="bg-gray-50">
+                <TableHead className="w-24 text-xs font-medium text-gray-500">Code</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500">Naam</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Aankoopdatum</TableHead>
+                <TableHead className="text-right w-28 text-xs font-medium text-gray-500">Aankoopwaarde</TableHead>
+                <TableHead className="text-right w-28 text-xs font-medium text-gray-500">Afgeschreven</TableHead>
+                <TableHead className="text-right w-28 text-xs font-medium text-gray-500">Boekwaarde</TableHead>
+                <TableHead className="w-32 text-xs font-medium text-gray-500">Voortgang</TableHead>
+                <TableHead className="w-24 text-xs font-medium text-gray-500">Status</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Acties</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -296,10 +296,10 @@ const ActivaPage = () => {
                 const depreciationProgress = (asset.accumulated_depreciation / (asset.purchase_value - asset.residual_value)) * 100;
                 return (
                   <TableRow key={asset.id} data-testid={`asset-row-${asset.code}`}>
-                    <TableCell className="text-sm text-slate-600">{asset.code}</TableCell>
-                    <TableCell className="text-sm font-medium text-slate-900">{asset.name}</TableCell>
-                    <TableCell className="text-sm text-slate-500">{formatDate(asset.purchase_date)}</TableCell>
-                    <TableCell className="text-right text-sm font-medium text-slate-900">{formatAmount(asset.purchase_value)}</TableCell>
+                    <TableCell className="text-sm text-gray-600">{asset.code}</TableCell>
+                    <TableCell className="text-sm font-medium text-gray-900">{asset.name}</TableCell>
+                    <TableCell className="text-sm text-gray-500">{formatDate(asset.purchase_date)}</TableCell>
+                    <TableCell className="text-right text-sm font-medium text-gray-900">{formatAmount(asset.purchase_value)}</TableCell>
                     <TableCell className="text-right text-sm font-medium text-amber-600">
                       {formatAmount(asset.accumulated_depreciation)}
                     </TableCell>
@@ -309,14 +309,14 @@ const ActivaPage = () => {
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Progress value={Math.min(depreciationProgress, 100)} className="h-2" />
-                        <span className="text-xs text-slate-500">{formatNumber(depreciationProgress, 0)}%</span>
+                        <span className="text-xs text-gray-500">{formatNumber(depreciationProgress, 0)}%</span>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Badge className={`text-xs ${
                         asset.status === 'active' ? 'bg-green-100 text-green-700' :
                         asset.status === 'sold' ? 'bg-blue-100 text-blue-700' :
-                        'bg-slate-100 text-slate-700'
+                        'bg-slate-100 text-gray-700'
                       }`}>
                         {asset.status === 'active' ? 'Actief' : asset.status === 'sold' ? 'Verkocht' : 'Afgeschreven'}
                       </Badge>
@@ -338,7 +338,7 @@ const ActivaPage = () => {
               })}
               {assets.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={9} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                     Geen vaste activa gevonden. Maak uw eerste activum aan.
                   </TableCell>
                 </TableRow>
