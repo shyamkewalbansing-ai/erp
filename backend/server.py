@@ -7398,9 +7398,9 @@ async def get_exchange_rate():
 
 @api_router.get("/addons", response_model=List[AddonResponse])
 async def get_all_addons():
-    """Get all available add-ons (public endpoint)"""
+    """Get all available add-ons (public endpoint) - excludes admin_only addons"""
     addons = await db.addons.find(
-        {"is_active": True},
+        {"is_active": True, "admin_only": {"$ne": True}},
         {"_id": 0}
     ).to_list(100)
     return [AddonResponse(**addon) for addon in addons]
