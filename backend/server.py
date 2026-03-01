@@ -7442,6 +7442,7 @@ async def create_addon(addon_data: AddonCreate, current_user: dict = Depends(get
         "description": addon_data.description,
         "price": addon_data.price,
         "is_active": addon_data.is_active,
+        "admin_only": addon_data.admin_only,
         "created_at": now,
         # Extra module detail fields
         "category": addon_data.category,
