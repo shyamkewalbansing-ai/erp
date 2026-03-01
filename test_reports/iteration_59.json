@@ -1,0 +1,83 @@
+{
+  "summary": "Completed frontend testing of Afdrukvoorbeeld (Print Preview) and PDF functionality for Nieuwe Verkoopfactuur page. All 10 features tested and working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/notifications",
+        "issue": "Returns 403 error - notifications endpoint not accessible",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "afdrukvoorbeeld_tests": {
+      "status": "PASS",
+      "features_tested": [
+        {"feature": "Afdrukvoorbeeld knop opent de preview dialog", "status": "PASS"},
+        {"feature": "Preview toont groene header strip", "status": "PASS"},
+        {"feature": "Preview toont bedrijfsnaam rechts (Mijn Bedrijf)", "status": "PASS"},
+        {"feature": "Preview toont klantgegevens links (Aan: naam, adres, plaats)", "status": "PASS"},
+        {"feature": "Preview toont factuurnummer en datums (Factuurnummer, Factuurdatum, Vervaldatum)", "status": "PASS"},
+        {"feature": "Preview toont regelitems tabel met alle kolommen (OMSCHRIJVING, AANTAL, STUKSPRIJS, BTW, TOTAAL)", "status": "PASS"},
+        {"feature": "Preview toont BTW breakdown (BTW%, OVER, BEDRAG)", "status": "PASS"},
+        {"feature": "Preview toont Subtotaal (TOTAAL EXCL BTW) en Totaal correct berekend", "status": "PASS"},
+        {"feature": "Afdrukken knop in preview werkt (opens print window)", "status": "PASS"},
+        {"feature": "PDF download endpoint werkt (/api/boekhouding/verkoopfacturen/{id}/pdf)", "status": "PASS"}
+      ]
+    },
+    "pdf_endpoint_test": {
+      "status": "PASS",
+      "endpoint": "/api/boekhouding/verkoopfacturen/{id}/pdf",
+      "http_status": 200,
+      "content_type": "application/pdf",
+      "file_size": "2887 bytes",
+      "pdf_valid": true
+    }
+  },
+  "preview_elements_verified": {
+    "green_header_strip": true,
+    "company_name_right": true,
+    "customer_info_left": true,
+    "factuurnummer": true,
+    "factuurdatum": true,
+    "vervaldatum": true,
+    "omschrijving_column": true,
+    "aantal_column": true,
+    "stuksprijs_column": true,
+    "btw_column": true,
+    "totaal_column": true,
+    "btw_percentage_breakdown": true,
+    "over_breakdown": true,
+    "bedrag_breakdown": true,
+    "subtotaal_excl_btw": true,
+    "afdrukken_button": true
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "InvoicePreview.js is well-structured with proper formatting functions",
+    "BTW breakdown calculation is correct - groups by percentage and calculates over/bedrag",
+    "Print functionality uses window.open with proper CSS styling for print",
+    "PDF endpoint returns valid PDF with correct content-type header",
+    "All data-testid attributes are present for testing"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "100% (PDF endpoint working)",
+    "frontend": "100% (10/10 features verified)"
+  },
+  "test_credentials": {
+    "email": "demo@facturatie.sr",
+    "password": "demo2024"
+  },
+  "seed_data_creation": "Used existing test invoices from iteration_58",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Afdrukvoorbeeld (Print Preview) functionality fully tested and working. The preview shows a professional invoice layout with: green accent header strip, company name on right, customer details on left, invoice details (factuurnummer, dates), line items table with all columns (OMSCHRIJVING, AANTAL, STUKSPRIJS, BTW, TOTAAL), BTW breakdown table (BTW%, OVER, BEDRAG), subtotaal and totaal. The Afdrukken button opens a print window with proper styling. PDF download endpoint at /api/boekhouding/verkoopfacturen/{id}/pdf returns valid PDF files."
+}
