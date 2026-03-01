@@ -446,8 +446,8 @@ const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh 
                       <tr key={idx} className="border-b border-gray-100 last:border-0">
                         <td className="px-4 py-2.5 text-gray-900">{line.omschrijving || line.description || 'Product/Dienst'}</td>
                         <td className="px-2 py-2.5 text-center text-gray-600">{line.aantal || line.quantity || 1}</td>
-                        <td className="px-2 py-2.5 text-right text-gray-600">{formatCurrency(line.prijs || line.price || 0, currency)}</td>
-                        <td className="px-4 py-2.5 text-right font-medium text-gray-900">{formatCurrency(line.totaal || line.total || 0, currency)}</td>
+                        <td className="px-2 py-2.5 text-right text-gray-600">{formatCurrency(line.eenheidsprijs || line.prijs || line.price || 0, currency)}</td>
+                        <td className="px-4 py-2.5 text-right font-medium text-gray-900">{formatCurrency(line.bedrag_incl || line.totaal || line.total || 0, currency)}</td>
                       </tr>
                     ))}
                   </tbody>
