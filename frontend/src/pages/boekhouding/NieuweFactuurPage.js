@@ -161,9 +161,9 @@ const NieuweFactuurPage = () => {
       invoiceData.regels = invoice.lines.map(line => toBackendFormat({
         product_id: line.product_id,
         description: line.description,
-        quantity: line.quantity,
-        unit_price: line.unit_price,
-        btw_percentage: line.btw_percentage
+        quantity: parseFloat(line.quantity) || 0,
+        unit_price: parseFloat(line.unit_price) || 0,
+        btw_percentage: parseFloat(line.btw_percentage) || 0
       }));
       
       const result = await invoicesAPI.create(invoiceData);
