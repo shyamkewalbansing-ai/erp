@@ -171,6 +171,20 @@ const boekhoudingNavItems = [
   { to: '/app/boekhouding/instellingen', icon: Settings, label: 'Instellingen', addon: 'boekhouding' },
 ];
 
+// Schuldbeheer Module navigation - Personal Finance & Debt Management
+const schuldbeheerNavItems = [
+  { to: '/app/schuldbeheer', icon: LayoutDashboard, label: 'Dashboard', addon: 'schuldbeheer' },
+  { to: '/app/schuldbeheer/relaties', icon: Users, label: 'Schuldeisers', addon: 'schuldbeheer' },
+  { to: '/app/schuldbeheer/schulden', icon: FileText, label: 'Schulden', addon: 'schuldbeheer' },
+  { to: '/app/schuldbeheer/betalingen', icon: CreditCard, label: 'Betalingen', addon: 'schuldbeheer' },
+  { to: '/app/schuldbeheer/inkomsten', icon: TrendingUp, label: 'Inkomsten', addon: 'schuldbeheer' },
+  { to: '/app/schuldbeheer/uitgaven', icon: TrendingDown, label: 'Uitgaven', addon: 'schuldbeheer' },
+  { to: '/app/schuldbeheer/rekeningen', icon: Wallet, label: 'Bankrekeningen', addon: 'schuldbeheer' },
+  { to: '/app/schuldbeheer/planning', icon: Calendar, label: 'Planning', addon: 'schuldbeheer' },
+  { to: '/app/schuldbeheer/rapportages', icon: BarChart3, label: 'Rapportages', addon: 'schuldbeheer' },
+  { to: '/app/schuldbeheer/documenten', icon: FolderArchive, label: 'Documenten', addon: 'schuldbeheer' },
+];
+
 export default function Layout() {
   const { user, logout, hasActiveSubscription, isSuperAdmin, workspace, branding } = useAuth();
   const navigate = useNavigate();
