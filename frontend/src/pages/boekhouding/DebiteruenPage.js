@@ -40,7 +40,7 @@ import {
 const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'default', trend }) => {
   if (loading) {
     return (
-      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+      <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200">
         <Skeleton className="h-4 w-24 mb-3" />
         <Skeleton className="h-8 w-32 mb-2" />
         <Skeleton className="h-3 w-20" />
@@ -49,7 +49,7 @@ const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'defa
   }
 
   const variants = {
-    default: 'bg-white border-slate-100',
+    default: 'bg-white border-gray-200',
     primary: 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-emerald-400',
     warning: 'bg-gradient-to-br from-amber-500 to-orange-500 text-white border-amber-400',
     danger: 'bg-gradient-to-br from-red-500 to-rose-600 text-white border-red-400',
@@ -61,21 +61,21 @@ const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'defa
   return (
     <div className={`rounded-2xl p-5 shadow-sm border transition-all hover:shadow-md ${variants[variant]}`}>
       <div className="flex items-start justify-between mb-3">
-        <span className={`text-sm font-medium ${isColored ? 'text-white/80' : 'text-slate-500'}`}>{title}</span>
+        <span className={`text-sm font-medium ${isColored ? 'text-white/80' : 'text-gray-500'}`}>{title}</span>
         {Icon && (
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
             isColored ? 'bg-white/20' : 'bg-slate-100'
           }`}>
-            <Icon className={`w-5 h-5 ${isColored ? 'text-white' : 'text-slate-600'}`} />
+            <Icon className={`w-5 h-5 ${isColored ? 'text-white' : 'text-gray-600'}`} />
           </div>
         )}
       </div>
-      <div className={`text-2xl md:text-3xl font-bold mb-1 ${isColored ? 'text-white' : 'text-slate-900'}`}>
+      <div className={`text-2xl md:text-3xl font-bold mb-1 ${isColored ? 'text-white' : 'text-gray-900'}`}>
         {value}
       </div>
       {subtitle && (
         <div className="flex items-center gap-2">
-          <span className={`text-xs ${isColored ? 'text-white/70' : 'text-slate-400'}`}>{subtitle}</span>
+          <span className={`text-xs ${isColored ? 'text-white/70' : 'text-gray-400'}`}>{subtitle}</span>
           {trend && (
             <span className={`text-xs px-1.5 py-0.5 rounded ${
               trend > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
@@ -91,15 +91,15 @@ const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'defa
 
 // Mobile Customer Card
 const CustomerCard = ({ customer, formatAmount, onEdit, onDelete }) => (
-  <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-all">
+  <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200 hover:shadow-md transition-all">
     <div className="flex items-start justify-between mb-3">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-lg">
           {customer.naam?.charAt(0)?.toUpperCase() || '?'}
         </div>
         <div>
-          <h3 className="font-semibold text-slate-900">{customer.naam}</h3>
-          <p className="text-xs text-slate-500 font-mono">{customer.nummer}</p>
+          <h3 className="font-semibold text-gray-900">{customer.naam}</h3>
+          <p className="text-xs text-gray-500 font-mono">{customer.nummer}</p>
         </div>
       </div>
       <Badge variant="outline" className="text-xs">{customer.valuta}</Badge>
@@ -107,35 +107,35 @@ const CustomerCard = ({ customer, formatAmount, onEdit, onDelete }) => (
     
     <div className="space-y-2 mb-4">
       {customer.email && (
-        <div className="flex items-center gap-2 text-sm text-slate-600">
-          <Mail className="w-4 h-4 text-slate-400" />
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Mail className="w-4 h-4 text-gray-400" />
           <span className="truncate">{customer.email}</span>
         </div>
       )}
       {customer.telefoon && (
-        <div className="flex items-center gap-2 text-sm text-slate-600">
-          <Phone className="w-4 h-4 text-slate-400" />
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <Phone className="w-4 h-4 text-gray-400" />
           <span>{customer.telefoon}</span>
         </div>
       )}
       {customer.plaats && (
-        <div className="flex items-center gap-2 text-sm text-slate-600">
-          <MapPin className="w-4 h-4 text-slate-400" />
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <MapPin className="w-4 h-4 text-gray-400" />
           <span>{customer.plaats}, {customer.land}</span>
         </div>
       )}
     </div>
     
-    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+    <div className="flex items-center justify-between pt-3 border-t border-gray-200">
       <div>
-        <p className="text-xs text-slate-500">Openstaand</p>
+        <p className="text-xs text-gray-500">Openstaand</p>
         <p className={`text-lg font-bold ${
           (customer.openstaand_bedrag || 0) > 0 ? 'text-amber-600' : 'text-emerald-600'
         }`}>
           {formatAmount(customer.openstaand_bedrag || 0, customer.valuta)}
         </p>
       </div>
-      <Button variant="ghost" size="sm" className="text-slate-400 hover:text-emerald-600">
+      <Button variant="ghost" size="sm" className="text-gray-400 hover:text-emerald-600">
         <ChevronRight className="w-5 h-5" />
       </Button>
     </div>
@@ -148,25 +148,25 @@ const InvoiceCard = ({ invoice, formatAmount, formatDate, getStatusLabel }) => {
   
   return (
     <div className={`bg-white rounded-xl p-4 shadow-sm border transition-all hover:shadow-md ${
-      isOverdue ? 'border-red-200 bg-red-50/30' : 'border-slate-100'
+      isOverdue ? 'border-red-200 bg-red-50/30' : 'border-gray-200'
     }`}>
       <div className="flex items-start justify-between mb-3">
         <div>
-          <p className="font-mono text-sm font-semibold text-slate-900">{invoice.factuurnummer}</p>
-          <p className="text-xs text-slate-500">{formatDate(invoice.factuurdatum)}</p>
+          <p className="font-mono text-sm font-semibold text-gray-900">{invoice.factuurnummer}</p>
+          <p className="text-xs text-gray-500">{formatDate(invoice.factuurdatum)}</p>
         </div>
         <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
           invoice.status === 'betaald' ? 'bg-emerald-100 text-emerald-700' : 
           invoice.status === 'verzonden' ? 'bg-blue-100 text-blue-700' : 
           invoice.status === 'herinnering' ? 'bg-amber-100 text-amber-700' : 
-          'bg-slate-100 text-slate-600'
+          'bg-slate-100 text-gray-600'
         }`}>
           {getStatusLabel(invoice.status)}
         </span>
       </div>
       
       <div className="mb-3">
-        <p className="font-medium text-slate-900">{invoice.debiteur_naam || 'Onbekende klant'}</p>
+        <p className="font-medium text-gray-900">{invoice.debiteur_naam || 'Onbekende klant'}</p>
         {isOverdue && (
           <div className="flex items-center gap-1 mt-1 text-red-600">
             <AlertTriangle className="w-3 h-3" />
@@ -175,9 +175,9 @@ const InvoiceCard = ({ invoice, formatAmount, formatDate, getStatusLabel }) => {
         )}
       </div>
       
-      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+      <div className="flex items-center justify-between pt-3 border-t border-gray-200">
         <div>
-          <p className="text-xs text-slate-500">Totaal incl. BTW</p>
+          <p className="text-xs text-gray-500">Totaal incl. BTW</p>
           <p className="text-lg font-bold text-emerald-600">
             {formatAmount(invoice.totaal_incl_btw, invoice.valuta)}
           </p>
@@ -317,8 +317,8 @@ const DebiteurenPage = () => {
         <div className="px-4 md:px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-xl md:text-2xl font-bold text-slate-900">Debiteuren</h1>
-              <p className="text-sm text-slate-500">Beheer klanten & verkoopfacturen</p>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Debiteuren</h1>
+              <p className="text-sm text-gray-500">Beheer klanten & verkoopfacturen</p>
             </div>
             <div className="flex items-center gap-2">
               <Button 
@@ -347,7 +347,7 @@ const DebiteurenPage = () => {
                   <div className="space-y-6 py-4">
                     {/* Basic Info */}
                     <div className="space-y-4">
-                      <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <Users className="w-4 h-4" />
                         Basisgegevens
                       </h3>
@@ -387,7 +387,7 @@ const DebiteurenPage = () => {
 
                     {/* Contact Info */}
                     <div className="space-y-4">
-                      <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <Mail className="w-4 h-4" />
                         Contactgegevens
                       </h3>
@@ -416,7 +416,7 @@ const DebiteurenPage = () => {
 
                     {/* Address */}
                     <div className="space-y-4">
-                      <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <MapPin className="w-4 h-4" />
                         Adresgegevens
                       </h3>
@@ -466,7 +466,7 @@ const DebiteurenPage = () => {
 
                     {/* Payment Terms */}
                     <div className="space-y-4">
-                      <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                         <Wallet className="w-4 h-4" />
                         Betalingsvoorwaarden
                       </h3>
@@ -596,7 +596,7 @@ const DebiteurenPage = () => {
             {/* Search Bar */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder="Zoek op naam, nummer of e-mail..."
                   value={searchTerm}
@@ -614,13 +614,13 @@ const DebiteurenPage = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
-                        <TableHead className="w-24 text-xs font-semibold text-slate-600">Nr.</TableHead>
-                        <TableHead className="text-xs font-semibold text-slate-600">Naam</TableHead>
-                        <TableHead className="text-xs font-semibold text-slate-600">Plaats</TableHead>
-                        <TableHead className="text-xs font-semibold text-slate-600">E-mail</TableHead>
-                        <TableHead className="text-xs font-semibold text-slate-600">Telefoon</TableHead>
-                        <TableHead className="w-20 text-xs font-semibold text-slate-600">Valuta</TableHead>
-                        <TableHead className="text-right w-36 text-xs font-semibold text-slate-600">Openstaand</TableHead>
+                        <TableHead className="w-24 text-xs font-semibold text-gray-600">Nr.</TableHead>
+                        <TableHead className="text-xs font-semibold text-gray-600">Naam</TableHead>
+                        <TableHead className="text-xs font-semibold text-gray-600">Plaats</TableHead>
+                        <TableHead className="text-xs font-semibold text-gray-600">E-mail</TableHead>
+                        <TableHead className="text-xs font-semibold text-gray-600">Telefoon</TableHead>
+                        <TableHead className="w-20 text-xs font-semibold text-gray-600">Valuta</TableHead>
+                        <TableHead className="text-right w-36 text-xs font-semibold text-gray-600">Openstaand</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -639,18 +639,18 @@ const DebiteurenPage = () => {
                       ) : filteredCustomers.length > 0 ? (
                         filteredCustomers.map(customer => (
                           <TableRow key={customer.id} className="hover:bg-emerald-50/30 transition-colors" data-testid={`customer-row-${customer.nummer}`}>
-                            <TableCell className="text-sm font-mono text-slate-600">{customer.nummer}</TableCell>
+                            <TableCell className="text-sm font-mono text-gray-600">{customer.nummer}</TableCell>
                             <TableCell>
                               <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-xs font-semibold">
                                   {customer.naam?.charAt(0)?.toUpperCase()}
                                 </div>
-                                <span className="text-sm font-medium text-slate-900">{customer.naam}</span>
+                                <span className="text-sm font-medium text-gray-900">{customer.naam}</span>
                               </div>
                             </TableCell>
-                            <TableCell className="text-sm text-slate-500">{customer.plaats || '-'}</TableCell>
-                            <TableCell className="text-sm text-slate-500">{customer.email || '-'}</TableCell>
-                            <TableCell className="text-sm text-slate-500">{customer.telefoon || '-'}</TableCell>
+                            <TableCell className="text-sm text-gray-500">{customer.plaats || '-'}</TableCell>
+                            <TableCell className="text-sm text-gray-500">{customer.email || '-'}</TableCell>
+                            <TableCell className="text-sm text-gray-500">{customer.telefoon || '-'}</TableCell>
                             <TableCell>
                               <Badge variant="outline" className="text-xs rounded-lg font-medium">{customer.valuta}</Badge>
                             </TableCell>
@@ -665,8 +665,8 @@ const DebiteurenPage = () => {
                         <TableRow>
                           <TableCell colSpan={7} className="text-center py-16">
                             <Users className="w-16 h-16 mx-auto mb-4 text-slate-200" />
-                            <p className="text-lg font-semibold text-slate-700 mb-2">Geen klanten gevonden</p>
-                            <p className="text-sm text-slate-500 mb-6">Voeg uw eerste debiteur toe om te beginnen.</p>
+                            <p className="text-lg font-semibold text-gray-700 mb-2">Geen klanten gevonden</p>
+                            <p className="text-sm text-gray-500 mb-6">Voeg uw eerste debiteur toe om te beginnen.</p>
                             <Button onClick={() => setShowCustomerDialog(true)} className="bg-emerald-600 hover:bg-emerald-700 rounded-xl">
                               <Plus className="w-4 h-4 mr-2" />
                               Eerste Klant Toevoegen
@@ -701,8 +701,8 @@ const DebiteurenPage = () => {
               ) : (
                 <div className="text-center py-12 bg-white rounded-xl">
                   <Users className="w-16 h-16 mx-auto mb-4 text-slate-200" />
-                  <p className="text-lg font-semibold text-slate-700 mb-2">Geen klanten</p>
-                  <p className="text-sm text-slate-500 mb-4">Voeg uw eerste debiteur toe</p>
+                  <p className="text-lg font-semibold text-gray-700 mb-2">Geen klanten</p>
+                  <p className="text-sm text-gray-500 mb-4">Voeg uw eerste debiteur toe</p>
                   <Button onClick={() => setShowCustomerDialog(true)} className="bg-emerald-600 rounded-xl">
                     <Plus className="w-4 h-4 mr-2" />
                     Toevoegen
@@ -717,7 +717,7 @@ const DebiteurenPage = () => {
             {/* Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder="Zoek factuur..."
                   value={searchTerm}
@@ -747,12 +747,12 @@ const DebiteurenPage = () => {
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
-                        <TableHead className="w-28 text-xs font-semibold text-slate-600">Nummer</TableHead>
-                        <TableHead className="w-28 text-xs font-semibold text-slate-600">Datum</TableHead>
-                        <TableHead className="text-xs font-semibold text-slate-600">Debiteur</TableHead>
-                        <TableHead className="w-28 text-xs font-semibold text-slate-600">Vervaldatum</TableHead>
-                        <TableHead className="text-right w-36 text-xs font-semibold text-slate-600">Bedrag</TableHead>
-                        <TableHead className="w-32 text-xs font-semibold text-slate-600">Status</TableHead>
+                        <TableHead className="w-28 text-xs font-semibold text-gray-600">Nummer</TableHead>
+                        <TableHead className="w-28 text-xs font-semibold text-gray-600">Datum</TableHead>
+                        <TableHead className="text-xs font-semibold text-gray-600">Debiteur</TableHead>
+                        <TableHead className="w-28 text-xs font-semibold text-gray-600">Vervaldatum</TableHead>
+                        <TableHead className="text-right w-36 text-xs font-semibold text-gray-600">Bedrag</TableHead>
+                        <TableHead className="w-32 text-xs font-semibold text-gray-600">Status</TableHead>
                         <TableHead className="w-16"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -778,10 +778,10 @@ const DebiteurenPage = () => {
                               className={`transition-colors ${isOverdue ? 'bg-red-50/50 hover:bg-red-50' : 'hover:bg-emerald-50/30'}`}
                               data-testid={`invoice-row-${invoice.factuurnummer}`}
                             >
-                              <TableCell className="text-sm font-mono text-slate-700 font-medium">{invoice.factuurnummer}</TableCell>
-                              <TableCell className="text-sm text-slate-500">{formatDate(invoice.factuurdatum)}</TableCell>
-                              <TableCell className="text-sm font-medium text-slate-900">{invoice.debiteur_naam || '-'}</TableCell>
-                              <TableCell className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-slate-500'}`}>
+                              <TableCell className="text-sm font-mono text-gray-700 font-medium">{invoice.factuurnummer}</TableCell>
+                              <TableCell className="text-sm text-gray-500">{formatDate(invoice.factuurdatum)}</TableCell>
+                              <TableCell className="text-sm font-medium text-gray-900">{invoice.debiteur_naam || '-'}</TableCell>
+                              <TableCell className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
                                 {formatDate(invoice.vervaldatum)}
                                 {isOverdue && <AlertTriangle className="w-3 h-3 inline ml-1" />}
                               </TableCell>
@@ -793,7 +793,7 @@ const DebiteurenPage = () => {
                                   invoice.status === 'betaald' ? 'bg-emerald-100 text-emerald-700' : 
                                   invoice.status === 'verzonden' ? 'bg-blue-100 text-blue-700' : 
                                   invoice.status === 'herinnering' ? 'bg-amber-100 text-amber-700' : 
-                                  'bg-slate-100 text-slate-600'
+                                  'bg-slate-100 text-gray-600'
                                 }`}>
                                   {getStatusLabel(invoice.status)}
                                 </span>
@@ -815,8 +815,8 @@ const DebiteurenPage = () => {
                         <TableRow>
                           <TableCell colSpan={7} className="text-center py-16">
                             <FileText className="w-16 h-16 mx-auto mb-4 text-slate-200" />
-                            <p className="text-lg font-semibold text-slate-700 mb-2">Geen facturen gevonden</p>
-                            <p className="text-sm text-slate-500">Pas de filters aan of maak een nieuwe factuur aan.</p>
+                            <p className="text-lg font-semibold text-gray-700 mb-2">Geen facturen gevonden</p>
+                            <p className="text-sm text-gray-500">Pas de filters aan of maak een nieuwe factuur aan.</p>
                           </TableCell>
                         </TableRow>
                       )}
@@ -849,8 +849,8 @@ const DebiteurenPage = () => {
               ) : (
                 <div className="text-center py-12 bg-white rounded-xl">
                   <FileText className="w-16 h-16 mx-auto mb-4 text-slate-200" />
-                  <p className="text-lg font-semibold text-slate-700 mb-2">Geen facturen</p>
-                  <p className="text-sm text-slate-500">Pas de filters aan</p>
+                  <p className="text-lg font-semibold text-gray-700 mb-2">Geen facturen</p>
+                  <p className="text-sm text-gray-500">Pas de filters aan</p>
                 </div>
               )}
             </div>
