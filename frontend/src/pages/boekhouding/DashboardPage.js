@@ -1,26 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardAPI, exchangeRatesAPI } from '../../lib/boekhoudingApi';
 import { formatCurrency, formatNumber } from '../../lib/utils';
-import { Card, CardContent } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Button } from '../../components/ui/button';
-import { useNavigate } from 'react-router-dom';
 import {
   TrendingUp,
   TrendingDown,
-  ArrowUpRight,
-  ArrowDownRight,
+  Users,
+  Building2,
+  Receipt,
   Wallet,
-  CreditCard,
-  PiggyBank,
-  Send,
-  Download,
-  History,
+  DollarSign,
+  Euro,
+  Landmark,
   Clock,
-  ChevronDown,
-  Filter,
-  MoreVertical,
-  Wifi
+  AlertCircle
 } from 'lucide-react';
 import {
   BarChart,
@@ -33,154 +27,81 @@ import {
   Legend
 } from 'recharts';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
-
-// Stat Card Component (Total Income, Expense, Savings style)
-const StatCard = ({ title, value, trend, trendValue, icon: Icon, loading, variant = 'default' }) => {
+// Stat Card Component - Original Style
+const StatCard = ({ title, value, subtitle, icon: Icon, color, loading }) => {
   if (loading) {
     return (
-      <Card className="bg-white border-0 shadow-sm rounded-2xl">
-        <CardContent className="p-6">
-          <Skeleton className="h-4 w-24 mb-4" />
-          <Skeleton className="h-10 w-32 mb-2" />
-          <Skeleton className="h-4 w-20" />
+      <Card className="bg-white border border-slate-200 shadow-sm">
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <Skeleton className="h-4 w-20 mb-3" />
+              <Skeleton className="h-7 w-28 mb-2" />
+              <Skeleton className="h-3 w-16" />
+            </div>
+            <Skeleton className="w-12 h-12 rounded-full" />
+          </div>
         </CardContent>
       </Card>
     );
   }
 
-  const isPositive = trend === 'up';
+  const colorStyles = {
+    emerald: { bg: 'bg-emerald-100', icon: 'text-emerald-600' },
+    red: { bg: 'bg-red-100', icon: 'text-red-600' },
+    blue: { bg: 'bg-blue-100', icon: 'text-blue-600' },
+    amber: { bg: 'bg-amber-100', icon: 'text-amber-600' },
+    purple: { bg: 'bg-purple-100', icon: 'text-purple-600' },
+    slate: { bg: 'bg-slate-100', icon: 'text-slate-600' },
+    cyan: { bg: 'bg-cyan-100', icon: 'text-cyan-600' },
+    orange: { bg: 'bg-orange-100', icon: 'text-orange-600' },
+    indigo: { bg: 'bg-indigo-100', icon: 'text-indigo-600' },
+    rose: { bg: 'bg-rose-100', icon: 'text-rose-600' }
+  };
+
+  const style = colorStyles[color] || colorStyles.slate;
 
   return (
-    <Card className={`border-0 shadow-sm rounded-2xl ${variant === 'savings' ? 'bg-emerald-50' : 'bg-white'}`}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <span className="text-sm text-slate-500 font-medium">{title}</span>
-          {Icon && (
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-              variant === 'expense' ? 'bg-slate-100' : 
-              variant === 'savings' ? 'bg-emerald-100' : 
-              'bg-emerald-50'
-            }`}>
-              <Icon className={`w-5 h-5 ${
-                variant === 'expense' ? 'text-slate-600' : 'text-emerald-600'
-              }`} />
-            </div>
-          )}
-        </div>
-        <div className="text-3xl font-bold text-slate-900 mb-2">{value}</div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-slate-400">Since Last Week</span>
-          <span className={`flex items-center text-sm font-medium px-2 py-0.5 rounded ${
-            isPositive ? 'text-emerald-600 bg-emerald-50' : 'text-red-500 bg-red-50'
-          }`}>
-            {isPositive ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
-            {trendValue}
-          </span>
+    <Card className="bg-white border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <p className="text-sm text-slate-500 font-medium mb-1">{title}</p>
+            <p className="text-xl font-bold text-slate-900 mb-1">{value}</p>
+            {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+          </div>
+          <div className={`w-12 h-12 rounded-full ${style.bg} flex items-center justify-center`}>
+            <Icon className={`w-6 h-6 ${style.icon}`} />
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 };
 
-// Credit Card Component
-const CreditCardDisplay = ({ name, balance, expiry, cvv }) => (
-  <div className="bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 rounded-2xl p-5 text-white relative overflow-hidden">
-    {/* Wifi icon */}
-    <div className="absolute top-4 right-4">
-      <Wifi className="w-6 h-6 rotate-90 opacity-80" />
+// Ouderdom Item
+const OuderdomItem = ({ label, amount, percentage, color }) => (
+  <div className="flex items-center justify-between py-2">
+    <div className="flex items-center gap-3">
+      <div className={`w-3 h-3 rounded-full ${color}`} />
+      <span className="text-sm text-slate-600">{label}</span>
     </div>
-    
-    {/* Card chip pattern */}
-    <div className="flex gap-1 mb-8">
-      <div className="w-8 h-6 bg-yellow-300/80 rounded-sm" />
-    </div>
-    
-    <div className="mb-6">
-      <div className="text-emerald-100 text-xs mb-1">Card Holder</div>
-      <div className="text-xl font-semibold">{name}</div>
-    </div>
-    
-    <div className="flex items-end justify-between">
-      <div>
-        <div className="text-emerald-100 text-xs mb-1">Balance Amount</div>
-        <div className="text-2xl font-bold">{balance}</div>
-      </div>
-      <div className="flex gap-4 text-sm">
-        <div>
-          <div className="text-emerald-100 text-xs">EXP</div>
-          <div className="font-medium">{expiry}</div>
-        </div>
-        <div>
-          <div className="text-emerald-100 text-xs">CVV</div>
-          <div className="font-medium">{cvv}</div>
-        </div>
-      </div>
+    <div className="text-right">
+      <span className="text-sm font-medium text-slate-900">{amount}</span>
+      <span className="text-xs text-slate-400 ml-2">({percentage}%)</span>
     </div>
   </div>
 );
 
-// Quick Action Button
-const QuickActionButton = ({ icon: Icon, label, onClick }) => (
-  <button 
-    onClick={onClick}
-    className="flex flex-col items-center gap-2 p-3 hover:bg-slate-50 rounded-xl transition-colors"
-  >
-    <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center">
-      <Icon className="w-5 h-5 text-slate-600" />
-    </div>
-    <span className="text-xs text-slate-600 font-medium">{label}</span>
-  </button>
-);
-
-// Activity Item
-const ActivityItem = ({ name, action, time, avatar }) => (
-  <div className="flex items-center gap-3 py-3">
-    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-200 to-slate-300 flex items-center justify-center text-slate-600 font-medium text-sm">
-      {avatar || name?.charAt(0)}
-    </div>
-    <div className="flex-1 min-w-0">
-      <div className="text-sm font-medium text-slate-900">{name}</div>
-      <div className="text-xs text-slate-500 truncate">{action}</div>
-    </div>
-    <div className="text-xs text-slate-400">{time}</div>
-  </div>
-);
-
-// Transaction Row
-const TransactionRow = ({ name, category, date, time, amount, note, status }) => (
-  <tr className="border-b border-slate-100 hover:bg-slate-50">
-    <td className="py-4 px-4">
-      <div className="font-medium text-slate-900">{name}</div>
-      <div className="text-xs text-slate-500">{category}</div>
-    </td>
-    <td className="py-4 px-4 text-sm text-slate-600">
-      <div>{date}</div>
-      <div className="text-xs text-slate-400">{time}</div>
-    </td>
-    <td className="py-4 px-4 text-sm font-medium text-slate-900">{amount}</td>
-    <td className="py-4 px-4 text-sm text-slate-500">{note}</td>
-    <td className="py-4 px-4">
-      {status === 'failed' ? (
-        <span className="px-2 py-1 text-xs font-medium text-red-600 bg-red-50 rounded-full">Failed</span>
-      ) : status === 'pending' ? (
-        <span className="px-2 py-1 text-xs font-medium text-amber-600 bg-amber-50 rounded-full">Pending</span>
-      ) : (
-        <span className="px-2 py-1 text-xs font-medium text-emerald-600 bg-emerald-50 rounded-full">Success</span>
-      )}
-    </td>
-  </tr>
-);
-
-// Custom Chart Tooltip
+// Custom Tooltip
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-slate-800 text-white p-3 rounded-lg shadow-lg">
-        <p className="font-medium mb-1">{label} 2029</p>
+      <div className="bg-white border border-slate-200 shadow-lg rounded-lg p-3">
+        <p className="font-medium text-slate-900 mb-2">{label}</p>
         {payload.map((entry, index) => (
-          <p key={index} className="text-sm">
-            {entry.name}: ${entry.value?.toLocaleString()}
+          <p key={index} className="text-sm" style={{ color: entry.color }}>
+            {entry.name}: {formatCurrency(entry.value, 'SRD')}
           </p>
         ))}
       </div>
@@ -190,13 +111,11 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const DashboardPage = () => {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [rates, setRates] = useState(null);
-  const [transactions, setTransactions] = useState([]);
   const [chartData, setChartData] = useState([]);
-  const [topKlanten, setTopKlanten] = useState([]);
+  const [ouderdomData, setOuderdomData] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -205,9 +124,6 @@ const DashboardPage = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-
       const [dashRes, ratesRes, chartsRes] = await Promise.all([
         dashboardAPI.getSummary().catch(() => ({ data: {} })),
         exchangeRatesAPI.getLatest().catch(() => ({ data: {} })),
@@ -217,30 +133,29 @@ const DashboardPage = () => {
       setDashboardData(dashRes.data || {});
       setRates(ratesRes.data || {});
       
-      // Process chart data from backend
+      // Process chart data
       if (chartsRes.data?.omzet_kosten) {
         const formattedChartData = chartsRes.data.omzet_kosten.map(item => ({
           name: item.maand,
-          Income: item.omzet || 0,
-          Expense: item.kosten || 0
+          Omzet: item.omzet || 0,
+          Kosten: item.kosten || 0
         }));
         setChartData(formattedChartData);
-      }
-      
-      // Top customers
-      if (chartsRes.data?.top_klanten) {
-        setTopKlanten(chartsRes.data.top_klanten);
+      } else {
+        // Default chart data if none available
+        setChartData([
+          { name: 'Jan', Omzet: 0, Kosten: 0 },
+          { name: 'Feb', Omzet: 0, Kosten: 0 },
+          { name: 'Mrt', Omzet: 0, Kosten: 0 },
+          { name: 'Apr', Omzet: 0, Kosten: 0 },
+          { name: 'Mei', Omzet: 0, Kosten: 0 },
+          { name: 'Jun', Omzet: 0, Kosten: 0 }
+        ]);
       }
 
-      // Fetch recent transactions
-      try {
-        const transRes = await fetch(`${API_URL}/api/boekhouding/verkopen?limit=5`, { headers });
-        if (transRes.ok) {
-          const transData = await transRes.json();
-          setTransactions(transData.slice(0, 5));
-        }
-      } catch (e) {
-        console.error('Error fetching transactions:', e);
+      // Process ouderdom data
+      if (chartsRes.data?.ouderdom_debiteuren) {
+        setOuderdomData(chartsRes.data.ouderdom_debiteuren);
       }
     } catch (error) {
       console.error('Dashboard error:', error);
@@ -249,111 +164,166 @@ const DashboardPage = () => {
     }
   };
 
-  // Calculate totals from dashboard data
-  const totalIncome = dashboardData?.omzet?.deze_maand || 0;
-  const totalExpense = dashboardData?.kosten?.deze_maand || 0;
-  const totalSavings = dashboardData?.winst?.deze_maand || (totalIncome - totalExpense);
-  const openstaandDebiteuren = dashboardData?.openstaand?.debiteuren || 0;
-  const kasBalance = dashboardData?.liquiditeit?.bank_srd || 0;
+  // Extract values from dashboard data
+  const omzet = dashboardData?.omzet?.deze_maand || 0;
+  const kosten = dashboardData?.kosten?.deze_maand || 0;
+  const winst = dashboardData?.winst?.deze_maand || (omzet - kosten);
+  const debiteuren = dashboardData?.openstaand?.debiteuren || 0;
+  const crediteuren = dashboardData?.openstaand?.crediteuren || 0;
+  const btwTeBetalen = dashboardData?.btw?.te_betalen || 0;
+  const btwTeVorderen = dashboardData?.btw?.te_vorderen || 0;
+  const bankSRD = dashboardData?.liquiditeit?.bank_srd || 0;
+  const bankUSD = dashboardData?.liquiditeit?.bank_usd || 0;
+  const bankEUR = dashboardData?.liquiditeit?.bank_eur || 0;
+
+  // Calculate ouderdom totals
+  const ouderdomTotaal = ouderdomData.reduce((sum, item) => sum + (item.bedrag || 0), 0);
 
   return (
-    <div className="min-h-screen bg-slate-50/50">
-      {/* Top Header */}
-      <div className="bg-white border-b border-slate-100 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold text-slate-900">Dashboard</h1>
-          <div className="flex items-center gap-3">
-            {rates?.USD_SRD && (
-              <div className="bg-slate-50 rounded-lg px-3 py-1.5 text-sm">
-                <span className="text-slate-500">USD/SRD:</span>
-                <span className="font-medium text-slate-900 ml-1">{formatNumber(rates.USD_SRD.koers, 2)}</span>
-              </div>
-            )}
-            {rates?.EUR_SRD && (
-              <div className="bg-slate-50 rounded-lg px-3 py-1.5 text-sm">
-                <span className="text-slate-500">EUR/SRD:</span>
-                <span className="font-medium text-slate-900 ml-1">{formatNumber(rates.EUR_SRD.koers, 2)}</span>
-              </div>
-            )}
+    <div className="min-h-screen bg-slate-50" data-testid="boekhouding-dashboard">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 shadow-sm">
+        <div className="px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl font-semibold text-slate-800">Dashboard</h1>
+              <p className="text-sm text-slate-500">Overzicht van uw boekhouding</p>
+            </div>
+            <div className="flex items-center gap-4">
+              {rates?.USD_SRD && (
+                <div className="bg-slate-50 rounded-lg px-3 py-1.5 text-sm border border-slate-200">
+                  <span className="text-slate-500">USD/SRD:</span>
+                  <span className="font-semibold text-slate-900 ml-1">{formatNumber(rates.USD_SRD.koers, 2)}</span>
+                </div>
+              )}
+              {rates?.EUR_SRD && (
+                <div className="bg-slate-50 rounded-lg px-3 py-1.5 text-sm border border-slate-200">
+                  <span className="text-slate-500">EUR/SRD:</span>
+                  <span className="font-semibold text-slate-900 ml-1">{formatNumber(rates.EUR_SRD.koers, 2)}</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       <div className="p-6">
-        <div className="flex gap-6">
-          {/* Main Content */}
-          <div className="flex-1 space-y-6">
-            {/* Stats Row */}
-            <div className="grid grid-cols-3 gap-6">
-              <StatCard
-                title="Total Income"
-                value={formatCurrency(totalIncome, 'SRD')}
-                trend="up"
-                trendValue="+1.78%"
-                icon={TrendingUp}
-                loading={loading}
-              />
-              <StatCard
-                title="Total Expense"
-                value={formatCurrency(totalExpense, 'SRD')}
-                trend="up"
-                trendValue="+1.78%"
-                icon={TrendingDown}
-                loading={loading}
-                variant="expense"
-              />
-              <StatCard
-                title="Total Savings"
-                value={formatCurrency(totalSavings, 'SRD')}
-                trend="up"
-                trendValue="+1.78%"
-                icon={PiggyBank}
-                loading={loading}
-                variant="savings"
-              />
-            </div>
+        {/* Main Stats Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+          <StatCard
+            title="Omzet"
+            value={formatCurrency(omzet, 'SRD')}
+            subtitle="Deze maand"
+            icon={TrendingUp}
+            color="emerald"
+            loading={loading}
+          />
+          <StatCard
+            title="Kosten"
+            value={formatCurrency(kosten, 'SRD')}
+            subtitle="Deze maand"
+            icon={TrendingDown}
+            color="red"
+            loading={loading}
+          />
+          <StatCard
+            title="Winst"
+            value={formatCurrency(winst, 'SRD')}
+            subtitle="Deze maand"
+            icon={Wallet}
+            color="blue"
+            loading={loading}
+          />
+          <StatCard
+            title="Debiteuren"
+            value={formatCurrency(debiteuren, 'SRD')}
+            subtitle="Openstaand"
+            icon={Users}
+            color="amber"
+            loading={loading}
+          />
+          <StatCard
+            title="Crediteuren"
+            value={formatCurrency(crediteuren, 'SRD')}
+            subtitle="Openstaand"
+            icon={Building2}
+            color="purple"
+            loading={loading}
+          />
+        </div>
 
-            {/* Earning Section */}
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <div className="text-sm text-slate-500 mb-1">Omzet & Kosten Overzicht</div>
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-4xl font-bold text-slate-900">
-                        {formatCurrency(totalIncome, 'SRD')}
-                      </span>
-                      {totalIncome > 0 && (
-                        <span className="flex items-center text-sm font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
-                          <ArrowUpRight className="w-3 h-3 mr-0.5" />
-                          Omzet
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="rounded-lg">
-                      Dit Jaar <ChevronDown className="w-4 h-4 ml-1" />
-                    </Button>
-                  </div>
-                </div>
+        {/* Second Row Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+          <StatCard
+            title="BTW te betalen"
+            value={formatCurrency(btwTeBetalen, 'SRD')}
+            subtitle="Aangifte periode"
+            icon={Receipt}
+            color="rose"
+            loading={loading}
+          />
+          <StatCard
+            title="Bank SRD"
+            value={formatCurrency(bankSRD, 'SRD')}
+            subtitle="Saldo"
+            icon={Landmark}
+            color="slate"
+            loading={loading}
+          />
+          <StatCard
+            title="Bank USD"
+            value={formatCurrency(bankUSD, 'USD')}
+            subtitle="Saldo"
+            icon={DollarSign}
+            color="cyan"
+            loading={loading}
+          />
+          <StatCard
+            title="Bank EUR"
+            value={formatCurrency(bankEUR, 'EUR')}
+            subtitle="Saldo"
+            icon={Euro}
+            color="indigo"
+            loading={loading}
+          />
+          <StatCard
+            title="BTW te vorderen"
+            value={formatCurrency(btwTeVorderen, 'SRD')}
+            subtitle="Voorbelasting"
+            icon={AlertCircle}
+            color="orange"
+            loading={loading}
+          />
+        </div>
 
-                {/* Bar Chart */}
-                <div className="h-72">
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Cashflow Chart */}
+          <Card className="bg-white border border-slate-200 shadow-sm lg:col-span-2">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold text-slate-800">Cashflow Overzicht</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-72">
+                {loading ? (
+                  <div className="h-full flex items-center justify-center">
+                    <Skeleton className="w-full h-full" />
+                  </div>
+                ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} barGap={4}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                    <BarChart data={chartData} barGap={8}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis 
                         dataKey="name" 
                         axisLine={false} 
                         tickLine={false}
-                        tick={{ fill: '#94a3b8', fontSize: 12 }}
+                        tick={{ fill: '#64748b', fontSize: 12 }}
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false}
-                        tick={{ fill: '#94a3b8', fontSize: 12 }}
-                        tickFormatter={(value) => `$${value}`}
+                        tick={{ fill: '#64748b', fontSize: 12 }}
+                        tickFormatter={(value) => formatNumber(value, 0)}
                       />
                       <Tooltip content={<CustomTooltip />} />
                       <Legend 
@@ -361,161 +331,79 @@ const DashboardPage = () => {
                         align="right"
                         iconType="circle"
                         iconSize={8}
-                        wrapperStyle={{ paddingBottom: 20 }}
+                        wrapperStyle={{ paddingBottom: 10 }}
                       />
                       <Bar 
-                        dataKey="Income" 
+                        dataKey="Omzet" 
                         fill="#10b981" 
                         radius={[4, 4, 0, 0]} 
-                        maxBarSize={35}
+                        maxBarSize={40}
                       />
                       <Bar 
-                        dataKey="Expense" 
-                        fill="#fbbf24" 
+                        dataKey="Kosten" 
+                        fill="#f59e0b" 
                         radius={[4, 4, 0, 0]} 
-                        maxBarSize={35}
+                        maxBarSize={40}
                       />
                     </BarChart>
                   </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Transaction History */}
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900">Transaction History</h3>
-                  <div className="flex items-center gap-2 text-sm text-slate-500">
-                    <span>Status</span>
-                    <ChevronDown className="w-4 h-4" />
+          {/* Ouderdomsanalyse Debiteuren */}
+          <Card className="bg-white border border-slate-200 shadow-sm">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base font-semibold text-slate-800">Ouderdomsanalyse Debiteuren</CardTitle>
+                <Clock className="w-5 h-5 text-slate-400" />
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-4">
+                  {[...Array(4)].map((_, i) => (
+                    <Skeleton key={i} className="h-8 w-full" />
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  <OuderdomItem 
+                    label="0-30 dagen" 
+                    amount={formatCurrency(ouderdomData.find(d => d.periode === '0-30')?.bedrag || 0, 'SRD')}
+                    percentage={ouderdomTotaal > 0 ? Math.round(((ouderdomData.find(d => d.periode === '0-30')?.bedrag || 0) / ouderdomTotaal) * 100) : 0}
+                    color="bg-emerald-500"
+                  />
+                  <OuderdomItem 
+                    label="31-60 dagen" 
+                    amount={formatCurrency(ouderdomData.find(d => d.periode === '31-60')?.bedrag || 0, 'SRD')}
+                    percentage={ouderdomTotaal > 0 ? Math.round(((ouderdomData.find(d => d.periode === '31-60')?.bedrag || 0) / ouderdomTotaal) * 100) : 0}
+                    color="bg-amber-500"
+                  />
+                  <OuderdomItem 
+                    label="61-90 dagen" 
+                    amount={formatCurrency(ouderdomData.find(d => d.periode === '61-90')?.bedrag || 0, 'SRD')}
+                    percentage={ouderdomTotaal > 0 ? Math.round(((ouderdomData.find(d => d.periode === '61-90')?.bedrag || 0) / ouderdomTotaal) * 100) : 0}
+                    color="bg-orange-500"
+                  />
+                  <OuderdomItem 
+                    label=">90 dagen" 
+                    amount={formatCurrency(ouderdomData.find(d => d.periode === '>90')?.bedrag || 0, 'SRD')}
+                    percentage={ouderdomTotaal > 0 ? Math.round(((ouderdomData.find(d => d.periode === '>90')?.bedrag || 0) / ouderdomTotaal) * 100) : 0}
+                    color="bg-red-500"
+                  />
+                  
+                  <div className="border-t border-slate-200 mt-4 pt-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-slate-600">Totaal Openstaand</span>
+                      <span className="text-lg font-bold text-slate-900">{formatCurrency(debiteuren, 'SRD')}</span>
+                    </div>
                   </div>
                 </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Transaction Name</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Date & Time</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Amount</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Note</th>
-                        <th className="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {loading ? (
-                        [...Array(3)].map((_, i) => (
-                          <tr key={i} className="border-b border-slate-100">
-                            <td className="py-4 px-4"><Skeleton className="h-4 w-32" /></td>
-                            <td className="py-4 px-4"><Skeleton className="h-4 w-24" /></td>
-                            <td className="py-4 px-4"><Skeleton className="h-4 w-20" /></td>
-                            <td className="py-4 px-4"><Skeleton className="h-4 w-28" /></td>
-                            <td className="py-4 px-4"><Skeleton className="h-4 w-16" /></td>
-                          </tr>
-                        ))
-                      ) : transactions.length > 0 ? (
-                        transactions.map((trans, index) => (
-                          <TransactionRow
-                            key={trans.id || index}
-                            name={trans.klant_naam || trans.omschrijving || 'Verkoop'}
-                            category={trans.betaalmethode === 'contant' ? 'Contant' : 'Pin'}
-                            date={new Date(trans.datum || trans.created_at).toLocaleDateString('nl-NL')}
-                            time={new Date(trans.datum || trans.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                            amount={formatCurrency(trans.totaal || 0, 'SRD')}
-                            note={trans.omschrijving || 'POS Verkoop'}
-                            status={trans.status || 'success'}
-                          />
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={5} className="py-8 text-center text-slate-500">
-                            Geen recente transacties
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Right Sidebar */}
-          <div className="w-80 space-y-6">
-            {/* My Card Section */}
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900">My Card</h3>
-                  <Button variant="outline" size="sm" className="rounded-lg text-sm">
-                    + Add Card
-                  </Button>
-                </div>
-
-                <CreditCardDisplay
-                  name="Kas Balans"
-                  balance={formatCurrency(kasBalance, 'SRD')}
-                  expiry=""
-                  cvv=""
-                />
-
-                {/* Quick Actions */}
-                <div className="grid grid-cols-4 gap-2 mt-6">
-                  <QuickActionButton icon={Wallet} label="POS" onClick={() => navigate('/app/boekhouding/pos')} />
-                  <QuickActionButton icon={Send} label="Factuur" onClick={() => navigate('/app/boekhouding/verkoop')} />
-                  <QuickActionButton icon={Download} label="Inkoop" onClick={() => navigate('/app/boekhouding/inkoop')} />
-                  <QuickActionButton icon={History} label="Grootboek" onClick={() => navigate('/app/boekhouding/grootboek')} />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Openstaand Debiteuren */}
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-slate-900">Openstaand Debiteuren</h3>
-                  <button className="text-slate-400 hover:text-slate-600" onClick={() => navigate('/app/boekhouding/debiteuren')}>
-                    <MoreVertical className="w-5 h-5" />
-                  </button>
-                </div>
-
-                <div className="text-sm text-slate-500 mb-2">
-                  <span className="font-medium text-slate-900 text-lg">{formatCurrency(openstaandDebiteuren, 'SRD')}</span>
-                </div>
-                <div className="text-xs text-slate-400">
-                  {dashboardData?.openstaand?.facturen_count || 0} openstaande facturen
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Top Klanten */}
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-slate-900 mb-4">Top Klanten</h3>
-                
-                <div className="text-xs font-medium text-slate-400 uppercase mb-2">Op basis van omzet</div>
-                
-                <div className="space-y-1">
-                  {topKlanten.length > 0 ? (
-                    topKlanten.slice(0, 5).map((klant, idx) => (
-                      <ActivityItem
-                        key={idx}
-                        name={klant.naam || 'Onbekend'}
-                        action={`${klant.facturen || 0} facturen`}
-                        time={formatCurrency(klant.omzet || 0, 'SRD')}
-                        avatar={klant.naam?.charAt(0) || '?'}
-                      />
-                    ))
-                  ) : (
-                    <div className="text-sm text-slate-400 text-center py-4">
-                      Nog geen klantdata
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
