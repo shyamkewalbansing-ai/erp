@@ -181,15 +181,21 @@ export default function AIAssistant() {
   useEffect(() => {
     const loadModules = async () => {
       try {
-        // Get user info for company name
-        const userStr = localStorage.getItem('user');
+        // Get user profile for company name
         let company = 'uw bedrijf';
-        if (userStr) {
-          try {
-            const user = JSON.parse(userStr);
-            company = user.company_name || user.companyName || user.name || 'uw bedrijf';
-          } catch (e) {
-            console.error('Error parsing user:', e);
+        try {
+          const profileRes = await getProfile();
+          company = profileRes.data.company_name || profileRes.data.name || 'uw bedrijf';
+        } catch (e) {
+          // Fallback to localStorage
+          const userStr = localStorage.getItem('user');
+          if (userStr) {
+            try {
+              const user = JSON.parse(userStr);
+              company = user.company_name || user.companyName || user.name || 'uw bedrijf';
+            } catch (parseErr) {
+              console.error('Error parsing user:', parseErr);
+            }
           }
         }
         setCompanyName(company);
