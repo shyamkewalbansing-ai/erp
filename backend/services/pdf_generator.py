@@ -160,15 +160,6 @@ def generate_invoice_pdf(
         leading=12
     )
     
-    total_value_style = ParagraphStyle(
-        'TotalValue',
-        parent=styles['Normal'],
-        fontSize=14,
-        textColor=colors.HexColor(text_dark),
-        fontName='Helvetica-Bold',
-        leading=18
-    )
-    
     # Build content
     content = []
     
