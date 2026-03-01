@@ -673,7 +673,15 @@ const VerkoopPage = () => {
       await invoicesAPI.addPayment(selectedInvoice.id, newPayment);
       toast.success('Betaling opgeslagen');
       setShowPaymentDialog(false);
-      fetchData();
+      // Refresh data and update detail item
+      await fetchData();
+      // Get updated invoice and update detail item
+      try {
+        const updated = await invoicesAPI.getOne(selectedInvoice.id);
+        if (updated.data) {
+          setDetailItem(updated.data);
+        }
+      } catch {}
     } catch { toast.error('Fout bij opslaan'); }
     finally { setSaving(false); }
   };
