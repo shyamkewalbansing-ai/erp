@@ -257,20 +257,20 @@ const DocumentenPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-2">Totaal Documenten</p>
                 <p className="text-2xl font-semibold text-gray-900">{documents.length}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center">
                 <FolderOpen className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -279,7 +279,7 @@ const DocumentenPage = () => {
                   {formatFileSize(documents.reduce((sum, d) => sum + (d.file_size || d.bestandsgrootte || 0), 0))}
                 </p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-green-50 flex items-center justify-center">
                 <File className="w-5 h-5 text-green-500" />
               </div>
             </div>
@@ -288,7 +288,7 @@ const DocumentenPage = () => {
       </div>
 
       {/* Documents Table */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader className="pb-3">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <CardTitle className="text-base font-semibold text-gray-900">Documenten</CardTitle>

@@ -185,53 +185,53 @@ const AuditTrailPage = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-2">Totaal Acties</p>
                 <p className="text-2xl font-semibold text-gray-900">{stats.totaal}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center">
                 <History className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-2">Vandaag</p>
                 <p className="text-2xl font-semibold text-gray-900">{stats.vandaag}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-green-50 flex items-center justify-center">
                 <Database className="w-5 h-5 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-2">Aangemaakt</p>
                 <p className="text-2xl font-semibold text-gray-900">{stats.creates}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-purple-50 flex items-center justify-center">
                 <Plus className="w-5 h-5 text-purple-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-2">Bijgewerkt</p>
                 <p className="text-2xl font-semibold text-gray-900">{stats.updates}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center">
                 <Edit className="w-5 h-5 text-amber-500" />
               </div>
             </div>
@@ -240,7 +240,7 @@ const AuditTrailPage = () => {
       </div>
 
       {/* Filters */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
@@ -296,7 +296,7 @@ const AuditTrailPage = () => {
       </Card>
 
       {/* Audit Logs Table */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-base font-semibold text-gray-900">Activiteitenlog</CardTitle>
         </CardHeader>

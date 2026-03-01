@@ -110,7 +110,7 @@ const RapportagesPage = () => {
 
         {/* Balance Sheet */}
         <TabsContent value="balance" className="mt-4">
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base font-semibold text-gray-900">Balans</CardTitle>
               <Button variant="outline" size="sm">
@@ -198,7 +198,7 @@ const RapportagesPage = () => {
 
         {/* Profit & Loss */}
         <TabsContent value="pl" className="mt-4">
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base font-semibold text-gray-900">Winst & Verliesrekening</CardTitle>
               <Button variant="outline" size="sm">
@@ -251,7 +251,7 @@ const RapportagesPage = () => {
                 </Table>
 
                 {/* Net Profit */}
-                <div className={`mt-8 p-5 rounded-xl ${(profitLoss?.netto_winst || profitLoss?.net_profit || 0) >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                <div className={`mt-8 p-5 rounded-2xl ${(profitLoss?.netto_winst || profitLoss?.net_profit || 0) >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
                   <div className="flex justify-between items-center">
                     <span className="text-base font-semibold text-gray-900">Netto Resultaat</span>
                     <span className={`text-xl font-semibold ${(profitLoss?.netto_winst || profitLoss?.net_profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
@@ -266,7 +266,7 @@ const RapportagesPage = () => {
 
         {/* BTW Report */}
         <TabsContent value="btw" className="mt-4">
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-base font-semibold text-gray-900">BTW Aangifte Overzicht</CardTitle>
               <Button variant="outline" size="sm">
@@ -275,7 +275,7 @@ const RapportagesPage = () => {
               </Button>
             </CardHeader>
             <CardContent>
-              <div className="max-w-2xl bg-white border border-slate-200 rounded-xl p-6">
+              <div className="max-w-2xl bg-white border border-slate-200 rounded-2xl p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-6">BTW Aangifte Suriname</h3>
                 
                 <div className="space-y-4">
@@ -318,7 +318,7 @@ const RapportagesPage = () => {
         <TabsContent value="aging" className="mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Receivables */}
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
                 <CardTitle className="text-base font-semibold text-gray-900">Ouderdomsanalyse Debiteuren</CardTitle>
               </CardHeader>
@@ -386,7 +386,7 @@ const RapportagesPage = () => {
             </Card>
 
             {/* Payables */}
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
                 <CardTitle className="text-base font-semibold text-gray-900">Ouderdomsanalyse Crediteuren</CardTitle>
               </CardHeader>

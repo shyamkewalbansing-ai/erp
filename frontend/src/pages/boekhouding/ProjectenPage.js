@@ -359,40 +359,40 @@ const ProjectenPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-2">Totaal Projecten</p>
                 <p className="text-2xl font-semibold text-gray-900">{projects.length}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center">
                 <FolderKanban className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-2">Actieve Projecten</p>
                 <p className="text-2xl font-semibold text-green-600">{activeProjects}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-green-50 flex items-center justify-center">
                 <FolderKanban className="w-5 h-5 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-2">Totaal Uren</p>
                 <p className="text-2xl font-semibold text-gray-900">{formatNumber(totalHours, 1)}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center">
                 <Clock className="w-5 h-5 text-amber-500" />
               </div>
             </div>
@@ -413,7 +413,7 @@ const ProjectenPage = () => {
         </TabsList>
 
         <TabsContent value="projects" className="mt-4">
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="text-base font-semibold text-gray-900">Projecten</CardTitle>
             </CardHeader>
@@ -470,7 +470,7 @@ const ProjectenPage = () => {
         </TabsContent>
 
         <TabsContent value="time" className="mt-4">
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="text-base font-semibold text-gray-900">Urenregistratie</CardTitle>
             </CardHeader>

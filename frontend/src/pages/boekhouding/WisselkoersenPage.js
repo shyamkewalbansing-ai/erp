@@ -365,7 +365,7 @@ const WisselkoersenPage = () => {
 
       {/* Current Rates */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -379,13 +379,13 @@ const WisselkoersenPage = () => {
                   </p>
                 )}
               </div>
-              <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-green-50 flex items-center justify-center">
                 <DollarSign className="w-6 h-6 text-green-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -399,7 +399,7 @@ const WisselkoersenPage = () => {
                   </p>
                 )}
               </div>
-              <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
                 <Euro className="w-6 h-6 text-blue-500" />
               </div>
             </div>
@@ -409,7 +409,7 @@ const WisselkoersenPage = () => {
 
       {/* Chart */}
       {chartData.length > 0 && (
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardHeader>
             <CardTitle className="text-base font-semibold text-gray-900">Koersontwikkeling</CardTitle>
           </CardHeader>
@@ -453,7 +453,7 @@ const WisselkoersenPage = () => {
       )}
 
       {/* History Table */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-base font-semibold text-gray-900">Koershistorie</CardTitle>
           <CardDescription className="text-xs text-gray-500">

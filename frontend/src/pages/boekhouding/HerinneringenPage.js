@@ -149,33 +149,33 @@ const HerinneringenPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-2">Te Verzenden</p>
                 <p className="text-2xl font-semibold text-amber-600">{pendingCount}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center">
                 <Mail className="w-5 h-5 text-amber-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-gray-200 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-sm text-gray-500 mb-2">Verzonden</p>
                 <p className="text-2xl font-semibold text-blue-600">{sentCount}</p>
               </div>
-              <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+              <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center">
                 <Clock className="w-5 h-5 text-blue-500" />
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className={`bg-white border border-gray-200 shadow-sm ${totalOverdue > 0 ? 'bg-red-50' : ''}`}>
+        <Card className={`bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow ${totalOverdue > 0 ? 'bg-red-50' : ''}`}>
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
@@ -184,7 +184,7 @@ const HerinneringenPage = () => {
                   {formatAmount(totalOverdue)}
                 </p>
               </div>
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${totalOverdue > 0 ? 'bg-red-100' : 'bg-slate-100'}`}>
+              <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${totalOverdue > 0 ? 'bg-red-100' : 'bg-slate-100'}`}>
                 <AlertTriangle className={`w-5 h-5 ${totalOverdue > 0 ? 'text-red-500' : 'text-gray-400'}`} />
               </div>
             </div>
@@ -193,7 +193,7 @@ const HerinneringenPage = () => {
       </div>
 
       {/* Reminders Table */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
         <CardHeader>
           <CardTitle className="text-base font-semibold text-gray-900">Herinneringen Overzicht</CardTitle>
         </CardHeader>

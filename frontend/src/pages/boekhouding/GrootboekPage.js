@@ -31,7 +31,7 @@ import {
 const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'default' }) => {
   if (loading) {
     return (
-      <Card className="bg-white border-0 shadow-sm rounded-2xl">
+      <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
         <CardContent className="p-6">
           <Skeleton className="h-4 w-24 mb-4" />
           <Skeleton className="h-10 w-32 mb-2" />
@@ -42,14 +42,14 @@ const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'defa
   }
 
   return (
-    <Card className={`border-0 shadow-sm rounded-2xl ${
+    <Card className={`border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl ${
       variant === 'primary' ? 'bg-emerald-50' : 'bg-white'
     }`}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <span className="text-sm text-gray-500 font-medium">{title}</span>
           {Icon && (
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
               variant === 'primary' ? 'bg-emerald-100' : 'bg-slate-100'
             }`}>
               <Icon className={`w-5 h-5 ${
@@ -405,7 +405,7 @@ const GrootboekPage = () => {
                     </div>
                   </div>
                   
-                  <div className="border rounded-xl overflow-hidden">
+                  <div className="border rounded-2xl overflow-hidden">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-gray-50">
@@ -518,7 +518,7 @@ const GrootboekPage = () => {
         {/* Tabs */}
         <Tabs defaultValue="accounts" className="space-y-6">
           <div className="flex items-center justify-between">
-            <TabsList className="bg-white border border-slate-200 rounded-xl p-1">
+            <TabsList className="bg-white border border-slate-200 rounded-2xl p-1">
               <TabsTrigger 
                 value="accounts" 
                 className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700"
@@ -539,7 +539,7 @@ const GrootboekPage = () => {
           </div>
 
           <TabsContent value="accounts">
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+            <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
               <CardContent className="p-6">
                 {/* Filter Bar */}
                 <div className="flex items-center justify-between mb-6">
@@ -577,7 +577,7 @@ const GrootboekPage = () => {
                         {accountTypes[type]}
                         <Badge variant="outline" className="ml-2 text-xs">{accs.length}</Badge>
                       </h3>
-                      <div className="border border-gray-200 rounded-xl overflow-hidden">
+                      <div className="border border-gray-200 rounded-2xl overflow-hidden">
                         <Table>
                           <TableHeader>
                             <TableRow className="bg-gray-50/50">
@@ -642,7 +642,7 @@ const GrootboekPage = () => {
           </TabsContent>
 
           <TabsContent value="journal">
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
+            <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Journaalposten</h3>
@@ -651,7 +651,7 @@ const GrootboekPage = () => {
                   </Button>
                 </div>
                 
-                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                <div className="border border-gray-200 rounded-2xl overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-gray-50/50">
@@ -711,7 +711,7 @@ const GrootboekPage = () => {
           </DialogHeader>
           {selectedAccount && (
             <div className="space-y-4 py-4">
-              <div className="bg-gray-50 p-4 rounded-xl">
+              <div className="bg-gray-50 p-4 rounded-2xl">
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <span className="text-gray-500">Rekening:</span>
                   <span className="font-medium">{selectedAccount.code} - {selectedAccount.naam}</span>

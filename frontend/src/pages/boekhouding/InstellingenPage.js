@@ -379,10 +379,10 @@ const InstellingenPage = () => {
         <TabsContent value="bedrijf" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Algemene Info */}
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center">
                     <Building2 className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
@@ -450,10 +450,10 @@ const InstellingenPage = () => {
             </Card>
 
             {/* Registratie & Bank */}
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-2xl bg-green-50 flex items-center justify-center">
                     <Settings className="w-5 h-5 text-green-500" />
                   </div>
                   <div>
@@ -512,10 +512,10 @@ const InstellingenPage = () => {
           </div>
 
           {/* Bedrijfslogo Card */}
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center">
+                <div className="w-11 h-11 rounded-2xl bg-indigo-50 flex items-center justify-center">
                   <Image className="w-5 h-5 text-indigo-500" />
                 </div>
                 <div>
@@ -616,10 +616,10 @@ const InstellingenPage = () => {
 
         {/* E-mail (SMTP) Tab */}
         <TabsContent value="email" className="space-y-6">
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center">
+                <div className="w-11 h-11 rounded-2xl bg-purple-50 flex items-center justify-center">
                   <Mail className="w-5 h-5 text-purple-500" />
                 </div>
                 <div>
@@ -778,10 +778,10 @@ const InstellingenPage = () => {
         <TabsContent value="herinneringen" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Instellingen */}
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center">
                     <Bell className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
@@ -853,10 +853,10 @@ const InstellingenPage = () => {
             </Card>
 
             {/* Status */}
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-2xl bg-blue-50 flex items-center justify-center">
                     <Clock className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
@@ -933,7 +933,7 @@ const InstellingenPage = () => {
           </div>
           
           {/* Info Card */}
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <h3 className="font-semibold text-gray-900 mb-3">Hoe werkt automatische herinneringen?</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -973,10 +973,10 @@ const InstellingenPage = () => {
         <TabsContent value="factuur" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Template Keuze */}
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-2xl bg-amber-50 flex items-center justify-center">
                     <FileText className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
@@ -1015,10 +1015,10 @@ const InstellingenPage = () => {
             </Card>
 
             {/* Kleuren */}
-            <Card className="bg-white border border-gray-200 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-pink-50 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-2xl bg-pink-50 flex items-center justify-center">
                     <Palette className="w-5 h-5 text-pink-500" />
                   </div>
                   <div>
@@ -1093,7 +1093,7 @@ const InstellingenPage = () => {
             </Card>
 
             {/* Factuur Voorwaarden */}
-            <Card className="bg-white border border-gray-200 shadow-sm lg:col-span-2">
+            <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow lg:col-span-2">
               <CardHeader>
                 <CardTitle className="text-base font-semibold text-gray-900">Factuur Voorwaarden</CardTitle>
                 <CardDescription className="text-sm text-gray-500">
@@ -1114,11 +1114,11 @@ const InstellingenPage = () => {
 
         {/* Multi-Tenant / Bedrijven Tab */}
         <TabsContent value="multi-tenant" className="space-y-6">
-          <Card className="bg-white border border-gray-200 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-2xl bg-indigo-50 flex items-center justify-center">
                     <Building className="w-5 h-5 text-indigo-500" />
                   </div>
                   <div>
