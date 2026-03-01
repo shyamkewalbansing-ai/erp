@@ -21,55 +21,174 @@ import {
   Filter,
   TrendingUp,
   Wallet,
-  ChevronDown,
-  Eye
+  Eye,
+  Phone,
+  Mail,
+  MapPin,
+  Building2,
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  ChevronRight,
+  MoreVertical,
+  Edit,
+  Trash2,
+  RefreshCw
 } from 'lucide-react';
 
-// Stat Card Component matching Dashboard/Grootboek style
-const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'default' }) => {
+// Enhanced Stat Card with gradient backgrounds
+const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'default', trend }) => {
   if (loading) {
     return (
-      <Card className="bg-white border-0 shadow-sm rounded-2xl">
-        <CardContent className="p-6">
-          <Skeleton className="h-4 w-24 mb-4" />
-          <Skeleton className="h-10 w-32 mb-2" />
-          <Skeleton className="h-4 w-20" />
-        </CardContent>
-      </Card>
+      <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100">
+        <Skeleton className="h-4 w-24 mb-3" />
+        <Skeleton className="h-8 w-32 mb-2" />
+        <Skeleton className="h-3 w-20" />
+      </div>
     );
   }
 
+  const variants = {
+    default: 'bg-white border-slate-100',
+    primary: 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white border-emerald-400',
+    warning: 'bg-gradient-to-br from-amber-500 to-orange-500 text-white border-amber-400',
+    danger: 'bg-gradient-to-br from-red-500 to-rose-600 text-white border-red-400',
+    info: 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-blue-400'
+  };
+
+  const isColored = variant !== 'default';
+
   return (
-    <Card className={`border-0 shadow-sm rounded-2xl ${
-      variant === 'primary' ? 'bg-emerald-50' : 
-      variant === 'warning' ? 'bg-amber-50' : 
-      'bg-white'
-    }`}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <span className="text-sm text-slate-500 font-medium">{title}</span>
-          {Icon && (
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-              variant === 'primary' ? 'bg-emerald-100' : 
-              variant === 'warning' ? 'bg-amber-100' : 
-              'bg-slate-100'
-            }`}>
-              <Icon className={`w-5 h-5 ${
-                variant === 'primary' ? 'text-emerald-600' : 
-                variant === 'warning' ? 'text-amber-600' : 
-                'text-slate-600'
-              }`} />
-            </div>
-          )}
-        </div>
-        <div className="text-3xl font-bold text-slate-900 mb-2">{value}</div>
-        {subtitle && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-400">{subtitle}</span>
+    <div className={`rounded-2xl p-5 shadow-sm border transition-all hover:shadow-md ${variants[variant]}`}>
+      <div className="flex items-start justify-between mb-3">
+        <span className={`text-sm font-medium ${isColored ? 'text-white/80' : 'text-slate-500'}`}>{title}</span>
+        {Icon && (
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+            isColored ? 'bg-white/20' : 'bg-slate-100'
+          }`}>
+            <Icon className={`w-5 h-5 ${isColored ? 'text-white' : 'text-slate-600'}`} />
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+      <div className={`text-2xl md:text-3xl font-bold mb-1 ${isColored ? 'text-white' : 'text-slate-900'}`}>
+        {value}
+      </div>
+      {subtitle && (
+        <div className="flex items-center gap-2">
+          <span className={`text-xs ${isColored ? 'text-white/70' : 'text-slate-400'}`}>{subtitle}</span>
+          {trend && (
+            <span className={`text-xs px-1.5 py-0.5 rounded ${
+              trend > 0 ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
+            }`}>
+              {trend > 0 ? '+' : ''}{trend}%
+            </span>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Mobile Customer Card
+const CustomerCard = ({ customer, formatAmount, onEdit, onDelete }) => (
+  <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-100 hover:shadow-md transition-all">
+    <div className="flex items-start justify-between mb-3">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-lg">
+          {customer.naam?.charAt(0)?.toUpperCase() || '?'}
+        </div>
+        <div>
+          <h3 className="font-semibold text-slate-900">{customer.naam}</h3>
+          <p className="text-xs text-slate-500 font-mono">{customer.nummer}</p>
+        </div>
+      </div>
+      <Badge variant="outline" className="text-xs">{customer.valuta}</Badge>
+    </div>
+    
+    <div className="space-y-2 mb-4">
+      {customer.email && (
+        <div className="flex items-center gap-2 text-sm text-slate-600">
+          <Mail className="w-4 h-4 text-slate-400" />
+          <span className="truncate">{customer.email}</span>
+        </div>
+      )}
+      {customer.telefoon && (
+        <div className="flex items-center gap-2 text-sm text-slate-600">
+          <Phone className="w-4 h-4 text-slate-400" />
+          <span>{customer.telefoon}</span>
+        </div>
+      )}
+      {customer.plaats && (
+        <div className="flex items-center gap-2 text-sm text-slate-600">
+          <MapPin className="w-4 h-4 text-slate-400" />
+          <span>{customer.plaats}, {customer.land}</span>
+        </div>
+      )}
+    </div>
+    
+    <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+      <div>
+        <p className="text-xs text-slate-500">Openstaand</p>
+        <p className={`text-lg font-bold ${
+          (customer.openstaand_bedrag || 0) > 0 ? 'text-amber-600' : 'text-emerald-600'
+        }`}>
+          {formatAmount(customer.openstaand_bedrag || 0, customer.valuta)}
+        </p>
+      </div>
+      <Button variant="ghost" size="sm" className="text-slate-400 hover:text-emerald-600">
+        <ChevronRight className="w-5 h-5" />
+      </Button>
+    </div>
+  </div>
+);
+
+// Mobile Invoice Card
+const InvoiceCard = ({ invoice, formatAmount, formatDate, getStatusLabel }) => {
+  const isOverdue = invoice.vervaldatum && new Date(invoice.vervaldatum) < new Date() && invoice.status !== 'betaald';
+  
+  return (
+    <div className={`bg-white rounded-xl p-4 shadow-sm border transition-all hover:shadow-md ${
+      isOverdue ? 'border-red-200 bg-red-50/30' : 'border-slate-100'
+    }`}>
+      <div className="flex items-start justify-between mb-3">
+        <div>
+          <p className="font-mono text-sm font-semibold text-slate-900">{invoice.factuurnummer}</p>
+          <p className="text-xs text-slate-500">{formatDate(invoice.factuurdatum)}</p>
+        </div>
+        <span className={`px-2.5 py-1 text-xs font-medium rounded-full ${
+          invoice.status === 'betaald' ? 'bg-emerald-100 text-emerald-700' : 
+          invoice.status === 'verzonden' ? 'bg-blue-100 text-blue-700' : 
+          invoice.status === 'herinnering' ? 'bg-amber-100 text-amber-700' : 
+          'bg-slate-100 text-slate-600'
+        }`}>
+          {getStatusLabel(invoice.status)}
+        </span>
+      </div>
+      
+      <div className="mb-3">
+        <p className="font-medium text-slate-900">{invoice.debiteur_naam || 'Onbekende klant'}</p>
+        {isOverdue && (
+          <div className="flex items-center gap-1 mt-1 text-red-600">
+            <AlertTriangle className="w-3 h-3" />
+            <span className="text-xs font-medium">Verlopen op {formatDate(invoice.vervaldatum)}</span>
+          </div>
+        )}
+      </div>
+      
+      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+        <div>
+          <p className="text-xs text-slate-500">Totaal incl. BTW</p>
+          <p className="text-lg font-bold text-emerald-600">
+            {formatAmount(invoice.totaal_incl_btw, invoice.valuta)}
+          </p>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-emerald-50 hover:text-emerald-600">
+            <Eye className="w-4 h-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -81,6 +200,7 @@ const DebiteurenPage = () => {
   const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [viewMode, setViewMode] = useState('table'); // 'table' or 'cards'
 
   const [newCustomer, setNewCustomer] = useState({
     naam: '',
@@ -110,6 +230,18 @@ const DebiteurenPage = () => {
 
   useEffect(() => {
     fetchData();
+  }, []);
+
+  // Auto-detect mobile view
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setViewMode('cards');
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const fetchData = async () => {
@@ -172,161 +304,233 @@ const DebiteurenPage = () => {
   // Calculate totals
   const totalOutstanding = customers.reduce((sum, c) => sum + (c.openstaand_bedrag || 0), 0);
   const totalInvoiced = invoices.reduce((sum, i) => sum + (i.totaal_incl_btw || 0), 0);
+  const paidInvoices = invoices.filter(i => i.status === 'betaald').length;
   const overdueInvoices = invoices.filter(i => {
     if (!i.vervaldatum || i.status === 'betaald') return false;
     return new Date(i.vervaldatum) < new Date();
   }).length;
 
   return (
-    <div className="min-h-screen bg-slate-50/50" data-testid="debiteuren-page">
-      {/* Top Header */}
-      <div className="bg-white border-b border-slate-100 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Debiteuren</h1>
-            <p className="text-sm text-slate-500">Beheer uw klanten en verkoopfacturen</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Dialog open={showCustomerDialog} onOpenChange={setShowCustomerDialog}>
-              <DialogTrigger asChild>
-                <Button className="rounded-lg bg-emerald-600 hover:bg-emerald-700" data-testid="add-customer-btn">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nieuwe Debiteur
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Nieuwe Debiteur</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2 col-span-2">
-                      <Label>Naam *</Label>
-                      <Input
-                        value={newCustomer.naam}
-                        onChange={(e) => setNewCustomer({...newCustomer, naam: e.target.value})}
-                        placeholder="Bedrijfsnaam of naam"
-                        data-testid="customer-name-input"
-                      />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100" data-testid="debiteuren-page">
+      {/* Top Header - Responsive */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div className="px-4 md:px-6 py-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-slate-900">Debiteuren</h1>
+              <p className="text-sm text-slate-500">Beheer klanten & verkoopfacturen</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={fetchData}
+                className="rounded-lg"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </Button>
+              <Dialog open={showCustomerDialog} onOpenChange={setShowCustomerDialog}>
+                <DialogTrigger asChild>
+                  <Button className="rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/25" data-testid="add-customer-btn">
+                    <Plus className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Nieuwe Debiteur</span>
+                    <span className="sm:hidden">Nieuw</span>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5 text-emerald-600" />
+                      Nieuwe Debiteur Aanmaken
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6 py-4">
+                    {/* Basic Info */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <Users className="w-4 h-4" />
+                        Basisgegevens
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label>Bedrijfsnaam / Naam *</Label>
+                          <Input
+                            value={newCustomer.naam}
+                            onChange={(e) => setNewCustomer({...newCustomer, naam: e.target.value})}
+                            placeholder="Bijv. ABC Trading N.V."
+                            className="rounded-lg"
+                            data-testid="customer-name-input"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>BTW-nummer</Label>
+                          <Input
+                            value={newCustomer.btw_nummer}
+                            onChange={(e) => setNewCustomer({...newCustomer, btw_nummer: e.target.value})}
+                            placeholder="BTW123456789"
+                            className="rounded-lg"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Valuta</Label>
+                          <Select value={newCustomer.valuta} onValueChange={(v) => setNewCustomer({...newCustomer, valuta: v})}>
+                            <SelectTrigger className="rounded-lg"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="SRD">SRD - Surinaamse Dollar</SelectItem>
+                              <SelectItem value="USD">USD - US Dollar</SelectItem>
+                              <SelectItem value="EUR">EUR - Euro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2 col-span-2">
-                      <Label>Adres</Label>
-                      <Input
-                        value={newCustomer.adres}
-                        onChange={(e) => setNewCustomer({...newCustomer, adres: e.target.value})}
-                        placeholder="Straat en huisnummer"
-                      />
+
+                    {/* Contact Info */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <Mail className="w-4 h-4" />
+                        Contactgegevens
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Telefoon</Label>
+                          <Input
+                            value={newCustomer.telefoon}
+                            onChange={(e) => setNewCustomer({...newCustomer, telefoon: e.target.value})}
+                            placeholder="+597 123 4567"
+                            className="rounded-lg"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>E-mail</Label>
+                          <Input
+                            type="email"
+                            value={newCustomer.email}
+                            onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})}
+                            placeholder="info@bedrijf.sr"
+                            className="rounded-lg"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Postcode</Label>
-                      <Input
-                        value={newCustomer.postcode}
-                        onChange={(e) => setNewCustomer({...newCustomer, postcode: e.target.value})}
-                        placeholder="Postcode"
-                      />
+
+                    {/* Address */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <MapPin className="w-4 h-4" />
+                        Adresgegevens
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label>Straat en huisnummer</Label>
+                          <Input
+                            value={newCustomer.adres}
+                            onChange={(e) => setNewCustomer({...newCustomer, adres: e.target.value})}
+                            placeholder="Domineestraat 1"
+                            className="rounded-lg"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Postcode</Label>
+                          <Input
+                            value={newCustomer.postcode}
+                            onChange={(e) => setNewCustomer({...newCustomer, postcode: e.target.value})}
+                            placeholder="Postcode"
+                            className="rounded-lg"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Plaats</Label>
+                          <Input
+                            value={newCustomer.plaats}
+                            onChange={(e) => setNewCustomer({...newCustomer, plaats: e.target.value})}
+                            placeholder="Paramaribo"
+                            className="rounded-lg"
+                          />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                          <Label>Land</Label>
+                          <Select value={newCustomer.land} onValueChange={(v) => setNewCustomer({...newCustomer, land: v})}>
+                            <SelectTrigger className="rounded-lg"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Suriname">Suriname</SelectItem>
+                              <SelectItem value="Nederland">Nederland</SelectItem>
+                              <SelectItem value="Verenigde Staten">Verenigde Staten</SelectItem>
+                              <SelectItem value="Guyana">Guyana</SelectItem>
+                              <SelectItem value="Overig">Overig</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Plaats</Label>
-                      <Input
-                        value={newCustomer.plaats}
-                        onChange={(e) => setNewCustomer({...newCustomer, plaats: e.target.value})}
-                        placeholder="Paramaribo"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Land</Label>
-                      <Select value={newCustomer.land} onValueChange={(v) => setNewCustomer({...newCustomer, land: v})}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Suriname">Suriname</SelectItem>
-                          <SelectItem value="Nederland">Nederland</SelectItem>
-                          <SelectItem value="Verenigde Staten">Verenigde Staten</SelectItem>
-                          <SelectItem value="Overig">Overig</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>BTW-nummer</Label>
-                      <Input
-                        value={newCustomer.btw_nummer}
-                        onChange={(e) => setNewCustomer({...newCustomer, btw_nummer: e.target.value})}
-                        placeholder="BTW123456"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Telefoon</Label>
-                      <Input
-                        value={newCustomer.telefoon}
-                        onChange={(e) => setNewCustomer({...newCustomer, telefoon: e.target.value})}
-                        placeholder="+597 123 4567"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>E-mail</Label>
-                      <Input
-                        type="email"
-                        value={newCustomer.email}
-                        onChange={(e) => setNewCustomer({...newCustomer, email: e.target.value})}
-                        placeholder="info@klant.sr"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Betalingstermijn</Label>
-                      <Select 
-                        value={String(newCustomer.betalingstermijn)} 
-                        onValueChange={(v) => setNewCustomer({...newCustomer, betalingstermijn: parseInt(v)})}
-                      >
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">Direct</SelectItem>
-                          <SelectItem value="14">14 dagen</SelectItem>
-                          <SelectItem value="30">30 dagen</SelectItem>
-                          <SelectItem value="60">60 dagen</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Valuta</Label>
-                      <Select value={newCustomer.valuta} onValueChange={(v) => setNewCustomer({...newCustomer, valuta: v})}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="SRD">SRD</SelectItem>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                        </SelectContent>
-                      </Select>
+
+                    {/* Payment Terms */}
+                    <div className="space-y-4">
+                      <h3 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <Wallet className="w-4 h-4" />
+                        Betalingsvoorwaarden
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Betalingstermijn</Label>
+                          <Select 
+                            value={String(newCustomer.betalingstermijn)} 
+                            onValueChange={(v) => setNewCustomer({...newCustomer, betalingstermijn: parseInt(v)})}
+                          >
+                            <SelectTrigger className="rounded-lg"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">Direct</SelectItem>
+                              <SelectItem value="7">7 dagen</SelectItem>
+                              <SelectItem value="14">14 dagen</SelectItem>
+                              <SelectItem value="30">30 dagen</SelectItem>
+                              <SelectItem value="60">60 dagen</SelectItem>
+                              <SelectItem value="90">90 dagen</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Kredietlimiet</Label>
+                          <Input
+                            type="number"
+                            value={newCustomer.kredietlimiet}
+                            onChange={(e) => setNewCustomer({...newCustomer, kredietlimiet: parseFloat(e.target.value) || 0})}
+                            placeholder="0.00"
+                            className="rounded-lg"
+                          />
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setShowCustomerDialog(false)} className="rounded-lg">
-                    Annuleren
-                  </Button>
-                  <Button onClick={handleCreateCustomer} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
-                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                    Opslaan
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                  <DialogFooter className="gap-2 sm:gap-0">
+                    <Button variant="outline" onClick={() => setShowCustomerDialog(false)} className="rounded-lg">
+                      Annuleren
+                    </Button>
+                    <Button onClick={handleCreateCustomer} disabled={saving} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 rounded-lg">
+                      {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+                      Opslaan
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* Stats Row */}
-        <div className="grid grid-cols-4 gap-6">
+      <div className="p-4 md:p-6 space-y-6">
+        {/* Stats Row - Responsive Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
           <StatCard
-            title="Totaal Debiteuren"
+            title="Totaal Klanten"
             value={customers.length}
-            subtitle="Actieve klanten"
+            subtitle="Actieve debiteuren"
             icon={Users}
             loading={loading}
           />
           <StatCard
-            title="Verkoopfacturen"
+            title="Facturen"
             value={invoices.length}
-            subtitle="Totaal aantal"
+            subtitle={`${paidInvoices} betaald`}
             icon={FileText}
             loading={loading}
           />
@@ -334,27 +538,43 @@ const DebiteurenPage = () => {
             title="Openstaand"
             value={formatAmount(totalOutstanding, 'SRD')}
             subtitle="Te ontvangen"
-            icon={TrendingUp}
+            icon={Clock}
             loading={loading}
             variant="warning"
           />
           <StatCard
-            title="Totaal Gefactureerd"
+            title="Gefactureerd"
             value={formatAmount(totalInvoiced, 'SRD')}
-            subtitle="Alle facturen"
-            icon={Wallet}
+            subtitle="Totaal omzet"
+            icon={TrendingUp}
             loading={loading}
             variant="primary"
           />
         </div>
 
-        {/* Tabs */}
-        <Tabs defaultValue="customers" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList className="bg-white border border-slate-200 rounded-xl p-1">
+        {/* Alert for overdue invoices */}
+        {overdueInvoices > 0 && (
+          <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-red-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-red-800">Let op: {overdueInvoices} verlopen facturen</p>
+              <p className="text-sm text-red-600">Er zijn facturen die de vervaldatum hebben overschreden.</p>
+            </div>
+            <Button variant="outline" size="sm" className="border-red-300 text-red-700 hover:bg-red-100 rounded-lg hidden sm:flex">
+              Bekijken
+            </Button>
+          </div>
+        )}
+
+        {/* Tabs - Responsive */}
+        <Tabs defaultValue="customers" className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <TabsList className="bg-white border border-slate-200 rounded-xl p-1 w-full sm:w-auto">
               <TabsTrigger 
                 value="customers" 
-                className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700"
+                className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 flex-1 sm:flex-none"
                 data-testid="tab-customers"
               >
                 <Users className="w-4 h-4 mr-2" />
@@ -362,46 +582,45 @@ const DebiteurenPage = () => {
               </TabsTrigger>
               <TabsTrigger 
                 value="invoices"
-                className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700"
+                className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 flex-1 sm:flex-none"
                 data-testid="tab-invoices"
               >
                 <FileText className="w-4 h-4 mr-2" />
-                Verkoopfacturen
+                Facturen
               </TabsTrigger>
             </TabsList>
           </div>
 
-          <TabsContent value="customers">
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                {/* Filter Bar */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <Input
-                        placeholder="Zoek klant..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64 rounded-lg"
-                        data-testid="search-input"
-                      />
-                    </div>
-                  </div>
-                </div>
+          {/* Customers Tab */}
+          <TabsContent value="customers" className="space-y-4">
+            {/* Search Bar */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Zoek op naam, nummer of e-mail..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 rounded-xl bg-white"
+                  data-testid="search-input"
+                />
+              </div>
+            </div>
 
-                {/* Customers Table */}
-                <div className="border border-slate-100 rounded-xl overflow-hidden">
+            {/* Desktop Table View */}
+            <div className="hidden md:block">
+              <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50/50">
-                        <TableHead className="w-24 text-xs font-medium text-slate-500">Nr.</TableHead>
-                        <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
-                        <TableHead className="text-xs font-medium text-slate-500">Plaats</TableHead>
-                        <TableHead className="text-xs font-medium text-slate-500">E-mail</TableHead>
-                        <TableHead className="text-xs font-medium text-slate-500">Telefoon</TableHead>
-                        <TableHead className="w-20 text-xs font-medium text-slate-500">Valuta</TableHead>
-                        <TableHead className="text-right w-36 text-xs font-medium text-slate-500">Openstaand</TableHead>
+                      <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                        <TableHead className="w-24 text-xs font-semibold text-slate-600">Nr.</TableHead>
+                        <TableHead className="text-xs font-semibold text-slate-600">Naam</TableHead>
+                        <TableHead className="text-xs font-semibold text-slate-600">Plaats</TableHead>
+                        <TableHead className="text-xs font-semibold text-slate-600">E-mail</TableHead>
+                        <TableHead className="text-xs font-semibold text-slate-600">Telefoon</TableHead>
+                        <TableHead className="w-20 text-xs font-semibold text-slate-600">Valuta</TableHead>
+                        <TableHead className="text-right w-36 text-xs font-semibold text-slate-600">Openstaand</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -419,16 +638,23 @@ const DebiteurenPage = () => {
                         ))
                       ) : filteredCustomers.length > 0 ? (
                         filteredCustomers.map(customer => (
-                          <TableRow key={customer.id} className="hover:bg-slate-50/50" data-testid={`customer-row-${customer.nummer}`}>
+                          <TableRow key={customer.id} className="hover:bg-emerald-50/30 transition-colors" data-testid={`customer-row-${customer.nummer}`}>
                             <TableCell className="text-sm font-mono text-slate-600">{customer.nummer}</TableCell>
-                            <TableCell className="text-sm font-medium text-slate-900">{customer.naam}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-xs font-semibold">
+                                  {customer.naam?.charAt(0)?.toUpperCase()}
+                                </div>
+                                <span className="text-sm font-medium text-slate-900">{customer.naam}</span>
+                              </div>
+                            </TableCell>
                             <TableCell className="text-sm text-slate-500">{customer.plaats || '-'}</TableCell>
                             <TableCell className="text-sm text-slate-500">{customer.email || '-'}</TableCell>
                             <TableCell className="text-sm text-slate-500">{customer.telefoon || '-'}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className="text-xs rounded-md">{customer.valuta}</Badge>
+                              <Badge variant="outline" className="text-xs rounded-lg font-medium">{customer.valuta}</Badge>
                             </TableCell>
-                            <TableCell className={`text-right text-sm font-semibold ${
+                            <TableCell className={`text-right text-sm font-bold ${
                               (customer.openstaand_bedrag || 0) > 0 ? 'text-amber-600' : 'text-emerald-600'
                             }`}>
                               {formatAmount(customer.openstaand_bedrag || 0, customer.valuta)}
@@ -437,67 +663,96 @@ const DebiteurenPage = () => {
                         ))
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-16 text-slate-500">
+                          <TableCell colSpan={7} className="text-center py-16">
                             <Users className="w-16 h-16 mx-auto mb-4 text-slate-200" />
-                            <p className="text-lg font-medium mb-2">Geen klanten gevonden</p>
-                            <p className="text-sm mb-6">Maak uw eerste debiteur aan om te beginnen.</p>
+                            <p className="text-lg font-semibold text-slate-700 mb-2">Geen klanten gevonden</p>
+                            <p className="text-sm text-slate-500 mb-6">Voeg uw eerste debiteur toe om te beginnen.</p>
+                            <Button onClick={() => setShowCustomerDialog(true)} className="bg-emerald-600 hover:bg-emerald-700 rounded-xl">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Eerste Klant Toevoegen
+                            </Button>
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
                 </div>
-              </CardContent>
-            </Card>
+              </Card>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="md:hidden space-y-3">
+              {loading ? (
+                [...Array(3)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
+                    <Skeleton className="h-12 w-12 rounded-full mb-3" />
+                    <Skeleton className="h-4 w-32 mb-2" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                ))
+              ) : filteredCustomers.length > 0 ? (
+                filteredCustomers.map(customer => (
+                  <CustomerCard 
+                    key={customer.id} 
+                    customer={customer} 
+                    formatAmount={formatAmount}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12 bg-white rounded-xl">
+                  <Users className="w-16 h-16 mx-auto mb-4 text-slate-200" />
+                  <p className="text-lg font-semibold text-slate-700 mb-2">Geen klanten</p>
+                  <p className="text-sm text-slate-500 mb-4">Voeg uw eerste debiteur toe</p>
+                  <Button onClick={() => setShowCustomerDialog(true)} className="bg-emerald-600 rounded-xl">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Toevoegen
+                  </Button>
+                </div>
+              )}
+            </div>
           </TabsContent>
 
-          <TabsContent value="invoices">
-            <Card className="bg-white border-0 shadow-sm rounded-2xl">
-              <CardContent className="p-6">
-                {/* Filter Bar */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <Input
-                        placeholder="Zoek factuur..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64 rounded-lg"
-                      />
-                    </div>
-                    <Select value={statusFilter} onValueChange={setStatusFilter}>
-                      <SelectTrigger className="w-48 rounded-lg">
-                        <Filter className="w-4 h-4 mr-2" />
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Alle statussen</SelectItem>
-                        <SelectItem value="concept">Concept</SelectItem>
-                        <SelectItem value="verzonden">Verzonden</SelectItem>
-                        <SelectItem value="betaald">Betaald</SelectItem>
-                        <SelectItem value="herinnering">Herinnering</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {overdueInvoices > 0 && (
-                    <div className="text-sm text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg">
-                      {overdueInvoices} verlopen facturen
-                    </div>
-                  )}
-                </div>
+          {/* Invoices Tab */}
+          <TabsContent value="invoices" className="space-y-4">
+            {/* Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  placeholder="Zoek factuur..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 rounded-xl bg-white"
+                />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48 rounded-xl bg-white">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle statussen</SelectItem>
+                  <SelectItem value="concept">Concept</SelectItem>
+                  <SelectItem value="verzonden">Verzonden</SelectItem>
+                  <SelectItem value="betaald">Betaald</SelectItem>
+                  <SelectItem value="herinnering">Herinnering</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-                {/* Invoices Table */}
-                <div className="border border-slate-100 rounded-xl overflow-hidden">
+            {/* Desktop Table */}
+            <div className="hidden md:block">
+              <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
+                <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50/50">
-                        <TableHead className="w-28 text-xs font-medium text-slate-500">Nummer</TableHead>
-                        <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
-                        <TableHead className="text-xs font-medium text-slate-500">Debiteur</TableHead>
-                        <TableHead className="w-28 text-xs font-medium text-slate-500">Vervaldatum</TableHead>
-                        <TableHead className="text-right w-36 text-xs font-medium text-slate-500">Bedrag</TableHead>
-                        <TableHead className="w-32 text-xs font-medium text-slate-500">Status</TableHead>
+                      <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                        <TableHead className="w-28 text-xs font-semibold text-slate-600">Nummer</TableHead>
+                        <TableHead className="w-28 text-xs font-semibold text-slate-600">Datum</TableHead>
+                        <TableHead className="text-xs font-semibold text-slate-600">Debiteur</TableHead>
+                        <TableHead className="w-28 text-xs font-semibold text-slate-600">Vervaldatum</TableHead>
+                        <TableHead className="text-right w-36 text-xs font-semibold text-slate-600">Bedrag</TableHead>
+                        <TableHead className="w-32 text-xs font-semibold text-slate-600">Status</TableHead>
                         <TableHead className="w-16"></TableHead>
                       </TableRow>
                     </TableHeader>
@@ -515,52 +770,90 @@ const DebiteurenPage = () => {
                           </TableRow>
                         ))
                       ) : filteredInvoices.length > 0 ? (
-                        filteredInvoices.map(invoice => (
-                          <TableRow key={invoice.id} className="hover:bg-slate-50/50" data-testid={`invoice-row-${invoice.factuurnummer}`}>
-                            <TableCell className="text-sm font-mono text-slate-600">{invoice.factuurnummer}</TableCell>
-                            <TableCell className="text-sm text-slate-500">{formatDate(invoice.factuurdatum)}</TableCell>
-                            <TableCell className="text-sm font-medium text-slate-900">{invoice.debiteur_naam || '-'}</TableCell>
-                            <TableCell className="text-sm text-slate-500">{formatDate(invoice.vervaldatum)}</TableCell>
-                            <TableCell className="text-right text-sm font-semibold text-emerald-600">
-                              {formatAmount(invoice.totaal_incl_btw, invoice.valuta)}
-                            </TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                invoice.status === 'betaald' ? 'bg-emerald-50 text-emerald-600' : 
-                                invoice.status === 'verzonden' ? 'bg-blue-50 text-blue-600' : 
-                                invoice.status === 'herinnering' ? 'bg-amber-50 text-amber-600' : 
-                                invoice.status === 'concept' ? 'bg-slate-50 text-slate-600' : 
-                                'bg-slate-50 text-slate-600'
-                              }`}>
-                                {getStatusLabel(invoice.status)}
-                              </span>
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
-                                title="Bekijken"
-                              >
-                                <Eye className="w-4 h-4 text-slate-400" />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
+                        filteredInvoices.map(invoice => {
+                          const isOverdue = invoice.vervaldatum && new Date(invoice.vervaldatum) < new Date() && invoice.status !== 'betaald';
+                          return (
+                            <TableRow 
+                              key={invoice.id} 
+                              className={`transition-colors ${isOverdue ? 'bg-red-50/50 hover:bg-red-50' : 'hover:bg-emerald-50/30'}`}
+                              data-testid={`invoice-row-${invoice.factuurnummer}`}
+                            >
+                              <TableCell className="text-sm font-mono text-slate-700 font-medium">{invoice.factuurnummer}</TableCell>
+                              <TableCell className="text-sm text-slate-500">{formatDate(invoice.factuurdatum)}</TableCell>
+                              <TableCell className="text-sm font-medium text-slate-900">{invoice.debiteur_naam || '-'}</TableCell>
+                              <TableCell className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-slate-500'}`}>
+                                {formatDate(invoice.vervaldatum)}
+                                {isOverdue && <AlertTriangle className="w-3 h-3 inline ml-1" />}
+                              </TableCell>
+                              <TableCell className="text-right text-sm font-bold text-emerald-600">
+                                {formatAmount(invoice.totaal_incl_btw, invoice.valuta)}
+                              </TableCell>
+                              <TableCell>
+                                <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                                  invoice.status === 'betaald' ? 'bg-emerald-100 text-emerald-700' : 
+                                  invoice.status === 'verzonden' ? 'bg-blue-100 text-blue-700' : 
+                                  invoice.status === 'herinnering' ? 'bg-amber-100 text-amber-700' : 
+                                  'bg-slate-100 text-slate-600'
+                                }`}>
+                                  {getStatusLabel(invoice.status)}
+                                </span>
+                              </TableCell>
+                              <TableCell>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 hover:bg-emerald-100 hover:text-emerald-600 rounded-lg"
+                                  title="Bekijken"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
                       ) : (
                         <TableRow>
-                          <TableCell colSpan={7} className="text-center py-16 text-slate-500">
+                          <TableCell colSpan={7} className="text-center py-16">
                             <FileText className="w-16 h-16 mx-auto mb-4 text-slate-200" />
-                            <p className="text-lg font-medium mb-2">Geen facturen gevonden</p>
-                            <p className="text-sm">Pas de filters aan of maak een nieuwe factuur aan.</p>
+                            <p className="text-lg font-semibold text-slate-700 mb-2">Geen facturen gevonden</p>
+                            <p className="text-sm text-slate-500">Pas de filters aan of maak een nieuwe factuur aan.</p>
                           </TableCell>
                         </TableRow>
                       )}
                     </TableBody>
                   </Table>
                 </div>
-              </CardContent>
-            </Card>
+              </Card>
+            </div>
+
+            {/* Mobile Cards */}
+            <div className="md:hidden space-y-3">
+              {loading ? (
+                [...Array(3)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
+                    <Skeleton className="h-4 w-24 mb-2" />
+                    <Skeleton className="h-5 w-32 mb-3" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                ))
+              ) : filteredInvoices.length > 0 ? (
+                filteredInvoices.map(invoice => (
+                  <InvoiceCard 
+                    key={invoice.id} 
+                    invoice={invoice}
+                    formatAmount={formatAmount}
+                    formatDate={formatDate}
+                    getStatusLabel={getStatusLabel}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12 bg-white rounded-xl">
+                  <FileText className="w-16 h-16 mx-auto mb-4 text-slate-200" />
+                  <p className="text-lg font-semibold text-slate-700 mb-2">Geen facturen</p>
+                  <p className="text-sm text-slate-500">Pas de filters aan</p>
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
