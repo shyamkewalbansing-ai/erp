@@ -71,12 +71,17 @@ const NieuweFactuurPage = () => {
 
   const fetchData = async () => {
     try {
-      const [customersRes, productsRes] = await Promise.all([
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
+      
+      const [customersRes, productsRes, bedrijfRes] = await Promise.all([
         customersAPI.getAll(),
-        productsAPI.getAll()
+        productsAPI.getAll(),
+        fetch(`${API_URL}/api/boekhouding/instellingen`, { headers }).then(r => r.json()).catch(() => ({}))
       ]);
       setCustomers(customersRes.data || []);
       setProducts(productsRes.data || []);
+      setBedrijf(bedrijfRes || {});
     } catch (error) {
       toast.error('Fout bij laden gegevens');
     } finally {
