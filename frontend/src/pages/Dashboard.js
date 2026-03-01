@@ -309,7 +309,7 @@ export default function Dashboard() {
 
               {/* Module selection */}
               <div className="grid gap-3">
-                {availableModules.filter(m => m.slug !== 'boekhouding').map((module) => (
+                {availableModules.filter(m => m.slug !== 'boekhouding' && m.slug !== 'schuldbeheer').map((module) => (
                   <div 
                     key={module.id}
                     onClick={() => toggleModuleSelection(module.id)}
