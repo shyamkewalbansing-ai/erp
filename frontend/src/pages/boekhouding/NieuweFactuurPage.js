@@ -617,6 +617,15 @@ const NieuweFactuurPage = () => {
           </Card>
         </div>
       </div>
+
+      {/* Invoice Preview Dialog */}
+      <InvoicePreview
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+        invoice={invoice}
+        customer={selectedCustomer}
+        bedrijf={bedrijf}
+      />
     </div>
   );
 };
