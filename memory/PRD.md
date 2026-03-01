@@ -10,7 +10,33 @@ Dutch (Nederlands)
 
 ## Wat is Voltooid (Maart 2026)
 
-### ✅ Dashboard Live Data Koppeling (NIEUW - 28 feb 2026)
+### ✅ Boekhouding Module Redesign (NIEUW - 1 maart 2026)
+- **15 pagina's geünificeerd:** Alle pagina's hebben nu dezelfde design als VerkoopPage
+- **Consistente statistiek kaarten:** Elke pagina heeft nu 4 StatCards met dezelfde styling
+- **Kleurenpalet gestandaardiseerd:** Alle `slate-` kleuren vervangen door `gray-` voor consistentie
+- **Moderne UI elementen:** `rounded-2xl` borders, `shadow-sm hover:shadow-md` transitions
+- **InkoopPage volledig herontworpen:** Nu met 4 kaarten, tabs, zoekbalk en detail sidebar
+- **VoorraadPage verbeterd:** Van 3 naar 4 statistiek kaarten
+
+**Alle herontworpen pagina's:**
+1. VerkoopPage (template)
+2. InkoopPage ✅
+3. VoorraadPage ✅
+4. CrediteruenPage ✅
+5. BTWPage ✅
+6. BankKasPage ✅
+7. GrootboekPage ✅
+8. DebiteruenPage ✅
+9. ProjectenPage ✅
+10. RapportagesPage ✅
+11. WisselkoersenPage ✅
+12. HerinneringenPage ✅
+13. DocumentenPage ✅
+14. AuditTrailPage ✅
+15. InstellingenPage ✅
+16. VasteActivaPage ✅
+
+### ✅ Dashboard Live Data Koppeling (28 feb 2026)
 - **Live financiële data:** Total Income, Expense, Savings nu gekoppeld aan backend API
 - **Live grafiekdata:** Omzet/Kosten per maand grafiek toont nu echte data uit `/dashboard/charts`
 - **Wisselkoersen:** USD/SRD en EUR/SRD worden live weergegeven
