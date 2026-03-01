@@ -105,7 +105,7 @@ const HerinneringenPage = () => {
 
   const getStatusBadge = (status) => {
     const styles = {
-      pending: 'bg-slate-100 text-slate-700',
+      pending: 'bg-slate-100 text-gray-700',
       sent: 'bg-blue-100 text-blue-700',
       acknowledged: 'bg-green-100 text-green-700'
     };
@@ -124,7 +124,7 @@ const HerinneringenPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96" data-testid="herinneringen-page">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -134,8 +134,8 @@ const HerinneringenPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Betalingsherinneringen</h1>
-          <p className="text-slate-500 mt-0.5">Beheer herinneringen voor vervallen facturen</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Betalingsherinneringen</h1>
+          <p className="text-gray-500 mt-0.5">Beheer herinneringen voor vervallen facturen</p>
         </div>
         <Button onClick={handleGenerate} disabled={generating} data-testid="generate-reminders-btn">
           {generating ? (
@@ -149,11 +149,11 @@ const HerinneringenPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Te Verzenden</p>
+                <p className="text-sm text-gray-500 mb-2">Te Verzenden</p>
                 <p className="text-2xl font-semibold text-amber-600">{pendingCount}</p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
@@ -162,11 +162,11 @@ const HerinneringenPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Verzonden</p>
+                <p className="text-sm text-gray-500 mb-2">Verzonden</p>
                 <p className="text-2xl font-semibold text-blue-600">{sentCount}</p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -175,17 +175,17 @@ const HerinneringenPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className={`bg-white border border-slate-100 shadow-sm ${totalOverdue > 0 ? 'bg-red-50' : ''}`}>
+        <Card className={`bg-white border border-gray-200 shadow-sm ${totalOverdue > 0 ? 'bg-red-50' : ''}`}>
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Totaal Openstaand</p>
-                <p className={`text-2xl font-semibold ${totalOverdue > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                <p className="text-sm text-gray-500 mb-2">Totaal Openstaand</p>
+                <p className={`text-2xl font-semibold ${totalOverdue > 0 ? 'text-red-600' : 'text-gray-900'}`}>
                   {formatAmount(totalOverdue)}
                 </p>
               </div>
               <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${totalOverdue > 0 ? 'bg-red-100' : 'bg-slate-100'}`}>
-                <AlertTriangle className={`w-5 h-5 ${totalOverdue > 0 ? 'text-red-500' : 'text-slate-400'}`} />
+                <AlertTriangle className={`w-5 h-5 ${totalOverdue > 0 ? 'text-red-500' : 'text-gray-400'}`} />
               </div>
             </div>
           </CardContent>
@@ -193,32 +193,32 @@ const HerinneringenPage = () => {
       </div>
 
       {/* Reminders Table */}
-      <Card className="bg-white border border-slate-100 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base font-semibold text-slate-900">Herinneringen Overzicht</CardTitle>
+          <CardTitle className="text-base font-semibold text-gray-900">Herinneringen Overzicht</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Factuur</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500">Klant</TableHead>
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Niveau</TableHead>
-                <TableHead className="text-right w-24 text-xs font-medium text-slate-500">Dagen</TableHead>
-                <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Bedrag</TableHead>
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Status</TableHead>
-                <TableHead className="w-32 text-xs font-medium text-slate-500">Acties</TableHead>
+              <TableRow className="bg-gray-50">
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Factuur</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500">Klant</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Niveau</TableHead>
+                <TableHead className="text-right w-24 text-xs font-medium text-gray-500">Dagen</TableHead>
+                <TableHead className="text-right w-32 text-xs font-medium text-gray-500">Bedrag</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Status</TableHead>
+                <TableHead className="w-32 text-xs font-medium text-gray-500">Acties</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {reminders.map(reminder => (
                 <TableRow key={reminder.id} data-testid={`reminder-row-${reminder.invoice_number}`}>
-                  <TableCell className="text-sm text-slate-600">{reminder.invoice_number}</TableCell>
+                  <TableCell className="text-sm text-gray-600">{reminder.invoice_number}</TableCell>
                   <TableCell>
                     <div>
-                      <span className="text-sm font-medium text-slate-900">{reminder.customer_name}</span>
+                      <span className="text-sm font-medium text-gray-900">{reminder.customer_name}</span>
                       {reminder.customer_email && (
-                        <p className="text-xs text-slate-500">{reminder.customer_email}</p>
+                        <p className="text-xs text-gray-500">{reminder.customer_email}</p>
                       )}
                     </div>
                   </TableCell>
@@ -226,7 +226,7 @@ const HerinneringenPage = () => {
                   <TableCell className="text-right text-sm font-medium text-red-600">
                     {reminder.days_overdue}
                   </TableCell>
-                  <TableCell className="text-right text-sm font-medium text-slate-900">
+                  <TableCell className="text-right text-sm font-medium text-gray-900">
                     {formatAmount(reminder.amount_due, reminder.currency)}
                   </TableCell>
                   <TableCell>{getStatusBadge(reminder.status)}</TableCell>
@@ -267,7 +267,7 @@ const HerinneringenPage = () => {
               ))}
               {reminders.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     Geen herinneringen. Klik op "Herinneringen Genereren" om te controleren op vervallen facturen.
                   </TableCell>
                 </TableRow>

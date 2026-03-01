@@ -165,7 +165,7 @@ const WisselkoersenPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96" data-testid="wisselkoersen-page">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -175,8 +175,8 @@ const WisselkoersenPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Wisselkoersen</h1>
-          <p className="text-slate-500 mt-0.5">Beheer valutakoersen voor SRD</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Wisselkoersen</h1>
+          <p className="text-gray-500 mt-0.5">Beheer valutakoersen voor SRD</p>
           {schedulerStatus?.scheduler?.running && (
             <div className="flex items-center gap-2 mt-2 text-xs text-green-600">
               <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
@@ -202,12 +202,12 @@ const WisselkoersenPage = () => {
               <div className="py-4">
                 {loadingPreview ? (
                   <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-                    <span className="ml-2 text-slate-500">Koersen ophalen van CME.sr...</span>
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                    <span className="ml-2 text-gray-500">Koersen ophalen van CME.sr...</span>
                   </div>
                 ) : cmePreview ? (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between text-sm text-slate-500">
+                    <div className="flex items-center justify-between text-sm text-gray-500">
                       <span>Bron: Central Money Exchange</span>
                       <a 
                         href="https://www.cme.sr" 
@@ -220,7 +220,7 @@ const WisselkoersenPage = () => {
                     </div>
                     
                     {cmePreview.cme_last_updated && (
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-gray-400">
                         CME laatste update: {cmePreview.cme_last_updated}
                       </p>
                     )}
@@ -270,7 +270,7 @@ const WisselkoersenPage = () => {
                     </div>
                   </div>
                 ) : (
-                  <p className="text-center text-slate-500 py-4">
+                  <p className="text-center text-gray-500 py-4">
                     Kon koersen niet ophalen
                   </p>
                 )}
@@ -365,16 +365,16 @@ const WisselkoersenPage = () => {
 
       {/* Current Rates */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">USD / SRD</p>
-                <p className="text-2xl font-semibold text-slate-900">
+                <p className="text-sm text-gray-500 mb-2">USD / SRD</p>
+                <p className="text-2xl font-semibold text-gray-900">
                   {latestRates?.USD_SRD ? formatNumber(latestRates.USD_SRD.koers, 4) : '-'}
                 </p>
                 {latestRates?.USD_SRD && (
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-gray-400 mt-1">
                     {formatDate(latestRates.USD_SRD.datum)} - {latestRates.USD_SRD.bron === 'central_bank' ? 'Centrale Bank' : latestRates.USD_SRD.bron === 'bank' ? 'Bank' : 'Handmatig'}
                   </p>
                 )}
@@ -385,16 +385,16 @@ const WisselkoersenPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">EUR / SRD</p>
-                <p className="text-2xl font-semibold text-slate-900">
+                <p className="text-sm text-gray-500 mb-2">EUR / SRD</p>
+                <p className="text-2xl font-semibold text-gray-900">
                   {latestRates?.EUR_SRD ? formatNumber(latestRates.EUR_SRD.koers, 4) : '-'}
                 </p>
                 {latestRates?.EUR_SRD && (
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-gray-400 mt-1">
                     {formatDate(latestRates.EUR_SRD.datum)} - {latestRates.EUR_SRD.bron === 'central_bank' ? 'Centrale Bank' : latestRates.EUR_SRD.bron === 'bank' ? 'Bank' : 'Handmatig'}
                   </p>
                 )}
@@ -409,9 +409,9 @@ const WisselkoersenPage = () => {
 
       {/* Chart */}
       {chartData.length > 0 && (
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="text-base font-semibold text-slate-900">Koersontwikkeling</CardTitle>
+            <CardTitle className="text-base font-semibold text-gray-900">Koersontwikkeling</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[280px]">
@@ -453,28 +453,28 @@ const WisselkoersenPage = () => {
       )}
 
       {/* History Table */}
-      <Card className="bg-white border border-slate-100 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base font-semibold text-slate-900">Koershistorie</CardTitle>
-          <CardDescription className="text-xs text-slate-500">
+          <CardTitle className="text-base font-semibold text-gray-900">Koershistorie</CardTitle>
+          <CardDescription className="text-xs text-gray-500">
             Koersen worden automatisch gesynchroniseerd bij openen van de boekhouding module
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
-                <TableHead className="w-20 text-xs font-medium text-slate-500">Valuta</TableHead>
-                <TableHead className="w-24 text-xs font-medium text-slate-500">Type</TableHead>
-                <TableHead className="text-right w-32 text-xs font-medium text-slate-500">Koers</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500">Bron</TableHead>
+              <TableRow className="bg-gray-50">
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Datum</TableHead>
+                <TableHead className="w-20 text-xs font-medium text-gray-500">Valuta</TableHead>
+                <TableHead className="w-24 text-xs font-medium text-gray-500">Type</TableHead>
+                <TableHead className="text-right w-32 text-xs font-medium text-gray-500">Koers</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500">Bron</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rates.map(rate => (
                 <TableRow key={rate.id}>
-                  <TableCell className="text-sm text-slate-600">{formatDate(rate.datum)}</TableCell>
+                  <TableCell className="text-sm text-gray-600">{formatDate(rate.datum)}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-xs">
                       {rate.valuta_van}/{rate.valuta_naar || 'SRD'}
@@ -485,15 +485,15 @@ const WisselkoersenPage = () => {
                       <Badge className={`text-xs ${
                         rate.koers_type === 'inkoop' ? 'bg-orange-100 text-orange-700' :
                         rate.koers_type === 'verkoop' ? 'bg-purple-100 text-purple-700' :
-                        'bg-slate-100 text-slate-700'
+                        'bg-slate-100 text-gray-700'
                       }`}>
                         {rate.koers_type === 'inkoop' ? 'Inkoop' : rate.koers_type === 'verkoop' ? 'Verkoop' : rate.koers_type}
                       </Badge>
                     ) : (
-                      <span className="text-slate-400">-</span>
+                      <span className="text-gray-400">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right text-sm font-medium text-slate-900">
+                  <TableCell className="text-right text-sm font-medium text-gray-900">
                     {formatNumber(rate.koers, 4)}
                   </TableCell>
                   <TableCell>
@@ -501,7 +501,7 @@ const WisselkoersenPage = () => {
                       rate.bron === 'CME.sr' ? 'bg-green-100 text-green-700' :
                       rate.bron === 'central_bank' ? 'bg-blue-100 text-blue-700' :
                       rate.bron === 'bank' ? 'bg-cyan-100 text-cyan-700' :
-                      'bg-slate-100 text-slate-700'
+                      'bg-slate-100 text-gray-700'
                     }`}>
                       {rate.bron === 'CME.sr' ? 'CME.sr' :
                        rate.bron === 'central_bank' ? 'Centrale Bank' : 
@@ -512,7 +512,7 @@ const WisselkoersenPage = () => {
               ))}
               {rates.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={5} className="text-center py-8 text-gray-500">
                     Geen wisselkoersen gevonden. Klik op "Sync CME.sr" om actuele koersen op te halen.
                   </TableCell>
                 </TableRow>

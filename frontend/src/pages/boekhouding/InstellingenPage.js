@@ -324,7 +324,7 @@ const InstellingenPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96" data-testid="instellingen-page">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -334,8 +334,8 @@ const InstellingenPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Instellingen</h1>
-          <p className="text-slate-500 mt-0.5">Beheer uw bedrijfsgegevens, e-mail en factuurinstellingen</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Instellingen</h1>
+          <p className="text-gray-500 mt-0.5">Beheer uw bedrijfsgegevens, e-mail en factuurinstellingen</p>
         </div>
         <Button 
           onClick={handleSave} 
@@ -379,15 +379,15 @@ const InstellingenPage = () => {
         <TabsContent value="bedrijf" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Algemene Info */}
-            <Card className="bg-white border border-slate-100 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
                     <Building2 className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-semibold text-slate-900">Bedrijfsgegevens</CardTitle>
-                    <CardDescription className="text-sm text-slate-500">Algemene informatie over uw bedrijf</CardDescription>
+                    <CardTitle className="text-base font-semibold text-gray-900">Bedrijfsgegevens</CardTitle>
+                    <CardDescription className="text-sm text-gray-500">Algemene informatie over uw bedrijf</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -450,15 +450,15 @@ const InstellingenPage = () => {
             </Card>
 
             {/* Registratie & Bank */}
-            <Card className="bg-white border border-slate-100 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
                     <Settings className="w-5 h-5 text-green-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-semibold text-slate-900">Registratie & Bank</CardTitle>
-                    <CardDescription className="text-sm text-slate-500">Fiscale en bankgegevens</CardDescription>
+                    <CardTitle className="text-base font-semibold text-gray-900">Registratie & Bank</CardTitle>
+                    <CardDescription className="text-sm text-gray-500">Fiscale en bankgegevens</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -512,15 +512,15 @@ const InstellingenPage = () => {
           </div>
 
           {/* Bedrijfslogo Card */}
-          <Card className="bg-white border border-slate-100 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-indigo-50 flex items-center justify-center">
                   <Image className="w-5 h-5 text-indigo-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-base font-semibold text-slate-900">Bedrijfslogo</CardTitle>
-                  <CardDescription className="text-sm text-slate-500">Upload uw logo voor facturen en documenten</CardDescription>
+                  <CardTitle className="text-base font-semibold text-gray-900">Bedrijfslogo</CardTitle>
+                  <CardDescription className="text-sm text-gray-500">Upload uw logo voor facturen en documenten</CardDescription>
                 </div>
               </div>
             </CardHeader>
@@ -545,8 +545,8 @@ const InstellingenPage = () => {
                       </button>
                     </div>
                   ) : (
-                    <div className="w-40 h-40 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-slate-50">
-                      <div className="text-center text-slate-400">
+                    <div className="w-40 h-40 border-2 border-dashed border-slate-300 rounded-lg flex items-center justify-center bg-gray-50">
+                      <div className="text-center text-gray-400">
                         <Image className="w-10 h-10 mx-auto mb-2" />
                         <span className="text-xs">Geen logo</span>
                       </div>
@@ -557,8 +557,8 @@ const InstellingenPage = () => {
                 {/* Upload Controls */}
                 <div className="flex-1 space-y-4">
                   <div>
-                    <Label className="text-slate-700">Logo uploaden</Label>
-                    <p className="text-sm text-slate-500 mt-1 mb-3">
+                    <Label className="text-gray-700">Logo uploaden</Label>
+                    <p className="text-sm text-gray-500 mt-1 mb-3">
                       Upload een logo (JPG, PNG, GIF of WEBP, max 5MB). Dit logo verschijnt op uw facturen en andere documenten.
                     </p>
                     <div className="flex items-center gap-3">
@@ -596,8 +596,8 @@ const InstellingenPage = () => {
                   </div>
                   
                   {/* Of URL invoeren */}
-                  <div className="pt-4 border-t border-slate-100">
-                    <Label className="text-slate-700">Of voer een URL in</Label>
+                  <div className="pt-4 border-t border-gray-200">
+                    <Label className="text-gray-700">Of voer een URL in</Label>
                     <div className="flex gap-2 mt-2">
                       <Input
                         value={settings.logo_url || ''}
@@ -616,15 +616,15 @@ const InstellingenPage = () => {
 
         {/* E-mail (SMTP) Tab */}
         <TabsContent value="email" className="space-y-6">
-          <Card className="bg-white border border-slate-100 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center">
                   <Mail className="w-5 h-5 text-purple-500" />
                 </div>
                 <div>
-                  <CardTitle className="text-base font-semibold text-slate-900">E-mail Server Instellingen (SMTP)</CardTitle>
-                  <CardDescription className="text-sm text-slate-500">
+                  <CardTitle className="text-base font-semibold text-gray-900">E-mail Server Instellingen (SMTP)</CardTitle>
+                  <CardDescription className="text-sm text-gray-500">
                     Configureer uw eigen SMTP-server om facturen en herinneringen te versturen.
                   </CardDescription>
                 </div>
@@ -641,7 +641,7 @@ const InstellingenPage = () => {
                       placeholder="smtp.gmail.com"
                       data-testid="smtp-host-input"
                     />
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-gray-500">
                       Gmail: smtp.gmail.com | Outlook: smtp.office365.com
                     </p>
                   </div>
@@ -654,7 +654,7 @@ const InstellingenPage = () => {
                       placeholder="587"
                       data-testid="smtp-port-input"
                     />
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-gray-500">
                       TLS: 587 (aanbevolen) | SSL: 465
                     </p>
                   </div>
@@ -668,7 +668,7 @@ const InstellingenPage = () => {
                       placeholder="uw.email@gmail.com"
                       data-testid="smtp-user-input"
                     />
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-gray-500">
                       Meestal uw volledige e-mailadres
                     </p>
                   </div>
@@ -681,7 +681,7 @@ const InstellingenPage = () => {
                       placeholder="••••••••"
                       data-testid="smtp-password-input"
                     />
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-gray-500">
                       Voor Gmail: gebruik een App-wachtwoord
                     </p>
                   </div>
@@ -689,7 +689,7 @@ const InstellingenPage = () => {
               </div>
 
               <div className="border-t border-slate-200 pt-6">
-                <h4 className="font-medium text-slate-900 mb-4">Afzender Gegevens</h4>
+                <h4 className="font-medium text-gray-900 mb-4">Afzender Gegevens</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>Afzender E-mail</Label>
@@ -699,7 +699,7 @@ const InstellingenPage = () => {
                       onChange={(e) => setSettings({...settings, smtp_from_email: e.target.value})}
                       placeholder="facturen@uwbedrijf.sr"
                     />
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-gray-500">
                       Laat leeg om SMTP gebruikersnaam te gebruiken
                     </p>
                   </div>
@@ -710,7 +710,7 @@ const InstellingenPage = () => {
                       onChange={(e) => setSettings({...settings, smtp_from_name: e.target.value})}
                       placeholder="Uw Bedrijf"
                     />
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-gray-500">
                       Naam die ontvangers zien
                     </p>
                   </div>
@@ -721,8 +721,8 @@ const InstellingenPage = () => {
               <div className="border-t border-slate-200 pt-6">
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h4 className="font-medium text-slate-900">Test E-mail Versturen</h4>
-                    <p className="text-sm text-slate-500">
+                    <h4 className="font-medium text-gray-900">Test E-mail Versturen</h4>
+                    <p className="text-sm text-gray-500">
                       Verstuur een test e-mail naar uw eigen adres om de configuratie te verifiëren
                     </p>
                   </div>
@@ -760,9 +760,9 @@ const InstellingenPage = () => {
               </div>
 
               {/* Gmail Help */}
-              <div className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-                <h5 className="font-medium text-slate-900 mb-2">Gmail Configuratie Hulp</h5>
-                <ol className="text-sm text-slate-600 space-y-1 list-decimal list-inside">
+              <div className="bg-gray-50 border border-slate-200 rounded-lg p-4">
+                <h5 className="font-medium text-gray-900 mb-2">Gmail Configuratie Hulp</h5>
+                <ol className="text-sm text-gray-600 space-y-1 list-decimal list-inside">
                   <li>Ga naar uw Google Account Instellingen</li>
                   <li>Zoek naar "App-wachtwoorden" onder Beveiliging</li>
                   <li>Genereer een nieuw wachtwoord voor "Mail"</li>
@@ -778,23 +778,23 @@ const InstellingenPage = () => {
         <TabsContent value="herinneringen" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Instellingen */}
-            <Card className="bg-white border border-slate-100 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
                     <Bell className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-semibold text-slate-900">Automatische Herinneringen</CardTitle>
-                    <CardDescription className="text-sm text-slate-500">Automatisch herinneringen versturen bij vervallen facturen</CardDescription>
+                    <CardTitle className="text-base font-semibold text-gray-900">Automatische Herinneringen</CardTitle>
+                    <CardDescription className="text-sm text-gray-500">Automatisch herinneringen versturen bij vervallen facturen</CardDescription>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
                     <Label className="text-sm font-medium">Automatische herinneringen inschakelen</Label>
-                    <p className="text-xs text-slate-500 mt-1">Dagelijks om 08:00 (Suriname tijd) worden vervallen facturen gecontroleerd</p>
+                    <p className="text-xs text-gray-500 mt-1">Dagelijks om 08:00 (Suriname tijd) worden vervallen facturen gecontroleerd</p>
                   </div>
                   <Switch
                     checked={settings.auto_herinneringen_enabled}
@@ -814,7 +814,7 @@ const InstellingenPage = () => {
                       onChange={(e) => setSettings({...settings, dagen_voor_eerste_herinnering: parseInt(e.target.value) || 7})}
                       className="mt-1"
                     />
-                    <p className="text-xs text-slate-500 mt-1">Na hoeveel dagen over de vervaldatum de eerste herinnering wordt verzonden</p>
+                    <p className="text-xs text-gray-500 mt-1">Na hoeveel dagen over de vervaldatum de eerste herinnering wordt verzonden</p>
                   </div>
                   
                   <div>
@@ -828,7 +828,7 @@ const InstellingenPage = () => {
                       onChange={(e) => setSettings({...settings, dagen_tussen_herinneringen: parseInt(e.target.value) || 7})}
                       className="mt-1"
                     />
-                    <p className="text-xs text-slate-500 mt-1">Aantal dagen tussen escalatie (eerste → tweede → aanmaning)</p>
+                    <p className="text-xs text-gray-500 mt-1">Aantal dagen tussen escalatie (eerste → tweede → aanmaning)</p>
                   </div>
                   
                   <div>
@@ -846,22 +846,22 @@ const InstellingenPage = () => {
                         <SelectItem value="3">3 herinneringen (incl. aanmaning)</SelectItem>
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-slate-500 mt-1">Na dit aantal stopt de automatische opvolging</p>
+                    <p className="text-xs text-gray-500 mt-1">Na dit aantal stopt de automatische opvolging</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
             {/* Status */}
-            <Card className="bg-white border border-slate-100 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
                     <Clock className="w-5 h-5 text-blue-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-semibold text-slate-900">Scheduler Status</CardTitle>
-                    <CardDescription className="text-sm text-slate-500">Huidige status en statistieken</CardDescription>
+                    <CardTitle className="text-base font-semibold text-gray-900">Scheduler Status</CardTitle>
+                    <CardDescription className="text-sm text-gray-500">Huidige status en statistieken</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -869,25 +869,25 @@ const InstellingenPage = () => {
                 {schedulerStatus ? (
                   <>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-xs text-slate-500">Status</p>
-                        <p className={`text-lg font-semibold ${schedulerStatus.auto_herinneringen_enabled ? 'text-green-600' : 'text-slate-400'}`}>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-500">Status</p>
+                        <p className={`text-lg font-semibold ${schedulerStatus.auto_herinneringen_enabled ? 'text-green-600' : 'text-gray-400'}`}>
                           {schedulerStatus.auto_herinneringen_enabled ? 'Actief' : 'Uitgeschakeld'}
                         </p>
                       </div>
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-xs text-slate-500">SMTP</p>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-500">SMTP</p>
                         <p className={`text-lg font-semibold ${schedulerStatus.smtp_configured ? 'text-green-600' : 'text-red-500'}`}>
                           {schedulerStatus.smtp_configured ? 'Geconfigureerd' : 'Niet geconfigureerd'}
                         </p>
                       </div>
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-xs text-slate-500">Facturen over vervaldatum</p>
-                        <p className="text-2xl font-semibold text-slate-900">{schedulerStatus.facturen_over_vervaldatum}</p>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-500">Facturen over vervaldatum</p>
+                        <p className="text-2xl font-semibold text-gray-900">{schedulerStatus.facturen_over_vervaldatum}</p>
                       </div>
-                      <div className="p-4 bg-slate-50 rounded-lg">
-                        <p className="text-xs text-slate-500">Herinneringen vandaag</p>
-                        <p className="text-2xl font-semibold text-slate-900">{schedulerStatus.herinneringen_vandaag}</p>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-xs text-gray-500">Herinneringen vandaag</p>
+                        <p className="text-2xl font-semibold text-gray-900">{schedulerStatus.herinneringen_vandaag}</p>
                       </div>
                     </div>
                     
@@ -925,7 +925,7 @@ const InstellingenPage = () => {
                   </>
                 ) : (
                   <div className="flex items-center justify-center h-32">
-                    <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                    <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
                   </div>
                 )}
               </CardContent>
@@ -933,17 +933,17 @@ const InstellingenPage = () => {
           </div>
           
           {/* Info Card */}
-          <Card className="bg-white border border-slate-100 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardContent className="p-6">
-              <h3 className="font-semibold text-slate-900 mb-3">Hoe werkt automatische herinneringen?</h3>
+              <h3 className="font-semibold text-gray-900 mb-3">Hoe werkt automatische herinneringen?</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex gap-3">
                   <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
                     <span className="text-sm font-bold text-amber-600">1</span>
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900">Eerste herinnering</p>
-                    <p className="text-sm text-slate-500">Vriendelijke herinnering na {settings.dagen_voor_eerste_herinnering} dagen over vervaldatum</p>
+                    <p className="font-medium text-gray-900">Eerste herinnering</p>
+                    <p className="text-sm text-gray-500">Vriendelijke herinnering na {settings.dagen_voor_eerste_herinnering} dagen over vervaldatum</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -951,8 +951,8 @@ const InstellingenPage = () => {
                     <span className="text-sm font-bold text-orange-600">2</span>
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900">Tweede herinnering</p>
-                    <p className="text-sm text-slate-500">Dringender verzoek na nog eens {settings.dagen_tussen_herinneringen} dagen</p>
+                    <p className="font-medium text-gray-900">Tweede herinnering</p>
+                    <p className="text-sm text-gray-500">Dringender verzoek na nog eens {settings.dagen_tussen_herinneringen} dagen</p>
                   </div>
                 </div>
                 <div className="flex gap-3">
@@ -960,8 +960,8 @@ const InstellingenPage = () => {
                     <span className="text-sm font-bold text-red-600">3</span>
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900">Aanmaning</p>
-                    <p className="text-sm text-slate-500">Laatste waarschuwing met vermelding van incassomaatregelen</p>
+                    <p className="font-medium text-gray-900">Aanmaning</p>
+                    <p className="text-sm text-gray-500">Laatste waarschuwing met vermelding van incassomaatregelen</p>
                   </div>
                 </div>
               </div>
@@ -973,15 +973,15 @@ const InstellingenPage = () => {
         <TabsContent value="factuur" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Template Keuze */}
-            <Card className="bg-white border border-slate-100 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
                     <FileText className="w-5 h-5 text-amber-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-semibold text-slate-900">Factuur Template</CardTitle>
-                    <CardDescription className="text-sm text-slate-500">Kies het uiterlijk van uw facturen</CardDescription>
+                    <CardTitle className="text-base font-semibold text-gray-900">Factuur Template</CardTitle>
+                    <CardDescription className="text-sm text-gray-500">Kies het uiterlijk van uw facturen</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -1005,8 +1005,8 @@ const InstellingenPage = () => {
                         className="w-4 h-4 text-primary"
                       />
                       <div>
-                        <span className="font-medium text-slate-900">{template.label}</span>
-                        <p className="text-sm text-slate-500">{template.description}</p>
+                        <span className="font-medium text-gray-900">{template.label}</span>
+                        <p className="text-sm text-gray-500">{template.description}</p>
                       </div>
                     </label>
                   ))}
@@ -1015,15 +1015,15 @@ const InstellingenPage = () => {
             </Card>
 
             {/* Kleuren */}
-            <Card className="bg-white border border-slate-100 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="w-11 h-11 rounded-xl bg-pink-50 flex items-center justify-center">
                     <Palette className="w-5 h-5 text-pink-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-semibold text-slate-900">Kleuren</CardTitle>
-                    <CardDescription className="text-sm text-slate-500">Pas de kleuren van uw facturen aan</CardDescription>
+                    <CardTitle className="text-base font-semibold text-gray-900">Kleuren</CardTitle>
+                    <CardDescription className="text-sm text-gray-500">Pas de kleuren van uw facturen aan</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -1044,7 +1044,7 @@ const InstellingenPage = () => {
                       className="flex-1"
                     />
                   </div>
-                  <p className="text-xs text-slate-500">Voor kopteksten en accenten</p>
+                  <p className="text-xs text-gray-500">Voor kopteksten en accenten</p>
                 </div>
                 <div className="space-y-2">
                   <Label>Secundaire Kleur</Label>
@@ -1062,7 +1062,7 @@ const InstellingenPage = () => {
                       className="flex-1"
                     />
                   </div>
-                  <p className="text-xs text-slate-500">Voor achtergronden en subtiele elementen</p>
+                  <p className="text-xs text-gray-500">Voor achtergronden en subtiele elementen</p>
                 </div>
 
                 {/* Voorbeeld */}
@@ -1078,7 +1078,7 @@ const InstellingenPage = () => {
                     >
                       FACTUUR #VF2024-00001
                     </div>
-                    <div className="text-sm text-slate-600">
+                    <div className="text-sm text-gray-600">
                       {settings.bedrijfsnaam || 'Uw Bedrijf'}
                     </div>
                     <div 
@@ -1093,10 +1093,10 @@ const InstellingenPage = () => {
             </Card>
 
             {/* Factuur Voorwaarden */}
-            <Card className="bg-white border border-slate-100 shadow-sm lg:col-span-2">
+            <Card className="bg-white border border-gray-200 shadow-sm lg:col-span-2">
               <CardHeader>
-                <CardTitle className="text-base font-semibold text-slate-900">Factuur Voorwaarden</CardTitle>
-                <CardDescription className="text-sm text-slate-500">
+                <CardTitle className="text-base font-semibold text-gray-900">Factuur Voorwaarden</CardTitle>
+                <CardDescription className="text-sm text-gray-500">
                   Standaard tekst die onderaan elke factuur wordt getoond
                 </CardDescription>
               </CardHeader>
@@ -1114,7 +1114,7 @@ const InstellingenPage = () => {
 
         {/* Multi-Tenant / Bedrijven Tab */}
         <TabsContent value="multi-tenant" className="space-y-6">
-          <Card className="bg-white border border-slate-100 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -1122,8 +1122,8 @@ const InstellingenPage = () => {
                     <Building className="w-5 h-5 text-indigo-500" />
                   </div>
                   <div>
-                    <CardTitle className="text-base font-semibold text-slate-900">Bedrijven Beheer</CardTitle>
-                    <CardDescription className="text-sm text-slate-500">
+                    <CardTitle className="text-base font-semibold text-gray-900">Bedrijven Beheer</CardTitle>
+                    <CardDescription className="text-sm text-gray-500">
                       Beheer meerdere bedrijven vanuit één account.
                     </CardDescription>
                   </div>
@@ -1196,10 +1196,10 @@ const InstellingenPage = () => {
             <CardContent>
               {bedrijvenLoading ? (
                 <div className="flex items-center justify-center py-8">
-                  <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
                 </div>
               ) : bedrijven.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
+                <div className="text-center py-8 text-gray-500">
                   Nog geen bedrijven aangemaakt
                 </div>
               ) : (
@@ -1216,26 +1216,26 @@ const InstellingenPage = () => {
                     >
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                          bedrijf.is_actief ? 'bg-primary text-white' : 'bg-slate-100 text-slate-600'
+                          bedrijf.is_actief ? 'bg-primary text-white' : 'bg-slate-100 text-gray-600'
                         }`}>
                           <Building2 className="w-5 h-5" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-slate-900">{bedrijf.naam}</span>
+                            <span className="font-medium text-gray-900">{bedrijf.naam}</span>
                             {bedrijf.is_actief && (
                               <span className="px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full font-medium">
                                 Actief
                               </span>
                             )}
                             {bedrijf.is_default && (
-                              <span className="px-2 py-0.5 bg-slate-100 text-slate-600 text-xs rounded-full">
+                              <span className="px-2 py-0.5 bg-slate-100 text-gray-600 text-xs rounded-full">
                                 Standaard
                               </span>
                             )}
                           </div>
                           {(bedrijf.adres || bedrijf.plaats) && (
-                            <p className="text-sm text-slate-500">
+                            <p className="text-sm text-gray-500">
                               {[bedrijf.adres, bedrijf.plaats].filter(Boolean).join(', ')}
                             </p>
                           )}

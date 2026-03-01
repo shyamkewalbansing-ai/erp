@@ -73,7 +73,7 @@ const RapportagesPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96" data-testid="rapportages-page">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -83,8 +83,8 @@ const RapportagesPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Rapportages</h1>
-          <p className="text-slate-500 mt-0.5">Financiële rapporten en overzichten</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Rapportages</h1>
+          <p className="text-gray-500 mt-0.5">Financiële rapporten en overzichten</p>
         </div>
       </div>
 
@@ -110,9 +110,9 @@ const RapportagesPage = () => {
 
         {/* Balance Sheet */}
         <TabsContent value="balance" className="mt-4">
-          <Card className="bg-white border border-slate-100 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base font-semibold text-slate-900">Balans</CardTitle>
+              <CardTitle className="text-base font-semibold text-gray-900">Balans</CardTitle>
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
                 Exporteren
@@ -122,26 +122,26 @@ const RapportagesPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Assets */}
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-4 pb-2 border-b">Activa</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b">Activa</h3>
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead className="text-xs font-medium text-slate-500">Rekening</TableHead>
-                        <TableHead className="text-right text-xs font-medium text-slate-500">Saldo</TableHead>
+                      <TableRow className="bg-gray-50">
+                        <TableHead className="text-xs font-medium text-gray-500">Rekening</TableHead>
+                        <TableHead className="text-right text-xs font-medium text-gray-500">Saldo</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {(balanceSheet?.activa || balanceSheet?.assets?.accounts || []).map((acc, idx) => (
                         <TableRow key={acc.id || idx}>
-                          <TableCell className="text-sm text-slate-600">{acc.code} - {acc.naam || acc.name}</TableCell>
-                          <TableCell className="text-right text-sm font-medium text-slate-900">
+                          <TableCell className="text-sm text-gray-600">{acc.code} - {acc.naam || acc.name}</TableCell>
+                          <TableCell className="text-right text-sm font-medium text-gray-900">
                             {formatAmount(acc.saldo || acc.balance, acc.valuta || acc.currency)}
                           </TableCell>
                         </TableRow>
                       ))}
                       <TableRow className="bg-slate-100">
-                        <TableCell className="text-sm font-semibold text-slate-900">Totaal Activa</TableCell>
-                        <TableCell className="text-right text-sm font-semibold text-slate-900">
+                        <TableCell className="text-sm font-semibold text-gray-900">Totaal Activa</TableCell>
+                        <TableCell className="text-right text-sm font-semibold text-gray-900">
                           {formatAmount(balanceSheet?.totaal_activa || balanceSheet?.assets?.total || 0)}
                         </TableCell>
                       </TableRow>
@@ -151,40 +151,40 @@ const RapportagesPage = () => {
 
                 {/* Liabilities & Equity */}
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-4 pb-2 border-b">Passiva</h3>
+                  <h3 className="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b">Passiva</h3>
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50">
-                        <TableHead className="text-xs font-medium text-slate-500">Rekening</TableHead>
-                        <TableHead className="text-right text-xs font-medium text-slate-500">Saldo</TableHead>
+                      <TableRow className="bg-gray-50">
+                        <TableHead className="text-xs font-medium text-gray-500">Rekening</TableHead>
+                        <TableHead className="text-right text-xs font-medium text-gray-500">Saldo</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {(balanceSheet?.passiva || balanceSheet?.liabilities?.accounts || []).map((acc, idx) => (
                         <TableRow key={acc.id || idx}>
-                          <TableCell className="text-sm text-slate-600">{acc.code} - {acc.naam || acc.name}</TableCell>
-                          <TableCell className="text-right text-sm font-medium text-slate-900">
+                          <TableCell className="text-sm text-gray-600">{acc.code} - {acc.naam || acc.name}</TableCell>
+                          <TableCell className="text-right text-sm font-medium text-gray-900">
                             {formatAmount(acc.saldo || acc.balance, acc.valuta || acc.currency)}
                           </TableCell>
                         </TableRow>
                       ))}
-                      <TableRow className="bg-slate-50">
-                        <TableCell className="text-sm font-medium text-slate-700">Totaal Vreemd Vermogen</TableCell>
-                        <TableCell className="text-right text-sm font-medium text-slate-700">
+                      <TableRow className="bg-gray-50">
+                        <TableCell className="text-sm font-medium text-gray-700">Totaal Vreemd Vermogen</TableCell>
+                        <TableCell className="text-right text-sm font-medium text-gray-700">
                           {formatAmount(balanceSheet?.totaal_passiva || balanceSheet?.liabilities?.total || 0)}
                         </TableCell>
                       </TableRow>
                       {(balanceSheet?.eigen_vermogen || balanceSheet?.equity?.accounts || []).map((acc, idx) => (
                         <TableRow key={acc.id || `ev-${idx}`}>
-                          <TableCell className="text-sm text-slate-600">{acc.code} - {acc.naam || acc.name}</TableCell>
-                          <TableCell className="text-right text-sm font-medium text-slate-900">
+                          <TableCell className="text-sm text-gray-600">{acc.code} - {acc.naam || acc.name}</TableCell>
+                          <TableCell className="text-right text-sm font-medium text-gray-900">
                             {formatAmount(acc.saldo || acc.balance, acc.valuta || acc.currency)}
                           </TableCell>
                         </TableRow>
                       ))}
                       <TableRow className="bg-slate-100">
-                        <TableCell className="text-sm font-semibold text-slate-900">Totaal Passiva</TableCell>
-                        <TableCell className="text-right text-sm font-semibold text-slate-900">
+                        <TableCell className="text-sm font-semibold text-gray-900">Totaal Passiva</TableCell>
+                        <TableCell className="text-right text-sm font-semibold text-gray-900">
                           {formatAmount(balanceSheet?.totaal_passiva || ((balanceSheet?.liabilities?.total || 0) + (balanceSheet?.equity?.total || 0)))}
                         </TableCell>
                       </TableRow>
@@ -198,9 +198,9 @@ const RapportagesPage = () => {
 
         {/* Profit & Loss */}
         <TabsContent value="pl" className="mt-4">
-          <Card className="bg-white border border-slate-100 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base font-semibold text-slate-900">Winst & Verliesrekening</CardTitle>
+              <CardTitle className="text-base font-semibold text-gray-900">Winst & Verliesrekening</CardTitle>
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
                 Exporteren
@@ -209,19 +209,19 @@ const RapportagesPage = () => {
             <CardContent>
               <div className="max-w-2xl">
                 {/* Revenue */}
-                <h3 className="text-sm font-semibold text-slate-700 mb-4 pb-2 border-b">Omzet</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b">Omzet</h3>
                 <Table>
                   <TableBody>
                     {(profitLoss?.omzet || profitLoss?.revenue?.accounts || []).map((acc, idx) => (
                       <TableRow key={acc.id || idx}>
-                        <TableCell className="text-sm text-slate-600">{acc.code ? `${acc.code} - ` : ''}{acc.naam || acc.name}</TableCell>
+                        <TableCell className="text-sm text-gray-600">{acc.code ? `${acc.code} - ` : ''}{acc.naam || acc.name}</TableCell>
                         <TableCell className="text-right text-sm font-medium text-green-600">
                           {formatAmount(Math.abs(acc.bedrag || acc.balance || 0), acc.valuta || acc.currency)}
                         </TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="bg-green-50">
-                      <TableCell className="text-sm font-semibold text-slate-900">Totaal Omzet</TableCell>
+                      <TableCell className="text-sm font-semibold text-gray-900">Totaal Omzet</TableCell>
                       <TableCell className="text-right text-sm font-semibold text-green-600">
                         {formatAmount(profitLoss?.totaal_omzet || profitLoss?.revenue?.total || 0)}
                       </TableCell>
@@ -230,19 +230,19 @@ const RapportagesPage = () => {
                 </Table>
 
                 {/* Expenses */}
-                <h3 className="text-sm font-semibold text-slate-700 mb-4 pb-2 border-b mt-8">Kosten</h3>
+                <h3 className="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b mt-8">Kosten</h3>
                 <Table>
                   <TableBody>
                     {(profitLoss?.kosten || profitLoss?.expenses?.accounts || []).map((acc, idx) => (
                       <TableRow key={acc.id || idx}>
-                        <TableCell className="text-sm text-slate-600">{acc.code ? `${acc.code} - ` : ''}{acc.naam || acc.name}</TableCell>
+                        <TableCell className="text-sm text-gray-600">{acc.code ? `${acc.code} - ` : ''}{acc.naam || acc.name}</TableCell>
                         <TableCell className="text-right text-sm font-medium text-red-600">
                           {formatAmount(Math.abs(acc.bedrag || acc.balance || 0), acc.valuta || acc.currency)}
                         </TableCell>
                       </TableRow>
                     ))}
                     <TableRow className="bg-red-50">
-                      <TableCell className="text-sm font-semibold text-slate-900">Totaal Kosten</TableCell>
+                      <TableCell className="text-sm font-semibold text-gray-900">Totaal Kosten</TableCell>
                       <TableCell className="text-right text-sm font-semibold text-red-600">
                         {formatAmount(profitLoss?.totaal_kosten || profitLoss?.expenses?.total || 0)}
                       </TableCell>
@@ -253,7 +253,7 @@ const RapportagesPage = () => {
                 {/* Net Profit */}
                 <div className={`mt-8 p-5 rounded-xl ${(profitLoss?.netto_winst || profitLoss?.net_profit || 0) >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
                   <div className="flex justify-between items-center">
-                    <span className="text-base font-semibold text-slate-900">Netto Resultaat</span>
+                    <span className="text-base font-semibold text-gray-900">Netto Resultaat</span>
                     <span className={`text-xl font-semibold ${(profitLoss?.netto_winst || profitLoss?.net_profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                       {formatAmount(profitLoss?.netto_winst || profitLoss?.net_profit || 0)}
                     </span>
@@ -266,9 +266,9 @@ const RapportagesPage = () => {
 
         {/* BTW Report */}
         <TabsContent value="btw" className="mt-4">
-          <Card className="bg-white border border-slate-100 shadow-sm">
+          <Card className="bg-white border border-gray-200 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base font-semibold text-slate-900">BTW Aangifte Overzicht</CardTitle>
+              <CardTitle className="text-base font-semibold text-gray-900">BTW Aangifte Overzicht</CardTitle>
               <Button variant="outline" size="sm">
                 <Download className="w-4 h-4 mr-2" />
                 Exporteren
@@ -276,26 +276,26 @@ const RapportagesPage = () => {
             </CardHeader>
             <CardContent>
               <div className="max-w-2xl bg-white border border-slate-200 rounded-xl p-6">
-                <h3 className="text-lg font-semibold text-slate-900 mb-6">BTW Aangifte Suriname</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-6">BTW Aangifte Suriname</h3>
                 
                 <div className="space-y-4">
-                  <div className="flex justify-between py-3 border-b border-slate-100">
-                    <span className="text-sm text-slate-600">1a. Leveringen/diensten belast met BTW</span>
-                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_sales || 0)}</span>
+                  <div className="flex justify-between py-3 border-b border-gray-200">
+                    <span className="text-sm text-gray-600">1a. Leveringen/diensten belast met BTW</span>
+                    <span className="text-sm font-medium text-gray-900">{formatAmount(btwReport?.btw_sales || 0)}</span>
                   </div>
                   
-                  <div className="flex justify-between py-3 border-b border-slate-100">
-                    <span className="text-sm text-slate-600">5a. Verschuldigde BTW</span>
-                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_sales || 0)}</span>
+                  <div className="flex justify-between py-3 border-b border-gray-200">
+                    <span className="text-sm text-gray-600">5a. Verschuldigde BTW</span>
+                    <span className="text-sm font-medium text-gray-900">{formatAmount(btwReport?.btw_sales || 0)}</span>
                   </div>
                   
-                  <div className="flex justify-between py-3 border-b border-slate-100">
-                    <span className="text-sm text-slate-600">5b. Voorbelasting</span>
-                    <span className="text-sm font-medium text-slate-900">{formatAmount(btwReport?.btw_purchases || 0)}</span>
+                  <div className="flex justify-between py-3 border-b border-gray-200">
+                    <span className="text-sm text-gray-600">5b. Voorbelasting</span>
+                    <span className="text-sm font-medium text-gray-900">{formatAmount(btwReport?.btw_purchases || 0)}</span>
                   </div>
                   
                   <div className={`flex justify-between py-4 rounded-lg px-4 mt-4 ${(btwReport?.btw_to_pay || 0) > 0 ? 'bg-red-50' : 'bg-green-50'}`}>
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-gray-700">
                       {(btwReport?.btw_to_pay || 0) > 0 ? '5c. Te betalen' : '5d. Te ontvangen'}
                     </span>
                     <span className={`text-sm font-semibold ${(btwReport?.btw_to_pay || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
@@ -305,7 +305,7 @@ const RapportagesPage = () => {
                 </div>
                 
                 <div className="mt-6 pt-4 border-t border-slate-200">
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-gray-500">
                     Dit is een indicatief overzicht. Raadpleeg uw accountant voor de officiële BTW-aangifte.
                   </p>
                 </div>
@@ -318,9 +318,9 @@ const RapportagesPage = () => {
         <TabsContent value="aging" className="mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Receivables */}
-            <Card className="bg-white border border-slate-100 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-base font-semibold text-slate-900">Ouderdomsanalyse Debiteuren</CardTitle>
+                <CardTitle className="text-base font-semibold text-gray-900">Ouderdomsanalyse Debiteuren</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[250px] mb-6">
@@ -345,38 +345,38 @@ const RapportagesPage = () => {
                 <Table>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="text-sm text-slate-600">Huidig (niet vervallen)</TableCell>
+                      <TableCell className="text-sm text-gray-600">Huidig (niet vervallen)</TableCell>
                       <TableCell className="text-right text-sm font-medium text-green-600">
                         {formatAmount(agingReceivables?.aging?.current || 0)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="text-sm text-slate-600">1-30 dagen vervallen</TableCell>
+                      <TableCell className="text-sm text-gray-600">1-30 dagen vervallen</TableCell>
                       <TableCell className="text-right text-sm font-medium text-amber-600">
                         {formatAmount(agingReceivables?.aging?.['30_days'] || 0)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="text-sm text-slate-600">31-60 dagen vervallen</TableCell>
+                      <TableCell className="text-sm text-gray-600">31-60 dagen vervallen</TableCell>
                       <TableCell className="text-right text-sm font-medium text-orange-600">
                         {formatAmount(agingReceivables?.aging?.['60_days'] || 0)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="text-sm text-slate-600">61-90 dagen vervallen</TableCell>
+                      <TableCell className="text-sm text-gray-600">61-90 dagen vervallen</TableCell>
                       <TableCell className="text-right text-sm font-medium text-red-500">
                         {formatAmount(agingReceivables?.aging?.['90_days'] || 0)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="text-sm text-slate-600">90+ dagen vervallen</TableCell>
+                      <TableCell className="text-sm text-gray-600">90+ dagen vervallen</TableCell>
                       <TableCell className="text-right text-sm font-medium text-red-600">
                         {formatAmount(agingReceivables?.aging?.over_90 || 0)}
                       </TableCell>
                     </TableRow>
                     <TableRow className="bg-slate-100">
-                      <TableCell className="text-sm font-semibold text-slate-900">Totaal</TableCell>
-                      <TableCell className="text-right text-sm font-semibold text-slate-900">
+                      <TableCell className="text-sm font-semibold text-gray-900">Totaal</TableCell>
+                      <TableCell className="text-right text-sm font-semibold text-gray-900">
                         {formatAmount(agingReceivables?.total || 0)}
                       </TableCell>
                     </TableRow>
@@ -386,46 +386,46 @@ const RapportagesPage = () => {
             </Card>
 
             {/* Payables */}
-            <Card className="bg-white border border-slate-100 shadow-sm">
+            <Card className="bg-white border border-gray-200 shadow-sm">
               <CardHeader>
-                <CardTitle className="text-base font-semibold text-slate-900">Ouderdomsanalyse Crediteuren</CardTitle>
+                <CardTitle className="text-base font-semibold text-gray-900">Ouderdomsanalyse Crediteuren</CardTitle>
               </CardHeader>
               <CardContent>
                 <Table>
                   <TableBody>
                     <TableRow>
-                      <TableCell className="text-sm text-slate-600">Huidig (niet vervallen)</TableCell>
+                      <TableCell className="text-sm text-gray-600">Huidig (niet vervallen)</TableCell>
                       <TableCell className="text-right text-sm font-medium text-green-600">
                         {formatAmount(agingPayables?.aging?.current || 0)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="text-sm text-slate-600">1-30 dagen vervallen</TableCell>
+                      <TableCell className="text-sm text-gray-600">1-30 dagen vervallen</TableCell>
                       <TableCell className="text-right text-sm font-medium text-amber-600">
                         {formatAmount(agingPayables?.aging?.['30_days'] || 0)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="text-sm text-slate-600">31-60 dagen vervallen</TableCell>
+                      <TableCell className="text-sm text-gray-600">31-60 dagen vervallen</TableCell>
                       <TableCell className="text-right text-sm font-medium text-orange-600">
                         {formatAmount(agingPayables?.aging?.['60_days'] || 0)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="text-sm text-slate-600">61-90 dagen vervallen</TableCell>
+                      <TableCell className="text-sm text-gray-600">61-90 dagen vervallen</TableCell>
                       <TableCell className="text-right text-sm font-medium text-red-500">
                         {formatAmount(agingPayables?.aging?.['90_days'] || 0)}
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell className="text-sm text-slate-600">90+ dagen vervallen</TableCell>
+                      <TableCell className="text-sm text-gray-600">90+ dagen vervallen</TableCell>
                       <TableCell className="text-right text-sm font-medium text-red-600">
                         {formatAmount(agingPayables?.aging?.over_90 || 0)}
                       </TableCell>
                     </TableRow>
                     <TableRow className="bg-slate-100">
-                      <TableCell className="text-sm font-semibold text-slate-900">Totaal</TableCell>
-                      <TableCell className="text-right text-sm font-semibold text-slate-900">
+                      <TableCell className="text-sm font-semibold text-gray-900">Totaal</TableCell>
+                      <TableCell className="text-right text-sm font-semibold text-gray-900">
                         {formatAmount(agingPayables?.total || 0)}
                       </TableCell>
                     </TableRow>

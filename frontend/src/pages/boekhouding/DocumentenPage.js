@@ -133,8 +133,8 @@ const DocumentenPage = () => {
       customer: 'bg-green-100 text-green-700',
       supplier: 'bg-amber-100 text-amber-700',
       project: 'bg-purple-100 text-purple-700',
-      journal: 'bg-slate-100 text-slate-700',
-      general: 'bg-slate-100 text-slate-500'
+      journal: 'bg-slate-100 text-gray-700',
+      general: 'bg-slate-100 text-gray-500'
     };
     return <Badge className={`text-xs ${colors[type]}`}>{labels[type] || type}</Badge>;
   };
@@ -153,7 +153,7 @@ const DocumentenPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96" data-testid="documenten-page">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -163,8 +163,8 @@ const DocumentenPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Documentbeheer</h1>
-          <p className="text-slate-500 mt-0.5">Upload en beheer documenten en bijlagen</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Documentbeheer</h1>
+          <p className="text-gray-500 mt-0.5">Upload en beheer documenten en bijlagen</p>
         </div>
         <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
           <DialogTrigger asChild>
@@ -196,14 +196,14 @@ const DocumentenPage = () => {
                       <FileText className="w-8 h-8 text-primary" />
                       <div className="text-left">
                         <p className="font-medium text-sm">{selectedFile.name}</p>
-                        <p className="text-xs text-slate-500">{formatFileSize(selectedFile.size)}</p>
+                        <p className="text-xs text-gray-500">{formatFileSize(selectedFile.size)}</p>
                       </div>
                     </div>
                   ) : (
                     <>
-                      <Upload className="w-8 h-8 mx-auto text-slate-400 mb-2" />
-                      <p className="text-sm text-slate-600">Klik om een bestand te selecteren</p>
-                      <p className="text-xs text-slate-400 mt-1">PDF, JPG, PNG, DOC, XLS (max 10MB)</p>
+                      <Upload className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600">Klik om een bestand te selecteren</p>
+                      <p className="text-xs text-gray-400 mt-1">PDF, JPG, PNG, DOC, XLS (max 10MB)</p>
                     </>
                   )}
                 </div>
@@ -257,12 +257,12 @@ const DocumentenPage = () => {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Totaal Documenten</p>
-                <p className="text-2xl font-semibold text-slate-900">{documents.length}</p>
+                <p className="text-sm text-gray-500 mb-2">Totaal Documenten</p>
+                <p className="text-2xl font-semibold text-gray-900">{documents.length}</p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
                 <FolderOpen className="w-5 h-5 text-blue-500" />
@@ -270,12 +270,12 @@ const DocumentenPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Totale Grootte</p>
-                <p className="text-2xl font-semibold text-slate-900">
+                <p className="text-sm text-gray-500 mb-2">Totale Grootte</p>
+                <p className="text-2xl font-semibold text-gray-900">
                   {formatFileSize(documents.reduce((sum, d) => sum + (d.file_size || d.bestandsgrootte || 0), 0))}
                 </p>
               </div>
@@ -288,13 +288,13 @@ const DocumentenPage = () => {
       </div>
 
       {/* Documents Table */}
-      <Card className="bg-white border border-slate-100 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <CardTitle className="text-base font-semibold text-slate-900">Documenten</CardTitle>
+            <CardTitle className="text-base font-semibold text-gray-900">Documenten</CardTitle>
             <div className="flex gap-2">
               <div className="relative w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder="Zoeken..."
                   value={searchTerm}
@@ -321,13 +321,13 @@ const DocumentenPage = () => {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50">
+              <TableRow className="bg-gray-50">
                 <TableHead className="w-12"></TableHead>
-                <TableHead className="text-xs font-medium text-slate-500">Bestandsnaam</TableHead>
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Type</TableHead>
-                <TableHead className="w-24 text-xs font-medium text-slate-500">Grootte</TableHead>
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Acties</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500">Bestandsnaam</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Type</TableHead>
+                <TableHead className="w-24 text-xs font-medium text-gray-500">Grootte</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Datum</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Acties</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -343,15 +343,15 @@ const DocumentenPage = () => {
                   <TableCell>{getFileIcon(fileType)}</TableCell>
                   <TableCell>
                     <div>
-                      <span className="text-sm font-medium text-slate-900">{filename}</span>
+                      <span className="text-sm font-medium text-gray-900">{filename}</span>
                       {description && (
-                        <p className="text-xs text-slate-500">{description}</p>
+                        <p className="text-xs text-gray-500">{description}</p>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>{getEntityTypeBadge(entityType)}</TableCell>
-                  <TableCell className="text-sm text-slate-600">{formatFileSize(fileSize)}</TableCell>
-                  <TableCell className="text-sm text-slate-500">{formatDate(doc.created_at)}</TableCell>
+                  <TableCell className="text-sm text-gray-600">{formatFileSize(fileSize)}</TableCell>
+                  <TableCell className="text-sm text-gray-500">{formatDate(doc.created_at)}</TableCell>
                   <TableCell>
                     <div className="flex gap-1">
                       <Button
@@ -377,7 +377,7 @@ const DocumentenPage = () => {
               )})}
               {filteredDocuments.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                     {searchTerm ? 'Geen documenten gevonden' : 'Geen documenten. Upload uw eerste document.'}
                   </TableCell>
                 </TableRow>

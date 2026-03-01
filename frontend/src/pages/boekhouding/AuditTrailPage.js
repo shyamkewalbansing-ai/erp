@@ -86,11 +86,11 @@ const AuditTrailPage = () => {
       case 'create': return <Plus className="w-4 h-4 text-green-500" />;
       case 'update': return <Edit className="w-4 h-4 text-blue-500" />;
       case 'delete': return <Trash2 className="w-4 h-4 text-red-500" />;
-      case 'view': return <Eye className="w-4 h-4 text-slate-500" />;
+      case 'view': return <Eye className="w-4 h-4 text-gray-500" />;
       case 'verzenden': return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'betaling': return <CheckCircle className="w-4 h-4 text-blue-500" />;
       case 'boeken': return <FileText className="w-4 h-4 text-purple-500" />;
-      default: return <History className="w-4 h-4 text-slate-500" />;
+      default: return <History className="w-4 h-4 text-gray-500" />;
     }
   };
 
@@ -112,12 +112,12 @@ const AuditTrailPage = () => {
       'create': 'bg-green-100 text-green-700',
       'update': 'bg-blue-100 text-blue-700',
       'delete': 'bg-red-100 text-red-700',
-      'view': 'bg-slate-100 text-slate-700',
+      'view': 'bg-slate-100 text-gray-700',
       'verzenden': 'bg-green-100 text-green-700',
       'betaling': 'bg-blue-100 text-blue-700',
       'boeken': 'bg-purple-100 text-purple-700'
     };
-    return colors[action] || 'bg-slate-100 text-slate-700';
+    return colors[action] || 'bg-slate-100 text-gray-700';
   };
 
   const getModuleLabel = (module) => {
@@ -158,7 +158,7 @@ const AuditTrailPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96" data-testid="audit-trail-page">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -168,8 +168,8 @@ const AuditTrailPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Audit Trail</h1>
-          <p className="text-slate-500 mt-0.5">Bekijk alle gebruikersacties en wijzigingen</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Audit Trail</h1>
+          <p className="text-gray-500 mt-0.5">Bekijk alle gebruikersacties en wijzigingen</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={fetchData}>
@@ -185,12 +185,12 @@ const AuditTrailPage = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Totaal Acties</p>
-                <p className="text-2xl font-semibold text-slate-900">{stats.totaal}</p>
+                <p className="text-sm text-gray-500 mb-2">Totaal Acties</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.totaal}</p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-blue-50 flex items-center justify-center">
                 <History className="w-5 h-5 text-blue-500" />
@@ -198,12 +198,12 @@ const AuditTrailPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Vandaag</p>
-                <p className="text-2xl font-semibold text-slate-900">{stats.vandaag}</p>
+                <p className="text-sm text-gray-500 mb-2">Vandaag</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.vandaag}</p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center">
                 <Database className="w-5 h-5 text-green-500" />
@@ -211,12 +211,12 @@ const AuditTrailPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Aangemaakt</p>
-                <p className="text-2xl font-semibold text-slate-900">{stats.creates}</p>
+                <p className="text-sm text-gray-500 mb-2">Aangemaakt</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.creates}</p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-purple-50 flex items-center justify-center">
                 <Plus className="w-5 h-5 text-purple-500" />
@@ -224,12 +224,12 @@ const AuditTrailPage = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-white border border-slate-100 shadow-sm">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-slate-500 mb-2">Bijgewerkt</p>
-                <p className="text-2xl font-semibold text-slate-900">{stats.updates}</p>
+                <p className="text-sm text-gray-500 mb-2">Bijgewerkt</p>
+                <p className="text-2xl font-semibold text-gray-900">{stats.updates}</p>
               </div>
               <div className="w-11 h-11 rounded-xl bg-amber-50 flex items-center justify-center">
                 <Edit className="w-5 h-5 text-amber-500" />
@@ -240,11 +240,11 @@ const AuditTrailPage = () => {
       </div>
 
       {/* Filters */}
-      <Card className="bg-white border border-slate-100 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -296,39 +296,39 @@ const AuditTrailPage = () => {
       </Card>
 
       {/* Audit Logs Table */}
-      <Card className="bg-white border border-slate-100 shadow-sm">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-base font-semibold text-slate-900">Activiteitenlog</CardTitle>
+          <CardTitle className="text-base font-semibold text-gray-900">Activiteitenlog</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50">
-                <TableHead className="w-12 text-xs font-medium text-slate-500"></TableHead>
-                <TableHead className="w-40 text-xs font-medium text-slate-500">Tijdstip</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500">Gebruiker</TableHead>
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Module</TableHead>
-                <TableHead className="w-28 text-xs font-medium text-slate-500">Actie</TableHead>
-                <TableHead className="text-xs font-medium text-slate-500">Entiteit</TableHead>
-                <TableHead className="w-32 text-xs font-medium text-slate-500">IP Adres</TableHead>
+              <TableRow className="bg-gray-50">
+                <TableHead className="w-12 text-xs font-medium text-gray-500"></TableHead>
+                <TableHead className="w-40 text-xs font-medium text-gray-500">Tijdstip</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500">Gebruiker</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Module</TableHead>
+                <TableHead className="w-28 text-xs font-medium text-gray-500">Actie</TableHead>
+                <TableHead className="text-xs font-medium text-gray-500">Entiteit</TableHead>
+                <TableHead className="w-32 text-xs font-medium text-gray-500">IP Adres</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredLogs.map(log => (
                 <TableRow key={log.id}>
                   <TableCell>{getActionIcon(log.action)}</TableCell>
-                  <TableCell className="text-sm text-slate-600">
+                  <TableCell className="text-sm text-gray-600">
                     <div>{formatDate(log.timestamp)}</div>
-                    <div className="text-slate-400 text-xs">{new Date(log.timestamp).toLocaleTimeString('nl-NL')}</div>
+                    <div className="text-gray-400 text-xs">{new Date(log.timestamp).toLocaleTimeString('nl-NL')}</div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
-                        <User className="w-4 h-4 text-slate-500" />
+                        <User className="w-4 h-4 text-gray-500" />
                       </div>
                       <div>
-                        <div className="text-sm font-medium text-slate-900">{log.user_name || 'Onbekend'}</div>
-                        <div className="text-xs text-slate-500">{log.user_email}</div>
+                        <div className="text-sm font-medium text-gray-900">{log.user_name || 'Onbekend'}</div>
+                        <div className="text-xs text-gray-500">{log.user_email}</div>
                       </div>
                     </div>
                   </TableCell>
@@ -340,16 +340,16 @@ const AuditTrailPage = () => {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      <div className="font-medium text-slate-900">{log.entity_type}</div>
-                      <div className="text-slate-500 text-xs">{log.entity_id}</div>
+                      <div className="font-medium text-gray-900">{log.entity_type}</div>
+                      <div className="text-gray-500 text-xs">{log.entity_id}</div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-slate-500">{log.ip_address || '-'}</TableCell>
+                  <TableCell className="text-sm text-gray-500">{log.ip_address || '-'}</TableCell>
                 </TableRow>
               ))}
               {filteredLogs.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-slate-500">
+                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                     Geen audit logs gevonden met deze filters
                   </TableCell>
                 </TableRow>

@@ -47,21 +47,21 @@ const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'defa
     }`}>
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
-          <span className="text-sm text-slate-500 font-medium">{title}</span>
+          <span className="text-sm text-gray-500 font-medium">{title}</span>
           {Icon && (
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
               variant === 'primary' ? 'bg-emerald-100' : 'bg-slate-100'
             }`}>
               <Icon className={`w-5 h-5 ${
-                variant === 'primary' ? 'text-emerald-600' : 'text-slate-600'
+                variant === 'primary' ? 'text-emerald-600' : 'text-gray-600'
               }`} />
             </div>
           )}
         </div>
-        <div className="text-3xl font-bold text-slate-900 mb-2">{value}</div>
+        <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
         {subtitle && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-slate-400">{subtitle}</span>
+            <span className="text-sm text-gray-400">{subtitle}</span>
           </div>
         )}
       </CardContent>
@@ -267,13 +267,13 @@ const GrootboekPage = () => {
   const totalCredit = accounts.reduce((sum, acc) => sum + (acc.saldo < 0 ? Math.abs(acc.saldo) : 0), 0);
 
   return (
-    <div className="min-h-screen bg-slate-50/50" data-testid="grootboek-page">
+    <div className="min-h-screen bg-gray-50/50" data-testid="grootboek-page">
       {/* Top Header */}
-      <div className="bg-white border-b border-slate-100 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Grootboek</h1>
-            <p className="text-sm text-slate-500">Beheer uw rekeningschema en journaalposten</p>
+            <h1 className="text-2xl font-semibold text-gray-900">Grootboek</h1>
+            <p className="text-sm text-gray-500">Beheer uw rekeningschema en journaalposten</p>
           </div>
           <div className="flex items-center gap-2">
             {accounts.length === 0 && (
@@ -408,7 +408,7 @@ const GrootboekPage = () => {
                   <div className="border rounded-xl overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-slate-50">
+                        <TableRow className="bg-gray-50">
                           <TableHead className="text-xs">Rekening</TableHead>
                           <TableHead className="w-32 text-xs text-right">Debet</TableHead>
                           <TableHead className="w-32 text-xs text-right">Credit</TableHead>
@@ -452,7 +452,7 @@ const GrootboekPage = () => {
                           </TableRow>
                         ))}
                         <TableRow className="bg-emerald-50">
-                          <TableCell className="text-sm font-medium text-slate-700">Totaal</TableCell>
+                          <TableCell className="text-sm font-medium text-gray-700">Totaal</TableCell>
                           <TableCell className="text-right text-sm font-bold text-emerald-700">
                             {formatAmount(newJournal.regels.reduce((s, l) => s + (parseFloat(l.debet) || 0), 0), 'SRD')}
                           </TableCell>
@@ -545,7 +545,7 @@ const GrootboekPage = () => {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
                         placeholder="Zoek rekening..."
                         value={searchTerm}
@@ -572,31 +572,31 @@ const GrootboekPage = () => {
                 <div className="space-y-6">
                   {Object.entries(groupedAccounts).map(([type, accs]) => (
                     <div key={type}>
-                      <h3 className="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                         {accountTypes[type]}
                         <Badge variant="outline" className="ml-2 text-xs">{accs.length}</Badge>
                       </h3>
-                      <div className="border border-slate-100 rounded-xl overflow-hidden">
+                      <div className="border border-gray-200 rounded-xl overflow-hidden">
                         <Table>
                           <TableHeader>
-                            <TableRow className="bg-slate-50/50">
-                              <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
-                              <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
-                              <TableHead className="text-xs font-medium text-slate-500">Categorie</TableHead>
-                              <TableHead className="w-28 text-xs font-medium text-slate-500">Externe Code</TableHead>
-                              <TableHead className="w-20 text-xs font-medium text-slate-500">Valuta</TableHead>
-                              <TableHead className="text-right w-36 text-xs font-medium text-slate-500">Saldo</TableHead>
+                            <TableRow className="bg-gray-50/50">
+                              <TableHead className="w-24 text-xs font-medium text-gray-500">Code</TableHead>
+                              <TableHead className="text-xs font-medium text-gray-500">Naam</TableHead>
+                              <TableHead className="text-xs font-medium text-gray-500">Categorie</TableHead>
+                              <TableHead className="w-28 text-xs font-medium text-gray-500">Externe Code</TableHead>
+                              <TableHead className="w-20 text-xs font-medium text-gray-500">Valuta</TableHead>
+                              <TableHead className="text-right w-36 text-xs font-medium text-gray-500">Saldo</TableHead>
                               <TableHead className="w-16"></TableHead>
                             </TableRow>
                           </TableHeader>
                           <TableBody>
                             {accs.map(account => (
-                              <TableRow key={account.id} className="hover:bg-slate-50/50" data-testid={`account-row-${account.code}`}>
-                                <TableCell className="text-sm font-mono text-slate-600">{account.code}</TableCell>
-                                <TableCell className="text-sm font-medium text-slate-900">{account.naam}</TableCell>
-                                <TableCell className="text-sm text-slate-500">{account.categorie}</TableCell>
-                                <TableCell className="text-sm text-slate-400 font-mono">
+                              <TableRow key={account.id} className="hover:bg-gray-50/50" data-testid={`account-row-${account.code}`}>
+                                <TableCell className="text-sm font-mono text-gray-600">{account.code}</TableCell>
+                                <TableCell className="text-sm font-medium text-gray-900">{account.naam}</TableCell>
+                                <TableCell className="text-sm text-gray-500">{account.categorie}</TableCell>
+                                <TableCell className="text-sm text-gray-400 font-mono">
                                   {account.externe_code || '-'}
                                 </TableCell>
                                 <TableCell>
@@ -615,7 +615,7 @@ const GrootboekPage = () => {
                                     className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg"
                                     title="Externe code koppelen"
                                   >
-                                    <Link2 className="w-4 h-4 text-slate-400" />
+                                    <Link2 className="w-4 h-4 text-gray-400" />
                                   </Button>
                                 </TableCell>
                               </TableRow>
@@ -626,7 +626,7 @@ const GrootboekPage = () => {
                     </div>
                   ))}
                   {Object.keys(groupedAccounts).length === 0 && (
-                    <div className="text-center py-16 text-slate-500">
+                    <div className="text-center py-16 text-gray-500">
                       <BookOpen className="w-16 h-16 mx-auto mb-4 text-slate-200" />
                       <p className="text-lg font-medium mb-2">Geen rekeningen gevonden</p>
                       <p className="text-sm mb-6">Klik op "Standaard Schema" om het Surinaamse rekeningschema te laden.</p>
@@ -645,33 +645,33 @@ const GrootboekPage = () => {
             <Card className="bg-white border-0 shadow-sm rounded-2xl">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-slate-900">Journaalposten</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Journaalposten</h3>
                   <Button variant="outline" size="sm" className="rounded-lg">
                     Status <ChevronDown className="w-4 h-4 ml-1" />
                   </Button>
                 </div>
                 
-                <div className="border border-slate-100 rounded-xl overflow-hidden">
+                <div className="border border-gray-200 rounded-xl overflow-hidden">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50/50">
-                        <TableHead className="w-28 text-xs font-medium text-slate-500">Nummer</TableHead>
-                        <TableHead className="w-28 text-xs font-medium text-slate-500">Datum</TableHead>
-                        <TableHead className="w-24 text-xs font-medium text-slate-500">Dagboek</TableHead>
-                        <TableHead className="text-xs font-medium text-slate-500">Omschrijving</TableHead>
-                        <TableHead className="text-right w-36 text-xs font-medium text-slate-500">Bedrag</TableHead>
-                        <TableHead className="w-24 text-xs font-medium text-slate-500">Status</TableHead>
+                      <TableRow className="bg-gray-50/50">
+                        <TableHead className="w-28 text-xs font-medium text-gray-500">Nummer</TableHead>
+                        <TableHead className="w-28 text-xs font-medium text-gray-500">Datum</TableHead>
+                        <TableHead className="w-24 text-xs font-medium text-gray-500">Dagboek</TableHead>
+                        <TableHead className="text-xs font-medium text-gray-500">Omschrijving</TableHead>
+                        <TableHead className="text-right w-36 text-xs font-medium text-gray-500">Bedrag</TableHead>
+                        <TableHead className="w-24 text-xs font-medium text-gray-500">Status</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {journalEntries.map(entry => (
-                        <TableRow key={entry.id} className="hover:bg-slate-50/50" data-testid={`journal-row-${entry.volgnummer}`}>
-                          <TableCell className="text-sm font-mono text-slate-600">{entry.volgnummer}</TableCell>
-                          <TableCell className="text-sm text-slate-500">{new Date(entry.datum).toLocaleDateString('nl-NL')}</TableCell>
+                        <TableRow key={entry.id} className="hover:bg-gray-50/50" data-testid={`journal-row-${entry.volgnummer}`}>
+                          <TableCell className="text-sm font-mono text-gray-600">{entry.volgnummer}</TableCell>
+                          <TableCell className="text-sm text-gray-500">{new Date(entry.datum).toLocaleDateString('nl-NL')}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className="text-xs rounded-md">{journalTypes[entry.dagboek_code] || entry.dagboek_code}</Badge>
                           </TableCell>
-                          <TableCell className="text-sm text-slate-900">{entry.omschrijving}</TableCell>
+                          <TableCell className="text-sm text-gray-900">{entry.omschrijving}</TableCell>
                           <TableCell className="text-right text-sm font-semibold text-emerald-600">
                             {formatAmount(entry.totaal_debet || 0, 'SRD')}
                           </TableCell>
@@ -679,7 +679,7 @@ const GrootboekPage = () => {
                             <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                               entry.status === 'geboekt' ? 'bg-emerald-50 text-emerald-600' : 
                               entry.status === 'concept' ? 'bg-amber-50 text-amber-600' : 
-                              'bg-slate-50 text-slate-600'
+                              'bg-gray-50 text-gray-600'
                             }`}>
                               {getStatusLabel(entry.status)}
                             </span>
@@ -688,7 +688,7 @@ const GrootboekPage = () => {
                       ))}
                       {journalEntries.length === 0 && (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-12 text-slate-500">
+                          <TableCell colSpan={6} className="text-center py-12 text-gray-500">
                             <FileText className="w-12 h-12 mx-auto mb-3 text-slate-200" />
                             <p>Geen journaalposten gevonden</p>
                           </TableCell>
@@ -711,11 +711,11 @@ const GrootboekPage = () => {
           </DialogHeader>
           {selectedAccount && (
             <div className="space-y-4 py-4">
-              <div className="bg-slate-50 p-4 rounded-xl">
+              <div className="bg-gray-50 p-4 rounded-xl">
                 <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span className="text-slate-500">Rekening:</span>
+                  <span className="text-gray-500">Rekening:</span>
                   <span className="font-medium">{selectedAccount.code} - {selectedAccount.naam}</span>
-                  <span className="text-slate-500">Type:</span>
+                  <span className="text-gray-500">Type:</span>
                   <span className="font-medium">{accountTypes[selectedAccount.type] || selectedAccount.type}</span>
                 </div>
               </div>
@@ -728,7 +728,7 @@ const GrootboekPage = () => {
                   className="rounded-lg"
                   data-testid="externe-code-input"
                 />
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-gray-500">
                   Koppel uw eigen code voor integratie met externe systemen.
                 </p>
               </div>
