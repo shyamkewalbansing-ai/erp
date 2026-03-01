@@ -154,10 +154,10 @@ const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh 
   const date = item.factuurdatum || item.date;
   const customer = item.debiteur_naam || item.customer_name || '-';
   const total = item.totaal_incl_btw || item.total || 0;
-  const subtotal = item.totaal_excl_btw || item.subtotal || 0;
+  const subtotal = item.subtotaal || item.totaal_excl_btw || item.subtotal || 0;
   const tax = item.btw_bedrag || item.tax || 0;
   const paid = item.totaal_betaald || 0;
-  const openAmount = item.openstaand_bedrag || total - paid;
+  const openAmount = item.openstaand_bedrag !== undefined ? item.openstaand_bedrag : (total - paid);
   const currency = item.valuta || item.currency || 'SRD';
   const lines = item.regels || item.items || [];
   const payments = item.betalingen || [];
