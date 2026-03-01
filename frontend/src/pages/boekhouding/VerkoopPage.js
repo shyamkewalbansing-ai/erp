@@ -124,7 +124,7 @@ const TabButton = ({ active, onClick, icon: Icon, label, count, alert }) => (
   </button>
 );
 
-// Enhanced Editable Detail Sidebar
+// Business-style Detail Sidebar - Clean and functional
 const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({});
@@ -197,98 +197,49 @@ const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh 
 
   return (
     <>
-      {/* Blurred backdrop overlay */}
-      <div 
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-all duration-300" 
-        onClick={onClose} 
-      />
+      {/* Simple dark overlay */}
+      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
       
-      {/* Modern Detail Panel with glassmorphism */}
-      <div className="fixed inset-y-0 right-0 w-[540px] bg-white/95 backdrop-blur-xl shadow-2xl z-50 flex flex-col border-l border-gray-200/50 animate-in slide-in-from-right duration-300">
-        {/* Header - Modern gradient with glass effect */}
-        <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600" />
-          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_50%)]" />
-          <div className="relative px-6 py-5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30">
-                  <Receipt className="w-7 h-7 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-white tracking-tight">{number}</h2>
-                  <p className="text-sm text-emerald-100 mt-0.5">{customer}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/30">
-                  <StatusBadge status={item.status} />
-                </div>
-                <button 
-                  onClick={onClose} 
-                  className="p-2 hover:bg-white/20 rounded-xl transition-all duration-200 hover:scale-105"
-                >
-                  <X className="w-5 h-5 text-white" />
-                </button>
-              </div>
+      {/* Clean business-style panel */}
+      <div className="fixed inset-y-0 right-0 w-[500px] bg-white shadow-lg z-50 flex flex-col border-l border-gray-200">
+        {/* Header - Simple and clean */}
+        <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">{number}</h2>
+              <p className="text-sm text-gray-500">{customer}</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <StatusBadge status={item.status} />
+              <button onClick={onClose} className="p-1.5 hover:bg-gray-200 rounded">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Action Bar - Modern design */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
+        {/* Action buttons - Simple row */}
+        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 bg-white">
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => onAction('pdf', item)}
-              className="bg-white hover:bg-gray-50 border-gray-200 shadow-sm hover:shadow transition-all"
-            >
-              <Download className="w-4 h-4 mr-2 text-emerald-600" /> PDF
+            <Button variant="outline" size="sm" onClick={() => onAction('pdf', item)}>
+              <Download className="w-4 h-4 mr-1.5" /> PDF
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => onAction('email', item)}
-              className="bg-white hover:bg-gray-50 border-gray-200 shadow-sm hover:shadow transition-all"
-            >
-              <Mail className="w-4 h-4 mr-2 text-blue-600" /> E-mail
+            <Button variant="outline" size="sm" onClick={() => onAction('email', item)}>
+              <Mail className="w-4 h-4 mr-1.5" /> E-mail
             </Button>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => onAction('print', item)}
-              className="bg-white hover:bg-gray-50 border-gray-200 shadow-sm hover:shadow transition-all"
-            >
-              <Printer className="w-4 h-4 mr-2 text-gray-600" /> Print
+            <Button variant="outline" size="sm" onClick={() => onAction('print', item)}>
+              <Printer className="w-4 h-4 mr-1.5" /> Print
             </Button>
           </div>
           {!isEditing ? (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => setIsEditing(true)}
-              className="bg-white hover:bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm hover:shadow transition-all"
-            >
-              <Pencil className="w-4 h-4 mr-2" /> Bewerken
+            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
+              <Pencil className="w-4 h-4 mr-1.5" /> Bewerken
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleCancel}
-                className="bg-white hover:bg-red-50 border-red-200 text-red-600"
-              >
-                <XCircle className="w-4 h-4 mr-2" /> Annuleren
-              </Button>
-              <Button 
-                size="sm" 
-                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all" 
-                onClick={handleSave} 
-                disabled={saving}
-              >
-                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              <Button variant="outline" size="sm" onClick={handleCancel}>Annuleren</Button>
+              <Button size="sm" onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+                {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
                 Opslaan
               </Button>
             </div>
@@ -297,37 +248,275 @@ const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh 
 
         {/* Content */}
         <ScrollArea className="flex-1">
-          <div className="p-6 space-y-5">
-            {/* Overdue Alert - Modern design */}
+          <div className="p-5 space-y-4">
+            {/* Overdue Alert */}
             {isOverdue && (
-              <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-2xl p-5 flex items-start gap-4 shadow-sm">
-                <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="w-6 h-6 text-red-500" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-base font-bold text-red-700">Factuur is {daysOverdue} dagen vervallen</p>
-                  <p className="text-sm text-red-600 mt-1">Vervaldatum was {formatDate(dueDate)}</p>
-                  <div className="flex gap-2 mt-4">
-                    <Button 
-                      size="sm" 
-                      className="bg-red-600 hover:bg-red-700 text-white shadow-sm" 
-                      onClick={() => onAction('reminder', item)}
-                    >
-                      <Bell className="w-4 h-4 mr-2" /> Herinnering sturen
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-red-700">Factuur is {daysOverdue} dagen vervallen</p>
+                    <p className="text-xs text-red-600 mt-1">Vervaldatum: {formatDate(dueDate)}</p>
+                    <Button size="sm" variant="outline" className="mt-2 h-7 text-xs border-red-300 text-red-700 hover:bg-red-100" onClick={() => onAction('reminder', item)}>
+                      <Bell className="w-3 h-3 mr-1" /> Herinnering sturen
                     </Button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Factuur Gegevens - Editable with modern card */}
-            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-              <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
-                <p className="text-sm font-bold text-gray-800 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-emerald-600" />
-                  Factuurgegevens
-                </p>
+            {/* Factuurgegevens */}
+            <div className="border border-gray-200 rounded-lg">
+              <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-700">Factuurgegevens</p>
               </div>
+              <div className="p-4">
+                {isEditing ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-gray-500">Factuurnummer</Label>
+                        <Input value={editData.factuurnummer} onChange={(e) => setEditData({...editData, factuurnummer: e.target.value})} className="mt-1 h-8 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Referentie</Label>
+                        <Input value={editData.referentie} onChange={(e) => setEditData({...editData, referentie: e.target.value})} className="mt-1 h-8 text-sm" placeholder="Optioneel" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-gray-500">Factuurdatum</Label>
+                        <Input type="date" value={editData.factuurdatum?.split('T')[0] || ''} onChange={(e) => setEditData({...editData, factuurdatum: e.target.value})} className="mt-1 h-8 text-sm" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Vervaldatum</Label>
+                        <Input type="date" value={editData.vervaldatum?.split('T')[0] || ''} onChange={(e) => setEditData({...editData, vervaldatum: e.target.value})} className="mt-1 h-8 text-sm" />
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-500">Valuta</Label>
+                      <Select value={editData.valuta} onValueChange={(v) => setEditData({...editData, valuta: v})}>
+                        <SelectTrigger className="mt-1 h-8 text-sm"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="SRD">SRD</SelectItem>
+                          <SelectItem value="USD">USD</SelectItem>
+                          <SelectItem value="EUR">EUR</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                    <div>
+                      <p className="text-xs text-gray-400">Factuurnummer</p>
+                      <p className="font-medium text-gray-900">{number}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Referentie</p>
+                      <p className="text-gray-900">{item.referentie || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Factuurdatum</p>
+                      <p className="text-gray-900">{formatDate(date)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Vervaldatum</p>
+                      <p className={isOverdue ? 'text-red-600 font-medium' : 'text-gray-900'}>{formatDate(dueDate)}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Valuta</p>
+                      <p className="text-gray-900">{currency}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">Status</p>
+                      <StatusBadge status={item.status} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Bedragen */}
+            <div className="border border-gray-200 rounded-lg">
+              <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-700">Bedragen</p>
+              </div>
+              <div className="p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Subtotaal</span>
+                  <span className="text-gray-900">{formatCurrency(subtotal, currency)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">BTW (15%)</span>
+                  <span className="text-gray-900">{formatCurrency(tax, currency)}</span>
+                </div>
+                <div className="flex justify-between pt-2 border-t border-gray-100">
+                  <span className="font-medium text-gray-900">Totaal</span>
+                  <span className="font-bold text-gray-900">{formatCurrency(total, currency)}</span>
+                </div>
+                {type === 'invoice' && paid > 0 && (
+                  <div className="flex justify-between text-emerald-600">
+                    <span>Betaald</span>
+                    <span>- {formatCurrency(paid, currency)}</span>
+                  </div>
+                )}
+                {type === 'invoice' && openAmount > 0 && (
+                  <div className="flex justify-between pt-2 border-t border-gray-100 text-amber-600">
+                    <span className="font-medium">Openstaand</span>
+                    <span className="font-bold">{formatCurrency(openAmount, currency)}</span>
+                  </div>
+                )}
+                {type === 'invoice' && item.status === 'betaald' && (
+                  <div className="flex justify-between items-center pt-2 border-t border-gray-100 text-emerald-600">
+                    <span className="font-medium">Volledig betaald</span>
+                    <CheckCircle className="w-4 h-4" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Klantgegevens */}
+            <div className="border border-gray-200 rounded-lg">
+              <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-700">Klantgegevens</p>
+              </div>
+              <div className="p-4">
+                {isEditing ? (
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs text-gray-500">Naam</Label>
+                      <Input value={editData.debiteur_naam} onChange={(e) => setEditData({...editData, debiteur_naam: e.target.value})} className="mt-1 h-8 text-sm" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-500">E-mail</Label>
+                      <Input type="email" value={editData.debiteur_email} onChange={(e) => setEditData({...editData, debiteur_email: e.target.value})} className="mt-1 h-8 text-sm" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-500">Telefoon</Label>
+                      <Input value={editData.debiteur_telefoon} onChange={(e) => setEditData({...editData, debiteur_telefoon: e.target.value})} className="mt-1 h-8 text-sm" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-gray-500">Adres</Label>
+                      <Textarea value={editData.debiteur_adres} onChange={(e) => setEditData({...editData, debiteur_adres: e.target.value})} className="mt-1 text-sm" rows={2} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2 text-sm">
+                    <p className="font-medium text-gray-900">{customer}</p>
+                    {(item.debiteur_email || item.customer_email) && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Mail className="w-3.5 h-3.5 text-gray-400" />
+                        <span>{item.debiteur_email || item.customer_email}</span>
+                      </div>
+                    )}
+                    {(item.debiteur_telefoon || item.customer_phone) && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Phone className="w-3.5 h-3.5 text-gray-400" />
+                        <span>{item.debiteur_telefoon || item.customer_phone}</span>
+                      </div>
+                    )}
+                    {(item.debiteur_adres || item.customer_address) && (
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                        <span>{item.debiteur_adres || item.customer_address}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Factuurregels */}
+            <div className="border border-gray-200 rounded-lg">
+              <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-700">Factuurregels ({lines.length})</p>
+              </div>
+              {lines.length > 0 ? (
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-4 py-2 text-xs font-medium text-gray-500">Omschrijving</th>
+                      <th className="text-center px-2 py-2 text-xs font-medium text-gray-500">Aantal</th>
+                      <th className="text-right px-2 py-2 text-xs font-medium text-gray-500">Prijs</th>
+                      <th className="text-right px-4 py-2 text-xs font-medium text-gray-500">Totaal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {lines.map((line, idx) => (
+                      <tr key={idx} className="border-b border-gray-100 last:border-0">
+                        <td className="px-4 py-2.5 text-gray-900">{line.omschrijving || line.description || 'Product/Dienst'}</td>
+                        <td className="px-2 py-2.5 text-center text-gray-600">{line.aantal || line.quantity || 1}</td>
+                        <td className="px-2 py-2.5 text-right text-gray-600">{formatCurrency(line.prijs || line.price || 0, currency)}</td>
+                        <td className="px-4 py-2.5 text-right font-medium text-gray-900">{formatCurrency(line.totaal || line.total || 0, currency)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="px-4 py-6 text-center text-gray-400 text-sm">Geen regels</div>
+              )}
+            </div>
+
+            {/* Betalingen */}
+            {type === 'invoice' && (
+              <div className="border border-gray-200 rounded-lg">
+                <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+                  <p className="text-sm font-medium text-gray-700">Betalingen ({payments.length})</p>
+                  {item.status !== 'betaald' && (
+                    <button className="text-xs text-emerald-600 hover:underline" onClick={() => onAction('payment', item)}>
+                      + Toevoegen
+                    </button>
+                  )}
+                </div>
+                {payments.length > 0 ? (
+                  <div className="divide-y divide-gray-100">
+                    {payments.map((p, idx) => (
+                      <div key={idx} className="px-4 py-3 flex items-center justify-between text-sm">
+                        <div>
+                          <p className="text-gray-900">{formatDate(p.datum || p.date)}</p>
+                          <p className="text-xs text-gray-500 capitalize">{p.betaalmethode || p.method || 'Bank'}</p>
+                        </div>
+                        <span className="font-medium text-emerald-600">{formatCurrency(p.bedrag || p.amount || 0, currency)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="px-4 py-6 text-center text-gray-400 text-sm">Geen betalingen</div>
+                )}
+              </div>
+            )}
+
+            {/* Opmerkingen */}
+            <div className="border border-gray-200 rounded-lg">
+              <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
+                <p className="text-sm font-medium text-gray-700">Opmerkingen</p>
+              </div>
+              <div className="p-4">
+                {isEditing ? (
+                  <Textarea value={editData.opmerkingen} onChange={(e) => setEditData({...editData, opmerkingen: e.target.value})} placeholder="Opmerkingen..." rows={2} className="text-sm" />
+                ) : (
+                  <p className="text-sm text-gray-600">{item.opmerkingen || item.notes || 'Geen opmerkingen'}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+
+        {/* Footer Actions */}
+        {type === 'invoice' && item.status !== 'betaald' && !isEditing && (
+          <div className="p-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+            <Button variant="outline" className="flex-1" onClick={() => onAction('payment', item)}>
+              <CreditCard className="w-4 h-4 mr-2" /> Betaling Registreren
+            </Button>
+            <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => onAction('markPaid', item)}>
+              <CheckCircle className="w-4 h-4 mr-2" /> Markeer als Betaald
+            </Button>
+          </div>
+        )}
+      </div>
+    </>
+  );
+};
               <div className="p-4 space-y-4">
                 {isEditing ? (
                   <>
