@@ -2462,7 +2462,28 @@ async def send_factuur_email(factuur_id: str, data: SendEmailRequest, authorizat
     
     # Genereer PDF
     try:
-        pdf_content = await generate_invoice_pdf(factuur_id, user_id)
+        # Haal bedrijfsgegevens op
+        instellingen = await db.boekhouding_instellingen.find_one({"user_id": user_id}) or {}
+        bedrijf = {
+            "naam": instellingen.get("bedrijfsnaam", ""),
+            "adres": instellingen.get("adres", ""),
+            "postcode": instellingen.get("postcode", ""),
+            "plaats": instellingen.get("plaats", ""),
+            "kvk": instellingen.get("kvk_nummer", ""),
+            "btw": instellingen.get("btw_nummer", ""),
+            "email": instellingen.get("email", ""),
+            "telefoon": instellingen.get("telefoon", ""),
+            "website": instellingen.get("website", ""),
+            "iban": instellingen.get("iban", ""),
+            "logo": instellingen.get("logo", None)
+        }
+        
+        # Haal debiteur op
+        debiteur = None
+        if factuur.get("debiteur_id"):
+            debiteur = await db.boekhouding_debiteuren.find_one({"id": factuur["debiteur_id"], "user_id": user_id})
+        
+        pdf_content = generate_invoice_pdf(factuur, bedrijf, debiteur, instellingen)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fout bij genereren PDF: {str(e)}")
     
