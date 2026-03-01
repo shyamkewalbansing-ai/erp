@@ -152,6 +152,7 @@ const DashboardPage = () => {
   const vervallenFacturen = dashboardData?.openstaand?.vervallen_count || 0;
 
   const eurSrdRate = rates?.EUR_SRD?.koers || 44.50;
+  const usdSrdRate = rates?.USD_SRD?.koers || 36.50;
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="boekhouding-dashboard">
@@ -162,9 +163,22 @@ const DashboardPage = () => {
             <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
             <p className="text-gray-500 mt-1">Welkom terug! Hier is uw financiële overzicht.</p>
           </div>
-          <div className="bg-gray-50 rounded-lg px-4 py-2 border border-gray-200">
-            <span className="text-sm text-gray-500">EUR/SRD: </span>
-            <span className="text-sm font-semibold text-gray-900">{formatNumber(eurSrdRate, 2)}</span>
+          <div className="flex items-center gap-3">
+            <div className="bg-gray-50 rounded-lg px-4 py-2 border border-gray-200">
+              <span className="text-sm text-gray-500">USD/SRD: </span>
+              <span className="text-sm font-semibold text-gray-900">{formatNumber(usdSrdRate, 2)}</span>
+            </div>
+            <div className="bg-gray-50 rounded-lg px-4 py-2 border border-gray-200">
+              <span className="text-sm text-gray-500">EUR/SRD: </span>
+              <span className="text-sm font-semibold text-gray-900">{formatNumber(eurSrdRate, 2)}</span>
+            </div>
+            <button 
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors"
+              onClick={() => window.location.href = '/app/pos'}
+            >
+              <Receipt className="w-4 h-4" />
+              Point of Sale
+            </button>
           </div>
         </div>
       </div>
