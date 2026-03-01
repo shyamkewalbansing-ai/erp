@@ -818,6 +818,18 @@ function MainAppRoutes() {
           <Route path="boekhouding/herinneringen" element={<BoekhoudingHerinneringen />} />
           <Route path="boekhouding/documenten" element={<BoekhoudingDocumenten />} />
           <Route path="boekhouding/audit-trail" element={<BoekhoudingAuditTrail />} />
+          
+          {/* Schuldbeheer Module Routes */}
+          <Route path="schuldbeheer" element={<SchuldbeheerDashboard />} />
+          <Route path="schuldbeheer/relaties" element={<SchuldbeheerRelaties />} />
+          <Route path="schuldbeheer/schulden" element={<SchuldbeheerSchulden />} />
+          <Route path="schuldbeheer/betalingen" element={<SchuldbeheerBetalingen />} />
+          <Route path="schuldbeheer/inkomsten" element={<SchuldbeheerInkomsten />} />
+          <Route path="schuldbeheer/uitgaven" element={<SchuldbeheerUitgaven />} />
+          <Route path="schuldbeheer/rekeningen" element={<SchuldbeheerRekeningen />} />
+          <Route path="schuldbeheer/planning" element={<SchuldbeheerPlanning />} />
+          <Route path="schuldbeheer/rapportages" element={<SchuldbeheerRapportages />} />
+          <Route path="schuldbeheer/documenten" element={<SchuldbeheerDocumenten />} />
         </Route>
         
         {/* POS Fullscreen Route - Outside Layout */}
