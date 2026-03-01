@@ -139,54 +139,6 @@ const VerkoopPage = () => {
     }
   };
 
-  const updateLine = (index, field, value) => {
-    const lines = [...newInvoice.lines];
-    lines[index][field] = value;
-    
-    const quantity = parseFloat(lines[index].quantity) || 0;
-    const unitPrice = parseFloat(lines[index].unit_price) || 0;
-    const btwPercentage = parseFloat(lines[index].btw_percentage) || 0;
-    
-    const subtotal = quantity * unitPrice;
-    lines[index].btw_amount = subtotal * (btwPercentage / 100);
-    lines[index].total = subtotal + lines[index].btw_amount;
-    
-    setNewInvoice({ ...newInvoice, lines });
-  };
-
-  const addLine = () => {
-    setNewInvoice({
-      ...newInvoice,
-      lines: [...newInvoice.lines, { product_id: '', description: '', quantity: 1, unit_price: 0, btw_percentage: 10, btw_amount: 0, total: 0 }]
-    });
-  };
-
-  const removeLine = (index) => {
-    if (newInvoice.lines.length === 1) return;
-    const lines = newInvoice.lines.filter((_, i) => i !== index);
-    setNewInvoice({ ...newInvoice, lines });
-  };
-
-  const selectProduct = (index, productId) => {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      const lines = [...newInvoice.lines];
-      lines[index] = {
-        ...lines[index],
-        product_id: productId,
-        description: product.naam || product.name || '',
-        unit_price: product.verkoopprijs || product.sales_price || 0,
-      };
-      const qty = lines[index].quantity || 1;
-      const price = lines[index].unit_price || 0;
-      const btwPct = lines[index].btw_percentage || 0;
-      const subtotal = qty * price;
-      lines[index].btw_amount = subtotal * (btwPct / 100);
-      lines[index].total = subtotal + lines[index].btw_amount;
-      setNewInvoice({ ...newInvoice, lines });
-    }
-  };
-
   const handleDownloadPdf = async (invoiceId, invoiceNumber) => {
     try {
       const response = await pdfAPI.getInvoicePdf(invoiceId);
