@@ -543,91 +543,139 @@ export default function Layout() {
           {/* Customer navigation - only for non-superadmin users with active add-ons */}
           {!isSuperAdmin() && addonsLoaded && (
             <>
-              {/* Dynamic Module Sections - rendered in user's preferred order */}
-              {/* When on boekhouding pages, only show boekhouding items */}
-              {getOrderedModules().map((moduleSlug, index) => {
-                const config = moduleConfigs[moduleSlug];
-                if (!config) return null;
-                
-                // ALL modules show in sidebar normally
-                // No special filtering - users can navigate between all their active modules
-                
-                // Check if module should be shown based on addon
-                const shouldShow = config.alwaysShow || hasAddon(moduleSlug);
-                if (!shouldShow) return null;
-                
-                const ModuleIcon = config.icon;
-                const isFirst = index === 0;
-                
-                // Filter items based on search
-                const searchLower = sidebarSearch.toLowerCase();
-                const filteredItems = config.items.filter(item => {
-                  if (!config.alwaysShow && !hasAddon(item.addon)) return false;
-                  if (!sidebarSearch) return true;
-                  
-                  const isDashboard = item.label === 'Dashboard' || item.label === 'Spa Dashboard';
-                  const displayLabel = isDashboard ? config.name : item.label;
-                  return displayLabel.toLowerCase().includes(searchLower) || 
-                         config.name.toLowerCase().includes(searchLower);
+              {/* Dynamic Module Sections - First active module shows full menu, rest are quicklinks */}
+              {(() => {
+                const orderedModules = getOrderedModules();
+                const activeModules = orderedModules.filter(moduleSlug => {
+                  const config = moduleConfigs[moduleSlug];
+                  return config && (config.alwaysShow || hasAddon(moduleSlug));
                 });
                 
-                // Don't render module if no items match search
-                if (filteredItems.length === 0) return null;
+                // Track if we've rendered the first (expanded) module
+                let firstModuleRendered = false;
                 
-                // Default rendering for modules - Dashboard shows module name
-                return (
-                  <div key={moduleSlug} className="mb-2">
-                    {isCollapsed && !isFirst && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
-                    {!isCollapsed && !isFirst && !sidebarSearch && <div className="mt-3 mb-2 mx-3 border-t border-slate-200 dark:border-slate-700" />}
-                    {filteredItems.map((item) => {
-                      // Check if this is a Dashboard item - show module name instead
-                      const isDashboard = item.label === 'Dashboard' || item.label === 'Spa Dashboard';
-                      const displayLabel = isDashboard ? config.name : item.label;
-                      
-                      return item.external ? (
-                        <a
-                          key={item.to}
-                          href={item.to}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => setSidebarOpen(false)}
-                          className={`nav-item group relative ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
-                          data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
-                        >
-                          <item.icon className="w-5 h-5 flex-shrink-0" />
-                          {!isCollapsed && <span>{displayLabel}</span>}
-                          {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-40" />}
-                          {/* Tooltip for collapsed sidebar */}
-                          {isCollapsed && (
-                            <div className="fixed ml-16 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none" style={{ zIndex: 9999 }}>
-                              {displayLabel}
-                              <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
-                            </div>
-                          )}
-                        </a>
-                      ) : (
+                return orderedModules.map((moduleSlug) => {
+                  const config = moduleConfigs[moduleSlug];
+                  if (!config) return null;
+                  
+                  // Check if module should be shown based on addon
+                  const shouldShow = config.alwaysShow || hasAddon(moduleSlug);
+                  if (!shouldShow) return null;
+                  
+                  const ModuleIcon = config.icon;
+                  const isFirstModule = !firstModuleRendered;
+                  
+                  // Mark first module as rendered
+                  if (isFirstModule) {
+                    firstModuleRendered = true;
+                  }
+                  
+                  // Filter items based on search
+                  const searchLower = sidebarSearch.toLowerCase();
+                  const filteredItems = config.items.filter(item => {
+                    if (!config.alwaysShow && !hasAddon(item.addon)) return false;
+                    if (!sidebarSearch) return true;
+                    
+                    const isDashboard = item.label === 'Dashboard' || item.label === 'Spa Dashboard';
+                    const displayLabel = isDashboard ? config.name : item.label;
+                    return displayLabel.toLowerCase().includes(searchLower) || 
+                           config.name.toLowerCase().includes(searchLower);
+                  });
+                  
+                  // Don't render module if no items match search
+                  if (filteredItems.length === 0 && sidebarSearch) return null;
+                  
+                  // Get the dashboard route for quicklink
+                  const dashboardItem = config.items.find(item => 
+                    item.label === 'Dashboard' || item.label === 'Spa Dashboard' || item.label === 'HRM Dashboard' || item.label === 'Auto Dashboard'
+                  ) || config.items[0];
+                  
+                  // QUICKLINK: If not the first module, show only as quicklink
+                  if (!isFirstModule && !sidebarSearch) {
+                    return (
+                      <div key={moduleSlug} className="mb-1">
+                        {!isCollapsed && <div className="mt-3 mb-2 mx-3 border-t border-slate-200 dark:border-slate-700" />}
+                        {isCollapsed && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
                         <NavLink
-                          key={item.to}
-                          to={item.to}
+                          to={dashboardItem.to}
                           onClick={() => setSidebarOpen(false)}
-                          className={({ isActive }) => `nav-item group relative ${isActive ? 'active' : ''} ${isDashboard ? 'font-semibold' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
-                          data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
+                          className={({ isActive }) => `nav-item group relative font-medium ${isActive || location.pathname.startsWith(dashboardItem.to.split('/').slice(0, 4).join('/')) ? 'active' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
+                          data-testid={`nav-quicklink-${moduleSlug}`}
                         >
-                          <item.icon className="w-5 h-5 flex-shrink-0" />
-                          {!isCollapsed && <span>{displayLabel}</span>}
+                          <ModuleIcon className="w-5 h-5 flex-shrink-0" />
+                          {!isCollapsed && (
+                            <>
+                              <span>{config.name}</span>
+                              <ChevronRight className="w-4 h-4 ml-auto opacity-40" />
+                            </>
+                          )}
                           {/* Tooltip for collapsed sidebar */}
                           {isCollapsed && (
                             <div className="fixed ml-16 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none" style={{ zIndex: 9999 }}>
-                              {displayLabel}
+                              {config.name}
                               <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
                             </div>
                           )}
                         </NavLink>
-                      );
-                    })}
-                  </div>
-                );
-              })}
+                      </div>
+                    );
+                  }
+                  
+                  // FULL MENU: First module shows all items
+                  return (
+                    <div key={moduleSlug} className="mb-2">
+                      {isCollapsed && !isFirstModule && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
+                      {!isCollapsed && !isFirstModule && !sidebarSearch && <div className="mt-3 mb-2 mx-3 border-t border-slate-200 dark:border-slate-700" />}
+                      {filteredItems.map((item) => {
+                        // Check if this is a Dashboard item - show module name instead
+                        const isDashboard = item.label === 'Dashboard' || item.label === 'Spa Dashboard';
+                        const displayLabel = isDashboard ? config.name : item.label;
+                        
+                        return item.external ? (
+                          <a
+                            key={item.to}
+                            href={item.to}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setSidebarOpen(false)}
+                            className={`nav-item group relative ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
+                            data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
+                          >
+                            <item.icon className="w-5 h-5 flex-shrink-0" />
+                            {!isCollapsed && <span>{displayLabel}</span>}
+                            {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-40" />}
+                            {/* Tooltip for collapsed sidebar */}
+                            {isCollapsed && (
+                              <div className="fixed ml-16 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none" style={{ zIndex: 9999 }}>
+                                {displayLabel}
+                                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                              </div>
+                            )}
+                          </a>
+                        ) : (
+                          <NavLink
+                            key={item.to}
+                            to={item.to}
+                            onClick={() => setSidebarOpen(false)}
+                            className={({ isActive }) => `nav-item group relative ${isActive ? 'active' : ''} ${isDashboard ? 'font-semibold' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
+                            data-testid={`nav-${item.label.toLowerCase().replace(/ /g, '-')}`}
+                          >
+                            <item.icon className="w-5 h-5 flex-shrink-0" />
+                            {!isCollapsed && <span>{displayLabel}</span>}
+                            {/* Tooltip for collapsed sidebar */}
+                            {isCollapsed && (
+                              <div className="fixed ml-16 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none" style={{ zIndex: 9999 }}>
+                                {displayLabel}
+                                <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                              </div>
+                            )}
+                          </NavLink>
+                        );
+                      })}
+                    </div>
+                  );
+                });
+              })()}
             </>
           )}
 
