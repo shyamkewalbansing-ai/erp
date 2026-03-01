@@ -52,12 +52,38 @@
       "purpose": "maskable any"
     }
   ],
-  "start_url": "/",
+  "start_url": "/app/dashboard",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "theme_color": "#0caf60",
   "background_color": "#f8faf9",
-  "orientation": "portrait-primary",
+  "orientation": "any",
   "scope": "/",
   "lang": "nl",
-  "categories": ["business", "finance", "productivity"]
+  "categories": ["business", "finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Ga naar het dashboard",
+      "url": "/app/dashboard",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Boekhouding",
+      "short_name": "Boekhouding",
+      "description": "Boekhouding module",
+      "url": "/app/boekhouding/dashboard",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Facturen",
+      "short_name": "Facturen",
+      "description": "Verkoop facturen",
+      "url": "/app/boekhouding/verkoop",
+      "icons": [{ "src": "icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }
