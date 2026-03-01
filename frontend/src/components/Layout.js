@@ -666,6 +666,33 @@ export default function Layout() {
             </>
           )}
 
+          {/* Quick links to special modules - always visible */}
+          {!isSuperAdmin() && addonsLoaded && hasAddon('boekhouding') && !location.pathname.startsWith('/app/boekhouding') && (
+            <NavLink
+              to="/app/boekhouding"
+              onClick={() => setSidebarOpen(false)}
+              className={`nav-item group relative mt-2 ${isCollapsed ? 'justify-center' : ''}`}
+              data-testid="nav-boekhouding-quick"
+            >
+              <Calculator className="w-5 h-5 flex-shrink-0" />
+              {!isCollapsed && <span>Boekhouding</span>}
+              {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-40" />}
+            </NavLink>
+          )}
+          
+          {!isSuperAdmin() && addonsLoaded && hasAddon('schuldbeheer') && !location.pathname.startsWith('/app/schuldbeheer') && (
+            <NavLink
+              to="/app/schuldbeheer"
+              onClick={() => setSidebarOpen(false)}
+              className={`nav-item group relative mt-2 ${isCollapsed ? 'justify-center' : ''}`}
+              data-testid="nav-schuldbeheer-quick"
+            >
+              <Wallet className="w-5 h-5 flex-shrink-0" />
+              {!isCollapsed && <span>Schuldbeheer</span>}
+              {!isCollapsed && <ExternalLink className="w-4 h-4 ml-auto opacity-40" />}
+            </NavLink>
+          )}
+
           {/* Settings dropdown */}
           <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
             <button
