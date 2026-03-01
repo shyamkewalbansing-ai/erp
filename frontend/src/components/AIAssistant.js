@@ -185,8 +185,12 @@ export default function AIAssistant() {
         const userStr = localStorage.getItem('user');
         let company = 'uw bedrijf';
         if (userStr) {
-          const user = JSON.parse(userStr);
-          company = user.company_name || user.name || 'uw bedrijf';
+          try {
+            const user = JSON.parse(userStr);
+            company = user.company_name || user.companyName || user.name || 'uw bedrijf';
+          } catch (e) {
+            console.error('Error parsing user:', e);
+          }
         }
         setCompanyName(company);
         
@@ -206,8 +210,12 @@ export default function AIAssistant() {
         const userStr = localStorage.getItem('user');
         let company = 'uw bedrijf';
         if (userStr) {
-          const user = JSON.parse(userStr);
-          company = user.company_name || user.name || 'uw bedrijf';
+          try {
+            const user = JSON.parse(userStr);
+            company = user.company_name || user.companyName || user.name || 'uw bedrijf';
+          } catch (e) {
+            console.error('Error parsing user:', e);
+          }
         }
         setCompanyName(company);
         setMessages([{
