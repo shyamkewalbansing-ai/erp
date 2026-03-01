@@ -538,6 +538,14 @@ const VerkoopPage = () => {
   const [newPayment, setNewPayment] = useState({
     bedrag: 0, datum: new Date().toISOString().split('T')[0], betaalmethode: 'bank', referentie: ''
   });
+  
+  // Email dialog state
+  const [showEmailDialog, setShowEmailDialog] = useState(false);
+  const [emailData, setEmailData] = useState({
+    to: '', subject: '', message: ''
+  });
+  const [emailInvoice, setEmailInvoice] = useState(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
 
