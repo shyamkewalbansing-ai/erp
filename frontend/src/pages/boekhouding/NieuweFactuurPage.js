@@ -233,6 +233,8 @@ const NieuweFactuurPage = () => {
               variant="outline" 
               className="rounded-lg"
               disabled={saving}
+              onClick={() => setShowPreview(true)}
+              data-testid="preview-btn"
             >
               <Eye className="w-4 h-4 mr-2" />
               Afdrukvoorbeeld
