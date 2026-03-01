@@ -19,10 +19,10 @@ const API_URL = process.env.REACT_APP_BACKEND_URL + '/api';
 const ChatMessage = memo(({ message, isBot }) => (
   <div className={`flex gap-3 ${isBot ? '' : 'flex-row-reverse'}`}>
     <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-      isBot ? 'bg-emerald-100' : 'bg-gray-100'
+      isBot ? 'bg-emerald-500' : 'bg-gray-100'
     }`}>
       {isBot ? (
-        <Bot className="w-4 h-4 text-emerald-600" />
+        <span className="text-white font-bold text-xs">SK</span>
       ) : (
         <User className="w-4 h-4 text-gray-600" />
       )}
