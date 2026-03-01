@@ -154,13 +154,23 @@ export default function AIAssistant() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(() => `chat_${Date.now()}`);
+  const [companyName, setCompanyName] = useState('');
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Load active modules
+  // Load active modules and company name
   useEffect(() => {
     const loadModules = async () => {
       try {
+        // Get user info for company name
+        const userStr = localStorage.getItem('user');
+        let company = 'uw bedrijf';
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          company = user.company_name || user.name || 'uw bedrijf';
+        }
+        setCompanyName(company);
+        
         const res = await getMyAddons();
         const activeSlugs = res.data
           .filter(a => a.status === 'active')
@@ -170,13 +180,20 @@ export default function AIAssistant() {
         // Set initial welcome message based on active modules
         setMessages([{
           role: 'assistant',
-          content: getWelcomeMessage(activeSlugs)
+          content: getWelcomeMessageWithCompany(activeSlugs, company)
         }]);
       } catch (error) {
         console.error('Error loading modules:', error);
+        const userStr = localStorage.getItem('user');
+        let company = 'uw bedrijf';
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          company = user.company_name || user.name || 'uw bedrijf';
+        }
+        setCompanyName(company);
         setMessages([{
           role: 'assistant',
-          content: 'Hallo! 👋 Ik ben uw AI assistent voor Facturatie N.V. Hoe kan ik u helpen?'
+          content: `Hallo! 👋 Ik ben uw AI assistent voor ${company}. Hoe kan ik u helpen?`
         }]);
       } finally {
         setModulesLoaded(true);
