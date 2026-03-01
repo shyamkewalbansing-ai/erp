@@ -78,6 +78,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import NotificationBell from './NotificationBell';
 import AIAssistant from './AIAssistant';
+import PWAInstallPrompt from './PWAInstallPrompt';
 import { toast } from 'sonner';
 
 // Server IP from environment variable for DNS instructions
