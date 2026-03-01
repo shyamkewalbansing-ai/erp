@@ -1097,6 +1097,77 @@ const VerkoopPage = () => {
         onRefresh={refreshDetailItem}
       />
 
+      {/* Email Dialog */}
+      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                <Mail className="w-5 h-5 text-blue-600" />
+              </div>
+              Factuur Versturen per E-mail
+            </DialogTitle>
+          </DialogHeader>
+          {emailInvoice && (
+            <div className="space-y-4 mt-2">
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex justify-between items-center">
+                <div>
+                  <p className="text-xs text-gray-500">Factuur</p>
+                  <p className="text-sm font-semibold text-gray-900">{emailInvoice.factuurnummer || emailInvoice.invoice_number}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Bedrag</p>
+                  <p className="text-sm font-semibold text-gray-900">{formatCurrency(emailInvoice.totaal_incl_btw || emailInvoice.total, emailInvoice.valuta || 'SRD')}</p>
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs text-gray-500">Aan (e-mailadres) *</Label>
+                <Input 
+                  type="email" 
+                  value={emailData.to} 
+                  onChange={(e) => setEmailData({...emailData, to: e.target.value})} 
+                  placeholder="klant@voorbeeld.com"
+                  className="mt-1 h-9" 
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-gray-500">Onderwerp</Label>
+                <Input 
+                  value={emailData.subject} 
+                  onChange={(e) => setEmailData({...emailData, subject: e.target.value})} 
+                  className="mt-1 h-9" 
+                />
+              </div>
+              <div>
+                <Label className="text-xs text-gray-500">Bericht</Label>
+                <Textarea 
+                  value={emailData.message} 
+                  onChange={(e) => setEmailData({...emailData, message: e.target.value})}
+                  rows={6}
+                  className="mt-1 resize-none"
+                  placeholder="Voeg een persoonlijk bericht toe..."
+                />
+              </div>
+              <p className="text-xs text-gray-400">
+                De factuur wordt als PDF-bijlage meegestuurd.
+              </p>
+            </div>
+          )}
+          <DialogFooter className="mt-4">
+            <Button variant="outline" onClick={() => setShowEmailDialog(false)}>Annuleren</Button>
+            <Button 
+              onClick={handleSendEmail} 
+              disabled={sendingEmail || !emailData.to} 
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {sendingEmail && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
+              <Send className="w-4 h-4 mr-1.5" />
+              Versturen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Payment Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
         <DialogContent className="sm:max-w-md">
