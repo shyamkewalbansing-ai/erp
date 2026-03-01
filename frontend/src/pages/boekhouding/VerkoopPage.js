@@ -1024,7 +1024,7 @@ const VerkoopPage = () => {
 
       <div className="p-6 space-y-6">
         {/* Stats - Matching Dashboard design */}
-        <div className="grid grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {loading ? (
             <>
               <LoadingStatCard />
