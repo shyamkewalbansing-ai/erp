@@ -39,6 +39,9 @@ if (typeof window !== 'undefined') {
 const TenantLogin = lazy(() => import("./pages/TenantLogin"));
 const TenantDashboard = lazy(() => import("./pages/TenantDashboard"));
 
+// AI Assistant standalone page
+const AIAssistantPage = lazy(() => import("./pages/AIAssistantPage"));
+
 // Lazy load non-critical pages for faster initial load
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Tenants = lazy(() => import("./pages/Tenants"));
