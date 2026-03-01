@@ -76,15 +76,6 @@ def generate_invoice_pdf(
     styles = getSampleStyleSheet()
     
     # Custom styles
-    company_name_style = ParagraphStyle(
-        'CompanyName',
-        parent=styles['Normal'],
-        fontSize=18,
-        textColor=colors.HexColor(text_dark),
-        fontName='Helvetica-Bold',
-        spaceAfter=2
-    )
-    
     company_info_style = ParagraphStyle(
         'CompanyInfo',
         parent=styles['Normal'],
