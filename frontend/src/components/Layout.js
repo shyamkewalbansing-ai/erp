@@ -66,7 +66,9 @@ import {
   Bell,
   FileUp,
   History,
-  Store
+  Store,
+  TrendingDown,
+  FolderArchive
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
