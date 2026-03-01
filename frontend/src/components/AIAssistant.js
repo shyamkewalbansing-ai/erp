@@ -15,7 +15,7 @@ import {
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { toast } from 'sonner';
-import api, { getMyAddons } from '../lib/api';
+import api, { getMyAddons, getProfile } from '../lib/api';
 import { triggerRefresh, REFRESH_EVENTS } from '../lib/refreshEvents';
 
 // Module-specific capabilities
