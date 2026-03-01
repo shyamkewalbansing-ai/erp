@@ -242,10 +242,6 @@ const VerkoopPage = () => {
   const totalPaid = invoices.reduce((sum, i) => sum + (i.totaal_betaald || 0), 0);
   const totalOutstanding = invoices.reduce((sum, i) => sum + (i.openstaand_bedrag || 0), 0);
 
-  const subtotal = newInvoice.lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
-  const btwTotal = newInvoice.lines.reduce((s, l) => s + (l.btw_amount || 0), 0);
-  const total = subtotal + btwTotal;
-
   return (
     <div className="min-h-screen bg-slate-50/50" data-testid="verkoop-page">
       {/* Top Header */}
