@@ -419,18 +419,18 @@ const VoorraadPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96" data-testid="voorraad-page">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 " data-testid="voorraad-page">
-      {/* Header */}
+    <div className="space-y-6" data-testid="voorraad-page">
+      {/* Header - matching VerkoopPage */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">Voorraad</h1>
-          <p className="text-slate-500 mt-0.5">Beheer producten en voorraadniveaus</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Voorraad</h1>
+          <p className="text-gray-500 mt-0.5">Beheer producten en voorraadniveaus</p>
         </div>
         <div className="flex gap-2">
           <Dialog open={showProductDialog} onOpenChange={setShowProductDialog}>
