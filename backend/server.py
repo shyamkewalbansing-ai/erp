@@ -1263,6 +1263,7 @@ class AddonCreate(BaseModel):
     description: Optional[str] = None
     price: float
     is_active: bool = True
+    admin_only: bool = False  # If True, addon is NOT visible to customers - only admin can assign
     # Extra module detail fields
     category: Optional[str] = None  # e.g., 'Personeel', 'Vastgoed', 'Analytics'
     icon_name: Optional[str] = None  # Lucide icon name e.g., 'Users', 'Building2'
