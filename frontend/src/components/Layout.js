@@ -551,6 +551,7 @@ export default function Layout() {
                 
                 // Detect current module context based on URL
                 const isOnBoekhouding = location.pathname.startsWith('/app/boekhouding');
+                const isOnSchuldbeheer = location.pathname.startsWith('/app/schuldbeheer');
                 const isOnSystemSettings = location.pathname === '/app/instellingen' || 
                                            location.pathname === '/app/abonnement' || 
                                            location.pathname === '/app/workspace' ||
@@ -563,18 +564,25 @@ export default function Layout() {
                   if (previousModule === 'boekhouding' && moduleSlug !== 'boekhouding') return null;
                   if (previousModule === 'boekhouding' && moduleSlug === 'boekhouding') {
                     // Show boekhouding module when coming from boekhouding
-                  } else if (previousModule !== 'boekhouding' && moduleSlug === 'boekhouding') {
+                  } else if (previousModule === 'schuldbeheer' && moduleSlug !== 'schuldbeheer') return null;
+                  else if (previousModule === 'schuldbeheer' && moduleSlug === 'schuldbeheer') {
+                    // Show schuldbeheer module when coming from schuldbeheer
+                  } else if (previousModule !== 'boekhouding' && previousModule !== 'schuldbeheer' && (moduleSlug === 'boekhouding' || moduleSlug === 'schuldbeheer')) {
                     return null;
                   }
                 } else {
-                  // Normal module filtering
+                  // Normal module filtering - boekhouding and schuldbeheer have their own pages
                   if (isOnBoekhouding && moduleSlug !== 'boekhouding') return null;
-                  if (!isOnBoekhouding && moduleSlug === 'boekhouding') return null;
+                  if (!isOnBoekhouding && !isOnSchuldbeheer && moduleSlug === 'boekhouding') return null;
+                  if (isOnSchuldbeheer && moduleSlug !== 'schuldbeheer') return null;
+                  if (!isOnSchuldbeheer && !isOnBoekhouding && moduleSlug === 'schuldbeheer') return null;
                   
                   // Store the current module for later use
                   if (isOnBoekhouding) {
                     localStorage.setItem('lastActiveModule', 'boekhouding');
-                  } else if (moduleSlug !== 'boekhouding' && hasAddon(moduleSlug)) {
+                  } else if (isOnSchuldbeheer) {
+                    localStorage.setItem('lastActiveModule', 'schuldbeheer');
+                  } else if (moduleSlug !== 'boekhouding' && moduleSlug !== 'schuldbeheer' && hasAddon(moduleSlug)) {
                     localStorage.setItem('lastActiveModule', moduleSlug);
                   }
                 }
