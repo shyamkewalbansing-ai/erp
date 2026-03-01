@@ -25,7 +25,8 @@ import {
   CreditCard,
   Search,
   Filter,
-  TrendingUp
+  TrendingUp,
+  Trash2
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../../components/ui/dropdown-menu';
 
