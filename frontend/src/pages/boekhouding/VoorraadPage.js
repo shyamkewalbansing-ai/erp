@@ -974,12 +974,12 @@ const VoorraadPage = () => {
         </TabsList>
 
         <TabsContent value="products" className="mt-4">
-          <Card className="bg-white border border-slate-100 shadow-sm">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold text-slate-900">Producten</CardTitle>
+                <CardTitle className="text-base font-semibold text-gray-900">Producten</CardTitle>
                 <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     placeholder="Zoeken..."
                     value={searchTerm}
@@ -993,17 +993,17 @@ const VoorraadPage = () => {
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead className="w-16 text-xs font-medium text-slate-500">Foto</TableHead>
-                    <TableHead className="w-24 text-xs font-medium text-slate-500">Code</TableHead>
-                    <TableHead className="text-xs font-medium text-slate-500">Naam</TableHead>
-                    <TableHead className="w-28 text-xs font-medium text-slate-500">Barcode</TableHead>
-                    <TableHead className="w-20 text-xs font-medium text-slate-500">Eenheid</TableHead>
-                    <TableHead className="text-right w-24 text-xs font-medium text-slate-500">Voorraad</TableHead>
-                    <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Inkoopprijs</TableHead>
-                    <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Verkoopprijs</TableHead>
-                    <TableHead className="text-right w-28 text-xs font-medium text-slate-500">Waarde</TableHead>
-                    <TableHead className="w-24 text-xs font-medium text-slate-500 text-center">Acties</TableHead>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-16 text-xs font-medium text-gray-500">Foto</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-gray-500">Code</TableHead>
+                    <TableHead className="text-xs font-medium text-gray-500">Naam</TableHead>
+                    <TableHead className="w-28 text-xs font-medium text-gray-500">Barcode</TableHead>
+                    <TableHead className="w-20 text-xs font-medium text-gray-500">Eenheid</TableHead>
+                    <TableHead className="text-right w-24 text-xs font-medium text-gray-500">Voorraad</TableHead>
+                    <TableHead className="text-right w-28 text-xs font-medium text-gray-500">Inkoopprijs</TableHead>
+                    <TableHead className="text-right w-28 text-xs font-medium text-gray-500">Verkoopprijs</TableHead>
+                    <TableHead className="text-right w-28 text-xs font-medium text-gray-500">Waarde</TableHead>
+                    <TableHead className="w-24 text-xs font-medium text-gray-500 text-center">Acties</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
