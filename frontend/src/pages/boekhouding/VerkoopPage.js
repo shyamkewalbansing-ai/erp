@@ -627,7 +627,16 @@ const VerkoopPage = () => {
     setSelectedItems(prev => prev.length === items.length ? [] : items.map(i => i.id));
   };
 
-  const openDetail = (item) => { setDetailItem(item); setDetailOpen(true); };
+  const openDetail = async (item) => { 
+    // Always fetch the latest data for this item
+    try {
+      const res = await invoicesAPI.getOne(item.id);
+      setDetailItem(res.data || item);
+    } catch {
+      setDetailItem(item);
+    }
+    setDetailOpen(true); 
+  };
 
   const handleSaveInvoice = async (id, data) => {
     // This would call the API to update the invoice
