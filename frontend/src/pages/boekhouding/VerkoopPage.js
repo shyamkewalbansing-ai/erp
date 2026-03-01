@@ -34,12 +34,25 @@ import {
   Eye,
   RefreshCw,
   BarChart3,
-  Calendar
+  Calendar,
+  X,
+  Mail,
+  Phone,
+  MapPin,
+  Building2,
+  Copy,
+  Printer,
+  History,
+  AlertCircle,
+  ChevronRight,
+  Sparkles,
+  Target,
+  Zap
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../../components/ui/dropdown-menu';
 
-// Enhanced Stat Card with trend indicator and mini sparkline
-const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, iconColor, trend, trendUp, loading }) => {
+// Enhanced Stat Card with gradient and animation
+const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, gradientFrom, gradientTo, trend, trendUp, loading, onClick }) => {
   if (loading) {
     return (
       <Card className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
@@ -60,18 +73,25 @@ const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, i
   }
 
   return (
-    <Card className="bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden group">
-      <CardContent className="p-0">
-        {/* Top colored accent line */}
-        <div className={`h-1 ${iconBg?.replace('bg-', 'bg-').replace('-50', '-400') || 'bg-emerald-400'}`} />
-        <div className="p-5">
+    <Card 
+      className={`bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden group ${onClick ? 'cursor-pointer' : ''}`}
+      onClick={onClick}
+    >
+      <CardContent className="p-0 relative">
+        {/* Gradient accent line */}
+        <div className={`h-1 bg-gradient-to-r ${gradientFrom} ${gradientTo}`} />
+        
+        {/* Background decoration */}
+        <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${gradientFrom} ${gradientTo} opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-150 transition-transform duration-700`} />
+        
+        <div className="p-5 relative">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <p className="text-sm text-gray-500 font-medium">{title}</p>
               <p className="text-2xl font-bold text-gray-900 mt-2 tracking-tight">{value}</p>
               <div className="flex items-center gap-2 mt-2">
                 {trend && (
-                  <span className={`inline-flex items-center text-xs font-semibold ${trendUp ? 'text-emerald-600' : 'text-red-500'}`}>
+                  <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${trendUp ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>
                     {trendUp ? <ArrowUpRight className="w-3 h-3 mr-0.5" /> : <ArrowDownRight className="w-3 h-3 mr-0.5" />}
                     {trend}
                   </span>
@@ -81,8 +101,8 @@ const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, i
                 )}
               </div>
             </div>
-            <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-              <Icon className={`w-6 h-6 ${iconColor}`} />
+            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${gradientFrom} ${gradientTo} flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 shadow-lg`}>
+              <Icon className="w-6 h-6 text-white" />
             </div>
           </div>
         </div>
@@ -91,24 +111,301 @@ const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, i
   );
 };
 
-// Quick Action Button component
-const QuickAction = ({ icon: Icon, label, onClick, variant = 'default' }) => {
+// Quick Action Button with hover effect
+const QuickAction = ({ icon: Icon, label, onClick, variant = 'default', badge }) => {
   const variants = {
-    default: 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200',
-    primary: 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-500',
-    secondary: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200'
+    default: 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200 hover:border-gray-300',
+    primary: 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white border-transparent shadow-lg shadow-emerald-200',
+    secondary: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200',
+    warning: 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'
   };
   
   return (
     <button
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border font-medium text-sm transition-all duration-200 ${variants[variant]}`}
+      className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl border font-medium text-sm transition-all duration-300 hover:scale-105 ${variants[variant]}`}
     >
       <Icon className="w-4 h-4" />
       {label}
+      {badge && (
+        <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+          {badge}
+        </span>
+      )}
     </button>
   );
 };
+
+// Invoice Detail Slide-over Panel
+const InvoiceDetailPanel = ({ invoice, open, onClose, onDownloadPdf, onAddPayment, onUpdateStatus, formatAmount }) => {
+  if (!invoice) return null;
+
+  const invoiceNumber = invoice.factuurnummer || invoice.invoice_number || '-';
+  const invoiceDate = invoice.factuurdatum || invoice.date;
+  const customerName = invoice.debiteur_naam || invoice.customer_name || '-';
+  const customerEmail = invoice.debiteur_email || invoice.customer_email || '-';
+  const customerPhone = invoice.debiteur_telefoon || invoice.customer_phone || '-';
+  const customerAddress = invoice.debiteur_adres || invoice.customer_address || '-';
+  const dueDate = invoice.vervaldatum || invoice.due_date;
+  const totalAmount = invoice.totaal_incl_btw || invoice.total || 0;
+  const subtotal = invoice.totaal_excl_btw || invoice.subtotal || 0;
+  const btwAmount = invoice.btw_bedrag || invoice.tax || 0;
+  const paidAmount = invoice.totaal_betaald || 0;
+  const openAmount = invoice.openstaand_bedrag || totalAmount - paidAmount;
+  const currency = invoice.valuta || invoice.currency || 'SRD';
+  const items = invoice.regels || invoice.items || [];
+  const payments = invoice.betalingen || [];
+
+  const getStatusStyle = (status) => {
+    switch(status) {
+      case 'betaald': return 'bg-emerald-100 text-emerald-700';
+      case 'verzonden': return 'bg-blue-100 text-blue-700';
+      case 'herinnering': return 'bg-amber-100 text-amber-700';
+      default: return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl p-0 rounded-2xl overflow-hidden max-h-[90vh]">
+        {/* Header with gradient */}
+        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 p-6 text-white">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-emerald-100 text-sm font-medium">Factuur</p>
+              <h2 className="text-2xl font-bold mt-1">{invoiceNumber}</h2>
+              <div className="flex items-center gap-3 mt-3">
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusStyle(invoice.status)} bg-opacity-90`}>
+                  {getStatusLabel(invoice.status)}
+                </span>
+                <span className="text-emerald-100 text-sm">
+                  {formatDate(invoiceDate)}
+                </span>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-emerald-100 text-sm">Totaal</p>
+              <p className="text-3xl font-bold">{formatAmount(totalAmount, currency)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-280px)]">
+          {/* Customer Info */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Klantgegevens</h3>
+            <div className="bg-gray-50 rounded-xl p-4">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                  {customerName.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Building2 className="w-4 h-4 text-gray-400" />
+                    <span className="font-medium text-gray-900">{customerName}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Mail className="w-4 h-4 text-gray-400" />
+                    <span>{customerEmail}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <Phone className="w-4 h-4 text-gray-400" />
+                    <span>{customerPhone}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-600">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    <span>{customerAddress}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Invoice Lines */}
+          <div className="mb-6">
+            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Factuurregels</h3>
+            <div className="bg-gray-50 rounded-xl overflow-hidden">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-100">
+                    <th className="text-left text-xs font-semibold text-gray-500 uppercase px-4 py-3">Omschrijving</th>
+                    <th className="text-center text-xs font-semibold text-gray-500 uppercase px-4 py-3">Aantal</th>
+                    <th className="text-right text-xs font-semibold text-gray-500 uppercase px-4 py-3">Prijs</th>
+                    <th className="text-right text-xs font-semibold text-gray-500 uppercase px-4 py-3">Totaal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.length > 0 ? items.map((item, idx) => (
+                    <tr key={idx} className="border-t border-gray-200">
+                      <td className="px-4 py-3 text-gray-900">{item.omschrijving || item.description}</td>
+                      <td className="px-4 py-3 text-center text-gray-600">{item.aantal || item.quantity}</td>
+                      <td className="px-4 py-3 text-right text-gray-600">{formatAmount(item.prijs || item.price, currency)}</td>
+                      <td className="px-4 py-3 text-right font-medium text-gray-900">{formatAmount(item.totaal || item.total, currency)}</td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                        Geen regels beschikbaar
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Totals */}
+          <div className="mb-6">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4">
+              <div className="space-y-2">
+                <div className="flex justify-between text-gray-600">
+                  <span>Subtotaal</span>
+                  <span>{formatAmount(subtotal, currency)}</span>
+                </div>
+                <div className="flex justify-between text-gray-600">
+                  <span>BTW</span>
+                  <span>{formatAmount(btwAmount, currency)}</span>
+                </div>
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className="flex justify-between font-bold text-lg text-gray-900">
+                    <span>Totaal</span>
+                    <span>{formatAmount(totalAmount, currency)}</span>
+                  </div>
+                </div>
+                {paidAmount > 0 && (
+                  <>
+                    <div className="flex justify-between text-emerald-600">
+                      <span>Betaald</span>
+                      <span>- {formatAmount(paidAmount, currency)}</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-amber-600">
+                      <span>Openstaand</span>
+                      <span>{formatAmount(openAmount, currency)}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Payment History */}
+          {payments.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                <History className="w-4 h-4" />
+                Betalingshistorie
+              </h3>
+              <div className="space-y-2">
+                {payments.map((payment, idx) => (
+                  <div key={idx} className="flex items-center justify-between bg-emerald-50 rounded-lg p-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{formatDate(payment.datum || payment.date)}</p>
+                        <p className="text-xs text-gray-500">{payment.betaalmethode || payment.method}</p>
+                      </div>
+                    </div>
+                    <span className="font-semibold text-emerald-600">{formatAmount(payment.bedrag || payment.amount, currency)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Due Date Warning */}
+          {invoice.status !== 'betaald' && new Date(dueDate) < new Date() && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+              <div>
+                <p className="font-medium text-red-700">Vervallen factuur</p>
+                <p className="text-sm text-red-600">Deze factuur is vervallen op {formatDate(dueDate)}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="border-t border-gray-100 bg-gray-50 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                navigator.clipboard.writeText(invoiceNumber);
+                toast.success('Factuurnummer gekopieerd');
+              }}
+              className="rounded-lg"
+            >
+              <Copy className="w-4 h-4 mr-1" />
+              Kopiëren
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDownloadPdf(invoice.id, invoiceNumber)}
+              className="rounded-lg"
+            >
+              <Download className="w-4 h-4 mr-1" />
+              PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.print()}
+              className="rounded-lg"
+            >
+              <Printer className="w-4 h-4 mr-1" />
+              Print
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            {invoice.status !== 'betaald' && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onAddPayment(invoice)}
+                  className="rounded-lg border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+                >
+                  <CreditCard className="w-4 h-4 mr-1" />
+                  Betaling
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => onUpdateStatus(invoice.id, 'betaald')}
+                  className="rounded-lg bg-emerald-500 hover:bg-emerald-600"
+                >
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                  Markeer Betaald
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+// Recent Activity Item
+const ActivityItem = ({ icon: Icon, iconBg, title, subtitle, time, amount, amountColor }) => (
+  <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+    <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
+      <Icon className="w-5 h-5 text-white" />
+    </div>
+    <div className="flex-1 min-w-0">
+      <p className="text-sm font-medium text-gray-900 truncate">{title}</p>
+      <p className="text-xs text-gray-500">{subtitle}</p>
+    </div>
+    <div className="text-right">
+      {amount && <p className={`text-sm font-semibold ${amountColor || 'text-gray-900'}`}>{amount}</p>}
+      <p className="text-xs text-gray-400">{time}</p>
+    </div>
+  </div>
+);
 
 const VerkoopPage = () => {
   const navigate = useNavigate();
@@ -119,6 +416,7 @@ const VerkoopPage = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [showDetailPanel, setShowDetailPanel] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [saving, setSaving] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(null);
@@ -192,6 +490,7 @@ const VerkoopPage = () => {
       await invoicesAPI.updateStatus(invoiceId, newStatus);
       toast.success(`Status gewijzigd naar ${getStatusLabel(newStatus)}`);
       fetchData();
+      setShowDetailPanel(false);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij status wijzigen');
     } finally {
@@ -208,7 +507,13 @@ const VerkoopPage = () => {
       betaalmethode: 'bank',
       referentie: ''
     });
+    setShowDetailPanel(false);
     setShowPaymentDialog(true);
+  };
+
+  const openDetailPanel = (invoice) => {
+    setSelectedInvoice(invoice);
+    setShowDetailPanel(true);
   };
 
   const handleAddPayment = async () => {
@@ -265,17 +570,23 @@ const VerkoopPage = () => {
     (o.customer_name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Totals
+  // Calculations
   const totalInvoiced = invoices.reduce((sum, i) => sum + (i.totaal_incl_btw || i.total || 0), 0);
   const totalPaid = invoices.reduce((sum, i) => sum + (i.totaal_betaald || 0), 0);
   const totalOutstanding = invoices.reduce((sum, i) => sum + (i.openstaand_bedrag || 0), 0);
   const paidCount = invoices.filter(i => i.status === 'betaald').length;
   const openCount = invoices.filter(i => i.status !== 'betaald').length;
+  const overdueCount = invoices.filter(i => i.status !== 'betaald' && new Date(i.vervaldatum || i.due_date) < new Date()).length;
   const thisMonthInvoices = invoices.filter(i => {
     const d = new Date(i.factuurdatum || i.date);
     const now = new Date();
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
+
+  // Recent activity (last 5 invoices)
+  const recentInvoices = [...invoices].sort((a, b) => 
+    new Date(b.factuurdatum || b.date) - new Date(a.factuurdatum || a.date)
+  ).slice(0, 5);
 
   const getStatusStyle = (status) => {
     switch(status) {
@@ -289,33 +600,31 @@ const VerkoopPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50" data-testid="verkoop-page">
-      {/* Header with gradient accent */}
-      <div className="bg-white border-b border-gray-100 shadow-sm">
-        <div className="px-8 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50" data-testid="verkoop-page">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-lg border-b border-gray-100 sticky top-0 z-40">
+        <div className="px-8 py-5">
           <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
-                  <Receipt className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Verkoop</h1>
-                  <p className="text-gray-500 text-sm mt-0.5">Beheer uw offertes, orders en facturen</p>
-                </div>
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-200">
+                <Receipt className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Verkoop</h1>
+                <p className="text-gray-500 text-sm">Beheer uw offertes, orders en facturen</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <Button 
                 variant="outline"
-                className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl"
+                className="border-gray-200 text-gray-600 hover:bg-gray-50 rounded-xl h-10"
                 onClick={fetchData}
               >
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Vernieuwen
               </Button>
               <Button 
-                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-emerald-200 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-300" 
+                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white px-5 h-10 rounded-xl font-medium shadow-lg shadow-emerald-200 transition-all duration-300 hover:shadow-xl hover:scale-105" 
                 data-testid="add-invoice-btn"
                 onClick={() => navigate('/app/boekhouding/verkoop/nieuw')}
               >
@@ -328,17 +637,17 @@ const VerkoopPage = () => {
       </div>
 
       <div className="p-8">
-        {/* Stats Row - 4 columns with enhanced design */}
+        {/* Stats Row */}
         <div className="grid grid-cols-4 gap-5 mb-6">
           <StatCard
-            title="Gefactureerd"
+            title="Totaal Gefactureerd"
             value={formatAmount(totalInvoiced)}
-            subtitle={`${invoices.length} facturen totaal`}
+            subtitle={`${invoices.length} facturen`}
             trend="+12.5%"
             trendUp={true}
             icon={TrendingUp}
-            iconBg="bg-blue-50"
-            iconColor="text-blue-500"
+            gradientFrom="from-blue-400"
+            gradientTo="to-blue-600"
             loading={loading}
           />
           <StatCard
@@ -349,56 +658,109 @@ const VerkoopPage = () => {
             trend="+8.2%"
             trendUp={true}
             icon={Wallet}
-            iconBg="bg-emerald-50"
-            iconColor="text-emerald-500"
+            gradientFrom="from-emerald-400"
+            gradientTo="to-emerald-600"
             loading={loading}
           />
           <StatCard
             title="Openstaand"
             value={formatAmount(totalOutstanding)}
-            subtitle={`${openCount} openstaand`}
+            subtitle={`${openCount} facturen`}
             subtitleColor="text-amber-600"
             icon={Clock}
-            iconBg="bg-amber-50"
-            iconColor="text-amber-500"
+            gradientFrom="from-amber-400"
+            gradientTo="to-amber-600"
             loading={loading}
+            onClick={() => setStatusFilter(statusFilter === 'verzonden' ? 'all' : 'verzonden')}
           />
           <StatCard
             title="Deze Maand"
             value={thisMonthInvoices.toString()}
             subtitle="Nieuwe facturen"
             icon={Calendar}
-            iconBg="bg-violet-50"
-            iconColor="text-violet-500"
+            gradientFrom="from-violet-400"
+            gradientTo="to-violet-600"
             loading={loading}
           />
         </div>
 
-        {/* Quick Actions Bar */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <QuickAction 
-              icon={FileText} 
-              label="Nieuwe Offerte" 
-              onClick={() => toast.info('Offerte functie komt binnenkort')}
-            />
-            <QuickAction 
-              icon={BarChart3} 
-              label="Rapportage" 
-              onClick={() => navigate('/app/boekhouding/rapportages')}
-              variant="secondary"
-            />
+        {/* Quick Actions + Recent Activity Row */}
+        <div className="grid grid-cols-3 gap-6 mb-6">
+          {/* Quick Actions Card */}
+          <div className="col-span-2">
+            <Card className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden h-full">
+              <CardContent className="p-5">
+                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  Snelle Acties
+                </h3>
+                <div className="flex flex-wrap gap-3">
+                  <QuickAction 
+                    icon={Plus} 
+                    label="Nieuwe Factuur" 
+                    onClick={() => navigate('/app/boekhouding/verkoop/nieuw')}
+                    variant="primary"
+                  />
+                  <QuickAction 
+                    icon={FileText} 
+                    label="Nieuwe Offerte" 
+                    onClick={() => toast.info('Offerte functie komt binnenkort')}
+                  />
+                  <QuickAction 
+                    icon={BarChart3} 
+                    label="Rapportages" 
+                    onClick={() => navigate('/app/boekhouding/rapportages')}
+                    variant="secondary"
+                  />
+                  {overdueCount > 0 && (
+                    <QuickAction 
+                      icon={AlertCircle} 
+                      label="Vervallen Facturen" 
+                      onClick={() => setStatusFilter('herinnering')}
+                      variant="warning"
+                      badge={overdueCount}
+                    />
+                  )}
+                  <QuickAction 
+                    icon={Target} 
+                    label="Doelen" 
+                    onClick={() => toast.info('Doelen functie komt binnenkort')}
+                  />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <div className="text-sm text-gray-500">
-            Laatst bijgewerkt: <span className="font-medium text-gray-700">Vandaag om {new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}</span>
-          </div>
+
+          {/* Recent Activity Card */}
+          <Card className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
+            <CardContent className="p-5">
+              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Recente Activiteit
+              </h3>
+              <div className="space-y-1">
+                {recentInvoices.slice(0, 3).map((inv, idx) => (
+                  <ActivityItem
+                    key={idx}
+                    icon={Receipt}
+                    iconBg={inv.status === 'betaald' ? 'bg-emerald-500' : 'bg-blue-500'}
+                    title={inv.factuurnummer || inv.invoice_number}
+                    subtitle={inv.debiteur_naam || inv.customer_name}
+                    time={formatDate(inv.factuurdatum || inv.date)}
+                    amount={formatAmount(inv.totaal_incl_btw || inv.total)}
+                    amountColor={inv.status === 'betaald' ? 'text-emerald-600' : 'text-gray-900'}
+                  />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Main Content Card with enhanced styling */}
+        {/* Main Content Card */}
         <Card className="bg-white border border-gray-100 rounded-2xl shadow-sm overflow-hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            {/* Tab Header with better styling */}
-            <div className="border-b border-gray-100 bg-gray-50/50 px-6">
+            {/* Tab Header */}
+            <div className="border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white px-6">
               <TabsList className="bg-transparent p-0 h-auto gap-1">
                 <TabsTrigger 
                   value="quotes" 
@@ -468,7 +830,7 @@ const VerkoopPage = () => {
                     ))
                   ) : filteredQuotes.length > 0 ? (
                     filteredQuotes.map(quote => (
-                      <TableRow key={quote.id} className="hover:bg-emerald-50/30 transition-colors border-b border-gray-50">
+                      <TableRow key={quote.id} className="hover:bg-emerald-50/30 transition-colors border-b border-gray-50 cursor-pointer">
                         <TableCell className="font-semibold text-emerald-600 pl-6">{quote.quote_number}</TableCell>
                         <TableCell className="text-gray-600">{formatDate(quote.date)}</TableCell>
                         <TableCell className="text-gray-900 font-medium">{quote.customer_name}</TableCell>
@@ -536,7 +898,7 @@ const VerkoopPage = () => {
                     ))
                   ) : filteredOrders.length > 0 ? (
                     filteredOrders.map(order => (
-                      <TableRow key={order.id} className="hover:bg-emerald-50/30 transition-colors border-b border-gray-50">
+                      <TableRow key={order.id} className="hover:bg-emerald-50/30 transition-colors border-b border-gray-50 cursor-pointer">
                         <TableCell className="font-semibold text-emerald-600 pl-6">{order.order_number}</TableCell>
                         <TableCell className="text-gray-600">{formatDate(order.date)}</TableCell>
                         <TableCell className="text-gray-900 font-medium">{order.customer_name}</TableCell>
@@ -593,7 +955,7 @@ const VerkoopPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="flex items-center gap-4 text-sm text-gray-500">
                   <span className="font-semibold text-gray-900">{filteredInvoices.length}</span> resultaten
                 </div>
               </div>
@@ -630,15 +992,26 @@ const VerkoopPage = () => {
                       const dueDate = invoice.vervaldatum || invoice.due_date;
                       const totalAmount = invoice.totaal_incl_btw || invoice.total || 0;
                       const currency = invoice.valuta || invoice.currency || 'SRD';
+                      const isOverdue = invoice.status !== 'betaald' && new Date(dueDate) < new Date();
                       
                       return (
-                        <TableRow key={invoice.id} className="hover:bg-emerald-50/30 transition-colors border-b border-gray-50 group" data-testid={`sales-invoice-row-${invoiceNumber}`}>
+                        <TableRow 
+                          key={invoice.id} 
+                          className={`hover:bg-emerald-50/30 transition-colors border-b border-gray-50 group cursor-pointer ${isOverdue ? 'bg-red-50/30' : ''}`} 
+                          data-testid={`sales-invoice-row-${invoiceNumber}`}
+                          onClick={() => openDetailPanel(invoice)}
+                        >
                           <TableCell className="pl-6">
-                            <span className="font-semibold text-emerald-600 hover:text-emerald-700 cursor-pointer">{invoiceNumber}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-emerald-600 hover:text-emerald-700">{invoiceNumber}</span>
+                              {isOverdue && <AlertCircle className="w-4 h-4 text-red-500" />}
+                            </div>
                           </TableCell>
                           <TableCell className="text-gray-600">{formatDate(invoiceDate)}</TableCell>
                           <TableCell className="text-gray-900 font-medium">{customerName}</TableCell>
-                          <TableCell className="text-gray-500">{formatDate(dueDate)}</TableCell>
+                          <TableCell className={`${isOverdue ? 'text-red-500 font-medium' : 'text-gray-500'}`}>
+                            {formatDate(dueDate)}
+                          </TableCell>
                           <TableCell className="text-right">
                             <span className="font-bold text-gray-900">{formatAmount(totalAmount, currency)}</span>
                           </TableCell>
@@ -647,8 +1020,17 @@ const VerkoopPage = () => {
                               {getStatusLabel(invoice.status)}
                             </span>
                           </TableCell>
-                          <TableCell className="pr-6">
+                          <TableCell className="pr-6" onClick={(e) => e.stopPropagation()}>
                             <div className="flex items-center justify-end gap-1 opacity-70 group-hover:opacity-100 transition-opacity">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openDetailPanel(invoice)}
+                                className="h-9 w-9 p-0 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                                title="Bekijk Details"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
@@ -669,13 +1051,13 @@ const VerkoopPage = () => {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-52 rounded-xl shadow-lg border-gray-100">
+                                  <DropdownMenuItem onClick={() => openDetailPanel(invoice)} className="rounded-lg">
+                                    <Eye className="w-4 h-4 mr-3 text-gray-400" />
+                                    Bekijk Details
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => handleDownloadPdf(invoice.id, invoiceNumber)} className="rounded-lg">
                                     <Download className="w-4 h-4 mr-3 text-gray-400" />
                                     Download PDF
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem className="rounded-lg">
-                                    <Eye className="w-4 h-4 mr-3 text-gray-400" />
-                                    Bekijk Details
                                   </DropdownMenuItem>
                                   {invoice.status === 'concept' && (
                                     <DropdownMenuItem onClick={() => handleUpdateStatus(invoice.id, 'verzonden')} className="rounded-lg">
@@ -733,15 +1115,26 @@ const VerkoopPage = () => {
         </Card>
       </div>
 
-      {/* Payment Dialog with enhanced styling */}
+      {/* Invoice Detail Panel */}
+      <InvoiceDetailPanel
+        invoice={selectedInvoice}
+        open={showDetailPanel}
+        onClose={() => setShowDetailPanel(false)}
+        onDownloadPdf={handleDownloadPdf}
+        onAddPayment={openPaymentDialog}
+        onUpdateStatus={handleUpdateStatus}
+        formatAmount={formatAmount}
+      />
+
+      {/* Payment Dialog */}
       <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
         <DialogContent className="max-w-md rounded-2xl p-0 overflow-hidden">
           <div className="h-1.5 bg-gradient-to-r from-emerald-400 to-emerald-600" />
           <div className="p-6">
             <DialogHeader className="mb-5">
               <DialogTitle className="text-xl font-bold text-gray-900 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-emerald-600" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg">
+                  <CreditCard className="w-5 h-5 text-white" />
                 </div>
                 Betaling Toevoegen
               </DialogTitle>
