@@ -72,7 +72,7 @@ class UnifiedEmailService:
         settings = None
         
         # Try user-specific settings (boekhouding_instellingen)
-        if self.db and user_id:
+        if self.db is not None and user_id:
             settings = await self.db.boekhouding_instellingen.find_one({"user_id": user_id})
             if settings and settings.get('smtp_host'):
                 return {
@@ -86,7 +86,7 @@ class UnifiedEmailService:
                 }
         
         # Try workspace settings
-        if self.db and workspace_id:
+        if self.db is not None and workspace_id:
             settings = await self.db.email_settings.find_one({"workspace_id": workspace_id})
             if settings and settings.get('smtp_host'):
                 return settings
