@@ -2436,6 +2436,90 @@ async def add_betaling_to_factuur(factuur_id: str, data: BetalingCreate, authori
         "status": nieuwe_status
     }
 
+
+class SendEmailRequest(BaseModel):
+    to: str
+    subject: str
+    message: str
+
+
+@router.post("/verkoopfacturen/{factuur_id}/send-email")
+async def send_factuur_email(factuur_id: str, data: SendEmailRequest, authorization: str = Header(None)):
+    """Verstuur factuur per e-mail met PDF bijlage"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Haal factuur op
+    factuur = await db.boekhouding_verkoopfacturen.find_one({"id": factuur_id, "user_id": user_id})
+    if not factuur:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    # Valideer e-mailadres
+    import re
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    if not re.match(email_pattern, data.to):
+        raise HTTPException(status_code=400, detail="Ongeldig e-mailadres")
+    
+    # Genereer PDF
+    try:
+        pdf_content = await generate_invoice_pdf(factuur_id, user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fout bij genereren PDF: {str(e)}")
+    
+    # Maak HTML email body
+    factuurnummer = factuur.get('factuurnummer', factuur_id)
+    html_body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+            {data.message.replace(chr(10), '<br>')}
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            <p style="color: #666; font-size: 12px;">
+                Deze e-mail is verzonden via Facturatie.sr<br>
+                Factuur {factuurnummer} is bijgevoegd als PDF.
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Verstuur email met PDF bijlage
+    from services.unified_email_service import UnifiedEmailService
+    email_service = UnifiedEmailService(db)
+    
+    result = await email_service.send_email(
+        to_email=data.to,
+        subject=data.subject,
+        body_html=html_body,
+        body_text=data.message,
+        attachments=[{
+            "filename": f"factuur_{factuurnummer}.pdf",
+            "content": pdf_content,
+            "mime_type": "application/pdf"
+        }],
+        user_id=user_id
+    )
+    
+    if not result.get('success'):
+        error_msg = result.get('error', 'Onbekende fout')
+        if result.get('simulated'):
+            raise HTTPException(status_code=400, detail=error_msg)
+        raise HTTPException(status_code=500, detail=f"E-mail versturen mislukt: {error_msg}")
+    
+    # Update factuur status naar verzonden als het nog concept is
+    if factuur.get('status') == 'concept':
+        await db.boekhouding_verkoopfacturen.update_one(
+            {"id": factuur_id, "user_id": user_id},
+            {"$set": {"status": "verzonden", "updated_at": datetime.now(timezone.utc)}}
+        )
+    
+    return {
+        "success": True,
+        "message": f"E-mail verstuurd naar {data.to}",
+        "factuur_status": factuur.get('status', 'verzonden')
+    }
+
+
 @router.post("/verkoopfacturen/boek-alle-verzonden")
 async def boek_alle_verzonden_facturen(authorization: str = Header(None)):
     """Boek alle verzonden facturen die nog niet geboekt zijn naar het grootboek"""
