@@ -4093,6 +4093,28 @@ def main():
         ("Create Project", tester.test_create_project),
         ("Get Projecten", tester.test_get_projecten),
         
+        # SCHULDBEHEER MODULE TESTING
+        ("=== SCHULDBEHEER MODULE TESTING ===", lambda: True),
+        ("Schuldbeheer Dashboard", tester.test_schuldbeheer_dashboard),
+        ("Create Bankrekening (Schuldbeheer)", tester.test_create_bankrekening_schuldbeheer),
+        ("Get Bankrekeningen (Schuldbeheer)", tester.test_get_bankrekeningen_schuldbeheer),
+        ("Create Relatie (Schuldbeheer)", tester.test_create_relatie_schuldbeheer),
+        ("Get Relaties (Schuldbeheer)", tester.test_get_relaties_schuldbeheer),
+        ("Create Schuld (Schuldbeheer)", tester.test_create_schuld_schuldbeheer),
+        ("Get Schulden (Schuldbeheer)", tester.test_get_schulden_schuldbeheer),
+        ("Create Betaling (Schuldbeheer)", tester.test_create_betaling_schuldbeheer),
+        ("Get Betalingen (Schuldbeheer)", tester.test_get_betalingen_schuldbeheer),
+        ("Verify Schuld Saldo Update", tester.test_verify_schuld_saldo_update),
+        ("Create Inkomst (Schuldbeheer)", tester.test_create_inkomst_schuldbeheer),
+        ("Get Inkomsten (Schuldbeheer)", tester.test_get_inkomsten_schuldbeheer),
+        ("Create Uitgave (Schuldbeheer)", tester.test_create_uitgave_schuldbeheer),
+        ("Get Uitgaven (Schuldbeheer)", tester.test_get_uitgaven_schuldbeheer),
+        ("Schuldbeheer Planning", tester.test_schuldbeheer_planning),
+        ("Rapportage Schuld per Schuldeiser", tester.test_schuldbeheer_rapportage_schuld_per_schuldeiser),
+        ("Rapportage Cashflow", tester.test_schuldbeheer_rapportage_cashflow),
+        ("Rapportage Jaaroverzicht", tester.test_schuldbeheer_rapportage_jaaroverzicht),
+        ("Schuldbeheer Statistieken", tester.test_schuldbeheer_statistieken),
+        
         # CLEANUP TESTS
         ("Delete Salary Payment", tester.test_delete_salary_payment),
         ("Delete Employee", tester.test_delete_employee),
