@@ -750,21 +750,23 @@ const VerkoopPage = () => {
     setSendingEmail(true);
     try {
       // Call the email API with the invoice and message
-      await invoicesAPI.sendEmail(emailInvoice.id, {
+      const result = await invoicesAPI.sendEmail(emailInvoice.id, {
         to: emailData.to,
         subject: emailData.subject,
         message: emailData.message
       });
-      toast.success('E-mail verstuurd naar ' + emailData.to);
+      toast.success(result.data?.message || 'E-mail verstuurd naar ' + emailData.to);
       setShowEmailDialog(false);
       setEmailData({ to: '', subject: '', message: '' });
       setEmailInvoice(null);
+      // Refresh data in case status changed
+      await fetchData();
+      if (detailItem && detailItem.id === emailInvoice.id) {
+        await refreshDetailItem();
+      }
     } catch (error) {
-      // If API doesn't exist yet, show success anyway (mock)
-      toast.success('E-mail verstuurd naar ' + emailData.to);
-      setShowEmailDialog(false);
-      setEmailData({ to: '', subject: '', message: '' });
-      setEmailInvoice(null);
+      const errorMsg = error.response?.data?.detail || error.message || 'Fout bij versturen e-mail';
+      toast.error(errorMsg);
     }
     finally { setSendingEmail(false); }
   };
