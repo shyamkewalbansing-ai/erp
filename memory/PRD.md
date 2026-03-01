@@ -152,4 +152,4 @@ Dutch (Nederlands)
 
 ---
 
-*Laatste update: 28 februari 2026 - Barcode veld toegevoegd aan Voorraadpagina*
+*Laatste update: 1 maart 2026 - Alle 15+ Boekhouding pagina's herontworpen met consistente VerkoopPage stijl*
