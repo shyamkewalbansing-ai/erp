@@ -340,6 +340,18 @@ frontend:
         agent: "main"
         comment: "ModuleDetailPage aangepast om dynamisch addons uit database te laden als geen hardcoded data beschikbaar is. Icon mapping toegevoegd voor dynamische iconen."
 
+  - task: "Schuldbeheer Module API endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/routers/schuldbeheer.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Schuldbeheer module geïmplementeerd met: Dashboard, Relatiebeheer (Crediteuren CRUD), Schuldenbeheer (Dossiers CRUD + auto saldo berekening), Betalingen (CRUD + auto schuld update), Inkomsten (CRUD), Uitgaven (CRUD met categorieën), Bankrekeningen (CRUD), Planning (maandoverzicht), Rapportages (schuld per schuldeiser/categorie, betaalhistorie, cashflow, jaaroverzicht), Documenten (upload/download/delete), Statistieken (schuldontwikkeling grafiek). Admin-only addon veld toegevoegd zodat module niet zichtbaar is voor klanten. Test met demo account."
+
   - task: "Boekhouding Module Frontend"
     implemented: true
     working: true
