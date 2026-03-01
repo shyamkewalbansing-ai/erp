@@ -48,20 +48,20 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// Stat Card - Matching Dashboard design exactly
+// Stat Card - Matching Dashboard design exactly with proper number display
 const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, iconColor, onClick }) => {
   return (
     <Card className={`bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''}`} onClick={onClick}>
       <CardContent className="p-5">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-500 font-medium">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+            <p className="text-2xl font-bold text-gray-900 mt-2 whitespace-nowrap overflow-hidden text-ellipsis">{value}</p>
             {subtitle && (
               <p className={`text-xs mt-1 ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
             )}
           </div>
-          <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center`}>
+          <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
             <Icon className={`w-6 h-6 ${iconColor}`} />
           </div>
         </div>
@@ -197,53 +197,98 @@ const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh 
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 w-[520px] bg-white shadow-xl z-50 flex flex-col">
-        {/* Header - Green accent like Dashboard */}
-        <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 px-5 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
-                <Receipt className="w-5 h-5 text-white" />
+      {/* Blurred backdrop overlay */}
+      <div 
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 transition-all duration-300" 
+        onClick={onClose} 
+      />
+      
+      {/* Modern Detail Panel with glassmorphism */}
+      <div className="fixed inset-y-0 right-0 w-[540px] bg-white/95 backdrop-blur-xl shadow-2xl z-50 flex flex-col border-l border-gray-200/50 animate-in slide-in-from-right duration-300">
+        {/* Header - Modern gradient with glass effect */}
+        <div className="relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600" />
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"60\" height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"none\" fill-rule=\"evenodd\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.05\"%3E%3Cpath d=\"M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30" />
+          <div className="relative px-6 py-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30">
+                  <Receipt className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white tracking-tight">{number}</h2>
+                  <p className="text-sm text-emerald-100 mt-0.5">{customer}</p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-white">{number}</h2>
-                <p className="text-sm text-emerald-100">{customer}</p>
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 backdrop-blur-sm rounded-full px-3 py-1.5 border border-white/30">
+                  <StatusBadge status={item.status} />
+                </div>
+                <button 
+                  onClick={onClose} 
+                  className="p-2 hover:bg-white/20 rounded-xl transition-all duration-200 hover:scale-105"
+                >
+                  <X className="w-5 h-5 text-white" />
+                </button>
               </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <StatusBadge status={item.status} />
-              <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded-lg transition-colors">
-                <X className="w-5 h-5 text-white" />
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Edit Toggle */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-100 bg-gray-50">
+        {/* Action Bar - Modern design */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => onAction('pdf', item)}>
-              <Download className="w-3.5 h-3.5 mr-1.5" /> PDF
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onAction('pdf', item)}
+              className="bg-white hover:bg-gray-50 border-gray-200 shadow-sm hover:shadow transition-all"
+            >
+              <Download className="w-4 h-4 mr-2 text-emerald-600" /> PDF
             </Button>
-            <Button variant="outline" size="sm" onClick={() => onAction('email', item)}>
-              <Mail className="w-3.5 h-3.5 mr-1.5" /> E-mail
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onAction('email', item)}
+              className="bg-white hover:bg-gray-50 border-gray-200 shadow-sm hover:shadow transition-all"
+            >
+              <Mail className="w-4 h-4 mr-2 text-blue-600" /> E-mail
             </Button>
-            <Button variant="outline" size="sm" onClick={() => onAction('print', item)}>
-              <Printer className="w-3.5 h-3.5 mr-1.5" /> Print
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => onAction('print', item)}
+              className="bg-white hover:bg-gray-50 border-gray-200 shadow-sm hover:shadow transition-all"
+            >
+              <Printer className="w-4 h-4 mr-2 text-gray-600" /> Print
             </Button>
           </div>
           {!isEditing ? (
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-              <Pencil className="w-3.5 h-3.5 mr-1.5" /> Bewerken
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setIsEditing(true)}
+              className="bg-white hover:bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm hover:shadow transition-all"
+            >
+              <Pencil className="w-4 h-4 mr-2" /> Bewerken
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleCancel}>
-                <XCircle className="w-3.5 h-3.5 mr-1.5" /> Annuleren
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleCancel}
+                className="bg-white hover:bg-red-50 border-red-200 text-red-600"
+              >
+                <XCircle className="w-4 h-4 mr-2" /> Annuleren
               </Button>
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> : <Save className="w-3.5 h-3.5 mr-1.5" />}
+              <Button 
+                size="sm" 
+                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all" 
+                onClick={handleSave} 
+                disabled={saving}
+              >
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Opslaan
               </Button>
             </div>
@@ -252,27 +297,36 @@ const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh 
 
         {/* Content */}
         <ScrollArea className="flex-1">
-          <div className="p-5 space-y-5">
-            {/* Overdue Alert */}
+          <div className="p-6 space-y-5">
+            {/* Overdue Alert - Modern design */}
             {isOverdue && (
-              <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
+              <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-2xl p-5 flex items-start gap-4 shadow-sm">
+                <div className="w-12 h-12 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <AlertCircle className="w-6 h-6 text-red-500" />
+                </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-red-700">Factuur is {daysOverdue} dagen vervallen</p>
-                  <p className="text-xs text-red-600 mt-0.5">Vervaldatum was {formatDate(dueDate)}</p>
-                  <div className="flex gap-2 mt-3">
-                    <Button size="sm" variant="outline" className="h-7 text-xs border-red-300 text-red-700 hover:bg-red-100" onClick={() => onAction('reminder', item)}>
-                      <Bell className="w-3 h-3 mr-1" /> Herinnering sturen
+                  <p className="text-base font-bold text-red-700">Factuur is {daysOverdue} dagen vervallen</p>
+                  <p className="text-sm text-red-600 mt-1">Vervaldatum was {formatDate(dueDate)}</p>
+                  <div className="flex gap-2 mt-4">
+                    <Button 
+                      size="sm" 
+                      className="bg-red-600 hover:bg-red-700 text-white shadow-sm" 
+                      onClick={() => onAction('reminder', item)}
+                    >
+                      <Bell className="w-4 h-4 mr-2" /> Herinnering sturen
                     </Button>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Factuur Gegevens - Editable */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <p className="text-sm font-semibold text-gray-700">Factuurgegevens</p>
+            {/* Factuur Gegevens - Editable with modern card */}
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <p className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-emerald-600" />
+                  Factuurgegevens
+                </p>
               </div>
               <div className="p-4 space-y-4">
                 {isEditing ? (
@@ -363,50 +417,60 @@ const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh 
               </div>
             </div>
 
-            {/* Bedragen */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <p className="text-sm font-semibold text-gray-700">Bedragen</p>
+            {/* Bedragen - Modern card with gradient */}
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <p className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4 text-emerald-600" />
+                  Bedragen
+                </p>
               </div>
-              <div className="p-4 space-y-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Subtotaal</span>
-                  <span className="font-medium text-gray-900">{formatCurrency(subtotal, currency)}</span>
+              <div className="p-5 space-y-4">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">Subtotaal</span>
+                  <span className="font-semibold text-gray-900">{formatCurrency(subtotal, currency)}</span>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">BTW (15%)</span>
-                  <span className="font-medium text-gray-900">{formatCurrency(tax, currency)}</span>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-500">BTW (15%)</span>
+                  <span className="font-semibold text-gray-900">{formatCurrency(tax, currency)}</span>
                 </div>
-                <div className="border-t border-gray-200 pt-3 flex justify-between">
-                  <span className="text-sm font-semibold text-gray-900">Totaal</span>
-                  <span className="text-xl font-bold text-gray-900">{formatCurrency(total, currency)}</span>
+                <div className="border-t border-gray-100 pt-4 flex justify-between items-center">
+                  <span className="text-base font-bold text-gray-900">Totaal</span>
+                  <span className="text-2xl font-bold text-gray-900">{formatCurrency(total, currency)}</span>
                 </div>
                 {type === 'invoice' && paid > 0 && (
-                  <div className="flex justify-between text-sm text-emerald-600">
-                    <span>Betaald</span>
-                    <span className="font-semibold">- {formatCurrency(paid, currency)}</span>
+                  <div className="flex justify-between items-center text-sm bg-emerald-50 -mx-5 px-5 py-3 border-t border-emerald-100">
+                    <span className="text-emerald-700 font-medium">Betaald</span>
+                    <span className="font-bold text-emerald-600">- {formatCurrency(paid, currency)}</span>
                   </div>
                 )}
                 {type === 'invoice' && openAmount > 0 && (
-                  <div className="bg-amber-50 -mx-4 px-4 py-3 border-t border-amber-200 flex justify-between">
-                    <span className="text-sm font-semibold text-amber-700">Openstaand</span>
-                    <span className="text-lg font-bold text-amber-700">{formatCurrency(openAmount, currency)}</span>
+                  <div className="bg-gradient-to-r from-amber-50 to-orange-50 -mx-5 px-5 py-4 border-t border-amber-200 flex justify-between items-center">
+                    <span className="text-base font-bold text-amber-700">Openstaand</span>
+                    <span className="text-2xl font-bold text-amber-600">{formatCurrency(openAmount, currency)}</span>
                   </div>
                 )}
                 {type === 'invoice' && item.status === 'betaald' && (
-                  <div className="bg-emerald-50 -mx-4 px-4 py-3 border-t border-emerald-200 flex justify-between items-center">
-                    <span className="text-sm font-semibold text-emerald-700">Volledig betaald</span>
-                    <CheckCircle className="w-5 h-5 text-emerald-600" />
+                  <div className="bg-gradient-to-r from-emerald-50 to-green-50 -mx-5 px-5 py-4 border-t border-emerald-200 flex justify-between items-center">
+                    <span className="text-base font-bold text-emerald-700">Volledig betaald</span>
+                    <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
+                      <CheckCircle className="w-5 h-5 text-emerald-600" />
+                    </div>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Klantgegevens - Editable */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-700">Klantgegevens</p>
-                <button className="text-xs text-emerald-600 hover:underline">Bekijk klant →</button>
+            {/* Klantgegevens - Editable with modern design */}
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex items-center justify-between">
+                <p className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <Users className="w-4 h-4 text-blue-600" />
+                  Klantgegevens
+                </p>
+                <button className="text-xs text-emerald-600 hover:text-emerald-700 font-medium hover:underline transition-colors">
+                  Bekijk klant →
+                </button>
               </div>
               <div className="p-4">
                 {isEditing ? (
@@ -477,89 +541,115 @@ const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh 
               </div>
             </div>
 
-            {/* Factuurregels */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <p className="text-sm font-semibold text-gray-700">Factuurregels ({lines.length})</p>
+            {/* Factuurregels - Modern table */}
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <p className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <FileSpreadsheet className="w-4 h-4 text-purple-600" />
+                  Factuurregels
+                  <span className="ml-auto bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs font-medium">
+                    {lines.length} items
+                  </span>
+                </p>
               </div>
               {lines.length > 0 ? (
                 <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50/50">
                     <tr>
-                      <th className="text-left px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Omschrijving</th>
-                      <th className="text-center px-2 py-2 text-xs font-semibold text-gray-500 uppercase">Aantal</th>
-                      <th className="text-right px-2 py-2 text-xs font-semibold text-gray-500 uppercase">Prijs</th>
-                      <th className="text-right px-4 py-2 text-xs font-semibold text-gray-500 uppercase">Totaal</th>
+                      <th className="text-left px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Omschrijving</th>
+                      <th className="text-center px-3 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Aantal</th>
+                      <th className="text-right px-3 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Prijs</th>
+                      <th className="text-right px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Totaal</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-gray-100">
                     {lines.map((line, idx) => (
-                      <tr key={idx} className="border-b border-gray-100 last:border-0">
-                        <td className="px-4 py-3 text-gray-900">{line.omschrijving || line.description || 'Product/Dienst'}</td>
-                        <td className="px-2 py-3 text-center text-gray-600">{line.aantal || line.quantity || 1}</td>
-                        <td className="px-2 py-3 text-right text-gray-600">{formatCurrency(line.prijs || line.price || 0, currency)}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-gray-900">{formatCurrency(line.totaal || line.total || 0, currency)}</td>
+                      <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-5 py-4 text-gray-900 font-medium">{line.omschrijving || line.description || 'Product/Dienst'}</td>
+                        <td className="px-3 py-4 text-center text-gray-600">{line.aantal || line.quantity || 1}</td>
+                        <td className="px-3 py-4 text-right text-gray-600">{formatCurrency(line.prijs || line.price || 0, currency)}</td>
+                        <td className="px-5 py-4 text-right font-bold text-gray-900">{formatCurrency(line.totaal || line.total || 0, currency)}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               ) : (
-                <div className="px-4 py-8 text-center text-gray-400 text-sm">Geen regels beschikbaar</div>
+                <div className="px-5 py-12 text-center">
+                  <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                    <FileSpreadsheet className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-sm">Geen regels beschikbaar</p>
+                </div>
               )}
             </div>
 
-            {/* Betalingen */}
+            {/* Betalingen - Modern design */}
             {type === 'invoice' && (
-              <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                  <p className="text-sm font-semibold text-gray-700">Betalingen ({payments.length})</p>
+              <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100 flex items-center justify-between">
+                  <p className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                    <CreditCard className="w-4 h-4 text-emerald-600" />
+                    Betalingen
+                    <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-medium">
+                      {payments.length}
+                    </span>
+                  </p>
                   {item.status !== 'betaald' && (
                     <button 
-                      className="text-xs text-emerald-600 hover:underline flex items-center gap-1"
+                      className="text-xs bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition-colors"
                       onClick={() => onAction('payment', item)}
                     >
-                      <Plus className="w-3 h-3" /> Betaling toevoegen
+                      <Plus className="w-3.5 h-3.5" /> Toevoegen
                     </button>
                   )}
                 </div>
                 {payments.length > 0 ? (
                   <div className="divide-y divide-gray-100">
                     {payments.map((p, idx) => (
-                      <div key={idx} className="px-4 py-3 flex items-center justify-between hover:bg-gray-50">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center">
-                            <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      <div key={idx} className="px-5 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-100 to-green-100 flex items-center justify-center">
+                            <CheckCircle className="w-5 h-5 text-emerald-600" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{formatDate(p.datum || p.date)}</p>
-                            <p className="text-xs text-gray-500 capitalize">{p.betaalmethode || p.method || 'Bank'}</p>
+                            <p className="text-sm font-semibold text-gray-900">{formatDate(p.datum || p.date)}</p>
+                            <p className="text-xs text-gray-500 capitalize mt-0.5">{p.betaalmethode || p.method || 'Bank'}</p>
                           </div>
                         </div>
-                        <span className="text-sm font-bold text-emerald-600">{formatCurrency(p.bedrag || p.amount || 0, currency)}</span>
+                        <span className="text-base font-bold text-emerald-600">{formatCurrency(p.bedrag || p.amount || 0, currency)}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="px-4 py-8 text-center text-gray-400 text-sm">Nog geen betalingen ontvangen</div>
+                  <div className="px-5 py-12 text-center">
+                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-3">
+                      <CreditCard className="w-6 h-6 text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 text-sm">Nog geen betalingen ontvangen</p>
+                  </div>
                 )}
               </div>
             )}
 
-            {/* Opmerkingen - Editable */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-                <p className="text-sm font-semibold text-gray-700">Opmerkingen</p>
+            {/* Opmerkingen - Editable with modern design */}
+            <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+              <div className="px-5 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
+                <p className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                  <Edit className="w-4 h-4 text-gray-600" />
+                  Opmerkingen
+                </p>
               </div>
-              <div className="p-4">
+              <div className="p-5">
                 {isEditing ? (
                   <Textarea 
                     value={editData.opmerkingen} 
                     onChange={(e) => setEditData({...editData, opmerkingen: e.target.value})}
                     placeholder="Voeg opmerkingen toe..."
                     rows={3}
+                    className="resize-none border-gray-200 focus:border-emerald-300 focus:ring-emerald-200"
                   />
                 ) : (
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 leading-relaxed">
                     {item.opmerkingen || item.notes || 'Geen opmerkingen'}
                   </p>
                 )}
@@ -568,13 +658,20 @@ const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh 
           </div>
         </ScrollArea>
 
-        {/* Footer Actions */}
+        {/* Footer Actions - Modern design */}
         {type === 'invoice' && item.status !== 'betaald' && !isEditing && (
-          <div className="p-4 border-t border-gray-200 bg-gray-50 flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => onAction('payment', item)}>
-              <CreditCard className="w-4 h-4 mr-2" /> Betaling Registreren
+          <div className="p-5 border-t border-gray-100 bg-gradient-to-r from-gray-50 to-white flex gap-3">
+            <Button 
+              variant="outline" 
+              className="flex-1 h-11 bg-white hover:bg-gray-50 border-gray-200 shadow-sm hover:shadow transition-all"
+              onClick={() => onAction('payment', item)}
+            >
+              <CreditCard className="w-4 h-4 mr-2 text-emerald-600" /> Betaling Registreren
             </Button>
-            <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => onAction('markPaid', item)}>
+            <Button 
+              className="flex-1 h-11 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-md hover:shadow-lg transition-all"
+              onClick={() => onAction('markPaid', item)}
+            >
               <CheckCircle className="w-4 h-4 mr-2" /> Markeer als Betaald
             </Button>
           </div>
