@@ -25,6 +25,9 @@ import {
   MapPin
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../../components/ui/dropdown-menu';
+import InvoicePreview from '../../components/InvoicePreview';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const NieuweFactuurPage = () => {
   const navigate = useNavigate();
