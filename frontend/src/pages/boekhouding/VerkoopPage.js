@@ -638,9 +638,22 @@ const VerkoopPage = () => {
     setDetailOpen(true); 
   };
 
+  const refreshDetailItem = async () => {
+    await fetchData();
+    if (detailItem) {
+      try {
+        const res = await invoicesAPI.getOne(detailItem.id);
+        if (res.data) {
+          setDetailItem(res.data);
+        }
+      } catch {}
+    }
+  };
+
   const handleSaveInvoice = async (id, data) => {
     // This would call the API to update the invoice
     await invoicesAPI.update(id, data);
+    await refreshDetailItem();
   };
 
   const handleAction = async (action, item) => {
