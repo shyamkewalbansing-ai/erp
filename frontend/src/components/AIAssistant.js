@@ -121,6 +121,85 @@ const moduleCapabilities = {
       { label: '📊 Vandaag', message: 'Hoeveel verkocht vandaag?' },
       { label: '➕ Verkoop', message: 'Registreer een brandstofverkoop' },
     ]
+  },
+  boekhouding: {
+    name: 'Boekhouding',
+    capabilities: [
+      '• Verkoop- en inkoopfacturen',
+      '• Debiteuren en crediteuren',
+      '• BTW administratie',
+      '• Grootboek en journaalposten',
+      '• Bank & kas mutaties',
+      '• Voorraad beheer',
+      '• Rapportages en balansen',
+      '• Wisselkoersen (CME)'
+    ],
+    quickActions: [
+      { label: '📄 Facturen', message: 'Toon openstaande facturen' },
+      { label: '💰 BTW', message: 'Wat is mijn BTW saldo?' },
+      { label: '📊 Omzet', message: 'Toon omzet overzicht' },
+      { label: '🏦 Bank', message: 'Toon bank mutaties' },
+    ]
+  },
+  schuldbeheer: {
+    name: 'Schuldbeheer',
+    capabilities: [
+      '• Leningen beheren',
+      '• Schulden overzicht',
+      '• Aflossingsschema\'s',
+      '• Betalingsherinneringen',
+      '• Financiële planning'
+    ],
+    quickActions: [
+      { label: '💳 Schulden', message: 'Toon openstaande schulden' },
+      { label: '📅 Aflossing', message: 'Wanneer is mijn volgende aflossing?' },
+    ]
+  },
+  suribet: {
+    name: 'Suribet Retailer',
+    capabilities: [
+      '• Tickets verkopen',
+      '• Dagelijkse omzet bekijken',
+      '• Uitbetalingen beheren',
+      '• Transactie historie'
+    ],
+    quickActions: [
+      { label: '🎫 Tickets', message: 'Toon ticket verkopen' },
+      { label: '💰 Omzet', message: 'Wat is mijn omzet vandaag?' },
+    ]
+  },
+  chatbot: {
+    name: 'AI Chatbot',
+    capabilities: [
+      '• GPT-4 powered klantenservice',
+      '• Automatische antwoorden',
+      '• Kennisbank beheer',
+      '• Chat historie'
+    ],
+    quickActions: []
+  },
+  cms: {
+    name: 'Website CMS',
+    capabilities: [
+      '• Website content beheren',
+      '• Pagina\'s aanmaken en bewerken',
+      '• Media bibliotheek',
+      '• SEO instellingen'
+    ],
+    quickActions: []
+  },
+  rapportage: {
+    name: 'Rapportage',
+    capabilities: [
+      '• Bedrijfsanalytics',
+      '• Dashboards en grafieken',
+      '• Export naar PDF/Excel',
+      '• Automatische rapportages'
+    ],
+    quickActions: [
+      { label: '📊 Dashboard', message: 'Toon analytics dashboard' },
+      { label: '📈 Trends', message: 'Wat zijn de trends?' },
+    ]
   }
 };
 
