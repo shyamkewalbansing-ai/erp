@@ -64,7 +64,7 @@ const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'defa
         <span className={`text-sm font-medium ${isColored ? 'text-white/80' : 'text-gray-500'}`}>{title}</span>
         {Icon && (
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-            isColored ? 'bg-white/20' : 'bg-slate-100'
+            isColored ? 'bg-white/20' : 'bg-gray-100'
           }`}>
             <Icon className={`w-5 h-5 ${isColored ? 'text-white' : 'text-gray-600'}`} />
           </div>
@@ -159,7 +159,7 @@ const InvoiceCard = ({ invoice, formatAmount, formatDate, getStatusLabel }) => {
           invoice.status === 'betaald' ? 'bg-emerald-100 text-emerald-700' : 
           invoice.status === 'verzonden' ? 'bg-blue-100 text-blue-700' : 
           invoice.status === 'herinnering' ? 'bg-amber-100 text-amber-700' : 
-          'bg-slate-100 text-gray-600'
+          'bg-gray-100 text-gray-600'
         }`}>
           {getStatusLabel(invoice.status)}
         </span>
@@ -311,9 +311,9 @@ const DebiteurenPage = () => {
   }).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100" data-testid="debiteuren-page">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100" data-testid="debiteuren-page">
       {/* Top Header - Responsive */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+      <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="px-4 md:px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
@@ -571,7 +571,7 @@ const DebiteurenPage = () => {
         {/* Tabs - Responsive */}
         <Tabs defaultValue="customers" className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <TabsList className="bg-white border border-slate-200 rounded-xl p-1 w-full sm:w-auto">
+            <TabsList className="bg-white border border-gray-200 rounded-xl p-1 w-full sm:w-auto">
               <TabsTrigger 
                 value="customers" 
                 className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700 flex-1 sm:flex-none"
@@ -596,7 +596,7 @@ const DebiteurenPage = () => {
             {/* Search Bar */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder="Zoek op naam, nummer of e-mail..."
                   value={searchTerm}
@@ -613,7 +613,7 @@ const DebiteurenPage = () => {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                      <TableRow className="bg-gray-50/80 hover:bg-gray-50/80">
                         <TableHead className="w-24 text-xs font-semibold text-gray-600">Nr.</TableHead>
                         <TableHead className="text-xs font-semibold text-gray-600">Naam</TableHead>
                         <TableHead className="text-xs font-semibold text-gray-600">Plaats</TableHead>
@@ -664,7 +664,7 @@ const DebiteurenPage = () => {
                       ) : (
                         <TableRow>
                           <TableCell colSpan={7} className="text-center py-16">
-                            <Users className="w-16 h-16 mx-auto mb-4 text-slate-200" />
+                            <Users className="w-16 h-16 mx-auto mb-4 text-gray-200" />
                             <p className="text-lg font-semibold text-gray-700 mb-2">Geen klanten gevonden</p>
                             <p className="text-sm text-gray-500 mb-6">Voeg uw eerste debiteur toe om te beginnen.</p>
                             <Button onClick={() => setShowCustomerDialog(true)} className="bg-emerald-600 hover:bg-emerald-700 rounded-xl">
@@ -700,7 +700,7 @@ const DebiteurenPage = () => {
                 ))
               ) : (
                 <div className="text-center py-12 bg-white rounded-xl">
-                  <Users className="w-16 h-16 mx-auto mb-4 text-slate-200" />
+                  <Users className="w-16 h-16 mx-auto mb-4 text-gray-200" />
                   <p className="text-lg font-semibold text-gray-700 mb-2">Geen klanten</p>
                   <p className="text-sm text-gray-500 mb-4">Voeg uw eerste debiteur toe</p>
                   <Button onClick={() => setShowCustomerDialog(true)} className="bg-emerald-600 rounded-xl">
@@ -717,7 +717,7 @@ const DebiteurenPage = () => {
             {/* Filter Bar */}
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
                 <Input
                   placeholder="Zoek factuur..."
                   value={searchTerm}
@@ -746,7 +746,7 @@ const DebiteurenPage = () => {
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="bg-slate-50/80 hover:bg-slate-50/80">
+                      <TableRow className="bg-gray-50/80 hover:bg-gray-50/80">
                         <TableHead className="w-28 text-xs font-semibold text-gray-600">Nummer</TableHead>
                         <TableHead className="w-28 text-xs font-semibold text-gray-600">Datum</TableHead>
                         <TableHead className="text-xs font-semibold text-gray-600">Debiteur</TableHead>
@@ -793,7 +793,7 @@ const DebiteurenPage = () => {
                                   invoice.status === 'betaald' ? 'bg-emerald-100 text-emerald-700' : 
                                   invoice.status === 'verzonden' ? 'bg-blue-100 text-blue-700' : 
                                   invoice.status === 'herinnering' ? 'bg-amber-100 text-amber-700' : 
-                                  'bg-slate-100 text-gray-600'
+                                  'bg-gray-100 text-gray-600'
                                 }`}>
                                   {getStatusLabel(invoice.status)}
                                 </span>
@@ -814,7 +814,7 @@ const DebiteurenPage = () => {
                       ) : (
                         <TableRow>
                           <TableCell colSpan={7} className="text-center py-16">
-                            <FileText className="w-16 h-16 mx-auto mb-4 text-slate-200" />
+                            <FileText className="w-16 h-16 mx-auto mb-4 text-gray-200" />
                             <p className="text-lg font-semibold text-gray-700 mb-2">Geen facturen gevonden</p>
                             <p className="text-sm text-gray-500">Pas de filters aan of maak een nieuwe factuur aan.</p>
                           </TableCell>
@@ -848,7 +848,7 @@ const DebiteurenPage = () => {
                 ))
               ) : (
                 <div className="text-center py-12 bg-white rounded-xl">
-                  <FileText className="w-16 h-16 mx-auto mb-4 text-slate-200" />
+                  <FileText className="w-16 h-16 mx-auto mb-4 text-gray-200" />
                   <p className="text-lg font-semibold text-gray-700 mb-2">Geen facturen</p>
                   <p className="text-sm text-gray-500">Pas de filters aan</p>
                 </div>

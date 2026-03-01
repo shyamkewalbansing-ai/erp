@@ -565,7 +565,7 @@ const VoorraadPage = () => {
                         <img 
                           src={newProduct.image_url} 
                           alt="Product" 
-                          className="w-24 h-24 object-cover rounded-lg border border-slate-200"
+                          className="w-24 h-24 object-cover rounded-lg border border-gray-200"
                         />
                         <button
                           type="button"
@@ -576,7 +576,7 @@ const VoorraadPage = () => {
                         </button>
                       </div>
                     ) : (
-                      <label className="w-24 h-24 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                      <label className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
                         {uploadingImage ? (
                           <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
                         ) : (
@@ -831,7 +831,7 @@ const VoorraadPage = () => {
               </DialogHeader>
               <div className="space-y-4 py-4">
                 {/* Camera View */}
-                <div className="relative bg-slate-900 rounded-lg overflow-hidden" style={{ minHeight: '250px' }}>
+                <div className="relative bg-gray-900 rounded-lg overflow-hidden" style={{ minHeight: '250px' }}>
                   <div id="barcode-scanner-voorraad" className="w-full" />
                   
                   {/* Scanning overlay */}
@@ -850,7 +850,7 @@ const VoorraadPage = () => {
                   
                   {/* Camera Error */}
                   {cameraError && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-900">
+                    <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
                       <div className="text-center p-4">
                         <CameraOff className="w-12 h-12 text-red-400 mx-auto mb-3" />
                         <p className="text-white text-sm mb-3">{cameraError}</p>
@@ -858,7 +858,7 @@ const VoorraadPage = () => {
                           onClick={startBarcodeScanner} 
                           variant="outline" 
                           size="sm"
-                          className="text-white border-white hover:bg-slate-800"
+                          className="text-white border-white hover:bg-gray-800"
                         >
                           Opnieuw proberen
                         </Button>
@@ -979,7 +979,7 @@ const VoorraadPage = () => {
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base font-semibold text-gray-900">Producten</CardTitle>
                 <div className="relative w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
                   <Input
                     placeholder="Zoeken..."
                     value={searchTerm}
@@ -1025,10 +1025,10 @@ const VoorraadPage = () => {
                           <img 
                             src={fotoUrl.startsWith('/') ? `${API_URL}${fotoUrl}` : fotoUrl} 
                             alt={productName} 
-                            className="w-10 h-10 object-cover rounded-md border border-slate-200"
+                            className="w-10 h-10 object-cover rounded-md border border-gray-200"
                           />
                         ) : (
-                          <div className="w-10 h-10 bg-slate-100 rounded-md flex items-center justify-center">
+                          <div className="w-10 h-10 bg-gray-100 rounded-md flex items-center justify-center">
                             <Package className="w-5 h-5 text-gray-400" />
                           </div>
                         )}
@@ -1047,7 +1047,7 @@ const VoorraadPage = () => {
                             <span className="font-mono text-xs">{productBarcode}</span>
                           </span>
                         ) : (
-                          <span className="text-slate-300">-</span>
+                          <span className="text-gray-300">-</span>
                         )}
                       </TableCell>
                       <TableCell className="text-sm text-gray-500">{unit}</TableCell>
@@ -1065,7 +1065,7 @@ const VoorraadPage = () => {
                             variant="ghost" 
                             size="sm" 
                             onClick={() => handleEditProduct(product)}
-                            className="h-8 w-8 p-0 hover:bg-slate-100"
+                            className="h-8 w-8 p-0 hover:bg-gray-100"
                             data-testid={`edit-product-${product.code}`}
                           >
                             <Pencil className="w-4 h-4 text-gray-500" />
@@ -1109,7 +1109,7 @@ const VoorraadPage = () => {
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-slate-50">
+                  <TableRow className="bg-gray-50">
                     <TableHead className="w-28 text-xs font-medium text-gray-500">Datum</TableHead>
                     <TableHead className="text-xs font-medium text-gray-500">Product</TableHead>
                     <TableHead className="w-28 text-xs font-medium text-gray-500">Type</TableHead>
@@ -1135,7 +1135,7 @@ const VoorraadPage = () => {
                         case 'correctie_min': return { label: 'Correctie -', color: 'bg-orange-100 text-orange-700', sign: '-' };
                         case 'in': return { label: 'Inkomend', color: 'bg-green-100 text-green-700', sign: '+' };
                         case 'out': return { label: 'Uitgaand', color: 'bg-red-100 text-red-700', sign: '-' };
-                        default: return { label: type, color: 'bg-slate-100 text-gray-700', sign: '' };
+                        default: return { label: type, color: 'bg-gray-100 text-gray-700', sign: '' };
                       }
                     };
                     const typeInfo = getTypeDisplay(movementType);
