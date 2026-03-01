@@ -61,7 +61,6 @@ def generate_invoice_pdf(
     accent_color = settings.get('factuur_primaire_kleur', '#22c55e')  # Groene accent
     text_dark = '#1e293b'  # Donkere tekst
     text_light = '#64748b'  # Lichte tekst
-    bg_light = '#f8fafc'  # Lichte achtergrond
     
     # Setup document
     doc = SimpleDocTemplate(
