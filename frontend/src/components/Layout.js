@@ -543,7 +543,7 @@ export default function Layout() {
           {/* Customer navigation - only for non-superadmin users with active add-ons */}
           {!isSuperAdmin() && addonsLoaded && (
             <>
-              {/* Dynamic Module Sections - First active module shows full menu, rest are quicklinks */}
+              {/* Dynamic Module Sections - Current module shows full menu, rest are quicklinks */}
               {(() => {
                 const orderedModules = getOrderedModules();
                 const activeModules = orderedModules.filter(moduleSlug => {
@@ -551,10 +551,30 @@ export default function Layout() {
                   return config && (config.alwaysShow || hasAddon(moduleSlug));
                 });
                 
-                // Track if we've rendered the first (expanded) module
-                let firstModuleRendered = false;
+                // Determine which module is currently active based on URL
+                const currentPath = location.pathname;
+                let currentModuleSlug = null;
                 
-                return orderedModules.map((moduleSlug) => {
+                // Check which module matches the current URL
+                for (const moduleSlug of activeModules) {
+                  const config = moduleConfigs[moduleSlug];
+                  if (config) {
+                    const moduleMatches = config.items.some(item => 
+                      currentPath.startsWith(item.to) || currentPath === item.to
+                    );
+                    if (moduleMatches) {
+                      currentModuleSlug = moduleSlug;
+                      break;
+                    }
+                  }
+                }
+                
+                // If no module matches current URL, use the first active module
+                if (!currentModuleSlug && activeModules.length > 0) {
+                  currentModuleSlug = activeModules[0];
+                }
+                
+                return orderedModules.map((moduleSlug, index) => {
                   const config = moduleConfigs[moduleSlug];
                   if (!config) return null;
                   
@@ -563,12 +583,11 @@ export default function Layout() {
                   if (!shouldShow) return null;
                   
                   const ModuleIcon = config.icon;
-                  const isFirstModule = !firstModuleRendered;
-                  
-                  // Mark first module as rendered
-                  if (isFirstModule) {
-                    firstModuleRendered = true;
-                  }
+                  const isCurrentModule = moduleSlug === currentModuleSlug;
+                  const isFirstVisible = index === 0 || orderedModules.slice(0, index).every(slug => {
+                    const c = moduleConfigs[slug];
+                    return !c || (!c.alwaysShow && !hasAddon(slug));
+                  });
                   
                   // Filter items based on search
                   const searchLower = sidebarSearch.toLowerCase();
@@ -590,16 +609,16 @@ export default function Layout() {
                     item.label === 'Dashboard' || item.label === 'Spa Dashboard' || item.label === 'HRM Dashboard' || item.label === 'Auto Dashboard'
                   ) || config.items[0];
                   
-                  // QUICKLINK: If not the first module, show only as quicklink
-                  if (!isFirstModule && !sidebarSearch) {
+                  // QUICKLINK: If not the current module (and not searching), show only as quicklink
+                  if (!isCurrentModule && !sidebarSearch) {
                     return (
                       <div key={moduleSlug} className="mb-1">
-                        {!isCollapsed && <div className="mt-3 mb-2 mx-3 border-t border-slate-200 dark:border-slate-700" />}
-                        {isCollapsed && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
+                        {!isCollapsed && !isFirstVisible && <div className="mt-3 mb-2 mx-3 border-t border-slate-200 dark:border-slate-700" />}
+                        {isCollapsed && !isFirstVisible && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
                         <NavLink
                           to={dashboardItem.to}
                           onClick={() => setSidebarOpen(false)}
-                          className={({ isActive }) => `nav-item group relative font-medium ${isActive || location.pathname.startsWith(dashboardItem.to.split('/').slice(0, 4).join('/')) ? 'active' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
+                          className={({ isActive }) => `nav-item group relative font-medium ${isActive ? 'active' : ''} ${!isSubscriptionActive && !config.alwaysShow ? 'opacity-50 pointer-events-none' : ''} ${isCollapsed ? 'justify-center' : ''}`}
                           data-testid={`nav-quicklink-${moduleSlug}`}
                         >
                           <ModuleIcon className="w-5 h-5 flex-shrink-0" />
@@ -621,11 +640,11 @@ export default function Layout() {
                     );
                   }
                   
-                  // FULL MENU: First module shows all items
+                  // FULL MENU: Current module shows all items
                   return (
                     <div key={moduleSlug} className="mb-2">
-                      {isCollapsed && !isFirstModule && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
-                      {!isCollapsed && !isFirstModule && !sidebarSearch && <div className="mt-3 mb-2 mx-3 border-t border-slate-200 dark:border-slate-700" />}
+                      {isCollapsed && !isFirstVisible && <div className="mt-3 mb-3 mx-2 border-t border-primary/10" />}
+                      {!isCollapsed && !isFirstVisible && !sidebarSearch && <div className="mt-3 mb-2 mx-3 border-t border-slate-200 dark:border-slate-700" />}
                       {filteredItems.map((item) => {
                         // Check if this is a Dashboard item - show module name instead
                         const isDashboard = item.label === 'Dashboard' || item.label === 'Spa Dashboard';
