@@ -4,19 +4,16 @@ import { dashboardAPI, exchangeRatesAPI } from '../../lib/boekhoudingApi';
 import { formatCurrency, formatNumber } from '../../lib/utils';
 import { Card, CardContent } from '../../components/ui/card';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Button } from '../../components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import {
-  Filter,
-  ArrowUpDown,
-  RefreshCw,
-  MoreVertical,
-  Calendar,
-  Download,
-  Maximize2,
-  Settings,
-  Bell,
-  Search
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Truck,
+  FileText,
+  Landmark,
+  DollarSign,
+  Euro,
+  Receipt
 } from 'lucide-react';
 import {
   LineChart,
@@ -27,58 +24,26 @@ import {
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
-  Tooltip,
-  Legend,
-  ComposedChart,
-  Area
+  Tooltip
 } from 'recharts';
 
-// KPI Card - Exact match to reference design
-const KPICard = ({ title, value, vsLY, vsBudget, currency = '', suffix = '' }) => {
-  const formatValue = (val) => {
-    if (typeof val === 'number') {
-      if (val >= 1000000) {
-        return `${(val / 1000000).toFixed(3).replace('.', '.')}`;
-      }
-      if (val >= 1000) {
-        return `${(val / 1000).toFixed(0)}`;
-      }
-      return val.toString();
-    }
-    return val;
-  };
-
+// Stat Card - Icon on RIGHT side like reference
+const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, iconColor }) => {
   return (
-    <Card className="bg-white border border-gray-100 rounded-xl shadow-sm hover:shadow-md transition-all">
+    <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
       <CardContent className="p-5">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-sm font-medium text-gray-500 uppercase tracking-wide">{title}</span>
-          <span className="text-xs text-gray-400 font-medium">YTD</span>
-        </div>
-        
-        {/* Main Value */}
-        <div className="mb-4">
-          <span className="text-3xl font-bold text-[#0ea5e9]">
-            {formatValue(value)}{suffix}
-          </span>
-          {currency && <span className="text-lg font-medium text-[#0ea5e9] ml-1">{currency}</span>}
-        </div>
-        
-        {/* VS LY and VS BUDGET */}
-        <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
+        <div className="flex items-start justify-between">
+          {/* Content - LEFT */}
           <div className="flex-1">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">VS LY</p>
-            <p className={`text-sm font-bold ${vsLY >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-              {vsLY >= 0 ? '+' : ''}{vsLY}%
-            </p>
+            <p className="text-sm text-gray-500 font-medium">{title}</p>
+            <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+            {subtitle && (
+              <p className={`text-xs mt-1 ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
+            )}
           </div>
-          <div className="w-px h-8 bg-gray-100"></div>
-          <div className="flex-1">
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">VS BUDGET</p>
-            <p className={`text-sm font-bold ${vsBudget >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-              {vsBudget >= 0 ? '+' : ''}{vsBudget}%
-            </p>
+          {/* Icon - RIGHT */}
+          <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center`}>
+            <Icon className={`w-6 h-6 ${iconColor}`} />
           </div>
         </div>
       </CardContent>
@@ -86,76 +51,35 @@ const KPICard = ({ title, value, vsLY, vsBudget, currency = '', suffix = '' }) =
   );
 };
 
+// Bank Card - Simpler design
+const BankCard = ({ title, value, icon: Icon }) => {
+  return (
+    <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+      <CardContent className="p-5">
+        <div className="flex items-center gap-2 mb-3">
+          <Icon className="w-4 h-4 text-gray-400" />
+          <span className="text-sm text-gray-500">{title}</span>
+        </div>
+        <p className="text-2xl font-bold text-gray-900">{value}</p>
+      </CardContent>
+    </Card>
+  );
+};
+
 // Loading Card
-const LoadingKPICard = () => (
-  <Card className="bg-white border border-gray-100 rounded-xl shadow-sm">
+const LoadingStatCard = () => (
+  <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
     <CardContent className="p-5">
-      <Skeleton className="h-4 w-20 mb-2" />
-      <Skeleton className="h-10 w-32 mb-4" />
-      <div className="flex gap-4 pt-3 border-t border-gray-100">
+      <div className="flex items-start justify-between">
         <div className="flex-1">
-          <Skeleton className="h-3 w-12 mb-1" />
-          <Skeleton className="h-4 w-10" />
+          <Skeleton className="h-4 w-20 mb-3" />
+          <Skeleton className="h-8 w-28 mb-2" />
+          <Skeleton className="h-3 w-16" />
         </div>
-        <div className="flex-1">
-          <Skeleton className="h-3 w-12 mb-1" />
-          <Skeleton className="h-4 w-10" />
-        </div>
+        <Skeleton className="w-12 h-12 rounded-xl" />
       </div>
     </CardContent>
   </Card>
-);
-
-// Chart Header with controls
-const ChartHeader = ({ title, showDropdown = false, dropdownValue, onDropdownChange }) => (
-  <div className="flex items-center justify-between mb-4">
-    <div className="flex items-center gap-3">
-      <h3 className="text-base font-semibold text-gray-800">{title}</h3>
-      {showDropdown && (
-        <Select value={dropdownValue} onValueChange={onDropdownChange}>
-          <SelectTrigger className="w-[180px] h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="full_year">Accounting full year</SelectItem>
-            <SelectItem value="q1">Q1 2024</SelectItem>
-            <SelectItem value="q2">Q2 2024</SelectItem>
-            <SelectItem value="q3">Q3 2024</SelectItem>
-            <SelectItem value="q4">Q4 2024</SelectItem>
-          </SelectContent>
-        </Select>
-      )}
-    </div>
-    <div className="flex items-center gap-1">
-      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-        <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
-      </Button>
-      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-        <Download className="w-3.5 h-3.5 text-gray-400" />
-      </Button>
-      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-        <Maximize2 className="w-3.5 h-3.5 text-gray-400" />
-      </Button>
-      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-        <Settings className="w-3.5 h-3.5 text-gray-400" />
-      </Button>
-    </div>
-  </div>
-);
-
-// Custom Legend
-const CustomLegend = ({ items }) => (
-  <div className="flex items-center justify-end gap-4 mb-4">
-    {items.map((item, index) => (
-      <div key={index} className="flex items-center gap-2">
-        <div 
-          className={`w-3 h-3 rounded-sm`} 
-          style={{ backgroundColor: item.color }}
-        />
-        <span className="text-xs text-gray-500">{item.label}</span>
-      </div>
-    ))}
-  </div>
 );
 
 const DashboardPage = () => {
@@ -163,13 +87,8 @@ const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [rates, setRates] = useState(null);
-  const [selectedPeriod, setSelectedPeriod] = useState('full_year');
-  const [dateRange, setDateRange] = useState('Sep.10 2024 - Dec 16 2024');
-
-  // Chart data
-  const [ebitdaData, setEbitdaData] = useState([]);
-  const [forecastData, setForecastData] = useState([]);
   const [cashflowData, setCashflowData] = useState([]);
+  const [ouderdomData, setOuderdomData] = useState([]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -187,41 +106,29 @@ const DashboardPage = () => {
       setDashboardData(dashRes.data || {});
       setRates(ratesRes.data || {});
       
-      // EBITDA & Gross Margin Forecasts data
-      setEbitdaData([
-        { month: 'JAN 2024', revenue: 8000000, ebitda: 4000000, ebitdaCum: 4000000, margin: 48 },
-        { month: 'FEB 2024', revenue: 5000000, ebitda: 3000000, ebitdaCum: 7000000, margin: 47 },
-        { month: 'MAR 2024', revenue: 6000000, ebitda: 4500000, ebitdaCum: 11500000, margin: 48 },
-        { month: 'APR 2024', revenue: 18000000, ebitda: 12000000, ebitdaCum: 23500000, margin: 65 },
-        { month: 'MAY 2024', revenue: 22000000, ebitda: 15000000, ebitdaCum: 38500000, margin: 68 },
-        { month: 'JUN 2024', revenue: 35000000, ebitda: 25000000, ebitdaCum: 63500000, margin: 72 },
-        { month: 'JUL 2024', revenue: 18000000, ebitda: 12000000, ebitdaCum: 75500000, margin: 65 },
-        { month: 'AUG 2024', revenue: 48000000, ebitda: 35000000, ebitdaCum: 110500000, margin: 75 },
-        { month: 'SEP 2024', revenue: 55000000, ebitda: 40000000, ebitdaCum: 150500000, margin: 78 },
-        { month: 'OCT 2024', revenue: 45000000, ebitda: 32000000, ebitdaCum: 182500000, margin: 72 }
-      ]);
+      // Cashflow data with two lines (omzet and kosten)
+      if (chartsRes.data?.omzet_kosten) {
+        setCashflowData(chartsRes.data.omzet_kosten.map(item => ({
+          name: item.maand,
+          omzet: item.omzet || 0,
+          kosten: item.kosten || 0
+        })));
+      } else {
+        setCashflowData([
+          { name: 'Jan', omzet: 35000, kosten: 30000 },
+          { name: 'Feb', omzet: 55000, kosten: 40000 },
+          { name: 'Mrt', omzet: 60000, kosten: 45000 },
+          { name: 'Apr', omzet: 58000, kosten: 50000 },
+          { name: 'Mei', omzet: 62000, kosten: 48000 },
+          { name: 'Jun', omzet: 70000, kosten: 52000 }
+        ]);
+      }
 
-      // Forecast Financial Performance data
-      setForecastData([
-        { month: 'Jan', cy: 95000000, forecast: 100000000, budget: 85000000, y1: 65000000 },
-        { month: 'Feb', cy: 65000000, forecast: 70000000, budget: 50000000, y1: 55000000 },
-        { month: 'Mar', cy: 50000000, forecast: 55000000, budget: 45000000, y1: 48000000 },
-        { month: 'Apr', cy: 35000000, forecast: 40000000, budget: 30000000, y1: 32000000 },
-        { month: 'May', cy: 25000000, forecast: 28000000, budget: 22000000, y1: 20000000 }
-      ]);
-
-      // Cashflow data
-      setCashflowData([
-        { month: 'Jan', collection: 95000000, balance: 100000000, trend: 98 },
-        { month: 'Feb', collection: 85000000, balance: 90000000, trend: 92 },
-        { month: 'Mar', collection: 100000000, balance: 105000000, trend: 102 },
-        { month: 'Apr', collection: 80000000, balance: 85000000, trend: 88 },
-        { month: 'May', collection: 70000000, balance: 75000000, trend: 78 },
-        { month: 'Jun', collection: 95000000, balance: 100000000, trend: 95 },
-        { month: 'Jul', collection: 110000000, balance: 115000000, trend: 108 },
-        { month: 'Aug', collection: 105000000, balance: 110000000, trend: 105 },
-        { month: 'Sep', collection: 90000000, balance: 95000000, trend: 92 },
-        { month: 'Oct', collection: 115000000, balance: 120000000, trend: 112 }
+      // Ouderdom data for bar chart
+      setOuderdomData([
+        { name: '0-30', value: 25000 },
+        { name: '31-60', value: 15000 },
+        { name: '61-90', value: 8000 }
       ]);
     } catch (error) {
       console.error('Dashboard error:', error);
@@ -230,303 +137,266 @@ const DashboardPage = () => {
     }
   };
 
-  // Extract values for KPI cards
-  const omzet = dashboardData?.omzet?.deze_maand || 1459000;
+  // Extract values
+  const omzet = dashboardData?.omzet?.deze_maand || 0;
   const kosten = dashboardData?.kosten?.deze_maand || 0;
   const winst = dashboardData?.winst?.deze_maand || (omzet - kosten);
-  const ebitdaPercent = 26;
-  const grossMargin = 78;
-  const fixedCosts = dashboardData?.kosten?.vast || 2882000;
+  const debiteuren = dashboardData?.openstaand?.debiteuren || 0;
+  const debiteurenKlanten = dashboardData?.openstaand?.debiteuren_count || 0;
+  const crediteuren = dashboardData?.openstaand?.crediteuren || 0;
+  const crediteurenLeveranciers = dashboardData?.openstaand?.crediteuren_count || 0;
+  const btwTeBetalen = dashboardData?.btw?.te_betalen || 0;
+  const btwTeVorderen = dashboardData?.btw?.te_vorderen || 0;
+  const bankSRD = dashboardData?.liquiditeit?.bank_srd || 0;
+  const bankUSD = dashboardData?.liquiditeit?.bank_usd || 0;
+  const bankEUR = dashboardData?.liquiditeit?.bank_eur || 0;
+  const openstaandeFacturen = dashboardData?.openstaand?.facturen_count || 0;
+  const vervallenFacturen = dashboardData?.openstaand?.vervallen_count || 0;
+
+  const eurSrdRate = rates?.EUR_SRD?.koers || 44.50;
+  const usdSrdRate = rates?.USD_SRD?.koers || 36.50;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]" data-testid="boekhouding-dashboard">
-      {/* Top Header Bar */}
+    <div className="min-h-screen bg-gray-50" data-testid="boekhouding-dashboard">
+      {/* Header */}
       <div className="bg-white border-b border-gray-100">
-        <div className="px-6 py-4 flex items-center justify-between">
-          {/* Left - Title */}
-          <h1 className="text-xl font-semibold text-gray-800">Trend & Forecast</h1>
-          
-          {/* Right - User controls */}
+        <div className="px-8 py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-500 mt-1">Welkom terug! Hier is uw financiële overzicht.</p>
+          </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-              <Bell className="w-5 h-5 text-gray-500" />
-            </Button>
-            <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-              <Search className="w-5 h-5 text-gray-500" />
-            </Button>
-            <div className="w-9 h-9 rounded-full bg-[#0ea5e9] flex items-center justify-center">
-              <span className="text-white text-sm font-medium">U</span>
+            <div className="bg-gray-50 rounded-lg px-4 py-2 border border-gray-200">
+              <span className="text-sm text-gray-500">USD/SRD: </span>
+              <span className="text-sm font-semibold text-gray-900">{formatNumber(usdSrdRate, 2)}</span>
             </div>
+            <div className="bg-gray-50 rounded-lg px-4 py-2 border border-gray-200">
+              <span className="text-sm text-gray-500">EUR/SRD: </span>
+              <span className="text-sm font-semibold text-gray-900">{formatNumber(eurSrdRate, 2)}</span>
+            </div>
+            <button 
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors"
+              onClick={() => navigate('/app/boekhouding/pos')}
+            >
+              <Receipt className="w-4 h-4" />
+              Point of Sale
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="bg-white border-b border-gray-100 px-6 py-3">
-        <div className="flex items-center justify-between">
-          {/* Left filters */}
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="h-8 text-xs text-gray-600">
-              <Filter className="w-3.5 h-3.5 mr-2" />
-              Filter tasks
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs text-gray-600">
-              <ArrowUpDown className="w-3.5 h-3.5 mr-2" />
-              Sort tasks
-            </Button>
-            <span className="text-sm text-gray-500 ml-2">Ma 12:45 | 2024</span>
-          </div>
-          
-          {/* Right controls */}
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="h-8 text-xs text-gray-600">
-              <Calendar className="w-3.5 h-3.5 mr-2" />
-              {dateRange}
-            </Button>
-            <Button variant="outline" size="sm" className="h-8 text-xs text-gray-600">
-              <RefreshCw className="w-3.5 h-3.5 mr-2" />
-              Refresh
-            </Button>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <MoreVertical className="w-4 h-4 text-gray-400" />
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      <div className="p-6">
-        {/* KPI Cards Row */}
-        <div className="grid grid-cols-5 gap-4 mb-6">
+      <div className="p-8">
+        {/* Row 1: Omzet, Kosten, Winst, Openstaande Facturen - 4 columns */}
+        <div className="grid grid-cols-4 gap-5 mb-5">
           {loading ? (
             <>
-              <LoadingKPICard />
-              <LoadingKPICard />
-              <LoadingKPICard />
-              <LoadingKPICard />
-              <LoadingKPICard />
+              <LoadingStatCard />
+              <LoadingStatCard />
+              <LoadingStatCard />
+              <LoadingStatCard />
             </>
           ) : (
             <>
-              <KPICard
-                title="EBITDA"
-                value="1.459.000"
-                currency="€"
-                vsLY={109}
-                vsBudget={22}
+              <StatCard
+                title="Omzet"
+                value={formatCurrency(omzet, 'SRD')}
+                subtitle="↗ +12% Deze periode"
+                subtitleColor="text-emerald-600"
+                icon={TrendingUp}
+                iconBg="bg-emerald-50"
+                iconColor="text-emerald-500"
               />
-              <KPICard
-                title="EBITDA%"
-                value={ebitdaPercent}
-                suffix="%"
-                vsLY={58}
-                vsBudget={37}
+              <StatCard
+                title="Kosten"
+                value={formatCurrency(kosten, 'SRD')}
+                subtitle="Deze periode"
+                icon={TrendingDown}
+                iconBg="bg-red-50"
+                iconColor="text-red-500"
               />
-              <KPICard
-                title="GROSS MARGIN"
-                value={grossMargin}
-                suffix="%"
-                vsLY={96}
-                vsBudget={82}
+              <StatCard
+                title="Winst"
+                value={formatCurrency(winst, 'SRD')}
+                subtitle={winst < 0 ? "↘ Negatief Netto resultaat" : "Netto resultaat"}
+                subtitleColor={winst < 0 ? "text-red-500" : "text-gray-400"}
+                icon={Receipt}
+                iconBg="bg-rose-50"
+                iconColor="text-rose-500"
               />
-              <KPICard
-                title="GROSS MARGIN%"
-                value={grossMargin}
-                suffix="%"
-                vsLY={96}
-                vsBudget={82}
-              />
-              <KPICard
-                title="FIXED COSTS"
-                value="2.882.000"
-                currency="€"
-                vsLY={269}
-                vsBudget={119}
+              <StatCard
+                title="Openstaande Facturen"
+                value={openstaandeFacturen.toString()}
+                subtitle={`${vervallenFacturen} vervallen`}
+                icon={FileText}
+                iconBg="bg-blue-50"
+                iconColor="text-blue-500"
               />
             </>
           )}
         </div>
 
-        {/* Main Chart - EBITDA & Gross Margin Forecasts */}
-        <Card className="bg-white border border-gray-100 rounded-xl shadow-sm mb-6">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-base font-semibold text-gray-800">EBITDA & Gross Margin Forcasts</h3>
-              <CustomLegend items={[
-                { color: '#1e3a5f', label: 'REVENUE' },
-                { color: '#0ea5e9', label: 'EBITDA' },
-                { color: '#64748b', label: 'EBITDA CUMULATED' },
-                { color: '#1e293b', label: 'GROSS MARGIN PERCENTAGE' }
-              ]} />
-            </div>
-            <div className="h-72">
-              {loading ? (
-                <Skeleton className="w-full h-full" />
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={ebitdaData}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                    <XAxis 
-                      dataKey="month" 
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: '#64748b', fontSize: 11 }}
-                    />
-                    <YAxis 
-                      yAxisId="left"
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: '#64748b', fontSize: 11 }}
-                      tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`}
-                    />
-                    <YAxis 
-                      yAxisId="right"
-                      orientation="right"
-                      axisLine={false} 
-                      tickLine={false}
-                      tick={{ fill: '#64748b', fontSize: 11 }}
-                      tickFormatter={(v) => `${v}%`}
-                      domain={[0, 100]}
-                    />
-                    <Tooltip 
-                      formatter={(value, name) => {
-                        if (name === 'margin') return [`${value}%`, 'Gross Margin'];
-                        return [`€${(value/1000000).toFixed(1)}M`, name];
-                      }}
-                      contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: 12 }}
-                    />
-                    <Bar 
-                      yAxisId="left"
-                      dataKey="revenue" 
-                      fill="#1e3a5f" 
-                      radius={[2, 2, 0, 0]}
-                      barSize={20}
-                      name="Revenue"
-                    />
-                    <Bar 
-                      yAxisId="left"
-                      dataKey="ebitda" 
-                      fill="#0ea5e9" 
-                      radius={[2, 2, 0, 0]}
-                      barSize={20}
-                      name="EBITDA"
-                    />
-                    <Line 
-                      yAxisId="right"
-                      type="monotone" 
-                      dataKey="margin" 
-                      stroke="#1e293b" 
-                      strokeWidth={2}
-                      dot={{ fill: '#0ea5e9', r: 4, strokeWidth: 2, stroke: '#0ea5e9' }}
-                      name="margin"
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Bottom Charts Row */}
-        <div className="grid grid-cols-2 gap-6">
-          {/* Forecast Financial Performance */}
-          <Card className="bg-white border border-gray-100 rounded-xl shadow-sm">
-            <CardContent className="p-5">
-              <ChartHeader 
-                title="Forcast Financial Performance" 
-                showDropdown={true}
-                dropdownValue={selectedPeriod}
-                onDropdownChange={setSelectedPeriod}
+        {/* Row 2: Debiteuren, Crediteuren, BTW te betalen, BTW te vorderen - 4 columns */}
+        <div className="grid grid-cols-4 gap-5 mb-5">
+          {loading ? (
+            <>
+              <LoadingStatCard />
+              <LoadingStatCard />
+              <LoadingStatCard />
+              <LoadingStatCard />
+            </>
+          ) : (
+            <>
+              <StatCard
+                title="Debiteuren"
+                value={formatCurrency(debiteuren, 'SRD')}
+                subtitle={`${debiteurenKlanten} klanten`}
+                icon={Users}
+                iconBg="bg-blue-50"
+                iconColor="text-blue-500"
               />
-              <CustomLegend items={[
-                { color: '#1e3a5f', label: 'CY' },
-                { color: '#0ea5e9', label: 'PREVIOUS FORCAST' },
-                { color: '#94a3b8', label: 'BUDGET' },
-                { color: '#cbd5e1', label: 'Y-1' }
-              ]} />
-              <div className="h-56">
+              <StatCard
+                title="Crediteuren"
+                value={formatCurrency(crediteuren, 'SRD')}
+                subtitle={`${crediteurenLeveranciers} leveranciers`}
+                icon={Truck}
+                iconBg="bg-amber-50"
+                iconColor="text-amber-500"
+              />
+              <StatCard
+                title="BTW te betalen"
+                value={formatCurrency(btwTeBetalen, 'SRD')}
+                subtitle="Huidige periode"
+                icon={FileText}
+                iconBg="bg-emerald-50"
+                iconColor="text-emerald-500"
+              />
+              <StatCard
+                title="BTW te vorderen"
+                value={formatCurrency(btwTeVorderen, 'SRD')}
+                subtitle="Huidige periode"
+                icon={FileText}
+                iconBg="bg-emerald-50"
+                iconColor="text-emerald-500"
+              />
+            </>
+          )}
+        </div>
+
+        {/* Row 3: Bank SRD, Bank USD, Bank EUR - 3 columns */}
+        <div className="grid grid-cols-3 gap-5 mb-5">
+          {loading ? (
+            <>
+              <LoadingStatCard />
+              <LoadingStatCard />
+              <LoadingStatCard />
+            </>
+          ) : (
+            <>
+              <BankCard
+                title="Bank SRD"
+                value={formatCurrency(bankSRD, 'SRD')}
+                icon={Landmark}
+              />
+              <BankCard
+                title="Bank USD"
+                value={formatCurrency(bankUSD, 'USD')}
+                icon={DollarSign}
+              />
+              <BankCard
+                title="Bank EUR"
+                value={formatCurrency(bankEUR, 'EUR')}
+                icon={Euro}
+              />
+            </>
+          )}
+        </div>
+
+        {/* Row 4: Cashflow Overzicht + Ouderdomsanalyse - 2 columns */}
+        <div className="grid grid-cols-2 gap-5">
+          {/* Cashflow Overzicht */}
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Cashflow Overzicht</h3>
+              <div className="h-64">
                 {loading ? (
                   <Skeleton className="w-full h-full" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={forecastData} barGap={2}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <LineChart data={cashflowData}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                       <XAxis 
-                        dataKey="month" 
+                        dataKey="name" 
                         axisLine={false} 
                         tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 11 }}
+                        tick={{ fill: '#9ca3af', fontSize: 12 }}
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 11 }}
-                        tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`}
+                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                        tickFormatter={(v) => `${(v/1000).toFixed(0)}k`}
                       />
                       <Tooltip 
-                        formatter={(value) => [`€${(value/1000000).toFixed(1)}M`]}
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: 12 }}
+                        formatter={(value) => formatCurrency(value, 'SRD')}
+                        contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
                       />
-                      <Bar dataKey="cy" fill="#1e3a5f" radius={[2, 2, 0, 0]} barSize={14} />
-                      <Bar dataKey="forecast" fill="#0ea5e9" radius={[2, 2, 0, 0]} barSize={14} />
-                      <Bar dataKey="budget" fill="#94a3b8" radius={[2, 2, 0, 0]} barSize={14} />
-                      <Bar dataKey="y1" fill="#cbd5e1" radius={[2, 2, 0, 0]} barSize={14} />
-                    </BarChart>
+                      <Line 
+                        type="monotone" 
+                        dataKey="omzet" 
+                        stroke="#22c55e" 
+                        strokeWidth={2}
+                        dot={{ fill: '#22c55e', r: 4 }}
+                        name="Omzet"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="kosten" 
+                        stroke="#ef4444" 
+                        strokeWidth={2}
+                        dot={{ fill: '#ef4444', r: 4 }}
+                        name="Kosten"
+                      />
+                    </LineChart>
                   </ResponsiveContainer>
                 )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Cashflow */}
-          <Card className="bg-white border border-gray-100 rounded-xl shadow-sm">
-            <CardContent className="p-5">
-              <ChartHeader title="Cashflow" />
-              <CustomLegend items={[
-                { color: '#0ea5e9', label: 'CLIENT COLLECTION' },
-                { color: '#1e293b', label: 'CASH BALANCE' }
-              ]} />
-              <div className="h-56">
+          {/* Ouderdomsanalyse Debiteuren */}
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+            <CardContent className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Ouderdomsanalyse Debiteuren</h3>
+              <div className="h-64">
                 {loading ? (
                   <Skeleton className="w-full h-full" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={cashflowData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                    <BarChart data={ouderdomData} barSize={60}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                       <XAxis 
-                        dataKey="month" 
+                        dataKey="name" 
                         axisLine={false} 
                         tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 11 }}
+                        tick={{ fill: '#9ca3af', fontSize: 12 }}
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false}
-                        tick={{ fill: '#64748b', fontSize: 11 }}
-                        tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`}
+                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                        tickFormatter={(v) => `${(v/1000).toFixed(0)}k`}
                       />
                       <Tooltip 
-                        formatter={(value, name) => {
-                          if (name === 'trend') return [`${value}`, 'Trend'];
-                          return [`€${(value/1000000).toFixed(1)}M`, name];
-                        }}
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: 12 }}
+                        formatter={(value) => formatCurrency(value, 'SRD')}
+                        contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
                       />
                       <Bar 
-                        dataKey="collection" 
-                        fill="#0ea5e9" 
-                        radius={[2, 2, 0, 0]}
-                        barSize={24}
-                        name="Client Collection"
+                        dataKey="value" 
+                        fill="#3b82f6" 
+                        radius={[4, 4, 0, 0]}
+                        name="Bedrag"
                       />
-                      <Line 
-                        type="monotone" 
-                        dataKey="trend" 
-                        stroke="#1e293b" 
-                        strokeWidth={2}
-                        dot={{ fill: '#0ea5e9', r: 4, strokeWidth: 2, stroke: '#0ea5e9' }}
-                        name="trend"
-                      />
-                    </ComposedChart>
+                    </BarChart>
                   </ResponsiveContainer>
                 )}
               </div>

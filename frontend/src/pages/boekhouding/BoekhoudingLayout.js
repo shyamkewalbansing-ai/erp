@@ -17,10 +17,7 @@ import {
   RefreshCw,
   Settings,
   LogOut,
-  DollarSign,
-  TrendingUp,
-  Truck,
-  UserCircle
+  Euro
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -48,22 +45,20 @@ export default function BoekhoudingLayout() {
   }, [token]);
 
   const menuItems = [
-    { path: '/app/boekhouding', icon: LayoutDashboard, label: 'Finance', exact: true },
-    { path: '/app/boekhouding/bank-kas', icon: DollarSign, label: 'Cashflow' },
-    { path: '/app/boekhouding/debiteuren', icon: Users, label: 'Customers' },
-    { path: '/app/boekhouding/crediteuren', icon: Truck, label: 'Suppliers' },
-    { path: '/app/boekhouding/rapportages', icon: TrendingUp, label: 'Trend & Forecast' },
-  ];
-
-  const secondaryMenuItems = [
+    { path: '/app/boekhouding', icon: LayoutDashboard, label: 'Dashboard', exact: true },
     { path: '/app/boekhouding/grootboek', icon: BookOpen, label: 'Grootboek' },
+    { path: '/app/boekhouding/debiteuren', icon: Users, label: 'Debiteuren' },
+    { path: '/app/boekhouding/crediteuren', icon: Building2, label: 'Crediteuren' },
+    { path: '/app/boekhouding/bank-kas', icon: Landmark, label: 'Bank/Kas' },
     { path: '/app/boekhouding/btw', icon: Receipt, label: 'BTW' },
     { path: '/app/boekhouding/verkoop', icon: ShoppingCart, label: 'Verkoop' },
     { path: '/app/boekhouding/inkoop', icon: ShoppingBag, label: 'Inkoop' },
     { path: '/app/boekhouding/voorraad', icon: Package, label: 'Voorraad' },
     { path: '/app/boekhouding/vaste-activa', icon: Building, label: 'Vaste Activa' },
     { path: '/app/boekhouding/projecten', icon: FolderKanban, label: 'Projecten' },
+    { path: '/app/boekhouding/rapportages', icon: BarChart3, label: 'Rapportages' },
     { path: '/app/boekhouding/wisselkoersen', icon: RefreshCw, label: 'Wisselkoersen' },
+    { path: '/app/boekhouding/instellingen', icon: Settings, label: 'Instellingen' },
   ];
 
   const isActive = (path, exact = false) => {
@@ -72,23 +67,19 @@ export default function BoekhoudingLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-[#f8fafc]">
-      {/* Sidebar - Dark blue design matching reference */}
-      <div className="w-52 bg-[#2f4561] flex flex-col">
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar - Fixed width, no collapse */}
+      <div className="w-56 bg-white border-r border-gray-200 flex flex-col">
         {/* Logo */}
-        <div className="p-5 flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <div className="w-1.5 h-6 bg-[#0ea5e9] rounded-sm"></div>
-            <div className="w-1.5 h-4 bg-[#0ea5e9] rounded-sm"></div>
-            <div className="w-1.5 h-5 bg-[#0ea5e9] rounded-sm"></div>
+        <div className="p-4 border-b border-gray-100 flex items-center gap-3">
+          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+            FO
           </div>
-          <span className="text-white font-semibold text-base tracking-wide">
-            <span className="text-[#0ea5e9]">KPI</span>DASHBOARD
-          </span>
+          <span className="font-semibold text-gray-800">Finance OS</span>
         </div>
 
-        {/* Main Navigation */}
-        <nav className="flex-1 py-2">
+        {/* Navigation */}
+        <nav className="flex-1 py-4 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path, item.exact);
@@ -96,99 +87,60 @@ export default function BoekhoudingLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-5 py-3 transition-all relative ${
+                className={`flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg transition-all ${
                   active
-                    ? 'bg-[#243a52] text-white'
-                    : 'text-[#8ba4bf] hover:bg-[#374d66] hover:text-white'
+                    ? 'bg-blue-50 text-blue-600'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
-                {active && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0ea5e9] rounded-r"></div>
-                )}
-                <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-white' : 'text-[#8ba4bf]'}`} />
+                <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-blue-600' : 'text-gray-400'}`} />
                 <span className="text-sm font-medium">{item.label}</span>
               </Link>
             );
           })}
-
-          {/* Divider */}
-          <div className="my-4 mx-5 border-t border-[#3d566f]"></div>
-
-          {/* Secondary Navigation (scrollable) */}
-          <div className="max-h-48 overflow-y-auto">
-            {secondaryMenuItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-3 px-5 py-2.5 transition-all relative ${
-                    active
-                      ? 'bg-[#243a52] text-white'
-                      : 'text-[#8ba4bf] hover:bg-[#374d66] hover:text-white'
-                  }`}
-                >
-                  {active && (
-                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0ea5e9] rounded-r"></div>
-                  )}
-                  <Icon className={`w-4 h-4 flex-shrink-0 ${active ? 'text-white' : 'text-[#6b8299]'}`} />
-                  <span className="text-xs font-medium">{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
         </nav>
 
-        {/* Settings at bottom */}
-        <div className="mt-auto">
-          <Link
-            to="/app/boekhouding/instellingen"
-            className={`flex items-center gap-3 px-5 py-3 transition-all relative ${
-              isActive('/app/boekhouding/instellingen')
-                ? 'bg-[#243a52] text-white'
-                : 'text-[#8ba4bf] hover:bg-[#374d66] hover:text-white'
-            }`}
-          >
-            {isActive('/app/boekhouding/instellingen') && (
-              <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0ea5e9] rounded-r"></div>
-            )}
-            <Settings className="w-5 h-5 flex-shrink-0" />
-            <span className="text-sm font-medium">Settings</span>
-          </Link>
-
-          {/* User section */}
-          <div className="border-t border-[#3d566f] p-4">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-[#0ea5e9] rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
-                  {user?.name?.charAt(0) || 'U'}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
-                  {user?.name || 'Admin'}
-                </p>
-                <p className="text-xs text-[#8ba4bf] truncate">
-                  {user?.email}
-                </p>
-              </div>
+        {/* User section */}
+        <div className="border-t border-gray-100 p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+              <span className="text-xs font-medium text-gray-600">
+                {user?.name?.charAt(0) || 'U'}
+              </span>
             </div>
-            <button
-              onClick={logout}
-              className="mt-3 flex items-center gap-2 text-[#8ba4bf] hover:text-white text-xs transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Uitloggen</span>
-            </button>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user?.name || 'Admin'}
+              </p>
+              <p className="text-xs text-gray-500 truncate">
+                {user?.email}
+              </p>
+            </div>
           </div>
+          <button
+            onClick={logout}
+            className="mt-3 flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm"
+          >
+            <LogOut className="w-4 h-4" />
+            <span>Uitloggen</span>
+          </button>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Page Content - Dashboard has its own header */}
-        <div className="flex-1 overflow-auto">
+        {/* Top bar with wisselkoers */}
+        <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-end px-6">
+          {wisselkoers && (
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Euro className="w-4 h-4" />
+              <span>EUR/SRD: <strong>{wisselkoers}</strong></span>
+            </div>
+          )}
+        </div>
+
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto p-6">
           <Outlet />
         </div>
       </div>
