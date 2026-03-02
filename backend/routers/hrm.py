@@ -810,3 +810,335 @@ async def get_hrm_dashboard(current_user: dict = Depends(get_current_user)):
         "today_present": present_count,
         "today_absent": stats["active_employees"] - present_count
     }
+
+
+# ==================== SURINAME PAYROLL TAX CALCULATION ====================
+
+def calculate_suriname_payroll_tax(gross_salary: float, tax_free_allowance: float = 9000) -> dict:
+    """
+    Calculate Suriname payroll taxes based on 2024 tax brackets.
+    
+    Monthly tax brackets (after tax-free allowance of SRD 9,000):
+    - Up to 3,500: 8%
+    - 3,501 - 7,000: 18%
+    - 7,001 - 10,500: 28%
+    - Above 10,500: 38%
+    
+    Returns detailed breakdown of all deductions.
+    """
+    # Belastbaar loon = bruto - belastingvrije som
+    taxable_income = max(0, gross_salary - tax_free_allowance)
+    
+    # Calculate progressive income tax
+    income_tax = 0
+    remaining = taxable_income
+    
+    # Bracket 1: 0 - 3,500 at 8%
+    bracket1 = min(remaining, 3500)
+    income_tax += bracket1 * 0.08
+    remaining -= bracket1
+    
+    # Bracket 2: 3,501 - 7,000 at 18%
+    if remaining > 0:
+        bracket2 = min(remaining, 3500)
+        income_tax += bracket2 * 0.18
+        remaining -= bracket2
+    
+    # Bracket 3: 7,001 - 10,500 at 28%
+    if remaining > 0:
+        bracket3 = min(remaining, 3500)
+        income_tax += bracket3 * 0.28
+        remaining -= bracket3
+    
+    # Bracket 4: Above 10,500 at 38%
+    if remaining > 0:
+        income_tax += remaining * 0.38
+    
+    # AOV (Algemene Ouderdomsvoorziening) - typically 4% employee contribution
+    aov_contribution = gross_salary * 0.04
+    
+    # Calculate effective tax rate
+    total_deductions = income_tax + aov_contribution
+    effective_rate = (total_deductions / gross_salary * 100) if gross_salary > 0 else 0
+    
+    return {
+        "gross_salary": round(gross_salary, 2),
+        "tax_free_allowance": round(tax_free_allowance, 2),
+        "taxable_income": round(taxable_income, 2),
+        "income_tax": round(income_tax, 2),
+        "aov_contribution": round(aov_contribution, 2),
+        "total_deductions": round(total_deductions, 2),
+        "net_salary": round(gross_salary - total_deductions, 2),
+        "effective_tax_rate": round(effective_rate, 2)
+    }
+
+
+@router.post("/payroll/calculate-tax")
+async def calculate_payroll_tax(
+    gross_salary: float,
+    tax_free_allowance: float = 9000,
+    current_user: dict = Depends(get_current_user)
+):
+    """Calculate Suriname payroll taxes for a given gross salary"""
+    result = calculate_suriname_payroll_tax(gross_salary, tax_free_allowance)
+    return result
+
+
+@router.post("/payroll/generate-with-tax")
+async def generate_payroll_with_tax(
+    period: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Generate payroll records with Suriname tax calculations for all active employees.
+    Creates detailed breakdown including income tax, AOV, and net salary.
+    """
+    db = await get_db()
+    wf = workspace_filter(current_user)
+    
+    # Get all active employees
+    employees = await db.hrm_employees.find({**wf, "status": "active"}).to_list(1000)
+    
+    generated = []
+    for emp in employees:
+        # Check if payroll already exists for this employee and period
+        existing = await db.hrm_payroll.find_one({
+            **wf,
+            "employee_id": str(emp["_id"]),
+            "period": period
+        })
+        
+        if not existing:
+            gross_salary = emp.get("salary", 0)
+            
+            # Calculate Suriname taxes
+            tax_calc = calculate_suriname_payroll_tax(gross_salary)
+            
+            # Get allowances (overtime, bonuses, etc.) - can be expanded
+            allowances = emp.get("allowances", 0)
+            
+            pay_dict = {
+                "employee_id": str(emp["_id"]),
+                "employee_name": f"{emp.get('first_name', '')} {emp.get('last_name', '')}".strip(),
+                "period": period,
+                "basic_salary": gross_salary,
+                "allowances": allowances,
+                "gross_salary": gross_salary + allowances,
+                
+                # Tax breakdown
+                "tax_free_allowance": tax_calc["tax_free_allowance"],
+                "taxable_income": tax_calc["taxable_income"],
+                "income_tax": tax_calc["income_tax"],
+                "aov_contribution": tax_calc["aov_contribution"],
+                
+                # Total deductions
+                "deductions": tax_calc["total_deductions"],
+                "net_salary": tax_calc["net_salary"] + allowances,
+                
+                "effective_tax_rate": tax_calc["effective_tax_rate"],
+                "status": "draft",
+                "workspace_id": current_user.get("workspace_id"),
+                "user_id": str(current_user["_id"]),
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            result = await db.hrm_payroll.insert_one(pay_dict)
+            pay_dict["id"] = str(result.inserted_id)
+            generated.append(pay_dict)
+    
+    return {
+        "message": f"{len(generated)} salarisrecords gegenereerd met belastingberekening",
+        "count": len(generated),
+        "records": generated
+    }
+
+
+@router.put("/payroll/{payroll_id}/pay")
+async def process_payroll_payment(
+    payroll_id: str,
+    create_journal: bool = True,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Process payroll payment and optionally create automatic journal entries.
+    
+    Journal entries created:
+    - Debit: Salariskosten (expense account)
+    - Credit: Te betalen loonbelasting (liability)
+    - Credit: Te betalen AOV (liability)
+    - Credit: Bank/Kas (asset - net payment)
+    """
+    db = await get_db()
+    wf = workspace_filter(current_user)
+    
+    # Get the payroll record
+    payroll = await db.hrm_payroll.find_one({"_id": ObjectId(payroll_id), **wf})
+    if not payroll:
+        raise HTTPException(status_code=404, detail="Salarisrecord niet gevonden")
+    
+    if payroll.get("status") == "paid":
+        raise HTTPException(status_code=400, detail="Dit salaris is al uitbetaald")
+    
+    # Update payroll status
+    await db.hrm_payroll.update_one(
+        {"_id": ObjectId(payroll_id)},
+        {
+            "$set": {
+                "status": "paid",
+                "paid_at": datetime.now(timezone.utc).isoformat(),
+                "paid_by": str(current_user["_id"])
+            }
+        }
+    )
+    
+    journal_entry = None
+    
+    if create_journal:
+        # Create automatic journal entry in grootboek
+        gross_salary = payroll.get("gross_salary", payroll.get("basic_salary", 0))
+        income_tax = payroll.get("income_tax", 0)
+        aov = payroll.get("aov_contribution", 0)
+        net_salary = payroll.get("net_salary", gross_salary)
+        employee_name = payroll.get("employee_name", "Onbekend")
+        period = payroll.get("period", "")
+        
+        # Journal entry lines
+        journal_lines = [
+            {
+                "grootboek_code": "4100",
+                "grootboek_naam": "Salariskosten",
+                "omschrijving": f"Salaris {employee_name} - {period}",
+                "debet": gross_salary,
+                "credit": 0
+            },
+            {
+                "grootboek_code": "2100",
+                "grootboek_naam": "Te betalen loonbelasting",
+                "omschrijving": f"Loonbelasting {employee_name} - {period}",
+                "debet": 0,
+                "credit": income_tax
+            },
+            {
+                "grootboek_code": "2110",
+                "grootboek_naam": "Te betalen AOV",
+                "omschrijving": f"AOV-premie {employee_name} - {period}",
+                "debet": 0,
+                "credit": aov
+            },
+            {
+                "grootboek_code": "1100",
+                "grootboek_naam": "Bank",
+                "omschrijving": f"Netto salaris {employee_name} - {period}",
+                "debet": 0,
+                "credit": net_salary
+            }
+        ]
+        
+        # Create the journal entry
+        journal_entry = {
+            "type": "salaris",
+            "datum": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "boekstuk_nummer": f"SAL-{payroll_id[-6:].upper()}",
+            "omschrijving": f"Salarisbetaling {employee_name} - {period}",
+            "regels": journal_lines,
+            "totaal_debet": gross_salary,
+            "totaal_credit": gross_salary,
+            "payroll_id": payroll_id,
+            "employee_id": payroll.get("employee_id"),
+            "workspace_id": current_user.get("workspace_id"),
+            "user_id": str(current_user["_id"]),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        result = await db.boekhouding_journaalposten.insert_one(journal_entry)
+        journal_entry["id"] = str(result.inserted_id)
+        
+        # Update payroll with journal reference
+        await db.hrm_payroll.update_one(
+            {"_id": ObjectId(payroll_id)},
+            {"$set": {"journal_entry_id": str(result.inserted_id)}}
+        )
+    
+    return {
+        "message": "Salaris uitbetaald",
+        "payroll_id": payroll_id,
+        "journal_entry": journal_entry
+    }
+
+
+@router.get("/payroll/tax-report")
+async def get_payroll_tax_report(
+    period: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get aggregated payroll tax report for a period.
+    Useful for filing tax returns with Suriname tax authority.
+    """
+    db = await get_db()
+    wf = workspace_filter(current_user)
+    
+    match_filter = {**wf}
+    if period:
+        match_filter["period"] = period
+    
+    # Aggregate payroll data
+    pipeline = [
+        {"$match": match_filter},
+        {
+            "$group": {
+                "_id": "$period",
+                "total_gross": {"$sum": "$gross_salary"},
+                "total_taxable": {"$sum": "$taxable_income"},
+                "total_income_tax": {"$sum": "$income_tax"},
+                "total_aov": {"$sum": "$aov_contribution"},
+                "total_deductions": {"$sum": "$deductions"},
+                "total_net": {"$sum": "$net_salary"},
+                "employee_count": {"$sum": 1},
+                "paid_count": {
+                    "$sum": {"$cond": [{"$eq": ["$status", "paid"]}, 1, 0]}
+                }
+            }
+        },
+        {"$sort": {"_id": -1}}
+    ]
+    
+    reports = await db.hrm_payroll.aggregate(pipeline).to_list(100)
+    
+    # Calculate totals
+    totals = {
+        "total_gross": sum(r["total_gross"] for r in reports),
+        "total_taxable": sum(r["total_taxable"] for r in reports),
+        "total_income_tax": sum(r["total_income_tax"] for r in reports),
+        "total_aov": sum(r["total_aov"] for r in reports),
+        "total_deductions": sum(r["total_deductions"] for r in reports),
+        "total_net": sum(r["total_net"] for r in reports),
+        "total_employees": sum(r["employee_count"] for r in reports)
+    }
+    
+    return {
+        "periods": [
+            {
+                "period": r["_id"],
+                "gross_salary": round(r["total_gross"], 2),
+                "taxable_income": round(r["total_taxable"], 2),
+                "income_tax": round(r["total_income_tax"], 2),
+                "aov_contribution": round(r["total_aov"], 2),
+                "total_deductions": round(r["total_deductions"], 2),
+                "net_salary": round(r["total_net"], 2),
+                "employee_count": r["employee_count"],
+                "paid_count": r["paid_count"]
+            }
+            for r in reports
+        ],
+        "totals": {k: round(v, 2) for k, v in totals.items()},
+        "tax_rates": {
+            "bracket_1": "8% (0 - 3,500 SRD)",
+            "bracket_2": "18% (3,501 - 7,000 SRD)",
+            "bracket_3": "28% (7,001 - 10,500 SRD)",
+            "bracket_4": "38% (boven 10,500 SRD)",
+            "tax_free_allowance": "9,000 SRD per maand",
+            "aov_rate": "4%"
+        }
+    }
+
