@@ -303,52 +303,56 @@ const VerkoopPage = () => {
 
       {/* Main Content */}
       <div className="p-6">
-        {/* Summary Cards - Zakelijk */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-white border border-gray-200 rounded-xl p-4">
+        {/* Summary Cards - Zakelijk 3D */}
+        <div className="grid grid-cols-4 gap-5 mb-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Totaal Facturen</p>
-                <p className="text-lg font-bold text-gray-900 mt-1">{aantalFacturen}</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Totaal Facturen</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{aantalFacturen}</p>
+                <p className="text-xs text-gray-400 mt-1">Dit boekjaar</p>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                <Receipt className="w-5 h-5 text-gray-600" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <Receipt className="w-6 h-6 text-gray-600" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Totaal Omzet</p>
-                <p className="text-lg font-bold text-gray-900 mt-1">{formatCurrency(totaalOmzet)}</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Totaal Omzet</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{formatCurrency(totaalOmzet)}</p>
+                <p className="text-xs text-gray-400 mt-1">Betaalde facturen</p>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                <CheckCircle className="w-5 h-5 text-gray-600" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <CheckCircle className="w-6 h-6 text-gray-600" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Openstaand</p>
-                <p className="text-lg font-bold text-amber-600 mt-1">{formatCurrency(totaalOpenstaand)}</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Openstaand</p>
+                <p className="text-2xl font-bold text-amber-600 mt-2">{formatCurrency(totaalOpenstaand)}</p>
+                <p className="text-xs text-gray-400 mt-1">Nog te ontvangen</p>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-gray-600" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <Clock className="w-6 h-6 text-gray-600" />
               </div>
             </div>
           </div>
           
-          <div className="bg-white border border-gray-200 rounded-xl p-4">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wide">Offertes</p>
-                <p className="text-lg font-bold text-gray-900 mt-1">{aantalOffertes}</p>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Offertes</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{aantalOffertes}</p>
+                <p className="text-xs text-gray-400 mt-1">Actieve offertes</p>
               </div>
-              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-gray-600" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <FileText className="w-6 h-6 text-gray-600" />
               </div>
             </div>
           </div>
