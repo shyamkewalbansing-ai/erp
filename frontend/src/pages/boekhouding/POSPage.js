@@ -676,10 +676,12 @@ const POSPage = () => {
         const error = await response.json();
         toast.error(error.detail || 'Fout bij verwerken betaling');
         setPaymentStep('method');
+        setPaymentMethod(null);
       }
     } catch (error) {
       toast.error('Fout bij verwerken betaling');
       setPaymentStep('method');
+      setPaymentMethod(null);
     } finally {
       setProcessing(false);
     }
