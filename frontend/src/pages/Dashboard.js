@@ -352,7 +352,6 @@ export default function Dashboard() {
                       <div className="flex items-center gap-3">
                         <Checkbox 
                           checked={selectedModules.includes(module.id)}
-                          className="data-[state=checked]:bg-emerald-500"
                         />
                         <div>
                           <h4 className="font-semibold">{module.name}</h4>
