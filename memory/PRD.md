@@ -144,16 +144,16 @@ Dutch (Nederlands)
 - Wachtwoord: demo2024
 
 ### Recent Test Rapport
-- `/app/test_reports/iteration_60.json`
-- Frontend: 100% (8/8 Boekhouding pagina's geverifieerd)
-- Alle pagina's hebben consistente design met 4 stat cards, gray kleuren, rounded-2xl borders
+- `/app/test_reports/iteration_61.json`
+- Frontend: 100% (16/16 POS numpad features geverifieerd)
+- POS geïntegreerde numpad werkt correct zonder popup
 
 ---
 
 ## Belangrijke Bestanden
 
 ### Frontend
-- `/app/frontend/src/pages/boekhouding/POSPage.js` (1400+ regels)
+- `/app/frontend/src/pages/boekhouding/POSPage.js` (1800+ regels) - met geïntegreerde numpad
 - `/app/frontend/src/pages/boekhouding/VoorraadPage.js` - met barcode functionaliteit
 - `/app/frontend/src/pages/boekhouding/POSPublicScannerPage.js` - publieke scanner
 
