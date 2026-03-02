@@ -10,6 +10,37 @@ Dutch (Nederlands)
 
 ## Wat is Voltooid (Maart 2026)
 
+### ✅ KPI Dashboard Redesign (2 maart 2026)
+Dashboard volledig herontworpen naar professioneel finance dashboard design:
+
+**KPI Kaarten (5 stuks):**
+- EBITDA met waarde in cyaan kleur
+- EBITDA% percentage
+- GROSS MARGIN percentage
+- GROSS MARGIN% percentage
+- FIXED COSTS met euro waarde
+- Elke kaart: YTD indicator, VS LY (vorig jaar), VS BUDGET vergelijking
+- Groene percentages voor positieve trends
+
+**Grafieken:**
+- **EBITDA & Gross Margin Forecasts:** Combinatie bar chart (Revenue, EBITDA) + line chart (Gross Margin %)
+- **Forecast Financial Performance:** Clustered bar chart met CY, Previous Forecast, Budget, Y-1
+- **Cashflow:** Combinatie bar chart (Client Collection) + line chart (Cash Balance)
+
+**UI Elementen:**
+- Filter tasks button
+- Sort tasks button
+- Datum range selector
+- Refresh button
+- Custom legends bij elke grafiek
+- Responsive tooltips met details
+
+**Technische Details:**
+- Recharts library voor alle grafieken
+- ComposedChart voor combinatie visualisaties
+- Dual Y-axis voor waarde + percentage
+- Moderne kleurenpalet (#0ea5e9 cyaan, #1e3a5f donkerblauw)
+
 ### ✅ HRM / Personeel Module (2 maart 2026)
 Volledig geïntegreerde HRM functionaliteit binnen Boekhouding:
 
