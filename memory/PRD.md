@@ -33,23 +33,35 @@ Volledig geïntegreerde HRM functionaliteit binnen Boekhouding:
 - Start- en einddatum
 - Salaris per contract
 
-**Salarisadministratie:**
-- Salarisrun genereren per periode
-- Bruto, toeslagen, inhoudingen, netto
+**Salarisadministratie met Surinaamse Loonbelasting:**
+- **Automatische belastingberekening** volgens Surinaamse tarieven 2024:
+  - Belastingvrije som: SRD 9.000/maand
+  - Schijf 1: 8% (0 - 3.500)
+  - Schijf 2: 18% (3.501 - 7.000)
+  - Schijf 3: 28% (7.001 - 10.500)
+  - Schijf 4: 38% (boven 10.500)
+  - AOV premie: 4%
+- Salarisrun genereren met belastingdetails
+- Bruto, Loonbelasting, AOV, Netto weergave
 - Goedkeuren en uitbetalen workflow
-- Koppeling met grootboek (journaalposten)
+
+**Automatische Journaalposten (Grootboek Koppeling):**
+Bij uitbetaling salaris worden automatisch geboekt:
+- Debet: Salariskosten (4100)
+- Credit: Te betalen loonbelasting (2100)
+- Credit: Te betalen AOV (2110)
+- Credit: Bank (1100) - netto bedrag
 
 **Aanwezigheid:**
 - Urenregistratie
 - In- en uitklokken
 - Gewerkte uren overzicht
 
-**UI Features:**
-- 4 stat cards (totaal, actief, verlof, salariskosten)
-- 6 tabs voor alle functies
-- Zoeken en filteren
-- Detail sidebar voor medewerkers
-- Dialogen voor toevoegen/bewerken
+**API Endpoints:**
+- `POST /api/hrm/payroll/calculate-tax` - Bereken belasting voor bedrag
+- `POST /api/hrm/payroll/generate-with-tax` - Genereer salarisrun met belasting
+- `PUT /api/hrm/payroll/{id}/pay` - Uitbetalen met journaalpost
+- `GET /api/hrm/payroll/tax-report` - Belastingoverzicht voor aangifte
 - **ALLE 16 pagina's nu 100% consistent:** Elke Boekhouding pagina heeft nu dezelfde CardContent styling als GrootboekPage
 - **Main Card:** `border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl`
 - **CardContent wrapper:** `p-0` voor full-width tables, `p-6` voor content
