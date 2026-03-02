@@ -621,7 +621,7 @@ const BankKasPage = () => {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {bankAccounts.map(account => (
-                    <tr key={account.id} className="hover:bg-gray-50">
+                    <tr key={account.id} className="hover:bg-gray-50/50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
@@ -633,25 +633,26 @@ const BankKasPage = () => {
                       <td className="px-4 py-3 text-sm text-gray-600">{account.bank}</td>
                       <td className="px-4 py-3 text-sm text-gray-500 hidden md:table-cell font-mono">{account.rekeningnummer || account.account_number}</td>
                       <td className="px-4 py-3 text-right">
-                        <span className={`font-bold ${(account.saldo || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                        <span className={`font-medium ${(account.saldo || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                           {formatCurrency(account.saldo || account.balance || 0, account.valuta)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openEditAccount(account)}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" onClick={() => openEditAccount(account)}>
                             <Edit className="w-4 h-4 text-gray-400" />
                           </Button>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500" onClick={() => handleDeleteAccount(account)}>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg text-red-500" onClick={() => handleDeleteAccount(account)}>
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
