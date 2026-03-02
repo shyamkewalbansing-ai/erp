@@ -695,7 +695,6 @@ const POSPage = () => {
   };
 
   const closePaymentAndReset = () => {
-    setShowPaymentDialog(false);
     setPaymentStep('method');
     setPaymentMethod(null);
     setCashReceived('');
