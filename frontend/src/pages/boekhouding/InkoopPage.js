@@ -522,62 +522,64 @@ const InkoopPage = () => {
       </div>
 
       {/* Tabs - matching VerkoopPage style */}
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-        <div className="border-b border-gray-200 px-4">
-          <div className="flex gap-1">
-            <TabButton active={activeTab === 'invoices'} onClick={() => setActiveTab('invoices')} icon={Receipt} label="Inkoopfacturen" count={invoices.length} />
-            <TabButton active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} icon={ShoppingCart} label="Inkooporders" count={purchaseOrders.length} />
+      <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+        <CardContent className="p-0">
+          <div className="border-b border-gray-200 px-6">
+            <div className="flex gap-1">
+              <TabButton active={activeTab === 'invoices'} onClick={() => setActiveTab('invoices')} icon={Receipt} label="Inkoopfacturen" count={invoices.length} />
+              <TabButton active={activeTab === 'orders'} onClick={() => setActiveTab('orders')} icon={ShoppingCart} label="Inkooporders" count={purchaseOrders.length} />
+            </div>
           </div>
-        </div>
 
-        {/* Search bar */}
-        <div className="p-4 border-b border-gray-100">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Zoeken op nummer of leverancier..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          {/* Search bar */}
+          <div className="p-6 border-b border-gray-100">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Zoeken op nummer of leverancier..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 rounded-lg"
+              />
+            </div>
           </div>
-        </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
-          {activeTab === 'invoices' ? (
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead className="w-28 text-xs font-medium text-gray-500">Nummer</TableHead>
-                  <TableHead className="w-28 text-xs font-medium text-gray-500">Datum</TableHead>
-                  <TableHead className="text-xs font-medium text-gray-500">Leverancier</TableHead>
-                  <TableHead className="w-28 text-xs font-medium text-gray-500">Vervaldatum</TableHead>
-                  <TableHead className="text-right w-32 text-xs font-medium text-gray-500">Bedrag</TableHead>
-                  <TableHead className="w-24 text-xs font-medium text-gray-500">Status</TableHead>
-                  <TableHead className="w-16 text-xs font-medium text-gray-500">Acties</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredInvoices.map(invoice => (
-                  <TableRow 
-                    key={invoice.id} 
-                    className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => { setDetailItem(invoice); setShowDetail(true); }}
-                    data-testid={`purchase-invoice-row-${invoice.factuurnummer || invoice.invoice_number}`}
-                  >
-                    <TableCell className="text-sm font-medium text-gray-900">{invoice.factuurnummer || invoice.invoice_number || '-'}</TableCell>
-                    <TableCell className="text-sm text-gray-500">{formatDate(invoice.factuurdatum || invoice.date)}</TableCell>
-                    <TableCell className="text-sm text-gray-700">{invoice.crediteur_naam || invoice.supplier_name || '-'}</TableCell>
-                    <TableCell className="text-sm text-gray-500">{formatDate(invoice.vervaldatum || invoice.due_date)}</TableCell>
-                    <TableCell className="text-right text-sm font-medium text-gray-900">
-                      {formatCurrency(invoice.totaal_incl_btw || invoice.total, invoice.valuta || invoice.currency)}
-                    </TableCell>
-                    <TableCell><StatusBadge status={invoice.status} /></TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetailItem(invoice); setShowDetail(true); }}>
-                        <Eye className="w-4 h-4 text-gray-400" />
-                      </Button>
+          {/* Table */}
+          <div className="p-6">
+            <div className="border border-gray-200 rounded-2xl overflow-hidden">
+              {activeTab === 'invoices' ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50/50">
+                      <TableHead className="w-28 text-xs font-medium text-gray-500">Nummer</TableHead>
+                      <TableHead className="w-28 text-xs font-medium text-gray-500">Datum</TableHead>
+                      <TableHead className="text-xs font-medium text-gray-500">Leverancier</TableHead>
+                      <TableHead className="w-28 text-xs font-medium text-gray-500">Vervaldatum</TableHead>
+                      <TableHead className="text-right w-32 text-xs font-medium text-gray-500">Bedrag</TableHead>
+                      <TableHead className="w-24 text-xs font-medium text-gray-500">Status</TableHead>
+                      <TableHead className="w-16 text-xs font-medium text-gray-500">Acties</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredInvoices.map(invoice => (
+                      <TableRow 
+                        key={invoice.id} 
+                        className="hover:bg-gray-50/50 cursor-pointer"
+                        onClick={() => { setDetailItem(invoice); setShowDetail(true); }}
+                        data-testid={`purchase-invoice-row-${invoice.factuurnummer || invoice.invoice_number}`}
+                      >
+                        <TableCell className="text-sm font-medium text-gray-900">{invoice.factuurnummer || invoice.invoice_number || '-'}</TableCell>
+                        <TableCell className="text-sm text-gray-500">{formatDate(invoice.factuurdatum || invoice.date)}</TableCell>
+                        <TableCell className="text-sm text-gray-700">{invoice.crediteur_naam || invoice.supplier_name || '-'}</TableCell>
+                        <TableCell className="text-sm text-gray-500">{formatDate(invoice.vervaldatum || invoice.due_date)}</TableCell>
+                        <TableCell className="text-right text-sm font-medium text-gray-900">
+                          {formatCurrency(invoice.totaal_incl_btw || invoice.total, invoice.valuta || invoice.currency)}
+                        </TableCell>
+                        <TableCell><StatusBadge status={invoice.status} /></TableCell>
+                        <TableCell>
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDetailItem(invoice); setShowDetail(true); }}>
+                            <Eye className="w-4 h-4 text-gray-400" />
+                          </Button>
                     </TableCell>
                   </TableRow>
                 ))}
