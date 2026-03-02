@@ -823,6 +823,7 @@ function MainAppRoutes() {
           <Route path="boekhouding/btw/aangifte" element={<BoekhoudingNieuweBTWAangifte />} />
           <Route path="boekhouding/verkoop" element={<BoekhoudingVerkoop />} />
           <Route path="boekhouding/verkoop/nieuw" element={<BoekhoudingNieuweFactuur />} />
+          <Route path="boekhouding/verkoop/offerte" element={<BoekhoudingNieuweOfferte />} />
           <Route path="boekhouding/debiteuren/nieuw" element={<BoekhoudingNieuweDebiteur />} />
           <Route path="boekhouding/crediteuren/nieuw" element={<BoekhoudingNieuweLeverancier />} />
           <Route path="boekhouding/inkoop" element={<BoekhoudingInkoop />} />
