@@ -413,7 +413,7 @@ const DebiteurenPage = () => {
                         <Users className="w-16 h-16 mx-auto mb-4 text-gray-200" />
                         <p className="text-lg font-semibold text-gray-700 mb-2">Geen debiteuren gevonden</p>
                         <p className="text-sm text-gray-500 mb-6">Voeg uw eerste debiteur toe om te beginnen.</p>
-                        <Button onClick={() => setShowCustomerDialog(true)} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                        <Button onClick={() => navigate('/app/boekhouding/debiteuren/nieuw')} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
                           <Plus className="w-4 h-4 mr-2" />
                           Eerste Debiteur Toevoegen
                         </Button>
