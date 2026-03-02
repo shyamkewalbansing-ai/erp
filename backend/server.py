@@ -15011,6 +15011,7 @@ api_router.include_router(spa_booking_router)
 api_router.include_router(suribet_router)
 api_router.include_router(boekhouding_router)
 api_router.include_router(schuldbeheer_router)
+api_router.include_router(sumup_router, prefix="/sumup", tags=["sumup"])
 
 # =============================================================================
 # GITHUB WEBHOOK AUTO-DEPLOY
