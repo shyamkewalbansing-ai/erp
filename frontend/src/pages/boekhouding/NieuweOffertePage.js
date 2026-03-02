@@ -391,7 +391,7 @@ const NieuweOffertePage = () => {
                     <Input 
                       value={offerte.project_name} 
                       onChange={(e) => setOfferte({...offerte, project_name: e.target.value})}
-                      placeholder="Bijv. Renovatie kantoorpand"
+                      placeholder="Projectnaam of referentienummer"
                       className="h-9"
                     />
                   </div>
