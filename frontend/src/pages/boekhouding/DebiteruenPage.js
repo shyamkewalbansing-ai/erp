@@ -829,6 +829,8 @@ const DebiteurenPage = () => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Mobile Cards */}
             <div className="md:hidden space-y-3">
               {loading ? (
                 [...Array(3)].map((_, i) => (
