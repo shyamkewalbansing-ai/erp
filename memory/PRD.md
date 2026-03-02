@@ -62,6 +62,17 @@ Dutch (Nederlands)
 
 ### ✅ Point of Sale (POS) - Volledig Uitgebreid
 
+#### 🆕 Geïntegreerde Numpad Interface (2 maart 2026)
+- **Geen popup meer:** Betaalmethode selectie en numpad direct in rechter kolom
+- **Volledige numpad:** Cijfers 0-9, 00, decimaalpunt
+- **Quick bedragen:** 10, 20, 50, 100, 200 knoppen
+- **Actie knoppen:** Exact (ceil naar totaal), Wis (backspace), Reset
+- **Live wisselgeld:** Automatische berekening met kleurcode (groen=voldoende, amber=onvoldoende)
+- **Drie weergaves:** Te Betalen, Ontvangen, Wisselgeld/Nog Nodig
+- **Success scherm:** Bonnummer, methode, totaal, ontvangen, wisselgeld met print en volgende knoppen
+- **Terug knop:** Om terug te keren naar betaalmethode selectie
+- **Pin/Kaart:** Verwerkt direct zonder numpad
+
 #### Camera Barcode Scanner
 - **html5-qrcode library** geïntegreerd
 - **Start/Stop Camera** knoppen
