@@ -1,21 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { bankAccountsAPI, bankTransactionsAPI, bankImportAPI } from '../../lib/boekhoudingApi';
 import { formatDate } from '../../lib/utils';
-import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
 import { ScrollArea } from '../../components/ui/scroll-area';
-import { Badge } from '../../components/ui/badge';
+import { Checkbox } from '../../components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
   Plus, Building2, ArrowUpRight, ArrowDownRight, Loader2, Wallet, Upload, FileUp,
-  RefreshCw, Download, Search, Filter, Eye, Edit, Trash2, X, CreditCard,
-  DollarSign, TrendingUp, TrendingDown, Calendar, CheckCircle, AlertCircle, Save
+  RefreshCw, Download, Search, Eye, Edit, Trash2, X, CreditCard,
+  DollarSign, Calendar, CheckCircle, AlertCircle, Save, Clock, Circle,
+  FileText, TrendingUp, TrendingDown, Users, Printer, Mail, MoreHorizontal,
+  ArrowUpDown, XCircle, Send
 } from 'lucide-react';
 
 // Format currency
@@ -30,77 +29,44 @@ const formatCurrency = (amount, currency = 'SRD') => {
   return `${prefix}SRD ${formatted}`;
 };
 
-// Stat Card Component - 3D Zakelijk Design
-const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, onClick }) => {
-  return (
-    <div 
-      className={`bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 ${onClick ? 'cursor-pointer' : ''}`} 
-      style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}
-      onClick={onClick}
-    >
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
-          {subtitle && (
-            <p className={`text-xs mt-1 ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
-          )}
-        </div>
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
-          <Icon className="w-6 h-6 text-gray-600" />
-        </div>
-      </div>
-    </div>
-  );
-};
+// Tab Button Component - Verkoop Style
+const TabButton = ({ active, onClick, children }) => (
+  <button
+    onClick={onClick}
+    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
+      active 
+        ? 'bg-emerald-600 text-white shadow-sm' 
+        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+    }`}
+  >
+    {children}
+  </button>
+);
 
-// Transaction Type Badge
-const TransactionBadge = ({ type }) => {
-  if (type === 'credit' || type === 'ontvangst') {
-    return (
-      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">
-        <ArrowDownRight className="w-3 h-3 mr-1" /> Ontvangst
-      </Badge>
-    );
+// Status Legend Item
+const StatusLegendItem = ({ icon: Icon, label, color }) => (
+  <div className="flex items-center gap-2">
+    <Icon className={`w-4 h-4 ${color}`} />
+    <span className="text-xs text-gray-600">{label}</span>
+  </div>
+);
+
+// Status Icon Component
+const StatusIcon = ({ status }) => {
+  switch (status) {
+    case 'verwerkt':
+      return <CheckCircle className="w-5 h-5 text-emerald-500" />;
+    case 'in_behandeling':
+      return <Clock className="w-5 h-5 text-amber-500" />;
+    case 'afgewezen':
+      return <XCircle className="w-5 h-5 text-red-500" />;
+    case 'concept':
+      return <Circle className="w-5 h-5 text-gray-400" />;
+    case 'afgestemd':
+      return <CheckCircle className="w-5 h-5 text-blue-500" />;
+    default:
+      return <Circle className="w-5 h-5 text-gray-400" />;
   }
-  return (
-    <Badge className="bg-red-100 text-red-700 hover:bg-red-100 text-xs">
-      <ArrowUpRight className="w-3 h-3 mr-1" /> Uitgave
-    </Badge>
-  );
-};
-
-// Account Card
-const AccountCard = ({ account, onSelect, isSelected }) => {
-  const balance = account.saldo || account.balance || 0;
-  return (
-    <div 
-      onClick={() => onSelect(account)}
-      className={`p-4 rounded-xl border cursor-pointer transition-all ${
-        isSelected 
-          ? 'border-emerald-500 bg-emerald-50 shadow-md' 
-          : 'border-gray-200 bg-white hover:border-emerald-300 hover:shadow-sm'
-      }`}
-    >
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-          isSelected ? 'bg-emerald-100' : 'bg-gray-100'
-        }`}>
-          <Building2 className={`w-5 h-5 ${isSelected ? 'text-emerald-600' : 'text-gray-500'}`} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-gray-900 truncate">{account.naam || account.name}</p>
-          <p className="text-xs text-gray-500">{account.bank}</p>
-        </div>
-      </div>
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-gray-400">{account.rekeningnummer || account.account_number}</p>
-        <p className={`font-bold ${balance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-          {formatCurrency(balance, account.valuta)}
-        </p>
-      </div>
-    </div>
-  );
 };
 
 // Detail Sidebar for Transaction
@@ -137,7 +103,6 @@ const TransactionDetailSidebar = ({ item, open, onClose, accounts }) => {
 
         <ScrollArea className="flex-1">
           <div className="p-5 space-y-4">
-            {/* Bedrag */}
             <div className={`p-4 rounded-xl text-center ${
               item.type === 'credit' || item.bedrag > 0 ? 'bg-emerald-50' : 'bg-red-50'
             }`}>
@@ -149,7 +114,6 @@ const TransactionDetailSidebar = ({ item, open, onClose, accounts }) => {
               </p>
             </div>
 
-            {/* Details */}
             <div className="border border-gray-200 rounded-lg">
               <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
                 <p className="text-sm font-medium text-gray-700">Transactie Gegevens</p>
@@ -160,17 +124,12 @@ const TransactionDetailSidebar = ({ item, open, onClose, accounts }) => {
                   <span className="text-gray-900">{formatDate(item.datum || item.date)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Type</span>
-                  <TransactionBadge type={item.type || (item.bedrag > 0 ? 'credit' : 'debit')} />
-                </div>
-                <div className="flex justify-between">
                   <span className="text-gray-500">Referentie</span>
                   <span className="text-gray-900">{item.referentie || item.reference || '-'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Beschrijving */}
             <div className="border border-gray-200 rounded-lg">
               <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
                 <p className="text-sm font-medium text-gray-700">Omschrijving</p>
@@ -180,7 +139,6 @@ const TransactionDetailSidebar = ({ item, open, onClose, accounts }) => {
               </div>
             </div>
 
-            {/* Bankrekening */}
             {account && (
               <div className="border border-gray-200 rounded-lg">
                 <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
@@ -209,10 +167,13 @@ const BankKasPage = () => {
   const [bankAccounts, setBankAccounts] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('transacties');
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedYear, setSelectedYear] = useState('2024');
+  const [selectedRows, setSelectedRows] = useState([]);
   
   // Dialogs
   const [showAccountDialog, setShowAccountDialog] = useState(false);
@@ -359,6 +320,22 @@ const BankKasPage = () => {
     }
   };
 
+  // Toggle row selection
+  const toggleRowSelection = (id) => {
+    setSelectedRows(prev => 
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+    );
+  };
+
+  // Toggle all rows
+  const toggleAllRows = () => {
+    if (selectedRows.length === filteredTransactions.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(filteredTransactions.map(t => t.id));
+    }
+  };
+
   // Calculate stats
   const totalBalance = bankAccounts.reduce((sum, a) => sum + (a.saldo || a.balance || 0), 0);
   const monthTransactions = transactions.filter(t => {
@@ -368,6 +345,7 @@ const BankKasPage = () => {
   });
   const monthIncome = monthTransactions.filter(t => (t.bedrag || t.amount || 0) > 0).reduce((sum, t) => sum + Math.abs(t.bedrag || t.amount || 0), 0);
   const monthExpense = monthTransactions.filter(t => (t.bedrag || t.amount || 0) < 0).reduce((sum, t) => sum + Math.abs(t.bedrag || t.amount || 0), 0);
+  const pendingReconciliation = transactions.filter(t => !t.afgestemd).length;
 
   // Filter transactions
   const filteredTransactions = transactions.filter(t => {
@@ -385,295 +363,499 @@ const BankKasPage = () => {
     <div className="min-h-screen bg-gray-50" data-testid="bank-kas-page">
       {/* Page Title */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-800">Bank & Kas</h1>
-            <p className="text-sm text-gray-500">Beheer uw bankrekeningen en transacties</p>
+        <div className="px-6 py-4">
+          <h1 className="text-xl font-semibold text-gray-800">Bank & Kas Beheer</h1>
+        </div>
+      </div>
+
+      {/* Tab Buttons Row - Verkoop Style */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <TabButton active={activeTab === 'transacties'} onClick={() => { setActiveTab('transacties'); setSelectedRows([]); }}>
+            Transacties
+          </TabButton>
+          <TabButton active={activeTab === 'rekeningen'} onClick={() => { setActiveTab('rekeningen'); setSelectedRows([]); }}>
+            Rekeningen
+          </TabButton>
+          <TabButton active={activeTab === 'afstemming'} onClick={() => { setActiveTab('afstemming'); setSelectedRows([]); }}>
+            Afstemming
+          </TabButton>
+          <TabButton active={activeTab === 'kasboek'} onClick={() => { setActiveTab('kasboek'); setSelectedRows([]); }}>
+            Kasboek
+          </TabButton>
+          <TabButton active={activeTab === 'rapporten'} onClick={() => { setActiveTab('rapporten'); setSelectedRows([]); }}>
+            Rapporten
+          </TabButton>
+          
+          {/* Action Buttons */}
+          <div className="ml-auto flex items-center gap-2">
+            <Button variant="outline" className="rounded-lg" onClick={() => setShowImportDialog(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Importeren
+            </Button>
+            <Button 
+              onClick={() => setShowTransactionDialog(true)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuwe Transactie
+            </Button>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={fetchData} disabled={loading} className="rounded-lg">
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} /> Vernieuwen
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setShowImportDialog(true)} className="rounded-lg">
-              <Upload className="w-4 h-4 mr-2" /> Importeren
-            </Button>
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 rounded-lg" onClick={() => setShowTransactionDialog(true)}>
-              <Plus className="w-4 h-4 mr-2" /> Nieuwe Transactie
-            </Button>
+        </div>
+      </div>
+
+      {/* Filter Section - Verkoop Style */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+          {/* Search */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Transactie / Omschrijving
+            </Label>
+            <div className="relative">
+              <Input
+                placeholder="Zoeken..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-lg pr-10"
+                data-testid="search-input"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
           </div>
+          
+          {/* Boekjaar */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600">Boekjaar</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2023">2023</SelectItem>
+                <SelectItem value="2022">2022</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Type Filter */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600">Type</Label>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle</SelectItem>
+                <SelectItem value="credit">Ontvangsten</SelectItem>
+                <SelectItem value="debit">Uitgaven</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Rekening Filter */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Rekening
+            </Label>
+            <Select value={selectedAccount?.id || 'all'} onValueChange={(v) => setSelectedAccount(v === 'all' ? null : bankAccounts.find(a => a.id === v))}>
+              <SelectTrigger className="rounded-lg">
+                <SelectValue placeholder="Alle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle rekeningen</SelectItem>
+                {bankAccounts.map(a => (
+                  <SelectItem key={a.id} value={a.id}>{a.naam || a.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Totaal Saldo */}
+          <div className="text-right">
+            <span className="text-sm text-gray-500">Totaal Saldo</span>
+            <p className={`text-lg font-bold ${totalBalance >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+              {formatCurrency(totalBalance)}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Legend - Verkoop Style */}
+      <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+        <div className="flex flex-wrap items-center gap-6">
+          <StatusLegendItem icon={Circle} label="Concept" color="text-gray-400" />
+          <StatusLegendItem icon={Send} label="Geboekt" color="text-blue-500" />
+          <StatusLegendItem icon={Clock} label="In behandeling" color="text-amber-500" />
+          <StatusLegendItem icon={CheckCircle} label="Afgestemd" color="text-emerald-500" />
+          <StatusLegendItem icon={AlertCircle} label="Te controleren" color="text-orange-500" />
+          <StatusLegendItem icon={XCircle} label="Afgewezen" color="text-red-500" />
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="p-6 space-y-6">
-
-      {/* Stats - 3D Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-        <StatCard
-          title="Totaal Saldo"
-          value={formatCurrency(totalBalance)}
-          subtitle={`${bankAccounts.length} rekeningen`}
-          icon={Wallet}
-        />
-        <StatCard
-          title="Ontvangsten (Maand)"
-          value={formatCurrency(monthIncome)}
-          subtitle="Deze maand"
-          subtitleColor="text-emerald-500"
-          icon={ArrowDownRight}
-        />
-        <StatCard
-          title="Uitgaven (Maand)"
-          value={formatCurrency(monthExpense)}
-          subtitle="Deze maand"
-          subtitleColor="text-red-500"
-          icon={ArrowUpRight}
-        />
-        <StatCard
-          title="Transacties"
-          value={monthTransactions.length}
-          subtitle="Deze maand"
-          icon={CreditCard}
-        />
-      </div>
-
-      {/* Tabs - Zakelijk Design */}
-      <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <div className="border-b border-gray-200 px-6 bg-gradient-to-r from-gray-50 to-white">
-          <TabsList className="bg-transparent p-0 h-auto gap-1">
-            <TabsTrigger value="overview" className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 data-[state=active]:bg-white data-[state=active]:shadow-none bg-transparent">
-              Overzicht
-            </TabsTrigger>
-            <TabsTrigger value="transactions" className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 data-[state=active]:bg-white data-[state=active]:shadow-none bg-transparent">
-              Transacties
-            </TabsTrigger>
-            <TabsTrigger value="accounts" className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-emerald-600 data-[state=active]:text-emerald-600 data-[state=active]:bg-white data-[state=active]:shadow-none bg-transparent">
-              Rekeningen
-            </TabsTrigger>
-          </TabsList>
+      <div className="p-6">
+        {/* Summary Cards - 3D Zakelijk */}
+        <div className="grid grid-cols-4 gap-5 mb-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Totaal Saldo</p>
+                <p className={`text-2xl font-bold mt-2 ${totalBalance >= 0 ? 'text-gray-900' : 'text-red-600'}`}>{formatCurrency(totalBalance)}</p>
+                <p className="text-xs text-gray-400 mt-1">{bankAccounts.length} rekeningen</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <Wallet className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Ontvangsten</p>
+                <p className="text-2xl font-bold text-emerald-600 mt-2">{formatCurrency(monthIncome)}</p>
+                <p className="text-xs text-emerald-500 mt-1">Deze maand</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <ArrowDownRight className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Uitgaven</p>
+                <p className="text-2xl font-bold text-red-600 mt-2">{formatCurrency(monthExpense)}</p>
+                <p className="text-xs text-red-500 mt-1">Deze maand</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <ArrowUpRight className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Af te stemmen</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{pendingReconciliation}</p>
+                <p className="text-xs text-gray-400 mt-1">Transacties</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <CreditCard className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="mt-0 p-6 space-y-6">
-          {/* Bank Accounts Grid - 3D Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {bankAccounts.map(account => (
-              <AccountCard
-                key={account.id}
-                account={account}
-                onSelect={setSelectedAccount}
-                isSelected={selectedAccount?.id === account.id}
-              />
-            ))}
-            <div 
-              onClick={() => setShowAccountDialog(true)}
-              className="p-4 rounded-xl border-2 border-dashed border-gray-200 bg-gray-50 hover:border-emerald-300 hover:bg-emerald-50 cursor-pointer transition-all flex items-center justify-center min-h-[120px]"
-            >
-              <div className="text-center">
-                <Plus className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Nieuwe Rekening</p>
+        {/* Data Table Card */}
+        <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+          {/* Table Header */}
+          <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">
+                {activeTab === 'transacties' && `Transacties (${filteredTransactions.length})`}
+                {activeTab === 'rekeningen' && `Bankrekeningen (${bankAccounts.length})`}
+                {activeTab === 'afstemming' && 'Bank Afstemming'}
+                {activeTab === 'kasboek' && 'Kasboek'}
+                {activeTab === 'rapporten' && 'Rapporten'}
+              </span>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="rounded-lg" onClick={fetchData}>
+                  <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                  Vernieuwen
+                </Button>
+                <Button variant="outline" size="sm" className="rounded-lg">
+                  <Printer className="w-4 h-4 mr-2" />
+                  Afdrukken
+                </Button>
+                <Button variant="outline" size="sm" className="rounded-lg">
+                  <Download className="w-4 h-4 mr-2" />
+                  Exporteren
+                </Button>
               </div>
             </div>
           </div>
 
-          {/* Recent Transactions - 3D Card */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-              <h3 className="font-semibold text-gray-900">Recente Transacties</h3>
-            </div>
-            <div className="p-4 space-y-2">
-              {transactions.slice(0, 5).map(t => (
-                <div key={t.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-emerald-50/50 cursor-pointer transition-colors" onClick={() => { setDetailItem(t); setDetailOpen(true); }}>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${(t.bedrag || 0) > 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
-                      {(t.bedrag || 0) > 0 ? <ArrowDownRight className="w-5 h-5 text-emerald-600" /> : <ArrowUpRight className="w-5 h-5 text-red-600" />}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{t.omschrijving || t.description || 'Transactie'}</p>
-                      <p className="text-xs text-gray-500">{formatDate(t.datum || t.date)}</p>
-                    </div>
-                  </div>
-                  <span className={`font-bold ${(t.bedrag || 0) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                    {(t.bedrag || 0) > 0 ? '+' : ''}{formatCurrency(t.bedrag || t.amount || 0)}
-                  </span>
-                </div>
-              ))}
-              {transactions.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <CreditCard className="w-10 h-10 mx-auto text-gray-300 mb-2" />
-                  <p className="text-sm">Geen transacties gevonden</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </TabsContent>
-
-        {/* Transactions Tab */}
-        <TabsContent value="transactions" className="mt-0 space-y-0">
-          {/* Filters */}
-          <div className="px-6 py-4 bg-gray-50/30 border-b border-gray-100">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input 
-                  placeholder="Zoeken op omschrijving, referentie..." 
-                  value={searchTerm} 
-                  onChange={(e) => setSearchTerm(e.target.value)} 
-                  className="pl-11 h-11 rounded-xl border-gray-200 bg-white shadow-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" 
-                />
-              </div>
-              <Select value={selectedAccount?.id || 'all'} onValueChange={(v) => setSelectedAccount(v === 'all' ? null : bankAccounts.find(a => a.id === v))}>
-                <SelectTrigger className="w-full sm:w-48 h-11 rounded-xl border-gray-200">
-                  <Building2 className="w-4 h-4 mr-2 text-gray-400" />
-                  <SelectValue placeholder="Alle rekeningen" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle rekeningen</SelectItem>
-                  {bankAccounts.map(a => (
-                    <SelectItem key={a.id} value={a.id}>{a.naam || a.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={typeFilter} onValueChange={setTypeFilter}>
-                <SelectTrigger className="w-full sm:w-40 h-11 rounded-xl border-gray-200">
-                  <Filter className="w-4 h-4 mr-2 text-gray-400" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle types</SelectItem>
-                  <SelectItem value="credit">Ontvangsten</SelectItem>
-                  <SelectItem value="debit">Uitgaven</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Transactions Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Datum</th>
-                  <th className="text-left px-4 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Omschrijving</th>
-                  <th className="text-left px-4 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Rekening</th>
-                  <th className="text-left px-4 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider hidden lg:table-cell">Referentie</th>
-                  <th className="text-right px-4 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Bedrag</th>
-                  <th className="text-center px-4 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-20">Acties</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  <tr><td colSpan={6} className="px-4 py-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-emerald-500" /></td></tr>
-                ) : filteredTransactions.length === 0 ? (
-                  <tr><td colSpan={6} className="px-4 py-16 text-center">
-                    <CreditCard className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                    <p className="font-medium text-gray-700">Geen transacties gevonden</p>
-                    <p className="text-sm text-gray-400 mt-1">Pas uw filters aan of voeg een nieuwe transactie toe</p>
-                  </td></tr>
-                ) : (
-                  filteredTransactions.map((t, index) => {
-                    const account = bankAccounts.find(a => a.id === t.bankrekening_id || a.id === t.bank_account_id);
-                    return (
-                      <tr 
-                        key={t.id} 
-                        className={`hover:bg-emerald-50/50 cursor-pointer transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}
-                        onClick={() => { setDetailItem(t); setDetailOpen(true); }}
-                      >
-                        <td className="px-6 py-4 text-sm text-gray-900 font-medium">{formatDate(t.datum || t.date)}</td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${(t.bedrag || 0) > 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
-                              {(t.bedrag || 0) > 0 ? <ArrowDownRight className="w-4 h-4 text-emerald-600" /> : <ArrowUpRight className="w-4 h-4 text-red-600" />}
-                            </div>
-                            <span className="text-sm text-gray-900">{t.omschrijving || t.description || '-'}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-sm text-gray-600 hidden md:table-cell">{account?.naam || account?.name || '-'}</td>
-                        <td className="px-4 py-4 text-sm text-gray-500 hidden lg:table-cell font-mono">{t.referentie || t.reference || '-'}</td>
-                        <td className="px-4 py-4 text-right">
-                          <span className={`font-bold ${(t.bedrag || 0) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {(t.bedrag || 0) > 0 ? '+' : ''}{formatCurrency(t.bedrag || t.amount || 0)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-4 text-center" onClick={e => e.stopPropagation()}>
-                          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-lg hover:bg-gray-100" onClick={() => { setDetailItem(t); setDetailOpen(true); }}>
-                            <Eye className="w-4 h-4 text-gray-500" />
-                          </Button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </TabsContent>
-
-        {/* Accounts Tab */}
-        <TabsContent value="accounts" className="mt-0 space-y-0">
-          <div className="px-6 py-4 bg-gray-50/30 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">Bankrekeningen</h3>
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 rounded-lg" onClick={() => { setAccountForm({ naam: '', bank: '', rekeningnummer: '', valuta: 'SRD', beginsaldo: 0 }); setShowAccountDialog(true); }}>
-              <Plus className="w-4 h-4 mr-2" /> Nieuwe Rekening
-            </Button>
-          </div>
-
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-gradient-to-r from-gray-50 to-gray-100/50 border-b border-gray-200">
-                  <th className="text-left px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Rekening</th>
-                  <th className="text-left px-4 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Bank</th>
-                  <th className="text-left px-4 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider hidden md:table-cell">Rekeningnummer</th>
-                  <th className="text-right px-4 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Saldo</th>
-                  <th className="text-center px-4 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-28">Acties</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {bankAccounts.length === 0 ? (
-                  <tr><td colSpan={5} className="px-4 py-16 text-center">
-                    <Building2 className="w-12 h-12 mx-auto text-gray-300 mb-3" />
-                    <p className="font-medium text-gray-700">Geen bankrekeningen gevonden</p>
-                    <p className="text-sm text-gray-400 mt-1">Voeg uw eerste bankrekening toe om te beginnen</p>
-                  </td></tr>
-                ) : (
-                  bankAccounts.map((account, index) => (
-                    <tr key={account.id} className={`hover:bg-emerald-50/50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-4">
-                          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
-                            <Building2 className="w-5 h-5 text-gray-600" />
-                          </div>
-                          <span className="font-semibold text-gray-900">{account.naam || account.name}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-sm text-gray-600 font-medium">{account.bank}</td>
-                      <td className="px-4 py-4 text-sm text-gray-500 hidden md:table-cell font-mono">{account.rekeningnummer || account.account_number}</td>
-                      <td className="px-4 py-4 text-right">
-                        <span className={`font-bold ${(account.saldo || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                          {formatCurrency(account.saldo || account.balance || 0, account.valuta)}
-                        </span>
-                      </td>
-                      <td className="px-4 py-4 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-lg hover:bg-blue-50" onClick={() => openEditAccount(account)}>
-                            <Edit className="w-4 h-4 text-blue-500" />
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 rounded-lg hover:bg-red-50" onClick={() => handleDeleteAccount(account)}>
-                            <Trash2 className="w-4 h-4 text-red-400" />
-                          </Button>
-                        </div>
+          {/* Transacties Tab */}
+          {activeTab === 'transacties' && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="w-12 px-4 py-3">
+                      <Checkbox 
+                        checked={selectedRows.length === filteredTransactions.length && filteredTransactions.length > 0}
+                        onCheckedChange={toggleAllRows}
+                      />
+                    </th>
+                    <th className="text-left px-4 py-3">
+                      <button className="flex items-center gap-1 text-xs font-medium text-gray-600 uppercase tracking-wide hover:text-gray-900">
+                        Datum
+                        <ArrowUpDown className="w-3 h-3" />
+                      </button>
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Omschrijving
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Rekening
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Referentie
+                    </th>
+                    <th className="text-center px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Status
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Bedrag
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Actie
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-16 text-center">
+                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-emerald-500" />
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </TabsContent>
-      </Tabs>
-      </div>
+                  ) : filteredTransactions.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="px-4 py-16 text-center">
+                        <CreditCard className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                        <p className="text-lg font-semibold text-gray-700 mb-2">Geen transacties gevonden</p>
+                        <p className="text-sm text-gray-500 mb-6">Voeg uw eerste transactie toe om te beginnen.</p>
+                        <Button onClick={() => setShowTransactionDialog(true)} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Nieuwe Transactie
+                        </Button>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTransactions.map((t, index) => {
+                      const account = bankAccounts.find(a => a.id === t.bankrekening_id || a.id === t.bank_account_id);
+                      return (
+                        <tr 
+                          key={t.id} 
+                          className={`border-b border-gray-100 hover:bg-emerald-50/30 transition-colors ${
+                            selectedRows.includes(t.id) ? 'bg-emerald-50/50' : ''
+                          }`}
+                        >
+                          <td className="px-4 py-3">
+                            <Checkbox 
+                              checked={selectedRows.includes(t.id)}
+                              onCheckedChange={() => toggleRowSelection(t.id)}
+                            />
+                          </td>
+                          <td className="px-4 py-3 text-sm text-gray-900 font-medium">
+                            {formatDate(t.datum || t.date)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${(t.bedrag || 0) > 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
+                                {(t.bedrag || 0) > 0 ? <ArrowDownRight className="w-4 h-4 text-emerald-600" /> : <ArrowUpRight className="w-4 h-4 text-red-600" />}
+                              </div>
+                              <span className="text-sm text-gray-900">{t.omschrijving || t.description || '-'}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-600">{account?.naam || account?.name || '-'}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-500 font-mono">{t.referentie || t.reference || '-'}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <StatusIcon status={t.status || (t.afgestemd ? 'afgestemd' : 'concept')} />
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className={`font-bold ${(t.bedrag || 0) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                              {(t.bedrag || 0) > 0 ? '+' : ''}{formatCurrency(t.bedrag || t.amount || 0)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <button className="text-gray-500 hover:text-gray-700" onClick={() => { setDetailItem(t); setDetailOpen(true); }}>
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button className="text-gray-500 hover:text-gray-700">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Rekeningen Tab */}
+          {activeTab === 'rekeningen' && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b border-gray-200">
+                    <th className="w-12 px-4 py-3">
+                      <Checkbox />
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Rekening
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Bank
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Rekeningnummer
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Valuta
+                    </th>
+                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Saldo
+                    </th>
+                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Actie
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bankAccounts.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="px-4 py-16 text-center">
+                        <Building2 className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                        <p className="text-lg font-semibold text-gray-700 mb-2">Geen bankrekeningen gevonden</p>
+                        <p className="text-sm text-gray-500 mb-6">Voeg uw eerste bankrekening toe om te beginnen.</p>
+                        <Button onClick={() => setShowAccountDialog(true)} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Nieuwe Rekening
+                        </Button>
+                      </td>
+                    </tr>
+                  ) : (
+                    bankAccounts.map((account) => (
+                      <tr key={account.id} className="border-b border-gray-100 hover:bg-emerald-50/30 transition-colors">
+                        <td className="px-4 py-3">
+                          <Checkbox />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                              <Building2 className="w-5 h-5 text-gray-600" />
+                            </div>
+                            <span className="text-sm font-medium text-gray-900">{account.naam || account.name}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{account.bank}</td>
+                        <td className="px-4 py-3 text-sm text-gray-500 font-mono">{account.rekeningnummer || account.account_number}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600">{account.valuta || 'SRD'}</td>
+                        <td className="px-4 py-3 text-right">
+                          <span className={`font-bold ${(account.saldo || 0) >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {formatCurrency(account.saldo || account.balance || 0, account.valuta)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <button className="text-gray-500 hover:text-blue-600" onClick={() => openEditAccount(account)}>
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button className="text-gray-500 hover:text-red-600" onClick={() => handleDeleteAccount(account)}>
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+              
+              {/* Add New Account Button */}
+              <div className="p-4 border-t border-gray-100">
+                <Button variant="outline" onClick={() => setShowAccountDialog(true)} className="w-full rounded-lg border-dashed">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nieuwe Rekening Toevoegen
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Afstemming Tab */}
+          {activeTab === 'afstemming' && (
+            <div className="p-8 text-center">
+              <CheckCircle className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+              <p className="text-lg font-semibold text-gray-700 mb-2">Bank Afstemming</p>
+              <p className="text-sm text-gray-500 mb-6">Stem uw banktransacties af met uw boekhouding.</p>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                Start Afstemming
+              </Button>
+            </div>
+          )}
+
+          {/* Kasboek Tab */}
+          {activeTab === 'kasboek' && (
+            <div className="p-8 text-center">
+              <DollarSign className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+              <p className="text-lg font-semibold text-gray-700 mb-2">Kasboek</p>
+              <p className="text-sm text-gray-500 mb-6">Beheer uw kas transacties en contante betalingen.</p>
+              <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                <Plus className="w-4 h-4 mr-2" />
+                Nieuwe Kasboeking
+              </Button>
+            </div>
+          )}
+
+          {/* Rapporten Tab */}
+          {activeTab === 'rapporten' && (
+            <div className="p-8 text-center">
+              <FileText className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+              <p className="text-lg font-semibold text-gray-700 mb-2">Rapporten</p>
+              <p className="text-sm text-gray-500 mb-6">Genereer bank- en kas rapporten.</p>
+              <div className="flex justify-center gap-4">
+                <Button variant="outline" className="rounded-lg">
+                  <Download className="w-4 h-4 mr-2" />
+                  Bank Overzicht
+                </Button>
+                <Button variant="outline" className="rounded-lg">
+                  <Download className="w-4 h-4 mr-2" />
+                  Kas Rapport
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Footer with selection info */}
+          {selectedRows.length > 0 && activeTab === 'transacties' && (
+            <div className="bg-emerald-50 border-t border-emerald-200 px-4 py-3 flex items-center justify-between">
+              <span className="text-sm text-emerald-700">
+                {selectedRows.length} transactie(s) geselecteerd
+              </span>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Afstemmen
+                </Button>
+                <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
+                  <Download className="w-4 h-4 mr-2" />
+                  Exporteren
+                </Button>
+                <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
+                  <Printer className="w-4 h-4 mr-2" />
+                  Afdrukken
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Transaction Detail Sidebar */}
@@ -693,21 +875,21 @@ const BankKasPage = () => {
           <div className="space-y-4 mt-4">
             <div>
               <Label className="text-xs text-gray-500">Naam *</Label>
-              <Input value={accountForm.naam} onChange={(e) => setAccountForm({...accountForm, naam: e.target.value})} placeholder="Hoofdrekening" className="mt-1" />
+              <Input value={accountForm.naam} onChange={(e) => setAccountForm({...accountForm, naam: e.target.value})} placeholder="Hoofdrekening" className="mt-1 rounded-lg" />
             </div>
             <div>
               <Label className="text-xs text-gray-500">Bank *</Label>
-              <Input value={accountForm.bank} onChange={(e) => setAccountForm({...accountForm, bank: e.target.value})} placeholder="Hakrinbank" className="mt-1" />
+              <Input value={accountForm.bank} onChange={(e) => setAccountForm({...accountForm, bank: e.target.value})} placeholder="Hakrinbank" className="mt-1 rounded-lg" />
             </div>
             <div>
               <Label className="text-xs text-gray-500">Rekeningnummer *</Label>
-              <Input value={accountForm.rekeningnummer} onChange={(e) => setAccountForm({...accountForm, rekeningnummer: e.target.value})} placeholder="NL00BANK0000000000" className="mt-1" />
+              <Input value={accountForm.rekeningnummer} onChange={(e) => setAccountForm({...accountForm, rekeningnummer: e.target.value})} placeholder="NL00BANK0000000000" className="mt-1 rounded-lg" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-gray-500">Valuta</Label>
                 <Select value={accountForm.valuta} onValueChange={(v) => setAccountForm({...accountForm, valuta: v})}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="mt-1 rounded-lg"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="SRD">SRD</SelectItem>
                     <SelectItem value="USD">USD</SelectItem>
@@ -717,14 +899,14 @@ const BankKasPage = () => {
               </div>
               <div>
                 <Label className="text-xs text-gray-500">Beginsaldo</Label>
-                <Input type="number" value={accountForm.beginsaldo} onChange={(e) => setAccountForm({...accountForm, beginsaldo: parseFloat(e.target.value) || 0})} className="mt-1" />
+                <Input type="number" value={accountForm.beginsaldo} onChange={(e) => setAccountForm({...accountForm, beginsaldo: parseFloat(e.target.value) || 0})} className="mt-1 rounded-lg" />
               </div>
             </div>
           </div>
           <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setShowAccountDialog(false)}>Annuleren</Button>
-            <Button onClick={handleCreateAccount} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
-              {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />} Aanmaken
+            <Button variant="outline" onClick={() => setShowAccountDialog(false)} className="rounded-lg">Annuleren</Button>
+            <Button onClick={handleCreateAccount} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Aanmaken
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -744,21 +926,21 @@ const BankKasPage = () => {
           <div className="space-y-4 mt-4">
             <div>
               <Label className="text-xs text-gray-500">Naam *</Label>
-              <Input value={accountForm.naam} onChange={(e) => setAccountForm({...accountForm, naam: e.target.value})} className="mt-1" />
+              <Input value={accountForm.naam} onChange={(e) => setAccountForm({...accountForm, naam: e.target.value})} className="mt-1 rounded-lg" />
             </div>
             <div>
               <Label className="text-xs text-gray-500">Bank *</Label>
-              <Input value={accountForm.bank} onChange={(e) => setAccountForm({...accountForm, bank: e.target.value})} className="mt-1" />
+              <Input value={accountForm.bank} onChange={(e) => setAccountForm({...accountForm, bank: e.target.value})} className="mt-1 rounded-lg" />
             </div>
             <div>
               <Label className="text-xs text-gray-500">Rekeningnummer *</Label>
-              <Input value={accountForm.rekeningnummer} onChange={(e) => setAccountForm({...accountForm, rekeningnummer: e.target.value})} className="mt-1" />
+              <Input value={accountForm.rekeningnummer} onChange={(e) => setAccountForm({...accountForm, rekeningnummer: e.target.value})} className="mt-1 rounded-lg" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-gray-500">Valuta</Label>
                 <Select value={accountForm.valuta} onValueChange={(v) => setAccountForm({...accountForm, valuta: v})}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="mt-1 rounded-lg"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="SRD">SRD</SelectItem>
                     <SelectItem value="USD">USD</SelectItem>
@@ -768,14 +950,14 @@ const BankKasPage = () => {
               </div>
               <div>
                 <Label className="text-xs text-gray-500">Beginsaldo</Label>
-                <Input type="number" value={accountForm.beginsaldo} onChange={(e) => setAccountForm({...accountForm, beginsaldo: parseFloat(e.target.value) || 0})} className="mt-1" />
+                <Input type="number" value={accountForm.beginsaldo} onChange={(e) => setAccountForm({...accountForm, beginsaldo: parseFloat(e.target.value) || 0})} className="mt-1 rounded-lg" />
               </div>
             </div>
           </div>
           <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setShowEditAccountDialog(false)}>Annuleren</Button>
-            <Button onClick={handleUpdateAccount} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
-              {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />} <Save className="w-4 h-4 mr-1.5" /> Opslaan
+            <Button variant="outline" onClick={() => setShowEditAccountDialog(false)} className="rounded-lg">Annuleren</Button>
+            <Button onClick={handleUpdateAccount} disabled={saving} className="bg-blue-600 hover:bg-blue-700 rounded-lg">
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} <Save className="w-4 h-4 mr-2" /> Opslaan
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -796,7 +978,7 @@ const BankKasPage = () => {
             <div>
               <Label className="text-xs text-gray-500">Bankrekening *</Label>
               <Select value={transactionForm.bankrekening_id} onValueChange={(v) => setTransactionForm({...transactionForm, bankrekening_id: v})}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Selecteer rekening" /></SelectTrigger>
+                <SelectTrigger className="mt-1 rounded-lg"><SelectValue placeholder="Selecteer rekening" /></SelectTrigger>
                 <SelectContent>
                   {bankAccounts.map(a => (
                     <SelectItem key={a.id} value={a.id}>{a.naam || a.name}</SelectItem>
@@ -807,12 +989,12 @@ const BankKasPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-xs text-gray-500">Datum *</Label>
-                <Input type="date" value={transactionForm.datum} onChange={(e) => setTransactionForm({...transactionForm, datum: e.target.value})} className="mt-1" />
+                <Input type="date" value={transactionForm.datum} onChange={(e) => setTransactionForm({...transactionForm, datum: e.target.value})} className="mt-1 rounded-lg" />
               </div>
               <div>
                 <Label className="text-xs text-gray-500">Type *</Label>
                 <Select value={transactionForm.type} onValueChange={(v) => setTransactionForm({...transactionForm, type: v})}>
-                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="mt-1 rounded-lg"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="credit">Ontvangst</SelectItem>
                     <SelectItem value="debit">Uitgave</SelectItem>
@@ -822,21 +1004,21 @@ const BankKasPage = () => {
             </div>
             <div>
               <Label className="text-xs text-gray-500">Bedrag *</Label>
-              <Input type="number" value={transactionForm.bedrag} onChange={(e) => setTransactionForm({...transactionForm, bedrag: parseFloat(e.target.value) || 0})} className="mt-1" />
+              <Input type="number" value={transactionForm.bedrag} onChange={(e) => setTransactionForm({...transactionForm, bedrag: parseFloat(e.target.value) || 0})} className="mt-1 rounded-lg" />
             </div>
             <div>
               <Label className="text-xs text-gray-500">Omschrijving</Label>
-              <Input value={transactionForm.omschrijving} onChange={(e) => setTransactionForm({...transactionForm, omschrijving: e.target.value})} className="mt-1" />
+              <Input value={transactionForm.omschrijving} onChange={(e) => setTransactionForm({...transactionForm, omschrijving: e.target.value})} className="mt-1 rounded-lg" />
             </div>
             <div>
               <Label className="text-xs text-gray-500">Referentie</Label>
-              <Input value={transactionForm.referentie} onChange={(e) => setTransactionForm({...transactionForm, referentie: e.target.value})} className="mt-1" />
+              <Input value={transactionForm.referentie} onChange={(e) => setTransactionForm({...transactionForm, referentie: e.target.value})} className="mt-1 rounded-lg" />
             </div>
           </div>
           <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setShowTransactionDialog(false)}>Annuleren</Button>
-            <Button onClick={handleCreateTransaction} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
-              {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />} Aanmaken
+            <Button variant="outline" onClick={() => setShowTransactionDialog(false)} className="rounded-lg">Annuleren</Button>
+            <Button onClick={handleCreateTransaction} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Aanmaken
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -857,7 +1039,7 @@ const BankKasPage = () => {
             <div>
               <Label className="text-xs text-gray-500">Bankrekening</Label>
               <Select value={selectedAccount?.id || ''} onValueChange={(v) => setSelectedAccount(bankAccounts.find(a => a.id === v))}>
-                <SelectTrigger className="mt-1"><SelectValue placeholder="Selecteer rekening" /></SelectTrigger>
+                <SelectTrigger className="mt-1 rounded-lg"><SelectValue placeholder="Selecteer rekening" /></SelectTrigger>
                 <SelectContent>
                   {bankAccounts.map(a => (
                     <SelectItem key={a.id} value={a.id}>{a.naam || a.name}</SelectItem>
@@ -869,14 +1051,14 @@ const BankKasPage = () => {
               <FileUp className="w-10 h-10 text-gray-300 mx-auto mb-3" />
               <p className="text-sm text-gray-500 mb-3">Sleep een CSV of MT940 bestand hierheen of</p>
               <input type="file" ref={fileInputRef} onChange={handleImport} accept=".csv,.mt940" className="hidden" />
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing}>
-                {importing ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Upload className="w-4 h-4 mr-1.5" />}
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={importing} className="rounded-lg">
+                {importing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Upload className="w-4 h-4 mr-2" />}
                 Bestand selecteren
               </Button>
             </div>
           </div>
           <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setShowImportDialog(false)}>Sluiten</Button>
+            <Button variant="outline" onClick={() => setShowImportDialog(false)} className="rounded-lg">Sluiten</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
