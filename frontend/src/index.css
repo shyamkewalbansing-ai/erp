@@ -454,21 +454,35 @@ code {
 }
 
 /* Custom Checkbox Styling - Override global theme colors */
-.checkbox-custom {
+.checkbox-custom,
+button.checkbox-custom,
+[data-radix-collection-item].checkbox-custom {
     background-color: #ffffff !important;
     border-color: #d1d5db !important;
 }
 
-.checkbox-custom:hover {
+.checkbox-custom:hover,
+button.checkbox-custom:hover {
     border-color: #9ca3af !important;
 }
 
-.checkbox-custom[data-state="checked"] {
+.checkbox-custom[data-state="checked"],
+button.checkbox-custom[data-state="checked"],
+[data-radix-collection-item].checkbox-custom[data-state="checked"] {
     background-color: #059669 !important;
     border-color: #059669 !important;
 }
 
-.checkbox-custom[data-state="checked"]:hover {
+.checkbox-custom[data-state="checked"]:hover,
+button.checkbox-custom[data-state="checked"]:hover {
     background-color: #047857 !important;
     border-color: #047857 !important;
+}
+
+/* Ensure unchecked state is always white */
+.checkbox-custom[data-state="unchecked"],
+button.checkbox-custom[data-state="unchecked"],
+[data-radix-collection-item].checkbox-custom[data-state="unchecked"] {
+    background-color: #ffffff !important;
+    border-color: #d1d5db !important;
 }
