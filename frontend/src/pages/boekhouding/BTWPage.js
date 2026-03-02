@@ -440,7 +440,6 @@ const BTWPage = () => {
                         <Checkbox 
                           checked={selectedRows.length === periodes.length && periodes.length > 0}
                           onCheckedChange={toggleAllRows}
-                          className="h-5 w-5 border-2 border-gray-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
                         />
                       </th>
                       <th className="text-left px-4 py-3">
@@ -499,7 +498,6 @@ const BTWPage = () => {
                             <Checkbox 
                               checked={selectedRows.includes(periode.id)}
                               onCheckedChange={() => toggleRowSelection(periode.id)}
-                              className="h-5 w-5 border-2 border-gray-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
                             />
                           </td>
                           <td className="px-4 py-3">
