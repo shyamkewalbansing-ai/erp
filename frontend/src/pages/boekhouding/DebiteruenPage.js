@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { customersAPI, invoicesAPI } from '../../lib/boekhoudingApi';
 import { formatDate, getStatusLabel } from '../../lib/utils';
 import { Card, CardContent } from '../../components/ui/card';
@@ -7,31 +8,21 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../../components/ui/dialog';
 import { Checkbox } from '../../components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
   Plus, 
   Users, 
   FileText, 
-  Loader2, 
   Search,
   Building2,
-  CheckCircle2,
   Clock,
-  Mail,
-  MapPin,
-  Phone,
-  Wallet,
-  ArrowUpDown,
-  Calendar,
   XCircle,
   AlertCircle,
   Send,
   CheckCircle,
   Circle,
-  Filter,
-  RefreshCw,
+  ArrowUpDown,
   User
 } from 'lucide-react';
 
