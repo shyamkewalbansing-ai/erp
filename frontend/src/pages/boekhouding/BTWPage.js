@@ -242,7 +242,7 @@ const BTWPage = () => {
         {/* Overview Tab */}
         <TabsContent value="overview" className="mt-4 space-y-4">
           {/* Period selector */}
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
             <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
@@ -267,7 +267,7 @@ const BTWPage = () => {
 
           {/* BTW Summary */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+            <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
@@ -295,7 +295,7 @@ const BTWPage = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+            <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
@@ -325,7 +325,7 @@ const BTWPage = () => {
           </div>
 
           {/* BTW Balance */}
-          <Card className={`border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl ${isPayable ? 'bg-amber-50' : 'bg-emerald-50'}`}>
+          <Card className={`border border-gray-200 rounded-2xl shadow-sm ${isPayable ? 'bg-amber-50' : 'bg-emerald-50'}`}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -353,7 +353,7 @@ const BTWPage = () => {
 
         {/* BTW Codes Tab */}
         <TabsContent value="codes" className="mt-4 space-y-4">
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-gray-900">BTW Tarieven</h3>
@@ -364,7 +364,7 @@ const BTWPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -429,7 +429,7 @@ const BTWPage = () => {
 
         {/* Aangifte Tab */}
         <TabsContent value="aangifte" className="mt-4 space-y-4">
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
             <CardContent className="p-6 text-center">
               <FileText className="w-12 h-12 mx-auto text-gray-300 mb-4" />
               <h3 className="font-medium text-gray-900 mb-2">BTW Aangifte</h3>

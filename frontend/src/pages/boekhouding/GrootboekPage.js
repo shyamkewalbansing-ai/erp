@@ -31,7 +31,7 @@ import {
 const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'default' }) => {
   if (loading) {
     return (
-      <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+      <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
         <CardContent className="p-6">
           <Skeleton className="h-4 w-24 mb-4" />
           <Skeleton className="h-10 w-32 mb-2" />
@@ -42,7 +42,7 @@ const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'defa
   }
 
   return (
-    <Card className={`border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl ${
+    <Card className={`border border-gray-200 rounded-2xl shadow-sm ${
       variant === 'primary' ? 'bg-emerald-50' : 'bg-white'
     }`}>
       <CardContent className="p-6">
@@ -539,7 +539,7 @@ const GrootboekPage = () => {
           </div>
 
           <TabsContent value="accounts">
-            <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+            <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
               <CardContent className="p-6">
                 {/* Filter Bar */}
                 <div className="flex items-center justify-between mb-6">
@@ -642,7 +642,7 @@ const GrootboekPage = () => {
           </TabsContent>
 
           <TabsContent value="journal">
-            <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+            <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-gray-900">Journaalposten</h3>

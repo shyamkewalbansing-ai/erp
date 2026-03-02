@@ -414,7 +414,7 @@ const CrediteurenPage = () => {
       </div>
 
       {/* Filters & Search */}
-      <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+      <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
@@ -443,7 +443,7 @@ const CrediteurenPage = () => {
       </Card>
 
       {/* Table */}
-      <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+      <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">

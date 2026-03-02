@@ -609,7 +609,7 @@ const DebiteurenPage = () => {
 
             {/* Desktop Table View */}
             <div className="hidden md:block">
-              <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+              <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <Table>
@@ -744,7 +744,7 @@ const DebiteurenPage = () => {
 
             {/* Desktop Table */}
             <div className="hidden md:block">
-              <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+              <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
                 <CardContent className="p-0">
                   <div className="overflow-x-auto">
                     <Table>

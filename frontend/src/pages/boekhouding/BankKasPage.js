@@ -476,7 +476,7 @@ const BankKasPage = () => {
           </div>
 
           {/* Recent Transactions */}
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
             <CardContent className="p-6">
               <h3 className="font-medium text-gray-900 mb-4">Recente Transacties</h3>
               <div className="space-y-2">
@@ -504,7 +504,7 @@ const BankKasPage = () => {
         {/* Transactions Tab */}
         <TabsContent value="transactions" className="mt-4 space-y-4">
           {/* Filters */}
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
             <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
@@ -539,7 +539,7 @@ const BankKasPage = () => {
           </Card>
 
           {/* Transactions Table */}
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
@@ -597,7 +597,7 @@ const BankKasPage = () => {
 
         {/* Accounts Tab */}
         <TabsContent value="accounts" className="mt-4 space-y-4">
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
             <CardContent className="p-6 flex items-center justify-between">
               <h3 className="font-medium text-gray-900">Bankrekeningen</h3>
               <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 rounded-lg" onClick={() => { setAccountForm({ naam: '', bank: '', rekeningnummer: '', valuta: 'SRD', beginsaldo: 0 }); setShowAccountDialog(true); }}>
@@ -606,7 +606,7 @@ const BankKasPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">

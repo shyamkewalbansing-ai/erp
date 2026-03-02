@@ -522,7 +522,7 @@ const InkoopPage = () => {
       </div>
 
       {/* Tabs - matching VerkoopPage style */}
-      <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+      <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
         <CardContent className="p-0">
           <div className="border-b border-gray-200 px-6">
             <div className="flex gap-1">
