@@ -133,7 +133,7 @@ async def create_hrm_employee(employee: HRMEmployee, current_user: dict = Depend
     db = await get_db()
     employee_dict = employee.model_dump()
     employee_dict["workspace_id"] = current_user.get("workspace_id")
-    employee_dict["user_id"] = str(current_user["_id"])
+    employee_dict["user_id"] = current_user.get("id")
     employee_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     
     # Generate employee ID if not provided
