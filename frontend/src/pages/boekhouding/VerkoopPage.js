@@ -1011,80 +1011,82 @@ const VerkoopPage = () => {
         </div>
 
         {/* Main Card */}
-        <Card className="bg-white border-gray-200 rounded-2xl shadow-sm">
-          {/* Tabs */}
-          <div className="border-b border-gray-200 px-4 flex items-center justify-between">
-            <div className="flex">
-              <TabButton active={activeTab === 'invoices'} onClick={() => { setActiveTab('invoices'); setSelectedItems([]); }} icon={Receipt} label="Facturen" count={invoices.length} alert={stats.overdueCount > 0} />
-              <TabButton active={activeTab === 'quotes'} onClick={() => { setActiveTab('quotes'); setSelectedItems([]); }} icon={FileText} label="Offertes" count={quotes.length} />
-              <TabButton active={activeTab === 'orders'} onClick={() => { setActiveTab('orders'); setSelectedItems([]); }} icon={ShoppingCart} label="Orders" count={orders.length} />
+        <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+          <CardContent className="p-0">
+            {/* Tabs */}
+            <div className="border-b border-gray-200 px-6 flex items-center justify-between">
+              <div className="flex">
+                <TabButton active={activeTab === 'invoices'} onClick={() => { setActiveTab('invoices'); setSelectedItems([]); }} icon={Receipt} label="Facturen" count={invoices.length} alert={stats.overdueCount > 0} />
+                <TabButton active={activeTab === 'quotes'} onClick={() => { setActiveTab('quotes'); setSelectedItems([]); }} icon={FileText} label="Offertes" count={quotes.length} />
+                <TabButton active={activeTab === 'orders'} onClick={() => { setActiveTab('orders'); setSelectedItems([]); }} icon={ShoppingCart} label="Orders" count={orders.length} />
+              </div>
             </div>
-          </div>
 
-          {/* Quick Filters */}
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-            <span className="text-xs text-gray-500 mr-2">Filter:</span>
-            <FilterChip label="Alles" active={quickFilter === 'all'} onClick={() => setQuickFilter('all')} />
-            <FilterChip label="Deze week" active={quickFilter === 'week'} onClick={() => setQuickFilter('week')} />
-            <FilterChip label="Deze maand" active={quickFilter === 'month'} onClick={() => setQuickFilter('month')} />
-            <FilterChip label="Openstaand" count={stats.openCount} active={quickFilter === 'unpaid'} onClick={() => setQuickFilter('unpaid')} />
-            <FilterChip label="Vervallen" count={stats.overdueCount} active={quickFilter === 'overdue'} onClick={() => setQuickFilter('overdue')} />
-          </div>
-
-          {/* Toolbar */}
-          <div className="px-4 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {selectedItems.length > 0 ? (
-                <>
-                  <span className="text-sm text-gray-600">{selectedItems.length} geselecteerd</span>
-                  <div className="w-px h-5 bg-gray-300 mx-1" />
-                  <Button variant="ghost" size="sm"><Send className="w-4 h-4 mr-1" /> Verzenden</Button>
-                  <Button variant="ghost" size="sm"><Bell className="w-4 h-4 mr-1" /> Herinnering</Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleExport('csv')}><Download className="w-4 h-4 mr-1" /> Exporteren</Button>
-                  <Button variant="ghost" size="sm" className="text-red-600"><Trash2 className="w-4 h-4 mr-1" /> Verwijderen</Button>
-                </>
-              ) : (
-                <>
-                  <Button variant="ghost" size="sm" onClick={fetchData}><RefreshCw className="w-4 h-4 mr-1" /> Vernieuwen</Button>
-                  <Button variant="ghost" size="sm" onClick={() => handleExport('csv')}><FileSpreadsheet className="w-4 h-4 mr-1" /> Exporteren</Button>
-                  <Button variant="ghost" size="sm"><Printer className="w-4 h-4 mr-1" /> Afdrukken</Button>
-                </>
-              )}
+            {/* Quick Filters */}
+            <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-2">
+              <span className="text-xs text-gray-500 mr-2">Filter:</span>
+              <FilterChip label="Alles" active={quickFilter === 'all'} onClick={() => setQuickFilter('all')} />
+              <FilterChip label="Deze week" active={quickFilter === 'week'} onClick={() => setQuickFilter('week')} />
+              <FilterChip label="Deze maand" active={quickFilter === 'month'} onClick={() => setQuickFilter('month')} />
+              <FilterChip label="Openstaand" count={stats.openCount} active={quickFilter === 'unpaid'} onClick={() => setQuickFilter('unpaid')} />
+              <FilterChip label="Vervallen" count={stats.overdueCount} active={quickFilter === 'overdue'} onClick={() => setQuickFilter('overdue')} />
             </div>
-            <span className="text-xs text-gray-500">
-              {activeTab === 'invoices' && `${filteredInvoices.length} van ${invoices.length}`}
-              {activeTab === 'quotes' && `${filteredQuotes.length} van ${quotes.length}`}
-              {activeTab === 'orders' && `${filteredOrders.length} van ${orders.length}`}
-            </span>
-          </div>
 
-          {/* Search & Filter */}
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
-              <Input placeholder="Zoeken op nummer of klant..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-9" />
+            {/* Toolbar */}
+            <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {selectedItems.length > 0 ? (
+                  <>
+                    <span className="text-sm text-gray-600">{selectedItems.length} geselecteerd</span>
+                    <div className="w-px h-5 bg-gray-300 mx-1" />
+                    <Button variant="ghost" size="sm"><Send className="w-4 h-4 mr-1" /> Verzenden</Button>
+                    <Button variant="ghost" size="sm"><Bell className="w-4 h-4 mr-1" /> Herinnering</Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleExport('csv')}><Download className="w-4 h-4 mr-1" /> Exporteren</Button>
+                    <Button variant="ghost" size="sm" className="text-red-600"><Trash2 className="w-4 h-4 mr-1" /> Verwijderen</Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="ghost" size="sm" onClick={fetchData}><RefreshCw className="w-4 h-4 mr-1" /> Vernieuwen</Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleExport('csv')}><FileSpreadsheet className="w-4 h-4 mr-1" /> Exporteren</Button>
+                    <Button variant="ghost" size="sm"><Printer className="w-4 h-4 mr-1" /> Afdrukken</Button>
+                  </>
+                )}
+              </div>
+              <span className="text-xs text-gray-500">
+                {activeTab === 'invoices' && `${filteredInvoices.length} van ${invoices.length}`}
+                {activeTab === 'quotes' && `${filteredQuotes.length} van ${quotes.length}`}
+                {activeTab === 'orders' && `${filteredOrders.length} van ${orders.length}`}
+              </span>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-44 h-9">
-                <Filter className="w-4 h-4 mr-1.5 text-gray-400" />
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alle statussen</SelectItem>
-                <SelectItem value="concept">Concept</SelectItem>
-                <SelectItem value="verzonden">Verzonden</SelectItem>
-                <SelectItem value="betaald">Betaald</SelectItem>
-                <SelectItem value="herinnering">Herinnering</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
 
-          {/* Table */}
-          <div className="p-4">
-            {activeTab === 'invoices' && renderTable('invoice')}
-            {activeTab === 'quotes' && renderTable('quote')}
-            {activeTab === 'orders' && renderTable('order')}
-          </div>
+            {/* Search & Filter */}
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input placeholder="Zoeken op nummer of klant..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-9 rounded-lg" />
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-44 h-9 rounded-lg">
+                  <Filter className="w-4 h-4 mr-1.5 text-gray-400" />
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle statussen</SelectItem>
+                  <SelectItem value="concept">Concept</SelectItem>
+                  <SelectItem value="verzonden">Verzonden</SelectItem>
+                  <SelectItem value="betaald">Betaald</SelectItem>
+                  <SelectItem value="herinnering">Herinnering</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Table */}
+            <div className="p-6">
+              {activeTab === 'invoices' && renderTable('invoice')}
+              {activeTab === 'quotes' && renderTable('quote')}
+              {activeTab === 'orders' && renderTable('order')}
+            </div>
+          </CardContent>
         </Card>
       </div>
 
