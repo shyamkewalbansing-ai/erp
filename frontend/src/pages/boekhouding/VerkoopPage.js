@@ -1,1238 +1,597 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { quotesAPI, salesOrdersAPI, invoicesAPI, pdfAPI } from '../../lib/boekhoudingApi';
+import { invoicesAPI, quotesAPI } from '../../lib/boekhoudingApi';
 import { formatDate, getStatusLabel } from '../../lib/utils';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Skeleton } from '../../components/ui/skeleton';
-import { Textarea } from '../../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Checkbox } from '../../components/ui/checkbox';
-import { ScrollArea } from '../../components/ui/scroll-area';
 import { toast } from 'sonner';
 import { 
-  Plus, FileText, ShoppingCart, Receipt, Loader2, Download, Send, CheckCircle, 
-  MoreHorizontal, CreditCard, Search, Trash2, Eye, RefreshCw, 
-  Mail, Phone, MapPin, Building2, Copy, Printer, 
-  AlertCircle, ChevronDown, ChevronRight, FileSpreadsheet,
-  Bell, X, Edit, Clock, Home, Settings, HelpCircle, Filter,
-  Calendar, ArrowUpDown, Save, XCircle, Pencil,
-  TrendingUp, Users, DollarSign
+  Plus, 
+  FileText, 
+  Search,
+  Building2,
+  Clock,
+  XCircle,
+  AlertCircle,
+  Send,
+  CheckCircle,
+  Circle,
+  ArrowUpDown,
+  User,
+  Download,
+  Mail,
+  ShoppingCart,
+  Receipt,
+  Eye,
+  Printer
 } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../../components/ui/dropdown-menu';
 
-// Currency formatter
+// Format currency
 const formatCurrency = (amount, currency = 'SRD') => {
-  const num = new Intl.NumberFormat('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Math.abs(amount || 0));
-  return currency === 'USD' ? `$ ${num}` : currency === 'EUR' ? `€ ${num}` : `SRD ${num}`;
+  const formatted = new Intl.NumberFormat('nl-NL', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(amount || 0));
+  if (currency === 'USD') return `$ ${formatted}`;
+  if (currency === 'EUR') return `€ ${formatted}`;
+  return `SRD ${formatted}`;
 };
 
-// Status Badge - Matching Dashboard style
-const StatusBadge = ({ status }) => {
-  const styles = {
-    concept: 'bg-gray-100 text-gray-600',
-    verzonden: 'bg-blue-100 text-blue-700',
-    betaald: 'bg-emerald-100 text-emerald-700',
-    herinnering: 'bg-amber-100 text-amber-700',
-    geaccepteerd: 'bg-emerald-100 text-emerald-700',
-    nieuw: 'bg-blue-100 text-blue-700'
-  };
-  return (
-    <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-lg ${styles[status] || styles.concept}`}>
-      {getStatusLabel(status)}
-    </span>
-  );
-};
-
-// Stat Card - Matching Dashboard design exactly with proper number display
-const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, iconColor, onClick }) => {
-  return (
-    <Card className={`bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow ${onClick ? 'cursor-pointer' : ''}`} onClick={onClick}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
-            <p className="text-xs text-gray-500 font-medium truncate">{title}</p>
-            <p className="text-sm lg:text-base font-bold text-gray-900 mt-1 whitespace-nowrap">{value}</p>
-            {subtitle && (
-              <p className={`text-xs mt-1 ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
-            )}
-          </div>
-          <div className={`w-9 h-9 lg:w-10 lg:h-10 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
-            <Icon className={`w-4 h-4 lg:w-5 lg:h-5 ${iconColor}`} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-// Loading Card
-const LoadingStatCard = () => (
-  <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-    <CardContent className="p-5">
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <Skeleton className="h-4 w-20 mb-3" />
-          <Skeleton className="h-8 w-28 mb-2" />
-          <Skeleton className="h-3 w-16" />
-        </div>
-        <Skeleton className="w-12 h-12 rounded-xl" />
-      </div>
-    </CardContent>
-  </Card>
-);
-
-// Quick Filter Chip
-const FilterChip = ({ label, count, active, onClick }) => (
+// Tab Button Component
+const TabButton = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
-    className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${
+    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
       active 
-        ? 'bg-emerald-100 text-emerald-700' 
+        ? 'bg-emerald-600 text-white shadow-sm' 
         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
     }`}
   >
-    {label}
-    {count !== undefined && (
-      <span className={`px-1.5 py-0.5 text-[10px] rounded-full ${active ? 'bg-emerald-200 text-emerald-800' : 'bg-gray-200 text-gray-600'}`}>
-        {count}
-      </span>
-    )}
+    {children}
   </button>
 );
 
-// Tab Button - Matching Dashboard style
-const TabButton = ({ active, onClick, icon: Icon, label, count, alert }) => (
-  <button
-    onClick={onClick}
-    className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-      active 
-        ? 'border-emerald-500 text-emerald-600' 
-        : 'border-transparent text-gray-500 hover:text-gray-700'
-    }`}
-  >
-    <Icon className="w-4 h-4" />
-    {label}
-    <span className={`px-1.5 py-0.5 text-[10px] font-semibold rounded ${active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
-      {count}
-    </span>
-    {alert && <span className="absolute top-2 right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse" />}
-  </button>
+// Status Legend Item
+const StatusLegendItem = ({ icon: Icon, label, color }) => (
+  <div className="flex items-center gap-2">
+    <Icon className={`w-4 h-4 ${color}`} />
+    <span className="text-xs text-gray-600">{label}</span>
+  </div>
 );
 
-// Business-style Detail Sidebar - Clean and functional
-const DetailSidebar = ({ item, type, open, onClose, onAction, onSave, onRefresh }) => {
-  const [isEditing, setIsEditing] = useState(false);
-  const [editData, setEditData] = useState({});
-  const [saving, setSaving] = useState(false);
+// Status Icon Component
+const StatusIcon = ({ status }) => {
+  switch (status) {
+    case 'betaald':
+      return <CheckCircle className="w-5 h-5 text-emerald-500" />;
+    case 'verzonden':
+      return <Send className="w-5 h-5 text-blue-500" />;
+    case 'herinnering':
+      return <AlertCircle className="w-5 h-5 text-amber-500" />;
+    case 'verlopen':
+      return <XCircle className="w-5 h-5 text-red-500" />;
+    case 'concept':
+      return <Circle className="w-5 h-5 text-gray-400" />;
+    case 'geaccepteerd':
+      return <CheckCircle className="w-5 h-5 text-emerald-500" />;
+    default:
+      return <Clock className="w-5 h-5 text-gray-400" />;
+  }
+};
 
-  useEffect(() => {
-    if (item) {
-      setEditData({
-        factuurnummer: item.factuurnummer || item.invoice_number || '',
-        debiteur_naam: item.debiteur_naam || item.customer_name || '',
-        debiteur_email: item.debiteur_email || item.customer_email || '',
-        debiteur_telefoon: item.debiteur_telefoon || item.customer_phone || '',
-        debiteur_adres: item.debiteur_adres || item.customer_address || '',
-        factuurdatum: item.factuurdatum || item.date || '',
-        vervaldatum: item.vervaldatum || item.due_date || '',
-        valuta: item.valuta || item.currency || 'SRD',
-        opmerkingen: item.opmerkingen || item.notes || '',
-        referentie: item.referentie || item.reference || ''
-      });
-      setIsEditing(false);
-    }
-  }, [item]);
-
-  if (!item || !open) return null;
-
-  const number = item.factuurnummer || item.invoice_number || item.quote_number || item.order_number || '-';
-  const date = item.factuurdatum || item.date;
-  const customer = item.debiteur_naam || item.customer_name || '-';
-  const total = item.totaal_incl_btw || item.total || 0;
-  const subtotal = item.subtotaal || item.totaal_excl_btw || item.subtotal || 0;
-  const tax = item.btw_bedrag || item.tax || 0;
-  const paid = item.totaal_betaald || 0;
-  const openAmount = item.openstaand_bedrag !== undefined ? item.openstaand_bedrag : (total - paid);
-  const currency = item.valuta || item.currency || 'SRD';
-  const lines = item.regels || item.items || [];
-  const payments = item.betalingen || [];
-  const dueDate = item.vervaldatum || item.due_date || item.valid_until;
-  const isOverdue = item.status !== 'betaald' && dueDate && new Date(dueDate) < new Date();
-  const daysOverdue = isOverdue ? Math.floor((new Date() - new Date(dueDate)) / (1000 * 60 * 60 * 24)) : 0;
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-      await onSave(item.id, editData);
-      toast.success('Wijzigingen opgeslagen');
-      setIsEditing(false);
-      onRefresh();
-    } catch (error) {
-      toast.error('Fout bij opslaan');
-    } finally {
-      setSaving(false);
-    }
+// Action Badge Component
+const ActionBadge = ({ type, label }) => {
+  const colors = {
+    success: 'text-emerald-600',
+    warning: 'text-amber-600', 
+    danger: 'text-red-600',
+    info: 'text-blue-600',
+    neutral: 'text-gray-500'
   };
-
-  const handleCancel = () => {
-    setEditData({
-      factuurnummer: item.factuurnummer || item.invoice_number || '',
-      debiteur_naam: item.debiteur_naam || item.customer_name || '',
-      debiteur_email: item.debiteur_email || item.customer_email || '',
-      debiteur_telefoon: item.debiteur_telefoon || item.customer_phone || '',
-      debiteur_adres: item.debiteur_adres || item.customer_address || '',
-      factuurdatum: item.factuurdatum || item.date || '',
-      vervaldatum: item.vervaldatum || item.due_date || '',
-      valuta: item.valuta || item.currency || 'SRD',
-      opmerkingen: item.opmerkingen || item.notes || '',
-      referentie: item.referentie || item.reference || ''
-    });
-    setIsEditing(false);
-  };
-
+  
   return (
-    <>
-      {/* Simple dark overlay */}
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
-      
-      {/* Clean business-style panel */}
-      <div className="fixed inset-y-0 right-0 w-[500px] bg-white shadow-lg z-50 flex flex-col border-l border-gray-200">
-        {/* Header - Simple and clean */}
-        <div className="px-5 py-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">{number}</h2>
-              <p className="text-sm text-gray-500">{customer}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <StatusBadge status={item.status} />
-              <button onClick={onClose} className="p-1.5 hover:bg-gray-200 rounded">
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Action buttons - Simple row */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => onAction('pdf', item)}>
-              <Download className="w-4 h-4 mr-1.5" /> PDF
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onAction('email', item)}>
-              <Mail className="w-4 h-4 mr-1.5" /> E-mail
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => onAction('print', item)}>
-              <Printer className="w-4 h-4 mr-1.5" /> Print
-            </Button>
-          </div>
-          {!isEditing ? (
-            <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-              <Pencil className="w-4 h-4 mr-1.5" /> Bewerken
-            </Button>
-          ) : (
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={handleCancel}>Annuleren</Button>
-              <Button size="sm" onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
-                {saving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
-                Opslaan
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Content */}
-        <ScrollArea className="flex-1">
-          <div className="p-5 space-y-4">
-            {/* Overdue Alert */}
-            {isOverdue && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-red-500 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-red-700">Factuur is {daysOverdue} dagen vervallen</p>
-                    <p className="text-xs text-red-600 mt-1">Vervaldatum: {formatDate(dueDate)}</p>
-                    <Button size="sm" variant="outline" className="mt-2 h-7 text-xs border-red-300 text-red-700 hover:bg-red-100" onClick={() => onAction('reminder', item)}>
-                      <Bell className="w-3 h-3 mr-1" /> Herinnering sturen
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Factuurgegevens */}
-            <div className="border border-gray-200 rounded-lg">
-              <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-700">Factuurgegevens</p>
-              </div>
-              <div className="p-4">
-                {isEditing ? (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs text-gray-500">Factuurnummer</Label>
-                        <Input value={editData.factuurnummer} onChange={(e) => setEditData({...editData, factuurnummer: e.target.value})} className="mt-1 h-8 text-sm" />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">Referentie</Label>
-                        <Input value={editData.referentie} onChange={(e) => setEditData({...editData, referentie: e.target.value})} className="mt-1 h-8 text-sm" placeholder="Optioneel" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label className="text-xs text-gray-500">Factuurdatum</Label>
-                        <Input type="date" value={editData.factuurdatum?.split('T')[0] || ''} onChange={(e) => setEditData({...editData, factuurdatum: e.target.value})} className="mt-1 h-8 text-sm" />
-                      </div>
-                      <div>
-                        <Label className="text-xs text-gray-500">Vervaldatum</Label>
-                        <Input type="date" value={editData.vervaldatum?.split('T')[0] || ''} onChange={(e) => setEditData({...editData, vervaldatum: e.target.value})} className="mt-1 h-8 text-sm" />
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-500">Valuta</Label>
-                      <Select value={editData.valuta} onValueChange={(v) => setEditData({...editData, valuta: v})}>
-                        <SelectTrigger className="mt-1 h-8 text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="SRD">SRD</SelectItem>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                    <div>
-                      <p className="text-xs text-gray-400">Factuurnummer</p>
-                      <p className="font-medium text-gray-900">{number}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Referentie</p>
-                      <p className="text-gray-900">{item.referentie || '-'}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Factuurdatum</p>
-                      <p className="text-gray-900">{formatDate(date)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Vervaldatum</p>
-                      <p className={isOverdue ? 'text-red-600 font-medium' : 'text-gray-900'}>{formatDate(dueDate)}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Valuta</p>
-                      <p className="text-gray-900">{currency}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400">Status</p>
-                      <StatusBadge status={item.status} />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Bedragen */}
-            <div className="border border-gray-200 rounded-lg">
-              <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-700">Bedragen</p>
-              </div>
-              <div className="p-4 space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">Subtotaal</span>
-                  <span className="text-gray-900">{formatCurrency(subtotal, currency)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">BTW (15%)</span>
-                  <span className="text-gray-900">{formatCurrency(tax, currency)}</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-gray-100">
-                  <span className="font-medium text-gray-900">Totaal</span>
-                  <span className="font-bold text-gray-900">{formatCurrency(total, currency)}</span>
-                </div>
-                {type === 'invoice' && paid > 0 && (
-                  <div className="flex justify-between text-emerald-600">
-                    <span>Betaald</span>
-                    <span>- {formatCurrency(paid, currency)}</span>
-                  </div>
-                )}
-                {type === 'invoice' && openAmount > 0 && (
-                  <div className="flex justify-between pt-2 border-t border-gray-100 text-amber-600">
-                    <span className="font-medium">Openstaand</span>
-                    <span className="font-bold">{formatCurrency(openAmount, currency)}</span>
-                  </div>
-                )}
-                {type === 'invoice' && item.status === 'betaald' && (
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-100 text-emerald-600">
-                    <span className="font-medium">Volledig betaald</span>
-                    <CheckCircle className="w-4 h-4" />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Klantgegevens */}
-            <div className="border border-gray-200 rounded-lg">
-              <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-700">Klantgegevens</p>
-              </div>
-              <div className="p-4">
-                {isEditing ? (
-                  <div className="space-y-3">
-                    <div>
-                      <Label className="text-xs text-gray-500">Naam</Label>
-                      <Input value={editData.debiteur_naam} onChange={(e) => setEditData({...editData, debiteur_naam: e.target.value})} className="mt-1 h-8 text-sm" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-500">E-mail</Label>
-                      <Input type="email" value={editData.debiteur_email} onChange={(e) => setEditData({...editData, debiteur_email: e.target.value})} className="mt-1 h-8 text-sm" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-500">Telefoon</Label>
-                      <Input value={editData.debiteur_telefoon} onChange={(e) => setEditData({...editData, debiteur_telefoon: e.target.value})} className="mt-1 h-8 text-sm" />
-                    </div>
-                    <div>
-                      <Label className="text-xs text-gray-500">Adres</Label>
-                      <Textarea value={editData.debiteur_adres} onChange={(e) => setEditData({...editData, debiteur_adres: e.target.value})} className="mt-1 text-sm" rows={2} />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2 text-sm">
-                    <p className="font-medium text-gray-900">{customer}</p>
-                    {(item.debiteur_email || item.customer_email) && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Mail className="w-3.5 h-3.5 text-gray-400" />
-                        <span>{item.debiteur_email || item.customer_email}</span>
-                      </div>
-                    )}
-                    {(item.debiteur_telefoon || item.customer_phone) && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <Phone className="w-3.5 h-3.5 text-gray-400" />
-                        <span>{item.debiteur_telefoon || item.customer_phone}</span>
-                      </div>
-                    )}
-                    {(item.debiteur_adres || item.customer_address) && (
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                        <span>{item.debiteur_adres || item.customer_address}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Factuurregels */}
-            <div className="border border-gray-200 rounded-lg">
-              <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-700">Factuurregels ({lines.length})</p>
-              </div>
-              {lines.length > 0 ? (
-                <table className="w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="text-left px-4 py-2 text-xs font-medium text-gray-500">Omschrijving</th>
-                      <th className="text-center px-2 py-2 text-xs font-medium text-gray-500">Aantal</th>
-                      <th className="text-right px-2 py-2 text-xs font-medium text-gray-500">Prijs</th>
-                      <th className="text-right px-4 py-2 text-xs font-medium text-gray-500">Totaal</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {lines.map((line, idx) => (
-                      <tr key={idx} className="border-b border-gray-100 last:border-0">
-                        <td className="px-4 py-2.5 text-gray-900">{line.omschrijving || line.description || 'Product/Dienst'}</td>
-                        <td className="px-2 py-2.5 text-center text-gray-600">{line.aantal || line.quantity || 1}</td>
-                        <td className="px-2 py-2.5 text-right text-gray-600">{formatCurrency(line.eenheidsprijs || line.prijs || line.price || 0, currency)}</td>
-                        <td className="px-4 py-2.5 text-right font-medium text-gray-900">{formatCurrency(line.bedrag_incl || line.totaal || line.total || 0, currency)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              ) : (
-                <div className="px-4 py-6 text-center text-gray-400 text-sm">Geen regels</div>
-              )}
-            </div>
-
-            {/* Betalingen */}
-            {type === 'invoice' && (
-              <div className="border border-gray-200 rounded-lg">
-                <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-                  <p className="text-sm font-medium text-gray-700">Betalingen ({payments.length})</p>
-                  {item.status !== 'betaald' && (
-                    <button className="text-xs text-emerald-600 hover:underline" onClick={() => onAction('payment', item)}>
-                      + Toevoegen
-                    </button>
-                  )}
-                </div>
-                {payments.length > 0 ? (
-                  <div className="divide-y divide-gray-100">
-                    {payments.map((p, idx) => (
-                      <div key={idx} className="px-4 py-3 flex items-center justify-between text-sm">
-                        <div>
-                          <p className="text-gray-900">{formatDate(p.datum || p.date)}</p>
-                          <p className="text-xs text-gray-500 capitalize">{p.betaalmethode || p.method || 'Bank'}</p>
-                        </div>
-                        <span className="font-medium text-emerald-600">{formatCurrency(p.bedrag || p.amount || 0, currency)}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="px-4 py-6 text-center text-gray-400 text-sm">Geen betalingen</div>
-                )}
-              </div>
-            )}
-
-            {/* Opmerkingen */}
-            <div className="border border-gray-200 rounded-lg">
-              <div className="px-4 py-2.5 bg-gray-50 border-b border-gray-200">
-                <p className="text-sm font-medium text-gray-700">Opmerkingen</p>
-              </div>
-              <div className="p-4">
-                {isEditing ? (
-                  <Textarea value={editData.opmerkingen} onChange={(e) => setEditData({...editData, opmerkingen: e.target.value})} placeholder="Opmerkingen..." rows={2} className="text-sm" />
-                ) : (
-                  <p className="text-sm text-gray-600">{item.opmerkingen || item.notes || 'Geen opmerkingen'}</p>
-                )}
-              </div>
-            </div>
-          </div>
-        </ScrollArea>
-
-        {/* Footer Actions */}
-        {type === 'invoice' && item.status !== 'betaald' && !isEditing && (
-          <div className="p-4 border-t border-gray-200 bg-gray-50 flex gap-3">
-            <Button variant="outline" className="flex-1" onClick={() => onAction('payment', item)}>
-              <CreditCard className="w-4 h-4 mr-2" /> Betaling Registreren
-            </Button>
-            <Button className="flex-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => onAction('markPaid', item)}>
-              <CheckCircle className="w-4 h-4 mr-2" /> Markeer als Betaald
-            </Button>
-          </div>
-        )}
-      </div>
-    </>
+    <span className={`text-sm ${colors[type] || colors.neutral}`}>
+      {label}
+    </span>
   );
 };
-// Main Component
+
 const VerkoopPage = () => {
   const navigate = useNavigate();
-  const [quotes, setQuotes] = useState([]);
-  const [orders, setOrders] = useState([]);
   const [invoices, setInvoices] = useState([]);
+  const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('invoices');
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('facturen');
+  const [selectedYear, setSelectedYear] = useState('2024');
+  const [selectedRows, setSelectedRows] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
-  const [quickFilter, setQuickFilter] = useState('all');
-  const [selectedItems, setSelectedItems] = useState([]);
-  const [sortConfig, setSortConfig] = useState({ key: 'date', dir: 'desc' });
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailItem, setDetailItem] = useState(null);
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [newPayment, setNewPayment] = useState({
-    bedrag: 0, datum: new Date().toISOString().split('T')[0], betaalmethode: 'bank', referentie: ''
-  });
-  
-  // Email dialog state
-  const [showEmailDialog, setShowEmailDialog] = useState(false);
-  const [emailData, setEmailData] = useState({
-    to: '', subject: '', message: ''
-  });
-  const [emailInvoice, setEmailInvoice] = useState(null);
-  const [sendingEmail, setSendingEmail] = useState(false);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
-    setLoading(true);
     try {
-      const [q, o, i] = await Promise.all([
-        quotesAPI.getAll(), salesOrdersAPI.getAll(), invoicesAPI.getAll({ invoice_type: 'sales' })
+      const [invoicesRes, quotesRes] = await Promise.all([
+        invoicesAPI.getAll({ invoice_type: 'sales' }),
+        quotesAPI.getAll()
       ]);
-      setQuotes(q.data || []);
-      setOrders(o.data || []);
-      setInvoices(i.data || []);
-    } catch { toast.error('Fout bij laden'); }
-    finally { setLoading(false); }
-  };
-
-  // Stats
-  const stats = useMemo(() => {
-    const now = new Date();
-    const total = invoices.reduce((s, i) => s + (i.totaal_incl_btw || i.total || 0), 0);
-    const paid = invoices.reduce((s, i) => s + (i.totaal_betaald || 0), 0);
-    const open = invoices.reduce((s, i) => s + (i.openstaand_bedrag || 0), 0);
-    const overdue = invoices.filter(i => i.status !== 'betaald' && new Date(i.vervaldatum || i.due_date) < now);
-    const overdueAmt = overdue.reduce((s, i) => s + (i.openstaand_bedrag || i.totaal_incl_btw || 0), 0);
-    const paidCount = invoices.filter(i => i.status === 'betaald').length;
-    const openCount = invoices.filter(i => i.status !== 'betaald').length;
-    
-    return { total, paid, open, overdueCount: overdue.length, overdueAmt, count: invoices.length, paidCount, openCount };
-  }, [invoices]);
-
-  // Filters
-  const getData = (data) => {
-    let filtered = [...data];
-    
-    const now = new Date();
-    if (quickFilter === 'week') {
-      const weekAgo = new Date(now.setDate(now.getDate() - 7));
-      filtered = filtered.filter(i => new Date(i.factuurdatum || i.date) >= weekAgo);
-    } else if (quickFilter === 'month') {
-      filtered = filtered.filter(i => {
-        const d = new Date(i.factuurdatum || i.date);
-        return d.getMonth() === new Date().getMonth() && d.getFullYear() === new Date().getFullYear();
-      });
-    } else if (quickFilter === 'overdue') {
-      filtered = filtered.filter(i => i.status !== 'betaald' && new Date(i.vervaldatum || i.due_date) < new Date());
-    } else if (quickFilter === 'unpaid') {
-      filtered = filtered.filter(i => i.status !== 'betaald');
-    }
-    
-    if (searchTerm) {
-      const t = searchTerm.toLowerCase();
-      filtered = filtered.filter(item => {
-        const num = (item.factuurnummer || item.invoice_number || item.quote_number || item.order_number || '').toLowerCase();
-        const cust = (item.debiteur_naam || item.customer_name || '').toLowerCase();
-        return num.includes(t) || cust.includes(t);
-      });
-    }
-    
-    if (statusFilter !== 'all') filtered = filtered.filter(i => i.status === statusFilter);
-    
-    filtered.sort((a, b) => {
-      let av, bv;
-      if (sortConfig.key === 'amount') { av = a.totaal_incl_btw || a.total || 0; bv = b.totaal_incl_btw || b.total || 0; }
-      else if (sortConfig.key === 'customer') { av = a.debiteur_naam || a.customer_name || ''; bv = b.debiteur_naam || b.customer_name || ''; }
-      else { av = new Date(a.factuurdatum || a.date); bv = new Date(b.factuurdatum || b.date); }
-      if (av < bv) return sortConfig.dir === 'asc' ? -1 : 1;
-      if (av > bv) return sortConfig.dir === 'asc' ? 1 : -1;
-      return 0;
-    });
-    
-    return filtered;
-  };
-
-  const filteredInvoices = getData(invoices);
-  const filteredQuotes = getData(quotes);
-  const filteredOrders = getData(orders);
-
-  const handleSort = (key) => {
-    setSortConfig(prev => ({ key, dir: prev.key === key && prev.dir === 'desc' ? 'asc' : 'desc' }));
-  };
-
-  const handleSelect = (id) => {
-    setSelectedItems(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
-
-  const handleSelectAll = (items) => {
-    setSelectedItems(prev => prev.length === items.length ? [] : items.map(i => i.id));
-  };
-
-  const openDetail = async (item) => { 
-    // Always fetch the latest data for this item
-    try {
-      const res = await invoicesAPI.getOne(item.id);
-      setDetailItem(res.data || item);
-    } catch {
-      setDetailItem(item);
-    }
-    setDetailOpen(true); 
-  };
-
-  const refreshDetailItem = async () => {
-    await fetchData();
-    if (detailItem) {
-      try {
-        const res = await invoicesAPI.getOne(detailItem.id);
-        if (res.data) {
-          setDetailItem(res.data);
-        }
-      } catch {}
-    }
-  };
-
-  const handleSaveInvoice = async (id, data) => {
-    // This would call the API to update the invoice
-    await invoicesAPI.update(id, data);
-    await refreshDetailItem();
-  };
-
-  const handleAction = async (action, item) => {
-    switch (action) {
-      case 'pdf':
-        try {
-          const res = await pdfAPI.getInvoicePdf(item.id);
-          const url = window.URL.createObjectURL(new Blob([res.data]));
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `factuur_${item.factuurnummer || item.invoice_number}.pdf`;
-          link.click();
-          toast.success('PDF gedownload');
-        } catch { toast.error('Download mislukt'); }
-        break;
-      case 'email':
-        // Open email dialog with pre-filled data
-        setEmailInvoice(item);
-        setEmailData({
-          to: item.debiteur_email || item.customer_email || '',
-          subject: `Factuur ${item.factuurnummer || item.invoice_number}`,
-          message: `Geachte ${item.debiteur_naam || item.customer_name || 'klant'},\n\nHierbij ontvangt u factuur ${item.factuurnummer || item.invoice_number} ter hoogte van ${formatCurrency(item.totaal_incl_btw || item.total || 0, item.valuta || 'SRD')}.\n\nDe vervaldatum is ${formatDate(item.vervaldatum || item.due_date)}.\n\nMet vriendelijke groet`
-        });
-        setShowEmailDialog(true);
-        break;
-      case 'print':
-        // Generate PDF and open print dialog
-        try {
-          toast.info('PDF wordt voorbereid...');
-          const res = await pdfAPI.getInvoicePdf(item.id);
-          const blob = new Blob([res.data], { type: 'application/pdf' });
-          const url = window.URL.createObjectURL(blob);
-          
-          // Open PDF in new window and trigger print
-          const printWindow = window.open(url, '_blank');
-          if (printWindow) {
-            printWindow.onload = () => {
-              printWindow.print();
-            };
-          }
-          toast.success('Print dialoog geopend');
-        } catch { toast.error('Print mislukt'); }
-        break;
-      case 'reminder': toast.success('Herinnering verstuurd'); break;
-      case 'payment':
-        setSelectedInvoice(item);
-        setNewPayment({ bedrag: item.openstaand_bedrag || item.totaal_incl_btw || 0, datum: new Date().toISOString().split('T')[0], betaalmethode: 'bank', referentie: '' });
-        setShowPaymentDialog(true);
-        break;
-      case 'markPaid':
-        try {
-          await invoicesAPI.updateStatus(item.id, 'betaald');
-          toast.success('Factuur gemarkeerd als betaald');
-          fetchData();
-          setDetailOpen(false);
-        } catch { toast.error('Actie mislukt'); }
-        break;
-    }
-  };
-
-  const handleAddPayment = async () => {
-    if (!selectedInvoice || newPayment.bedrag <= 0) { toast.error('Ongeldig bedrag'); return; }
-    setSaving(true);
-    try {
-      await invoicesAPI.addPayment(selectedInvoice.id, newPayment);
-      toast.success('Betaling opgeslagen');
-      setShowPaymentDialog(false);
-      // Refresh data and update detail item
-      await fetchData();
-      // Get updated invoice and update detail item
-      try {
-        const updated = await invoicesAPI.getOne(selectedInvoice.id);
-        if (updated.data) {
-          setDetailItem(updated.data);
-        }
-      } catch {}
-    } catch { toast.error('Fout bij opslaan'); }
-    finally { setSaving(false); }
-  };
-
-  const handleSendEmail = async () => {
-    if (!emailInvoice || !emailData.to) { 
-      toast.error('Voer een e-mailadres in'); 
-      return; 
-    }
-    setSendingEmail(true);
-    try {
-      // Call the email API with the invoice and message
-      const result = await invoicesAPI.sendEmail(emailInvoice.id, {
-        to: emailData.to,
-        subject: emailData.subject,
-        message: emailData.message
-      });
-      toast.success(result.data?.message || 'E-mail verstuurd naar ' + emailData.to);
-      setShowEmailDialog(false);
-      setEmailData({ to: '', subject: '', message: '' });
-      setEmailInvoice(null);
-      // Refresh data in case status changed
-      await fetchData();
-      if (detailItem && detailItem.id === emailInvoice.id) {
-        await refreshDetailItem();
-      }
+      setInvoices(invoicesRes.data || []);
+      setQuotes(quotesRes.data || []);
     } catch (error) {
-      const errorMsg = error.response?.data?.detail || error.message || 'Fout bij versturen e-mail';
-      toast.error(errorMsg);
+      toast.error('Fout bij laden gegevens');
+    } finally {
+      setLoading(false);
     }
-    finally { setSendingEmail(false); }
   };
 
-  const handleExport = (format) => {
-    const data = activeTab === 'invoices' ? filteredInvoices : activeTab === 'quotes' ? filteredQuotes : filteredOrders;
-    const rows = data.map(i => [
-      i.factuurnummer || i.invoice_number || i.quote_number || i.order_number,
-      i.factuurdatum || i.date,
-      i.debiteur_naam || i.customer_name,
-      i.totaal_incl_btw || i.total,
-      i.status
-    ]);
-    const csv = ['Nummer;Datum;Klant;Bedrag;Status', ...rows.map(r => r.join(';'))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `${activeTab}_export.csv`;
-    link.click();
-    toast.success('Geëxporteerd');
-  };
-
-  // Render Table
-  const renderTable = (type) => {
-    const items = type === 'invoice' ? filteredInvoices : type === 'quote' ? filteredQuotes : filteredOrders;
-    
-    return (
-      <div className="border border-gray-200 rounded-2xl overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-              <TableHead className="w-10 pl-4">
-                <Checkbox checked={selectedItems.length === items.length && items.length > 0} onCheckedChange={() => handleSelectAll(items)} />
-              </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('number')}>
-                <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
-                  Nummer <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('date')}>
-                <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
-                  Datum <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead className="cursor-pointer" onClick={() => handleSort('customer')}>
-                <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
-                  Klant <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              <TableHead className="text-xs font-medium text-gray-500">
-                {type === 'invoice' ? 'Vervaldatum' : type === 'quote' ? 'Geldig tot' : 'Leverdatum'}
-              </TableHead>
-              <TableHead className="text-right cursor-pointer" onClick={() => handleSort('amount')}>
-                <div className="flex items-center justify-end gap-1 text-xs font-medium text-gray-500">
-                  Bedrag <ArrowUpDown className="w-3 h-3" />
-                </div>
-              </TableHead>
-              {type === 'invoice' && <TableHead className="text-right text-xs font-medium text-gray-500">Open</TableHead>}
-              <TableHead className="text-xs font-medium text-gray-500">Status</TableHead>
-              <TableHead className="w-10 pr-4"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {loading ? (
-              [...Array(8)].map((_, i) => (
-                <TableRow key={i}>
-                  <TableCell className="pl-4"><Skeleton className="h-4 w-4" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                  {type === 'invoice' && <TableCell><Skeleton className="h-4 w-20" /></TableCell>}
-                  <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                  <TableCell><Skeleton className="h-4 w-4" /></TableCell>
-                </TableRow>
-              ))
-            ) : items.length > 0 ? items.map(item => {
-              const num = item.factuurnummer || item.invoice_number || item.quote_number || item.order_number;
-              const date = item.factuurdatum || item.date;
-              const cust = item.debiteur_naam || item.customer_name;
-              const due = item.vervaldatum || item.due_date || item.valid_until || item.delivery_date;
-              const total = item.totaal_incl_btw || item.total || 0;
-              const openAmt = item.openstaand_bedrag || 0;
-              const curr = item.valuta || item.currency || 'SRD';
-              const isOverdue = type === 'invoice' && item.status !== 'betaald' && due && new Date(due) < new Date();
-              const isSelected = selectedItems.includes(item.id);
-
-              return (
-                <TableRow 
-                  key={item.id} 
-                  className={`cursor-pointer hover:bg-gray-50/50 ${isSelected ? 'bg-emerald-50' : ''} ${isOverdue ? 'bg-red-50/50' : ''}`}
-                  onClick={() => openDetail(item)}
-                >
-                  <TableCell className="pl-4" onClick={e => e.stopPropagation()}>
-                    <Checkbox checked={isSelected} onCheckedChange={() => handleSelect(item.id)} />
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm font-medium text-emerald-600 hover:text-emerald-700 hover:underline">{num}</span>
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-600">{formatDate(date)}</TableCell>
-                  <TableCell className="text-sm font-medium text-gray-900">{cust}</TableCell>
-                  <TableCell className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
-                    {formatDate(due)} {isOverdue && <AlertCircle className="w-3 h-3 inline ml-1" />}
-                  </TableCell>
-                  <TableCell className="text-sm text-right font-medium text-gray-900">{formatCurrency(total, curr)}</TableCell>
-                  {type === 'invoice' && (
-                    <TableCell className={`text-sm text-right font-medium ${openAmt > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
-                      {openAmt > 0 ? formatCurrency(openAmt, curr) : '-'}
-                    </TableCell>
-                  )}
-                  <TableCell><StatusBadge status={item.status} /></TableCell>
-                  <TableCell className="pr-4" onClick={e => e.stopPropagation()}>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="p-1.5 hover:bg-gray-100 rounded-lg"><MoreHorizontal className="w-4 h-4 text-gray-400" /></button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuItem onClick={() => openDetail(item)}><Eye className="w-4 h-4 mr-2" /> Bekijken</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleAction('pdf', item)}><Download className="w-4 h-4 mr-2" /> Download PDF</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleAction('email', item)}><Mail className="w-4 h-4 mr-2" /> E-mail versturen</DropdownMenuItem>
-                        <DropdownMenuItem><Edit className="w-4 h-4 mr-2" /> Bewerken</DropdownMenuItem>
-                        <DropdownMenuItem><Copy className="w-4 h-4 mr-2" /> Dupliceren</DropdownMenuItem>
-                        {type === 'invoice' && item.status !== 'betaald' && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleAction('payment', item)}><CreditCard className="w-4 h-4 mr-2" /> Betaling</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleAction('reminder', item)}><Bell className="w-4 h-4 mr-2" /> Herinnering</DropdownMenuItem>
-                          </>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600"><Trash2 className="w-4 h-4 mr-2" /> Verwijderen</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              );
-            }) : (
-              <TableRow>
-                <TableCell colSpan={type === 'invoice' ? 9 : 8} className="text-center py-12 text-gray-500">
-                  Geen resultaten gevonden
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+  // Toggle row selection
+  const toggleRowSelection = (id) => {
+    setSelectedRows(prev => 
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
     );
   };
 
+  // Toggle all rows
+  const toggleAllRows = () => {
+    const currentData = activeTab === 'facturen' ? filteredInvoices : filteredQuotes;
+    if (selectedRows.length === currentData.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(currentData.map(item => item.id));
+    }
+  };
+
+  // Filter invoices
+  const filteredInvoices = invoices.filter(inv => {
+    const matchesSearch = 
+      (inv.nummer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (inv.debiteur_naam || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Filter quotes
+  const filteredQuotes = quotes.filter(quote =>
+    (quote.nummer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (quote.klant_naam || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Calculate totals
+  const totaalOmzet = invoices.filter(i => i.status === 'betaald').reduce((sum, i) => sum + (i.totaal || 0), 0);
+  const totaalOpenstaand = invoices.filter(i => i.status !== 'betaald').reduce((sum, i) => sum + (i.totaal || 0), 0);
+  const aantalFacturen = invoices.length;
+  const aantalOffertes = quotes.length;
+
   return (
-    <div className="min-h-screen bg-gray-100" data-testid="verkoop-page">
-      {/* Header - Matching Dashboard */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold text-gray-900">Verkoop</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Beheer uw offertes, orders en facturen</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline">
-                  <Plus className="w-4 h-4 mr-1.5" /> Nieuw <ChevronDown className="w-3 h-3 ml-1.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => navigate('/app/boekhouding/verkoop/nieuw')}>
-                  <Receipt className="w-4 h-4 mr-2" /> Nieuwe Factuur
-                </DropdownMenuItem>
-                <DropdownMenuItem><FileText className="w-4 h-4 mr-2" /> Nieuwe Offerte</DropdownMenuItem>
-                <DropdownMenuItem><ShoppingCart className="w-4 h-4 mr-2" /> Nieuwe Order</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => navigate('/app/boekhouding/verkoop/nieuw')} data-testid="add-invoice-btn">
-              <Plus className="w-4 h-4 mr-1.5" /> Nieuwe Factuur
+    <div className="min-h-screen bg-gray-50" data-testid="verkoop-page">
+      {/* Page Title */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 py-4">
+          <h1 className="text-xl font-semibold text-gray-800">Verkoopbeheer</h1>
+        </div>
+      </div>
+
+      {/* Tab Buttons Row */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <TabButton active={activeTab === 'facturen'} onClick={() => { setActiveTab('facturen'); setSelectedRows([]); }}>
+            Facturen
+          </TabButton>
+          <TabButton active={activeTab === 'offertes'} onClick={() => { setActiveTab('offertes'); setSelectedRows([]); }}>
+            Offertes
+          </TabButton>
+          <TabButton active={activeTab === 'orders'} onClick={() => { setActiveTab('orders'); setSelectedRows([]); }}>
+            Verkooporders
+          </TabButton>
+          <TabButton active={activeTab === 'creditnota'} onClick={() => { setActiveTab('creditnota'); setSelectedRows([]); }}>
+            Creditnota's
+          </TabButton>
+          <TabButton active={activeTab === 'rapporten'} onClick={() => { setActiveTab('rapporten'); setSelectedRows([]); }}>
+            Rapporten
+          </TabButton>
+          
+          {/* Action Buttons */}
+          <div className="ml-auto flex items-center gap-2">
+            <Button 
+              onClick={() => navigate('/app/boekhouding/verkoop/nieuw')}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg" 
+              data-testid="add-invoice-btn"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              {activeTab === 'offertes' ? 'Nieuwe Offerte' : 'Nieuwe Factuur'}
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* Stats - Matching Dashboard design */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {loading ? (
-            <>
-              <LoadingStatCard />
-              <LoadingStatCard />
-              <LoadingStatCard />
-              <LoadingStatCard />
-              <LoadingStatCard />
-            </>
-          ) : (
-            <>
-              <StatCard 
-                title="Totaal Gefactureerd" 
-                value={formatCurrency(stats.total)} 
-                subtitle={`${stats.count} facturen`}
-                icon={TrendingUp}
-                iconBg="bg-blue-100"
-                iconColor="text-blue-600"
+      {/* Filter Section */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+          {/* Search */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              {activeTab === 'facturen' ? 'Factuur / Klant' : 'Offerte / Klant'}
+            </Label>
+            <div className="relative">
+              <Input
+                placeholder="Zoeken..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-lg pr-10"
+                data-testid="search-input"
               />
-              <StatCard 
-                title="Ontvangen" 
-                value={formatCurrency(stats.paid)} 
-                subtitle={`${stats.paidCount} betaald`}
-                subtitleColor="text-emerald-600"
-                icon={CheckCircle}
-                iconBg="bg-emerald-100"
-                iconColor="text-emerald-600"
-              />
-              <StatCard 
-                title="Openstaand" 
-                value={formatCurrency(stats.open)} 
-                subtitle={`${stats.openCount} facturen`}
-                subtitleColor="text-amber-600"
-                icon={Clock}
-                iconBg="bg-amber-100"
-                iconColor="text-amber-600"
-                onClick={() => setQuickFilter(quickFilter === 'unpaid' ? 'all' : 'unpaid')}
-              />
-              <StatCard 
-                title="Vervallen" 
-                value={formatCurrency(stats.overdueAmt)} 
-                subtitle={`${stats.overdueCount} facturen`}
-                subtitleColor="text-red-600"
-                icon={AlertCircle}
-                iconBg="bg-red-100"
-                iconColor="text-red-600"
-                onClick={() => setQuickFilter(quickFilter === 'overdue' ? 'all' : 'overdue')}
-              />
-              <StatCard 
-                title="Offertes" 
-                value={quotes.length.toString()} 
-                subtitle={`${quotes.filter(q => q.status === 'verzonden').length} verzonden`}
-                icon={FileText}
-                iconBg="bg-purple-100"
-                iconColor="text-purple-600"
-              />
-            </>
-          )}
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+          
+          {/* Boekjaar */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600">Boekjaar</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2023">2023</SelectItem>
+                <SelectItem value="2022">2022</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600">Status</Label>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle</SelectItem>
+                <SelectItem value="concept">Concept</SelectItem>
+                <SelectItem value="verzonden">Verzonden</SelectItem>
+                <SelectItem value="betaald">Betaald</SelectItem>
+                <SelectItem value="herinnering">Herinnering</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Verantwoordelijke */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Verantwoordelijke
+            </Label>
+            <Select defaultValue="all">
+              <SelectTrigger className="rounded-lg">
+                <SelectValue placeholder="Alle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle</SelectItem>
+                <SelectItem value="me">Alleen mij</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Totaal info */}
+          <div className="text-right">
+            <span className="text-sm text-gray-500">Totaal Openstaand</span>
+            <p className="text-sm font-bold text-amber-600">{formatCurrency(totaalOpenstaand)}</p>
+          </div>
         </div>
+      </div>
 
-        {/* Main Card */}
-        <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+      {/* Status Legend */}
+      <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+        <div className="flex flex-wrap items-center gap-6">
+          <StatusLegendItem icon={Circle} label="Concept" color="text-gray-400" />
+          <StatusLegendItem icon={Send} label="Verzonden" color="text-blue-500" />
+          <StatusLegendItem icon={Clock} label="Wachten op betaling" color="text-amber-500" />
+          <StatusLegendItem icon={CheckCircle} label="Betaald" color="text-emerald-500" />
+          <StatusLegendItem icon={AlertCircle} label="Herinnering verzonden" color="text-amber-600" />
+          <StatusLegendItem icon={XCircle} label="Vervallen" color="text-red-500" />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-6">
+        <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <CardContent className="p-0">
-            {/* Tabs */}
-            <div className="border-b border-gray-200 px-6 flex items-center justify-between">
-              <div className="flex">
-                <TabButton active={activeTab === 'invoices'} onClick={() => { setActiveTab('invoices'); setSelectedItems([]); }} icon={Receipt} label="Facturen" count={invoices.length} alert={stats.overdueCount > 0} />
-                <TabButton active={activeTab === 'quotes'} onClick={() => { setActiveTab('quotes'); setSelectedItems([]); }} icon={FileText} label="Offertes" count={quotes.length} />
-                <TabButton active={activeTab === 'orders'} onClick={() => { setActiveTab('orders'); setSelectedItems([]); }} icon={ShoppingCart} label="Orders" count={orders.length} />
+            {/* Table Header */}
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">
+                  {activeTab === 'facturen' && `Verkoopfacturen (${filteredInvoices.length})`}
+                  {activeTab === 'offertes' && `Offertes (${filteredQuotes.length})`}
+                  {activeTab === 'orders' && 'Verkooporders'}
+                  {activeTab === 'creditnota' && "Creditnota's"}
+                  {activeTab === 'rapporten' && 'Verkooprapporten'}
+                </span>
+                <Button variant="outline" size="sm" className="rounded-lg">
+                  <Download className="w-4 h-4 mr-2" />
+                  Exporteren
+                </Button>
               </div>
             </div>
 
-            {/* Quick Filters */}
-            <div className="px-6 py-3 border-b border-gray-100 flex items-center gap-2">
-              <span className="text-xs text-gray-500 mr-2">Filter:</span>
-              <FilterChip label="Alles" active={quickFilter === 'all'} onClick={() => setQuickFilter('all')} />
-              <FilterChip label="Deze week" active={quickFilter === 'week'} onClick={() => setQuickFilter('week')} />
-              <FilterChip label="Deze maand" active={quickFilter === 'month'} onClick={() => setQuickFilter('month')} />
-              <FilterChip label="Openstaand" count={stats.openCount} active={quickFilter === 'unpaid'} onClick={() => setQuickFilter('unpaid')} />
-              <FilterChip label="Vervallen" count={stats.overdueCount} active={quickFilter === 'overdue'} onClick={() => setQuickFilter('overdue')} />
-            </div>
-
-            {/* Toolbar */}
-            <div className="px-6 py-3 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {selectedItems.length > 0 ? (
-                  <>
-                    <span className="text-sm text-gray-600">{selectedItems.length} geselecteerd</span>
-                    <div className="w-px h-5 bg-gray-300 mx-1" />
-                    <Button variant="ghost" size="sm"><Send className="w-4 h-4 mr-1" /> Verzenden</Button>
-                    <Button variant="ghost" size="sm"><Bell className="w-4 h-4 mr-1" /> Herinnering</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleExport('csv')}><Download className="w-4 h-4 mr-1" /> Exporteren</Button>
-                    <Button variant="ghost" size="sm" className="text-red-600"><Trash2 className="w-4 h-4 mr-1" /> Verwijderen</Button>
-                  </>
-                ) : (
-                  <>
-                    <Button variant="ghost" size="sm" onClick={fetchData}><RefreshCw className="w-4 h-4 mr-1" /> Vernieuwen</Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleExport('csv')}><FileSpreadsheet className="w-4 h-4 mr-1" /> Exporteren</Button>
-                    <Button variant="ghost" size="sm"><Printer className="w-4 h-4 mr-1" /> Afdrukken</Button>
-                  </>
-                )}
+            {/* Facturen Table */}
+            {activeTab === 'facturen' && (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="w-10 px-4 py-3">
+                        <Checkbox 
+                          checked={selectedRows.length === filteredInvoices.length && filteredInvoices.length > 0}
+                          onCheckedChange={toggleAllRows}
+                        />
+                      </th>
+                      <th className="text-left px-4 py-3">
+                        <button className="flex items-center gap-1 text-xs font-medium text-gray-600 uppercase tracking-wide hover:text-gray-900">
+                          Factuurnummer
+                          <ArrowUpDown className="w-3 h-3" />
+                        </button>
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Klant
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Datum
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Vervaldatum
+                      </th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Status
+                      </th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Bedrag
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Actie
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      [...Array(8)].map((_, i) => (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-4" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-5 w-5 mx-auto" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                        </tr>
+                      ))
+                    ) : filteredInvoices.length > 0 ? (
+                      filteredInvoices.map((invoice) => (
+                        <tr 
+                          key={invoice.id} 
+                          className={`border-b border-gray-100 hover:bg-emerald-50/30 transition-colors ${
+                            selectedRows.includes(invoice.id) ? 'bg-emerald-50/50' : ''
+                          }`}
+                          data-testid={`invoice-row-${invoice.nummer}`}
+                        >
+                          <td className="px-4 py-3">
+                            <Checkbox 
+                              checked={selectedRows.includes(invoice.id)}
+                              onCheckedChange={() => toggleRowSelection(invoice.id)}
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm font-medium text-gray-900">{invoice.nummer}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-700">{invoice.debiteur_naam || 'Onbekend'}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-600">{formatDate(invoice.datum)}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-600">{formatDate(invoice.vervaldatum)}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <StatusIcon status={invoice.status} />
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="text-sm font-medium text-gray-900">
+                              {formatCurrency(invoice.totaal, invoice.valuta)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <button className="text-gray-500 hover:text-gray-700">
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button className="text-gray-500 hover:text-gray-700">
+                                <Mail className="w-4 h-4" />
+                              </button>
+                              <button className="text-gray-500 hover:text-gray-700">
+                                <Printer className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-16 text-center">
+                          <Receipt className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                          <p className="text-lg font-semibold text-gray-700 mb-2">Geen facturen gevonden</p>
+                          <p className="text-sm text-gray-500 mb-6">Maak uw eerste verkoopfactuur aan.</p>
+                          <Button onClick={() => navigate('/app/boekhouding/verkoop/nieuw')} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Nieuwe Factuur
+                          </Button>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-              <span className="text-xs text-gray-500">
-                {activeTab === 'invoices' && `${filteredInvoices.length} van ${invoices.length}`}
-                {activeTab === 'quotes' && `${filteredQuotes.length} van ${quotes.length}`}
-                {activeTab === 'orders' && `${filteredOrders.length} van ${orders.length}`}
-              </span>
-            </div>
+            )}
 
-            {/* Search & Filter */}
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-4">
-              <div className="relative flex-1 max-w-md">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <Input placeholder="Zoeken op nummer of klant..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 h-9 rounded-lg" />
+            {/* Offertes Table */}
+            {activeTab === 'offertes' && (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="w-10 px-4 py-3">
+                        <Checkbox 
+                          checked={selectedRows.length === filteredQuotes.length && filteredQuotes.length > 0}
+                          onCheckedChange={toggleAllRows}
+                        />
+                      </th>
+                      <th className="text-left px-4 py-3">
+                        <button className="flex items-center gap-1 text-xs font-medium text-gray-600 uppercase tracking-wide hover:text-gray-900">
+                          Offertenummer
+                          <ArrowUpDown className="w-3 h-3" />
+                        </button>
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Klant
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Datum
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Geldig tot
+                      </th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Status
+                      </th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Bedrag
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Actie
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      [...Array(5)].map((_, i) => (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-4" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-5 w-5 mx-auto" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                        </tr>
+                      ))
+                    ) : filteredQuotes.length > 0 ? (
+                      filteredQuotes.map((quote) => (
+                        <tr 
+                          key={quote.id} 
+                          className={`border-b border-gray-100 hover:bg-emerald-50/30 transition-colors ${
+                            selectedRows.includes(quote.id) ? 'bg-emerald-50/50' : ''
+                          }`}
+                        >
+                          <td className="px-4 py-3">
+                            <Checkbox 
+                              checked={selectedRows.includes(quote.id)}
+                              onCheckedChange={() => toggleRowSelection(quote.id)}
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm font-medium text-gray-900">{quote.nummer}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-700">{quote.klant_naam || 'Onbekend'}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-600">{formatDate(quote.datum)}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-600">{formatDate(quote.geldig_tot)}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <StatusIcon status={quote.status} />
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="text-sm font-medium text-gray-900">
+                              {formatCurrency(quote.totaal, quote.valuta)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <button className="text-gray-500 hover:text-gray-700">
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button className="text-gray-500 hover:text-gray-700">
+                                <FileText className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-16 text-center">
+                          <FileText className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                          <p className="text-lg font-semibold text-gray-700 mb-2">Geen offertes gevonden</p>
+                          <p className="text-sm text-gray-500 mb-6">Maak uw eerste offerte aan.</p>
+                          <Button onClick={() => navigate('/app/boekhouding/verkoop/nieuw')} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                            <Plus className="w-4 h-4 mr-2" />
+                            Nieuwe Offerte
+                          </Button>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-44 h-9 rounded-lg">
-                  <Filter className="w-4 h-4 mr-1.5 text-gray-400" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Alle statussen</SelectItem>
-                  <SelectItem value="concept">Concept</SelectItem>
-                  <SelectItem value="verzonden">Verzonden</SelectItem>
-                  <SelectItem value="betaald">Betaald</SelectItem>
-                  <SelectItem value="herinnering">Herinnering</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            )}
 
-            {/* Table */}
-            <div className="p-6">
-              {activeTab === 'invoices' && renderTable('invoice')}
-              {activeTab === 'quotes' && renderTable('quote')}
-              {activeTab === 'orders' && renderTable('order')}
-            </div>
+            {/* Placeholder for other tabs */}
+            {(activeTab === 'orders' || activeTab === 'creditnota' || activeTab === 'rapporten') && (
+              <div className="px-4 py-16 text-center">
+                <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                <p className="text-lg font-semibold text-gray-700 mb-2">
+                  {activeTab === 'orders' && 'Verkooporders'}
+                  {activeTab === 'creditnota' && "Creditnota's"}
+                  {activeTab === 'rapporten' && 'Verkooprapporten'}
+                </p>
+                <p className="text-sm text-gray-500">Deze sectie wordt binnenkort beschikbaar.</p>
+              </div>
+            )}
+
+            {/* Footer with selection info */}
+            {selectedRows.length > 0 && (
+              <div className="bg-emerald-50 border-t border-emerald-200 px-4 py-3 flex items-center justify-between">
+                <span className="text-sm text-emerald-700">
+                  {selectedRows.length} {activeTab === 'facturen' ? 'factuur/facturen' : 'offerte(s)'} geselecteerd
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
+                    <Mail className="w-4 h-4 mr-2" />
+                    Versturen
+                  </Button>
+                  <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
+                    <Download className="w-4 h-4 mr-2" />
+                    Exporteren
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
-
-      {/* Detail Sidebar */}
-      <DetailSidebar
-        item={detailItem}
-        type={activeTab === 'invoices' ? 'invoice' : activeTab === 'quotes' ? 'quote' : 'order'}
-        open={detailOpen}
-        onClose={() => setDetailOpen(false)}
-        onAction={handleAction}
-        onSave={handleSaveInvoice}
-        onRefresh={refreshDetailItem}
-      />
-
-      {/* Email Dialog */}
-      <Dialog open={showEmailDialog} onOpenChange={setShowEmailDialog}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                <Mail className="w-5 h-5 text-blue-600" />
-              </div>
-              Factuur Versturen per E-mail
-            </DialogTitle>
-          </DialogHeader>
-          {emailInvoice && (
-            <div className="space-y-4 mt-2">
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 flex justify-between items-center">
-                <div>
-                  <p className="text-xs text-gray-500">Factuur</p>
-                  <p className="text-sm font-semibold text-gray-900">{emailInvoice.factuurnummer || emailInvoice.invoice_number}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500">Bedrag</p>
-                  <p className="text-sm font-semibold text-gray-900">{formatCurrency(emailInvoice.totaal_incl_btw || emailInvoice.total, emailInvoice.valuta || 'SRD')}</p>
-                </div>
-              </div>
-              <div>
-                <Label className="text-xs text-gray-500">Aan (e-mailadres) *</Label>
-                <Input 
-                  type="email" 
-                  value={emailData.to} 
-                  onChange={(e) => setEmailData({...emailData, to: e.target.value})} 
-                  placeholder="klant@voorbeeld.com"
-                  className="mt-1 h-9" 
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-gray-500">Onderwerp</Label>
-                <Input 
-                  value={emailData.subject} 
-                  onChange={(e) => setEmailData({...emailData, subject: e.target.value})} 
-                  className="mt-1 h-9" 
-                />
-              </div>
-              <div>
-                <Label className="text-xs text-gray-500">Bericht</Label>
-                <Textarea 
-                  value={emailData.message} 
-                  onChange={(e) => setEmailData({...emailData, message: e.target.value})}
-                  rows={6}
-                  className="mt-1 resize-none"
-                  placeholder="Voeg een persoonlijk bericht toe..."
-                />
-              </div>
-              <p className="text-xs text-gray-400">
-                De factuur wordt als PDF-bijlage meegestuurd.
-              </p>
-            </div>
-          )}
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setShowEmailDialog(false)}>Annuleren</Button>
-            <Button 
-              onClick={handleSendEmail} 
-              disabled={sendingEmail || !emailData.to} 
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {sendingEmail && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
-              <Send className="w-4 h-4 mr-1.5" />
-              Versturen
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Payment Dialog */}
-      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <CreditCard className="w-5 h-5 text-emerald-600" />
-              </div>
-              Betaling Registreren
-            </DialogTitle>
-          </DialogHeader>
-          {selectedInvoice && (
-            <div className="space-y-4 mt-2">
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 flex justify-between">
-                <div>
-                  <p className="text-xs text-gray-500">Factuur</p>
-                  <p className="text-sm font-semibold text-gray-900">{selectedInvoice.factuurnummer || selectedInvoice.invoice_number}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs text-gray-500">Openstaand</p>
-                  <p className="text-sm font-semibold text-amber-600">{formatCurrency(selectedInvoice.openstaand_bedrag || selectedInvoice.totaal_incl_btw)}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs text-gray-500">Bedrag *</Label>
-                  <Input type="number" step="0.01" value={newPayment.bedrag} onChange={(e) => setNewPayment({...newPayment, bedrag: parseFloat(e.target.value) || 0})} className="mt-1 h-9" />
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-500">Datum *</Label>
-                  <Input type="date" value={newPayment.datum} onChange={(e) => setNewPayment({...newPayment, datum: e.target.value})} className="mt-1 h-9" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs text-gray-500">Betaalmethode</Label>
-                  <Select value={newPayment.betaalmethode} onValueChange={(v) => setNewPayment({...newPayment, betaalmethode: v})}>
-                    <SelectTrigger className="mt-1 h-9"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bank">Bankoverschrijving</SelectItem>
-                      <SelectItem value="kas">Contant</SelectItem>
-                      <SelectItem value="pin">PIN</SelectItem>
-                      <SelectItem value="ideal">iDEAL</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs text-gray-500">Referentie</Label>
-                  <Input value={newPayment.referentie} onChange={(e) => setNewPayment({...newPayment, referentie: e.target.value})} placeholder="Optioneel" className="mt-1 h-9" />
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter className="mt-4">
-            <Button variant="outline" onClick={() => setShowPaymentDialog(false)}>Annuleren</Button>
-            <Button onClick={handleAddPayment} disabled={saving || newPayment.bedrag <= 0} className="bg-emerald-600 hover:bg-emerald-700">
-              {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />} Opslaan
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
