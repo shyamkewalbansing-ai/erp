@@ -77,7 +77,6 @@ const POSPage = () => {
   const [cart, setCart] = useState([]);
   
   // Payment state
-  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [paymentStep, setPaymentStep] = useState('method'); // 'method', 'cash', 'processing', 'success'
   const [paymentMethod, setPaymentMethod] = useState(null);
   const [cashReceived, setCashReceived] = useState('');
