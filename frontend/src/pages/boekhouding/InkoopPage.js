@@ -595,7 +595,7 @@ const InkoopPage = () => {
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50">
+                <TableRow className="bg-gray-50/50">
                   <TableHead className="w-28 text-xs font-medium text-gray-500">Nummer</TableHead>
                   <TableHead className="w-28 text-xs font-medium text-gray-500">Datum</TableHead>
                   <TableHead className="text-xs font-medium text-gray-500">Leverancier</TableHead>
@@ -606,7 +606,7 @@ const InkoopPage = () => {
               </TableHeader>
               <TableBody>
                 {filteredOrders.map(order => (
-                  <TableRow key={order.id} className="hover:bg-gray-50">
+                  <TableRow key={order.id} className="hover:bg-gray-50/50">
                     <TableCell className="text-sm font-medium text-gray-900">{order.order_number}</TableCell>
                     <TableCell className="text-sm text-gray-500">{formatDate(order.date)}</TableCell>
                     <TableCell className="text-sm text-gray-700">{order.supplier_name}</TableCell>
@@ -627,8 +627,10 @@ const InkoopPage = () => {
               </TableBody>
             </Table>
           )}
-        </div>
-      </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Detail Sidebar */}
       <DetailSidebar item={detailItem} open={showDetail} onClose={() => setShowDetail(false)} />
