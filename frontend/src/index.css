@@ -486,3 +486,39 @@ button.checkbox-custom[data-state="unchecked"],
     background-color: #ffffff !important;
     border-color: #d1d5db !important;
 }
+
+
+/* Page transition animation - smooth navigation */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.page-enter {
+  animation: pageEnter 0.15s ease-out forwards;
+}
+
+/* Prevent layout shift during navigation */
+[data-testid] {
+  animation: pageEnter 0.15s ease-out forwards;
+}
+
+/* Skeleton loading pulse */
+.skeleton-pulse {
+  background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

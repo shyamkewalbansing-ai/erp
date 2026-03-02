@@ -179,10 +179,40 @@ const SuribetPortaalLink = lazy(() => import("./pages/suribet/PortaalLinkPage"))
 const SuribetMobileUpload = lazy(() => import("./pages/suribet/MobileUploadPage"));
 
 
-// Loading component for lazy loaded pages
+// Loading component for lazy loaded pages - minimal flash
 const PageLoader = memo(() => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
+  <div className="min-h-[calc(100vh-200px)] flex items-center justify-center">
+    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-500"></div>
+  </div>
+));
+
+// Skeleton loader for pages - prevents layout shift
+const PageSkeleton = memo(() => (
+  <div className="min-h-screen bg-gray-50 animate-pulse">
+    {/* Header skeleton */}
+    <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="h-6 bg-gray-200 rounded w-48"></div>
+    </div>
+    {/* Tab skeleton */}
+    <div className="bg-white border-b border-gray-200 px-6 py-3">
+      <div className="flex gap-2">
+        <div className="h-9 bg-gray-200 rounded-lg w-24"></div>
+        <div className="h-9 bg-gray-100 rounded-lg w-24"></div>
+        <div className="h-9 bg-gray-100 rounded-lg w-24"></div>
+      </div>
+    </div>
+    {/* Content skeleton */}
+    <div className="p-6">
+      <div className="grid grid-cols-4 gap-5 mb-6">
+        {[1,2,3,4].map(i => (
+          <div key={i} className="bg-white border border-gray-200 rounded-xl p-5 h-28">
+            <div className="h-3 bg-gray-200 rounded w-20 mb-3"></div>
+            <div className="h-6 bg-gray-200 rounded w-24"></div>
+          </div>
+        ))}
+      </div>
+      <div className="bg-white border border-gray-200 rounded-xl h-96"></div>
+    </div>
   </div>
 ));
 
@@ -547,7 +577,7 @@ function MainAppRoutes() {
   const onMainDomain = shouldRedirectToApp();
   
   return (
-    <Suspense fallback={<PageLoader />}>
+    <Suspense fallback={<PageSkeleton />}>
       <Routes>
         {/* Landing Page - Only on main domain */}
         <Route path="/" element={
