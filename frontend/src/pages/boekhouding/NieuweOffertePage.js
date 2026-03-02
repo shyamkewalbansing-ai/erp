@@ -6,9 +6,9 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
 import { Textarea } from '../../components/ui/textarea';
 import { Badge } from '../../components/ui/badge';
+import { Checkbox } from '../../components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, 
@@ -16,17 +16,20 @@ import {
   Trash2, 
   Loader2, 
   Save,
-  Eye,
   Send,
   MoreHorizontal,
   FileText,
   Calendar,
   Building2,
-  MapPin
+  MapPin,
+  Copy,
+  TrendingUp,
+  Percent,
+  ChevronDown,
+  ChevronRight,
+  Settings
 } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../../components/ui/dropdown-menu';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '../../components/ui/dropdown-menu';
 
 const NieuweOffertePage = () => {
   const navigate = useNavigate();
@@ -35,6 +38,36 @@ const NieuweOffertePage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [selectedRows, setSelectedRows] = useState([]);
+
+  // Item types
+  const ITEM_TYPES = [
+    { value: 'T', label: 'Titel' },
+    { value: 'M', label: 'Materiaal' },
+    { value: 'P', label: 'Product' },
+    { value: 'D', label: 'Dienst' },
+    { value: 'A', label: 'Arbeid' },
+  ];
+
+  // Units
+  const UNITS = [
+    { value: 'stuk', label: 'stuk' },
+    { value: 'm2', label: 'm²' },
+    { value: 'm', label: 'm' },
+    { value: 'uur', label: 'uur' },
+    { value: 'dag', label: 'dag' },
+    { value: 'vast', label: 'vast' },
+    { value: 'kg', label: 'kg' },
+    { value: 'liter', label: 'liter' },
+  ];
+
+  // BTW rates
+  const BTW_RATES = [
+    { value: '0', label: '0%' },
+    { value: '9', label: '9%' },
+    { value: '10', label: '10%' },
+    { value: '21', label: '21%' },
+  ];
 
   const [offerte, setOfferte] = useState({
     customer_id: '',
@@ -44,10 +77,20 @@ const NieuweOffertePage = () => {
     subject: '',
     reference: '',
     notes: '',
-    lines: [{ product_id: '', description: '', quantity: 1, unit_price: 0, btw_percentage: 10, btw_amount: 0, total: 0 }]
+    lines: [
+      { 
+        id: '1',
+        type: 'M', 
+        category: '', 
+        description: '', 
+        quantity: 1, 
+        unit: 'stuk',
+        unit_price: 0, 
+        btw_percentage: 10, 
+        isTitle: false
+      }
+    ]
   });
-
-  const tempOfferteNumber = `NIEUW`;
 
   const formatAmount = (amount, currency = 'SRD') => {
     const formatted = new Intl.NumberFormat('nl-NL', {
@@ -59,6 +102,8 @@ const NieuweOffertePage = () => {
     if (currency === 'EUR') return `€ ${formatted}`;
     return `SRD ${formatted}`;
   };
+
+  const generateId = () => Math.random().toString(36).substr(2, 9);
 
   useEffect(() => {
     fetchData();
@@ -89,28 +134,49 @@ const NieuweOffertePage = () => {
     const lines = [...offerte.lines];
     lines[index][field] = value;
     
-    const quantity = parseFloat(lines[index].quantity) || 0;
-    const unitPrice = parseFloat(lines[index].unit_price) || 0;
-    const btwPercentage = parseFloat(lines[index].btw_percentage) || 0;
-    
-    const subtotal = quantity * unitPrice;
-    lines[index].btw_amount = subtotal * (btwPercentage / 100);
-    lines[index].total = subtotal + lines[index].btw_amount;
+    // If type is changed to Title, reset numeric values
+    if (field === 'type' && value === 'T') {
+      lines[index].isTitle = true;
+      lines[index].quantity = 0;
+      lines[index].unit_price = 0;
+    } else if (field === 'type') {
+      lines[index].isTitle = false;
+    }
     
     setOfferte({ ...offerte, lines });
   };
 
-  const addLine = () => {
+  const addLine = (type = 'M') => {
     setOfferte({
       ...offerte,
-      lines: [...offerte.lines, { product_id: '', description: '', quantity: 1, unit_price: 0, btw_percentage: 10, btw_amount: 0, total: 0 }]
+      lines: [...offerte.lines, { 
+        id: generateId(),
+        type: type, 
+        category: '', 
+        description: '', 
+        quantity: 1, 
+        unit: 'stuk',
+        unit_price: 0, 
+        btw_percentage: 10,
+        isTitle: type === 'T'
+      }]
     });
   };
 
-  const addTextLine = () => {
+  const addTitleLine = () => {
     setOfferte({
       ...offerte,
-      lines: [...offerte.lines, { product_id: '', description: '', quantity: 0, unit_price: 0, btw_percentage: 0, btw_amount: 0, total: 0, isTextLine: true }]
+      lines: [...offerte.lines, { 
+        id: generateId(),
+        type: 'T', 
+        category: '', 
+        description: '', 
+        quantity: 0, 
+        unit: '',
+        unit_price: 0, 
+        btw_percentage: 0,
+        isTitle: true
+      }]
     });
   };
 
@@ -120,33 +186,92 @@ const NieuweOffertePage = () => {
     setOfferte({ ...offerte, lines });
   };
 
+  const duplicateLine = (index) => {
+    const lines = [...offerte.lines];
+    const newLine = { ...lines[index], id: generateId() };
+    lines.splice(index + 1, 0, newLine);
+    setOfferte({ ...offerte, lines });
+  };
+
   const selectProduct = (index, productId) => {
     const product = products.find(p => p.id === productId);
     if (product) {
       const lines = [...offerte.lines];
       lines[index] = {
         ...lines[index],
-        product_id: productId,
         description: product.naam || product.name || '',
         unit_price: product.verkoopprijs || product.sales_price || 0,
       };
-      const qty = lines[index].quantity || 1;
-      const price = lines[index].unit_price || 0;
-      const btwPct = lines[index].btw_percentage || 0;
-      const subtotal = qty * price;
-      lines[index].btw_amount = subtotal * (btwPct / 100);
-      lines[index].total = subtotal + lines[index].btw_amount;
       setOfferte({ ...offerte, lines });
     }
+  };
+
+  // Calculate line total
+  const calculateLineTotal = (line) => {
+    if (line.isTitle || line.type === 'T') return 0;
+    const subtotal = (parseFloat(line.quantity) || 0) * (parseFloat(line.unit_price) || 0);
+    return subtotal;
+  };
+
+  // Calculate line BTW
+  const calculateLineBTW = (line) => {
+    if (line.isTitle || line.type === 'T') return 0;
+    const subtotal = calculateLineTotal(line);
+    return subtotal * ((parseFloat(line.btw_percentage) || 0) / 100);
+  };
+
+  // Toggle row selection
+  const toggleRowSelection = (id) => {
+    setSelectedRows(prev => 
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+    );
+  };
+
+  // Toggle all rows
+  const toggleAllRows = () => {
+    if (selectedRows.length === offerte.lines.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(offerte.lines.map(l => l.id));
+    }
+  };
+
+  // Increase all prices
+  const increasePrices = (percentage) => {
+    const factor = 1 + (percentage / 100);
+    const lines = offerte.lines.map(line => ({
+      ...line,
+      unit_price: line.isTitle ? 0 : line.unit_price * factor
+    }));
+    setOfferte({ ...offerte, lines });
+    toast.success(`Prijzen ${percentage > 0 ? 'verhoogd' : 'verlaagd'} met ${Math.abs(percentage)}%`);
+  };
+
+  // Delete selected rows
+  const deleteSelectedRows = () => {
+    if (selectedRows.length === 0) return;
+    const lines = offerte.lines.filter(l => !selectedRows.includes(l.id));
+    if (lines.length === 0) {
+      lines.push({ 
+        id: generateId(),
+        type: 'M', 
+        category: '', 
+        description: '', 
+        quantity: 1, 
+        unit: 'stuk',
+        unit_price: 0, 
+        btw_percentage: 10,
+        isTitle: false
+      });
+    }
+    setOfferte({ ...offerte, lines });
+    setSelectedRows([]);
+    toast.success(`${selectedRows.length} regel(s) verwijderd`);
   };
 
   const handleSave = async (sendAfterSave = false) => {
     if (!offerte.customer_id) {
       toast.error('Selecteer een klant');
-      return;
-    }
-    if (offerte.lines.filter(l => !l.isTextLine).some(l => !l.description || l.unit_price <= 0)) {
-      toast.error('Vul alle regels correct in');
       return;
     }
     setSaving(true);
@@ -161,34 +286,29 @@ const NieuweOffertePage = () => {
         opmerkingen: offerte.notes,
         status: sendAfterSave ? 'verzonden' : 'concept',
         regels: offerte.lines.map(line => ({
-          product_id: line.product_id,
+          type: line.type,
+          categorie: line.category,
           omschrijving: line.description,
           aantal: parseFloat(line.quantity) || 0,
+          eenheid: line.unit,
           prijs: parseFloat(line.unit_price) || 0,
           btw_percentage: parseFloat(line.btw_percentage) || 0
         }))
       };
       
       await quotesAPI.create(offerteData);
-      
-      if (sendAfterSave) {
-        toast.success('Offerte aangemaakt en verzonden');
-      } else {
-        toast.success('Offerte aangemaakt');
-      }
-      
+      toast.success(sendAfterSave ? 'Offerte aangemaakt en verzonden' : 'Offerte opgeslagen');
       navigate('/app/boekhouding/verkoop');
     } catch (error) {
-      console.error('Quote creation error:', error);
-      toast.error(error.response?.data?.detail || error.message || 'Fout bij aanmaken');
+      toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
     } finally {
       setSaving(false);
     }
   };
 
   // Calculate totals
-  const subtotal = offerte.lines.reduce((s, l) => s + (parseFloat(l.quantity) || 0) * (parseFloat(l.unit_price) || 0), 0);
-  const btwTotal = offerte.lines.reduce((s, l) => s + (l.btw_amount || 0), 0);
+  const subtotal = offerte.lines.reduce((s, l) => s + calculateLineTotal(l), 0);
+  const btwTotal = offerte.lines.reduce((s, l) => s + calculateLineBTW(l), 0);
   const total = subtotal + btwTotal;
 
   if (loading) {
@@ -201,59 +321,69 @@ const NieuweOffertePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="nieuwe-offerte-page">
-      {/* Top Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-10">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3 sticky top-0 z-10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button 
               variant="ghost" 
               size="sm" 
               onClick={() => navigate('/app/boekhouding/verkoop')}
-              className="rounded-lg hover:bg-gray-100"
-              data-testid="back-button"
+              className="rounded-lg"
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-semibold text-gray-900">Offerte</h1>
-              <span className="text-xl font-mono text-gray-500">{tempOfferteNumber}</span>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">Nieuwe Offerte</h1>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
-              className="rounded-lg"
-              onClick={() => handleSave(false)}
-              disabled={saving}
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Opslaan
-            </Button>
+            {/* Bulk Actions */}
+            {selectedRows.length > 0 && (
+              <div className="flex items-center gap-2 mr-4 px-3 py-1 bg-emerald-50 rounded-lg">
+                <span className="text-sm text-emerald-700">{selectedRows.length} geselecteerd</span>
+                <Button variant="ghost" size="sm" onClick={deleteSelectedRows} className="h-7 text-red-600 hover:text-red-700 hover:bg-red-50">
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
+
+            {/* Quote Actions */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="rounded-lg bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100">
-                  Actie
-                  <MoreHorizontal className="w-4 h-4 ml-2" />
+                <Button variant="outline" size="sm" className="rounded-lg">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Acties
+                  <ChevronDown className="w-4 h-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleSave(false)}>
-                  <Save className="w-4 h-4 mr-2" />
-                  Opslaan als concept
+                <DropdownMenuItem onClick={() => increasePrices(5)}>
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  Verhoog prijzen +5%
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleSave(true)}>
-                  <Send className="w-4 h-4 mr-2" />
-                  Opslaan en verzenden
+                <DropdownMenuItem onClick={() => increasePrices(10)}>
+                  <TrendingUp className="w-4 h-4 mr-2" />
+                  Verhoog prijzen +10%
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => increasePrices(-5)}>
+                  <Percent className="w-4 h-4 mr-2" />
+                  Verlaag prijzen -5%
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => increasePrices(-10)}>
+                  <Percent className="w-4 h-4 mr-2" />
+                  Verlaag prijzen -10%
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button 
-              className="rounded-lg bg-emerald-600 hover:bg-emerald-700"
-              onClick={() => handleSave(true)}
-              disabled={saving}
-              data-testid="send-offerte-btn"
-            >
+
+            <Button variant="outline" size="sm" onClick={() => handleSave(false)} disabled={saving} className="rounded-lg">
+              <Save className="w-4 h-4 mr-2" />
+              Opslaan
+            </Button>
+            <Button size="sm" onClick={() => handleSave(true)} disabled={saving} className="rounded-lg bg-emerald-600 hover:bg-emerald-700">
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
               Versturen
             </Button>
@@ -261,110 +391,49 @@ const NieuweOffertePage = () => {
         </div>
       </div>
 
-      <div className="p-6 max-w-7xl mx-auto">
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Left Column - Customer Info */}
-          <Card className="bg-white border border-gray-200 shadow-sm rounded-xl lg:col-span-1">
-            <CardContent className="p-6">
-              <div className="space-y-6">
-                {/* Customer Selection */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-gray-400" />
-                    Klant
-                  </Label>
-                  <Select 
-                    value={offerte.customer_id} 
-                    onValueChange={handleCustomerChange}
-                  >
-                    <SelectTrigger className="rounded-lg h-11" data-testid="customer-select">
-                      <SelectValue placeholder="Selecteer klant..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {customers.map(c => (
-                        <SelectItem key={c.id} value={c.id}>
-                          {c.naam || c.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+      <div className="p-6">
+        {/* Top Section - Customer & Details */}
+        <div className="grid grid-cols-12 gap-4 mb-4">
+          {/* Customer */}
+          <Card className="col-span-4 bg-white border border-gray-200 rounded-lg">
+            <CardContent className="p-4">
+              <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block">Klant</Label>
+              <Select value={offerte.customer_id} onValueChange={handleCustomerChange}>
+                <SelectTrigger className="rounded-lg h-10">
+                  <SelectValue placeholder="Selecteer klant..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {customers.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.naam || c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedCustomer && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg text-sm">
+                  <p className="font-medium">{selectedCustomer.naam || selectedCustomer.name}</p>
+                  {selectedCustomer.adres && <p className="text-gray-600">{selectedCustomer.adres}</p>}
+                  {selectedCustomer.postcode && <p className="text-gray-600">{selectedCustomer.postcode} {selectedCustomer.plaats}</p>}
                 </div>
-
-                {/* Customer Address */}
-                {selectedCustomer && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-gray-400" />
-                      Adres
-                    </Label>
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
-                      <p className="font-medium text-gray-900">{selectedCustomer.naam || selectedCustomer.name}</p>
-                      {selectedCustomer.adres && <p className="text-sm text-gray-600 mt-1">{selectedCustomer.adres}</p>}
-                      {selectedCustomer.postcode && selectedCustomer.plaats && (
-                        <p className="text-sm text-gray-600">{selectedCustomer.postcode} {selectedCustomer.plaats}</p>
-                      )}
-                      {selectedCustomer.land && <p className="text-sm text-gray-600">{selectedCustomer.land}</p>}
-                      {selectedCustomer.kvk && (
-                        <p className="text-xs text-gray-400 mt-2">KVK: {selectedCustomer.kvk}</p>
-                      )}
-                      {selectedCustomer.btw_nummer && (
-                        <p className="text-xs text-gray-400">BTW: {selectedCustomer.btw_nummer}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {!selectedCustomer && (
-                  <div className="bg-gray-50 rounded-lg p-6 border border-dashed border-gray-200 text-center">
-                    <Building2 className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-                    <p className="text-sm text-gray-400">Selecteer een klant om het adres te tonen</p>
-                  </div>
-                )}
-              </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Right Column - Dates & Status */}
-          <Card className="bg-white border border-gray-200 shadow-sm rounded-xl lg:col-span-2">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm font-medium text-gray-700">Offertegegevens</span>
+          {/* Details */}
+          <Card className="col-span-8 bg-white border border-gray-200 rounded-lg">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-5 gap-3">
+                <div>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block">Datum</Label>
+                  <Input type="date" value={offerte.date} onChange={(e) => setOfferte({...offerte, date: e.target.value})} className="rounded-lg h-10" />
                 </div>
-                <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50">
-                  Concept
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Offertedatum</Label>
-                  <Input
-                    type="date"
-                    value={offerte.date}
-                    onChange={(e) => setOfferte({...offerte, date: e.target.value})}
-                    className="rounded-lg"
-                    data-testid="offerte-date"
-                  />
+                <div>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block">Geldig tot</Label>
+                  <Input type="date" value={offerte.valid_until} onChange={(e) => setOfferte({...offerte, valid_until: e.target.value})} className="rounded-lg h-10" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Geldig tot</Label>
-                  <Input
-                    type="date"
-                    value={offerte.valid_until}
-                    onChange={(e) => setOfferte({...offerte, valid_until: e.target.value})}
-                    className="rounded-lg"
-                    data-testid="valid-until"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Valuta</Label>
+                <div>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block">Valuta</Label>
                   <Select value={offerte.currency} onValueChange={(v) => setOfferte({...offerte, currency: v})}>
-                    <SelectTrigger className="rounded-lg">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="rounded-lg h-10"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="SRD">SRD</SelectItem>
                       <SelectItem value="USD">USD</SelectItem>
@@ -372,218 +441,217 @@ const NieuweOffertePage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Onderwerp</Label>
-                  <Input
-                    value={offerte.subject}
-                    onChange={(e) => setOfferte({...offerte, subject: e.target.value})}
-                    placeholder="Onderwerp van de offerte"
-                    className="rounded-lg"
-                  />
+                <div>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block">Onderwerp</Label>
+                  <Input value={offerte.subject} onChange={(e) => setOfferte({...offerte, subject: e.target.value})} placeholder="Onderwerp" className="rounded-lg h-10" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Referentie</Label>
-                  <Input
-                    value={offerte.reference}
-                    onChange={(e) => setOfferte({...offerte, reference: e.target.value})}
-                    placeholder="Uw referentie"
-                    className="rounded-lg"
-                  />
+                <div>
+                  <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block">Referentie</Label>
+                  <Input value={offerte.reference} onChange={(e) => setOfferte({...offerte, reference: e.target.value})} placeholder="Ref." className="rounded-lg h-10" />
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Offerte Lines */}
-        <Card className="bg-white border border-gray-200 shadow-sm rounded-xl mb-6">
+        {/* Lines Table */}
+        <Card className="bg-white border border-gray-200 rounded-lg mb-4">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50 border-b border-gray-200">
-                    <TableHead className="text-xs font-semibold text-gray-700 uppercase tracking-wide py-4 px-4 w-[40%]">
-                      Omschrijving
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-700 uppercase tracking-wide py-4 px-4 text-center w-[12%]">
-                      Aantal
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-700 uppercase tracking-wide py-4 px-4 text-right w-[15%]">
-                      Prijs
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-700 uppercase tracking-wide py-4 px-4 text-center w-[10%]">
-                      BTW
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-700 uppercase tracking-wide py-4 px-4 text-right w-[15%]">
-                      Totaal
-                    </TableHead>
-                    <TableHead className="text-xs font-semibold text-gray-700 uppercase tracking-wide py-4 px-4 text-center w-[8%]">
-                      
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-100 border-b border-gray-200">
+                    <th className="w-10 px-3 py-3 text-left">
+                      <Checkbox 
+                        checked={selectedRows.length === offerte.lines.length && offerte.lines.length > 0}
+                        onCheckedChange={toggleAllRows}
+                      />
+                    </th>
+                    <th className="w-20 px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Type</th>
+                    <th className="w-32 px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Categorie</th>
+                    <th className="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Omschrijving</th>
+                    <th className="w-24 px-2 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Aantal</th>
+                    <th className="w-24 px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Eenheid</th>
+                    <th className="w-28 px-2 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Prijs</th>
+                    <th className="w-28 px-2 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Totaal</th>
+                    <th className="w-20 px-2 py-3 text-center text-xs font-semibold text-gray-600 uppercase">BTW</th>
+                    <th className="w-24 px-2 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody>
                   {offerte.lines.map((line, idx) => (
-                    <TableRow key={idx} className="border-b border-gray-100 hover:bg-gray-50/50">
-                      <TableCell className="py-3 px-4">
-                        {line.isTextLine ? (
-                          <Input
-                            value={line.description}
-                            onChange={(e) => updateLine(idx, 'description', e.target.value)}
-                            placeholder="Typ tekst..."
-                            className="rounded-lg border-dashed"
+                    <tr 
+                      key={line.id} 
+                      className={`border-b border-gray-100 hover:bg-gray-50 ${line.isTitle || line.type === 'T' ? 'bg-gray-50' : ''} ${selectedRows.includes(line.id) ? 'bg-emerald-50' : ''}`}
+                    >
+                      <td className="px-3 py-2">
+                        <Checkbox 
+                          checked={selectedRows.includes(line.id)}
+                          onCheckedChange={() => toggleRowSelection(line.id)}
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        <Select value={line.type} onValueChange={(v) => updateLine(idx, 'type', v)}>
+                          <SelectTrigger className="h-8 text-xs rounded">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {ITEM_TYPES.map(t => (
+                              <SelectItem key={t.value} value={t.value}>{t.value} - {t.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="px-2 py-2">
+                        {!line.isTitle && line.type !== 'T' && (
+                          <Input 
+                            value={line.category} 
+                            onChange={(e) => updateLine(idx, 'category', e.target.value)}
+                            className="h-8 text-sm rounded"
+                            placeholder="Categorie"
                           />
-                        ) : (
-                          <div className="space-y-2">
-                            <Select 
-                              value={line.product_id || ''} 
-                              onValueChange={(v) => selectProduct(idx, v)}
-                            >
-                              <SelectTrigger className="rounded-lg" data-testid={`line-product-${idx}`}>
-                                <SelectValue placeholder="Selecteer artikel..." />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {products.map(product => (
-                                  <SelectItem key={product.id} value={product.id}>
-                                    {product.naam || product.name} - {formatAmount(product.verkoopprijs || product.sales_price || 0)}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Input
-                              value={line.description}
-                              onChange={(e) => updateLine(idx, 'description', e.target.value)}
-                              placeholder="Of typ handmatig..."
-                              className="rounded-lg text-sm"
-                              data-testid={`line-desc-${idx}`}
-                            />
-                          </div>
                         )}
-                      </TableCell>
-                      <TableCell className="py-3 px-4">
-                        {!line.isTextLine && (
-                          <Input
+                      </td>
+                      <td className="px-2 py-2">
+                        <Input 
+                          value={line.description} 
+                          onChange={(e) => updateLine(idx, 'description', e.target.value)}
+                          className={`h-8 text-sm rounded ${line.isTitle || line.type === 'T' ? 'font-semibold' : ''}`}
+                          placeholder={line.isTitle || line.type === 'T' ? "Sectie titel..." : "Omschrijving..."}
+                        />
+                      </td>
+                      <td className="px-2 py-2">
+                        {!line.isTitle && line.type !== 'T' && (
+                          <Input 
                             type="number"
-                            min="0"
-                            step="0.01"
-                            value={line.quantity}
+                            value={line.quantity} 
                             onChange={(e) => updateLine(idx, 'quantity', e.target.value)}
-                            className="rounded-lg text-center"
+                            className="h-8 text-sm rounded text-right"
                           />
                         )}
-                      </TableCell>
-                      <TableCell className="py-3 px-4">
-                        {!line.isTextLine && (
-                          <Input
-                            type="number"
-                            step="0.01"
-                            value={line.unit_price}
-                            onChange={(e) => updateLine(idx, 'unit_price', e.target.value)}
-                            className="rounded-lg text-right"
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell className="py-3 px-4">
-                        {!line.isTextLine && (
-                          <Select 
-                            value={String(line.btw_percentage)} 
-                            onValueChange={(v) => updateLine(idx, 'btw_percentage', parseFloat(v))}
-                          >
-                            <SelectTrigger className="rounded-lg">
+                      </td>
+                      <td className="px-2 py-2">
+                        {!line.isTitle && line.type !== 'T' && (
+                          <Select value={line.unit} onValueChange={(v) => updateLine(idx, 'unit', v)}>
+                            <SelectTrigger className="h-8 text-xs rounded">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="0">0%</SelectItem>
-                              <SelectItem value="10">10%</SelectItem>
-                              <SelectItem value="21">21%</SelectItem>
-                              <SelectItem value="25">25%</SelectItem>
+                              {UNITS.map(u => (
+                                <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         )}
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-right">
-                        <span className="font-medium text-gray-900">
-                          {formatAmount(line.total || 0, offerte.currency)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-3 px-4 text-center">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeLine(idx)}
-                          disabled={offerte.lines.length === 1}
-                          className="h-8 w-8 p-0 hover:bg-red-50 rounded-lg"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+                      </td>
+                      <td className="px-2 py-2">
+                        {!line.isTitle && line.type !== 'T' && (
+                          <Input 
+                            type="number"
+                            step="0.01"
+                            value={line.unit_price} 
+                            onChange={(e) => updateLine(idx, 'unit_price', e.target.value)}
+                            className="h-8 text-sm rounded text-right"
+                          />
+                        )}
+                      </td>
+                      <td className="px-2 py-2 text-right font-medium">
+                        {!line.isTitle && line.type !== 'T' && formatAmount(calculateLineTotal(line), offerte.currency)}
+                      </td>
+                      <td className="px-2 py-2">
+                        {!line.isTitle && line.type !== 'T' && (
+                          <Select value={String(line.btw_percentage)} onValueChange={(v) => updateLine(idx, 'btw_percentage', v)}>
+                            <SelectTrigger className="h-8 text-xs rounded">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {BTW_RATES.map(r => (
+                                <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </td>
+                      <td className="px-2 py-2">
+                        <div className="flex items-center justify-end gap-1">
+                          <Button variant="ghost" size="sm" onClick={() => duplicateLine(idx)} className="h-7 w-7 p-0 hover:bg-gray-100">
+                            <Copy className="w-3.5 h-3.5 text-gray-500" />
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => removeLine(idx)} disabled={offerte.lines.length === 1} className="h-7 w-7 p-0 hover:bg-red-50">
+                            <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
                   ))}
-                </TableBody>
-              </Table>
+                </tbody>
+              </table>
             </div>
 
-            {/* Add Line Buttons */}
-            <div className="p-4 border-t border-gray-100 flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={addLine} 
-                className="rounded-lg text-emerald-700 border-emerald-200 hover:bg-emerald-50"
-                data-testid="add-line-btn"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Nieuwe regel
+            {/* Add Buttons */}
+            <div className="px-4 py-3 border-t border-gray-100 flex gap-2 bg-gray-50">
+              <Button variant="outline" size="sm" onClick={() => addLine('M')} className="rounded-lg text-emerald-700 border-emerald-200 hover:bg-emerald-50">
+                <Plus className="w-4 h-4 mr-1" />
+                Regel
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={addTextLine} 
-                className="rounded-lg text-gray-600 hover:bg-gray-50"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Tekstregel
+              <Button variant="outline" size="sm" onClick={addTitleLine} className="rounded-lg">
+                <FileText className="w-4 h-4 mr-1" />
+                Titel/Sectie
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => addLine('D')} className="rounded-lg">
+                <Plus className="w-4 h-4 mr-1" />
+                Dienst
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => addLine('A')} className="rounded-lg">
+                <Plus className="w-4 h-4 mr-1" />
+                Arbeid
               </Button>
             </div>
           </CardContent>
         </Card>
 
-        {/* Totals & Notes */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Bottom Section - Notes & Totals */}
+        <div className="grid grid-cols-12 gap-4">
           {/* Notes */}
-          <Card className="bg-white border border-gray-200 shadow-sm rounded-xl">
-            <CardContent className="p-6">
-              <Label className="text-sm font-medium text-gray-700 mb-2 block">Opmerkingen</Label>
+          <Card className="col-span-7 bg-white border border-gray-200 rounded-lg">
+            <CardContent className="p-4">
+              <Label className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2 block">Opmerkingen</Label>
               <Textarea
                 value={offerte.notes}
                 onChange={(e) => setOfferte({...offerte, notes: e.target.value})}
-                placeholder="Opmerkingen op de offerte (zichtbaar voor de klant)"
-                className="rounded-lg min-h-[120px]"
-                data-testid="offerte-notes"
+                placeholder="Opmerkingen voor de klant..."
+                className="rounded-lg min-h-[100px]"
               />
             </CardContent>
           </Card>
 
           {/* Totals */}
-          <Card className="bg-white border border-gray-200 shadow-sm rounded-xl">
-            <CardContent className="p-6">
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-500">Subtotaal</span>
-                  <span className="text-sm font-medium text-gray-900">{formatAmount(subtotal, offerte.currency)}</span>
+          <Card className="col-span-5 bg-white border border-gray-200 rounded-lg">
+            <CardContent className="p-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">Subtotaal excl. BTW</span>
+                  <span className="text-sm font-medium">{formatAmount(subtotal, offerte.currency)}</span>
                 </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-sm text-gray-500">BTW</span>
-                  <span className="text-sm font-medium text-gray-900">{formatAmount(btwTotal, offerte.currency)}</span>
+                <div className="flex justify-between items-center py-2 border-b border-gray-100">
+                  <span className="text-sm text-gray-600">BTW</span>
+                  <span className="text-sm font-medium">{formatAmount(btwTotal, offerte.currency)}</span>
                 </div>
-                <div className="border-t border-gray-200 pt-3 mt-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-base font-semibold text-gray-900">Totaal</span>
-                    <span className="text-xl font-bold text-emerald-600" data-testid="offerte-total">
-                      {formatAmount(total, offerte.currency)}
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center py-3 bg-emerald-50 -mx-4 px-4 rounded-lg">
+                  <span className="font-semibold text-gray-900">Totaal incl. BTW</span>
+                  <span className="text-xl font-bold text-emerald-600">{formatAmount(total, offerte.currency)}</span>
+                </div>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="mt-4 pt-4 border-t border-gray-100 grid grid-cols-2 gap-3 text-center">
+                <div className="bg-gray-50 rounded-lg p-2">
+                  <p className="text-lg font-bold text-gray-900">{offerte.lines.filter(l => l.type !== 'T').length}</p>
+                  <p className="text-xs text-gray-500">Regels</p>
+                </div>
+                <div className="bg-gray-50 rounded-lg p-2">
+                  <p className="text-lg font-bold text-gray-900">{offerte.lines.filter(l => l.type === 'T').length}</p>
+                  <p className="text-xs text-gray-500">Secties</p>
                 </div>
               </div>
             </CardContent>
