@@ -28,7 +28,15 @@ import {
   Download,
   Clock,
   CheckCircle,
-  Circle
+  Circle,
+  Upload,
+  Settings,
+  Copy,
+  Trash2,
+  Filter,
+  MoreHorizontal,
+  Printer,
+  Mail
 } from 'lucide-react';
 
 // Format currency
@@ -90,8 +98,10 @@ const GrootboekPage = () => {
   const [showAccountDialog, setShowAccountDialog] = useState(false);
   const [showJournalDialog, setShowJournalDialog] = useState(false);
   const [showExterneCodeDialog, setShowExterneCodeDialog] = useState(false);
+  const [showBulkCodeDialog, setShowBulkCodeDialog] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [externeCode, setExterneCode] = useState('');
+  const [bulkCodePrefix, setBulkCodePrefix] = useState('');
   const [saving, setSaving] = useState(false);
   const [initializingSchema, setInitializingSchema] = useState(false);
   const [selectedType, setSelectedType] = useState('all');
@@ -189,6 +199,33 @@ const GrootboekPage = () => {
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij opslaan externe code');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleBulkCodeLink = async () => {
+    if (selectedRows.length === 0) {
+      toast.error('Selecteer eerst rekeningen om te koppelen');
+      return;
+    }
+    setSaving(true);
+    try {
+      // Link each selected account with prefix + original code
+      for (const accountId of selectedRows) {
+        const account = accounts.find(a => a.id === accountId);
+        if (account) {
+          const newCode = bulkCodePrefix ? `${bulkCodePrefix}-${account.code}` : account.code;
+          await accountsAPI.updateExterneCode(accountId, newCode);
+        }
+      }
+      toast.success(`${selectedRows.length} rekeningen gekoppeld`);
+      setShowBulkCodeDialog(false);
+      setBulkCodePrefix('');
+      setSelectedRows([]);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij koppelen codes');
     } finally {
       setSaving(false);
     }
@@ -319,6 +356,14 @@ const GrootboekPage = () => {
                 Standaard Schema
               </Button>
             )}
+            <Button variant="outline" className="rounded-lg" data-testid="import-btn">
+              <Upload className="w-4 h-4 mr-2" />
+              Import
+            </Button>
+            <Button variant="outline" className="rounded-lg" data-testid="bulk-link-btn" onClick={() => setShowBulkCodeDialog(true)}>
+              <Link2 className="w-4 h-4 mr-2" />
+              Codes Koppelen
+            </Button>
             <Dialog open={showAccountDialog} onOpenChange={setShowAccountDialog}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="rounded-lg" data-testid="add-account-btn">
@@ -583,59 +628,59 @@ const GrootboekPage = () => {
 
       {/* Main Content */}
       <div className="p-6">
-        {/* Summary Cards */}
-        <div className="grid grid-cols-4 gap-6 mb-6">
-          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <span className="text-sm text-gray-500 font-medium">REKENINGEN</span>
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
-                  <BookOpen className="w-5 h-5 text-gray-600" />
-                </div>
+        {/* Summary Cards - Zakelijk 3D */}
+        <div className="grid grid-cols-4 gap-5 mb-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Rekeningen</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{aantalRekeningen}</p>
+                <p className="text-xs text-gray-400 mt-1">Totaal in schema</p>
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">{aantalRekeningen}</div>
-              <span className="text-sm text-gray-400">Totaal rekeningen</span>
-            </CardContent>
-          </Card>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <BookOpen className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
           
-          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <span className="text-sm text-gray-500 font-medium">TOTAAL DEBET</span>
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-emerald-100">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
-                </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Totaal Debet</p>
+                <p className="text-2xl font-bold text-emerald-600 mt-2">{formatCurrency(totalDebet)}</p>
+                <p className="text-xs text-gray-400 mt-1">Debet saldo</p>
               </div>
-              <div className="text-3xl font-bold text-emerald-600 mb-2">{formatCurrency(totalDebet)}</div>
-              <span className="text-sm text-gray-400">Debet saldo</span>
-            </CardContent>
-          </Card>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-100 to-emerald-200 flex items-center justify-center shadow-inner">
+                <TrendingUp className="w-6 h-6 text-emerald-600" />
+              </div>
+            </div>
+          </div>
           
-          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <span className="text-sm text-gray-500 font-medium">TOTAAL CREDIT</span>
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-blue-100">
-                  <Wallet className="w-5 h-5 text-blue-600" />
-                </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Totaal Credit</p>
+                <p className="text-2xl font-bold text-blue-600 mt-2">{formatCurrency(totalCredit)}</p>
+                <p className="text-xs text-gray-400 mt-1">Credit saldo</p>
               </div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">{formatCurrency(totalCredit)}</div>
-              <span className="text-sm text-gray-400">Credit saldo</span>
-            </CardContent>
-          </Card>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-inner">
+                <Wallet className="w-6 h-6 text-blue-600" />
+              </div>
+            </div>
+          </div>
           
-          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <span className="text-sm text-gray-500 font-medium">JOURNAALPOSTEN</span>
-                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
-                  <FileText className="w-5 h-5 text-gray-600" />
-                </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Journaalposten</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{aantalJournaalposten}</p>
+                <p className="text-xs text-gray-400 mt-1">Dit boekjaar</p>
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">{aantalJournaalposten}</div>
-              <span className="text-sm text-gray-400">Dit boekjaar</span>
-            </CardContent>
-          </Card>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <FileText className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Data Table */}
@@ -795,6 +840,34 @@ const GrootboekPage = () => {
                 </p>
               </div>
             )}
+
+            {/* Footer with selection info */}
+            {selectedRows.length > 0 && activeTab === 'rekeningen' && (
+              <div className="bg-emerald-50 border-t border-emerald-200 px-4 py-3 flex items-center justify-between">
+                <span className="text-sm text-emerald-700">
+                  {selectedRows.length} rekening(en) geselecteerd
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100"
+                    onClick={() => setShowBulkCodeDialog(true)}
+                  >
+                    <Link2 className="w-4 h-4 mr-2" />
+                    Codes Koppelen
+                  </Button>
+                  <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
+                    <Download className="w-4 h-4 mr-2" />
+                    Exporteren
+                  </Button>
+                  <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
+                    <Printer className="w-4 h-4 mr-2" />
+                    Afdrukken
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -826,6 +899,77 @@ const GrootboekPage = () => {
             <Button onClick={handleSaveExterneCode} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               Opslaan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Code Koppeling Dialog */}
+      <Dialog open={showBulkCodeDialog} onOpenChange={setShowBulkCodeDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Codes Bulk Koppelen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+              <div className="flex items-start gap-3">
+                <Link2 className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div>
+                  <p className="text-sm font-medium text-blue-800">Koppel uw eigen codes</p>
+                  <p className="text-xs text-blue-600 mt-1">
+                    Selecteer rekeningen in de tabel en koppel ze aan uw externe boekhoudsysteem met een voorvoegsel.
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Geselecteerde rekeningen</Label>
+              <div className="bg-gray-50 p-3 rounded-lg max-h-32 overflow-y-auto">
+                {selectedRows.length === 0 ? (
+                  <p className="text-sm text-gray-500">Geen rekeningen geselecteerd. Selecteer rekeningen in de tabel.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedRows.map(id => {
+                      const acc = accounts.find(a => a.id === id);
+                      return acc ? (
+                        <Badge key={id} variant="outline" className="text-xs">
+                          {acc.code} - {acc.naam}
+                        </Badge>
+                      ) : null;
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Voorvoegsel (Prefix)</Label>
+              <Input
+                value={bulkCodePrefix}
+                onChange={(e) => setBulkCodePrefix(e.target.value)}
+                placeholder="Bijv. EXT of uw bedrijfscode"
+              />
+              <p className="text-xs text-gray-500">
+                De externe code wordt: <span className="font-mono bg-gray-100 px-1 rounded">{bulkCodePrefix || 'PREFIX'}-[rekeningcode]</span>
+              </p>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 p-3 rounded-lg">
+              <p className="text-xs text-amber-700">
+                <strong>Voorbeeld:</strong> Met prefix "EXT" wordt rekening 1000 gekoppeld als "EXT-1000"
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkCodeDialog(false)}>Annuleren</Button>
+            <Button 
+              onClick={handleBulkCodeLink} 
+              disabled={saving || selectedRows.length === 0} 
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Link2 className="w-4 h-4 mr-2" />}
+              {selectedRows.length} Rekeningen Koppelen
             </Button>
           </DialogFooter>
         </DialogContent>
