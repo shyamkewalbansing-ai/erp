@@ -520,9 +520,10 @@ const CrediteurenPage = () => {
                     </tr>
                   ))
               )}
-            </tbody>
-          </table>
-        </div>
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
       </Card>
 
       {/* Detail Sidebar */}
