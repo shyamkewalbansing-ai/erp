@@ -666,50 +666,6 @@ const DebiteurenPage = () => {
           </CardContent>
         </Card>
 
-        {/* Summary cards at bottom */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-          <Card className="bg-white border border-gray-200 rounded-xl">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <Users className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Totaal Debiteuren</p>
-                  <p className="text-xl font-bold text-gray-900">{customers.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white border border-gray-200 rounded-xl">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Openstaand Bedrag</p>
-                  <p className="text-xl font-bold text-amber-600">{formatAmount(totalOutstanding, 'SRD')}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white border border-gray-200 rounded-xl">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                  <XCircle className="w-5 h-5 text-red-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Verlopen</p>
-                  <p className="text-xl font-bold text-red-600">{overdueCustomers}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </div>
   );
