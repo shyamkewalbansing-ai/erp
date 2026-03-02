@@ -858,23 +858,23 @@ const VerkoopPage = () => {
               return (
                 <TableRow 
                   key={item.id} 
-                  className={`cursor-pointer hover:bg-gray-50 ${isSelected ? 'bg-emerald-50' : ''} ${isOverdue ? 'bg-red-50/50' : ''}`}
+                  className={`cursor-pointer hover:bg-gray-50/50 ${isSelected ? 'bg-emerald-50' : ''} ${isOverdue ? 'bg-red-50/50' : ''}`}
                   onClick={() => openDetail(item)}
                 >
                   <TableCell className="pl-4" onClick={e => e.stopPropagation()}>
                     <Checkbox checked={isSelected} onCheckedChange={() => handleSelect(item.id)} />
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 hover:underline">{num}</span>
+                    <span className="text-sm font-medium text-emerald-600 hover:text-emerald-700 hover:underline">{num}</span>
                   </TableCell>
                   <TableCell className="text-sm text-gray-600">{formatDate(date)}</TableCell>
                   <TableCell className="text-sm font-medium text-gray-900">{cust}</TableCell>
-                  <TableCell className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-600'}`}>
+                  <TableCell className={`text-sm ${isOverdue ? 'text-red-600 font-medium' : 'text-gray-500'}`}>
                     {formatDate(due)} {isOverdue && <AlertCircle className="w-3 h-3 inline ml-1" />}
                   </TableCell>
-                  <TableCell className="text-sm text-right font-semibold text-gray-900">{formatCurrency(total, curr)}</TableCell>
+                  <TableCell className="text-sm text-right font-medium text-gray-900">{formatCurrency(total, curr)}</TableCell>
                   {type === 'invoice' && (
-                    <TableCell className={`text-sm text-right font-semibold ${openAmt > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                    <TableCell className={`text-sm text-right font-medium ${openAmt > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
                       {openAmt > 0 ? formatCurrency(openAmt, curr) : '-'}
                     </TableCell>
                   )}
@@ -882,7 +882,7 @@ const VerkoopPage = () => {
                   <TableCell className="pr-4" onClick={e => e.stopPropagation()}>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="p-1 hover:bg-gray-100 rounded"><MoreHorizontal className="w-4 h-4 text-gray-400" /></button>
+                        <button className="p-1.5 hover:bg-gray-100 rounded-lg"><MoreHorizontal className="w-4 h-4 text-gray-400" /></button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem onClick={() => openDetail(item)}><Eye className="w-4 h-4 mr-2" /> Bekijken</DropdownMenuItem>
