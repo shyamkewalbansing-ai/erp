@@ -68,7 +68,6 @@ from routers.spa_booking import router as spa_booking_router
 from routers.suribet import router as suribet_router
 from routers.boekhouding import router as boekhouding_router
 from routers.schuldbeheer import router as schuldbeheer_router
-from routers.sumup import router as sumup_router
 from services.unified_email_service import get_email_service, EMAIL_TEMPLATES
 from services.scheduled_tasks import get_scheduled_tasks
 
