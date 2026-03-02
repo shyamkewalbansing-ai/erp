@@ -164,6 +164,7 @@ const boekhoudingNavItems = [
   { to: '/app/boekhouding/verkoop', icon: ShoppingCart, label: 'Verkoop', addon: 'boekhouding' },
   { to: '/app/boekhouding/inkoop', icon: ShoppingBag, label: 'Inkoop', addon: 'boekhouding' },
   { to: '/app/boekhouding/voorraad', icon: Package, label: 'Voorraad', addon: 'boekhouding' },
+  { to: '/app/boekhouding/hrm', icon: Users2, label: 'HRM / Personeel', addon: 'boekhouding' },
   { to: '/app/boekhouding/vaste-activa', icon: Archive, label: 'Vaste Activa', addon: 'boekhouding' },
   { to: '/app/boekhouding/projecten', icon: FolderKanban, label: 'Projecten', addon: 'boekhouding' },
   { to: '/app/boekhouding/rapportages', icon: BarChart3, label: 'Rapportages', addon: 'boekhouding' },
