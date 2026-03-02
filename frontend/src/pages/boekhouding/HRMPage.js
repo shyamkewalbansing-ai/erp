@@ -347,15 +347,19 @@ const HRMPage = () => {
   // Payroll
   const handleGeneratePayroll = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/hrm/payroll/generate?period=${payrollPeriod}`, {
+      // Use the new endpoint with tax calculation
+      const response = await fetch(`${API_URL}/api/hrm/payroll/generate-with-tax?period=${payrollPeriod}`, {
         method: 'POST',
         headers: getAuthHeader()
       });
 
       if (response.ok) {
         const result = await response.json();
-        toast.success(`${result.count || 0} salarisrecords gegenereerd`);
+        toast.success(`${result.count || 0} salarisrecords gegenereerd met belastingberekening`);
+        setShowPayrollDialog(false);
         fetchData();
+      } else {
+        toast.error('Fout bij genereren salarisrun');
       }
     } catch (error) {
       toast.error('Fout bij genereren salarisrun');
@@ -375,6 +379,29 @@ const HRMPage = () => {
       }
     } catch (error) {
       toast.error('Fout bij bijwerken');
+    }
+  };
+
+  // Handle payroll payment with automatic journal entry
+  const handlePayrollPayment = async (record) => {
+    try {
+      const response = await fetch(`${API_URL}/api/hrm/payroll/${record.id}/pay?create_journal=true`, {
+        method: 'PUT',
+        headers: getAuthHeader()
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        toast.success('Salaris uitbetaald en geboekt naar grootboek');
+        if (result.journal_entry) {
+          toast.info(`Journaalpost ${result.journal_entry.boekstuk_nummer} aangemaakt`);
+        }
+        fetchData();
+      } else {
+        toast.error('Fout bij uitbetalen');
+      }
+    } catch (error) {
+      toast.error('Fout bij uitbetalen');
     }
   };
 
