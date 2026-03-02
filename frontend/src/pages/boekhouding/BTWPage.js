@@ -353,88 +353,90 @@ const BTWPage = () => {
 
         {/* BTW Codes Tab */}
         <TabsContent value="codes" className="mt-4 space-y-4">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <CardContent className="p-4">
+          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+            <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <h3 className="font-medium text-gray-900">BTW Tarieven</h3>
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => { resetForm(); setShowCreateDialog(true); }}>
+                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 rounded-lg" onClick={() => { resetForm(); setShowCreateDialog(true); }}>
                   <Plus className="w-4 h-4 mr-1.5" /> Nieuw Tarief
                 </Button>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Code</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Naam</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">Percentage</th>
-                    <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Type</th>
-                    <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase w-24">Acties</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {loading ? (
+          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50/50 border-b border-gray-200">
                     <tr>
-                      <td colSpan={5} className="px-4 py-12 text-center">
-                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />
-                        <p className="text-sm text-gray-500 mt-2">Laden...</p>
-                      </td>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Code</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Naam</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-500">Percentage</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-500">Type</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 w-24">Acties</th>
                     </tr>
-                  ) : btwCodes.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-4 py-12 text-center">
-                        <Percent className="w-10 h-10 mx-auto text-gray-300 mb-2" />
-                        <p className="text-sm text-gray-500">Geen BTW-codes gevonden</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    btwCodes.map((code) => (
-                      <tr key={code.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3">
-                          <span className="font-mono font-medium text-gray-900">{code.code}</span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="text-gray-900">{code.naam || code.name}</span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="font-semibold text-gray-900">{code.percentage}%</span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <BTWTypeBadge type={code.type} />
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openEdit(code)}>
-                              <Edit className="w-4 h-4 text-gray-400" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-500 hover:text-red-600" onClick={() => handleDelete(code)}>
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {loading ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-12 text-center">
+                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />
+                          <p className="text-sm text-gray-500 mt-2">Laden...</p>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : btwCodes.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-12 text-center">
+                          <Percent className="w-10 h-10 mx-auto text-gray-300 mb-2" />
+                          <p className="text-sm text-gray-500">Geen BTW-codes gevonden</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      btwCodes.map((code) => (
+                        <tr key={code.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-4 py-3">
+                            <span className="font-mono font-medium text-gray-900">{code.code}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-gray-900">{code.naam || code.name}</span>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <span className="font-medium text-gray-900">{code.percentage}%</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <BTWTypeBadge type={code.type} />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" onClick={() => openEdit(code)}>
+                                <Edit className="w-4 h-4 text-gray-400" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg text-red-500 hover:text-red-600" onClick={() => handleDelete(code)}>
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
 
         {/* Aangifte Tab */}
         <TabsContent value="aangifte" className="mt-4 space-y-4">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
+          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
             <CardContent className="p-6 text-center">
               <FileText className="w-12 h-12 mx-auto text-gray-300 mb-4" />
               <h3 className="font-medium text-gray-900 mb-2">BTW Aangifte</h3>
               <p className="text-sm text-gray-500 mb-4">
                 Genereer en verstuur uw BTW aangifte naar de belastingdienst
               </p>
-              <Button className="bg-emerald-600 hover:bg-emerald-700">
+              <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
                 <FileText className="w-4 h-4 mr-2" /> Aangifte Genereren
               </Button>
             </CardContent>
