@@ -303,6 +303,57 @@ const VerkoopPage = () => {
 
       {/* Main Content */}
       <div className="p-6">
+        {/* Summary Cards - Zakelijk */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Totaal Facturen</p>
+                <p className="text-lg font-bold text-gray-900 mt-1">{aantalFacturen}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                <Receipt className="w-5 h-5 text-gray-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Totaal Omzet</p>
+                <p className="text-lg font-bold text-gray-900 mt-1">{formatCurrency(totaalOmzet)}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-gray-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Openstaand</p>
+                <p className="text-lg font-bold text-amber-600 mt-1">{formatCurrency(totaalOpenstaand)}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                <Clock className="w-5 h-5 text-gray-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide">Offertes</p>
+                <p className="text-lg font-bold text-gray-900 mt-1">{aantalOffertes}</p>
+              </div>
+              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-gray-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <CardContent className="p-0">
             {/* Table Header */}
