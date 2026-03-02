@@ -190,7 +190,7 @@ async def create_hrm_department(department: HRMDepartment, current_user: dict = 
     db = await get_db()
     dept_dict = department.model_dump()
     dept_dict["workspace_id"] = current_user.get("workspace_id")
-    dept_dict["user_id"] = str(current_user["_id"])
+    dept_dict["user_id"] = current_user.get("id")
     dept_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.hrm_departments.insert_one(dept_dict)
     dept_dict.pop("_id", None)
@@ -234,7 +234,7 @@ async def create_hrm_leave_request(request: HRMLeaveRequest, current_user: dict 
     db = await get_db()
     req_dict = request.model_dump()
     req_dict["workspace_id"] = current_user.get("workspace_id")
-    req_dict["user_id"] = str(current_user["_id"])
+    req_dict["user_id"] = current_user.get("id")
     req_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     req_dict["status"] = "pending"
     
@@ -262,7 +262,7 @@ async def update_hrm_leave_request(request_id: str, status: str, current_user: d
         {"$set": {
             "status": status,
             "updated_at": datetime.now(timezone.utc).isoformat(),
-            "updated_by": str(current_user["_id"])
+            "updated_by": current_user.get("id")
         }}
     )
     if result.matched_count == 0:
@@ -306,7 +306,7 @@ async def create_hrm_contract(contract: HRMContract, current_user: dict = Depend
     db = await get_db()
     contract_dict = contract.model_dump()
     contract_dict["workspace_id"] = current_user.get("workspace_id")
-    contract_dict["user_id"] = str(current_user["_id"])
+    contract_dict["user_id"] = current_user.get("id")
     contract_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     
     result = await db.hrm_contracts.insert_one(contract_dict)
@@ -357,7 +357,7 @@ async def create_hrm_vacancy(vacancy: HRMVacancy, current_user: dict = Depends(g
     db = await get_db()
     vac_dict = vacancy.model_dump()
     vac_dict["workspace_id"] = current_user.get("workspace_id")
-    vac_dict["user_id"] = str(current_user["_id"])
+    vac_dict["user_id"] = current_user.get("id")
     vac_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.hrm_vacancies.insert_one(vac_dict)
     vac_dict.pop("_id", None)
@@ -415,7 +415,7 @@ async def create_hrm_application(application: HRMApplication, current_user: dict
     db = await get_db()
     app_dict = application.model_dump()
     app_dict["workspace_id"] = current_user.get("workspace_id")
-    app_dict["user_id"] = str(current_user["_id"])
+    app_dict["user_id"] = current_user.get("id")
     app_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     
     result = await db.hrm_applications.insert_one(app_dict)
@@ -468,7 +468,7 @@ async def create_hrm_document(document: HRMDocument, current_user: dict = Depend
     db = await get_db()
     doc_dict = document.model_dump()
     doc_dict["workspace_id"] = current_user.get("workspace_id")
-    doc_dict["user_id"] = str(current_user["_id"])
+    doc_dict["user_id"] = current_user.get("id")
     doc_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.hrm_documents.insert_one(doc_dict)
     doc_dict.pop("_id", None)
@@ -523,7 +523,7 @@ async def create_hrm_attendance(attendance: HRMAttendance, current_user: dict = 
     
     att_dict = attendance.model_dump()
     att_dict["workspace_id"] = current_user.get("workspace_id")
-    att_dict["user_id"] = str(current_user["_id"])
+    att_dict["user_id"] = current_user.get("id")
     att_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     result = await db.hrm_attendance.insert_one(att_dict)
     att_dict.pop("_id", None)
@@ -557,7 +557,7 @@ async def clock_in(employee_id: str, current_user: dict = Depends(get_current_us
             "clock_in": now,
             "status": "present",
             "workspace_id": current_user.get("workspace_id"),
-            "user_id": str(current_user["_id"]),
+            "user_id": current_user.get("id"),
             "created_at": datetime.now(timezone.utc).isoformat()
         })
     
@@ -613,7 +613,7 @@ async def create_hrm_payroll(payroll: HRMPayroll, current_user: dict = Depends(g
     db = await get_db()
     pay_dict = payroll.model_dump()
     pay_dict["workspace_id"] = current_user.get("workspace_id")
-    pay_dict["user_id"] = str(current_user["_id"])
+    pay_dict["user_id"] = current_user.get("id")
     pay_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     
     # Calculate net salary if not provided
@@ -702,7 +702,7 @@ async def generate_payroll(period: str, current_user: dict = Depends(get_current
                 "net_salary": emp.get("salary", 0),
                 "status": "draft",
                 "workspace_id": current_user.get("workspace_id"),
-                "user_id": str(current_user["_id"]),
+                "user_id": current_user.get("id"),
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
             result = await db.hrm_payroll.insert_one(pay_dict)
@@ -736,7 +736,7 @@ async def update_hrm_settings(settings: HRMSettings, current_user: dict = Depend
     db = await get_db()
     settings_dict = settings.model_dump()
     settings_dict["workspace_id"] = current_user.get("workspace_id")
-    settings_dict["user_id"] = str(current_user["_id"])
+    settings_dict["user_id"] = current_user.get("id")
     settings_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.hrm_settings.update_one(
@@ -938,7 +938,7 @@ async def generate_payroll_with_tax(
                 "effective_tax_rate": tax_calc["effective_tax_rate"],
                 "status": "draft",
                 "workspace_id": current_user.get("workspace_id"),
-                "user_id": str(current_user["_id"]),
+                "user_id": current_user.get("id"),
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
             
@@ -986,7 +986,7 @@ async def process_payroll_payment(
             "$set": {
                 "status": "paid",
                 "paid_at": datetime.now(timezone.utc).isoformat(),
-                "paid_by": str(current_user["_id"])
+                "paid_by": current_user.get("id")
             }
         }
     )
@@ -1046,7 +1046,7 @@ async def process_payroll_payment(
             "payroll_id": payroll_id,
             "employee_id": payroll.get("employee_id"),
             "workspace_id": current_user.get("workspace_id"),
-            "user_id": str(current_user["_id"]),
+            "user_id": current_user.get("id"),
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         
