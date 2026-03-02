@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { btwAPI, reportsAPI } from '../../lib/boekhoudingApi';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
