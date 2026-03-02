@@ -79,18 +79,20 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// Tab Button Component
+// Tab Button Component - Zakelijk Design
 const TabButton = ({ active, onClick, icon: Icon, label, count }) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-colors ${
-      active ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-gray-500 hover:text-gray-700'
+    className={`flex items-center gap-2 px-4 py-3 border-b-2 transition-all ${
+      active 
+        ? 'border-emerald-600 text-emerald-600 bg-white' 
+        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
     }`}
   >
     <Icon className="w-4 h-4" />
     <span className="font-medium text-sm">{label}</span>
     {count !== undefined && (
-      <span className={`text-xs px-1.5 py-0.5 rounded-full ${active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+      <span className={`text-xs px-2 py-0.5 rounded-full ${active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
         {count}
       </span>
     )}
@@ -409,21 +411,26 @@ const HRMPage = () => {
   );
 
   return (
-    <div className="space-y-6" data-testid="hrm-page">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">HRM / Personeel</h1>
-          <p className="text-sm text-gray-500">Beheer medewerkers, verlof, contracten en salarisadministratie</p>
+    <div className="min-h-screen bg-gray-50" data-testid="hrm-page">
+      {/* Page Title */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-semibold text-gray-800">HRM / Personeel</h1>
+            <p className="text-sm text-gray-500">Beheer medewerkers, verlof, contracten en salarisadministratie</p>
+          </div>
+          <Button 
+            className="bg-emerald-600 hover:bg-emerald-700 rounded-lg"
+            onClick={() => { resetEmployeeForm(); setEditingItem(null); setShowEmployeeDialog(true); }}
+            data-testid="add-employee-btn"
+          >
+            <UserPlus className="w-4 h-4 mr-2" /> Nieuwe Medewerker
+          </Button>
         </div>
-        <Button 
-          className="bg-emerald-600 hover:bg-emerald-700"
-          onClick={() => { resetEmployeeForm(); setEditingItem(null); setShowEmployeeDialog(true); }}
-          data-testid="add-employee-btn"
-        >
-          <UserPlus className="w-4 h-4 mr-2" /> Nieuwe Medewerker
-        </Button>
       </div>
+
+      {/* Main Content */}
+      <div className="p-6 space-y-6">
 
       {/* Stats - 3D Zakelijk Design */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
@@ -433,11 +440,11 @@ const HRMPage = () => {
         <StatCard title="Totaal Salariskosten" value={formatCurrency(totalSalary)} subtitle="Per maand" icon={DollarSign} />
       </div>
 
-      {/* Main Content Card */}
-      <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-        <CardContent className="p-0">
+      {/* Main Content Card - Zakelijk 3D Design */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+        <div className="p-0">
           {/* Tabs */}
-          <div className="border-b border-gray-200 px-6 flex flex-wrap">
+          <div className="border-b border-gray-200 px-6 flex flex-wrap bg-gray-50/50">
             <TabButton active={activeTab === 'employees'} onClick={() => setActiveTab('employees')} icon={Users} label="Medewerkers" count={employees.length} />
             <TabButton active={activeTab === 'departments'} onClick={() => setActiveTab('departments')} icon={Building2} label="Afdelingen" count={departments.length} />
             <TabButton active={activeTab === 'leave'} onClick={() => setActiveTab('leave')} icon={Calendar} label="Verlof" count={leaveRequests.length} />
@@ -572,9 +579,12 @@ const HRMPage = () => {
                       </div>
                     ) : (
                       departments.map(dept => (
-                        <Card key={dept.id} className="bg-white border border-gray-200 rounded-xl">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between">
+                        <div key={dept.id} className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                                <Building2 className="w-5 h-5 text-gray-600" />
+                              </div>
                               <div>
                                 <h3 className="font-semibold text-gray-900">{dept.name}</h3>
                                 <p className="text-sm text-gray-500 mt-1">{dept.description || 'Geen beschrijving'}</p>
@@ -582,12 +592,12 @@ const HRMPage = () => {
                                   {employees.filter(e => e.department === dept.name).length} medewerkers
                                 </p>
                               </div>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" onClick={() => handleDeleteDepartment(dept)}>
-                                <Trash2 className="w-4 h-4 text-red-400" />
-                              </Button>
                             </div>
-                          </CardContent>
-                        </Card>
+                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg hover:bg-red-50" onClick={() => handleDeleteDepartment(dept)}>
+                              <Trash2 className="w-4 h-4 text-red-400" />
+                            </Button>
+                          </div>
+                        </div>
                       ))
                     )}
                   </div>
@@ -823,8 +833,8 @@ const HRMPage = () => {
               </>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Employee Dialog */}
       <Dialog open={showEmployeeDialog} onOpenChange={setShowEmployeeDialog}>
@@ -1132,6 +1142,7 @@ const HRMPage = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };
