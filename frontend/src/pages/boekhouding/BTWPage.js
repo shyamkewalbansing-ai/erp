@@ -5,15 +5,33 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
+import { Checkbox } from '../../components/ui/checkbox';
+import { Skeleton } from '../../components/ui/skeleton';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { ScrollArea } from '../../components/ui/scroll-area';
-import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 import { 
-  Plus, Calculator, FileText, Loader2, TrendingUp, TrendingDown,
-  RefreshCw, Download, Search, Filter, Eye, Edit, Trash2, X,
-  DollarSign, Percent, Calendar, CheckCircle, AlertCircle, ArrowUpRight, ArrowDownRight
+  Plus, 
+  Calculator, 
+  FileText, 
+  Loader2, 
+  TrendingUp, 
+  TrendingDown,
+  Download, 
+  Search, 
+  CheckCircle, 
+  AlertCircle, 
+  Clock,
+  Circle,
+  XCircle,
+  Send,
+  ArrowUpDown,
+  Calendar,
+  Percent,
+  Building2,
+  User,
+  Save,
+  BarChart3,
+  Receipt
 } from 'lucide-react';
 
 // Format currency
@@ -27,42 +45,72 @@ const formatCurrency = (amount, currency = 'SRD') => {
   return `SRD ${formatted}`;
 };
 
-// Stat Card Component
-const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, iconColor, trend }) => {
+// Tab Button Component
+const TabButton = ({ active, onClick, children }) => (
+  <button
+    onClick={onClick}
+    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
+      active 
+        ? 'bg-emerald-600 text-white shadow-sm' 
+        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+    }`}
+  >
+    {children}
+  </button>
+);
+
+// Status Legend Item
+const StatusLegendItem = ({ icon: Icon, label, color }) => (
+  <div className="flex items-center gap-2">
+    <Icon className={`w-4 h-4 ${color}`} />
+    <span className="text-xs text-gray-600">{label}</span>
+  </div>
+);
+
+// Status Icon Component
+const StatusIcon = ({ status }) => {
+  switch (status) {
+    case 'ingediend':
+      return <CheckCircle className="w-5 h-5 text-emerald-500" />;
+    case 'concept':
+      return <Circle className="w-5 h-5 text-gray-400" />;
+    case 'te_betalen':
+      return <Clock className="w-5 h-5 text-amber-500" />;
+    case 'te_vorderen':
+      return <TrendingUp className="w-5 h-5 text-blue-500" />;
+    case 'verlopen':
+      return <XCircle className="w-5 h-5 text-red-500" />;
+    default:
+      return <Circle className="w-5 h-5 text-gray-400" />;
+  }
+};
+
+// Action Badge Component
+const ActionBadge = ({ type, label }) => {
+  const colors = {
+    success: 'text-emerald-600',
+    warning: 'text-amber-600', 
+    danger: 'text-red-600',
+    info: 'text-blue-600',
+    neutral: 'text-gray-500'
+  };
+  
   return (
-    <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1">
-            <p className="text-xs text-gray-500 font-medium truncate">{title}</p>
-            <p className="text-sm lg:text-base font-bold text-gray-900 mt-1 whitespace-nowrap">{value}</p>
-            {subtitle && (
-              <div className="flex items-center gap-1 mt-1">
-                {trend && (
-                  trend > 0 ? <ArrowUpRight className="w-3 h-3 text-emerald-500" /> : <ArrowDownRight className="w-3 h-3 text-red-500" />
-                )}
-                <p className={`text-xs ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
-              </div>
-            )}
-          </div>
-          <div className={`w-9 h-9 lg:w-10 lg:h-10 rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
-            <Icon className={`w-4 h-4 lg:w-5 lg:h-5 ${iconColor}`} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <span className={`text-sm font-medium ${colors[type] || colors.neutral}`}>
+      {label}
+    </span>
   );
 };
 
-// BTW Code Badge
+// BTW Type Badge
 const BTWTypeBadge = ({ type }) => {
   if (type === 'sales' || type === 'verkoop') {
-    return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 text-xs">Verkoop</Badge>;
+    return <span className="px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded">Verkoop</span>;
   }
   if (type === 'purchases' || type === 'inkoop') {
-    return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 text-xs">Inkoop</Badge>;
+    return <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-700 rounded">Inkoop</span>;
   }
-  return <Badge variant="secondary" className="text-xs">Beide</Badge>;
+  return <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded">Beide</span>;
 };
 
 // Main Component
@@ -70,16 +118,25 @@ const BTWPage = () => {
   const [btwCodes, setBtwCodes] = useState([]);
   const [btwReport, setBtwReport] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('overzicht');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [showEditDialog, setShowEditDialog] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [editItem, setEditItem] = useState(null);
-  const [selectedPeriod, setSelectedPeriod] = useState('current_quarter');
+  const [selectedYear, setSelectedYear] = useState('2024');
+  const [selectedQuarter, setSelectedQuarter] = useState('Q4');
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [formData, setFormData] = useState({
     code: '', naam: '', percentage: 0, type: 'both'
   });
+
+  // Periode data voor de tabel
+  const [periodes, setPeriodes] = useState([
+    { id: '2024-Q4', periode: 'Q4 2024', maanden: 'Okt - Dec', status: 'concept', verkoop_btw: 45000, inkoop_btw: 32000, saldo: 13000, deadline: '2025-01-31' },
+    { id: '2024-Q3', periode: 'Q3 2024', maanden: 'Jul - Sep', status: 'ingediend', verkoop_btw: 52000, inkoop_btw: 38000, saldo: 14000, deadline: '2024-10-31' },
+    { id: '2024-Q2', periode: 'Q2 2024', maanden: 'Apr - Jun', status: 'ingediend', verkoop_btw: 48000, inkoop_btw: 35000, saldo: 13000, deadline: '2024-07-31' },
+    { id: '2024-Q1', periode: 'Q1 2024', maanden: 'Jan - Mar', status: 'ingediend', verkoop_btw: 41000, inkoop_btw: 29000, saldo: 12000, deadline: '2024-04-30' },
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -101,14 +158,17 @@ const BTWPage = () => {
     }
   };
 
-  const handleCreate = async () => {
-    if (!formData.code || !formData.naam) { toast.error('Vul code en naam in'); return; }
+  const handleCreateCode = async () => {
+    if (!formData.code || !formData.naam) {
+      toast.error('Code en naam zijn verplicht');
+      return;
+    }
     setSaving(true);
     try {
       await btwAPI.create(formData);
       toast.success('BTW-code aangemaakt');
       setShowCreateDialog(false);
-      resetForm();
+      setFormData({ code: '', naam: '', percentage: 0, type: 'both' });
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
@@ -117,423 +177,545 @@ const BTWPage = () => {
     }
   };
 
-  const handleUpdate = async () => {
-    if (!editItem) return;
-    setSaving(true);
-    try {
-      await btwAPI.update(editItem.id, formData);
-      toast.success('BTW-code bijgewerkt');
-      setShowEditDialog(false);
-      setEditItem(null);
-      resetForm();
-      fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij bijwerken');
-    } finally {
-      setSaving(false);
+  // Toggle row selection
+  const toggleRowSelection = (id) => {
+    setSelectedRows(prev => 
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+    );
+  };
+
+  // Toggle all rows
+  const toggleAllRows = () => {
+    if (selectedRows.length === periodes.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(periodes.map(p => p.id));
     }
   };
 
-  const handleDelete = async (item) => {
-    if (!confirm(`Weet u zeker dat u BTW-code "${item.code}" wilt verwijderen?`)) return;
-    try {
-      await btwAPI.delete(item.id);
-      toast.success('BTW-code verwijderd');
-      fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
-    }
-  };
+  // Filter BTW codes
+  const filteredCodes = btwCodes.filter(code =>
+    (code.code || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (code.naam || '').toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const resetForm = () => {
-    setFormData({ code: '', naam: '', percentage: 0, type: 'both' });
-  };
-
-  const openEdit = (item) => {
-    setEditItem(item);
-    setFormData({
-      code: item.code || '',
-      naam: item.naam || item.name || '',
-      percentage: item.percentage || 0,
-      type: item.type || 'both'
-    });
-    setShowEditDialog(true);
-  };
-
-  // Calculate BTW stats
-  const btwSales = btwReport?.btw_verkoop || btwReport?.btw_sales || 0;
-  const btwPurchases = btwReport?.btw_inkoop || btwReport?.btw_purchases || 0;
-  const btwBalance = btwSales - btwPurchases;
-  const isPayable = btwBalance > 0;
+  // Calculate totals from report
+  const totaalVerkoop = btwReport?.verkoop_btw || periodes.reduce((sum, p) => sum + p.verkoop_btw, 0);
+  const totaalInkoop = btwReport?.inkoop_btw || periodes.reduce((sum, p) => sum + p.inkoop_btw, 0);
+  const totaalSaldo = totaalVerkoop - totaalInkoop;
 
   return (
-    <div className="p-4 lg:p-6 space-y-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">BTW Beheer</h1>
-          <p className="text-sm text-gray-500 mt-1">BTW-codes, aangiften en overzichten</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={fetchData} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-1.5 ${loading ? 'animate-spin' : ''}`} /> Vernieuwen
-          </Button>
-          <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-1.5" /> Exporteren
-          </Button>
+    <div className="min-h-screen bg-gray-50" data-testid="btw-page">
+      {/* Page Title */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 py-4">
+          <h1 className="text-xl font-semibold text-gray-800">BTW Administratie</h1>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          title="BTW Verkoop"
-          value={formatCurrency(btwSales)}
-          subtitle="Te ontvangen"
-          subtitleColor="text-emerald-500"
-          icon={TrendingUp}
-          iconBg="bg-emerald-100"
-          iconColor="text-emerald-600"
-          trend={1}
-        />
-        <StatCard
-          title="BTW Inkoop"
-          value={formatCurrency(btwPurchases)}
-          subtitle="Voorbelasting"
-          subtitleColor="text-blue-500"
-          icon={TrendingDown}
-          iconBg="bg-blue-100"
-          iconColor="text-blue-600"
-          trend={-1}
-        />
-        <StatCard
-          title="BTW Saldo"
-          value={formatCurrency(Math.abs(btwBalance))}
-          subtitle={isPayable ? 'Te betalen' : 'Te ontvangen'}
-          subtitleColor={isPayable ? 'text-amber-500' : 'text-emerald-500'}
-          icon={DollarSign}
-          iconBg={isPayable ? 'bg-amber-100' : 'bg-emerald-100'}
-          iconColor={isPayable ? 'text-amber-600' : 'text-emerald-600'}
-        />
-        <StatCard
-          title="BTW Codes"
-          value={btwCodes.length}
-          subtitle="Actieve tarieven"
-          icon={Percent}
-          iconBg="bg-purple-100"
-          iconColor="text-purple-600"
-        />
-      </div>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-white border border-gray-200 p-1 rounded-xl">
-          <TabsTrigger value="overview" className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
+      {/* Tab Buttons Row */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <TabButton active={activeTab === 'overzicht'} onClick={() => setActiveTab('overzicht')}>
             Overzicht
-          </TabsTrigger>
-          <TabsTrigger value="codes" className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
+          </TabButton>
+          <TabButton active={activeTab === 'aangiftes'} onClick={() => setActiveTab('aangiftes')}>
+            BTW-aangiftes
+          </TabButton>
+          <TabButton active={activeTab === 'codes'} onClick={() => setActiveTab('codes')}>
             BTW-codes
-          </TabsTrigger>
-          <TabsTrigger value="aangifte" className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700">
-            Aangifte
-          </TabsTrigger>
-        </TabsList>
+          </TabButton>
+          <TabButton active={activeTab === 'transacties'} onClick={() => setActiveTab('transacties')}>
+            Transacties
+          </TabButton>
+          <TabButton active={activeTab === 'rapporten'} onClick={() => setActiveTab('rapporten')}>
+            Rapporten
+          </TabButton>
+          
+          {/* Action Buttons */}
+          <div className="ml-auto flex items-center gap-2">
+            <Button 
+              variant="outline"
+              className="rounded-lg"
+              onClick={() => setShowCreateDialog(true)}
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuwe BTW-code
+            </Button>
+            <Button 
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              BTW-aangifte Maken
+            </Button>
+          </div>
+        </div>
+      </div>
 
-        {/* Overview Tab */}
-        <TabsContent value="overview" className="mt-4 space-y-4">
-          {/* Period selector */}
-          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <CardContent className="p-6">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="font-medium text-gray-900">BTW Overzicht</h3>
-                  <p className="text-sm text-gray-500">Selecteer een periode voor het overzicht</p>
-                </div>
-                <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                  <SelectTrigger className="w-48 rounded-lg">
-                    <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="current_quarter">Huidig Kwartaal</SelectItem>
-                    <SelectItem value="previous_quarter">Vorig Kwartaal</SelectItem>
-                    <SelectItem value="current_year">Huidig Jaar</SelectItem>
-                    <SelectItem value="previous_year">Vorig Jaar</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* BTW Summary */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                    <TrendingUp className="w-5 h-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">BTW over Verkopen</h3>
-                    <p className="text-xs text-gray-500">Af te dragen BTW</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Omzet excl. BTW</span>
-                    <span className="text-gray-900">{formatCurrency(btwReport?.omzet_excl || 0)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">BTW 15%</span>
-                    <span className="text-gray-900">{formatCurrency(btwReport?.btw_15 || btwSales)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm border-t pt-3">
-                    <span className="font-medium text-gray-900">Totaal BTW Verkoop</span>
-                    <span className="font-medium text-emerald-600">{formatCurrency(btwSales)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                    <TrendingDown className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">Voorbelasting (Inkoop)</h3>
-                    <p className="text-xs text-gray-500">Te verrekenen BTW</p>
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Inkoop excl. BTW</span>
-                    <span className="text-gray-900">{formatCurrency(btwReport?.inkoop_excl || 0)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">BTW 15%</span>
-                    <span className="text-gray-900">{formatCurrency(btwReport?.btw_inkoop_15 || btwPurchases)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm border-t pt-3">
-                    <span className="font-medium text-gray-900">Totaal Voorbelasting</span>
-                    <span className="font-medium text-blue-600">{formatCurrency(btwPurchases)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+      {/* Filter Section */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+          {/* Search */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Zoeken
+            </Label>
+            <div className="relative">
+              <Input
+                placeholder="Zoeken..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-lg pr-10"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+          
+          {/* Boekjaar */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600">Boekjaar</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2023">2023</SelectItem>
+                <SelectItem value="2022">2022</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Kwartaal */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600">Kwartaal</Label>
+            <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle kwartalen</SelectItem>
+                <SelectItem value="Q1">Q1 (Jan-Mar)</SelectItem>
+                <SelectItem value="Q2">Q2 (Apr-Jun)</SelectItem>
+                <SelectItem value="Q3">Q3 (Jul-Sep)</SelectItem>
+                <SelectItem value="Q4">Q4 (Okt-Dec)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Verantwoordelijke */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Verantwoordelijke
+            </Label>
+            <Select defaultValue="all">
+              <SelectTrigger className="rounded-lg">
+                <SelectValue placeholder="Alle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle</SelectItem>
+                <SelectItem value="me">Alleen mij</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* BTW Balance */}
-          <Card className={`border border-gray-200 rounded-2xl shadow-sm ${isPayable ? 'bg-amber-50' : 'bg-emerald-50'}`}>
-            <CardContent className="p-6">
+          {/* Saldo Info */}
+          <div className="text-right">
+            <span className="text-sm text-gray-500">BTW Saldo {selectedYear}</span>
+            <p className={`text-sm font-bold ${totaalSaldo >= 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+              {totaalSaldo >= 0 ? 'Te betalen: ' : 'Te vorderen: '}
+              {formatCurrency(Math.abs(totaalSaldo))}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Legend */}
+      <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+        <div className="flex flex-wrap items-center gap-6">
+          <StatusLegendItem icon={Circle} label="Concept" color="text-gray-400" />
+          <StatusLegendItem icon={Clock} label="Te betalen" color="text-amber-500" />
+          <StatusLegendItem icon={TrendingUp} label="Te vorderen" color="text-blue-500" />
+          <StatusLegendItem icon={Send} label="Verzonden" color="text-emerald-500" />
+          <StatusLegendItem icon={CheckCircle} label="Ingediend" color="text-emerald-600" />
+          <StatusLegendItem icon={XCircle} label="Deadline overschreden" color="text-red-500" />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-6">
+        {/* Summary Cards - Compact Row */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <Card className="bg-white border border-gray-200 rounded-xl">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${isPayable ? 'bg-amber-100' : 'bg-emerald-100'}`}>
-                    {isPayable ? <AlertCircle className="w-6 h-6 text-amber-600" /> : <CheckCircle className="w-6 h-6 text-emerald-600" />}
-                  </div>
-                  <div>
-                    <h3 className={`font-medium ${isPayable ? 'text-amber-900' : 'text-emerald-900'}`}>
-                      {isPayable ? 'Te Betalen aan Belastingdienst' : 'Te Ontvangen van Belastingdienst'}
-                    </h3>
-                    <p className={`text-sm ${isPayable ? 'text-amber-600' : 'text-emerald-600'}`}>
-                      BTW Saldo voor dit kwartaal
-                    </p>
-                  </div>
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">BTW Verkoop</p>
+                  <p className="text-lg font-bold text-gray-900 mt-1">{formatCurrency(totaalVerkoop)}</p>
                 </div>
-                <div className="text-right">
-                  <p className={`text-2xl font-bold ${isPayable ? 'text-amber-700' : 'text-emerald-700'}`}>
-                    {formatCurrency(Math.abs(btwBalance))}
+                <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 text-emerald-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white border border-gray-200 rounded-xl">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">BTW Inkoop</p>
+                  <p className="text-lg font-bold text-gray-900 mt-1">{formatCurrency(totaalInkoop)}</p>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <TrendingDown className="w-5 h-5 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white border border-gray-200 rounded-xl">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">BTW Saldo</p>
+                  <p className={`text-lg font-bold mt-1 ${totaalSaldo >= 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    {totaalSaldo >= 0 ? '+' : '-'} {formatCurrency(Math.abs(totaalSaldo))}
                   </p>
                 </div>
+                <div className={`w-10 h-10 rounded-lg ${totaalSaldo >= 0 ? 'bg-amber-100' : 'bg-emerald-100'} flex items-center justify-center`}>
+                  <Calculator className={`w-5 h-5 ${totaalSaldo >= 0 ? 'text-amber-600' : 'text-emerald-600'}`} />
+                </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        {/* BTW Codes Tab */}
-        <TabsContent value="codes" className="mt-4 space-y-4">
-          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <CardContent className="p-6">
+          
+          <Card className="bg-white border border-gray-200 rounded-xl">
+            <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-gray-900">BTW Tarieven</h3>
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 rounded-lg" onClick={() => { resetForm(); setShowCreateDialog(true); }}>
-                  <Plus className="w-4 h-4 mr-1.5" /> Nieuw Tarief
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide">BTW-codes</p>
+                  <p className="text-lg font-bold text-gray-900 mt-1">{btwCodes.length}</p>
+                </div>
+                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
+                  <Percent className="w-5 h-5 text-gray-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Data Table */}
+        <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <CardContent className="p-0">
+            {/* Table Header Info */}
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">
+                  {activeTab === 'overzicht' && 'BTW-aangiftes Overzicht'}
+                  {activeTab === 'aangiftes' && 'Alle BTW-aangiftes'}
+                  {activeTab === 'codes' && 'BTW-codes Beheer'}
+                  {activeTab === 'transacties' && 'BTW Transacties'}
+                  {activeTab === 'rapporten' && 'BTW Rapporten'}
+                </span>
+                <Button variant="outline" size="sm" className="rounded-lg">
+                  <Download className="w-4 h-4 mr-2" />
+                  Exporteren
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-            <CardContent className="p-0">
+            {/* Table for Overzicht / Aangiftes */}
+            {(activeTab === 'overzicht' || activeTab === 'aangiftes') && (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50/50 border-b border-gray-200">
-                    <tr>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Code</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Naam</th>
-                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-500">Percentage</th>
-                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-500">Type</th>
-                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 w-24">Acties</th>
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="w-10 px-4 py-3">
+                        <Checkbox 
+                          checked={selectedRows.length === periodes.length && periodes.length > 0}
+                          onCheckedChange={toggleAllRows}
+                        />
+                      </th>
+                      <th className="text-left px-4 py-3">
+                        <button className="flex items-center gap-1 text-xs font-medium text-gray-600 uppercase tracking-wide hover:text-gray-900">
+                          Periode
+                          <ArrowUpDown className="w-3 h-3" />
+                        </button>
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Maanden
+                      </th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Status
+                      </th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        BTW Verkoop
+                      </th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        BTW Inkoop
+                      </th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Saldo
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Deadline
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Actie
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody>
                     {loading ? (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-12 text-center">
-                          <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />
-                          <p className="text-sm text-gray-500 mt-2">Laden...</p>
-                        </td>
-                      </tr>
-                    ) : btwCodes.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-12 text-center">
-                          <Percent className="w-10 h-10 mx-auto text-gray-300 mb-2" />
-                          <p className="text-sm text-gray-500">Geen BTW-codes gevonden</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      btwCodes.map((code) => (
-                        <tr key={code.id} className="hover:bg-gray-50/50 transition-colors">
+                      [...Array(4)].map((_, i) => (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-4" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-5 w-5 mx-auto" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                        </tr>
+                      ))
+                    ) : periodes.length > 0 ? (
+                      periodes.map((periode) => (
+                        <tr 
+                          key={periode.id} 
+                          className={`border-b border-gray-100 hover:bg-emerald-50/30 transition-colors ${
+                            selectedRows.includes(periode.id) ? 'bg-emerald-50/50' : ''
+                          }`}
+                        >
                           <td className="px-4 py-3">
-                            <span className="font-mono font-medium text-gray-900">{code.code}</span>
+                            <Checkbox 
+                              checked={selectedRows.includes(periode.id)}
+                              onCheckedChange={() => toggleRowSelection(periode.id)}
+                            />
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-gray-900">{code.naam || code.name}</span>
+                            <span className="text-sm font-medium text-gray-900">{periode.periode}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-600">{periode.maanden}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <StatusIcon status={periode.status} />
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <span className="font-medium text-gray-900">{code.percentage}%</span>
+                            <span className="text-sm font-medium text-emerald-600">{formatCurrency(periode.verkoop_btw)}</span>
                           </td>
-                          <td className="px-4 py-3 text-center">
-                            <BTWTypeBadge type={code.type} />
+                          <td className="px-4 py-3 text-right">
+                            <span className="text-sm font-medium text-blue-600">{formatCurrency(periode.inkoop_btw)}</span>
                           </td>
-                          <td className="px-4 py-3 text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" onClick={() => openEdit(code)}>
-                                <Edit className="w-4 h-4 text-gray-400" />
-                              </Button>
-                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg text-red-500 hover:text-red-600" onClick={() => handleDelete(code)}>
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
+                          <td className="px-4 py-3 text-right">
+                            <span className={`text-sm font-bold ${periode.saldo >= 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                              {periode.saldo >= 0 ? '+' : '-'} {formatCurrency(Math.abs(periode.saldo))}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-600">{periode.deadline}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            {periode.status === 'concept' ? (
+                              <ActionBadge type="warning" label="Indienen" />
+                            ) : (
+                              <ActionBadge type="success" label="Bekijken" />
+                            )}
                           </td>
                         </tr>
                       ))
+                    ) : (
+                      <tr>
+                        <td colSpan={9} className="px-4 py-16 text-center">
+                          <Calculator className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                          <p className="text-lg font-semibold text-gray-700 mb-2">Geen BTW-aangiftes gevonden</p>
+                          <p className="text-sm text-gray-500 mb-6">Maak uw eerste BTW-aangifte aan.</p>
+                          <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                            <Plus className="w-4 h-4 mr-2" />
+                            BTW-aangifte Maken
+                          </Button>
+                        </td>
+                      </tr>
                     )}
                   </tbody>
                 </table>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            )}
 
-        {/* Aangifte Tab */}
-        <TabsContent value="aangifte" className="mt-4 space-y-4">
-          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <CardContent className="p-6 text-center">
-              <FileText className="w-12 h-12 mx-auto text-gray-300 mb-4" />
-              <h3 className="font-medium text-gray-900 mb-2">BTW Aangifte</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Genereer en verstuur uw BTW aangifte naar de belastingdienst
-              </p>
-              <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
-                <FileText className="w-4 h-4 mr-2" /> Aangifte Genereren
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            {/* Table for BTW-codes */}
+            {activeTab === 'codes' && (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="text-left px-4 py-3">
+                        <button className="flex items-center gap-1 text-xs font-medium text-gray-600 uppercase tracking-wide hover:text-gray-900">
+                          Code
+                          <ArrowUpDown className="w-3 h-3" />
+                        </button>
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Naam
+                      </th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Percentage
+                      </th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Type
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                        Actie
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      [...Array(5)].map((_, i) => (
+                        <tr key={i} className="border-b border-gray-100">
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-16" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-12 mx-auto" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-6 w-16 mx-auto" /></td>
+                          <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
+                        </tr>
+                      ))
+                    ) : filteredCodes.length > 0 ? (
+                      filteredCodes.map((code) => (
+                        <tr 
+                          key={code.id} 
+                          className="border-b border-gray-100 hover:bg-emerald-50/30 transition-colors"
+                        >
+                          <td className="px-4 py-3">
+                            <span className="text-sm font-mono font-medium text-gray-900">{code.code}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="text-sm text-gray-700">{code.naam}</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <span className="text-sm font-medium text-gray-900">{code.percentage}%</span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <BTWTypeBadge type={code.type} />
+                          </td>
+                          <td className="px-4 py-3">
+                            <ActionBadge type="neutral" label="Bewerken" />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-16 text-center">
+                          <Percent className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                          <p className="text-lg font-semibold text-gray-700 mb-2">Geen BTW-codes gevonden</p>
+                          <p className="text-sm text-gray-500 mb-6">Voeg uw eerste BTW-code toe.</p>
+                          <Button onClick={() => setShowCreateDialog(true)} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+                            <Plus className="w-4 h-4 mr-2" />
+                            BTW-code Toevoegen
+                          </Button>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-      {/* Create Dialog */}
+            {/* Placeholder for other tabs */}
+            {(activeTab === 'transacties' || activeTab === 'rapporten') && (
+              <div className="px-4 py-16 text-center">
+                <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                <p className="text-lg font-semibold text-gray-700 mb-2">
+                  {activeTab === 'transacties' ? 'BTW Transacties' : 'BTW Rapporten'}
+                </p>
+                <p className="text-sm text-gray-500">Deze sectie wordt binnenkort beschikbaar.</p>
+              </div>
+            )}
+
+            {/* Footer with selection info */}
+            {selectedRows.length > 0 && (
+              <div className="bg-emerald-50 border-t border-emerald-200 px-4 py-3 flex items-center justify-between">
+                <span className="text-sm text-emerald-700">
+                  {selectedRows.length} periode(s) geselecteerd
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
+                    <Send className="w-4 h-4 mr-2" />
+                    Indienen
+                  </Button>
+                  <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
+                    <Download className="w-4 h-4 mr-2" />
+                    Exporteren
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Create BTW Code Dialog */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-                <Percent className="w-5 h-5 text-purple-600" />
-              </div>
-              Nieuw BTW Tarief
+            <DialogTitle className="flex items-center gap-2">
+              <Percent className="w-5 h-5 text-emerald-600" />
+              Nieuwe BTW-code
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs text-gray-500">Code *</Label>
-                <Input value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} placeholder="BTW15" className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs text-gray-500">Percentage *</Label>
-                <Input type="number" value={formData.percentage} onChange={(e) => setFormData({...formData, percentage: parseFloat(e.target.value) || 0})} className="mt-1" />
-              </div>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Code *</Label>
+              <Input
+                value={formData.code}
+                onChange={(e) => setFormData({...formData, code: e.target.value})}
+                placeholder="Bijv. BTW21"
+                className="rounded-lg"
+              />
             </div>
-            <div>
-              <Label className="text-xs text-gray-500">Naam *</Label>
-              <Input value={formData.naam} onChange={(e) => setFormData({...formData, naam: e.target.value})} placeholder="BTW 15%" className="mt-1" />
+            <div className="space-y-2">
+              <Label>Naam *</Label>
+              <Input
+                value={formData.naam}
+                onChange={(e) => setFormData({...formData, naam: e.target.value})}
+                placeholder="Bijv. BTW Hoog Tarief"
+                className="rounded-lg"
+              />
             </div>
-            <div>
-              <Label className="text-xs text-gray-500">Type</Label>
+            <div className="space-y-2">
+              <Label>Percentage</Label>
+              <Input
+                type="number"
+                value={formData.percentage}
+                onChange={(e) => setFormData({...formData, percentage: parseFloat(e.target.value) || 0})}
+                placeholder="21"
+                className="rounded-lg"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Type</Label>
               <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="rounded-lg">
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="both">Beide (Verkoop & Inkoop)</SelectItem>
+                  <SelectItem value="both">Beide</SelectItem>
                   <SelectItem value="sales">Alleen Verkoop</SelectItem>
                   <SelectItem value="purchases">Alleen Inkoop</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Annuleren</Button>
-            <Button onClick={handleCreate} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
-              {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
-              Aanmaken
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowCreateDialog(false)} className="rounded-lg">
+              Annuleren
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-                <Edit className="w-5 h-5 text-blue-600" />
-              </div>
-              BTW Tarief Bewerken
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-xs text-gray-500">Code *</Label>
-                <Input value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value})} className="mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs text-gray-500">Percentage *</Label>
-                <Input type="number" value={formData.percentage} onChange={(e) => setFormData({...formData, percentage: parseFloat(e.target.value) || 0})} className="mt-1" />
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs text-gray-500">Naam *</Label>
-              <Input value={formData.naam} onChange={(e) => setFormData({...formData, naam: e.target.value})} className="mt-1" />
-            </div>
-            <div>
-              <Label className="text-xs text-gray-500">Type</Label>
-              <Select value={formData.type} onValueChange={(v) => setFormData({...formData, type: v})}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="both">Beide (Verkoop & Inkoop)</SelectItem>
-                  <SelectItem value="sales">Alleen Verkoop</SelectItem>
-                  <SelectItem value="purchases">Alleen Inkoop</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter className="mt-6">
-            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Annuleren</Button>
-            <Button onClick={handleUpdate} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
-              {saving && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
+            <Button onClick={handleCreateCode} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               Opslaan
             </Button>
           </DialogFooter>
