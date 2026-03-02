@@ -414,20 +414,20 @@ const CrediteurenPage = () => {
       </div>
 
       {/* Filters & Search */}
-      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-        <CardContent className="p-4">
+      <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+        <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 placeholder="Zoeken op naam, code of email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
+                className="pl-9 rounded-lg"
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48">
+              <SelectTrigger className="w-full sm:w-48 rounded-lg">
                 <Filter className="w-4 h-4 mr-2 text-gray-400" />
                 <SelectValue placeholder="Filter" />
               </SelectTrigger>
