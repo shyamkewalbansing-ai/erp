@@ -443,81 +443,82 @@ const CrediteurenPage = () => {
       </Card>
 
       {/* Table */}
-      <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Leverancier</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Contact</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Plaats</th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">Openstaand</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase w-20">Acties</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {loading ? (
+      <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50/50 border-b border-gray-200">
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />
-                    <p className="text-sm text-gray-500 mt-2">Laden...</p>
-                  </td>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Leverancier</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 hidden md:table-cell">Contact</th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 hidden lg:table-cell">Plaats</th>
+                  <th className="text-right px-4 py-3 text-xs font-medium text-gray-500">Openstaand</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-gray-500">Status</th>
+                  <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 w-20">Acties</th>
                 </tr>
-              ) : filteredSuppliers.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center">
-                    <Truck className="w-10 h-10 mx-auto text-gray-300 mb-2" />
-                    <p className="text-sm text-gray-500">Geen leveranciers gevonden</p>
-                  </td>
-                </tr>
-              ) : (
-                filteredSuppliers.map((supplier) => (
-                  <tr 
-                    key={supplier.id} 
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
-                    onClick={() => openDetail(supplier)}
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-                          {(supplier.naam || supplier.name || 'L').charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{supplier.naam || supplier.name}</p>
-                          <p className="text-xs text-gray-500">{supplier.code || supplier.nummer}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 hidden md:table-cell">
-                      <div className="text-sm">
-                        {supplier.email && <p className="text-gray-600">{supplier.email}</p>}
-                        {(supplier.telefoon || supplier.phone) && <p className="text-gray-400">{supplier.telefoon || supplier.phone}</p>}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 hidden lg:table-cell">
-                      <span className="text-sm text-gray-600">{supplier.plaats || supplier.city || '-'}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <span className={`font-semibold ${(supplier.openstaand_bedrag || 0) > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
-                        {formatCurrency(supplier.openstaand_bedrag || 0, supplier.valuta)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <StatusBadge active={supplier.actief !== false} />
-                    </td>
-                    <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex items-center justify-center gap-1">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openDetail(supplier)}>
-                          <Eye className="w-4 h-4 text-gray-400" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openEdit(supplier)}>
-                          <Edit className="w-4 h-4 text-gray-400" />
-                        </Button>
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center">
+                      <Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" />
+                      <p className="text-sm text-gray-500 mt-2">Laden...</p>
                     </td>
                   </tr>
-                ))
+                ) : filteredSuppliers.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-4 py-12 text-center">
+                      <Truck className="w-10 h-10 mx-auto text-gray-300 mb-2" />
+                      <p className="text-sm text-gray-500">Geen leveranciers gevonden</p>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredSuppliers.map((supplier) => (
+                    <tr 
+                      key={supplier.id} 
+                      className="hover:bg-gray-50/50 cursor-pointer transition-colors"
+                      onClick={() => openDetail(supplier)}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                            {(supplier.naam || supplier.name || 'L').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{supplier.naam || supplier.name}</p>
+                            <p className="text-xs text-gray-500">{supplier.code || supplier.nummer}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 hidden md:table-cell">
+                        <div className="text-sm">
+                          {supplier.email && <p className="text-gray-600">{supplier.email}</p>}
+                          {(supplier.telefoon || supplier.phone) && <p className="text-gray-400">{supplier.telefoon || supplier.phone}</p>}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 hidden lg:table-cell">
+                        <span className="text-sm text-gray-600">{supplier.plaats || supplier.city || '-'}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span className={`font-medium ${(supplier.openstaand_bedrag || 0) > 0 ? 'text-amber-600' : 'text-gray-400'}`}>
+                          {formatCurrency(supplier.openstaand_bedrag || 0, supplier.valuta)}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <StatusBadge active={supplier.actief !== false} />
+                      </td>
+                      <td className="px-4 py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" onClick={() => openDetail(supplier)}>
+                            <Eye className="w-4 h-4 text-gray-400" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" onClick={() => openEdit(supplier)}>
+                            <Edit className="w-4 h-4 text-gray-400" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>
