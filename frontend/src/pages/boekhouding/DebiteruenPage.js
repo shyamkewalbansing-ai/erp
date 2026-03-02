@@ -609,21 +609,22 @@ const DebiteurenPage = () => {
 
             {/* Desktop Table View */}
             <div className="hidden md:block">
-              <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gray-50/80 hover:bg-gray-50/80">
-                        <TableHead className="w-24 text-xs font-semibold text-gray-600">Nr.</TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600">Naam</TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600">Plaats</TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600">E-mail</TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600">Telefoon</TableHead>
-                        <TableHead className="w-20 text-xs font-semibold text-gray-600">Valuta</TableHead>
-                        <TableHead className="text-right w-36 text-xs font-semibold text-gray-600">Openstaand</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+              <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                          <TableHead className="w-24 text-xs font-medium text-gray-500">Nr.</TableHead>
+                          <TableHead className="text-xs font-medium text-gray-500">Naam</TableHead>
+                          <TableHead className="text-xs font-medium text-gray-500">Plaats</TableHead>
+                          <TableHead className="text-xs font-medium text-gray-500">E-mail</TableHead>
+                          <TableHead className="text-xs font-medium text-gray-500">Telefoon</TableHead>
+                          <TableHead className="w-20 text-xs font-medium text-gray-500">Valuta</TableHead>
+                          <TableHead className="text-right w-36 text-xs font-medium text-gray-500">Openstaand</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                       {loading ? (
                         [...Array(5)].map((_, i) => (
                           <TableRow key={i}>
