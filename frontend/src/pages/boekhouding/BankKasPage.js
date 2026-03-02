@@ -539,85 +539,88 @@ const BankKasPage = () => {
           </Card>
 
           {/* Transactions Table */}
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Datum</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Omschrijving</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Rekening</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase hidden lg:table-cell">Referentie</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">Bedrag</th>
-                    <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase w-16">Acties</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {loading ? (
-                    <tr><td colSpan={6} className="px-4 py-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" /></td></tr>
-                  ) : filteredTransactions.length === 0 ? (
-                    <tr><td colSpan={6} className="px-4 py-12 text-center"><CreditCard className="w-10 h-10 mx-auto text-gray-300 mb-2" /><p className="text-sm text-gray-500">Geen transacties gevonden</p></td></tr>
-                  ) : (
-                    filteredTransactions.map(t => {
-                      const account = bankAccounts.find(a => a.id === t.bankrekening_id || a.id === t.bank_account_id);
-                      return (
-                        <tr key={t.id} className="hover:bg-gray-50 cursor-pointer" onClick={() => { setDetailItem(t); setDetailOpen(true); }}>
-                          <td className="px-4 py-3 text-sm text-gray-900">{formatDate(t.datum || t.date)}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-6 h-6 rounded flex items-center justify-center ${(t.bedrag || 0) > 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
-                                {(t.bedrag || 0) > 0 ? <ArrowDownRight className="w-3 h-3 text-emerald-600" /> : <ArrowUpRight className="w-3 h-3 text-red-600" />}
+          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50/50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Datum</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Omschrijving</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 hidden md:table-cell">Rekening</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 hidden lg:table-cell">Referentie</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-500">Bedrag</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 w-16">Acties</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {loading ? (
+                      <tr><td colSpan={6} className="px-4 py-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-gray-400" /></td></tr>
+                    ) : filteredTransactions.length === 0 ? (
+                      <tr><td colSpan={6} className="px-4 py-12 text-center"><CreditCard className="w-10 h-10 mx-auto text-gray-300 mb-2" /><p className="text-sm text-gray-500">Geen transacties gevonden</p></td></tr>
+                    ) : (
+                      filteredTransactions.map(t => {
+                        const account = bankAccounts.find(a => a.id === t.bankrekening_id || a.id === t.bank_account_id);
+                        return (
+                          <tr key={t.id} className="hover:bg-gray-50/50 cursor-pointer" onClick={() => { setDetailItem(t); setDetailOpen(true); }}>
+                            <td className="px-4 py-3 text-sm text-gray-900">{formatDate(t.datum || t.date)}</td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-6 h-6 rounded flex items-center justify-center ${(t.bedrag || 0) > 0 ? 'bg-emerald-100' : 'bg-red-100'}`}>
+                                  {(t.bedrag || 0) > 0 ? <ArrowDownRight className="w-3 h-3 text-emerald-600" /> : <ArrowUpRight className="w-3 h-3 text-red-600" />}
+                                </div>
+                                <span className="text-sm text-gray-900">{t.omschrijving || t.description || '-'}</span>
                               </div>
-                              <span className="text-sm text-gray-900">{t.omschrijving || t.description || '-'}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-gray-500 hidden md:table-cell">{account?.naam || account?.name || '-'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell">{t.referentie || t.reference || '-'}</td>
-                          <td className="px-4 py-3 text-right">
-                            <span className={`font-semibold ${(t.bedrag || 0) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                              {(t.bedrag || 0) > 0 ? '+' : ''}{formatCurrency(t.bedrag || t.amount || 0)}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
-                            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => { setDetailItem(t); setDetailOpen(true); }}>
-                              <Eye className="w-4 h-4 text-gray-400" />
-                            </Button>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500 hidden md:table-cell">{account?.naam || account?.name || '-'}</td>
+                            <td className="px-4 py-3 text-sm text-gray-500 hidden lg:table-cell">{t.referentie || t.reference || '-'}</td>
+                            <td className="px-4 py-3 text-right">
+                              <span className={`font-medium ${(t.bedrag || 0) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                                {(t.bedrag || 0) > 0 ? '+' : ''}{formatCurrency(t.bedrag || t.amount || 0)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-center" onClick={e => e.stopPropagation()}>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" onClick={() => { setDetailItem(t); setDetailOpen(true); }}>
+                                <Eye className="w-4 h-4 text-gray-400" />
+                              </Button>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
           </Card>
         </TabsContent>
 
         {/* Accounts Tab */}
         <TabsContent value="accounts" className="mt-4 space-y-4">
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <CardContent className="p-4 flex items-center justify-between">
+          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+            <CardContent className="p-6 flex items-center justify-between">
               <h3 className="font-medium text-gray-900">Bankrekeningen</h3>
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => { setAccountForm({ naam: '', bank: '', rekeningnummer: '', valuta: 'SRD', beginsaldo: 0 }); setShowAccountDialog(true); }}>
+              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 rounded-lg" onClick={() => { setAccountForm({ naam: '', bank: '', rekeningnummer: '', valuta: 'SRD', beginsaldo: 0 }); setShowAccountDialog(true); }}>
                 <Plus className="w-4 h-4 mr-1.5" /> Nieuwe Rekening
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Rekening</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Bank</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase hidden md:table-cell">Rekeningnummer</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">Saldo</th>
-                    <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase w-24">Acties</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {bankAccounts.map(account => (
+          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50/50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Rekening</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500">Bank</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 hidden md:table-cell">Rekeningnummer</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-500">Saldo</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 w-24">Acties</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {bankAccounts.map(account => (
                     <tr key={account.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-3">
