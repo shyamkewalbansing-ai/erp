@@ -116,6 +116,7 @@ const BTWTypeBadge = ({ type }) => {
 
 // Main Component
 const BTWPage = () => {
+  const navigate = useNavigate();
   const [btwCodes, setBtwCodes] = useState([]);
   const [btwReport, setBtwReport] = useState(null);
   const [loading, setLoading] = useState(true);
