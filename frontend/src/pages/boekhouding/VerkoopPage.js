@@ -383,10 +383,11 @@ const VerkoopPage = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="w-10 px-4 py-3">
+                      <th className="w-12 px-4 py-3">
                         <Checkbox 
                           checked={selectedRows.length === filteredInvoices.length && filteredInvoices.length > 0}
                           onCheckedChange={toggleAllRows}
+                          className="h-5 w-5 border-2 border-gray-300 data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600"
                         />
                       </th>
                       <th className="text-left px-4 py-3">
