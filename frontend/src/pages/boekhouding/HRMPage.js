@@ -661,55 +661,99 @@ const HRMPage = () => {
 
                 {/* Payroll Tab */}
                 {activeTab === 'payroll' && (
-                  <div className="border border-gray-200 rounded-2xl overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50/50">
-                          <TableHead className="text-xs font-medium text-gray-500">Medewerker</TableHead>
-                          <TableHead className="text-xs font-medium text-gray-500">Periode</TableHead>
-                          <TableHead className="text-right text-xs font-medium text-gray-500">Bruto</TableHead>
-                          <TableHead className="text-right text-xs font-medium text-gray-500">Toeslagen</TableHead>
-                          <TableHead className="text-right text-xs font-medium text-gray-500">Inhoudingen</TableHead>
-                          <TableHead className="text-right text-xs font-medium text-gray-500">Netto</TableHead>
-                          <TableHead className="text-xs font-medium text-gray-500">Status</TableHead>
-                          <TableHead className="w-24"></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {payroll.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={8} className="text-center py-12 text-gray-500">
-                              <DollarSign className="w-10 h-10 mx-auto text-gray-300 mb-2" />
-                              <p>Geen salarisrecords</p>
-                            </TableCell>
+                  <div className="space-y-4">
+                    {/* Tax Info Card */}
+                    <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
+                            <DollarSign className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium text-blue-900">Surinaamse Loonbelasting 2024</h3>
+                            <p className="text-xs text-blue-600">Automatische berekening volgens belastingdienst tarieven</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                          <div className="bg-white/50 rounded-lg p-2">
+                            <p className="text-blue-600">Belastingvrij</p>
+                            <p className="font-semibold text-blue-900">SRD 9.000/mnd</p>
+                          </div>
+                          <div className="bg-white/50 rounded-lg p-2">
+                            <p className="text-blue-600">Schijf 1 (8%)</p>
+                            <p className="font-semibold text-blue-900">0 - 3.500</p>
+                          </div>
+                          <div className="bg-white/50 rounded-lg p-2">
+                            <p className="text-blue-600">Schijf 2 (18%)</p>
+                            <p className="font-semibold text-blue-900">3.501 - 7.000</p>
+                          </div>
+                          <div className="bg-white/50 rounded-lg p-2">
+                            <p className="text-blue-600">AOV Premie</p>
+                            <p className="font-semibold text-blue-900">4%</p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Payroll Table */}
+                    <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-50/50">
+                            <TableHead className="text-xs font-medium text-gray-500">Medewerker</TableHead>
+                            <TableHead className="text-xs font-medium text-gray-500">Periode</TableHead>
+                            <TableHead className="text-right text-xs font-medium text-gray-500">Bruto</TableHead>
+                            <TableHead className="text-right text-xs font-medium text-gray-500">Loonbelasting</TableHead>
+                            <TableHead className="text-right text-xs font-medium text-gray-500">AOV</TableHead>
+                            <TableHead className="text-right text-xs font-medium text-gray-500">Netto</TableHead>
+                            <TableHead className="text-xs font-medium text-gray-500">Status</TableHead>
+                            <TableHead className="w-32"></TableHead>
                           </TableRow>
-                        ) : (
-                          payroll.map(pay => (
-                            <TableRow key={pay.id} className="hover:bg-gray-50/50">
-                              <TableCell className="font-medium text-gray-900">{pay.employee_name || '-'}</TableCell>
-                              <TableCell className="text-sm text-gray-600">{pay.period}</TableCell>
-                              <TableCell className="text-right text-sm text-gray-900">{formatCurrency(pay.basic_salary)}</TableCell>
-                              <TableCell className="text-right text-sm text-emerald-600">+{formatCurrency(pay.allowances)}</TableCell>
-                              <TableCell className="text-right text-sm text-red-600">-{formatCurrency(pay.deductions)}</TableCell>
-                              <TableCell className="text-right text-sm font-medium text-gray-900">{formatCurrency(pay.net_salary)}</TableCell>
-                              <TableCell><StatusBadge status={pay.status} /></TableCell>
-                              <TableCell>
-                                {pay.status === 'draft' && (
-                                  <Button variant="ghost" size="sm" className="h-8 px-2 rounded-lg bg-emerald-50 text-emerald-700" onClick={() => handlePayrollAction(pay, 'approve')}>
-                                    Goedkeuren
-                                  </Button>
-                                )}
-                                {pay.status === 'approved' && (
-                                  <Button variant="ghost" size="sm" className="h-8 px-2 rounded-lg bg-blue-50 text-blue-700" onClick={() => handlePayrollAction(pay, 'pay')}>
-                                    Uitbetalen
-                                  </Button>
-                                )}
+                        </TableHeader>
+                        <TableBody>
+                          {payroll.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={8} className="text-center py-12 text-gray-500">
+                                <DollarSign className="w-10 h-10 mx-auto text-gray-300 mb-2" />
+                                <p>Geen salarisrecords</p>
+                                <p className="text-xs mt-1">Klik op "Salarisrun" om te genereren</p>
                               </TableCell>
                             </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
+                          ) : (
+                            payroll.map(pay => (
+                              <TableRow key={pay.id} className="hover:bg-gray-50/50">
+                                <TableCell className="font-medium text-gray-900">{pay.employee_name || '-'}</TableCell>
+                                <TableCell className="text-sm text-gray-600">{pay.period}</TableCell>
+                                <TableCell className="text-right text-sm text-gray-900">{formatCurrency(pay.gross_salary || pay.basic_salary)}</TableCell>
+                                <TableCell className="text-right text-sm text-red-600">-{formatCurrency(pay.income_tax || 0)}</TableCell>
+                                <TableCell className="text-right text-sm text-amber-600">-{formatCurrency(pay.aov_contribution || 0)}</TableCell>
+                                <TableCell className="text-right text-sm font-medium text-emerald-600">{formatCurrency(pay.net_salary)}</TableCell>
+                                <TableCell><StatusBadge status={pay.status} /></TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-1">
+                                    {pay.status === 'draft' && (
+                                      <Button variant="ghost" size="sm" className="h-8 px-2 rounded-lg bg-emerald-50 text-emerald-700 text-xs" onClick={() => handlePayrollAction(pay, 'approve')}>
+                                        Goedkeuren
+                                      </Button>
+                                    )}
+                                    {pay.status === 'approved' && (
+                                      <Button variant="ghost" size="sm" className="h-8 px-2 rounded-lg bg-blue-50 text-blue-700 text-xs" onClick={() => handlePayrollPayment(pay)}>
+                                        Uitbetalen
+                                      </Button>
+                                    )}
+                                    {pay.status === 'paid' && pay.journal_entry_id && (
+                                      <span className="text-xs text-gray-400 flex items-center gap-1">
+                                        <CheckCircle className="w-3 h-3" /> Geboekt
+                                      </span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 )}
 
