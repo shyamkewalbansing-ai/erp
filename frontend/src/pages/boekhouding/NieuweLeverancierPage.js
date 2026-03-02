@@ -21,7 +21,7 @@ const TabButton = ({ active, onClick, children }) => (
     onClick={onClick}
     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
       active 
-        ? 'bg-purple-600 text-white shadow-sm' 
+        ? 'bg-emerald-600 text-white shadow-sm' 
         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
     }`}
   >
@@ -108,7 +108,7 @@ const NieuweLeverancierPage = () => {
           <Button 
             onClick={handleSave} 
             disabled={saving}
-            className="ml-auto bg-purple-600 hover:bg-purple-700 rounded-lg"
+            className="ml-auto bg-emerald-600 hover:bg-emerald-700 rounded-lg"
           >
             {saving ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -170,7 +170,7 @@ const NieuweLeverancierPage = () => {
 
           <div className="text-right">
             <span className="text-sm text-gray-500">Status</span>
-            <p className="text-sm font-medium text-purple-600">Nieuw</p>
+            <p className="text-sm font-medium text-emerald-600">Nieuw</p>
           </div>
         </div>
       </div>
@@ -377,7 +377,7 @@ const NieuweLeverancierPage = () => {
               <Button 
                 onClick={handleSave} 
                 disabled={saving}
-                className="bg-purple-600 hover:bg-purple-700 rounded-lg"
+                className="bg-emerald-600 hover:bg-emerald-700 rounded-lg"
               >
                 {saving ? (
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
