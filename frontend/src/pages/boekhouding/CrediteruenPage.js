@@ -39,7 +39,7 @@ const TabButton = ({ active, onClick, children }) => (
     onClick={onClick}
     className={`px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
       active 
-        ? 'bg-purple-600 text-white shadow-sm' 
+        ? 'bg-emerald-600 text-white shadow-sm' 
         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
     }`}
   >
@@ -182,7 +182,7 @@ const CrediteruenPage = () => {
           {/* Add Supplier Button */}
           <Button 
             onClick={() => navigate('/app/boekhouding/crediteuren/nieuw')}
-            className="ml-auto bg-purple-600 hover:bg-purple-700 text-white rounded-lg" 
+            className="ml-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg" 
             data-testid="add-supplier-btn"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -331,8 +331,8 @@ const CrediteruenPage = () => {
                       return (
                         <tr 
                           key={supplier.id} 
-                          className={`border-b border-gray-100 hover:bg-purple-50/30 transition-colors ${
-                            selectedRows.includes(supplier.id) ? 'bg-purple-50/50' : ''
+                          className={`border-b border-gray-100 hover:bg-emerald-50/30 transition-colors ${
+                            selectedRows.includes(supplier.id) ? 'bg-emerald-50/50' : ''
                           }`}
                           data-testid={`supplier-row-${supplier.nummer || supplier.code}`}
                         >
@@ -389,7 +389,7 @@ const CrediteruenPage = () => {
                         <Truck className="w-16 h-16 mx-auto mb-4 text-gray-200" />
                         <p className="text-lg font-semibold text-gray-700 mb-2">Geen leveranciers gevonden</p>
                         <p className="text-sm text-gray-500 mb-6">Voeg uw eerste leverancier toe om te beginnen.</p>
-                        <Button onClick={() => navigate('/app/boekhouding/crediteuren/nieuw')} className="bg-purple-600 hover:bg-purple-700 rounded-lg">
+                        <Button onClick={() => navigate('/app/boekhouding/crediteuren/nieuw')} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
                           <Plus className="w-4 h-4 mr-2" />
                           Eerste Leverancier Toevoegen
                         </Button>
@@ -402,16 +402,16 @@ const CrediteruenPage = () => {
 
             {/* Footer with selection info */}
             {selectedRows.length > 0 && (
-              <div className="bg-purple-50 border-t border-purple-200 px-4 py-3 flex items-center justify-between">
-                <span className="text-sm text-purple-700">
+              <div className="bg-emerald-50 border-t border-emerald-200 px-4 py-3 flex items-center justify-between">
+                <span className="text-sm text-emerald-700">
                   {selectedRows.length} leverancier(s) geselecteerd
                 </span>
                 <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" className="rounded-lg text-purple-700 border-purple-300 hover:bg-purple-100">
+                  <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
                     <Send className="w-4 h-4 mr-2" />
                     Betaling Verwerken
                   </Button>
-                  <Button variant="outline" size="sm" className="rounded-lg text-purple-700 border-purple-300 hover:bg-purple-100">
+                  <Button variant="outline" size="sm" className="rounded-lg text-emerald-700 border-emerald-300 hover:bg-emerald-100">
                     <FileText className="w-4 h-4 mr-2" />
                     Rapport Genereren
                   </Button>
