@@ -1,15 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { accountsAPI, journalAPI } from '../../lib/boekhoudingApi';
-import { accountTypes, journalTypes, getStatusColor, getStatusLabel } from '../../lib/utils';
+import { accountTypes, journalTypes } from '../../lib/utils';
 import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Skeleton } from '../../components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '../../components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table';
+import { Checkbox } from '../../components/ui/checkbox';
 import { Badge } from '../../components/ui/badge';
 import { toast } from 'sonner';
 import { 
@@ -19,53 +17,69 @@ import {
   Loader2, 
   RefreshCw, 
   Link2, 
-  ChevronDown,
-  ArrowUpRight,
   TrendingUp,
   Wallet,
-  Filter,
-  Search
+  Search,
+  Building2,
+  User,
+  ArrowUpDown,
+  Eye,
+  Edit,
+  Download,
+  Clock,
+  CheckCircle,
+  Circle
 } from 'lucide-react';
 
-// Stat Card Component matching Dashboard style
-const StatCard = ({ title, value, subtitle, icon: Icon, loading, variant = 'default' }) => {
-  if (loading) {
-    return (
-      <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-        <CardContent className="p-6">
-          <Skeleton className="h-4 w-24 mb-4" />
-          <Skeleton className="h-10 w-32 mb-2" />
-          <Skeleton className="h-4 w-20" />
-        </CardContent>
-      </Card>
-    );
-  }
+// Format currency
+const formatCurrency = (amount, currency = 'SRD') => {
+  const formatted = new Intl.NumberFormat('nl-NL', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(amount || 0));
+  if (currency === 'USD') return `$ ${formatted}`;
+  if (currency === 'EUR') return `€ ${formatted}`;
+  return `SRD ${formatted}`;
+};
 
+// Tab Button Component
+const TabButton = ({ active, onClick, children }) => (
+  <button
+    onClick={onClick}
+    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
+      active 
+        ? 'bg-emerald-600 text-white shadow-sm' 
+        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+    }`}
+  >
+    {children}
+  </button>
+);
+
+// Status Legend Item
+const StatusLegendItem = ({ icon: Icon, label, color }) => (
+  <div className="flex items-center gap-2">
+    <Icon className={`w-4 h-4 ${color}`} />
+    <span className="text-xs text-gray-600">{label}</span>
+  </div>
+);
+
+// Type Badge Component
+const TypeBadge = ({ type }) => {
+  const config = {
+    activa: { label: 'Activa', className: 'bg-blue-100 text-blue-700' },
+    passiva: { label: 'Passiva', className: 'bg-purple-100 text-purple-700' },
+    kosten: { label: 'Kosten', className: 'bg-red-100 text-red-700' },
+    opbrengsten: { label: 'Opbrengsten', className: 'bg-emerald-100 text-emerald-700' },
+    eigen_vermogen: { label: 'Eigen Vermogen', className: 'bg-amber-100 text-amber-700' },
+  };
+  
+  const { label, className } = config[type] || { label: type, className: 'bg-gray-100 text-gray-600' };
+  
   return (
-    <Card className={`border border-gray-200 rounded-2xl shadow-sm ${
-      variant === 'primary' ? 'bg-emerald-50' : 'bg-white'
-    }`}>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <span className="text-sm text-gray-500 font-medium">{title}</span>
-          {Icon && (
-            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-              variant === 'primary' ? 'bg-emerald-100' : 'bg-gray-100'
-            }`}>
-              <Icon className={`w-5 h-5 ${
-                variant === 'primary' ? 'text-emerald-600' : 'text-gray-600'
-              }`} />
-            </div>
-          )}
-        </div>
-        <div className="text-3xl font-bold text-gray-900 mb-2">{value}</div>
-        {subtitle && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">{subtitle}</span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <Badge className={`${className} text-xs font-medium`}>
+      {label}
+    </Badge>
   );
 };
 
@@ -82,6 +96,9 @@ const GrootboekPage = () => {
   const [initializingSchema, setInitializingSchema] = useState(false);
   const [selectedType, setSelectedType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('rekeningen');
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectedYear, setSelectedYear] = useState('2024');
 
   const [newAccount, setNewAccount] = useState({
     code: '',
@@ -101,18 +118,6 @@ const GrootboekPage = () => {
     ]
   });
 
-  // Format number with Dutch locale
-  const formatAmount = (amount, currency = 'SRD') => {
-    const formatted = new Intl.NumberFormat('nl-NL', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(Math.abs(amount || 0));
-    
-    if (currency === 'USD') return `$ ${formatted}`;
-    if (currency === 'EUR') return `€ ${formatted}`;
-    return `SRD ${formatted}`;
-  };
-
   useEffect(() => {
     fetchData();
   }, []);
@@ -123,8 +128,8 @@ const GrootboekPage = () => {
         accountsAPI.getAll(),
         journalAPI.getAll()
       ]);
-      setAccounts(accountsRes.data);
-      setJournalEntries(journalRes.data);
+      setAccounts(accountsRes.data || []);
+      setJournalEntries(journalRes.data || []);
     } catch (error) {
       toast.error('Fout bij laden gegevens');
     } finally {
@@ -243,6 +248,20 @@ const GrootboekPage = () => {
     });
   };
 
+  const toggleRowSelection = (id) => {
+    setSelectedRows(prev => 
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+    );
+  };
+
+  const toggleAllRows = () => {
+    if (selectedRows.length === filteredAccounts.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(filteredAccounts.map(a => a.id));
+    }
+  };
+
   // Filter accounts
   let filteredAccounts = selectedType === 'all' 
     ? accounts 
@@ -255,27 +274,39 @@ const GrootboekPage = () => {
     );
   }
 
-  const groupedAccounts = filteredAccounts.reduce((acc, account) => {
-    const type = account.type;
-    if (!acc[type]) acc[type] = [];
-    acc[type].push(account);
-    return acc;
-  }, {});
-
   // Calculate totals
   const totalDebet = accounts.reduce((sum, acc) => sum + (acc.saldo > 0 ? acc.saldo : 0), 0);
   const totalCredit = accounts.reduce((sum, acc) => sum + (acc.saldo < 0 ? Math.abs(acc.saldo) : 0), 0);
+  const aantalRekeningen = accounts.length;
+  const aantalJournaalposten = journalEntries.length;
 
   return (
-    <div className="min-h-screen bg-gray-50/50" data-testid="grootboek-page">
-      {/* Top Header */}
+    <div className="min-h-screen bg-gray-50" data-testid="grootboek-page">
+      {/* Page Title */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-6 py-4">
+          <h1 className="text-xl font-semibold text-gray-800">Grootboek</h1>
+        </div>
+      </div>
+
+      {/* Tab Buttons Row */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">Grootboek</h1>
-            <p className="text-sm text-gray-500">Beheer uw rekeningschema en journaalposten</p>
-          </div>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <TabButton active={activeTab === 'rekeningen'} onClick={() => setActiveTab('rekeningen')}>
+            Rekeningen
+          </TabButton>
+          <TabButton active={activeTab === 'journaal'} onClick={() => setActiveTab('journaal')}>
+            Journaalposten
+          </TabButton>
+          <TabButton active={activeTab === 'balans'} onClick={() => setActiveTab('balans')}>
+            Balans
+          </TabButton>
+          <TabButton active={activeTab === 'resultaat'} onClick={() => setActiveTab('resultaat')}>
+            Resultatenrekening
+          </TabButton>
+          
+          {/* Action Buttons */}
+          <div className="ml-auto flex items-center gap-2">
             {accounts.length === 0 && (
               <Button 
                 variant="outline" 
@@ -404,342 +435,396 @@ const GrootboekPage = () => {
                       />
                     </div>
                   </div>
-                  
-                  <div className="border rounded-2xl overflow-hidden">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="bg-gray-50">
-                          <TableHead className="text-xs">Rekening</TableHead>
-                          <TableHead className="w-32 text-xs text-right">Debet</TableHead>
-                          <TableHead className="w-32 text-xs text-right">Credit</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="text-left p-3 font-medium">Rekening</th>
+                          <th className="text-right p-3 font-medium w-32">Debet</th>
+                          <th className="text-right p-3 font-medium w-32">Credit</th>
+                        </tr>
+                      </thead>
+                      <tbody>
                         {newJournal.regels.map((regel, idx) => (
-                          <TableRow key={idx}>
-                            <TableCell>
+                          <tr key={idx} className="border-t">
+                            <td className="p-2">
                               <Select value={regel.rekening_id} onValueChange={(v) => updateJournalLine(idx, 'rekening_id', v)}>
-                                <SelectTrigger className="text-sm">
-                                  <SelectValue placeholder="Selecteer rekening" />
-                                </SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Selecteer rekening" /></SelectTrigger>
                                 <SelectContent>
                                   {accounts.map(acc => (
-                                    <SelectItem key={acc.id} value={acc.id}>
-                                      {acc.code} - {acc.naam}
-                                    </SelectItem>
+                                    <SelectItem key={acc.id} value={acc.id}>{acc.code} - {acc.naam}</SelectItem>
                                   ))}
                                 </SelectContent>
                               </Select>
-                            </TableCell>
-                            <TableCell>
+                            </td>
+                            <td className="p-2">
                               <Input
                                 type="number"
-                                step="0.01"
                                 value={regel.debet || ''}
                                 onChange={(e) => updateJournalLine(idx, 'debet', e.target.value)}
-                                className="text-right text-sm"
+                                className="text-right"
                               />
-                            </TableCell>
-                            <TableCell>
+                            </td>
+                            <td className="p-2">
                               <Input
                                 type="number"
-                                step="0.01"
                                 value={regel.credit || ''}
                                 onChange={(e) => updateJournalLine(idx, 'credit', e.target.value)}
-                                className="text-right text-sm"
+                                className="text-right"
                               />
-                            </TableCell>
-                          </TableRow>
+                            </td>
+                          </tr>
                         ))}
-                        <TableRow className="bg-emerald-50">
-                          <TableCell className="text-sm font-medium text-gray-700">Totaal</TableCell>
-                          <TableCell className="text-right text-sm font-bold text-emerald-700">
-                            {formatAmount(newJournal.regels.reduce((s, l) => s + (parseFloat(l.debet) || 0), 0), 'SRD')}
-                          </TableCell>
-                          <TableCell className="text-right text-sm font-bold text-emerald-700">
-                            {formatAmount(newJournal.regels.reduce((s, l) => s + (parseFloat(l.credit) || 0), 0), 'SRD')}
-                          </TableCell>
-                        </TableRow>
-                      </TableBody>
-                    </Table>
+                      </tbody>
+                      <tfoot className="bg-gray-50 border-t">
+                        <tr>
+                          <td className="p-3 font-medium">Totaal</td>
+                          <td className="p-3 text-right font-medium">
+                            {formatCurrency(newJournal.regels.reduce((s, r) => s + (parseFloat(r.debet) || 0), 0))}
+                          </td>
+                          <td className="p-3 text-right font-medium">
+                            {formatCurrency(newJournal.regels.reduce((s, r) => s + (parseFloat(r.credit) || 0), 0))}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
                   </div>
-                  
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={addJournalLine} className="rounded-lg">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Regel toevoegen
-                    </Button>
-                    <Button onClick={handleCreateJournal} className="ml-auto bg-emerald-600 hover:bg-emerald-700 rounded-lg" disabled={saving}>
-                      {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                      Opslaan
-                    </Button>
-                  </div>
+                  <Button variant="outline" size="sm" onClick={addJournalLine}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Regel toevoegen
+                  </Button>
                 </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setShowJournalDialog(false)}>Annuleren</Button>
+                  <Button onClick={handleCreateJournal} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+                    {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    Boeken
+                  </Button>
+                </DialogFooter>
               </DialogContent>
             </Dialog>
           </div>
         </div>
       </div>
 
-      <div className="p-6 space-y-6">
-        {/* Stats Row */}
-        <div className="grid grid-cols-4 gap-6">
-          <StatCard
-            title="Totaal Rekeningen"
-            value={accounts.length}
-            subtitle="Actieve rekeningen"
-            icon={BookOpen}
-            loading={loading}
-          />
-          <StatCard
-            title="Journaalposten"
-            value={journalEntries.length}
-            subtitle="Totale boekingen"
-            icon={FileText}
-            loading={loading}
-          />
-          <StatCard
-            title="Totaal Debet"
-            value={formatAmount(totalDebet, 'SRD')}
-            subtitle="Alle rekeningen"
-            icon={TrendingUp}
-            loading={loading}
-            variant="primary"
-          />
-          <StatCard
-            title="Totaal Credit"
-            value={formatAmount(totalCredit, 'SRD')}
-            subtitle="Alle rekeningen"
-            icon={Wallet}
-            loading={loading}
-          />
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="accounts" className="space-y-6">
-          <div className="flex items-center justify-between">
-            <TabsList className="bg-white border border-gray-200 rounded-2xl p-1">
-              <TabsTrigger 
-                value="accounts" 
-                className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700"
-                data-testid="tab-accounts"
-              >
-                <BookOpen className="w-4 h-4 mr-2" />
-                Rekeningschema
-              </TabsTrigger>
-              <TabsTrigger 
-                value="journal"
-                className="rounded-lg data-[state=active]:bg-emerald-50 data-[state=active]:text-emerald-700"
-                data-testid="tab-journal"
-              >
-                <FileText className="w-4 h-4 mr-2" />
-                Journaalposten
-              </TabsTrigger>
-            </TabsList>
+      {/* Filter Section */}
+      <div className="bg-white border-b border-gray-200 px-6 py-5">
+        <div className="grid grid-cols-5 gap-6 items-end">
+          {/* Search */}
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Code / Naam
+            </Label>
+            <div className="relative">
+              <Input
+                placeholder="Zoeken..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-lg pr-10 h-11"
+                data-testid="search-input"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+          
+          {/* Boekjaar */}
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-600">Boekjaar</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="rounded-lg h-11">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2023">2023</SelectItem>
+                <SelectItem value="2022">2022</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          <TabsContent value="accounts">
-            <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-              <CardContent className="p-6">
-                {/* Filter Bar */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
-                      <Input
-                        placeholder="Zoek rekening..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10 w-64 rounded-lg"
-                      />
-                    </div>
-                    <Select value={selectedType} onValueChange={setSelectedType}>
-                      <SelectTrigger className="w-48 rounded-lg">
-                        <Filter className="w-4 h-4 mr-2" />
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Alle types</SelectItem>
-                        {Object.entries(accountTypes).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>{label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+          {/* Type Filter */}
+          <div className="space-y-2">
+            <Label className="text-sm text-gray-600">Type</Label>
+            <Select value={selectedType} onValueChange={setSelectedType}>
+              <SelectTrigger className="rounded-lg h-11">
+                <SelectValue placeholder="Alle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle types</SelectItem>
+                {Object.entries(accountTypes).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {/* Placeholder for layout */}
+          <div></div>
 
-                {/* Accounts Table */}
-                <div className="space-y-6">
-                  {Object.entries(groupedAccounts).map(([type, accs]) => (
-                    <div key={type}>
-                      <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
-                        {accountTypes[type]}
-                        <Badge variant="outline" className="ml-2 text-xs">{accs.length}</Badge>
-                      </h3>
-                      <div className="border border-gray-200 rounded-2xl overflow-hidden">
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="bg-gray-50/50">
-                              <TableHead className="w-24 text-xs font-medium text-gray-500">Code</TableHead>
-                              <TableHead className="text-xs font-medium text-gray-500">Naam</TableHead>
-                              <TableHead className="text-xs font-medium text-gray-500">Categorie</TableHead>
-                              <TableHead className="w-28 text-xs font-medium text-gray-500">Externe Code</TableHead>
-                              <TableHead className="w-20 text-xs font-medium text-gray-500">Valuta</TableHead>
-                              <TableHead className="text-right w-36 text-xs font-medium text-gray-500">Saldo</TableHead>
-                              <TableHead className="w-16"></TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {accs.map(account => (
-                              <TableRow key={account.id} className="hover:bg-gray-50/50" data-testid={`account-row-${account.code}`}>
-                                <TableCell className="text-sm font-mono text-gray-600">{account.code}</TableCell>
-                                <TableCell className="text-sm font-medium text-gray-900">{account.naam}</TableCell>
-                                <TableCell className="text-sm text-gray-500">{account.categorie}</TableCell>
-                                <TableCell className="text-sm text-gray-400 font-mono">
-                                  {account.externe_code || '-'}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="text-xs rounded-md">{account.valuta}</Badge>
-                                </TableCell>
-                                <TableCell className={`text-right text-sm font-semibold ${
-                                  account.saldo < 0 ? 'text-red-600' : 'text-emerald-600'
-                                }`}>
-                                  {formatAmount(account.saldo || 0, account.valuta)}
-                                </TableCell>
-                                <TableCell>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => openExterneCodeDialog(account)}
-                                    className="h-8 w-8 p-0 hover:bg-gray-100 rounded-lg"
-                                    title="Externe code koppelen"
-                                  >
-                                    <Link2 className="w-4 h-4 text-gray-400" />
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </div>
-                    </div>
-                  ))}
-                  {Object.keys(groupedAccounts).length === 0 && (
-                    <div className="text-center py-16 text-gray-500">
-                      <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-200" />
-                      <p className="text-lg font-medium mb-2">Geen rekeningen gevonden</p>
-                      <p className="text-sm mb-6">Klik op "Standaard Schema" om het Surinaamse rekeningschema te laden.</p>
-                      <Button onClick={handleInitStandaardSchema} disabled={initializingSchema} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
-                        {initializingSchema ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
-                        Standaard Schema Laden
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="journal">
-            <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Journaalposten</h3>
-                  <Button variant="outline" size="sm" className="rounded-lg">
-                    Status <ChevronDown className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-                
-                <div className="border border-gray-200 rounded-2xl overflow-hidden">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gray-50/50">
-                        <TableHead className="w-28 text-xs font-medium text-gray-500">Nummer</TableHead>
-                        <TableHead className="w-28 text-xs font-medium text-gray-500">Datum</TableHead>
-                        <TableHead className="w-24 text-xs font-medium text-gray-500">Dagboek</TableHead>
-                        <TableHead className="text-xs font-medium text-gray-500">Omschrijving</TableHead>
-                        <TableHead className="text-right w-36 text-xs font-medium text-gray-500">Bedrag</TableHead>
-                        <TableHead className="w-24 text-xs font-medium text-gray-500">Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {journalEntries.map(entry => (
-                        <TableRow key={entry.id} className="hover:bg-gray-50/50" data-testid={`journal-row-${entry.volgnummer}`}>
-                          <TableCell className="text-sm font-mono text-gray-600">{entry.volgnummer}</TableCell>
-                          <TableCell className="text-sm text-gray-500">{new Date(entry.datum).toLocaleDateString('nl-NL')}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="text-xs rounded-md">{journalTypes[entry.dagboek_code] || entry.dagboek_code}</Badge>
-                          </TableCell>
-                          <TableCell className="text-sm text-gray-900">{entry.omschrijving}</TableCell>
-                          <TableCell className="text-right text-sm font-semibold text-emerald-600">
-                            {formatAmount(entry.totaal_debet || 0, 'SRD')}
-                          </TableCell>
-                          <TableCell>
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              entry.status === 'geboekt' ? 'bg-emerald-50 text-emerald-600' : 
-                              entry.status === 'concept' ? 'bg-amber-50 text-amber-600' : 
-                              'bg-gray-50 text-gray-600'
-                            }`}>
-                              {getStatusLabel(entry.status)}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {journalEntries.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={6} className="text-center py-12 text-gray-500">
-                            <FileText className="w-12 h-12 mx-auto mb-3 text-gray-200" />
-                            <p>Geen journaalposten gevonden</p>
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          {/* Totaal Balans */}
+          <div className="text-right">
+            <span className="text-sm text-gray-500">Totaal Debet</span>
+            <p className="text-lg font-bold text-emerald-600">{formatCurrency(totalDebet)}</p>
+          </div>
+        </div>
       </div>
 
-      {/* External Code Dialog */}
+      {/* Status Legend */}
+      <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+        <div className="flex flex-wrap items-center gap-6">
+          <StatusLegendItem icon={Circle} label="Activa" color="text-blue-500" />
+          <StatusLegendItem icon={Circle} label="Passiva" color="text-purple-500" />
+          <StatusLegendItem icon={Circle} label="Kosten" color="text-red-500" />
+          <StatusLegendItem icon={Circle} label="Opbrengsten" color="text-emerald-500" />
+          <StatusLegendItem icon={Circle} label="Eigen Vermogen" color="text-amber-500" />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-6">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-4 gap-6 mb-6">
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-sm text-gray-500 font-medium">REKENINGEN</span>
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                  <BookOpen className="w-5 h-5 text-gray-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">{aantalRekeningen}</div>
+              <span className="text-sm text-gray-400">Totaal rekeningen</span>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-sm text-gray-500 font-medium">TOTAAL DEBET</span>
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-emerald-100">
+                  <TrendingUp className="w-5 h-5 text-emerald-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-emerald-600 mb-2">{formatCurrency(totalDebet)}</div>
+              <span className="text-sm text-gray-400">Debet saldo</span>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-sm text-gray-500 font-medium">TOTAAL CREDIT</span>
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-blue-100">
+                  <Wallet className="w-5 h-5 text-blue-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">{formatCurrency(totalCredit)}</div>
+              <span className="text-sm text-gray-400">Credit saldo</span>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <span className="text-sm text-gray-500 font-medium">JOURNAALPOSTEN</span>
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-gray-100">
+                  <FileText className="w-5 h-5 text-gray-600" />
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-gray-900 mb-2">{aantalJournaalposten}</div>
+              <span className="text-sm text-gray-400">Dit boekjaar</span>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Data Table */}
+        <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <CardContent className="p-0">
+            {/* Table Header */}
+            <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">
+                  {activeTab === 'rekeningen' && `Rekeningschema (${filteredAccounts.length})`}
+                  {activeTab === 'journaal' && `Journaalposten (${journalEntries.length})`}
+                  {activeTab === 'balans' && 'Balans'}
+                  {activeTab === 'resultaat' && 'Resultatenrekening'}
+                </span>
+                <Button variant="outline" size="sm" className="rounded-lg">
+                  <Download className="w-4 h-4 mr-2" />
+                  Exporteren
+                </Button>
+              </div>
+            </div>
+
+            {/* Rekeningen Tab */}
+            {activeTab === 'rekeningen' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="w-12 px-4 py-3">
+                        <Checkbox 
+                          checked={selectedRows.length === filteredAccounts.length && filteredAccounts.length > 0}
+                          onCheckedChange={toggleAllRows}
+                        />
+                      </th>
+                      <th className="text-left px-4 py-3">
+                        <button className="flex items-center gap-1 text-xs font-semibold text-gray-600 uppercase tracking-wide hover:text-gray-900">
+                          Code
+                          <ArrowUpDown className="w-3 h-3" />
+                        </button>
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Naam</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Type</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Categorie</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Saldo</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Externe Code</th>
+                      <th className="w-20 px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Actie</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-8 text-center text-gray-500">Laden...</td>
+                      </tr>
+                    ) : filteredAccounts.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="px-4 py-8 text-center text-gray-500">Geen rekeningen gevonden</td>
+                      </tr>
+                    ) : (
+                      filteredAccounts.map(account => (
+                        <tr 
+                          key={account.id} 
+                          className={`border-b border-gray-100 hover:bg-gray-50 ${selectedRows.includes(account.id) ? 'bg-emerald-50' : ''}`}
+                        >
+                          <td className="px-4 py-3">
+                            <Checkbox 
+                              checked={selectedRows.includes(account.id)}
+                              onCheckedChange={() => toggleRowSelection(account.id)}
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="font-mono font-medium text-gray-900">{account.code}</span>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600">{account.naam}</td>
+                          <td className="px-4 py-3">
+                            <TypeBadge type={account.type} />
+                          </td>
+                          <td className="px-4 py-3 text-gray-600">{account.categorie}</td>
+                          <td className="px-4 py-3 text-right font-medium">
+                            <span className={account.saldo >= 0 ? 'text-emerald-600' : 'text-red-600'}>
+                              {formatCurrency(account.saldo || 0)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            {account.externe_code ? (
+                              <Badge variant="outline" className="text-xs">{account.externe_code}</Badge>
+                            ) : (
+                              <span className="text-gray-400">-</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => openExterneCodeDialog(account)}>
+                                <Link2 className="w-4 h-4 text-gray-500" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                <Eye className="w-4 h-4 text-gray-500" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Journaal Tab */}
+            {activeTab === 'journaal' && (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-50 border-b border-gray-200">
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Datum</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Dagboek</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Omschrijving</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Debet</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wide">Credit</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-8 text-center text-gray-500">Laden...</td>
+                      </tr>
+                    ) : journalEntries.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-8 text-center text-gray-500">Geen journaalposten gevonden</td>
+                      </tr>
+                    ) : (
+                      journalEntries.map(entry => (
+                        <tr key={entry.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="px-4 py-3 text-gray-600">{entry.datum}</td>
+                          <td className="px-4 py-3">
+                            <Badge variant="outline">{entry.dagboek_code}</Badge>
+                          </td>
+                          <td className="px-4 py-3 text-gray-600">{entry.omschrijving}</td>
+                          <td className="px-4 py-3 text-right font-medium text-emerald-600">
+                            {formatCurrency(entry.totaal_debet || 0)}
+                          </td>
+                          <td className="px-4 py-3 text-right font-medium text-blue-600">
+                            {formatCurrency(entry.totaal_credit || 0)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Balans & Resultaat Tabs */}
+            {(activeTab === 'balans' || activeTab === 'resultaat') && (
+              <div className="px-6 py-12 text-center">
+                <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">
+                  {activeTab === 'balans' ? 'Balansrapport wordt gegenereerd...' : 'Resultatenrekening wordt gegenereerd...'}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Externe Code Dialog */}
       <Dialog open={showExterneCodeDialog} onOpenChange={setShowExterneCodeDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Externe Code Koppelen</DialogTitle>
           </DialogHeader>
-          {selectedAccount && (
-            <div className="space-y-4 py-4">
-              <div className="bg-gray-50 p-4 rounded-2xl">
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <span className="text-gray-500">Rekening:</span>
-                  <span className="font-medium">{selectedAccount.code} - {selectedAccount.naam}</span>
-                  <span className="text-gray-500">Type:</span>
-                  <span className="font-medium">{accountTypes[selectedAccount.type] || selectedAccount.type}</span>
-                </div>
+          <div className="space-y-4 py-4">
+            {selectedAccount && (
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <p className="text-sm font-medium">{selectedAccount.code} - {selectedAccount.naam}</p>
               </div>
-              <div className="space-y-2">
-                <Label>Externe Code</Label>
-                <Input
-                  value={externeCode}
-                  onChange={(e) => setExterneCode(e.target.value)}
-                  placeholder="Bijv. EXT-001"
-                  className="rounded-lg"
-                  data-testid="externe-code-input"
-                />
-                <p className="text-xs text-gray-500">
-                  Koppel uw eigen code voor integratie met externe systemen.
-                </p>
-              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Externe Code</Label>
+              <Input
+                value={externeCode}
+                onChange={(e) => setExterneCode(e.target.value)}
+                placeholder="Bijv. ABC123"
+              />
+              <p className="text-xs text-gray-500">Koppel deze rekening aan een externe boekhoudsoftware</p>
             </div>
-          )}
+          </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowExterneCodeDialog(false)} className="rounded-lg">
-              Annuleren
-            </Button>
-            <Button onClick={handleSaveExterneCode} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
-              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Link2 className="w-4 h-4 mr-2" />}
+            <Button variant="outline" onClick={() => setShowExterneCodeDialog(false)}>Annuleren</Button>
+            <Button onClick={handleSaveExterneCode} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               Opslaan
             </Button>
           </DialogFooter>
