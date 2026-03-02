@@ -52,16 +52,16 @@ const StatCard = ({ title, value, subtitle, icon: Icon }) => (
   </div>
 );
 
-// Status Badge Component
+// Status Badge Component - Zakelijk Design
 const StatusBadge = ({ status }) => {
   const styles = {
-    active: 'bg-emerald-100 text-emerald-700',
-    inactive: 'bg-gray-100 text-gray-600',
-    pending: 'bg-amber-100 text-amber-700',
-    approved: 'bg-emerald-100 text-emerald-700',
-    rejected: 'bg-red-100 text-red-700',
-    draft: 'bg-gray-100 text-gray-600',
-    paid: 'bg-emerald-100 text-emerald-700',
+    active: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    inactive: 'bg-gray-50 text-gray-600 border-gray-200',
+    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    rejected: 'bg-red-50 text-red-700 border-red-200',
+    draft: 'bg-gray-50 text-gray-600 border-gray-200',
+    paid: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   };
   const labels = {
     active: 'Actief',
@@ -73,9 +73,9 @@ const StatusBadge = ({ status }) => {
     paid: 'Betaald',
   };
   return (
-    <Badge className={`${styles[status] || styles.pending} font-medium`}>
+    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${styles[status] || styles.pending}`}>
       {labels[status] || status}
-    </Badge>
+    </span>
   );
 };
 
@@ -443,51 +443,55 @@ const HRMPage = () => {
       {/* Main Content Card - Zakelijk 3D Design */}
       <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
         <div className="p-0">
-          {/* Tabs */}
-          <div className="border-b border-gray-200 px-6 flex flex-wrap bg-gray-50/50">
-            <TabButton active={activeTab === 'employees'} onClick={() => setActiveTab('employees')} icon={Users} label="Medewerkers" count={employees.length} />
-            <TabButton active={activeTab === 'departments'} onClick={() => setActiveTab('departments')} icon={Building2} label="Afdelingen" count={departments.length} />
-            <TabButton active={activeTab === 'leave'} onClick={() => setActiveTab('leave')} icon={Calendar} label="Verlof" count={leaveRequests.length} />
-            <TabButton active={activeTab === 'contracts'} onClick={() => setActiveTab('contracts')} icon={FileText} label="Contracten" count={contracts.length} />
-            <TabButton active={activeTab === 'payroll'} onClick={() => setActiveTab('payroll')} icon={DollarSign} label="Salarisadministratie" count={payroll.length} />
-            <TabButton active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} icon={Clock} label="Aanwezigheid" />
+          {/* Tabs - Zakelijk Design */}
+          <div className="border-b border-gray-200 px-6 bg-gradient-to-r from-gray-50 to-white">
+            <div className="flex flex-wrap gap-1">
+              <TabButton active={activeTab === 'employees'} onClick={() => setActiveTab('employees')} icon={Users} label="Medewerkers" count={employees.length} />
+              <TabButton active={activeTab === 'departments'} onClick={() => setActiveTab('departments')} icon={Building2} label="Afdelingen" count={departments.length} />
+              <TabButton active={activeTab === 'leave'} onClick={() => setActiveTab('leave')} icon={Calendar} label="Verlof" count={leaveRequests.length} />
+              <TabButton active={activeTab === 'contracts'} onClick={() => setActiveTab('contracts')} icon={FileText} label="Contracten" count={contracts.length} />
+              <TabButton active={activeTab === 'payroll'} onClick={() => setActiveTab('payroll')} icon={DollarSign} label="Salarisadministratie" count={payroll.length} />
+              <TabButton active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} icon={Clock} label="Aanwezigheid" />
+            </div>
           </div>
 
-          {/* Search & Actions */}
-          <div className="p-6 border-b border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Zoeken..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 rounded-lg"
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={fetchData}>
-                <RefreshCw className="w-4 h-4 mr-1" /> Vernieuwen
-              </Button>
-              {activeTab === 'departments' && (
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowDepartmentDialog(true)}>
-                  <Plus className="w-4 h-4 mr-1" /> Afdeling
+          {/* Search & Actions - Zakelijk Design */}
+          <div className="px-6 py-4 bg-gray-50/30 border-b border-gray-100">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="relative w-full sm:w-96">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Zoeken op naam, email, afdeling..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-11 h-11 rounded-xl border-gray-200 bg-white shadow-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" onClick={fetchData} className="h-10 px-4 rounded-lg border-gray-200 hover:bg-gray-50">
+                  <RefreshCw className="w-4 h-4 mr-2" /> Vernieuwen
                 </Button>
-              )}
-              {activeTab === 'leave' && (
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowLeaveDialog(true)}>
-                  <Plus className="w-4 h-4 mr-1" /> Verlofaanvraag
-                </Button>
-              )}
-              {activeTab === 'contracts' && (
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowContractDialog(true)}>
-                  <Plus className="w-4 h-4 mr-1" /> Contract
-                </Button>
-              )}
-              {activeTab === 'payroll' && (
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => setShowPayrollDialog(true)}>
-                  <Plus className="w-4 h-4 mr-1" /> Salarisrun
-                </Button>
-              )}
+                {activeTab === 'departments' && (
+                  <Button size="sm" className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm" onClick={() => setShowDepartmentDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" /> Afdeling
+                  </Button>
+                )}
+                {activeTab === 'leave' && (
+                  <Button size="sm" className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm" onClick={() => setShowLeaveDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" /> Verlofaanvraag
+                  </Button>
+                )}
+                {activeTab === 'contracts' && (
+                  <Button size="sm" className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm" onClick={() => setShowContractDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" /> Contract
+                  </Button>
+                )}
+                {activeTab === 'payroll' && (
+                  <Button size="sm" className="h-10 px-4 bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm" onClick={() => setShowPayrollDialog(true)}>
+                    <Plus className="w-4 h-4 mr-2" /> Salarisrun
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -495,68 +499,103 @@ const HRMPage = () => {
           <div className="p-6">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
               </div>
             ) : (
               <>
-                {/* Employees Tab */}
+                {/* Employees Tab - Zakelijk Tabel Design */}
                 {activeTab === 'employees' && (
-                  <div className="border border-gray-200 rounded-2xl overflow-hidden">
+                  <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-gray-50/50">
-                          <TableHead className="text-xs font-medium text-gray-500">Medewerker</TableHead>
-                          <TableHead className="text-xs font-medium text-gray-500">Afdeling</TableHead>
-                          <TableHead className="text-xs font-medium text-gray-500">Functie</TableHead>
-                          <TableHead className="text-xs font-medium text-gray-500">Contact</TableHead>
-                          <TableHead className="text-right text-xs font-medium text-gray-500">Salaris</TableHead>
-                          <TableHead className="text-xs font-medium text-gray-500">Status</TableHead>
-                          <TableHead className="w-24"></TableHead>
+                        <TableRow className="bg-gradient-to-r from-gray-50 to-gray-100/50">
+                          <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider py-4">Medewerker</TableHead>
+                          <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Afdeling</TableHead>
+                          <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Functie</TableHead>
+                          <TableHead className="text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</TableHead>
+                          <TableHead className="text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Salaris</TableHead>
+                          <TableHead className="text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</TableHead>
+                          <TableHead className="w-28 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Acties</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {filteredEmployees.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={7} className="text-center py-12 text-gray-500">
-                              <Users className="w-10 h-10 mx-auto text-gray-300 mb-2" />
-                              <p>Geen medewerkers gevonden</p>
+                            <TableCell colSpan={7} className="text-center py-16 text-gray-500">
+                              <Users className="w-12 h-12 mx-auto text-gray-300 mb-3" />
+                              <p className="font-medium text-gray-700">Geen medewerkers gevonden</p>
+                              <p className="text-sm text-gray-400 mt-1">Voeg uw eerste medewerker toe om te beginnen</p>
                             </TableCell>
                           </TableRow>
                         ) : (
-                          filteredEmployees.map(emp => (
-                            <TableRow key={emp.id} className="hover:bg-gray-50/50">
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center text-white font-semibold">
+                          filteredEmployees.map((emp, index) => (
+                            <TableRow 
+                              key={emp.id} 
+                              className={`hover:bg-emerald-50/50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'}`}
+                            >
+                              <TableCell className="py-4">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center text-white font-bold text-sm shadow-md">
                                     {(emp.first_name || 'M').charAt(0).toUpperCase()}
                                   </div>
                                   <div>
-                                    <p className="font-medium text-gray-900">{emp.first_name} {emp.last_name}</p>
-                                    <p className="text-xs text-gray-500">{emp.employee_id}</p>
+                                    <p className="font-semibold text-gray-900">{emp.first_name} {emp.last_name}</p>
+                                    <p className="text-xs text-gray-400 font-mono">{emp.employee_id}</p>
                                   </div>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-sm text-gray-600">{emp.department || '-'}</TableCell>
-                              <TableCell className="text-sm text-gray-600">{emp.position || '-'}</TableCell>
                               <TableCell>
-                                <div className="text-sm">
-                                  {emp.email && <p className="text-gray-600">{emp.email}</p>}
-                                  {emp.phone && <p className="text-gray-400">{emp.phone}</p>}
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium">
+                                  {emp.department || '-'}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-sm text-gray-600 font-medium">{emp.position || '-'}</TableCell>
+                              <TableCell>
+                                <div className="space-y-1">
+                                  {emp.email && (
+                                    <p className="text-sm text-gray-600 flex items-center gap-1">
+                                      <Mail className="w-3.5 h-3.5 text-gray-400" />
+                                      {emp.email}
+                                    </p>
+                                  )}
+                                  {emp.phone && (
+                                    <p className="text-sm text-gray-400 flex items-center gap-1">
+                                      <Phone className="w-3.5 h-3.5 text-gray-300" />
+                                      {emp.phone}
+                                    </p>
+                                  )}
                                 </div>
                               </TableCell>
-                              <TableCell className="text-right text-sm font-medium text-gray-900">
-                                {formatCurrency(emp.salary)}
+                              <TableCell className="text-right">
+                                <span className="text-sm font-bold text-gray-900">
+                                  {formatCurrency(emp.salary)}
+                                </span>
                               </TableCell>
-                              <TableCell><StatusBadge status={emp.status} /></TableCell>
+                              <TableCell className="text-center"><StatusBadge status={emp.status} /></TableCell>
                               <TableCell>
-                                <div className="flex items-center gap-1">
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" onClick={() => { setDetailItem(emp); setShowDetail(true); }}>
-                                    <Eye className="w-4 h-4 text-gray-400" />
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-9 w-9 p-0 rounded-lg hover:bg-gray-100 transition-colors" 
+                                    onClick={() => { setDetailItem(emp); setShowDetail(true); }}
+                                  >
+                                    <Eye className="w-4 h-4 text-gray-500" />
                                   </Button>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" onClick={() => openEditEmployee(emp)}>
-                                    <Edit className="w-4 h-4 text-gray-400" />
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-9 w-9 p-0 rounded-lg hover:bg-blue-50 transition-colors" 
+                                    onClick={() => openEditEmployee(emp)}
+                                  >
+                                    <Edit className="w-4 h-4 text-blue-500" />
                                   </Button>
-                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 rounded-lg" onClick={() => handleDeleteEmployee(emp)}>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="h-9 w-9 p-0 rounded-lg hover:bg-red-50 transition-colors" 
+                                    onClick={() => handleDeleteEmployee(emp)}
+                                  >
                                     <Trash2 className="w-4 h-4 text-red-400" />
                                   </Button>
                                 </div>
