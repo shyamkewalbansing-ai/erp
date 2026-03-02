@@ -163,4 +163,4 @@ Dutch (Nederlands)
 
 ---
 
-*Laatste update: 1 maart 2026 - Alle 15+ Boekhouding pagina's herontworpen met consistente VerkoopPage stijl*
+*Laatste update: 2 maart 2026 - POS numpad geïntegreerd in hoofdpagina (geen popup meer)*
