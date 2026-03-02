@@ -84,29 +84,14 @@ const ActionBadge = ({ type, label }) => {
 };
 
 const DebiteurenPage = () => {
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState([]);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showCustomerDialog, setShowCustomerDialog] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('overzicht');
   const [selectedYear, setSelectedYear] = useState('2024');
   const [selectedRows, setSelectedRows] = useState([]);
-
-  const [newCustomer, setNewCustomer] = useState({
-    naam: '',
-    adres: '',
-    plaats: '',
-    postcode: '',
-    land: 'Suriname',
-    telefoon: '',
-    email: '',
-    btw_nummer: '',
-    betalingstermijn: 30,
-    kredietlimiet: 0,
-    valuta: 'SRD'
-  });
 
   // Format number with Dutch locale
   const formatAmount = (amount, currency = 'SRD') => {
