@@ -744,21 +744,22 @@ const DebiteurenPage = () => {
 
             {/* Desktop Table */}
             <div className="hidden md:block">
-              <Card className="bg-white border-0 shadow-sm rounded-2xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-gray-50/80 hover:bg-gray-50/80">
-                        <TableHead className="w-28 text-xs font-semibold text-gray-600">Nummer</TableHead>
-                        <TableHead className="w-28 text-xs font-semibold text-gray-600">Datum</TableHead>
-                        <TableHead className="text-xs font-semibold text-gray-600">Debiteur</TableHead>
-                        <TableHead className="w-28 text-xs font-semibold text-gray-600">Vervaldatum</TableHead>
-                        <TableHead className="text-right w-36 text-xs font-semibold text-gray-600">Bedrag</TableHead>
-                        <TableHead className="w-32 text-xs font-semibold text-gray-600">Status</TableHead>
-                        <TableHead className="w-16"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
+              <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                          <TableHead className="w-28 text-xs font-medium text-gray-500">Nummer</TableHead>
+                          <TableHead className="w-28 text-xs font-medium text-gray-500">Datum</TableHead>
+                          <TableHead className="text-xs font-medium text-gray-500">Debiteur</TableHead>
+                          <TableHead className="w-28 text-xs font-medium text-gray-500">Vervaldatum</TableHead>
+                          <TableHead className="text-right w-36 text-xs font-medium text-gray-500">Bedrag</TableHead>
+                          <TableHead className="w-32 text-xs font-medium text-gray-500">Status</TableHead>
+                          <TableHead className="w-16"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                       {loading ? (
                         [...Array(5)].map((_, i) => (
                           <TableRow key={i}>
