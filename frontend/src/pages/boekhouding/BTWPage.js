@@ -245,6 +245,7 @@ const BTWPage = () => {
               Nieuwe BTW-code
             </Button>
             <Button 
+              onClick={() => navigate('/app/boekhouding/btw/aangifte')}
               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
             >
               <FileText className="w-4 h-4 mr-2" />
