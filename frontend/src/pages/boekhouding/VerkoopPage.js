@@ -200,7 +200,7 @@ const VerkoopPage = () => {
           {/* Action Buttons */}
           <div className="ml-auto flex items-center gap-2">
             <Button 
-              onClick={() => navigate('/app/boekhouding/verkoop/nieuw')}
+              onClick={() => navigate(activeTab === 'offertes' ? '/app/boekhouding/verkoop/offerte' : '/app/boekhouding/verkoop/nieuw')}
               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg" 
               data-testid="add-invoice-btn"
             >
