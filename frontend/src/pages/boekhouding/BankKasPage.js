@@ -476,8 +476,8 @@ const BankKasPage = () => {
           </div>
 
           {/* Recent Transactions */}
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <CardContent className="p-4">
+          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+            <CardContent className="p-6">
               <h3 className="font-medium text-gray-900 mb-4">Recente Transacties</h3>
               <div className="space-y-2">
                 {transactions.slice(0, 5).map(t => (
@@ -491,7 +491,7 @@ const BankKasPage = () => {
                         <p className="text-xs text-gray-500">{formatDate(t.datum || t.date)}</p>
                       </div>
                     </div>
-                    <span className={`font-semibold ${(t.bedrag || 0) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                    <span className={`font-medium ${(t.bedrag || 0) > 0 ? 'text-emerald-600' : 'text-red-600'}`}>
                       {(t.bedrag || 0) > 0 ? '+' : ''}{formatCurrency(t.bedrag || t.amount || 0)}
                     </span>
                   </div>
@@ -504,15 +504,15 @@ const BankKasPage = () => {
         {/* Transactions Tab */}
         <TabsContent value="transactions" className="mt-4 space-y-4">
           {/* Filters */}
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <CardContent className="p-4">
+          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+            <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -trangray-y-1/2 w-4 h-4 text-gray-400" />
-                  <Input placeholder="Zoeken..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input placeholder="Zoeken..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-9 rounded-lg" />
                 </div>
                 <Select value={selectedAccount?.id || 'all'} onValueChange={(v) => setSelectedAccount(v === 'all' ? null : bankAccounts.find(a => a.id === v))}>
-                  <SelectTrigger className="w-full sm:w-48">
+                  <SelectTrigger className="w-full sm:w-48 rounded-lg">
                     <Building2 className="w-4 h-4 mr-2 text-gray-400" />
                     <SelectValue placeholder="Alle rekeningen" />
                   </SelectTrigger>
@@ -524,7 +524,7 @@ const BankKasPage = () => {
                   </SelectContent>
                 </Select>
                 <Select value={typeFilter} onValueChange={setTypeFilter}>
-                  <SelectTrigger className="w-full sm:w-40">
+                  <SelectTrigger className="w-full sm:w-40 rounded-lg">
                     <Filter className="w-4 h-4 mr-2 text-gray-400" />
                     <SelectValue />
                   </SelectTrigger>
