@@ -139,6 +139,7 @@ const BoekhoudingPOSMobileScanner = lazy(() => import("./pages/boekhouding/POSMo
 const BoekhoudingPOSPublicScanner = lazy(() => import("./pages/boekhouding/POSPublicScannerPage"));
 const BoekhoudingPOSPermanentScanner = lazy(() => import("./pages/boekhouding/POSPermanentScannerPage"));
 const BoekhoudingVoorraad = lazy(() => import("./pages/boekhouding/VoorraadPage"));
+const BoekhoudingHRM = lazy(() => import("./pages/boekhouding/HRMPage"));
 const BoekhoudingVasteActiva = lazy(() => import("./pages/boekhouding/VasteActivaPage"));
 const BoekhoudingProjecten = lazy(() => import("./pages/boekhouding/ProjectenPage"));
 const BoekhoudingRapportages = lazy(() => import("./pages/boekhouding/RapportagesPage"));
