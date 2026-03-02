@@ -36,22 +36,20 @@ const formatDate = (dateStr) => {
   return new Date(dateStr).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
 };
 
-// Stat Card Component
-const StatCard = ({ title, value, subtitle, icon: Icon, iconBg, iconColor }) => (
-  <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-    <CardContent className="p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex-1">
-          <p className="text-xs text-gray-500 font-medium">{title}</p>
-          <p className="text-lg font-bold text-gray-900 mt-1">{value}</p>
-          {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
-        </div>
-        <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
-          <Icon className={`w-5 h-5 ${iconColor}`} />
-        </div>
+// Stat Card Component - 3D Zakelijk Design
+const StatCard = ({ title, value, subtitle, icon: Icon }) => (
+  <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+    <div className="flex items-center justify-between">
+      <div>
+        <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">{title}</p>
+        <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+        {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
       </div>
-    </CardContent>
-  </Card>
+      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+        <Icon className="w-6 h-6 text-gray-600" />
+      </div>
+    </div>
+  </div>
 );
 
 // Status Badge Component
@@ -427,12 +425,12 @@ const HRMPage = () => {
         </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard title="Totaal Medewerkers" value={totalEmployees} icon={Users} iconBg="bg-blue-100" iconColor="text-blue-600" />
-        <StatCard title="Actieve Medewerkers" value={activeEmployees} icon={UserCheck} iconBg="bg-emerald-100" iconColor="text-emerald-600" />
-        <StatCard title="Verlofaanvragen" value={pendingLeave} subtitle="In behandeling" icon={Calendar} iconBg="bg-amber-100" iconColor="text-amber-600" />
-        <StatCard title="Totaal Salariskosten" value={formatCurrency(totalSalary)} subtitle="Per maand" icon={DollarSign} iconBg="bg-purple-100" iconColor="text-purple-600" />
+      {/* Stats - 3D Zakelijk Design */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+        <StatCard title="Totaal Medewerkers" value={totalEmployees} icon={Users} />
+        <StatCard title="Actieve Medewerkers" value={activeEmployees} icon={UserCheck} />
+        <StatCard title="Verlofaanvragen" value={pendingLeave} subtitle="In behandeling" icon={Calendar} />
+        <StatCard title="Totaal Salariskosten" value={formatCurrency(totalSalary)} subtitle="Per maand" icon={DollarSign} />
       </div>
 
       {/* Main Content Card */}
