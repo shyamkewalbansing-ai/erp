@@ -242,15 +242,15 @@ const BTWPage = () => {
         {/* Overview Tab */}
         <TabsContent value="overview" className="mt-4 space-y-4">
           {/* Period selector */}
-          <Card className="bg-white border border-gray-200 rounded-xl shadow-sm">
-            <CardContent className="p-4">
+          <Card className="bg-white border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl">
+            <CardContent className="p-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="font-medium text-gray-900">BTW Overzicht</h3>
                   <p className="text-sm text-gray-500">Selecteer een periode voor het overzicht</p>
                 </div>
                 <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-48 rounded-lg">
                     <Calendar className="w-4 h-4 mr-2 text-gray-400" />
                     <SelectValue />
                   </SelectTrigger>
