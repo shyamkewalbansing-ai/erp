@@ -10,7 +10,46 @@ Dutch (Nederlands)
 
 ## Wat is Voltooid (Maart 2026)
 
-### ✅ CardContent Styling Consistentie (2 maart 2026)
+### ✅ HRM / Personeel Module (2 maart 2026)
+Volledig geïntegreerde HRM functionaliteit binnen Boekhouding:
+
+**Medewerkers beheer:**
+- Toevoegen, bewerken, verwijderen van personeel
+- Persoonlijke gegevens (NAW, contact, noodcontact, bankrekening)
+- Afdeling en functie toewijzing
+- Salarisinformatie
+
+**Afdelingen:**
+- Aanmaken en beheren van afdelingen
+- Overzicht medewerkers per afdeling
+
+**Verlof:**
+- Verlofaanvragen indienen (vakantie, ziekte, bijzonder, onbetaald)
+- Goedkeuren/afwijzen workflow
+- Start- en einddatum met reden
+
+**Contracten:**
+- Contract types (vast, tijdelijk, oproep, stage)
+- Start- en einddatum
+- Salaris per contract
+
+**Salarisadministratie:**
+- Salarisrun genereren per periode
+- Bruto, toeslagen, inhoudingen, netto
+- Goedkeuren en uitbetalen workflow
+- Koppeling met grootboek (journaalposten)
+
+**Aanwezigheid:**
+- Urenregistratie
+- In- en uitklokken
+- Gewerkte uren overzicht
+
+**UI Features:**
+- 4 stat cards (totaal, actief, verlof, salariskosten)
+- 6 tabs voor alle functies
+- Zoeken en filteren
+- Detail sidebar voor medewerkers
+- Dialogen voor toevoegen/bewerken
 - **ALLE 16 pagina's nu 100% consistent:** Elke Boekhouding pagina heeft nu dezelfde CardContent styling als GrootboekPage
 - **Main Card:** `border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl`
 - **CardContent wrapper:** `p-0` voor full-width tables, `p-6` voor content
