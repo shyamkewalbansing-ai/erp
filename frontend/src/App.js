@@ -151,6 +151,7 @@ const BoekhoudingAuditTrail = lazy(() => import("./pages/boekhouding/AuditTrailP
 const BoekhoudingNieuweFactuur = lazy(() => import("./pages/boekhouding/NieuweFactuurPage"));
 const BoekhoudingNieuweDebiteur = lazy(() => import("./pages/boekhouding/NieuweDebiteurPage"));
 const BoekhoudingNieuweLeverancier = lazy(() => import("./pages/boekhouding/NieuweLeverancierPage"));
+const BoekhoudingNieuweBTWAangifte = lazy(() => import("./pages/boekhouding/NieuweBTWAangiftePage"));
 
 // Schuldbeheer Module (Persoonlijke Boekhouding & Schuldenbeheer)
 const SchuldbeheerDashboard = lazy(() => import("./pages/schuldbeheer/DashboardPage"));
