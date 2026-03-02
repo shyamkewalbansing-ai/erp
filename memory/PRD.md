@@ -10,7 +10,23 @@ Dutch (Nederlands)
 
 ## Wat is Voltooid (Maart 2026)
 
-### ✅ Boekhouding Module Redesign (NIEUW - 1 maart 2026)
+### ✅ CardContent Styling Consistentie (2 maart 2026)
+- **Alle pagina's nu consistent:** VerkoopPage, InkoopPage, CrediteruenPage, DebiteruenPage, BankKasPage hebben nu dezelfde CardContent styling als GrootboekPage
+- **Main Card:** `border-0 shadow-sm hover:shadow-md transition-shadow rounded-2xl`
+- **CardContent wrapper:** `p-0` voor full-width tables, `p-6` voor content
+- **Table headers:** `font-medium text-gray-500` (geen uppercase)
+- **Table background:** `bg-gray-50/50` voor subtiele achtergrond
+- **Row hover:** `hover:bg-gray-50/50` voor zachte hover
+- **Buttons:** `rounded-lg` toegevoegd aan actie buttons
+
+### ✅ POS Numpad Geïntegreerd (2 maart 2026)
+- **Geen popup meer:** Betaalmethode selectie en numpad direct in rechter kolom
+- **Volledige numpad:** Cijfers 0-9, 00, decimaalpunt
+- **Quick bedragen:** 10, 20, 50, 100, 200 knoppen
+- **Live wisselgeld:** Automatische berekening met kleurcode
+- **Success scherm:** Bonnummer, bedragen, print en volgende knoppen
+
+### ✅ Boekhouding Module Redesign (1 maart 2026)
 - **15 pagina's geünificeerd:** Alle pagina's hebben nu dezelfde design als VerkoopPage
 - **Consistente statistiek kaarten:** Elke pagina heeft nu 4 StatCards met dezelfde styling
 - **Kleurenpalet gestandaardiseerd:** Alle `slate-` kleuren vervangen door `gray-` voor consistentie
