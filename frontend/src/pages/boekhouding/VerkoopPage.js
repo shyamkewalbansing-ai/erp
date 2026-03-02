@@ -794,38 +794,38 @@ const VerkoopPage = () => {
     const items = type === 'invoice' ? filteredInvoices : type === 'quote' ? filteredQuotes : filteredOrders;
     
     return (
-      <div className="border border-gray-200 rounded-xl overflow-hidden">
+      <div className="border border-gray-200 rounded-2xl overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="bg-gray-50 hover:bg-gray-50">
+            <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
               <TableHead className="w-10 pl-4">
                 <Checkbox checked={selectedItems.length === items.length && items.length > 0} onCheckedChange={() => handleSelectAll(items)} />
               </TableHead>
               <TableHead className="cursor-pointer" onClick={() => handleSort('number')}>
-                <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase">
+                <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
                   Nummer <ArrowUpDown className="w-3 h-3" />
                 </div>
               </TableHead>
               <TableHead className="cursor-pointer" onClick={() => handleSort('date')}>
-                <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase">
+                <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
                   Datum <ArrowUpDown className="w-3 h-3" />
                 </div>
               </TableHead>
               <TableHead className="cursor-pointer" onClick={() => handleSort('customer')}>
-                <div className="flex items-center gap-1 text-xs font-semibold text-gray-500 uppercase">
+                <div className="flex items-center gap-1 text-xs font-medium text-gray-500">
                   Klant <ArrowUpDown className="w-3 h-3" />
                 </div>
               </TableHead>
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase">
+              <TableHead className="text-xs font-medium text-gray-500">
                 {type === 'invoice' ? 'Vervaldatum' : type === 'quote' ? 'Geldig tot' : 'Leverdatum'}
               </TableHead>
               <TableHead className="text-right cursor-pointer" onClick={() => handleSort('amount')}>
-                <div className="flex items-center justify-end gap-1 text-xs font-semibold text-gray-500 uppercase">
+                <div className="flex items-center justify-end gap-1 text-xs font-medium text-gray-500">
                   Bedrag <ArrowUpDown className="w-3 h-3" />
                 </div>
               </TableHead>
-              {type === 'invoice' && <TableHead className="text-right text-xs font-semibold text-gray-500 uppercase">Open</TableHead>}
-              <TableHead className="text-xs font-semibold text-gray-500 uppercase">Status</TableHead>
+              {type === 'invoice' && <TableHead className="text-right text-xs font-medium text-gray-500">Open</TableHead>}
+              <TableHead className="text-xs font-medium text-gray-500">Status</TableHead>
               <TableHead className="w-10 pr-4"></TableHead>
             </TableRow>
           </TableHeader>
