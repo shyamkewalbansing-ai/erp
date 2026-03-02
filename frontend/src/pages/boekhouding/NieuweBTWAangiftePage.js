@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { btwAPI, reportsAPI } from '../../lib/boekhoudingApi';
 import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
-import { Card, CardContent } from '../../components/ui/card';
+import { Checkbox } from '../../components/ui/checkbox';
 import { Skeleton } from '../../components/ui/skeleton';
 import { toast } from 'sonner';
 import { 
@@ -14,25 +13,20 @@ import {
   FileText,
   Calculator,
   Calendar,
-  TrendingUp,
-  TrendingDown,
   CheckCircle,
   AlertCircle,
   Printer,
-  Eye,
-  RefreshCw,
+  ArrowUpDown,
+  User,
   Building2
 } from 'lucide-react';
 
 // Format currency
-const formatCurrency = (amount, currency = 'SRD') => {
-  const formatted = new Intl.NumberFormat('nl-NL', {
+const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('nl-NL', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(Math.abs(amount || 0));
-  if (currency === 'USD') return `$ ${formatted}`;
-  if (currency === 'EUR') return `€ ${formatted}`;
-  return `SRD ${formatted}`;
+  }).format(amount || 0);
 };
 
 // Tab Button Component
@@ -49,100 +43,49 @@ const TabButton = ({ active, onClick, children }) => (
   </button>
 );
 
-// Step Indicator
-const StepIndicator = ({ step, currentStep, label }) => {
-  const isActive = step === currentStep;
-  const isComplete = step < currentStep;
-  
-  return (
-    <div className="flex items-center gap-3">
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-        isComplete ? 'bg-emerald-600 text-white' :
-        isActive ? 'bg-emerald-600 text-white' :
-        'bg-gray-200 text-gray-500'
-      }`}>
-        {isComplete ? <CheckCircle className="w-5 h-5" /> : step}
-      </div>
-      <span className={`text-sm ${isActive ? 'text-gray-900 font-medium' : 'text-gray-500'}`}>
-        {label}
-      </span>
-    </div>
-  );
-};
-
 const NieuweBTWAangiftePage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
+  const [generated, setGenerated] = useState(false);
   const [selectedYear, setSelectedYear] = useState('2024');
   const [selectedQuarter, setSelectedQuarter] = useState('Q4');
-  const [aangifteData, setAangifteData] = useState(null);
 
-  // Periodes mapping
+  // BTW regels data
+  const [btwRegels, setBtwRegels] = useState([
+    { id: 1, rubriek: '1a', omschrijving: 'Leveringen/diensten belast met hoog tarief', grondslag: 180000, btw: 45000 },
+    { id: 2, rubriek: '1b', omschrijving: 'Leveringen/diensten belast met laag tarief', grondslag: 70000, btw: 7000 },
+    { id: 3, rubriek: '1c', omschrijving: 'Leveringen/diensten belast met overige tarieven', grondslag: 0, btw: 0 },
+    { id: 4, rubriek: '2a', omschrijving: 'Intracommunautaire leveringen', grondslag: 0, btw: 0 },
+    { id: 5, rubriek: '3', omschrijving: 'Installatie/afstandsverkopen binnen de EU', grondslag: 0, btw: 0 },
+    { id: 6, rubriek: '4a', omschrijving: 'Leveringen uit landen buiten de EU', grondslag: 25000, btw: 6250 },
+    { id: 7, rubriek: '4b', omschrijving: 'Leveringen uit landen binnen de EU', grondslag: 0, btw: 0 },
+    { id: 8, rubriek: '5a', omschrijving: 'Voorbelasting', grondslag: 0, btw: 38000 },
+    { id: 9, rubriek: '5b', omschrijving: 'Verleggingsregelingen', grondslag: 0, btw: 6250 },
+  ]);
+
   const periodeLabels = {
-    'Q1': 'Januari - Maart',
-    'Q2': 'April - Juni', 
-    'Q3': 'Juli - September',
-    'Q4': 'Oktober - December'
+    'Q1': 'Jan - Mar',
+    'Q2': 'Apr - Jun', 
+    'Q3': 'Jul - Sep',
+    'Q4': 'Okt - Dec'
   };
 
-  const handleGenerateAangifte = async () => {
+  // Bereken totalen
+  const totaalVerschuldigdeBTW = btwRegels.slice(0, 7).reduce((sum, r) => sum + r.btw, 0);
+  const totaalVoorbelasting = btwRegels.slice(7).reduce((sum, r) => sum + r.btw, 0);
+  const teBetalen = totaalVerschuldigdeBTW - totaalVoorbelasting;
+
+  const handleGenerate = async () => {
     setGenerating(true);
-    try {
-      // Simulate API call to generate BTW report
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Mock data - in real app this would come from API
-      setAangifteData({
-        periode: `${selectedQuarter} ${selectedYear}`,
-        maanden: periodeLabels[selectedQuarter],
-        generated_at: new Date().toISOString(),
-        bedrijf: {
-          naam: 'Demo Bedrijf N.V.',
-          btw_nummer: 'BTW-SR-123456',
-          adres: 'Domineestraat 1, Paramaribo'
-        },
-        verkoop: {
-          totaal_excl: 250000,
-          btw_10: 15000,
-          btw_25: 10000,
-          totaal_btw: 25000
-        },
-        inkoop: {
-          totaal_excl: 180000,
-          btw_10: 10800,
-          btw_25: 7200,
-          totaal_btw: 18000
-        },
-        saldo: {
-          te_betalen: 7000,
-          te_vorderen: 0
-        },
-        transacties: {
-          verkoop_facturen: 45,
-          inkoop_facturen: 32
-        }
-      });
-      
-      setCurrentStep(2);
-      toast.success('BTW-aangifte succesvol gegenereerd');
-    } catch (error) {
-      toast.error('Fout bij genereren aangifte');
-    } finally {
-      setGenerating(false);
-    }
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setGenerated(true);
+    setGenerating(false);
+    toast.success('BTW-aangifte gegenereerd');
   };
 
-  const handleDownloadPDF = () => {
-    toast.success('BTW-aangifte wordt gedownload als PDF');
-    // In real app, this would trigger PDF download
-    setCurrentStep(3);
-  };
-
-  const handlePrint = () => {
-    window.print();
-    toast.success('Afdrukvenster geopend');
+  const handleDownload = () => {
+    toast.success('BTW-aangifte wordt gedownload');
   };
 
   return (
@@ -169,357 +112,273 @@ const NieuweBTWAangiftePage = () => {
           
           <div className="w-px h-6 bg-gray-300 mx-2"></div>
           
-          <TabButton active={currentStep === 1} onClick={() => currentStep > 1 && setCurrentStep(1)}>
-            1. Periode Selecteren
+          <TabButton active={true} onClick={() => {}}>
+            BTW-aangifte Genereren
           </TabButton>
-          <TabButton active={currentStep === 2} onClick={() => currentStep > 2 && setCurrentStep(2)}>
-            2. Aangifte Bekijken
-          </TabButton>
-          <TabButton active={currentStep === 3} onClick={() => {}}>
-            3. Downloaden & Indienen
-          </TabButton>
+          
+          {/* Action Buttons */}
+          <div className="ml-auto flex items-center gap-2">
+            <Button 
+              variant="outline"
+              onClick={handleDownload}
+              disabled={!generated}
+              className="rounded-lg"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Download PDF
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => window.print()}
+              disabled={!generated}
+              className="rounded-lg"
+            >
+              <Printer className="w-4 h-4 mr-2" />
+              Afdrukken
+            </Button>
+            <Button 
+              onClick={handleGenerate}
+              disabled={generating || generated}
+              className="bg-emerald-600 hover:bg-emerald-700 rounded-lg"
+            >
+              {generating ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Calculator className="w-4 h-4 mr-2" />
+              )}
+              {generated ? 'Gegenereerd' : 'Genereren'}
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Progress Steps */}
+      {/* Filter Section */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between max-w-2xl">
-          <StepIndicator step={1} currentStep={currentStep} label="Periode selecteren" />
-          <div className="flex-1 h-px bg-gray-200 mx-4"></div>
-          <StepIndicator step={2} currentStep={currentStep} label="Aangifte bekijken" />
-          <div className="flex-1 h-px bg-gray-200 mx-4"></div>
-          <StepIndicator step={3} currentStep={currentStep} label="Downloaden" />
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Administratie
+            </Label>
+            <Select defaultValue="demo">
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="demo">Demo Bedrijf N.V.</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600">Boekjaar</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2023">2023</SelectItem>
+                <SelectItem value="2022">2022</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600">Kwartaal</Label>
+            <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Q1">Q1 (Jan-Mar)</SelectItem>
+                <SelectItem value="Q2">Q2 (Apr-Jun)</SelectItem>
+                <SelectItem value="Q3">Q3 (Jul-Sep)</SelectItem>
+                <SelectItem value="Q4">Q4 (Okt-Dec)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Verantwoordelijke
+            </Label>
+            <Select defaultValue="me">
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="me">Huidige gebruiker</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="text-right">
+            <span className="text-sm text-gray-500">Periode</span>
+            <p className="text-sm font-medium text-gray-700">{selectedQuarter} {selectedYear} ({periodeLabels[selectedQuarter]})</p>
+          </div>
         </div>
       </div>
 
       {/* Info Banner */}
-      <div className="bg-amber-50 border-b border-amber-200 px-6 py-3">
-        <div className="flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
-          <p className="text-sm text-amber-800">
-            <strong>Let op:</strong> In Suriname is digitale indiening nog niet mogelijk. 
-            Genereer uw aangifte, download de PDF en dien deze handmatig in bij de Belastingdienst.
+      <div className="bg-amber-50 border-b border-amber-100 px-6 py-2">
+        <div className="flex items-center gap-2">
+          <AlertCircle className="w-4 h-4 text-amber-600" />
+          <p className="text-xs text-amber-700">
+            Digitale indiening is in Suriname niet mogelijk. Download de PDF en dien handmatig in bij de Belastingdienst.
           </p>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="p-6">
-        {/* Step 1: Periode Selecteren */}
-        {currentStep === 1 && (
-          <div className="max-w-2xl mx-auto">
-            <Card className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <div className="bg-gray-50 border-b border-gray-200 px-6 py-4">
-                <div className="flex items-center gap-3">
-                  <Calendar className="w-5 h-5 text-emerald-600" />
-                  <div>
-                    <h2 className="text-base font-semibold text-gray-800">Selecteer Periode</h2>
-                    <p className="text-sm text-gray-500">Kies het boekjaar en kwartaal voor de BTW-aangifte</p>
-                  </div>
-                </div>
-              </div>
-              
-              <CardContent className="p-6">
-                <div className="grid grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">Boekjaar</Label>
-                    <Select value={selectedYear} onValueChange={setSelectedYear}>
-                      <SelectTrigger className="rounded-lg">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="2024">2024</SelectItem>
-                        <SelectItem value="2023">2023</SelectItem>
-                        <SelectItem value="2022">2022</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-gray-700">Kwartaal</Label>
-                    <Select value={selectedQuarter} onValueChange={setSelectedQuarter}>
-                      <SelectTrigger className="rounded-lg">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Q1">Q1 - Januari t/m Maart</SelectItem>
-                        <SelectItem value="Q2">Q2 - April t/m Juni</SelectItem>
-                        <SelectItem value="Q3">Q3 - Juli t/m September</SelectItem>
-                        <SelectItem value="Q4">Q4 - Oktober t/m December</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600">
-                    <strong>Geselecteerde periode:</strong> {selectedQuarter} {selectedYear} ({periodeLabels[selectedQuarter]})
-                  </p>
-                </div>
-              </CardContent>
-
-              <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-end">
-                <Button 
-                  onClick={handleGenerateAangifte}
-                  disabled={generating}
-                  className="bg-emerald-600 hover:bg-emerald-700 rounded-lg"
-                >
-                  {generating ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  ) : (
-                    <Calculator className="w-4 h-4 mr-2" />
-                  )}
-                  Aangifte Genereren
-                </Button>
-              </div>
-            </Card>
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          {/* Table Header */}
+          <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">
+                BTW-aangifte {selectedQuarter} {selectedYear}
+              </span>
+              <span className="text-xs text-gray-500">
+                {generated ? (
+                  <span className="flex items-center gap-1 text-emerald-600">
+                    <CheckCircle className="w-3 h-3" /> Gegenereerd
+                  </span>
+                ) : (
+                  'Nog niet gegenereerd'
+                )}
+              </span>
+            </div>
           </div>
-        )}
 
-        {/* Step 2: Aangifte Bekijken */}
-        {currentStep === 2 && aangifteData && (
-          <div className="max-w-4xl mx-auto space-y-6">
-            {/* Aangifte Header */}
-            <Card className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <div className="bg-emerald-600 px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FileText className="w-6 h-6 text-white" />
-                    <div>
-                      <h2 className="text-lg font-semibold text-white">BTW-aangifte {aangifteData.periode}</h2>
-                      <p className="text-sm text-emerald-100">{aangifteData.maanden}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="rounded-lg bg-white/10 border-white/30 text-white hover:bg-white/20">
-                      <Eye className="w-4 h-4 mr-2" />
-                      Voorbeeld
-                    </Button>
-                    <Button variant="outline" size="sm" className="rounded-lg bg-white/10 border-white/30 text-white hover:bg-white/20">
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Herberekenen
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              
-              <CardContent className="p-6">
-                {/* Bedrijfsgegevens */}
-                <div className="mb-6 pb-6 border-b border-gray-200">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Building2 className="w-4 h-4 text-gray-500" />
-                    <span className="text-sm font-medium text-gray-700">Bedrijfsgegevens</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-500">Bedrijfsnaam</p>
-                      <p className="text-sm font-medium text-gray-900">{aangifteData.bedrijf.naam}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">BTW-nummer</p>
-                      <p className="text-sm font-medium text-gray-900">{aangifteData.bedrijf.btw_nummer}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">Adres</p>
-                      <p className="text-sm font-medium text-gray-900">{aangifteData.bedrijf.adres}</p>
-                    </div>
-                  </div>
-                </div>
+          {/* BTW Regels Table */}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide w-20">
+                    Rubriek
+                  </th>
+                  <th className="text-left px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide">
+                    Omschrijving
+                  </th>
+                  <th className="text-right px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide w-40">
+                    Grondslag (SRD)
+                  </th>
+                  <th className="text-right px-4 py-3 text-xs font-medium text-gray-600 uppercase tracking-wide w-40">
+                    BTW (SRD)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Verschuldigde BTW sectie */}
+                <tr className="bg-gray-50">
+                  <td colSpan={4} className="px-4 py-2 text-xs font-semibold text-gray-700 uppercase">
+                    Verschuldigde BTW
+                  </td>
+                </tr>
+                {btwRegels.slice(0, 7).map((regel) => (
+                  <tr key={regel.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <span className="text-sm font-mono text-gray-900">{regel.rubriek}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-sm text-gray-700">{regel.omschrijving}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="text-sm font-medium text-gray-900">{formatCurrency(regel.grondslag)}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="text-sm font-medium text-gray-900">{formatCurrency(regel.btw)}</span>
+                    </td>
+                  </tr>
+                ))}
+                
+                {/* Subtotaal verschuldigd */}
+                <tr className="bg-emerald-50 border-b border-emerald-200">
+                  <td colSpan={3} className="px-4 py-3 text-right">
+                    <span className="text-sm font-semibold text-emerald-800">Subtotaal verschuldigde BTW</span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <span className="text-sm font-bold text-emerald-700">{formatCurrency(totaalVerschuldigdeBTW)}</span>
+                  </td>
+                </tr>
 
-                {/* BTW Overzicht */}
-                <div className="grid grid-cols-2 gap-6">
-                  {/* Verkoop BTW */}
-                  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-                    <div className="flex items-center gap-2 mb-4">
-                      <TrendingUp className="w-5 h-5 text-emerald-600" />
-                      <span className="text-sm font-semibold text-emerald-800">BTW op Verkopen (Afdracht)</span>
-                    </div>
-                    <table className="w-full text-sm">
-                      <tbody>
-                        <tr className="border-b border-emerald-200">
-                          <td className="py-2 text-gray-600">Totaal verkopen excl. BTW</td>
-                          <td className="py-2 text-right font-medium">{formatCurrency(aangifteData.verkoop.totaal_excl)}</td>
-                        </tr>
-                        <tr className="border-b border-emerald-200">
-                          <td className="py-2 text-gray-600">BTW 10%</td>
-                          <td className="py-2 text-right font-medium">{formatCurrency(aangifteData.verkoop.btw_10)}</td>
-                        </tr>
-                        <tr className="border-b border-emerald-200">
-                          <td className="py-2 text-gray-600">BTW 25%</td>
-                          <td className="py-2 text-right font-medium">{formatCurrency(aangifteData.verkoop.btw_25)}</td>
-                        </tr>
-                        <tr>
-                          <td className="py-2 font-semibold text-emerald-800">Totaal BTW Verkoop</td>
-                          <td className="py-2 text-right font-bold text-emerald-600">{formatCurrency(aangifteData.verkoop.totaal_btw)}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+                {/* Voorbelasting sectie */}
+                <tr className="bg-gray-50">
+                  <td colSpan={4} className="px-4 py-2 text-xs font-semibold text-gray-700 uppercase">
+                    Voorbelasting (Aftrekbaar)
+                  </td>
+                </tr>
+                {btwRegels.slice(7).map((regel) => (
+                  <tr key={regel.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <span className="text-sm font-mono text-gray-900">{regel.rubriek}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-sm text-gray-700">{regel.omschrijving}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="text-sm font-medium text-gray-900">{formatCurrency(regel.grondslag)}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="text-sm font-medium text-gray-900">{formatCurrency(regel.btw)}</span>
+                    </td>
+                  </tr>
+                ))}
 
-                  {/* Inkoop BTW */}
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <div className="flex items-center gap-2 mb-4">
-                      <TrendingDown className="w-5 h-5 text-blue-600" />
-                      <span className="text-sm font-semibold text-blue-800">BTW op Inkopen (Voorheffing)</span>
-                    </div>
-                    <table className="w-full text-sm">
-                      <tbody>
-                        <tr className="border-b border-blue-200">
-                          <td className="py-2 text-gray-600">Totaal inkopen excl. BTW</td>
-                          <td className="py-2 text-right font-medium">{formatCurrency(aangifteData.inkoop.totaal_excl)}</td>
-                        </tr>
-                        <tr className="border-b border-blue-200">
-                          <td className="py-2 text-gray-600">BTW 10%</td>
-                          <td className="py-2 text-right font-medium">{formatCurrency(aangifteData.inkoop.btw_10)}</td>
-                        </tr>
-                        <tr className="border-b border-blue-200">
-                          <td className="py-2 text-gray-600">BTW 25%</td>
-                          <td className="py-2 text-right font-medium">{formatCurrency(aangifteData.inkoop.btw_25)}</td>
-                        </tr>
-                        <tr>
-                          <td className="py-2 font-semibold text-blue-800">Totaal BTW Inkoop</td>
-                          <td className="py-2 text-right font-bold text-blue-600">{formatCurrency(aangifteData.inkoop.totaal_btw)}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                {/* Subtotaal voorbelasting */}
+                <tr className="bg-blue-50 border-b border-blue-200">
+                  <td colSpan={3} className="px-4 py-3 text-right">
+                    <span className="text-sm font-semibold text-blue-800">Subtotaal voorbelasting</span>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <span className="text-sm font-bold text-blue-700">{formatCurrency(totaalVoorbelasting)}</span>
+                  </td>
+                </tr>
 
-                {/* Saldo */}
-                <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Calculator className="w-5 h-5 text-amber-600" />
-                      <span className="text-sm font-semibold text-amber-800">BTW Saldo (Te betalen aan Belastingdienst)</span>
-                    </div>
-                    <span className="text-2xl font-bold text-amber-600">{formatCurrency(aangifteData.saldo.te_betalen)}</span>
-                  </div>
-                  <p className="text-xs text-amber-700 mt-2">
-                    Berekening: BTW Verkoop ({formatCurrency(aangifteData.verkoop.totaal_btw)}) - BTW Inkoop ({formatCurrency(aangifteData.inkoop.totaal_btw)}) = {formatCurrency(aangifteData.saldo.te_betalen)}
-                  </p>
-                </div>
-
-                {/* Transactie Info */}
-                <div className="mt-6 grid grid-cols-2 gap-4">
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500">Verkoopfacturen verwerkt</p>
-                    <p className="text-lg font-bold text-gray-900">{aangifteData.transacties.verkoop_facturen}</p>
-                  </div>
-                  <div className="p-3 bg-gray-50 rounded-lg">
-                    <p className="text-xs text-gray-500">Inkoopfacturen verwerkt</p>
-                    <p className="text-lg font-bold text-gray-900">{aangifteData.transacties.inkoop_facturen}</p>
-                  </div>
-                </div>
-              </CardContent>
-
-              <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-between">
-                <Button 
-                  variant="outline"
-                  onClick={() => setCurrentStep(1)}
-                  className="rounded-lg"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Terug
-                </Button>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline"
-                    onClick={handlePrint}
-                    className="rounded-lg"
-                  >
-                    <Printer className="w-4 h-4 mr-2" />
-                    Afdrukken
-                  </Button>
-                  <Button 
-                    onClick={handleDownloadPDF}
-                    className="bg-emerald-600 hover:bg-emerald-700 rounded-lg"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download PDF
-                  </Button>
-                </div>
-              </div>
-            </Card>
+                {/* Eindtotaal */}
+                <tr className="bg-amber-50">
+                  <td colSpan={3} className="px-4 py-4 text-right">
+                    <span className="text-base font-bold text-amber-800">
+                      {teBetalen >= 0 ? 'Te betalen aan Belastingdienst' : 'Te vorderen van Belastingdienst'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4 text-right">
+                    <span className="text-lg font-bold text-amber-700">
+                      {formatCurrency(Math.abs(teBetalen))}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
-        )}
 
-        {/* Step 3: Downloaden & Indienen */}
-        {currentStep === 3 && (
-          <div className="max-w-2xl mx-auto">
-            <Card className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-              <div className="bg-emerald-600 px-6 py-8 text-center">
-                <div className="w-16 h-16 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">
-                  <CheckCircle className="w-10 h-10 text-white" />
-                </div>
-                <h2 className="text-xl font-semibold text-white">BTW-aangifte Klaar!</h2>
-                <p className="text-sm text-emerald-100 mt-2">Uw aangifte voor {aangifteData?.periode} is gegenereerd</p>
-              </div>
-              
-              <CardContent className="p-6">
-                <div className="space-y-4">
-                  <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-emerald-800">PDF Gedownload</p>
-                        <p className="text-xs text-emerald-600 mt-1">BTW-aangifte-{aangifteData?.periode}.pdf</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-sm font-medium text-amber-800">Volgende stap: Handmatig indienen</p>
-                        <p className="text-xs text-amber-700 mt-1">
-                          Dien de gedownloade PDF in bij de Belastingdienst Suriname. 
-                          U kunt dit doen via het loket of per post.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Te betalen bedrag:</p>
-                    <p className="text-2xl font-bold text-amber-600">{formatCurrency(aangifteData?.saldo?.te_betalen || 0)}</p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Deadline: Laatste dag van de maand volgend op het kwartaal
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-
-              <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex justify-between">
-                <Button 
-                  variant="outline"
-                  onClick={() => setCurrentStep(2)}
-                  className="rounded-lg"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Terug naar aangifte
-                </Button>
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="outline"
-                    onClick={handleDownloadPDF}
-                    className="rounded-lg"
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Opnieuw downloaden
-                  </Button>
-                  <Button 
-                    onClick={() => navigate('/app/boekhouding/btw')}
-                    className="bg-emerald-600 hover:bg-emerald-700 rounded-lg"
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Voltooien
-                  </Button>
-                </div>
-              </div>
-            </Card>
+          {/* Footer */}
+          <div className="bg-gray-50 border-t border-gray-200 px-6 py-3 flex items-center justify-between">
+            <div className="text-xs text-gray-500">
+              <p>Berekening: Verschuldigde BTW ({formatCurrency(totaalVerschuldigdeBTW)}) - Voorbelasting ({formatCurrency(totaalVoorbelasting)}) = {formatCurrency(teBetalen)}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/app/boekhouding/btw')}
+                className="rounded-lg"
+              >
+                Annuleren
+              </Button>
+              <Button 
+                onClick={handleDownload}
+                disabled={!generated}
+                className="bg-emerald-600 hover:bg-emerald-700 rounded-lg"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+              </Button>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
