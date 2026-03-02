@@ -149,6 +149,7 @@ const BoekhoudingHerinneringen = lazy(() => import("./pages/boekhouding/Herinner
 const BoekhoudingDocumenten = lazy(() => import("./pages/boekhouding/DocumentenPage"));
 const BoekhoudingAuditTrail = lazy(() => import("./pages/boekhouding/AuditTrailPage"));
 const BoekhoudingNieuweFactuur = lazy(() => import("./pages/boekhouding/NieuweFactuurPage"));
+const BoekhoudingNieuweOfferte = lazy(() => import("./pages/boekhouding/NieuweOffertePage"));
 const BoekhoudingNieuweDebiteur = lazy(() => import("./pages/boekhouding/NieuweDebiteurPage"));
 const BoekhoudingNieuweLeverancier = lazy(() => import("./pages/boekhouding/NieuweLeverancierPage"));
 const BoekhoudingNieuweBTWAangifte = lazy(() => import("./pages/boekhouding/NieuweBTWAangiftePage"));
