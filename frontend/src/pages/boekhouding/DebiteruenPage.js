@@ -677,7 +677,8 @@ const DebiteurenPage = () => {
                       )}
                     </TableBody>
                   </Table>
-                </div>
+                  </div>
+                </CardContent>
               </Card>
             </div>
 
