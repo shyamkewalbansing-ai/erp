@@ -124,29 +124,6 @@ const DebiteurenPage = () => {
     }
   };
 
-  const handleCreateCustomer = async () => {
-    if (!newCustomer.naam) {
-      toast.error('Naam is verplicht');
-      return;
-    }
-    setSaving(true);
-    try {
-      await customersAPI.create(newCustomer);
-      toast.success('Debiteur aangemaakt');
-      setShowCustomerDialog(false);
-      setNewCustomer({
-        naam: '', adres: '', plaats: '', postcode: '', land: 'Suriname', 
-        telefoon: '', email: '', btw_nummer: '', betalingstermijn: 30, 
-        kredietlimiet: 0, valuta: 'SRD'
-      });
-      fetchData();
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
-    } finally {
-      setSaving(false);
-    }
-  };
-
   // Toggle row selection
   const toggleRowSelection = (id) => {
     setSelectedRows(prev => 
