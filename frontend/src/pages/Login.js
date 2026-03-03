@@ -121,8 +121,8 @@ export default function Login() {
         'cms': '/app/cms'
       };
       
-      // Default order - same as sidebar
-      const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty', 'pompstation', 'boekhouding'];
+      // Default order - same as sidebar (boekhouding first)
+      const defaultOrder = ['boekhouding', 'vastgoed_beheer', 'suribet', 'autodealer', 'beauty', 'pompstation', 'hrm'];
       
       // Get ordered modules (same logic as sidebar)
       let orderedModules = defaultOrder;
