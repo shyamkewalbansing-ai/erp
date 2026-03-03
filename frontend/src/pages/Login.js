@@ -100,7 +100,6 @@ export default function Login() {
       
       const addons = addonsRes.data || [];
       const sidebarSettings = sidebarRes.data || {};
-      const savedOrder = sidebarSettings.module_order || [];
       const defaultDashboard = sidebarSettings.default_dashboard;
       
       // Get active module slugs
@@ -118,44 +117,38 @@ export default function Login() {
         'pompstation': '/app/pompstation',
         'boekhouding': '/app/boekhouding',
         'ai-chatbot': '/app/chatbot',
-        'cms': '/app/cms'
+        'cms': '/app/cms',
+        'schuldbeheer': '/app/schuldbeheer'
       };
-      
-      // Default order - same as sidebar (boekhouding first)
-      const defaultOrder = ['boekhouding', 'vastgoed_beheer', 'suribet', 'autodealer', 'beauty', 'pompstation', 'hrm'];
-      
-      // Get ordered modules (same logic as sidebar)
-      let orderedModules = defaultOrder;
-      if (savedOrder.length > 0) {
-        orderedModules = [...savedOrder];
-        defaultOrder.forEach(slug => {
-          if (!orderedModules.includes(slug)) {
-            orderedModules.push(slug);
-          }
-        });
-      }
-      
-      // Find first active module in sidebar order
-      let firstActiveModule = null;
-      for (const slug of orderedModules) {
-        if (activeModuleSlugs.includes(slug)) {
-          firstActiveModule = slug;
-          break;
-        }
-      }
       
       // Priority 1: User's explicit default dashboard choice
       if (defaultDashboard && activeModuleSlugs.includes(defaultDashboard)) {
         navigate(moduleRoutes[defaultDashboard] || '/app/dashboard');
+        return;
       }
-      // Priority 2: First module in sidebar order
-      else if (firstActiveModule && moduleRoutes[firstActiveModule]) {
-        navigate(moduleRoutes[firstActiveModule]);
+      
+      // Priority 2: If boekhouding is active, always go there (main app focus)
+      if (activeModuleSlugs.includes('boekhouding')) {
+        navigate('/app/boekhouding');
+        return;
       }
-      // Fallback
-      else {
+      
+      // Priority 3: If vastgoed_beheer is active, go to dashboard
+      if (activeModuleSlugs.includes('vastgoed_beheer')) {
         navigate('/app/dashboard');
+        return;
       }
+      
+      // Fallback: Go to first active module
+      for (const slug of activeModuleSlugs) {
+        if (moduleRoutes[slug]) {
+          navigate(moduleRoutes[slug]);
+          return;
+        }
+      }
+      
+      // Final fallback
+      navigate('/app/dashboard');
     } catch (error) {
       console.error('Error checking addons:', error);
       navigate('/app/dashboard');
