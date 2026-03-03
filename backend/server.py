@@ -12958,6 +12958,107 @@ async def process_ai_command(user_id: str, message: str, session_id: str):
             "VOORRAAD_OVERZICHT: Toon brandstof voorraad"
         ])
     
+    # BOEKHOUDING MODULE
+    if "boekhouding" in active_modules:
+        # Get invoices
+        invoices = await db.verkoopfacturen.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+        purchase_invoices = await db.inkoopfacturen.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+        debtors = await db.debiteuren.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+        creditors = await db.crediteuren.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+        btw_aangiftes = await db.btw_aangiftes.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+        grootboekrekeningen = await db.grootboekrekeningen.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+        journaalposten = await db.journaalposten.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+        bank_transactions = await db.bank_transactions.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+        
+        # Calculate statistics
+        open_invoices = [i for i in invoices if i.get("status") in ["openstaand", "verzonden", "concept"]]
+        paid_invoices = [i for i in invoices if i.get("status") == "betaald"]
+        total_revenue = sum([i.get("totaal", 0) for i in paid_invoices])
+        total_outstanding = sum([i.get("totaal", 0) for i in open_invoices])
+        
+        # BTW calculation
+        btw_te_betalen = sum([b.get("btw_te_betalen", 0) for b in btw_aangiftes if b.get("status") != "ingediend"])
+        btw_te_ontvangen = sum([b.get("btw_te_ontvangen", 0) for b in btw_aangiftes if b.get("status") != "ingediend"])
+        btw_saldo = btw_te_ontvangen - btw_te_betalen
+        
+        # Recent invoices
+        recent_invoices = sorted(invoices, key=lambda x: x.get("datum", ""), reverse=True)[:5]
+        invoice_list = ", ".join([f"{i.get('factuurnummer', 'N/A')} (SRD {i.get('totaal', 0):,.2f})" for i in recent_invoices]) if recent_invoices else "Geen facturen"
+        
+        # Debtor/Creditor names
+        debtor_names = ", ".join([d.get("naam", d.get("name", "")) for d in debtors[:5]]) if debtors else "Geen debiteuren"
+        creditor_names = ", ".join([c.get("naam", c.get("name", "")) for c in creditors[:5]]) if creditors else "Geen crediteuren"
+        
+        context_parts.append(f"""
+📦 BOEKHOUDING MODULE:
+- Totaal verkoopfacturen: {len(invoices)} ({len(open_invoices)} openstaand, {len(paid_invoices)} betaald)
+- Openstaand bedrag: SRD {total_outstanding:,.2f}
+- Totale omzet: SRD {total_revenue:,.2f}
+- Inkoopfacturen: {len(purchase_invoices)}
+- Debiteuren: {len(debtors)} ({debtor_names})
+- Crediteuren: {len(creditors)} ({creditor_names})
+- BTW Saldo: SRD {btw_saldo:,.2f} ({'te ontvangen' if btw_saldo >= 0 else 'te betalen'})
+- Grootboekrekeningen: {len(grootboekrekeningen)}
+- Journaalposten: {len(journaalposten)}
+- Bank transacties: {len(bank_transactions)}
+- Recente facturen: {invoice_list}""")
+        
+        available_actions.extend([
+            "BTW_OVERZICHT: Bekijk BTW saldo en aangiftes",
+            "OMZET_OVERZICHT: Bekijk omzet statistieken",
+            "OPENSTAANDE_FACTUREN: Toon openstaande verkoopfacturen",
+            "DEBITEUREN_OVERZICHT: Toon overzicht van debiteuren",
+            "CREDITEUREN_OVERZICHT: Toon overzicht van crediteuren",
+            "GROOTBOEK_OVERZICHT: Toon grootboekrekeningen",
+            "BANK_OVERZICHT: Toon bank transacties en saldo",
+            "FACTUUR_ZOEKEN: Zoek een factuur (params: search_term)",
+            "DEBITEUR_ZOEKEN: Zoek een debiteur (params: search_term)",
+            "BOEKHOUDING_RAPPORTAGE: Genereer boekhouding rapportage"
+        ])
+    
+    # SCHULDBEHEER MODULE
+    if "schuldbeheer" in active_modules:
+        # Get debts/loans
+        personal_debts = await db.personal_debts.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+        debt_payments = await db.debt_payments.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+        
+        total_debt = sum([d.get("amount", 0) - d.get("paid", 0) for d in personal_debts if d.get("status") != "paid"])
+        active_debts = len([d for d in personal_debts if d.get("status") != "paid"])
+        
+        context_parts.append(f"""
+📦 SCHULDBEHEER MODULE:
+- Totale openstaande schuld: SRD {total_debt:,.2f}
+- Actieve leningen/schulden: {active_debts}
+- Totaal geregistreerd: {len(personal_debts)}""")
+        
+        available_actions.extend([
+            "SCHULDEN_OVERZICHT: Bekijk alle schulden en leningen",
+            "SCHULD_TOEVOEGEN: Nieuwe schuld registreren (params: name, amount, creditor, due_date)",
+            "AFLOSSING_REGISTREREN: Aflossing registreren (params: debt_name, amount)",
+            "VOLGENDE_AFLOSSING: Wanneer is de volgende aflossing?"
+        ])
+    
+    # SURIBET MODULE
+    if "suribet" in active_modules:
+        suribet_tickets = await db.suribet_tickets.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+        suribet_payouts = await db.suribet_payouts.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+        
+        today = datetime.now().strftime("%Y-%m-%d")
+        today_tickets = len([t for t in suribet_tickets if t.get("date", "").startswith(today)])
+        today_revenue = sum([t.get("amount", 0) for t in suribet_tickets if t.get("date", "").startswith(today)])
+        
+        context_parts.append(f"""
+📦 SURIBET RETAILER MODULE:
+- Tickets verkocht vandaag: {today_tickets}
+- Omzet vandaag: SRD {today_revenue:,.2f}
+- Totaal tickets: {len(suribet_tickets)}""")
+        
+        available_actions.extend([
+            "SURIBET_OVERZICHT: Bekijk Suribet verkopen",
+            "TICKET_VERKOOP: Registreer ticket verkoop (params: amount)",
+            "UITBETALING_REGISTREREN: Registreer uitbetaling (params: ticket_number, amount)"
+        ])
+    
     # If no modules active
     if not active_modules:
         return {
@@ -12982,6 +13083,12 @@ async def process_ai_command(user_id: str, message: str, session_id: str):
         module_names.append("Beauty & Spa")
     if "pompstation" in active_modules:
         module_names.append("Pompstation")
+    if "boekhouding" in active_modules:
+        module_names.append("Boekhouding")
+    if "schuldbeheer" in active_modules:
+        module_names.append("Schuldbeheer")
+    if "suribet" in active_modules:
+        module_names.append("Suribet Retailer")
     
     active_module_list = ", ".join(module_names) if module_names else "Geen"
     
@@ -13022,15 +13129,31 @@ Als gevraagd wordt over andere modules, leg uit dat deze eerst geactiveerd moete
 
     # Initialize AI chat
     llm_key = os.environ.get("EMERGENT_LLM_KEY")
-    chat = LlmChat(
-        api_key=llm_key,
-        session_id=session_id,
-        system_message=system_prompt
-    ).with_model("openai", "gpt-4o")
+    if not llm_key:
+        logger.error("EMERGENT_LLM_KEY not configured")
+        return {
+            "response": "❌ De AI assistent is tijdelijk niet beschikbaar. Neem contact op met de beheerder om de configuratie te controleren.",
+            "action_executed": False,
+            "action_result": None
+        }
     
-    # Send message to AI
-    user_msg = UserMessage(text=message)
-    ai_response = await chat.send_message(user_msg)
+    try:
+        chat = LlmChat(
+            api_key=llm_key,
+            session_id=session_id,
+            system_message=system_prompt
+        ).with_model("openai", "gpt-4o")
+        
+        # Send message to AI
+        user_msg = UserMessage(text=message)
+        ai_response = await chat.send_message(user_msg)
+    except Exception as llm_error:
+        logger.error(f"LLM Chat error: {llm_error}")
+        return {
+            "response": "❌ Er is een probleem met de AI service. Probeer het later opnieuw of neem contact op met de beheerder.",
+            "action_executed": False,
+            "action_result": None
+        }
     
     # Check if response contains an action
     action_result = None
@@ -13291,6 +13414,242 @@ Als gevraagd wordt over andere modules, leg uit dat deze eerst geactiveerd moete
 📅 Verkopen vandaag: {len(today_sales)} (SRD {today_revenue:,.0f})
 💰 Totale omzet: SRD {total_revenue:,.0f}"""
                     action_result = {"overview": True}
+                
+                # BOEKHOUDING ACTIONS
+                elif action == "BTW_OVERZICHT":
+                    btw_aangiftes = await db.btw_aangiftes.find({"user_id": user_id}, {"_id": 0}).to_list(20)
+                    invoices = await db.verkoopfacturen.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+                    
+                    btw_te_betalen = sum([b.get("btw_te_betalen", 0) for b in btw_aangiftes if b.get("status") != "ingediend"])
+                    btw_te_ontvangen = sum([b.get("btw_te_ontvangen", 0) for b in btw_aangiftes if b.get("status") != "ingediend"])
+                    btw_saldo = btw_te_ontvangen - btw_te_betalen
+                    
+                    # Calculate from invoices
+                    total_btw_verkoop = sum([i.get("btw_bedrag", 0) for i in invoices])
+                    
+                    final_response = f"""💰 **BTW Overzicht**
+
+📊 **Saldo**: SRD {btw_saldo:,.2f} ({'te ontvangen' if btw_saldo >= 0 else 'te betalen'})
+📈 BTW te ontvangen: SRD {btw_te_ontvangen:,.2f}
+📉 BTW te betalen: SRD {btw_te_betalen:,.2f}
+
+📄 **Facturen BTW**:
+- Totale BTW op verkoop: SRD {total_btw_verkoop:,.2f}
+- Aangiftes: {len(btw_aangiftes)}"""
+                    action_result = {"btw_saldo": btw_saldo}
+                
+                elif action == "OMZET_OVERZICHT":
+                    invoices = await db.verkoopfacturen.find({"user_id": user_id}, {"_id": 0}).to_list(200)
+                    
+                    # Calculate by period
+                    now = datetime.now()
+                    this_month = now.strftime("%Y-%m")
+                    this_year = now.strftime("%Y")
+                    
+                    month_invoices = [i for i in invoices if i.get("datum", "").startswith(this_month)]
+                    year_invoices = [i for i in invoices if i.get("datum", "").startswith(this_year)]
+                    paid_invoices = [i for i in invoices if i.get("status") == "betaald"]
+                    
+                    month_revenue = sum([i.get("totaal", 0) for i in month_invoices])
+                    year_revenue = sum([i.get("totaal", 0) for i in year_invoices])
+                    total_paid = sum([i.get("totaal", 0) for i in paid_invoices])
+                    
+                    final_response = f"""📊 **Omzet Overzicht**
+
+📅 **Deze maand**: SRD {month_revenue:,.2f}
+📆 **Dit jaar**: SRD {year_revenue:,.2f}
+✅ **Totaal ontvangen**: SRD {total_paid:,.2f}
+
+📄 Totaal facturen: {len(invoices)}
+✅ Betaald: {len(paid_invoices)}"""
+                    action_result = {"month_revenue": month_revenue, "year_revenue": year_revenue}
+                
+                elif action == "OPENSTAANDE_FACTUREN":
+                    invoices = await db.verkoopfacturen.find(
+                        {"user_id": user_id, "status": {"$in": ["openstaand", "verzonden"]}}, 
+                        {"_id": 0}
+                    ).to_list(50)
+                    
+                    total_open = sum([i.get("totaal", 0) for i in invoices])
+                    
+                    if invoices:
+                        invoice_list = "\n".join([
+                            f"• {i.get('factuurnummer', 'N/A')} - {i.get('klant_naam', 'Onbekend')}: SRD {i.get('totaal', 0):,.2f}"
+                            for i in invoices[:10]
+                        ])
+                        final_response = f"""📄 **Openstaande Facturen** ({len(invoices)})
+
+💰 Totaal openstaand: SRD {total_open:,.2f}
+
+{invoice_list}"""
+                    else:
+                        final_response = "✅ Er zijn geen openstaande facturen!"
+                    action_result = {"count": len(invoices), "total": total_open}
+                
+                elif action == "DEBITEUREN_OVERZICHT":
+                    debtors = await db.debiteuren.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+                    
+                    if debtors:
+                        debtor_list = "\n".join([
+                            f"• {d.get('naam', d.get('name', 'Onbekend'))} - {d.get('email', 'Geen email')}"
+                            for d in debtors[:10]
+                        ])
+                        final_response = f"""👥 **Debiteuren** ({len(debtors)})
+
+{debtor_list}"""
+                    else:
+                        final_response = "Geen debiteuren gevonden."
+                    action_result = {"count": len(debtors)}
+                
+                elif action == "CREDITEUREN_OVERZICHT":
+                    creditors = await db.crediteuren.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+                    
+                    if creditors:
+                        creditor_list = "\n".join([
+                            f"• {c.get('naam', c.get('name', 'Onbekend'))} - {c.get('email', 'Geen email')}"
+                            for c in creditors[:10]
+                        ])
+                        final_response = f"""🏢 **Crediteuren** ({len(creditors)})
+
+{creditor_list}"""
+                    else:
+                        final_response = "Geen crediteuren gevonden."
+                    action_result = {"count": len(creditors)}
+                
+                elif action == "GROOTBOEK_OVERZICHT":
+                    rekeningen = await db.grootboekrekeningen.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+                    journaalposten = await db.journaalposten.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+                    
+                    # Group by type
+                    activa = [r for r in rekeningen if r.get("type") == "activa"]
+                    passiva = [r for r in rekeningen if r.get("type") == "passiva"]
+                    kosten = [r for r in rekeningen if r.get("type") == "kosten"]
+                    opbrengsten = [r for r in rekeningen if r.get("type") == "opbrengsten"]
+                    
+                    final_response = f"""📊 **Grootboek Overzicht**
+
+📁 **Rekeningen** ({len(rekeningen)} totaal):
+• Activa: {len(activa)}
+• Passiva: {len(passiva)}
+• Kosten: {len(kosten)}
+• Opbrengsten: {len(opbrengsten)}
+
+📝 **Journaalposten**: {len(journaalposten)}"""
+                    action_result = {"rekeningen": len(rekeningen), "journaalposten": len(journaalposten)}
+                
+                elif action == "BANK_OVERZICHT":
+                    transactions = await db.bank_transactions.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+                    rekeningen = await db.bank_rekeningen.find({"user_id": user_id}, {"_id": 0}).to_list(10)
+                    
+                    # Calculate totals
+                    ontvangen = sum([t.get("bedrag", 0) for t in transactions if t.get("type") == "ontvangst"])
+                    uitgaven = sum([t.get("bedrag", 0) for t in transactions if t.get("type") == "uitgave"])
+                    saldo = sum([r.get("saldo", 0) for r in rekeningen])
+                    
+                    final_response = f"""🏦 **Bank Overzicht**
+
+💰 **Saldo**: SRD {saldo:,.2f}
+📥 Ontvangen: SRD {ontvangen:,.2f}
+📤 Uitgaven: SRD {uitgaven:,.2f}
+
+📋 Transacties: {len(transactions)}
+🏦 Rekeningen: {len(rekeningen)}"""
+                    action_result = {"saldo": saldo, "transactions": len(transactions)}
+                
+                elif action == "BOEKHOUDING_RAPPORTAGE":
+                    # Get all boekhouding data
+                    invoices = await db.verkoopfacturen.find({"user_id": user_id}, {"_id": 0}).to_list(200)
+                    purchase_inv = await db.inkoopfacturen.find({"user_id": user_id}, {"_id": 0}).to_list(200)
+                    debtors = await db.debiteuren.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+                    creditors = await db.crediteuren.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+                    
+                    total_verkoop = sum([i.get("totaal", 0) for i in invoices])
+                    total_inkoop = sum([i.get("totaal", 0) for i in purchase_inv])
+                    open_verkoop = sum([i.get("totaal", 0) for i in invoices if i.get("status") != "betaald"])
+                    
+                    final_response = f"""📊 **Boekhouding Rapportage**
+
+💰 **Verkoop**:
+• Totaal gefactureerd: SRD {total_verkoop:,.2f}
+• Openstaand: SRD {open_verkoop:,.2f}
+• Facturen: {len(invoices)}
+
+💸 **Inkoop**:
+• Totaal: SRD {total_inkoop:,.2f}
+• Facturen: {len(purchase_inv)}
+
+👥 **Relaties**:
+• Debiteuren: {len(debtors)}
+• Crediteuren: {len(creditors)}
+
+📈 **Bruto marge**: SRD {total_verkoop - total_inkoop:,.2f}"""
+                    action_result = {"rapport": True}
+                
+                # SCHULDBEHEER ACTIONS
+                elif action == "SCHULDEN_OVERZICHT":
+                    debts = await db.personal_debts.find({"user_id": user_id}, {"_id": 0}).to_list(50)
+                    
+                    active_debts = [d for d in debts if d.get("status") != "paid"]
+                    total_debt = sum([d.get("amount", 0) - d.get("paid", 0) for d in active_debts])
+                    
+                    if active_debts:
+                        debt_list = "\n".join([
+                            f"• {d.get('name', 'Onbekend')} - SRD {d.get('amount', 0) - d.get('paid', 0):,.2f} ({d.get('creditor', 'Onbekend')})"
+                            for d in active_debts[:10]
+                        ])
+                        final_response = f"""💳 **Schulden Overzicht**
+
+💰 Totaal openstaand: SRD {total_debt:,.2f}
+📝 Actieve schulden: {len(active_debts)}
+
+{debt_list}"""
+                    else:
+                        final_response = "✅ Geen openstaande schulden!"
+                    action_result = {"total_debt": total_debt, "count": len(active_debts)}
+                
+                elif action == "VOLGENDE_AFLOSSING":
+                    debts = await db.personal_debts.find(
+                        {"user_id": user_id, "status": {"$ne": "paid"}}, 
+                        {"_id": 0}
+                    ).to_list(50)
+                    
+                    # Sort by due date
+                    debts_with_due = [d for d in debts if d.get("due_date")]
+                    if debts_with_due:
+                        sorted_debts = sorted(debts_with_due, key=lambda x: x.get("due_date", ""))
+                        next_debt = sorted_debts[0]
+                        final_response = f"""📅 **Volgende Aflossing**
+
+💳 {next_debt.get('name', 'Onbekend')}
+📅 Vervaldatum: {next_debt.get('due_date', 'Onbekend')}
+💰 Bedrag: SRD {next_debt.get('amount', 0) - next_debt.get('paid', 0):,.2f}
+🏢 Crediteur: {next_debt.get('creditor', 'Onbekend')}"""
+                    else:
+                        final_response = "Geen aflossingen met vervaldatum gevonden."
+                    action_result = {"found": len(debts_with_due) > 0}
+                
+                # SURIBET ACTIONS
+                elif action == "SURIBET_OVERZICHT":
+                    tickets = await db.suribet_tickets.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+                    payouts = await db.suribet_payouts.find({"user_id": user_id}, {"_id": 0}).to_list(100)
+                    
+                    today = datetime.now().strftime("%Y-%m-%d")
+                    today_tickets = [t for t in tickets if t.get("date", "").startswith(today)]
+                    today_revenue = sum([t.get("amount", 0) for t in today_tickets])
+                    total_revenue = sum([t.get("amount", 0) for t in tickets])
+                    total_payouts = sum([p.get("amount", 0) for p in payouts])
+                    
+                    final_response = f"""🎫 **Suribet Overzicht**
+
+📅 **Vandaag**:
+• Tickets: {len(today_tickets)}
+• Omzet: SRD {today_revenue:,.2f}
+
+📊 **Totaal**:
+• Tickets verkocht: {len(tickets)}
+• Omzet: SRD {total_revenue:,.2f}
+• Uitbetalingen: SRD {total_payouts:,.2f}"""
+                    action_result = {"today_revenue": today_revenue, "total_revenue": total_revenue}
                     
     except json.JSONDecodeError:
         pass
@@ -13330,6 +13689,12 @@ async def ai_chat(message_data: AIChatMessage, current_user: dict = Depends(get_
     except Exception as e:
         logger.error(f"AI Chat error: {e}")
         raise HTTPException(status_code=500, detail=f"AI fout: {str(e)}")
+
+# Alias endpoint for AI Assistant page
+@api_router.post("/ai/assistant/chat")
+async def ai_assistant_chat(message_data: AIChatMessage, current_user: dict = Depends(get_current_user)):
+    """AI Assistant Chat endpoint - alias for /ai/chat"""
+    return await ai_chat(message_data, current_user)
 
 # ==================== PUBLIC CHATBOT FOR WEBSITE ====================
 
