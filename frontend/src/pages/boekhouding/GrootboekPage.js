@@ -150,7 +150,7 @@ const GrootboekPage = () => {
   // Simple loading state - spinner in content area (same layout as loaded page)
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 w-full">
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
         </div>

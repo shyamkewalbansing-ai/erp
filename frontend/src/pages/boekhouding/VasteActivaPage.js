@@ -114,8 +114,10 @@ const ActivaPage = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96" data-testid="activa-page">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      <div className="min-h-screen bg-gray-50 w-full" data-testid="activa-page">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        </div>
       </div>
     );
   }

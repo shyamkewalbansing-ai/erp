@@ -181,7 +181,7 @@ const SuribetMobileUpload = lazy(() => import("./pages/suribet/MobileUploadPage"
 
 // Loading component for lazy loaded pages - minimal flash
 const PageLoader = memo(() => (
-  <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+  <div className="min-h-screen bg-gray-50 w-full flex items-center justify-center">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
   </div>
 ));
