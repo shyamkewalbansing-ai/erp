@@ -100,6 +100,7 @@ export default function Login() {
       
       const addons = addonsRes.data || [];
       const sidebarSettings = sidebarRes.data || {};
+      const savedOrder = sidebarSettings.module_order || [];
       const defaultDashboard = sidebarSettings.default_dashboard;
       
       // Get active module slugs
@@ -127,19 +128,17 @@ export default function Login() {
         return;
       }
       
-      // Priority 2: If boekhouding is active, always go there (main app focus)
-      if (activeModuleSlugs.includes('boekhouding')) {
-        navigate('/app/boekhouding');
-        return;
+      // Priority 2: First ACTIVE module in saved sidebar order
+      if (savedOrder.length > 0) {
+        for (const slug of savedOrder) {
+          if (activeModuleSlugs.includes(slug) && moduleRoutes[slug]) {
+            navigate(moduleRoutes[slug]);
+            return;
+          }
+        }
       }
       
-      // Priority 3: If vastgoed_beheer is active, go to dashboard
-      if (activeModuleSlugs.includes('vastgoed_beheer')) {
-        navigate('/app/dashboard');
-        return;
-      }
-      
-      // Fallback: Go to first active module
+      // Priority 3: First active module (fallback if no saved order)
       for (const slug of activeModuleSlugs) {
         if (moduleRoutes[slug]) {
           navigate(moduleRoutes[slug]);
