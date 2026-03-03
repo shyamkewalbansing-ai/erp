@@ -22,7 +22,8 @@ import {
   CheckCircle,
   Circle,
   ArrowUpDown,
-  User
+  User,
+  Loader2
 } from 'lucide-react';
 
 // Status Legend Item
