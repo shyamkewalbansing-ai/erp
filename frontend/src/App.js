@@ -186,32 +186,49 @@ const PageLoader = memo(() => (
   </div>
 ));
 
-// Skeleton loader for pages - prevents layout shift
+// Skeleton loader for pages - prevents layout shift (content area only)
 const PageSkeleton = memo(() => (
-  <div className="min-h-screen bg-gray-50 animate-pulse">
+  <div className="min-h-screen bg-gray-50">
     {/* Header skeleton */}
     <div className="bg-white border-b border-gray-200 px-6 py-4">
-      <div className="h-6 bg-gray-200 rounded w-48"></div>
+      <div className="h-6 bg-gray-200 rounded w-48 animate-pulse"></div>
     </div>
     {/* Tab skeleton */}
     <div className="bg-white border-b border-gray-200 px-6 py-3">
       <div className="flex gap-2">
-        <div className="h-9 bg-gray-200 rounded-lg w-24"></div>
-        <div className="h-9 bg-gray-100 rounded-lg w-24"></div>
-        <div className="h-9 bg-gray-100 rounded-lg w-24"></div>
+        <div className="h-9 bg-gray-200 rounded-lg w-24 animate-pulse"></div>
+        <div className="h-9 bg-gray-100 rounded-lg w-24 animate-pulse"></div>
+        <div className="h-9 bg-gray-100 rounded-lg w-24 animate-pulse"></div>
+      </div>
+    </div>
+    {/* Filter skeleton */}
+    <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="grid grid-cols-5 gap-4">
+        {[1,2,3,4,5].map(i => (
+          <div key={i} className="h-10 bg-gray-100 rounded-lg animate-pulse"></div>
+        ))}
       </div>
     </div>
     {/* Content skeleton */}
     <div className="p-6">
       <div className="grid grid-cols-4 gap-5 mb-6">
         {[1,2,3,4].map(i => (
-          <div key={i} className="bg-white border border-gray-200 rounded-xl p-5 h-28">
+          <div key={i} className="bg-white border border-gray-200 rounded-xl p-5 h-28 animate-pulse">
             <div className="h-3 bg-gray-200 rounded w-20 mb-3"></div>
             <div className="h-6 bg-gray-200 rounded w-24"></div>
           </div>
         ))}
       </div>
-      <div className="bg-white border border-gray-200 rounded-xl h-96"></div>
+      <div className="bg-white border border-gray-200 rounded-xl">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <div className="h-5 bg-gray-200 rounded w-32 animate-pulse"></div>
+        </div>
+        <div className="p-6 space-y-3">
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="h-14 bg-gray-100 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+      </div>
     </div>
   </div>
 ));

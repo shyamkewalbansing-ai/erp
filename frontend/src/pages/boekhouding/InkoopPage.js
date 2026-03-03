@@ -203,6 +203,7 @@ const InkoopPage = () => {
   const [suppliers, setSuppliers] = useState([]);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('invoices');
@@ -241,8 +242,38 @@ const InkoopPage = () => {
       toast.error('Fout bij laden gegevens');
     } finally {
       setLoading(false);
+      setInitialLoad(false);
     }
   };
+
+  // Full page skeleton during initial load
+  if (initialLoad) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+        </div>
+        <div className="bg-white border-b border-gray-200 px-6 py-3">
+          <div className="flex gap-2">
+            {[1,2,3,4].map(i => <div key={i} className="h-9 bg-gray-100 rounded-lg w-28 animate-pulse"></div>)}
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="grid grid-cols-4 gap-5 mb-6">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="bg-white border border-gray-200 rounded-xl p-5 h-28 animate-pulse">
+                <div className="h-3 bg-gray-200 rounded w-24 mb-3"></div>
+                <div className="h-7 bg-gray-200 rounded w-20"></div>
+              </div>
+            ))}
+          </div>
+          <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-3">
+            {[1,2,3,4,5].map(i => <div key={i} className="h-14 bg-gray-100 rounded-lg animate-pulse"></div>)}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const updateLine = (index, field, value) => {
     const lines = [...newInvoice.lines];
