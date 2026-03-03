@@ -342,11 +342,15 @@ const SmartRedirect = () => {
           'autodealer': '/app/autodealer',
           'beauty': '/app/beautyspa',
           'suribet': '/app/suribet',
-          'boekhouding': '/app/boekhouding'
+          'boekhouding': '/app/boekhouding',
+          'schuldbeheer': '/app/schuldbeheer',
+          'pompstation': '/app/pompstation',
+          'ai-chatbot': '/app/chatbot',
+          'cms': '/app/cms'
         };
 
-        // Default order - same as Layout.js sidebar (boekhouding first for accounting focus)
-        const defaultOrder = ['boekhouding', 'vastgoed_beheer', 'suribet', 'autodealer', 'beauty', 'hrm'];
+        // Default order - same as Layout.js sidebar
+        const defaultOrder = ['boekhouding', 'schuldbeheer', 'vastgoed_beheer', 'suribet', 'autodealer', 'beauty', 'hrm', 'pompstation'];
 
         // Get ordered modules (same logic as Layout.js getOrderedModules)
         let orderedModules = defaultOrder;
