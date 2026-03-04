@@ -160,22 +160,14 @@ export default function PublicInvoiceGenerator() {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <a href="/" className="flex items-center gap-3">
+            <a href="/" className="flex items-center">
               <img 
                 src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
                 alt="Facturatie.sr"
                 className="h-8 w-auto"
               />
             </a>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg shadow-teal-500/20">
-                <FileText className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-slate-900">Factuur Generator</h1>
-                <p className="text-xs text-slate-500">Gratis & Professioneel</p>
-              </div>
-            </div>
+            <span className="text-sm text-slate-500">Gratis Factuur & Offerte Maker</span>
           </div>
         </div>
       </header>
@@ -542,7 +534,7 @@ export default function PublicInvoiceGenerator() {
               {/* Invoice Preview */}
               <div 
                 ref={invoiceRef}
-                className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden print:shadow-none print:border-0 print:rounded-none"
+                className="invoice-preview-container bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden print:shadow-none print:border-0 print:rounded-none"
                 style={{ minHeight: '600px' }}
               >
                 {/* Colored Header Bar */}
@@ -689,8 +681,22 @@ export default function PublicInvoiceGenerator() {
       {/* Print styles */}
       <style>{`
         @media print {
-          body * { visibility: hidden; }
-          .print\\:hidden { display: none !important; }
+          body * { 
+            visibility: hidden; 
+          }
+          .invoice-preview-container,
+          .invoice-preview-container * { 
+            visibility: visible; 
+          }
+          .invoice-preview-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+          }
+          .print\\:hidden { 
+            display: none !important; 
+          }
         }
       `}</style>
     </div>
