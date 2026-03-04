@@ -12,6 +12,17 @@ Comprehensive accounting and business management platform for Suriname businesse
 
 ### Completed This Session
 
+#### Factuur PDF Preview Herontwerp ✅ (Latest)
+- **Modern geometrisch design** geïmplementeerd in `PublicInvoiceGenerator.js`:
+  - Diagonale vormen in header/footer met CSS `clip-path`
+  - 5 kleurthema's: Modern (teal/oranje), Zakelijk (blauw), Creatief (paars/roze), Krachtig (rood/amber), Natuur (groen)
+  - Elke template heeft nu `primaryColor` en `accentColor` voor two-tone designs
+  - Gekleurde tabelheaders met witte tekst
+  - Accent-gekleurde TOTAAL balk
+  - Bedrijfslogo met witte achtergrond in header
+  - "Bedankt voor uw vertrouwen!" boodschap in footer
+- **Tested by testing_agent**: 100% success rate (8/8 features + 4 extra tests)
+
 #### AI Assistent Enhancement ✅
 - **Boekhouding module** fully integrated into AI assistant with:
   - BTW overzicht (BTW saldo bekijken)
@@ -38,6 +49,7 @@ Comprehensive accounting and business management platform for Suriname businesse
   - PDF download (html2canvas + jsPDF)
   - Print functionality
   - Multiple line items support
+  - **5 modern template designs with geometric shapes** (NEW)
 
 ### Previous Session Fixes (March 3, 2026)
 - Fixed `Loader2 is not defined` JavaScript error
@@ -82,9 +94,13 @@ Now supports ALL modules:
 
 ## Pending/Upcoming Tasks
 
+### P0 - High Priority
+- **Login redirect issue**: Users incorrectly redirected to `/app/hrm` after login instead of their first module. Requires investigation of user-specific `sidebar-order` config.
+
 ### P1 - Next Priority
 - PDF Payslip Generator for HRM module
 - Verify production server AI assistant (EMERGENT_LLM_KEY configuration)
+- Template switching UI improvement (larger preview thumbnails)
 
 ### P2 - User Verification
 - POS link removal from sidebar
