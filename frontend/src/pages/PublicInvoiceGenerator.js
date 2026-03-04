@@ -65,6 +65,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
     if (token) {
       setIsLoggedIn(true);
       loadKlanten(token);
+      loadUserSettings(token);
       
       // Load invoice if editing
       if (factuurId) {
@@ -72,6 +73,23 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
       }
     }
   }, [factuurId]);
+  
+  const loadUserSettings = async (token) => {
+    try {
+      const response = await fetch(`${API_URL}/api/gratis-factuur/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const userData = await response.json();
+        // Set default currency if user has one configured and not editing existing invoice
+        if (userData.standaard_valuta && !factuurId) {
+          setCurrency(userData.standaard_valuta);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user settings:', error);
+    }
+  };
   
   const loadKlanten = async (token) => {
     try {
