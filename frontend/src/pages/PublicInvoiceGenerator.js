@@ -1109,6 +1109,19 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
       {/* Print styles */}
       <style>{`
         @media print {
+          /* Remove browser headers and footers */
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
+            /* Remove header/footer by setting them empty */
+            @top-left { content: none; }
+            @top-center { content: none; }
+            @top-right { content: none; }
+            @bottom-left { content: none; }
+            @bottom-center { content: none; }
+            @bottom-right { content: none; }
+          }
+          
           /* Hide everything */
           html, body {
             margin: 0 !important;
@@ -1116,12 +1129,6 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
             background: white !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-          }
-          
-          /* Page setup for A4 */
-          @page {
-            size: A4 portrait;
-            margin: 10mm;
           }
           
           /* Hide all elements by default */
@@ -1183,6 +1190,17 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
             margin: 0 !important;
             padding: 0 !important;
           }
+          
+          /* Hide URL and date in print - Note: this is browser controlled */
+          title { display: none !important; }
+        }
+      `}</style>
+      
+      {/* Additional style tag to force no margins */}
+      <style type="text/css" media="print">{`
+        @page { 
+          size: auto;
+          margin: 0mm; 
         }
       `}</style>
     </div>
