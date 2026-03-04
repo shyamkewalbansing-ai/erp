@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { 
   FileText, Plus, Trash2, Download, Printer, Upload, 
   Building2, User, CreditCard, Calendar,
-  Receipt, X, Check, Sparkles
+  Receipt, X, Check, Sparkles, Mail, Phone, MapPin
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -24,13 +24,13 @@ const btwOptions = {
   NL: { label: '🇳🇱 NL', rates: [{ value: 21, label: '21%' }, { value: 9, label: '9%' }, { value: 0, label: '0%' }] }
 };
 
-// Invoice Templates - Modern geometric designs
+// Invoice Templates - Exact match to reference design
 const templates = [
-  { id: 'modern', name: 'Modern', primaryColor: '#0d9488', accentColor: '#f97316' },
-  { id: 'zakelijk', name: 'Zakelijk', primaryColor: '#1e40af', accentColor: '#3b82f6' },
-  { id: 'creative', name: 'Creatief', primaryColor: '#7c3aed', accentColor: '#ec4899' },
-  { id: 'bold', name: 'Krachtig', primaryColor: '#dc2626', accentColor: '#f59e0b' },
-  { id: 'nature', name: 'Natuur', primaryColor: '#059669', accentColor: '#10b981' }
+  { id: 'modern', name: 'Modern', primaryColor: '#F47B1F', secondaryColor: '#1D2C5C' },  // Orange + Navy
+  { id: 'zakelijk', name: 'Zakelijk', primaryColor: '#2AA7DF', secondaryColor: '#1D2C5C' },  // Blue + Navy
+  { id: 'creative', name: 'Creatief', primaryColor: '#9333EA', secondaryColor: '#1E1B4B' },  // Purple + Dark Purple
+  { id: 'bold', name: 'Krachtig', primaryColor: '#DC2626', secondaryColor: '#1D2C5C' },  // Red + Navy
+  { id: 'nature', name: 'Natuur', primaryColor: '#059669', secondaryColor: '#1D2C5C' }   // Green + Navy
 ];
 
 const formatCurrency = (amount, currency) => {
@@ -174,33 +174,15 @@ export default function PublicInvoiceGenerator() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:p-0 print:max-w-none">
         
-        {/* Template Selection Bar */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 mb-6 print:hidden">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-slate-700">Template:</span>
-              <div className="flex gap-2">
-                {templates.map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setSelectedTemplate(t.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      selectedTemplate === t.id
-                        ? 'text-white shadow-md'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                    style={selectedTemplate === t.id ? { backgroundColor: t.primaryColor } : {}}
-                  >
-                    {selectedTemplate === t.id && <Check className="w-4 h-4" />}
-                    {t.name}
-                  </button>
-                ))}
-              </div>
-            </div>
+        {/* Template Selection Bar with Thumbnails */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6 print:hidden">
+          <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+            <span className="text-sm font-semibold text-slate-700">Kies een template:</span>
             <div className="flex items-center gap-3">
               <Button
                 onClick={generatePDF}
-                className="bg-teal-600 hover:bg-teal-700 text-white shadow-md shadow-teal-600/20"
+                style={{ backgroundColor: currentTemplate.primaryColor }}
+                className="text-white shadow-md hover:opacity-90"
               >
                 <Download className="w-4 h-4 mr-2" />
                 Download PDF
@@ -214,6 +196,106 @@ export default function PublicInvoiceGenerator() {
                 Printen
               </Button>
             </div>
+          </div>
+          
+          {/* Template Thumbnails */}
+          <div className="flex gap-3 overflow-x-auto pb-2">
+            {templates.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setSelectedTemplate(t.id)}
+                className={`flex-shrink-0 rounded-xl border-2 transition-all overflow-hidden relative ${
+                  selectedTemplate === t.id
+                    ? 'border-slate-800 shadow-lg scale-105'
+                    : 'border-slate-200 hover:border-slate-400'
+                }`}
+                style={{ width: '120px', height: '160px' }}
+              >
+                {/* Mini Invoice Preview */}
+                <div className="w-full h-full bg-white" style={{ fontSize: '4px' }}>
+                  {/* Top right geometric */}
+                  <div className="absolute top-0 right-0" style={{ width: '35px', height: '25px' }}>
+                    <div 
+                      className="absolute"
+                      style={{ 
+                        width: '40px', height: '30px', top: '-5px', right: '-5px',
+                        backgroundColor: t.secondaryColor,
+                        clipPath: 'polygon(100% 0, 0 0, 100% 100%)'
+                      }}
+                    />
+                    <div 
+                      className="absolute"
+                      style={{ 
+                        width: '25px', height: '20px', top: '-2px', right: '-2px',
+                        backgroundColor: t.primaryColor,
+                        clipPath: 'polygon(100% 0, 30% 0, 100% 80%)'
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Content preview */}
+                  <div className="p-2 pt-4">
+                    {/* Logo circle */}
+                    <div 
+                      className="w-3 h-3 rounded-full mb-1"
+                      style={{ backgroundColor: t.primaryColor }}
+                    />
+                    {/* Title bar */}
+                    <div 
+                      className="h-2 w-8 mx-auto mb-2 rounded-sm"
+                      style={{ backgroundColor: t.secondaryColor }}
+                    />
+                    {/* Table header */}
+                    <div 
+                      className="h-1.5 w-full mb-1"
+                      style={{ backgroundColor: t.primaryColor }}
+                    />
+                    {/* Table rows */}
+                    <div className="space-y-0.5">
+                      <div className="h-1 w-full bg-slate-100" />
+                      <div className="h-1 w-full bg-white" />
+                      <div className="h-1 w-full bg-slate-100" />
+                    </div>
+                    {/* Total bar */}
+                    <div 
+                      className="h-1.5 w-12 mt-2 ml-auto"
+                      style={{ backgroundColor: t.primaryColor }}
+                    />
+                  </div>
+                  
+                  {/* Bottom geometric */}
+                  <div className="absolute bottom-5 right-0" style={{ width: '25px', height: '15px' }}>
+                    <div 
+                      className="absolute"
+                      style={{ 
+                        width: '30px', height: '20px', bottom: '-5px', right: '-5px',
+                        backgroundColor: t.secondaryColor,
+                        clipPath: 'polygon(100% 100%, 100% 20%, 20% 100%)'
+                      }}
+                    />
+                  </div>
+                  <div className="absolute bottom-5 left-0" style={{ width: '20px', height: '12px' }}>
+                    <div 
+                      className="absolute"
+                      style={{ 
+                        width: '25px', height: '15px', bottom: '-3px', left: '-3px',
+                        backgroundColor: t.primaryColor,
+                        clipPath: 'polygon(0 100%, 0 40%, 80% 100%)'
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Template name */}
+                <div 
+                  className="absolute bottom-0 left-0 right-0 py-1.5 text-center text-xs font-medium text-white z-10"
+                  style={{ backgroundColor: selectedTemplate === t.id ? t.primaryColor : 'rgba(0,0,0,0.7)' }}
+                >
+                  {selectedTemplate === t.id && <Check className="w-3 h-3 inline mr-1" />}
+                  {t.name}
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -531,145 +613,137 @@ export default function PublicInvoiceGenerator() {
                 <span className="text-xs text-slate-400">Automatisch bijgewerkt</span>
               </div>
               
-              {/* Invoice Preview - Modern Geometric Design */}
+              {/* Invoice Preview - Exact Match Reference Design */}
               <div 
                 ref={invoiceRef}
                 className="invoice-preview-container bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden print:shadow-none print:border-0 print:rounded-none"
-                style={{ minHeight: '700px', position: 'relative' }}
+                style={{ minHeight: '800px', position: 'relative' }}
               >
-                {/* Geometric Header */}
-                <div className="relative" style={{ height: '140px', overflow: 'hidden' }}>
-                  {/* Main header background */}
-                  <div 
-                    className="absolute inset-0" 
-                    style={{ backgroundColor: currentTemplate.primaryColor }}
-                  />
-                  {/* Diagonal accent shape */}
-                  <div 
-                    className="absolute right-0 top-0 h-full"
-                    style={{ 
-                      width: '40%',
-                      backgroundColor: currentTemplate.accentColor,
-                      clipPath: 'polygon(30% 0, 100% 0, 100% 100%, 0% 100%)'
-                    }}
-                  />
-                  {/* Small triangle accent */}
+                {/* Top Right Geometric Shapes */}
+                <div className="absolute top-0 right-0" style={{ width: '280px', height: '200px', overflow: 'hidden' }}>
+                  {/* Navy triangle background */}
                   <div 
                     className="absolute"
                     style={{ 
-                      width: '80px',
-                      height: '80px',
-                      bottom: '-40px',
-                      left: '60%',
-                      backgroundColor: currentTemplate.primaryColor,
-                      opacity: 0.7,
-                      clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
-                      transform: 'rotate(180deg)'
+                      width: '300px',
+                      height: '220px',
+                      top: '-20px',
+                      right: '-20px',
+                      backgroundColor: currentTemplate.secondaryColor,
+                      clipPath: 'polygon(100% 0, 0 0, 100% 100%)'
                     }}
                   />
-                  
-                  {/* Header Content */}
-                  <div className="relative z-10 h-full px-8 py-6 flex justify-between items-start">
-                    <div className="flex items-center gap-4">
-                      {logo ? (
-                        <div className="w-16 h-16 rounded-xl bg-white p-2 shadow-lg flex items-center justify-center">
-                          <img src={logo} alt="Logo" className="max-h-12 max-w-12 object-contain" />
-                        </div>
-                      ) : company.name ? (
-                        <div className="w-16 h-16 rounded-xl bg-white shadow-lg flex items-center justify-center">
-                          <span className="text-2xl font-bold" style={{ color: currentTemplate.primaryColor }}>
-                            {company.name.substring(0, 2).toUpperCase()}
-                          </span>
-                        </div>
-                      ) : (
-                        <div className="w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center">
-                          <Building2 className="w-8 h-8 text-white/70" />
-                        </div>
-                      )}
-                      <div className="text-white">
-                        <h1 className="text-xl font-bold">{company.name || 'Uw Bedrijfsnaam'}</h1>
-                        <p className="text-white/80 text-sm">{company.city || 'Uw locatie'}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="text-right text-white">
-                      <div 
-                        className="inline-block px-6 py-2 rounded-lg font-bold text-lg uppercase tracking-wider"
-                        style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-                      >
-                        {documentType}
-                      </div>
-                    </div>
-                  </div>
+                  {/* Primary color triangle on top */}
+                  <div 
+                    className="absolute"
+                    style={{ 
+                      width: '200px',
+                      height: '160px',
+                      top: '-10px',
+                      right: '-10px',
+                      backgroundColor: currentTemplate.primaryColor,
+                      clipPath: 'polygon(100% 0, 30% 0, 100% 80%)'
+                    }}
+                  />
                 </div>
-                
-                {/* Main Content */}
-                <div className="px-8 py-6">
-                  {/* Invoice Info Row */}
-                  <div className="flex justify-between items-start mb-8">
-                    {/* Bill To Section */}
-                    <div className="flex-1">
+
+                {/* Main Content Area */}
+                <div className="relative z-10 p-8">
+                  
+                  {/* Header: Logo + Company Info */}
+                  <div className="flex items-start gap-4 mb-6">
+                    {/* Logo Circle */}
+                    {logo ? (
                       <div 
-                        className="inline-block px-3 py-1 rounded text-xs font-bold uppercase tracking-wide text-white mb-3"
+                        className="w-14 h-14 rounded-full flex items-center justify-center p-1"
                         style={{ backgroundColor: currentTemplate.primaryColor }}
                       >
-                        Factuur Aan
+                        <img src={logo} alt="Logo" className="max-h-10 max-w-10 object-contain rounded-full" />
                       </div>
-                      <h3 className="text-lg font-bold text-slate-900">{customer.name || 'Klantnaam'}</h3>
-                      {customer.address && <p className="text-slate-600 text-sm">{customer.address}</p>}
-                      {customer.city && <p className="text-slate-600 text-sm">{customer.city}</p>}
+                    ) : company.name ? (
+                      <div 
+                        className="w-14 h-14 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: currentTemplate.primaryColor }}
+                      >
+                        <span className="text-lg font-bold text-white">
+                          {company.name.substring(0, 2).toUpperCase()}
+                        </span>
+                      </div>
+                    ) : (
+                      <div 
+                        className="w-14 h-14 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: currentTemplate.primaryColor }}
+                      >
+                        <Building2 className="w-6 h-6 text-white" />
+                      </div>
+                    )}
+                    <div>
+                      <h1 className="text-xl font-bold text-slate-800">{company.name || 'Vector Arts'}</h1>
+                      <p className="text-sm text-slate-500 italic">{company.city || 'Your Satisfaction My Success'}</p>
+                    </div>
+                  </div>
+
+                  {/* INVOICE Title - Centered and Prominent */}
+                  <div className="text-center mb-8">
+                    <h2 
+                      className="text-4xl font-black tracking-wider uppercase"
+                      style={{ color: currentTemplate.secondaryColor }}
+                    >
+                      {documentType === 'factuur' ? 'FACTUUR' : 'OFFERTE'}
+                    </h2>
+                  </div>
+
+                  {/* Invoice Details Row */}
+                  <div className="flex justify-between mb-8">
+                    {/* Invoice To */}
+                    <div>
+                      <p 
+                        className="text-xs font-bold uppercase tracking-wider mb-2"
+                        style={{ color: currentTemplate.primaryColor }}
+                      >
+                        Factuur aan:
+                      </p>
+                      <p className="font-semibold text-slate-800">{customer.name || 'Klantnaam'}</p>
+                      {customer.address && <p className="text-sm text-slate-600">{customer.address}</p>}
+                      {customer.city && <p className="text-sm text-slate-600">{customer.city}</p>}
                     </div>
                     
-                    {/* Invoice Details */}
+                    {/* Invoice Number & Dates */}
                     <div className="text-right">
-                      <div className="mb-4">
-                        <p className="text-xs text-slate-500 uppercase font-semibold">Factuurnummer</p>
-                        <p className="text-xl font-bold" style={{ color: currentTemplate.primaryColor }}>
-                          {invoiceDetails.number}
-                        </p>
+                      <div className="mb-3">
+                        <p className="text-xs text-slate-500 uppercase">Factuur Nr:</p>
+                        <p className="font-bold text-slate-800">{invoiceDetails.number}</p>
                       </div>
-                      <div className="flex gap-6">
-                        <div>
-                          <p className="text-xs text-slate-500 uppercase font-semibold">Datum</p>
-                          <p className="text-sm font-semibold text-slate-800">
-                            {new Date(invoiceDetails.date).toLocaleDateString('nl-NL')}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-500 uppercase font-semibold">
-                            {documentType === 'factuur' ? 'Vervaldatum' : 'Geldig tot'}
-                          </p>
-                          <p className="text-sm font-semibold text-slate-800">
-                            {new Date(invoiceDetails.due_date).toLocaleDateString('nl-NL')}
-                          </p>
-                        </div>
+                      <div>
+                        <p className="text-xs text-slate-500 uppercase">Datum:</p>
+                        <p className="text-sm text-slate-700">{new Date(invoiceDetails.date).toLocaleDateString('nl-NL')}</p>
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Items Table */}
-                  <div className="mb-6">
+                  <div className="mb-8">
                     <table className="w-full">
                       <thead>
                         <tr style={{ backgroundColor: currentTemplate.primaryColor }}>
-                          <th className="text-left py-3 px-4 text-sm font-bold text-white uppercase rounded-tl-lg">Omschrijving</th>
-                          <th className="text-center py-3 px-2 text-sm font-bold text-white uppercase w-20">Aantal</th>
-                          <th className="text-right py-3 px-2 text-sm font-bold text-white uppercase w-28">Prijs</th>
-                          {btwRegion !== 'geen' && <th className="text-center py-3 px-2 text-sm font-bold text-white uppercase w-16">BTW</th>}
-                          <th className="text-right py-3 px-4 text-sm font-bold text-white uppercase w-28 rounded-tr-lg">Bedrag</th>
+                          <th className="text-left py-3 px-4 text-xs font-bold text-white uppercase">Omschrijving</th>
+                          <th className="text-right py-3 px-3 text-xs font-bold text-white uppercase w-24">Prijs</th>
+                          <th className="text-center py-3 px-3 text-xs font-bold text-white uppercase w-20">Aantal</th>
+                          {btwRegion !== 'geen' && <th className="text-center py-3 px-2 text-xs font-bold text-white uppercase w-16">BTW</th>}
+                          <th className="text-right py-3 px-4 text-xs font-bold text-white uppercase w-28">Totaal</th>
                         </tr>
                       </thead>
                       <tbody>
                         {items.map((item, index) => (
                           <tr 
                             key={item.id} 
-                            className={index % 2 === 0 ? 'bg-slate-50' : 'bg-white'}
+                            style={{ backgroundColor: index % 2 === 0 ? '#FFFFFF' : '#F6F6F6' }}
                           >
                             <td className="py-3 px-4 text-sm text-slate-700">{item.description || 'Product/Dienst'}</td>
-                            <td className="py-3 px-2 text-sm text-slate-600 text-center">{item.quantity}</td>
-                            <td className="py-3 px-2 text-sm text-slate-600 text-right">{formatCurrency(item.price, currency)}</td>
+                            <td className="py-3 px-3 text-sm text-slate-600 text-right">{formatCurrency(item.price, currency)}</td>
+                            <td className="py-3 px-3 text-sm text-slate-600 text-center">{item.quantity}</td>
                             {btwRegion !== 'geen' && <td className="py-3 px-2 text-sm text-slate-600 text-center">{item.btw}%</td>}
-                            <td className="py-3 px-4 text-sm font-semibold text-slate-900 text-right">
+                            <td className="py-3 px-4 text-sm font-semibold text-slate-800 text-right">
                               {formatCurrency(item.quantity * item.price, currency)}
                             </td>
                           </tr>
@@ -677,96 +751,135 @@ export default function PublicInvoiceGenerator() {
                       </tbody>
                     </table>
                   </div>
-                  
-                  {/* Bottom Section: Terms + Totals */}
-                  <div className="flex justify-between items-end gap-8">
-                    {/* Bank & Payment Info */}
+
+                  {/* Terms & Totals Section */}
+                  <div className="flex justify-between gap-8 mb-8">
+                    {/* Terms & Conditions */}
                     <div className="flex-1">
-                      {(company.bank_name || company.iban) && (
-                        <div className="mb-4">
-                          <p 
-                            className="text-xs font-bold uppercase tracking-wide mb-2"
-                            style={{ color: currentTemplate.primaryColor }}
-                          >
-                            Betalingsgegevens
-                          </p>
-                          <div className="text-sm text-slate-600">
-                            {company.bank_name && <p>Bank: {company.bank_name}</p>}
-                            {company.iban && <p>IBAN: {company.iban}</p>}
-                          </div>
-                        </div>
-                      )}
+                      <p 
+                        className="text-xs font-bold uppercase tracking-wider mb-2"
+                        style={{ color: currentTemplate.primaryColor }}
+                      >
+                        Betalingsvoorwaarden:
+                      </p>
+                      <p className="text-xs text-slate-500 leading-relaxed">
+                        Betaling binnen {Math.ceil((new Date(invoiceDetails.due_date) - new Date(invoiceDetails.date)) / (1000 * 60 * 60 * 24))} dagen na factuurdatum.
+                        {company.iban && ` Gelieve over te maken naar ${company.iban}.`}
+                      </p>
                       
-                      {(company.phone || company.email || company.kvk || company.btw_number) && (
-                        <div>
+                      {company.bank_name && (
+                        <div className="mt-4">
                           <p 
-                            className="text-xs font-bold uppercase tracking-wide mb-2"
+                            className="text-xs font-bold uppercase tracking-wider mb-1"
                             style={{ color: currentTemplate.primaryColor }}
                           >
-                            Contactgegevens
+                            Bankgegevens:
                           </p>
-                          <div className="text-sm text-slate-600 grid grid-cols-2 gap-x-4 gap-y-1">
-                            {company.phone && <p>{company.phone}</p>}
-                            {company.email && <p>{company.email}</p>}
-                            {company.kvk && <p>KvK: {company.kvk}</p>}
-                            {company.btw_number && <p>BTW: {company.btw_number}</p>}
-                          </div>
+                          <p className="text-xs text-slate-600">{company.bank_name}</p>
+                          {company.iban && <p className="text-xs text-slate-600">{company.iban}</p>}
                         </div>
                       )}
                     </div>
-                    
+
                     {/* Totals */}
-                    <div className="w-72">
-                      <div className="space-y-2">
-                        <div className="flex justify-between py-2 px-4 bg-slate-50 rounded">
+                    <div className="w-56">
+                      <div className="space-y-1">
+                        <div className="flex justify-between py-1">
                           <span className="text-sm text-slate-600">Subtotaal</span>
-                          <span className="text-sm font-semibold text-slate-800">{formatCurrency(calculateSubtotal(), currency)}</span>
+                          <span className="text-sm text-slate-800">{formatCurrency(calculateSubtotal(), currency)}</span>
                         </div>
                         {btwRegion !== 'geen' && (
-                          <div className="flex justify-between py-2 px-4 bg-slate-50 rounded">
+                          <div className="flex justify-between py-1">
                             <span className="text-sm text-slate-600">BTW</span>
-                            <span className="text-sm font-semibold text-slate-800">{formatCurrency(calculateBTW(), currency)}</span>
+                            <span className="text-sm text-slate-800">{formatCurrency(calculateBTW(), currency)}</span>
                           </div>
                         )}
                       </div>
                       
-                      {/* Grand Total Bar */}
+                      {/* GRAND TOTAL Bar */}
                       <div 
-                        className="flex justify-between items-center py-4 px-4 mt-3 rounded-lg text-white"
-                        style={{ backgroundColor: currentTemplate.accentColor }}
+                        className="flex justify-between items-center py-3 px-4 mt-3 text-white"
+                        style={{ backgroundColor: currentTemplate.primaryColor }}
                       >
-                        <span className="font-bold text-lg uppercase">Totaal</span>
-                        <span className="font-bold text-xl">{formatCurrency(calculateTotal(), currency)}</span>
+                        <span className="text-xs font-bold uppercase">Totaal</span>
+                        <span className="text-lg font-bold">{formatCurrency(calculateTotal(), currency)}</span>
                       </div>
                     </div>
                   </div>
+
+                  {/* Signature Section */}
+                  <div className="text-center mb-8">
+                    <div className="inline-block">
+                      <div className="w-40 border-b-2 border-slate-300 mb-2"></div>
+                      <p className="text-sm font-semibold text-slate-700">{company.name || 'Uw Naam'}</p>
+                      <p className="text-xs text-slate-500 uppercase">Handtekening</p>
+                    </div>
+                  </div>
+
+                  {/* Contact Info with Icons */}
+                  <div className="flex justify-center gap-8 text-xs text-slate-600">
+                    {company.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4" style={{ color: currentTemplate.primaryColor }} />
+                        <span>{company.email}</span>
+                      </div>
+                    )}
+                    {company.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4" style={{ color: currentTemplate.primaryColor }} />
+                        <span>{company.phone}</span>
+                      </div>
+                    )}
+                    {company.address && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4" style={{ color: currentTemplate.primaryColor }} />
+                        <span>{company.address}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                
-                {/* Geometric Footer */}
-                <div className="relative mt-6" style={{ height: '60px', overflow: 'hidden' }}>
-                  {/* Main footer background */}
+
+                {/* Bottom Right Geometric Shapes (mirrored) */}
+                <div className="absolute bottom-0 right-0" style={{ width: '200px', height: '120px', overflow: 'hidden' }}>
+                  {/* Navy triangle */}
                   <div 
-                    className="absolute inset-0" 
-                    style={{ backgroundColor: currentTemplate.primaryColor }}
-                  />
-                  {/* Diagonal accent shape */}
-                  <div 
-                    className="absolute left-0 top-0 h-full"
+                    className="absolute"
                     style={{ 
-                      width: '35%',
-                      backgroundColor: currentTemplate.accentColor,
-                      clipPath: 'polygon(0 0, 100% 0, 70% 100%, 0 100%)'
+                      width: '220px',
+                      height: '140px',
+                      bottom: '-20px',
+                      right: '-20px',
+                      backgroundColor: currentTemplate.secondaryColor,
+                      clipPath: 'polygon(100% 100%, 100% 20%, 20% 100%)'
                     }}
                   />
-                  {/* Footer Content */}
-                  <div className="relative z-10 h-full px-8 flex items-center justify-between">
-                    <span className="text-white/90 text-sm font-medium">
-                      Bedankt voor uw vertrouwen!
-                    </span>
-                    <span className="text-white/70 text-xs">
-                      {company.email || 'www.uwbedrijf.nl'}
-                    </span>
-                  </div>
+                  {/* Primary color accent */}
+                  <div 
+                    className="absolute"
+                    style={{ 
+                      width: '140px',
+                      height: '100px',
+                      bottom: '-10px',
+                      right: '-10px',
+                      backgroundColor: currentTemplate.primaryColor,
+                      clipPath: 'polygon(100% 100%, 100% 40%, 50% 100%)'
+                    }}
+                  />
+                </div>
+
+                {/* Bottom Left Geometric Shape */}
+                <div className="absolute bottom-0 left-0" style={{ width: '150px', height: '100px', overflow: 'hidden' }}>
+                  <div 
+                    className="absolute"
+                    style={{ 
+                      width: '160px',
+                      height: '110px',
+                      bottom: '-10px',
+                      left: '-10px',
+                      backgroundColor: currentTemplate.primaryColor,
+                      clipPath: 'polygon(0 100%, 0 40%, 80% 100%)'
+                    }}
+                  />
                 </div>
               </div>
             </div>
