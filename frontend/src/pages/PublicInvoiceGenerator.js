@@ -120,9 +120,26 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
       });
       if (response.ok) {
         const userData = await response.json();
-        // Set default currency if user has one configured and not editing existing invoice
-        if (userData.standaard_valuta && !factuurId) {
-          setCurrency(userData.standaard_valuta);
+        
+        // Only pre-fill if not editing existing invoice
+        if (!factuurId) {
+          // Set default currency
+          if (userData.standaard_valuta) {
+            setCurrency(userData.standaard_valuta);
+          }
+          
+          // Pre-fill company details from user profile
+          setCompany({
+            name: userData.bedrijfsnaam || '',
+            address: userData.adres || '',
+            city: userData.plaats ? `${userData.postcode || ''} ${userData.plaats}`.trim() : '',
+            phone: userData.telefoon || '',
+            email: userData.email || '',
+            kvk: userData.kvk_nummer || '',
+            btw_number: userData.btw_nummer || '',
+            bank_name: userData.bank_naam || '',
+            iban: userData.iban || ''
+          });
         }
       }
     } catch (error) {
