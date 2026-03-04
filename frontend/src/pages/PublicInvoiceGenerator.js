@@ -259,7 +259,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
       setSaving(false);
     }
   };
-  const [selectedTemplate, setSelectedTemplate] = useState('modern');
+  const [selectedTemplate, setSelectedTemplate] = useState('nature');
   
   const [company, setCompany] = useState({
     name: '', address: '', postcode: '', city: '', country: '',
