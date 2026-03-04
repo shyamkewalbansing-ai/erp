@@ -125,7 +125,7 @@ function Sidebar({ activeTab, user, isOpen, onClose }) {
         <div className="p-4 border-t border-slate-800">
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-white transition-colors"
+            className="flex items-center gap-3 px-4 py-2 w-full text-red-400 hover:text-red-300 hover:bg-slate-800 rounded-lg transition-colors"
           >
             <LogOut className="w-5 h-5" />
             <span>Uitloggen</span>
