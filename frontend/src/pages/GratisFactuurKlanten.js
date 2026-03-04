@@ -12,7 +12,7 @@ import { DashboardLayout } from './GratisFactuurDashboard';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('gratis_factuur_token');
+  const token = localStorage.getItem('invoice_token');
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
@@ -35,7 +35,7 @@ export default function GratisFactuurKlanten() {
   
   const loadKlanten = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/klanten`, {
+      const response = await fetch(`${API_URL}/api/invoice/klanten`, {
         headers: getAuthHeaders()
       });
       if (response.ok) {
@@ -54,8 +54,8 @@ export default function GratisFactuurKlanten() {
     
     try {
       const url = editingKlant 
-        ? `${API_URL}/api/gratis-factuur/klanten/${editingKlant.id}`
-        : `${API_URL}/api/gratis-factuur/klanten`;
+        ? `${API_URL}/api/invoice/klanten/${editingKlant.id}`
+        : `${API_URL}/api/invoice/klanten`;
       
       const response = await fetch(url, {
         method: editingKlant ? 'PUT' : 'POST',
@@ -95,7 +95,7 @@ export default function GratisFactuurKlanten() {
     if (!window.confirm('Weet u zeker dat u deze klant wilt verwijderen?')) return;
     
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/klanten/${klantId}`, {
+      const response = await fetch(`${API_URL}/api/invoice/klanten/${klantId}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });

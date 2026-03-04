@@ -580,20 +580,20 @@ function MainAppRoutes() {
             <Route path="/help" element={<FaqPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/demo" element={<DemoPage />} />
-            <Route path="/gratis-factuur" element={<PublicInvoiceGenerator />} />
+            <Route path="/invoice" element={<PublicInvoiceGenerator />} />
             <Route path="/invoice-generator" element={<PublicInvoiceGenerator />} />
             
             {/* Gratis Factuur Dashboard System - Separate Auth */}
-            <Route path="/gratis-factuur/login" element={<GratisFactuurAuth />} />
-            <Route path="/gratis-factuur/register" element={<GratisFactuurAuth />} />
-            <Route path="/gratis-factuur/dashboard" element={<GratisFactuurDashboard />} />
-            <Route path="/gratis-factuur/klanten" element={<GratisFactuurKlanten />} />
-            <Route path="/gratis-factuur/facturen" element={<GratisFactuurFacturen />} />
-            <Route path="/gratis-factuur/facturen/nieuw" element={<PublicInvoiceGenerator showSaveOption={true} />} />
-            <Route path="/gratis-factuur/facturen/:id" element={<PublicInvoiceGenerator showSaveOption={true} />} />
-            <Route path="/gratis-factuur/facturen/:id/bewerken" element={<PublicInvoiceGenerator showSaveOption={true} />} />
-            <Route path="/gratis-factuur/betalingen" element={<GratisFactuurFacturen />} />
-            <Route path="/gratis-factuur/instellingen" element={<GratisFactuurInstellingen />} />
+            <Route path="/invoice/login" element={<GratisFactuurAuth />} />
+            <Route path="/invoice/register" element={<GratisFactuurAuth />} />
+            <Route path="/invoice/dashboard" element={<GratisFactuurDashboard />} />
+            <Route path="/invoice/klanten" element={<GratisFactuurKlanten />} />
+            <Route path="/invoice/facturen" element={<GratisFactuurFacturen />} />
+            <Route path="/invoice/facturen/nieuw" element={<PublicInvoiceGenerator showSaveOption={true} />} />
+            <Route path="/invoice/facturen/:id" element={<PublicInvoiceGenerator showSaveOption={true} />} />
+            <Route path="/invoice/facturen/:id/bewerken" element={<PublicInvoiceGenerator showSaveOption={true} />} />
+            <Route path="/invoice/betalingen" element={<GratisFactuurFacturen />} />
+            <Route path="/invoice/instellingen" element={<GratisFactuurInstellingen />} />
           </>
         )}
         

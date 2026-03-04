@@ -61,7 +61,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
   const [saving, setSaving] = useState(false);
   
   useEffect(() => {
-    const token = localStorage.getItem('gratis_factuur_token');
+    const token = localStorage.getItem('invoice_token');
     if (token) {
       setIsLoggedIn(true);
       loadKlanten(token);
@@ -76,7 +76,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
   
   const loadUserSettings = async (token) => {
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/auth/me`, {
+      const response = await fetch(`${API_URL}/api/invoice/auth/me`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -93,7 +93,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
   
   const loadKlanten = async (token) => {
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/klanten`, {
+      const response = await fetch(`${API_URL}/api/invoice/klanten`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -107,7 +107,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
   
   const loadFactuur = async (token, id) => {
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/facturen/${id}`, {
+      const response = await fetch(`${API_URL}/api/invoice/facturen/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -149,7 +149,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
   
   const handleSaveFactuur = async () => {
     if (!isLoggedIn) {
-      navigate('/gratis-factuur/login');
+      navigate('/invoice/login');
       return;
     }
     
@@ -161,7 +161,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
     setSaving(true);
     
     try {
-      const token = localStorage.getItem('gratis_factuur_token');
+      const token = localStorage.getItem('invoice_token');
       const factuurData = {
         klant_id: selectedKlantId,
         document_type: documentType,
@@ -180,8 +180,8 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
       };
       
       const url = factuurId 
-        ? `${API_URL}/api/gratis-factuur/facturen/${factuurId}`
-        : `${API_URL}/api/gratis-factuur/facturen`;
+        ? `${API_URL}/api/invoice/facturen/${factuurId}`
+        : `${API_URL}/api/invoice/facturen`;
       
       const response = await fetch(url, {
         method: factuurId ? 'PUT' : 'POST',
@@ -195,7 +195,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
       if (!response.ok) throw new Error('Fout bij opslaan');
       
       toast.success(factuurId ? 'Factuur bijgewerkt!' : 'Factuur opgeslagen!');
-      navigate('/gratis-factuur/facturen');
+      navigate('/invoice/facturen');
       
     } catch (error) {
       toast.error(error.message);
@@ -325,7 +325,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
               </a>
               {isLoggedIn && (
                 <Link 
-                  to="/gratis-factuur/dashboard" 
+                  to="/invoice/dashboard" 
                   className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-medium transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
@@ -384,7 +384,7 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
                   {factuurId ? 'Bijwerken' : 'Opslaan'}
                 </Button>
               ) : (
-                <Link to="/gratis-factuur/login">
+                <Link to="/invoice/login">
                   <Button className="bg-green-600 hover:bg-green-700 text-white shadow-md">
                     <LogIn className="w-4 h-4 mr-2" />
                     Inloggen om op te slaan

@@ -12,7 +12,7 @@ import jwt
 import bcrypt
 import os
 
-router = APIRouter(prefix="/gratis-factuur", tags=["Gratis Factuur"])
+router = APIRouter(prefix="/invoice", tags=["Invoice System"])
 security = HTTPBearer(auto_error=False)
 
 # JWT settings

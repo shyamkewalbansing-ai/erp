@@ -10,7 +10,7 @@ import { DashboardLayout } from './GratisFactuurDashboard';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('gratis_factuur_token');
+  const token = localStorage.getItem('invoice_token');
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
@@ -49,7 +49,7 @@ export default function GratisFactuurInstellingen() {
   
   const loadProfile = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/auth/me`, {
+      const response = await fetch(`${API_URL}/api/invoice/auth/me`, {
         headers: getAuthHeaders()
       });
       
@@ -86,7 +86,7 @@ export default function GratisFactuurInstellingen() {
     setSaving(true);
     
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/auth/profile`, {
+      const response = await fetch(`${API_URL}/api/invoice/auth/profile`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(formData)
@@ -118,7 +118,7 @@ export default function GratisFactuurInstellingen() {
     
     // First save the settings
     try {
-      await fetch(`${API_URL}/api/gratis-factuur/auth/profile`, {
+      await fetch(`${API_URL}/api/invoice/auth/profile`, {
         method: 'PUT',
         headers: getAuthHeaders(),
         body: JSON.stringify(formData)
@@ -138,7 +138,7 @@ export default function GratisFactuurInstellingen() {
   const sendAutoReminders = async () => {
     setSendingReminders(true);
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/auto-herinneringen`, {
+      const response = await fetch(`${API_URL}/api/invoice/auto-herinneringen`, {
         method: 'POST',
         headers: getAuthHeaders()
       });

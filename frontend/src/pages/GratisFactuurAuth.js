@@ -29,7 +29,7 @@ export default function GratisFactuurAuth() {
         ? { email: formData.email, password: formData.password }
         : formData;
       
-      const response = await fetch(`${API_URL}/api/gratis-factuur/auth/${endpoint}`, {
+      const response = await fetch(`${API_URL}/api/invoice/auth/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -42,11 +42,11 @@ export default function GratisFactuurAuth() {
       }
       
       // Save token and user
-      localStorage.setItem('gratis_factuur_token', data.token);
-      localStorage.setItem('gratis_factuur_user', JSON.stringify(data.user));
+      localStorage.setItem('invoice_token', data.token);
+      localStorage.setItem('invoice_user', JSON.stringify(data.user));
       
       toast.success(mode === 'login' ? 'Welkom terug!' : 'Account aangemaakt!');
-      navigate('/gratis-factuur/dashboard');
+      navigate('/invoice/dashboard');
       
     } catch (error) {
       toast.error(error.message);
@@ -164,7 +164,7 @@ export default function GratisFactuurAuth() {
           
           <div className="mt-6 pt-6 border-t border-slate-200">
             <Link
-              to="/gratis-factuur"
+              to="/invoice"
               className="flex items-center justify-center gap-2 text-sm text-slate-500 hover:text-slate-700"
             >
               <User className="w-4 h-4" />

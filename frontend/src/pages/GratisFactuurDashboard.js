@@ -11,7 +11,7 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Auth helper
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('gratis_factuur_token');
+  const token = localStorage.getItem('invoice_token');
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
@@ -23,25 +23,25 @@ function Sidebar({ activeTab, user }) {
   const navigate = useNavigate();
   
   const handleLogout = () => {
-    localStorage.removeItem('gratis_factuur_token');
-    localStorage.removeItem('gratis_factuur_user');
-    navigate('/gratis-factuur/login');
+    localStorage.removeItem('invoice_token');
+    localStorage.removeItem('invoice_user');
+    navigate('/invoice/login');
     toast.success('Uitgelogd');
   };
   
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/gratis-factuur/dashboard' },
-    { id: 'facturen', label: 'Facturen', icon: FileText, path: '/gratis-factuur/facturen' },
-    { id: 'klanten', label: 'Klanten', icon: Users, path: '/gratis-factuur/klanten' },
-    { id: 'betalingen', label: 'Betalingen', icon: CreditCard, path: '/gratis-factuur/betalingen' },
-    { id: 'instellingen', label: 'Instellingen', icon: Settings, path: '/gratis-factuur/instellingen' },
+    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, path: '/invoice/dashboard' },
+    { id: 'facturen', label: 'Facturen', icon: FileText, path: '/invoice/facturen' },
+    { id: 'klanten', label: 'Klanten', icon: Users, path: '/invoice/klanten' },
+    { id: 'betalingen', label: 'Betalingen', icon: CreditCard, path: '/invoice/betalingen' },
+    { id: 'instellingen', label: 'Instellingen', icon: Settings, path: '/invoice/instellingen' },
   ];
   
   return (
     <div className="w-64 bg-slate-900 min-h-screen flex flex-col">
       {/* Logo */}
       <div className="p-4 border-b border-slate-800">
-        <Link to="/gratis-factuur" className="flex items-center gap-2">
+        <Link to="/invoice" className="flex items-center gap-2">
           <img 
             src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
             alt="Facturatie.sr"
@@ -77,7 +77,7 @@ function Sidebar({ activeTab, user }) {
       
       {/* Quick Action */}
       <div className="p-4 border-t border-slate-800">
-        <Link to="/gratis-factuur/facturen/nieuw">
+        <Link to="/invoice/facturen/nieuw">
           <Button className="w-full bg-teal-600 hover:bg-teal-700">
             <Plus className="w-4 h-4 mr-2" />
             Nieuwe Factuur
@@ -105,11 +105,11 @@ export function DashboardLayout({ children, activeTab }) {
   const [user, setUser] = useState(null);
   
   useEffect(() => {
-    const token = localStorage.getItem('gratis_factuur_token');
-    const storedUser = localStorage.getItem('gratis_factuur_user');
+    const token = localStorage.getItem('invoice_token');
+    const storedUser = localStorage.getItem('invoice_user');
     
     if (!token) {
-      navigate('/gratis-factuur/login');
+      navigate('/invoice/login');
       return;
     }
     
@@ -118,7 +118,7 @@ export function DashboardLayout({ children, activeTab }) {
     }
     
     // Verify token
-    fetch(`${API_URL}/api/gratis-factuur/auth/me`, {
+    fetch(`${API_URL}/api/invoice/auth/me`, {
       headers: getAuthHeaders()
     })
       .then(res => {
@@ -127,12 +127,12 @@ export function DashboardLayout({ children, activeTab }) {
       })
       .then(data => {
         setUser(data);
-        localStorage.setItem('gratis_factuur_user', JSON.stringify(data));
+        localStorage.setItem('invoice_user', JSON.stringify(data));
       })
       .catch(() => {
-        localStorage.removeItem('gratis_factuur_token');
-        localStorage.removeItem('gratis_factuur_user');
-        navigate('/gratis-factuur/login');
+        localStorage.removeItem('invoice_token');
+        localStorage.removeItem('invoice_user');
+        navigate('/invoice/login');
       });
   }, [navigate]);
   
@@ -168,9 +168,9 @@ export default function GratisFactuurDashboard() {
   const loadData = async () => {
     try {
       const [statsRes, facturenRes, userRes] = await Promise.all([
-        fetch(`${API_URL}/api/gratis-factuur/dashboard`, { headers: getAuthHeaders() }),
-        fetch(`${API_URL}/api/gratis-factuur/facturen`, { headers: getAuthHeaders() }),
-        fetch(`${API_URL}/api/gratis-factuur/auth/me`, { headers: getAuthHeaders() })
+        fetch(`${API_URL}/api/invoice/dashboard`, { headers: getAuthHeaders() }),
+        fetch(`${API_URL}/api/invoice/facturen`, { headers: getAuthHeaders() }),
+        fetch(`${API_URL}/api/invoice/auth/me`, { headers: getAuthHeaders() })
       ]);
       
       if (statsRes.ok) {
@@ -218,7 +218,7 @@ export default function GratisFactuurDashboard() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <Link to="/gratis-factuur/facturen/nieuw">
+          <Link to="/invoice/facturen/nieuw">
             <Button className="bg-teal-600 hover:bg-teal-700">
               <Plus className="w-4 h-4 mr-2" />
               Nieuwe Factuur
@@ -316,7 +316,7 @@ export default function GratisFactuurDashboard() {
           <div className="p-6 border-b border-slate-200">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">Recente Facturen</h2>
-              <Link to="/gratis-factuur/facturen" className="text-sm text-teal-600 hover:text-teal-700">
+              <Link to="/invoice/facturen" className="text-sm text-teal-600 hover:text-teal-700">
                 Alle bekijken →
               </Link>
             </div>
@@ -326,7 +326,7 @@ export default function GratisFactuurDashboard() {
             <div className="p-8 text-center">
               <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
               <p className="text-slate-500">Nog geen facturen</p>
-              <Link to="/gratis-factuur/facturen/nieuw">
+              <Link to="/invoice/facturen/nieuw">
                 <Button className="mt-4 bg-teal-600 hover:bg-teal-700">
                   <Plus className="w-4 h-4 mr-2" />
                   Eerste factuur maken
@@ -338,7 +338,7 @@ export default function GratisFactuurDashboard() {
               {recentFacturen.map((factuur) => (
                 <Link
                   key={factuur.id}
-                  to={`/gratis-factuur/facturen/${factuur.id}`}
+                  to={`/invoice/facturen/${factuur.id}`}
                   className="flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
                 >
                   <div className="flex items-center gap-4">

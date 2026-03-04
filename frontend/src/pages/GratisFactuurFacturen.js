@@ -12,7 +12,7 @@ import { DashboardLayout } from './GratisFactuurDashboard';
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('gratis_factuur_token');
+  const token = localStorage.getItem('invoice_token');
   return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
@@ -32,7 +32,7 @@ export default function GratisFactuurFacturen() {
   
   const loadFacturen = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/facturen`, {
+      const response = await fetch(`${API_URL}/api/invoice/facturen`, {
         headers: getAuthHeaders()
       });
       if (response.ok) {
@@ -50,7 +50,7 @@ export default function GratisFactuurFacturen() {
     if (!window.confirm('Weet u zeker dat u deze factuur wilt verwijderen?')) return;
     
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/facturen/${factuurId}`, {
+      const response = await fetch(`${API_URL}/api/invoice/facturen/${factuurId}`, {
         method: 'DELETE',
         headers: getAuthHeaders()
       });
@@ -67,7 +67,7 @@ export default function GratisFactuurFacturen() {
   
   const handleSendEmail = async (factuurId) => {
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/email/factuur`, {
+      const response = await fetch(`${API_URL}/api/invoice/email/factuur`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({ factuur_id: factuurId })
@@ -87,7 +87,7 @@ export default function GratisFactuurFacturen() {
   
   const handleSendReminder = async (factuurId) => {
     try {
-      const response = await fetch(`${API_URL}/api/gratis-factuur/email/herinnering/${factuurId}`, {
+      const response = await fetch(`${API_URL}/api/invoice/email/herinnering/${factuurId}`, {
         method: 'POST',
         headers: getAuthHeaders()
       });
@@ -162,7 +162,7 @@ export default function GratisFactuurFacturen() {
             <h1 className="text-2xl font-bold text-slate-900">Facturen</h1>
             <p className="text-slate-500">{facturen.length} facturen</p>
           </div>
-          <Link to="/gratis-factuur/facturen/nieuw">
+          <Link to="/invoice/facturen/nieuw">
             <Button className="bg-teal-600 hover:bg-teal-700">
               <Plus className="w-4 h-4 mr-2" />
               Nieuwe Factuur
@@ -205,7 +205,7 @@ export default function GratisFactuurFacturen() {
             <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-slate-900 mb-2">Geen facturen gevonden</h3>
             <p className="text-slate-500 mb-4">Maak uw eerste factuur aan</p>
-            <Link to="/gratis-factuur/facturen/nieuw">
+            <Link to="/invoice/facturen/nieuw">
               <Button className="bg-teal-600 hover:bg-teal-700">
                 <Plus className="w-4 h-4 mr-2" />
                 Factuur Maken
@@ -231,7 +231,7 @@ export default function GratisFactuurFacturen() {
                   <tr key={factuur.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-4 px-6">
                       <Link 
-                        to={`/gratis-factuur/facturen/${factuur.id}`}
+                        to={`/invoice/facturen/${factuur.id}`}
                         className="font-medium text-teal-600 hover:text-teal-700"
                       >
                         {factuur.nummer}
@@ -262,14 +262,14 @@ export default function GratisFactuurFacturen() {
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-end gap-1">
                         <Link
-                          to={`/gratis-factuur/facturen/${factuur.id}`}
+                          to={`/invoice/facturen/${factuur.id}`}
                           className="p-2 text-slate-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors"
                           title="Bekijken"
                         >
                           <Eye className="w-4 h-4" />
                         </Link>
                         <Link
-                          to={`/gratis-factuur/facturen/${factuur.id}/bewerken`}
+                          to={`/invoice/facturen/${factuur.id}/bewerken`}
                           className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           title="Bewerken"
                         >
