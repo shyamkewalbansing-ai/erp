@@ -834,7 +834,8 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
               {/* Invoice Preview - Exact Match Reference Design */}
               <div 
                 ref={invoiceRef}
-                className="invoice-preview-container bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden print:shadow-none print:border-0 print:rounded-none"
+                id="invoice-print-area"
+                className="invoice-preview-container bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden"
                 style={{ minHeight: '800px', position: 'relative' }}
               >
                 {/* Top Right Geometric Shapes */}
@@ -1108,21 +1109,79 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
       {/* Print styles */}
       <style>{`
         @media print {
-          body * { 
-            visibility: hidden; 
+          /* Hide everything */
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: white !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          .invoice-preview-container,
-          .invoice-preview-container * { 
-            visibility: visible; 
+          
+          /* Page setup for A4 */
+          @page {
+            size: A4 portrait;
+            margin: 10mm;
           }
-          .invoice-preview-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
+          
+          /* Hide all elements by default */
+          body > *:not(#root),
+          header,
+          nav,
+          button,
+          .print\\:hidden {
+            display: none !important;
           }
-          .print\\:hidden { 
-            display: none !important; 
+          
+          /* Hide form panel */
+          .xl\\:col-span-5 {
+            display: none !important;
+          }
+          
+          /* Show invoice preview */
+          #invoice-print-area {
+            display: block !important;
+            visibility: visible !important;
+            position: relative !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            page-break-inside: avoid !important;
+          }
+          
+          #invoice-print-area * {
+            visibility: visible !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          
+          /* Ensure background colors print */
+          #invoice-print-area [style*="backgroundColor"],
+          #invoice-print-area [style*="background-color"],
+          #invoice-print-area th,
+          #invoice-print-area .bg-slate-50,
+          #invoice-print-area [style*="clip-path"] {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          
+          /* Fix grid for print */
+          .grid {
+            display: block !important;
+          }
+          
+          /* Full width preview */
+          .xl\\:col-span-7 {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
           }
         }
       `}</style>
