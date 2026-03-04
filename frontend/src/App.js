@@ -10,6 +10,7 @@ import { initPerformanceMonitoring, prefetch } from "./lib/performance";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LandingPage from "./pages/LandingPage";
+import PublicInvoiceGenerator from "./pages/PublicInvoiceGenerator";
 import Layout from "./components/Layout";
 import "@/App.css";
 
@@ -572,6 +573,8 @@ function MainAppRoutes() {
             <Route path="/help" element={<FaqPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/demo" element={<DemoPage />} />
+            <Route path="/gratis-factuur" element={<PublicInvoiceGenerator />} />
+            <Route path="/invoice-generator" element={<PublicInvoiceGenerator />} />
           </>
         )}
         
