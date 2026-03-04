@@ -12,16 +12,54 @@ Comprehensive accounting and business management platform for Suriname businesse
 
 ### Completed This Session
 
-#### Factuur PDF Preview Herontwerp ✅ (Latest)
-- **Modern geometrisch design** geïmplementeerd in `PublicInvoiceGenerator.js`:
-  - Diagonale vormen in header/footer met CSS `clip-path`
-  - 5 kleurthema's: Modern (teal/oranje), Zakelijk (blauw), Creatief (paars/roze), Krachtig (rood/amber), Natuur (groen)
-  - Elke template heeft nu `primaryColor` en `accentColor` voor two-tone designs
-  - Gekleurde tabelheaders met witte tekst
-  - Accent-gekleurde TOTAAL balk
-  - Bedrijfslogo met witte achtergrond in header
-  - "Bedankt voor uw vertrouwen!" boodschap in footer
-- **Tested by testing_agent**: 100% success rate (8/8 features + 4 extra tests)
+#### Gratis Factuur Account Systeem ✅ (NEW - Latest)
+- **Complete standalone auth system** separate from main Facturatie.sr:
+  - User registration and login with JWT tokens
+  - Secure password hashing with bcrypt
+  - Token stored in `gratis_factuur_token` localStorage key
+- **Customer Management (Klantenbeheer)**:
+  - Full CRUD operations (add, edit, delete customers)
+  - Customer statistics (total invoices, outstanding amount)
+  - Search functionality
+- **Invoice Management (Facturenbeheer)**:
+  - Unlimited invoice storage
+  - Edit invoices after saving
+  - Status tracking: openstaand, deelbetaling, betaald
+  - Filter by status
+  - Link invoices to customers
+- **Payment Tracking (Betalingen)**:
+  - Register partial or full payments
+  - Automatic status updates on invoices
+  - Payment history per invoice
+- **Dashboard with Statistics**:
+  - Total revenue, outstanding amount
+  - Overdue invoices count
+  - Customer count
+  - Status breakdown (openstaand/deelbetaling/betaald)
+  - Recent invoices list
+- **Email via SMTP**:
+  - Configure personal SMTP server
+  - Send invoices to customers
+  - Send payment reminders
+- **New Pages**:
+  - `/gratis-factuur/login` - Login/Register
+  - `/gratis-factuur/dashboard` - Dashboard
+  - `/gratis-factuur/klanten` - Customer management
+  - `/gratis-factuur/facturen` - Invoice list
+  - `/gratis-factuur/instellingen` - Settings (company, bank, SMTP)
+- **Backend**: `/app/backend/routers/gratis_factuur.py`
+- **MongoDB Collections**: `gratis_factuur_users`, `gratis_factuur_klanten`, `gratis_factuur_facturen`, `gratis_factuur_betalingen`
+
+#### Factuur PDF Preview Herontwerp ✅
+- **Modern geometrisch design** exactly matching reference image:
+  - Geometric triangles in top-right corner (navy + primary color)
+  - Geometric shapes in bottom corners
+  - Large centered "FACTUUR" title
+  - Colored table header with alternating row colors
+  - Signature section
+  - Contact icons (Mail, Phone, MapPin)
+- **5 color templates**: Modern (orange), Zakelijk (blue), Creatief (purple), Krachtig (red), Natuur (green)
+- **Removed thumbnail previews** per user request
 
 #### AI Assistent Enhancement ✅
 - **Boekhouding module** fully integrated into AI assistant with:
@@ -100,13 +138,11 @@ Now supports ALL modules:
 ### P1 - Next Priority
 - PDF Payslip Generator for HRM module
 - Verify production server AI assistant (EMERGENT_LLM_KEY configuration)
-- Template switching UI improvement (larger preview thumbnails)
 
-### P2 - User Verification
-- POS link removal from sidebar
-- Employee add flow E2E test
-- Sidebar quicklink navigation
-- Invoice email delivery
+### P2 - Future
+- Schuldbeheer module core functionality
+- Advanced AI features (phone calls, WhatsApp)
+- POS link removal from sidebar verification
 
 ### Future/Backlog
 - Advanced AI Features (telephony, WhatsApp)

@@ -14,6 +14,13 @@ import PublicInvoiceGenerator from "./pages/PublicInvoiceGenerator";
 import Layout from "./components/Layout";
 import "@/App.css";
 
+// Gratis Factuur pages - separate auth system
+const GratisFactuurAuth = lazy(() => import("./pages/GratisFactuurAuth"));
+const GratisFactuurDashboard = lazy(() => import("./pages/GratisFactuurDashboard"));
+const GratisFactuurKlanten = lazy(() => import("./pages/GratisFactuurKlanten"));
+const GratisFactuurFacturen = lazy(() => import("./pages/GratisFactuurFacturen"));
+const GratisFactuurInstellingen = lazy(() => import("./pages/GratisFactuurInstellingen"));
+
 // Initialize performance monitoring and preload critical data
 initPerformanceMonitoring();
 
@@ -575,6 +582,18 @@ function MainAppRoutes() {
             <Route path="/demo" element={<DemoPage />} />
             <Route path="/gratis-factuur" element={<PublicInvoiceGenerator />} />
             <Route path="/invoice-generator" element={<PublicInvoiceGenerator />} />
+            
+            {/* Gratis Factuur Dashboard System - Separate Auth */}
+            <Route path="/gratis-factuur/login" element={<GratisFactuurAuth />} />
+            <Route path="/gratis-factuur/register" element={<GratisFactuurAuth />} />
+            <Route path="/gratis-factuur/dashboard" element={<GratisFactuurDashboard />} />
+            <Route path="/gratis-factuur/klanten" element={<GratisFactuurKlanten />} />
+            <Route path="/gratis-factuur/facturen" element={<GratisFactuurFacturen />} />
+            <Route path="/gratis-factuur/facturen/nieuw" element={<PublicInvoiceGenerator showSaveOption={true} />} />
+            <Route path="/gratis-factuur/facturen/:id" element={<PublicInvoiceGenerator showSaveOption={true} />} />
+            <Route path="/gratis-factuur/facturen/:id/bewerken" element={<PublicInvoiceGenerator showSaveOption={true} />} />
+            <Route path="/gratis-factuur/betalingen" element={<GratisFactuurFacturen />} />
+            <Route path="/gratis-factuur/instellingen" element={<GratisFactuurInstellingen />} />
           </>
         )}
         

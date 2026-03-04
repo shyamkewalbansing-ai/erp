@@ -68,6 +68,7 @@ from routers.spa_booking import router as spa_booking_router
 from routers.suribet import router as suribet_router
 from routers.boekhouding import router as boekhouding_router
 from routers.schuldbeheer import router as schuldbeheer_router
+from routers.gratis_factuur import router as gratis_factuur_router, set_database as set_gratis_factuur_db
 from services.unified_email_service import get_email_service, EMAIL_TEMPLATES
 from services.scheduled_tasks import get_scheduled_tasks
 
@@ -14486,6 +14487,10 @@ api_router.include_router(spa_booking_router)
 api_router.include_router(suribet_router)
 api_router.include_router(boekhouding_router)
 api_router.include_router(schuldbeheer_router)
+
+# Initialize and include gratis factuur router
+set_gratis_factuur_db(db)
+api_router.include_router(gratis_factuur_router)
 
 # =============================================================================
 # GITHUB WEBHOOK AUTO-DEPLOY

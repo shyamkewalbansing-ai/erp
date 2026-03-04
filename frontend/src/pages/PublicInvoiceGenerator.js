@@ -1,14 +1,17 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { 
   FileText, Plus, Trash2, Download, Printer, Upload, 
   Building2, User, CreditCard, Calendar,
-  Receipt, X, Check, Sparkles, Mail, Phone, MapPin
+  Receipt, X, Check, Sparkles, Mail, Phone, MapPin, Save, LogIn
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Currency configurations
 const currencies = {
@@ -43,11 +46,145 @@ const formatCurrency = (amount, currency) => {
   return `$ ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-export default function PublicInvoiceGenerator() {
+export default function PublicInvoiceGenerator({ showSaveOption }) {
+  const navigate = useNavigate();
+  const { id: factuurId } = useParams();
   const invoiceRef = useRef(null);
   const [documentType, setDocumentType] = useState('factuur');
   const [currency, setCurrency] = useState('SRD');
   const [btwRegion, setBtwRegion] = useState('SR');
+  
+  // Check if user is logged in
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [klanten, setKlanten] = useState([]);
+  const [selectedKlantId, setSelectedKlantId] = useState('');
+  const [saving, setSaving] = useState(false);
+  
+  useEffect(() => {
+    const token = localStorage.getItem('gratis_factuur_token');
+    if (token) {
+      setIsLoggedIn(true);
+      loadKlanten(token);
+      
+      // Load invoice if editing
+      if (factuurId) {
+        loadFactuur(token, factuurId);
+      }
+    }
+  }, [factuurId]);
+  
+  const loadKlanten = async (token) => {
+    try {
+      const response = await fetch(`${API_URL}/api/gratis-factuur/klanten`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setKlanten(data);
+      }
+    } catch (error) {
+      console.error('Error loading klanten:', error);
+    }
+  };
+  
+  const loadFactuur = async (token, id) => {
+    try {
+      const response = await fetch(`${API_URL}/api/gratis-factuur/facturen/${id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Populate form with invoice data
+        setDocumentType(data.document_type || 'factuur');
+        setCurrency(data.valuta || 'SRD');
+        setBtwRegion(data.btw_regio || 'SR');
+        setSelectedTemplate(data.template || 'modern');
+        setInvoiceDetails({
+          number: data.nummer,
+          date: data.datum,
+          due_date: data.vervaldatum
+        });
+        setSelectedKlantId(data.klant_id || '');
+        
+        if (data.klant) {
+          setCustomer({
+            name: data.klant.naam || '',
+            address: data.klant.adres || '',
+            city: data.klant.plaats || ''
+          });
+        }
+        
+        if (data.items && data.items.length > 0) {
+          setItems(data.items.map((item, idx) => ({
+            id: idx + 1,
+            description: item.omschrijving,
+            quantity: item.aantal,
+            price: item.prijs,
+            btw: item.btw_percentage
+          })));
+        }
+      }
+    } catch (error) {
+      console.error('Error loading factuur:', error);
+    }
+  };
+  
+  const handleSaveFactuur = async () => {
+    if (!isLoggedIn) {
+      navigate('/gratis-factuur/login');
+      return;
+    }
+    
+    if (!selectedKlantId) {
+      toast.error('Selecteer eerst een klant');
+      return;
+    }
+    
+    setSaving(true);
+    
+    try {
+      const token = localStorage.getItem('gratis_factuur_token');
+      const factuurData = {
+        klant_id: selectedKlantId,
+        document_type: documentType,
+        nummer: invoiceDetails.number,
+        datum: invoiceDetails.date,
+        vervaldatum: invoiceDetails.due_date,
+        valuta: currency,
+        btw_regio: btwRegion,
+        template: selectedTemplate,
+        items: items.map(item => ({
+          omschrijving: item.description,
+          aantal: item.quantity,
+          prijs: item.price,
+          btw_percentage: item.btw
+        }))
+      };
+      
+      const url = factuurId 
+        ? `${API_URL}/api/gratis-factuur/facturen/${factuurId}`
+        : `${API_URL}/api/gratis-factuur/facturen`;
+      
+      const response = await fetch(url, {
+        method: factuurId ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(factuurData)
+      });
+      
+      if (!response.ok) throw new Error('Fout bij opslaan');
+      
+      toast.success(factuurId ? 'Factuur bijgewerkt!' : 'Factuur opgeslagen!');
+      navigate('/gratis-factuur/facturen');
+      
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setSaving(false);
+    }
+  };
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
   
   const [company, setCompany] = useState({
@@ -198,6 +335,27 @@ export default function PublicInvoiceGenerator() {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              {isLoggedIn ? (
+                <Button
+                  onClick={handleSaveFactuur}
+                  disabled={saving}
+                  className="bg-green-600 hover:bg-green-700 text-white shadow-md"
+                >
+                  {saving ? (
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  ) : (
+                    <Save className="w-4 h-4 mr-2" />
+                  )}
+                  {factuurId ? 'Bijwerken' : 'Opslaan'}
+                </Button>
+              ) : (
+                <Link to="/gratis-factuur/login">
+                  <Button className="bg-green-600 hover:bg-green-700 text-white shadow-md">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Inloggen om op te slaan
+                  </Button>
+                </Link>
+              )}
               <Button
                 onClick={generatePDF}
                 style={{ backgroundColor: currentTemplate.primaryColor }}
@@ -403,6 +561,37 @@ export default function PublicInvoiceGenerator() {
                 <User className="w-4 h-4 text-teal-600" />
                 <h2 className="text-sm font-semibold text-slate-900">Klantgegevens</h2>
               </div>
+              
+              {/* Customer selector for logged in users */}
+              {isLoggedIn && klanten.length > 0 && (
+                <div className="mb-4">
+                  <select
+                    value={selectedKlantId}
+                    onChange={(e) => {
+                      const klantId = e.target.value;
+                      setSelectedKlantId(klantId);
+                      if (klantId) {
+                        const klant = klanten.find(k => k.id === klantId);
+                        if (klant) {
+                          setCustomer({
+                            name: klant.naam || '',
+                            address: klant.adres || '',
+                            city: klant.plaats || ''
+                          });
+                        }
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 text-sm"
+                  >
+                    <option value="">-- Selecteer bestaande klant --</option>
+                    {klanten.map((klant) => (
+                      <option key={klant.id} value={klant.id}>{klant.naam}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-slate-500 mt-1">Of vul handmatig in hieronder</p>
+                </div>
+              )}
+              
               <div className="space-y-3">
                 <Input
                   placeholder="Klantnaam / Bedrijf *"
