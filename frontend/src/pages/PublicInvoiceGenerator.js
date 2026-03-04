@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { 
   FileText, Plus, Trash2, Download, Printer, Upload, 
   Building2, User, CreditCard, Calendar,
-  Receipt, X, Check, Sparkles, Mail, Phone, MapPin, Save, LogIn
+  Receipt, X, Check, Sparkles, Mail, Phone, MapPin, Save, LogIn, ArrowLeft, LayoutDashboard
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -297,14 +297,34 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <a href="/" className="flex items-center">
-              <img 
-                src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
-                alt="Facturatie.sr"
-                className="h-8 w-auto"
-              />
-            </a>
-            <span className="text-sm text-slate-500">Gratis Factuur & Offerte Maker</span>
+            <div className="flex items-center gap-4">
+              {isLoggedIn ? (
+                <Link 
+                  to="/gratis-factuur/dashboard" 
+                  className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-medium transition-colors"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </Link>
+              ) : (
+                <a href="/" className="flex items-center">
+                  <img 
+                    src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
+                    alt="Facturatie.sr"
+                    className="h-8 w-auto"
+                  />
+                </a>
+              )}
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-slate-500">Gratis Factuur & Offerte Maker</span>
+              {isLoggedIn && (
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                  Ingelogd
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </header>

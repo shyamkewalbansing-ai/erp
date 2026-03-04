@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Settings, Building2, Mail, CreditCard, Save, TestTube
+  Settings, Building2, Mail, CreditCard, Save, TestTube, Bell, Send
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -37,7 +37,9 @@ export default function GratisFactuurInstellingen() {
     smtp_host: '',
     smtp_port: 587,
     smtp_user: '',
-    smtp_password: ''
+    smtp_password: '',
+    auto_herinnering_enabled: false,
+    auto_herinnering_dagen: 7
   });
   
   useEffect(() => {
@@ -66,7 +68,9 @@ export default function GratisFactuurInstellingen() {
           smtp_host: data.smtp_host || '',
           smtp_port: data.smtp_port || 587,
           smtp_user: data.smtp_user || '',
-          smtp_password: data.smtp_password || ''
+          smtp_password: data.smtp_password || '',
+          auto_herinnering_enabled: data.auto_herinnering_enabled || false,
+          auto_herinnering_dagen: data.auto_herinnering_dagen || 7
         });
       }
     } catch (error) {
@@ -127,10 +131,35 @@ export default function GratisFactuurInstellingen() {
     }
   };
   
+  const [sendingReminders, setSendingReminders] = useState(false);
+  
+  const sendAutoReminders = async () => {
+    setSendingReminders(true);
+    try {
+      const response = await fetch(`${API_URL}/api/gratis-factuur/auto-herinneringen`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success(data.message);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error('Fout bij versturen herinneringen');
+    } finally {
+      setSendingReminders(false);
+    }
+  };
+  
   const tabs = [
     { id: 'bedrijf', label: 'Bedrijfsgegevens', icon: Building2 },
     { id: 'bank', label: 'Bankgegevens', icon: CreditCard },
     { id: 'email', label: 'Email (SMTP)', icon: Mail },
+    { id: 'herinneringen', label: 'Herinneringen', icon: Bell },
   ];
   
   if (loading) {
@@ -352,6 +381,83 @@ export default function GratisFactuurInstellingen() {
                   <li>• Yahoo: smtp.mail.yahoo.com, port 587</li>
                 </ul>
               </div>
+            </div>
+          )}
+          
+          {activeTab === 'herinneringen' && (
+            <div className="space-y-6">
+              <div className="p-4 bg-blue-50 rounded-lg mb-6">
+                <p className="text-sm text-blue-800">
+                  <strong>Automatische Betalingsherinneringen</strong><br />
+                  Configureer automatische herinneringen voor verlopen facturen. Herinneringen worden verstuurd naar klanten met een email adres.
+                </p>
+              </div>
+              
+              {/* Enable/Disable Toggle */}
+              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                <div>
+                  <p className="font-medium text-slate-900">Automatische herinneringen</p>
+                  <p className="text-sm text-slate-500">Verstuur automatisch herinneringen voor verlopen facturen</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.auto_herinnering_enabled}
+                    onChange={(e) => setFormData({...formData, auto_herinnering_enabled: e.target.checked})}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                </label>
+              </div>
+              
+              {/* Days setting */}
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Verstuur herinnering na X dagen na vervaldatum
+                </label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="number"
+                    min="1"
+                    max="90"
+                    value={formData.auto_herinnering_dagen}
+                    onChange={(e) => setFormData({...formData, auto_herinnering_dagen: parseInt(e.target.value) || 7})}
+                    className="w-24"
+                  />
+                  <span className="text-slate-500">dagen</span>
+                </div>
+                <p className="text-xs text-slate-500 mt-1">
+                  Bijvoorbeeld: bij 7 dagen wordt een herinnering verstuurd 7 dagen na de vervaldatum
+                </p>
+              </div>
+              
+              {/* Manual trigger */}
+              <div className="pt-4 border-t border-slate-200">
+                <p className="text-sm font-medium text-slate-700 mb-3">Handmatig herinneringen versturen</p>
+                <Button
+                  onClick={sendAutoReminders}
+                  disabled={sendingReminders || !formData.smtp_host}
+                  className="bg-orange-600 hover:bg-orange-700"
+                >
+                  {sendingReminders ? (
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-2" />
+                  )}
+                  Nu herinneringen versturen
+                </Button>
+                <p className="text-xs text-slate-500 mt-2">
+                  Dit verstuurt direct herinneringen naar alle klanten met verlopen facturen (ouder dan {formData.auto_herinnering_dagen} dagen)
+                </p>
+              </div>
+              
+              {!formData.smtp_host && (
+                <div className="p-4 bg-amber-50 rounded-lg">
+                  <p className="text-sm text-amber-800">
+                    <strong>Let op:</strong> Configureer eerst uw SMTP instellingen in het "Email (SMTP)" tabblad voordat u herinneringen kunt versturen.
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

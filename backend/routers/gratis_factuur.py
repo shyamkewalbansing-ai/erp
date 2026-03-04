@@ -53,6 +53,9 @@ class GratisUserUpdate(BaseModel):
     smtp_port: Optional[int] = None
     smtp_user: Optional[str] = None
     smtp_password: Optional[str] = None
+    # Automatic reminder settings
+    auto_herinnering_enabled: Optional[bool] = None
+    auto_herinnering_dagen: Optional[int] = None  # Days after due date to send reminder
 
 class KlantCreate(BaseModel):
     naam: str
@@ -763,3 +766,146 @@ Met vriendelijke groet,
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Email versturen mislukt: {str(e)}")
+
+
+# ============== AUTOMATIC REMINDERS ==============
+
+@router.get("/verlopen-facturen")
+async def get_verlopen_facturen(user = Depends(get_current_user)):
+    """Get all overdue invoices that haven't been paid"""
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    facturen = await db.gratis_factuur_facturen.find({
+        "user_id": str(user["_id"]),
+        "status": {"$in": ["openstaand", "deelbetaling"]},
+        "vervaldatum": {"$lt": today}
+    }).sort("vervaldatum", 1).to_list(1000)
+    
+    # Enrich with customer info
+    for factuur in facturen:
+        if factuur.get("klant_id"):
+            klant = await db.gratis_factuur_klanten.find_one({"_id": ObjectId(factuur["klant_id"])})
+            if klant:
+                factuur["klant_naam"] = klant.get("naam", "")
+                factuur["klant_email"] = klant.get("email", "")
+        
+        # Calculate days overdue
+        vervaldatum = datetime.strptime(factuur["vervaldatum"], "%Y-%m-%d")
+        today_dt = datetime.now(timezone.utc).replace(tzinfo=None)
+        factuur["dagen_verlopen"] = (today_dt - vervaldatum).days
+        
+        clean_doc(factuur)
+    
+    return facturen
+
+@router.post("/auto-herinneringen")
+async def send_auto_herinneringen(user = Depends(get_current_user)):
+    """Send automatic reminders for overdue invoices based on user settings"""
+    import aiosmtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    
+    # Check if auto reminders are enabled
+    if not user.get("auto_herinnering_enabled"):
+        return {"success": False, "message": "Automatische herinneringen zijn niet ingeschakeld"}
+    
+    # Check SMTP settings
+    if not user.get("smtp_host") or not user.get("smtp_user") or not user.get("smtp_password"):
+        return {"success": False, "message": "SMTP instellingen niet geconfigureerd"}
+    
+    reminder_days = user.get("auto_herinnering_dagen", 7)  # Default 7 days after due date
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Find overdue invoices
+    facturen = await db.gratis_factuur_facturen.find({
+        "user_id": str(user["_id"]),
+        "status": {"$in": ["openstaand", "deelbetaling"]},
+        "vervaldatum": {"$lt": today},
+        "auto_herinnering_verzonden": {"$ne": True}  # Not already sent
+    }).to_list(1000)
+    
+    sent_count = 0
+    errors = []
+    
+    for factuur in facturen:
+        # Check if enough days have passed
+        vervaldatum = datetime.strptime(factuur["vervaldatum"], "%Y-%m-%d")
+        today_dt = datetime.now(timezone.utc).replace(tzinfo=None)
+        days_overdue = (today_dt - vervaldatum).days
+        
+        if days_overdue < reminder_days:
+            continue
+        
+        # Get customer
+        klant = await db.gratis_factuur_klanten.find_one({"_id": ObjectId(factuur["klant_id"])})
+        if not klant or not klant.get("email"):
+            continue
+        
+        openstaand = factuur['totaal'] - factuur.get('betaald_bedrag', 0)
+        
+        bericht = f"""
+Beste {klant['naam']},
+
+Dit is een automatische herinnering dat factuur {factuur['nummer']} nog niet (volledig) is betaald.
+
+Factuurnummer: {factuur['nummer']}
+Factuurdatum: {factuur['datum']}
+Vervaldatum: {factuur['vervaldatum']}
+Dagen verlopen: {days_overdue}
+Openstaand bedrag: {factuur['valuta']} {openstaand:,.2f}
+
+Wij verzoeken u vriendelijk het openstaande bedrag zo spoedig mogelijk te voldoen.
+
+Met vriendelijke groet,
+{user['bedrijfsnaam']}
+        """
+        
+        msg = MIMEMultipart()
+        msg['From'] = user.get("smtp_user")
+        msg['To'] = klant['email']
+        msg['Subject'] = f"Betalingsherinnering - Factuur {factuur['nummer']} ({days_overdue} dagen verlopen)"
+        msg.attach(MIMEText(bericht, 'plain'))
+        
+        try:
+            await aiosmtplib.send(
+                msg,
+                hostname=user['smtp_host'],
+                port=user.get('smtp_port', 587),
+                username=user['smtp_user'],
+                password=user['smtp_password'],
+                use_tls=True
+            )
+            
+            # Mark as sent
+            await db.gratis_factuur_facturen.update_one(
+                {"_id": factuur["_id"]},
+                {"$set": {
+                    "auto_herinnering_verzonden": True,
+                    "auto_herinnering_datum": datetime.now(timezone.utc)
+                }}
+            )
+            
+            sent_count += 1
+            
+        except Exception as e:
+            errors.append(f"Factuur {factuur['nummer']}: {str(e)}")
+    
+    return {
+        "success": True,
+        "verzonden": sent_count,
+        "fouten": errors,
+        "message": f"{sent_count} herinneringen verzonden" + (f", {len(errors)} fouten" if errors else "")
+    }
+
+@router.post("/herinnering-reset/{factuur_id}")
+async def reset_herinnering(factuur_id: str, user = Depends(get_current_user)):
+    """Reset the auto reminder flag for a specific invoice (to send again)"""
+    result = await db.gratis_factuur_facturen.update_one(
+        {"_id": ObjectId(factuur_id), "user_id": str(user["_id"])},
+        {"$unset": {"auto_herinnering_verzonden": "", "auto_herinnering_datum": ""}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    
+    return {"success": True, "message": "Herinnering status gereset"}
