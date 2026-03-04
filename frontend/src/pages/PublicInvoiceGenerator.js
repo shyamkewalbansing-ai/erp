@@ -334,7 +334,6 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
               )}
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-sm text-slate-500">Gratis Factuur & Offerte Maker</span>
               {isLoggedIn && (
                 <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
                   Ingelogd
@@ -822,8 +821,8 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
                       </div>
                     )}
                     <div>
-                      <h1 className="text-xl font-bold text-slate-800">{company.name || 'Vector Arts'}</h1>
-                      <p className="text-sm text-slate-500 italic">{company.city || 'Your Satisfaction My Success'}</p>
+                      <h1 className="text-xl font-bold text-slate-800">{company.name || 'Uw Bedrijfsnaam'}</h1>
+                      {company.city && <p className="text-sm text-slate-500">{company.city}</p>}
                     </div>
                   </div>
 
