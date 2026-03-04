@@ -174,10 +174,29 @@ export default function PublicInvoiceGenerator() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:p-0 print:max-w-none">
         
-        {/* Template Selection Bar with Thumbnails */}
+        {/* Template Selection Bar */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6 print:hidden">
-          <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
-            <span className="text-sm font-semibold text-slate-700">Kies een template:</span>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-slate-700">Template:</span>
+              <div className="flex gap-2">
+                {templates.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setSelectedTemplate(t.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      selectedTemplate === t.id
+                        ? 'text-white shadow-md'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    }`}
+                    style={selectedTemplate === t.id ? { backgroundColor: t.primaryColor } : {}}
+                  >
+                    {selectedTemplate === t.id && <Check className="w-4 h-4" />}
+                    {t.name}
+                  </button>
+                ))}
+              </div>
+            </div>
             <div className="flex items-center gap-3">
               <Button
                 onClick={generatePDF}
@@ -196,106 +215,6 @@ export default function PublicInvoiceGenerator() {
                 Printen
               </Button>
             </div>
-          </div>
-          
-          {/* Template Thumbnails */}
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {templates.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setSelectedTemplate(t.id)}
-                className={`flex-shrink-0 rounded-xl border-2 transition-all overflow-hidden relative ${
-                  selectedTemplate === t.id
-                    ? 'border-slate-800 shadow-lg scale-105'
-                    : 'border-slate-200 hover:border-slate-400'
-                }`}
-                style={{ width: '120px', height: '160px' }}
-              >
-                {/* Mini Invoice Preview */}
-                <div className="w-full h-full bg-white" style={{ fontSize: '4px' }}>
-                  {/* Top right geometric */}
-                  <div className="absolute top-0 right-0" style={{ width: '35px', height: '25px' }}>
-                    <div 
-                      className="absolute"
-                      style={{ 
-                        width: '40px', height: '30px', top: '-5px', right: '-5px',
-                        backgroundColor: t.secondaryColor,
-                        clipPath: 'polygon(100% 0, 0 0, 100% 100%)'
-                      }}
-                    />
-                    <div 
-                      className="absolute"
-                      style={{ 
-                        width: '25px', height: '20px', top: '-2px', right: '-2px',
-                        backgroundColor: t.primaryColor,
-                        clipPath: 'polygon(100% 0, 30% 0, 100% 80%)'
-                      }}
-                    />
-                  </div>
-                  
-                  {/* Content preview */}
-                  <div className="p-2 pt-4">
-                    {/* Logo circle */}
-                    <div 
-                      className="w-3 h-3 rounded-full mb-1"
-                      style={{ backgroundColor: t.primaryColor }}
-                    />
-                    {/* Title bar */}
-                    <div 
-                      className="h-2 w-8 mx-auto mb-2 rounded-sm"
-                      style={{ backgroundColor: t.secondaryColor }}
-                    />
-                    {/* Table header */}
-                    <div 
-                      className="h-1.5 w-full mb-1"
-                      style={{ backgroundColor: t.primaryColor }}
-                    />
-                    {/* Table rows */}
-                    <div className="space-y-0.5">
-                      <div className="h-1 w-full bg-slate-100" />
-                      <div className="h-1 w-full bg-white" />
-                      <div className="h-1 w-full bg-slate-100" />
-                    </div>
-                    {/* Total bar */}
-                    <div 
-                      className="h-1.5 w-12 mt-2 ml-auto"
-                      style={{ backgroundColor: t.primaryColor }}
-                    />
-                  </div>
-                  
-                  {/* Bottom geometric */}
-                  <div className="absolute bottom-5 right-0" style={{ width: '25px', height: '15px' }}>
-                    <div 
-                      className="absolute"
-                      style={{ 
-                        width: '30px', height: '20px', bottom: '-5px', right: '-5px',
-                        backgroundColor: t.secondaryColor,
-                        clipPath: 'polygon(100% 100%, 100% 20%, 20% 100%)'
-                      }}
-                    />
-                  </div>
-                  <div className="absolute bottom-5 left-0" style={{ width: '20px', height: '12px' }}>
-                    <div 
-                      className="absolute"
-                      style={{ 
-                        width: '25px', height: '15px', bottom: '-3px', left: '-3px',
-                        backgroundColor: t.primaryColor,
-                        clipPath: 'polygon(0 100%, 0 40%, 80% 100%)'
-                      }}
-                    />
-                  </div>
-                </div>
-                
-                {/* Template name */}
-                <div 
-                  className="absolute bottom-0 left-0 right-0 py-1.5 text-center text-xs font-medium text-white z-10"
-                  style={{ backgroundColor: selectedTemplate === t.id ? t.primaryColor : 'rgba(0,0,0,0.7)' }}
-                >
-                  {selectedTemplate === t.id && <Check className="w-3 h-3 inline mr-1" />}
-                  {t.name}
-                </div>
-              </button>
-            ))}
           </div>
         </div>
 
