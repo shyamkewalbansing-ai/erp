@@ -24,13 +24,13 @@ const btwOptions = {
   NL: { label: '🇳🇱 NL', rates: [{ value: 21, label: '21%' }, { value: 9, label: '9%' }, { value: 0, label: '0%' }] }
 };
 
-// Invoice Templates
+// Invoice Templates - Modern geometric designs
 const templates = [
-  { id: 'clean', name: 'Clean', primaryColor: '#0d9488' },
-  { id: 'zakelijk', name: 'Zakelijk', primaryColor: '#1e40af' },
-  { id: 'modern', name: 'Modern', primaryColor: '#7c3aed' },
-  { id: 'klassiek', name: 'Klassiek', primaryColor: '#374151' },
-  { id: 'fris', name: 'Fris', primaryColor: '#059669' }
+  { id: 'modern', name: 'Modern', primaryColor: '#0d9488', accentColor: '#f97316' },
+  { id: 'zakelijk', name: 'Zakelijk', primaryColor: '#1e40af', accentColor: '#3b82f6' },
+  { id: 'creative', name: 'Creatief', primaryColor: '#7c3aed', accentColor: '#ec4899' },
+  { id: 'bold', name: 'Krachtig', primaryColor: '#dc2626', accentColor: '#f59e0b' },
+  { id: 'nature', name: 'Natuur', primaryColor: '#059669', accentColor: '#10b981' }
 ];
 
 const formatCurrency = (amount, currency) => {
@@ -48,7 +48,7 @@ export default function PublicInvoiceGenerator() {
   const [documentType, setDocumentType] = useState('factuur');
   const [currency, setCurrency] = useState('SRD');
   const [btwRegion, setBtwRegion] = useState('SR');
-  const [selectedTemplate, setSelectedTemplate] = useState('clean');
+  const [selectedTemplate, setSelectedTemplate] = useState('modern');
   
   const [company, setCompany] = useState({
     name: '', address: '', postcode: '', city: '', country: '',
@@ -531,91 +531,145 @@ export default function PublicInvoiceGenerator() {
                 <span className="text-xs text-slate-400">Automatisch bijgewerkt</span>
               </div>
               
-              {/* Invoice Preview */}
+              {/* Invoice Preview - Modern Geometric Design */}
               <div 
                 ref={invoiceRef}
                 className="invoice-preview-container bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden print:shadow-none print:border-0 print:rounded-none"
-                style={{ minHeight: '600px' }}
+                style={{ minHeight: '700px', position: 'relative' }}
               >
-                {/* Colored Header Bar */}
-                <div className="h-1.5" style={{ backgroundColor: currentTemplate.primaryColor }}></div>
-                
-                <div className="p-8">
-                  {/* Header */}
-                  <div className="flex justify-between items-start mb-8">
-                    <div>
+                {/* Geometric Header */}
+                <div className="relative" style={{ height: '140px', overflow: 'hidden' }}>
+                  {/* Main header background */}
+                  <div 
+                    className="absolute inset-0" 
+                    style={{ backgroundColor: currentTemplate.primaryColor }}
+                  />
+                  {/* Diagonal accent shape */}
+                  <div 
+                    className="absolute right-0 top-0 h-full"
+                    style={{ 
+                      width: '40%',
+                      backgroundColor: currentTemplate.accentColor,
+                      clipPath: 'polygon(30% 0, 100% 0, 100% 100%, 0% 100%)'
+                    }}
+                  />
+                  {/* Small triangle accent */}
+                  <div 
+                    className="absolute"
+                    style={{ 
+                      width: '80px',
+                      height: '80px',
+                      bottom: '-40px',
+                      left: '60%',
+                      backgroundColor: currentTemplate.primaryColor,
+                      opacity: 0.7,
+                      clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+                      transform: 'rotate(180deg)'
+                    }}
+                  />
+                  
+                  {/* Header Content */}
+                  <div className="relative z-10 h-full px-8 py-6 flex justify-between items-start">
+                    <div className="flex items-center gap-4">
                       {logo ? (
-                        <img src={logo} alt="Logo" className="h-12 mb-3 object-contain" />
-                      ) : company.name ? (
-                        <div 
-                          className="w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-lg mb-3"
-                          style={{ backgroundColor: currentTemplate.primaryColor }}
-                        >
-                          {company.name.substring(0, 2).toUpperCase()}
+                        <div className="w-16 h-16 rounded-xl bg-white p-2 shadow-lg flex items-center justify-center">
+                          <img src={logo} alt="Logo" className="max-h-12 max-w-12 object-contain" />
                         </div>
-                      ) : null}
-                      <h1 className="text-xl font-bold text-slate-900">{company.name || 'Uw Bedrijfsnaam'}</h1>
-                      <div className="text-sm text-slate-500 mt-1">
-                        {company.address && <p>{company.address}</p>}
-                        {company.city && <p>{company.city}</p>}
+                      ) : company.name ? (
+                        <div className="w-16 h-16 rounded-xl bg-white shadow-lg flex items-center justify-center">
+                          <span className="text-2xl font-bold" style={{ color: currentTemplate.primaryColor }}>
+                            {company.name.substring(0, 2).toUpperCase()}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl bg-white/20 flex items-center justify-center">
+                          <Building2 className="w-8 h-8 text-white/70" />
+                        </div>
+                      )}
+                      <div className="text-white">
+                        <h1 className="text-xl font-bold">{company.name || 'Uw Bedrijfsnaam'}</h1>
+                        <p className="text-white/80 text-sm">{company.city || 'Uw locatie'}</p>
                       </div>
                     </div>
                     
-                    <div className="text-right">
-                      <span 
-                        className="inline-block px-4 py-1.5 rounded-full text-xs font-bold text-white uppercase tracking-wide"
-                        style={{ backgroundColor: currentTemplate.primaryColor }}
+                    <div className="text-right text-white">
+                      <div 
+                        className="inline-block px-6 py-2 rounded-lg font-bold text-lg uppercase tracking-wider"
+                        style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
                       >
                         {documentType}
-                      </span>
-                      <p className="text-2xl font-bold text-slate-900 mt-3">#{invoiceDetails.number}</p>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Info Row */}
-                  <div className="grid grid-cols-3 gap-4 mb-8">
-                    <div className="p-4 rounded-lg" style={{ backgroundColor: `${currentTemplate.primaryColor}10` }}>
-                      <p className="text-xs font-medium text-slate-500 uppercase mb-1">Aan</p>
-                      <p className="font-semibold text-slate-900 text-sm">{customer.name || 'Klantnaam'}</p>
-                      {customer.address && <p className="text-xs text-slate-600 mt-1">{customer.address}</p>}
-                      {customer.city && <p className="text-xs text-slate-600">{customer.city}</p>}
+                </div>
+                
+                {/* Main Content */}
+                <div className="px-8 py-6">
+                  {/* Invoice Info Row */}
+                  <div className="flex justify-between items-start mb-8">
+                    {/* Bill To Section */}
+                    <div className="flex-1">
+                      <div 
+                        className="inline-block px-3 py-1 rounded text-xs font-bold uppercase tracking-wide text-white mb-3"
+                        style={{ backgroundColor: currentTemplate.primaryColor }}
+                      >
+                        Factuur Aan
+                      </div>
+                      <h3 className="text-lg font-bold text-slate-900">{customer.name || 'Klantnaam'}</h3>
+                      {customer.address && <p className="text-slate-600 text-sm">{customer.address}</p>}
+                      {customer.city && <p className="text-slate-600 text-sm">{customer.city}</p>}
                     </div>
-                    <div className="p-4 rounded-lg bg-slate-50">
-                      <p className="text-xs font-medium text-slate-500 uppercase mb-1">Datum</p>
-                      <p className="font-semibold text-slate-900 text-sm">
-                        {new Date(invoiceDetails.date).toLocaleDateString('nl-NL')}
-                      </p>
-                    </div>
-                    <div className="p-4 rounded-lg bg-slate-50">
-                      <p className="text-xs font-medium text-slate-500 uppercase mb-1">
-                        {documentType === 'factuur' ? 'Vervaldatum' : 'Geldig tot'}
-                      </p>
-                      <p className="font-semibold text-slate-900 text-sm">
-                        {new Date(invoiceDetails.due_date).toLocaleDateString('nl-NL')}
-                      </p>
+                    
+                    {/* Invoice Details */}
+                    <div className="text-right">
+                      <div className="mb-4">
+                        <p className="text-xs text-slate-500 uppercase font-semibold">Factuurnummer</p>
+                        <p className="text-xl font-bold" style={{ color: currentTemplate.primaryColor }}>
+                          {invoiceDetails.number}
+                        </p>
+                      </div>
+                      <div className="flex gap-6">
+                        <div>
+                          <p className="text-xs text-slate-500 uppercase font-semibold">Datum</p>
+                          <p className="text-sm font-semibold text-slate-800">
+                            {new Date(invoiceDetails.date).toLocaleDateString('nl-NL')}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500 uppercase font-semibold">
+                            {documentType === 'factuur' ? 'Vervaldatum' : 'Geldig tot'}
+                          </p>
+                          <p className="text-sm font-semibold text-slate-800">
+                            {new Date(invoiceDetails.due_date).toLocaleDateString('nl-NL')}
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   
                   {/* Items Table */}
-                  <div className="mb-8">
+                  <div className="mb-6">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b-2 border-slate-200">
-                          <th className="text-left py-3 text-xs font-semibold text-slate-500 uppercase">Omschrijving</th>
-                          <th className="text-center py-3 text-xs font-semibold text-slate-500 uppercase w-16">Aantal</th>
-                          <th className="text-right py-3 text-xs font-semibold text-slate-500 uppercase w-24">Prijs</th>
-                          {btwRegion !== 'geen' && <th className="text-center py-3 text-xs font-semibold text-slate-500 uppercase w-16">BTW</th>}
-                          <th className="text-right py-3 text-xs font-semibold text-slate-500 uppercase w-28">Bedrag</th>
+                        <tr style={{ backgroundColor: currentTemplate.primaryColor }}>
+                          <th className="text-left py-3 px-4 text-sm font-bold text-white uppercase rounded-tl-lg">Omschrijving</th>
+                          <th className="text-center py-3 px-2 text-sm font-bold text-white uppercase w-20">Aantal</th>
+                          <th className="text-right py-3 px-2 text-sm font-bold text-white uppercase w-28">Prijs</th>
+                          {btwRegion !== 'geen' && <th className="text-center py-3 px-2 text-sm font-bold text-white uppercase w-16">BTW</th>}
+                          <th className="text-right py-3 px-4 text-sm font-bold text-white uppercase w-28 rounded-tr-lg">Bedrag</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {items.map((item) => (
-                          <tr key={item.id} className="border-b border-slate-100">
-                            <td className="py-3 text-sm text-slate-700">{item.description || 'Product/Dienst'}</td>
-                            <td className="py-3 text-sm text-slate-600 text-center">{item.quantity}</td>
-                            <td className="py-3 text-sm text-slate-600 text-right">{formatCurrency(item.price, currency)}</td>
-                            {btwRegion !== 'geen' && <td className="py-3 text-sm text-slate-600 text-center">{item.btw}%</td>}
-                            <td className="py-3 text-sm font-semibold text-slate-900 text-right">
+                        {items.map((item, index) => (
+                          <tr 
+                            key={item.id} 
+                            className={index % 2 === 0 ? 'bg-slate-50' : 'bg-white'}
+                          >
+                            <td className="py-3 px-4 text-sm text-slate-700">{item.description || 'Product/Dienst'}</td>
+                            <td className="py-3 px-2 text-sm text-slate-600 text-center">{item.quantity}</td>
+                            <td className="py-3 px-2 text-sm text-slate-600 text-right">{formatCurrency(item.price, currency)}</td>
+                            {btwRegion !== 'geen' && <td className="py-3 px-2 text-sm text-slate-600 text-center">{item.btw}%</td>}
+                            <td className="py-3 px-4 text-sm font-semibold text-slate-900 text-right">
                               {formatCurrency(item.quantity * item.price, currency)}
                             </td>
                           </tr>
@@ -624,54 +678,96 @@ export default function PublicInvoiceGenerator() {
                     </table>
                   </div>
                   
-                  {/* Totals */}
-                  <div className="flex justify-end mb-8">
-                    <div className="w-64">
-                      <div className="flex justify-between py-2 text-sm text-slate-600">
-                        <span>Subtotaal</span>
-                        <span>{formatCurrency(calculateSubtotal(), currency)}</span>
-                      </div>
-                      {btwRegion !== 'geen' && (
-                        <div className="flex justify-between py-2 text-sm text-slate-600 border-b border-slate-200">
-                          <span>BTW</span>
-                          <span>{formatCurrency(calculateBTW(), currency)}</span>
+                  {/* Bottom Section: Terms + Totals */}
+                  <div className="flex justify-between items-end gap-8">
+                    {/* Bank & Payment Info */}
+                    <div className="flex-1">
+                      {(company.bank_name || company.iban) && (
+                        <div className="mb-4">
+                          <p 
+                            className="text-xs font-bold uppercase tracking-wide mb-2"
+                            style={{ color: currentTemplate.primaryColor }}
+                          >
+                            Betalingsgegevens
+                          </p>
+                          <div className="text-sm text-slate-600">
+                            {company.bank_name && <p>Bank: {company.bank_name}</p>}
+                            {company.iban && <p>IBAN: {company.iban}</p>}
+                          </div>
                         </div>
                       )}
+                      
+                      {(company.phone || company.email || company.kvk || company.btw_number) && (
+                        <div>
+                          <p 
+                            className="text-xs font-bold uppercase tracking-wide mb-2"
+                            style={{ color: currentTemplate.primaryColor }}
+                          >
+                            Contactgegevens
+                          </p>
+                          <div className="text-sm text-slate-600 grid grid-cols-2 gap-x-4 gap-y-1">
+                            {company.phone && <p>{company.phone}</p>}
+                            {company.email && <p>{company.email}</p>}
+                            {company.kvk && <p>KvK: {company.kvk}</p>}
+                            {company.btw_number && <p>BTW: {company.btw_number}</p>}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Totals */}
+                    <div className="w-72">
+                      <div className="space-y-2">
+                        <div className="flex justify-between py-2 px-4 bg-slate-50 rounded">
+                          <span className="text-sm text-slate-600">Subtotaal</span>
+                          <span className="text-sm font-semibold text-slate-800">{formatCurrency(calculateSubtotal(), currency)}</span>
+                        </div>
+                        {btwRegion !== 'geen' && (
+                          <div className="flex justify-between py-2 px-4 bg-slate-50 rounded">
+                            <span className="text-sm text-slate-600">BTW</span>
+                            <span className="text-sm font-semibold text-slate-800">{formatCurrency(calculateBTW(), currency)}</span>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Grand Total Bar */}
                       <div 
-                        className="flex justify-between py-3 px-4 mt-2 rounded-lg text-white font-bold"
-                        style={{ backgroundColor: currentTemplate.primaryColor }}
+                        className="flex justify-between items-center py-4 px-4 mt-3 rounded-lg text-white"
+                        style={{ backgroundColor: currentTemplate.accentColor }}
                       >
-                        <span>Totaal</span>
-                        <span>{formatCurrency(calculateTotal(), currency)}</span>
+                        <span className="font-bold text-lg uppercase">Totaal</span>
+                        <span className="font-bold text-xl">{formatCurrency(calculateTotal(), currency)}</span>
                       </div>
                     </div>
                   </div>
-                  
-                  {/* Bank & Contact */}
-                  {(company.bank_name || company.iban || company.phone || company.email) && (
-                    <div className="border-t border-slate-200 pt-6">
-                      <div className="grid grid-cols-2 gap-6 text-sm">
-                        {(company.bank_name || company.iban) && (
-                          <div>
-                            <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Betalingsgegevens</p>
-                            {company.bank_name && <p className="text-slate-600">Bank: {company.bank_name}</p>}
-                            {company.iban && <p className="text-slate-600">IBAN: {company.iban}</p>}
-                          </div>
-                        )}
-                        {(company.phone || company.email) && (
-                          <div>
-                            <p className="text-xs font-semibold text-slate-500 uppercase mb-2">Contact</p>
-                            {company.phone && <p className="text-slate-600">{company.phone}</p>}
-                            {company.email && <p className="text-slate-600">{company.email}</p>}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
                 </div>
                 
-                {/* Colored Footer Bar */}
-                <div className="h-1.5" style={{ backgroundColor: currentTemplate.primaryColor }}></div>
+                {/* Geometric Footer */}
+                <div className="relative mt-6" style={{ height: '60px', overflow: 'hidden' }}>
+                  {/* Main footer background */}
+                  <div 
+                    className="absolute inset-0" 
+                    style={{ backgroundColor: currentTemplate.primaryColor }}
+                  />
+                  {/* Diagonal accent shape */}
+                  <div 
+                    className="absolute left-0 top-0 h-full"
+                    style={{ 
+                      width: '35%',
+                      backgroundColor: currentTemplate.accentColor,
+                      clipPath: 'polygon(0 0, 100% 0, 70% 100%, 0 100%)'
+                    }}
+                  />
+                  {/* Footer Content */}
+                  <div className="relative z-10 h-full px-8 flex items-center justify-between">
+                    <span className="text-white/90 text-sm font-medium">
+                      Bedankt voor uw vertrouwen!
+                    </span>
+                    <span className="text-white/70 text-xs">
+                      {company.email || 'www.uwbedrijf.nl'}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
