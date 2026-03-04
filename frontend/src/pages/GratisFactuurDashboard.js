@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, Users, FileText, CreditCard, Settings, LogOut,
-  Plus, TrendingUp, Clock, AlertTriangle, CheckCircle, Mail
+  Plus, TrendingUp, Clock, AlertTriangle, CheckCircle, Mail, Menu, X
 } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { toast } from 'sonner';
@@ -18,8 +18,26 @@ const getAuthHeaders = () => {
   };
 };
 
+// Mobile Header Component
+function MobileHeader({ user, onMenuClick }) {
+  return (
+    <div className="lg:hidden fixed top-0 left-0 right-0 bg-slate-900 z-40 px-4 py-3 flex items-center justify-between">
+      <Link to="/invoice" className="flex items-center gap-2">
+        <img 
+          src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
+          alt="Facturatie.sr"
+          className="h-7 w-auto brightness-0 invert"
+        />
+      </Link>
+      <button onClick={onMenuClick} className="text-white p-2">
+        <Menu className="w-6 h-6" />
+      </button>
+    </div>
+  );
+}
+
 // Sidebar Component
-function Sidebar({ activeTab, user }) {
+function Sidebar({ activeTab, user, isOpen, onClose }) {
   const navigate = useNavigate();
   
   const handleLogout = () => {
@@ -38,64 +56,83 @@ function Sidebar({ activeTab, user }) {
   ];
   
   return (
-    <div className="w-64 bg-slate-900 min-h-screen flex flex-col">
-      {/* Logo */}
-      <div className="p-4 border-b border-slate-800">
-        <Link to="/invoice" className="flex items-center gap-2">
-          <img 
-            src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
-            alt="Facturatie.sr"
-            className="h-8 w-auto brightness-0 invert"
-          />
-        </Link>
-        <p className="text-xs text-slate-500 mt-1">Gratis Facturatie</p>
-      </div>
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={onClose}
+        />
+      )}
       
-      {/* User Info */}
-      <div className="p-4 border-b border-slate-800">
-        <p className="text-white font-medium truncate">{user?.bedrijfsnaam || 'Mijn Bedrijf'}</p>
-        <p className="text-slate-400 text-sm truncate">{user?.email}</p>
-      </div>
-      
-      {/* Menu */}
-      <nav className="flex-1 p-2">
-        {menuItems.map((item) => (
-          <Link
-            key={item.id}
-            to={item.path}
-            className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
-              activeTab === item.id
-                ? 'bg-teal-600 text-white'
-                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-            }`}
-          >
-            <item.icon className="w-5 h-5" />
-            <span>{item.label}</span>
+      {/* Sidebar */}
+      <div className={`
+        fixed lg:static inset-y-0 left-0 z-50
+        w-64 bg-slate-900 min-h-screen flex flex-col
+        transform transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
+        {/* Logo */}
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <Link to="/invoice" className="flex items-center gap-2">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
+              alt="Facturatie.sr"
+              className="h-8 w-auto brightness-0 invert"
+            />
           </Link>
-        ))}
-      </nav>
-      
-      {/* Quick Action */}
-      <div className="p-4 border-t border-slate-800">
-        <Link to="/invoice/facturen/nieuw">
-          <Button className="w-full bg-teal-600 hover:bg-teal-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Nieuwe Factuur
-          </Button>
-        </Link>
+          <button onClick={onClose} className="lg:hidden text-slate-400 p-1">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        {/* User Info */}
+        <div className="p-4 border-b border-slate-800">
+          <p className="text-white font-medium truncate">{user?.bedrijfsnaam || 'Mijn Bedrijf'}</p>
+          <p className="text-slate-400 text-sm truncate">{user?.email}</p>
+        </div>
+        
+        {/* Menu */}
+        <nav className="flex-1 p-2">
+          {menuItems.map((item) => (
+            <Link
+              key={item.id}
+              to={item.path}
+              onClick={onClose}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-1 transition-colors ${
+                activeTab === item.id
+                  ? 'bg-teal-600 text-white'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span>{item.label}</span>
+            </Link>
+          ))}
+        </nav>
+        
+        {/* Quick Action */}
+        <div className="p-4 border-t border-slate-800">
+          <Link to="/invoice/facturen/nieuw" onClick={onClose}>
+            <Button className="w-full bg-teal-600 hover:bg-teal-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuwe Factuur
+            </Button>
+          </Link>
+        </div>
+        
+        {/* Logout */}
+        <div className="p-4 border-t border-slate-800">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-white transition-colors"
+          >
+            <LogOut className="w-5 h-5" />
+            <span>Uitloggen</span>
+          </button>
+        </div>
       </div>
-      
-      {/* Logout */}
-      <div className="p-4 border-t border-slate-800">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-white transition-colors"
-        >
-          <LogOut className="w-5 h-5" />
-          <span>Uitloggen</span>
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -103,6 +140,7 @@ function Sidebar({ activeTab, user }) {
 export function DashboardLayout({ children, activeTab }) {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   useEffect(() => {
     const token = localStorage.getItem('invoice_token');
@@ -146,8 +184,19 @@ export function DashboardLayout({ children, activeTab }) {
   
   return (
     <div className="flex min-h-screen bg-slate-100">
-      <Sidebar activeTab={activeTab} user={user} />
-      <main className="flex-1 p-8">
+      {/* Mobile Header */}
+      <MobileHeader user={user} onMenuClick={() => setSidebarOpen(true)} />
+      
+      {/* Sidebar */}
+      <Sidebar 
+        activeTab={activeTab} 
+        user={user} 
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
+      
+      {/* Main Content */}
+      <main className="flex-1 p-4 lg:p-8 pt-16 lg:pt-8">
         {children}
       </main>
     </div>

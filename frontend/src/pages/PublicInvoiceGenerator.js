@@ -60,6 +60,45 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
   const [selectedKlantId, setSelectedKlantId] = useState('');
   const [saving, setSaving] = useState(false);
   
+  // PWA Install prompt
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+  
+  useEffect(() => {
+    // Check if already installed
+    const isInstalled = window.matchMedia('(display-mode: standalone)').matches;
+    const dismissedInstall = localStorage.getItem('pwa_install_dismissed');
+    
+    if (!isInstalled && !dismissedInstall) {
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        setDeferredPrompt(e);
+        setShowInstallBanner(true);
+      });
+    }
+    
+    return () => {
+      window.removeEventListener('beforeinstallprompt', () => {});
+    };
+  }, []);
+  
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    if (outcome === 'accepted') {
+      setShowInstallBanner(false);
+    }
+    setDeferredPrompt(null);
+  };
+  
+  const dismissInstallBanner = () => {
+    setShowInstallBanner(false);
+    localStorage.setItem('pwa_install_dismissed', 'true');
+  };
+  
   useEffect(() => {
     const token = localStorage.getItem('invoice_token');
     if (token) {
@@ -311,16 +350,48 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* PWA Install Banner */}
+      {showInstallBanner && (
+        <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-96 bg-slate-900 text-white rounded-xl shadow-2xl p-4 z-50 print:hidden">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 bg-teal-600 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Download className="w-6 h-6" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold mb-1">Installeer Facturatie App</h3>
+              <p className="text-sm text-slate-300 mb-3">Installeer de app voor snelle toegang tot uw facturen, ook offline!</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleInstallClick}
+                  className="px-4 py-2 bg-teal-600 hover:bg-teal-700 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Installeren
+                </button>
+                <button
+                  onClick={dismissInstallBanner}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Later
+                </button>
+              </div>
+            </div>
+            <button onClick={dismissInstallBanner} className="text-slate-400 hover:text-white">
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+      
       {/* Header with Logo */}
       <header className="bg-white border-b border-slate-200 sticky top-0 z-50 print:hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between h-14 lg:h-16">
+            <div className="flex items-center gap-2 lg:gap-4">
               <a href="/" className="flex items-center">
                 <img 
                   src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
                   alt="Facturatie.sr"
-                  className="h-8 w-auto"
+                  className="h-6 lg:h-8 w-auto"
                 />
               </a>
               {isLoggedIn && (
@@ -344,80 +415,84 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 print:p-0 print:max-w-none">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8 print:p-0 print:max-w-none">
         
-        {/* Template Selection Bar */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6 print:hidden">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
+        {/* Template Selection Bar - Responsive */}
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-5 mb-4 lg:mb-6 print:hidden">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <span className="text-sm font-medium text-slate-700">Template:</span>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {templates.map((t) => (
                   <button
                     key={t.id}
                     onClick={() => setSelectedTemplate(t.id)}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
                       selectedTemplate === t.id
                         ? 'text-white shadow-md'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                     style={selectedTemplate === t.id ? { backgroundColor: t.primaryColor } : {}}
                   >
-                    {selectedTemplate === t.id && <Check className="w-4 h-4" />}
+                    {selectedTemplate === t.id && <Check className="w-3 h-3 sm:w-4 sm:h-4" />}
                     {t.name}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 lg:gap-3">
               {isLoggedIn ? (
                 <Button
                   onClick={handleSaveFactuur}
                   disabled={saving}
-                  className="bg-green-600 hover:bg-green-700 text-white shadow-md"
+                  className="bg-green-600 hover:bg-green-700 text-white shadow-md text-xs sm:text-sm flex-1 sm:flex-none"
                 >
                   {saving ? (
                     <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2" />
                   ) : (
-                    <Save className="w-4 h-4 mr-2" />
+                    <Save className="w-4 h-4 mr-1 sm:mr-2" />
                   )}
-                  {factuurId ? 'Bijwerken' : 'Opslaan'}
+                  <span className="hidden sm:inline">{factuurId ? 'Bijwerken' : 'Opslaan'}</span>
+                  <span className="sm:hidden">Opslaan</span>
                 </Button>
               ) : (
-                <Link to="/invoice/login">
-                  <Button className="bg-green-600 hover:bg-green-700 text-white shadow-md">
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Inloggen om op te slaan
+                <Link to="/invoice/login" className="flex-1 sm:flex-none">
+                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white shadow-md text-xs sm:text-sm">
+                    <LogIn className="w-4 h-4 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">Inloggen om op te slaan</span>
+                    <span className="sm:hidden">Inloggen</span>
                   </Button>
                 </Link>
               )}
               <Button
                 onClick={generatePDF}
                 style={{ backgroundColor: currentTemplate.primaryColor }}
-                className="text-white shadow-md hover:opacity-90"
+                className="text-white shadow-md hover:opacity-90 text-xs sm:text-sm flex-1 sm:flex-none"
               >
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
+                <Download className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Download PDF</span>
+                <span className="sm:hidden">PDF</span>
               </Button>
               <Button
                 onClick={() => window.print()}
                 variant="outline"
-                className="border-slate-300"
+                className="border-slate-300 text-xs sm:text-sm flex-1 sm:flex-none"
               >
-                <Printer className="w-4 h-4 mr-2" />
-                Printen
+                <Printer className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Printen</span>
+                <span className="sm:hidden">Print</span>
               </Button>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 print:block">
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 lg:gap-6 print:block">
           
           {/* Left Panel - Form */}
-          <div className="xl:col-span-5 space-y-5 print:hidden">
+          <div className="xl:col-span-5 space-y-4 lg:space-y-5 print:hidden">
             
             {/* Document Settings */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 lg:p-5">
               <h2 className="text-sm font-semibold text-slate-900 mb-4">Document Instellingen</h2>
               
               <div className="grid grid-cols-2 gap-3 mb-4">
