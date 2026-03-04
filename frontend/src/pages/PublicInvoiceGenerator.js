@@ -298,23 +298,21 @@ export default function PublicInvoiceGenerator({ showSaveOption }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
-              {isLoggedIn ? (
+              <a href="/" className="flex items-center">
+                <img 
+                  src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
+                  alt="Facturatie.sr"
+                  className="h-8 w-auto"
+                />
+              </a>
+              {isLoggedIn && (
                 <Link 
                   to="/gratis-factuur/dashboard" 
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 font-medium transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-slate-700 text-sm font-medium transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  <LayoutDashboard className="w-4 h-4" />
                   Dashboard
                 </Link>
-              ) : (
-                <a href="/" className="flex items-center">
-                  <img 
-                    src="https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
-                    alt="Facturatie.sr"
-                    className="h-8 w-auto"
-                  />
-                </a>
               )}
             </div>
             <div className="flex items-center gap-4">

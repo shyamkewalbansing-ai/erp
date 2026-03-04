@@ -56,6 +56,8 @@ class GratisUserUpdate(BaseModel):
     # Automatic reminder settings
     auto_herinnering_enabled: Optional[bool] = None
     auto_herinnering_dagen: Optional[int] = None  # Days after due date to send reminder
+    # Default currency setting
+    standaard_valuta: Optional[str] = None  # SRD, EUR, USD
 
 class KlantCreate(BaseModel):
     naam: str

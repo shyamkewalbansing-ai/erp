@@ -159,6 +159,7 @@ export default function GratisFactuurDashboard() {
   const [stats, setStats] = useState(null);
   const [recentFacturen, setRecentFacturen] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userValuta, setUserValuta] = useState('SRD');
   
   useEffect(() => {
     loadData();
@@ -166,9 +167,10 @@ export default function GratisFactuurDashboard() {
   
   const loadData = async () => {
     try {
-      const [statsRes, facturenRes] = await Promise.all([
+      const [statsRes, facturenRes, userRes] = await Promise.all([
         fetch(`${API_URL}/api/gratis-factuur/dashboard`, { headers: getAuthHeaders() }),
-        fetch(`${API_URL}/api/gratis-factuur/facturen`, { headers: getAuthHeaders() })
+        fetch(`${API_URL}/api/gratis-factuur/facturen`, { headers: getAuthHeaders() }),
+        fetch(`${API_URL}/api/gratis-factuur/auth/me`, { headers: getAuthHeaders() })
       ]);
       
       if (statsRes.ok) {
@@ -180,6 +182,13 @@ export default function GratisFactuurDashboard() {
         const facturenData = await facturenRes.json();
         setRecentFacturen(facturenData.slice(0, 5));
       }
+      
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        if (userData.standaard_valuta) {
+          setUserValuta(userData.standaard_valuta);
+        }
+      }
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -187,9 +196,10 @@ export default function GratisFactuurDashboard() {
     }
   };
   
-  const formatCurrency = (amount, valuta = 'SRD') => {
-    if (valuta === 'EUR') return `€ ${amount.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
-    if (valuta === 'USD') return `$ ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+  const formatCurrency = (amount, valuta) => {
+    const v = valuta || userValuta;
+    if (v === 'EUR') return `€ ${amount.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
+    if (v === 'USD') return `$ ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
     return `SRD ${amount.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
   };
   
