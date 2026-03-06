@@ -664,14 +664,14 @@ button[class*="variant-ghost"]:hover {
    ======================================== */
 .page-content {
     flex: 1;
-    padding: 24px;
+    padding: 0;
     max-width: 100%;
     overflow-x: hidden;
 }
 
 @media (max-width: 1024px) {
     .page-content {
-        padding: 76px 16px 24px 16px;
+        padding: 56px 0 0 0;
     }
 }
 
