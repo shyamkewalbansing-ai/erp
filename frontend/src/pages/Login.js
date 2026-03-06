@@ -297,7 +297,7 @@ export default function Login() {
         </div>
 
         {/* Right side - Login Form */}
-        <div className="flex-1 flex items-center justify-center p-6 md:p-8 bg-gradient-to-br from-slate-50 to-emerald-50/30">
+        <div className="flex-1 flex items-center justify-center p-6 md:p-8 login-form-bg" style={{ background: 'linear-gradient(to bottom right, #f8fafc, rgba(236, 253, 245, 0.3))' }}>
           <div className="w-full max-w-md">
             {/* Mobile Logo */}
             <div className="lg:hidden mb-8">
@@ -323,25 +323,25 @@ export default function Login() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1">
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
                 <Label htmlFor="email" className="font-medium text-slate-700">E-mailadres</Label>
-                <div className="relative">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <div className="relative mt-1">
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
                   <Input
                     id="email"
                     type="email"
                     placeholder="naam@bedrijf.sr"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="pl-12 h-12 bg-white border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
+                    className="pl-12 h-12 bg-white border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl"
                     required
                     data-testid="login-email-input"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1">
+              <div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="font-medium text-slate-700">Wachtwoord</Label>
                   <button 
@@ -352,15 +352,15 @@ export default function Login() {
                     Wachtwoord vergeten?
                   </button>
                 </div>
-                <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <div className="relative mt-1">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
                   <Input
                     id="password"
                     type="password"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-12 h-12 bg-white border-slate-200 focus:border-emerald-500 focus:ring-emerald-500"
+                    className="pl-12 h-12 bg-white border-slate-200 focus:border-emerald-500 focus:ring-emerald-500 rounded-xl"
                     required
                     data-testid="login-password-input"
                   />
@@ -388,12 +388,12 @@ export default function Login() {
             </form>
 
             {/* Divider */}
-            <div className="relative my-8">
+            <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-200"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-[#f6f9f8] text-slate-500">
+              <div className="relative flex justify-center">
+                <span className="px-4 text-sm text-slate-500" style={{ background: 'linear-gradient(to bottom right, #f8fafc, rgba(236, 253, 245, 0.3))' }}>
                   Nog geen account?
                 </span>
               </div>
