@@ -99,11 +99,31 @@ export default function BoekhoudingOfflineManager() {
     setStatus('Service Worker registreren...');
 
     try {
-      // 1. Register service worker
+      // 1. Register service worker and wait for it to be active
       if ('serviceWorker' in navigator) {
-        await navigator.serviceWorker.register('/service-worker.js');
+        const registration = await navigator.serviceWorker.register('/service-worker.js');
+        
+        // Wait for the service worker to be active
+        let sw = registration.active;
+        if (!sw) {
+          sw = registration.installing || registration.waiting;
+          if (sw) {
+            await new Promise(resolve => {
+              sw.addEventListener('statechange', () => {
+                if (sw.state === 'activated') resolve();
+              });
+              if (sw.state === 'activated') resolve();
+            });
+          }
+        }
+        
+        // Now cache index.html
         const reg = await navigator.serviceWorker.ready;
-        reg.active?.postMessage('CACHE_BOEKHOUDING');
+        if (reg.active) {
+          reg.active.postMessage('CACHE_BOEKHOUDING');
+          // Wait a bit for caching to complete
+          await new Promise(r => setTimeout(r, 1000));
+        }
       }
 
       // 2. Download alle pagina's parallel (sneller)

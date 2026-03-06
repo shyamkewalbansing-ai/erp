@@ -3,33 +3,34 @@ import ReactDOM from "react-dom/client";
 import "@/index.css";
 import App from "@/App";
 
-// Register Service Worker
+// Register Service Worker and cache index.html immediately
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(registration => {
-        console.log('SW registered:', registration.scope);
-        
-        // Check for updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New version available
-                console.log('New SW version available');
-                if (window.confirm('Er is een nieuwe versie beschikbaar. Wilt u herladen?')) {
-                  newWorker.postMessage({ type: 'SKIP_WAITING' });
-                  window.location.reload();
-                }
-              }
-            });
-          }
-        });
-      })
-      .catch(error => {
-        console.error('SW registration failed:', error);
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/service-worker.js');
+      console.log('[App] SW registered:', registration.scope);
+      
+      // Wait for SW to be ready and cache index.html
+      const sw = await navigator.serviceWorker.ready;
+      if (sw.active) {
+        sw.active.postMessage('CACHE_INDEX');
+        console.log('[App] Requested index.html caching');
+      }
+      
+      // Check for updates
+      registration.addEventListener('updatefound', () => {
+        const newWorker = registration.installing;
+        if (newWorker) {
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('[App] New SW version available');
+            }
+          });
+        }
       });
+    } catch (error) {
+      console.error('[App] SW registration failed:', error);
+    }
   });
 }
 
