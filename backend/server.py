@@ -69,6 +69,7 @@ from routers.suribet import router as suribet_router
 from routers.boekhouding import router as boekhouding_router
 from routers.schuldbeheer import router as schuldbeheer_router
 from routers.gratis_factuur import router as gratis_factuur_router, set_database as set_gratis_factuur_db
+from routers.live_chat import router as live_chat_router, set_database as set_live_chat_db, set_jwt_config as set_live_chat_jwt
 from services.unified_email_service import get_email_service, EMAIL_TEMPLATES
 from services.scheduled_tasks import get_scheduled_tasks
 
@@ -13103,6 +13104,16 @@ BELANGRIJKE INSTRUCTIES:
 4. Wees vriendelijk, professioneel en behulpzaam
 5. Gebruik SRD (Surinaamse Dollar) als valuta
 6. Geef beknopte maar informatieve antwoorden
+7. STUUR NOOIT een welkomstbericht of introductie tenzij het de allereerste interactie is
+8. Bij bevestigingen zoals "ja", "jha", "ok", "akkoord", "doe maar" - VOER DE ACTIE UIT zonder opnieuw te vragen
+9. Vraag MAXIMAAL 1x om bevestiging, daarna voer de actie uit
+10. Als de gebruiker gegevens doorgeeft na een vraag, gebruik die direct zonder opnieuw te vragen
+
+CONVERSATIE REGELS:
+- Dit is een LOPEND gesprek, niet een nieuw gesprek
+- Reageer DIRECT op wat de gebruiker zegt, zonder welkomstberichten
+- Als je om gegevens hebt gevraagd en de gebruiker geeft ze, GEBRUIK ze direct
+- Bij onduidelijkheid, vraag 1x om verduidelijking en voer dan uit
 
 ACTIEVE MODULES VAN DEZE GEBRUIKER: {active_module_list}
 
@@ -13116,11 +13127,15 @@ WANNEER DE GEBRUIKER EEN ACTIE WIL UITVOEREN, GEEF DAN EEN JSON RESPONSE:
 {{"action": "ACTIE_NAAM", "params": {{"param1": "waarde1", "param2": "waarde2"}}}}
 
 VOORBEELDEN VAN COMMANDO'S:
+- "Voeg huurder Jan toe met telefoon 123456" -> {{"action": "HUURDER_TOEVOEGEN", "params": {{"name": "Jan", "phone": "123456"}}}}
+- "Ja" of "Jha" na bevestigingsvraag -> VOER DE ACTIE UIT met eerder genoemde gegevens
 - "Voeg werknemer Jan toe" -> {{"action": "WERKNEMER_TOEVOEGEN", "params": {{"name": "Jan", "department": "Algemeen"}}}}
-- "Voeg auto BMW X5 toe" -> {{"action": "VOERTUIG_TOEVOEGEN", "params": {{"brand": "BMW", "model": "X5"}}}}
 - "Registreer betaling 5000 voor Maria" -> {{"action": "BETALING_REGISTREREN", "params": {{"tenant_name": "Maria", "amount": 5000}}}}
-- "Hoeveel werknemers heb ik?" -> Normale tekst response met de data
-- "Toon beschikbare voertuigen" -> {{"action": "BESCHIKBARE_VOERTUIGEN", "params": {{}}}}
+
+BELANGRIJK BIJ BEVESTIGINGEN:
+- Als de gebruiker "ja", "jha", "ok", "akkoord" zegt -> Voer de laatste besproken actie UIT
+- Stuur GEEN welkomstbericht na een bevestiging
+- Gebruik de gegevens uit het vorige bericht
 
 Als de gebruiker alleen informatie vraagt of een vraag stelt, antwoord normaal in tekst ZONDER JSON.
 Als de gebruiker een actie wil uitvoeren, geef dan de JSON response met de juiste actie en parameters.
@@ -13145,7 +13160,21 @@ Als gevraagd wordt over andere modules, leg uit dat deze eerst geactiveerd moete
             system_message=system_prompt
         ).with_model("openai", "gpt-4o")
         
-        # Send message to AI
+        # Load previous conversation history from database (last 10 messages for context)
+        previous_messages = await db.ai_chat_history.find(
+            {"user_id": user_id, "session_id": session_id},
+            {"_id": 0}
+        ).sort("created_at", -1).limit(10).to_list(10)
+        
+        # Reverse to get chronological order and add to chat context
+        if previous_messages:
+            previous_messages.reverse()
+            for prev in previous_messages:
+                # Add user message
+                if prev.get("user_message"):
+                    await chat.send_message(UserMessage(text=prev["user_message"]))
+        
+        # Send current message to AI
         user_msg = UserMessage(text=message)
         ai_response = await chat.send_message(user_msg)
     except Exception as llm_error:
@@ -14491,6 +14520,11 @@ api_router.include_router(schuldbeheer_router)
 # Initialize and include gratis factuur router
 set_gratis_factuur_db(db)
 api_router.include_router(gratis_factuur_router)
+
+# Initialize and include live chat router
+set_live_chat_db(db)
+set_live_chat_jwt(JWT_SECRET, JWT_ALGORITHM)
+api_router.include_router(live_chat_router)
 
 # =============================================================================
 # GITHUB WEBHOOK AUTO-DEPLOY

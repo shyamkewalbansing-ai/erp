@@ -21,6 +21,9 @@ const GratisFactuurKlanten = lazy(() => import("./pages/GratisFactuurKlanten"));
 const GratisFactuurFacturen = lazy(() => import("./pages/GratisFactuurFacturen"));
 const GratisFactuurInstellingen = lazy(() => import("./pages/GratisFactuurInstellingen"));
 
+// Staff Chat Dashboard
+const StaffChatDashboard = lazy(() => import("./pages/StaffChatDashboard"));
+
 // Initialize performance monitoring and preload critical data
 initPerformanceMonitoring();
 
@@ -594,6 +597,9 @@ function MainAppRoutes() {
             <Route path="/invoice/facturen/:id/bewerken" element={<PublicInvoiceGenerator showSaveOption={true} />} />
             <Route path="/invoice/betalingen" element={<GratisFactuurFacturen />} />
             <Route path="/invoice/instellingen" element={<GratisFactuurInstellingen />} />
+            
+            {/* Staff Chat Dashboard - Public access with own auth */}
+            <Route path="/staff-chat" element={<StaffChatDashboard />} />
           </>
         )}
         

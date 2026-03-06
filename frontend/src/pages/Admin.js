@@ -54,6 +54,7 @@ import { Badge } from '../components/ui/badge';
 
 // Lazy load WebsiteEditor for better performance
 const WebsiteEditor = lazy(() => import('../components/WebsiteEditor'));
+const LiveChatStaffManager = lazy(() => import('./LiveChatStaffManager'));
 import DomainManagementPage from './DomainManagementPage';
 import EmailSettingsAdmin from '../components/EmailSettingsAdmin';
 import { Input } from '../components/ui/input';
@@ -122,7 +123,8 @@ import {
   Banknote,
   Mail,
   Rocket,
-  Play
+  Play,
+  MessageSquare
 } from 'lucide-react';
 
 // Server IP from environment variable for DNS instructions
@@ -992,6 +994,11 @@ server {
               <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
               <span className="hidden sm:inline">Update</span>
               <span className="sm:hidden">Upd</span>
+            </TabsTrigger>
+            <TabsTrigger value="live-chat" className="data-[state=active]:bg-teal-500 data-[state=active]:text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
+              <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
+              <span className="hidden sm:inline">Live Chat</span>
+              <span className="sm:hidden">Chat</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -2337,6 +2344,17 @@ server {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        {/* Live Chat Staff Management Tab */}
+        <TabsContent value="live-chat">
+          <Suspense fallback={
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            </div>
+          }>
+            <LiveChatStaffManager />
+          </Suspense>
         </TabsContent>
       </Tabs>
 
