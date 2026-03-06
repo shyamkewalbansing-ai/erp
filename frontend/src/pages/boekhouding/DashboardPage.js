@@ -27,23 +27,23 @@ import {
   Tooltip
 } from 'recharts';
 
-// Stat Card - Icon on RIGHT side like reference
+// Stat Card - Responsive with icon on RIGHT
 const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, iconColor }) => {
   return (
-    <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
+    <Card className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl shadow-sm hover:shadow-md transition-shadow">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-start justify-between gap-2">
           {/* Content - LEFT */}
-          <div className="flex-1">
-            <p className="text-sm text-gray-500 font-medium">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm text-gray-500 font-medium truncate">{title}</p>
+            <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mt-0.5 sm:mt-1 truncate">{value}</p>
             {subtitle && (
-              <p className={`text-xs mt-0.5 ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
+              <p className={`text-[10px] sm:text-xs mt-0.5 truncate ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
             )}
           </div>
           {/* Icon - RIGHT */}
-          <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center`}>
-            <Icon className={`w-5 h-5 ${iconColor}`} />
+          <div className={`w-9 h-9 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-lg sm:rounded-xl ${iconBg} flex items-center justify-center flex-shrink-0`}>
+            <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${iconColor}`} />
           </div>
         </div>
       </CardContent>
@@ -51,32 +51,32 @@ const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, i
   );
 };
 
-// Bank Card - Simpler design
+// Bank Card - Responsive
 const BankCard = ({ title, value, icon: Icon }) => {
   return (
-    <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-      <CardContent className="p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Icon className="w-4 h-4 text-gray-400" />
-          <span className="text-sm text-gray-500">{title}</span>
+    <Card className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl shadow-sm">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+          <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400" />
+          <span className="text-xs sm:text-sm text-gray-500">{title}</span>
         </div>
-        <p className="text-2xl font-bold text-gray-900">{value}</p>
+        <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{value}</p>
       </CardContent>
     </Card>
   );
 };
 
-// Loading Card
+// Loading Card - Responsive
 const LoadingStatCard = () => (
-  <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-    <CardContent className="p-5">
+  <Card className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl shadow-sm">
+    <CardContent className="p-3 sm:p-4">
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <Skeleton className="h-4 w-20 mb-3" />
-          <Skeleton className="h-8 w-28 mb-2" />
-          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-3 sm:h-4 w-16 sm:w-20 mb-2 sm:mb-3" />
+          <Skeleton className="h-6 sm:h-8 w-20 sm:w-28 mb-1.5 sm:mb-2" />
+          <Skeleton className="h-2.5 sm:h-3 w-12 sm:w-16" />
         </div>
-        <Skeleton className="w-12 h-12 rounded-xl" />
+        <Skeleton className="w-9 h-9 sm:w-10 sm:h-10 lg:w-12 lg:h-12 rounded-lg sm:rounded-xl" />
       </div>
     </CardContent>
   </Card>
@@ -158,36 +158,42 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="boekhouding-dashboard">
-      {/* Header */}
+      {/* Header - Responsive */}
       <div className="bg-white border-b border-gray-100">
-        <div className="px-6 py-3 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-500 text-sm">Welkom terug! Hier is uw financiële overzicht.</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="bg-gray-50 rounded-lg px-4 py-2 border border-gray-200">
-              <span className="text-sm text-gray-500">USD/SRD: </span>
-              <span className="text-sm font-semibold text-gray-900">{formatNumber(usdSrdRate, 2)}</span>
+        <div className="px-3 sm:px-4 lg:px-6 py-2 sm:py-3">
+          {/* Mobile: Stack layout, Desktop: Row layout */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+            <div className="min-w-0">
+              <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Dashboard</h1>
+              <p className="text-gray-500 text-xs sm:text-sm truncate">Welkom terug! Hier is uw financiële overzicht.</p>
             </div>
-            <div className="bg-gray-50 rounded-lg px-4 py-2 border border-gray-200">
-              <span className="text-sm text-gray-500">EUR/SRD: </span>
-              <span className="text-sm font-semibold text-gray-900">{formatNumber(eurSrdRate, 2)}</span>
+            
+            {/* Exchange rates and POS button */}
+            <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto pb-1 sm:pb-0 scrollbar-hide">
+              <div className="bg-gray-50 rounded-lg px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 border border-gray-200 flex-shrink-0">
+                <span className="text-[10px] sm:text-xs lg:text-sm text-gray-500">USD/SRD: </span>
+                <span className="text-[10px] sm:text-xs lg:text-sm font-semibold text-gray-900">{formatNumber(usdSrdRate, 2)}</span>
+              </div>
+              <div className="bg-gray-50 rounded-lg px-2 sm:px-3 lg:px-4 py-1.5 sm:py-2 border border-gray-200 flex-shrink-0">
+                <span className="text-[10px] sm:text-xs lg:text-sm text-gray-500">EUR/SRD: </span>
+                <span className="text-[10px] sm:text-xs lg:text-sm font-semibold text-gray-900">{formatNumber(eurSrdRate, 2)}</span>
+              </div>
+              <button 
+                className="bg-emerald-500 hover:bg-emerald-600 text-white px-2.5 sm:px-3 lg:px-4 py-1.5 sm:py-2 rounded-lg font-medium text-[10px] sm:text-xs lg:text-sm flex items-center gap-1 sm:gap-2 transition-colors flex-shrink-0 whitespace-nowrap"
+                onClick={() => navigate('/app/boekhouding/pos')}
+              >
+                <Receipt className="w-3 h-3 sm:w-4 sm:h-4" />
+                Point of Sale
+              </button>
             </div>
-            <button 
-              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-colors"
-              onClick={() => navigate('/app/boekhouding/pos')}
-            >
-              <Receipt className="w-4 h-4" />
-              Point of Sale
-            </button>
           </div>
         </div>
       </div>
 
-      <div className="px-6 py-4">
-        {/* Row 1: Omzet, Kosten, Winst, Openstaande Facturen - 4 columns */}
-        <div className="grid grid-cols-4 gap-4 mb-4">
+      {/* Content - No padding, responsive gaps */}
+      <div className="p-0">
+        {/* Row 1: Omzet, Kosten, Winst, Openstaande Facturen */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 pb-0 sm:pb-0 lg:pb-0">
           {loading ? (
             <>
               <LoadingStatCard />
@@ -217,7 +223,7 @@ const DashboardPage = () => {
               <StatCard
                 title="Winst"
                 value={formatCurrency(winst, 'SRD')}
-                subtitle={winst < 0 ? "↘ Negatief Netto resultaat" : "Netto resultaat"}
+                subtitle={winst < 0 ? "↘ Negatief" : "Netto resultaat"}
                 subtitleColor={winst < 0 ? "text-red-500" : "text-gray-400"}
                 icon={Receipt}
                 iconBg="bg-rose-50"
@@ -235,8 +241,8 @@ const DashboardPage = () => {
           )}
         </div>
 
-        {/* Row 2: Debiteuren, Crediteuren, BTW te betalen, BTW te vorderen - 4 columns */}
-        <div className="grid grid-cols-4 gap-4 mb-4">
+        {/* Row 2: Debiteuren, Crediteuren, BTW te betalen, BTW te vorderen */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 pb-0 sm:pb-0 lg:pb-0">
           {loading ? (
             <>
               <LoadingStatCard />
@@ -282,8 +288,8 @@ const DashboardPage = () => {
           )}
         </div>
 
-        {/* Row 3: Bank SRD, Bank USD, Bank EUR - 3 columns */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        {/* Row 3: Bank SRD, Bank USD, Bank EUR */}
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4 pb-0 sm:pb-0 lg:pb-0">
           {loading ? (
             <>
               <LoadingStatCard />
@@ -311,13 +317,13 @@ const DashboardPage = () => {
           )}
         </div>
 
-        {/* Row 4: Cashflow Overzicht + Ouderdomsanalyse - 2 columns */}
-        <div className="grid grid-cols-2 gap-4">
+        {/* Row 4: Cashflow Overzicht + Ouderdomsanalyse - Stack on mobile */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 sm:gap-3 lg:gap-4 p-2 sm:p-3 lg:p-4">
           {/* Cashflow Overzicht */}
-          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Cashflow Overzicht</h3>
-              <div className="h-64">
+          <Card className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl shadow-sm">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 lg:mb-6">Cashflow Overzicht</h3>
+              <div className="h-48 sm:h-56 lg:h-64">
                 {loading ? (
                   <Skeleton className="w-full h-full" />
                 ) : (
@@ -328,24 +334,25 @@ const DashboardPage = () => {
                         dataKey="name" 
                         axisLine={false} 
                         tickLine={false}
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                        tick={{ fill: '#9ca3af', fontSize: 10 }}
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false}
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                        tick={{ fill: '#9ca3af', fontSize: 10 }}
                         tickFormatter={(v) => `${(v/1000).toFixed(0)}k`}
+                        width={35}
                       />
                       <Tooltip 
                         formatter={(value) => formatCurrency(value, 'SRD')}
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                        contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '12px' }}
                       />
                       <Line 
                         type="monotone" 
                         dataKey="omzet" 
                         stroke="#22c55e" 
                         strokeWidth={2}
-                        dot={{ fill: '#22c55e', r: 4 }}
+                        dot={{ fill: '#22c55e', r: 3 }}
                         name="Omzet"
                       />
                       <Line 
@@ -353,7 +360,7 @@ const DashboardPage = () => {
                         dataKey="kosten" 
                         stroke="#ef4444" 
                         strokeWidth={2}
-                        dot={{ fill: '#ef4444', r: 4 }}
+                        dot={{ fill: '#ef4444', r: 3 }}
                         name="Kosten"
                       />
                     </LineChart>
@@ -364,31 +371,32 @@ const DashboardPage = () => {
           </Card>
 
           {/* Ouderdomsanalyse Debiteuren */}
-          <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Ouderdomsanalyse Debiteuren</h3>
-              <div className="h-64">
+          <Card className="bg-white border border-gray-200 rounded-xl sm:rounded-2xl shadow-sm">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
+              <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-3 sm:mb-4 lg:mb-6">Ouderdomsanalyse Debiteuren</h3>
+              <div className="h-48 sm:h-56 lg:h-64">
                 {loading ? (
                   <Skeleton className="w-full h-full" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={ouderdomData} barSize={60}>
+                    <BarChart data={ouderdomData} barSize={40}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
                       <XAxis 
                         dataKey="name" 
                         axisLine={false} 
                         tickLine={false}
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                        tick={{ fill: '#9ca3af', fontSize: 10 }}
                       />
                       <YAxis 
                         axisLine={false} 
                         tickLine={false}
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                        tick={{ fill: '#9ca3af', fontSize: 10 }}
                         tickFormatter={(v) => `${(v/1000).toFixed(0)}k`}
+                        width={35}
                       />
                       <Tooltip 
                         formatter={(value) => formatCurrency(value, 'SRD')}
-                        contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                        contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', fontSize: '12px' }}
                       />
                       <Bar 
                         dataKey="value" 
