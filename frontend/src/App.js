@@ -2,9 +2,42 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
+import { OfflineProvider, OfflineIndicator } from "./context/OfflineContext";
 import React, { lazy, Suspense, memo, useEffect } from "react";
 import { preloadCriticalData } from "./lib/api";
 import { initPerformanceMonitoring, prefetch } from "./lib/performance";
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/service-worker.js')
+      .then(registration => {
+        console.log('SW registered:', registration.scope);
+        
+        // Check for updates every 5 minutes
+        setInterval(() => {
+          registration.update();
+        }, 5 * 60 * 1000);
+        
+        // Handle updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New version available
+              if (window.confirm('Er is een nieuwe versie beschikbaar. Wilt u de pagina herladen?')) {
+                newWorker.postMessage({ type: 'SKIP_WAITING' });
+                window.location.reload();
+              }
+            }
+          });
+        });
+      })
+      .catch(error => {
+        console.error('SW registration failed:', error);
+      });
+  });
+}
 
 // Critical pages - load immediately
 import Login from "./pages/Login";
@@ -479,22 +512,25 @@ function EmployeePortalRoutes() {
 function AppWithRoutes() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          {/* Tenant Portal Routes */}
-          <Route path="/huurder/*" element={<TenantPortalRoutes />} />
-          
-          {/* Employee Portal Routes */}
-          <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
-          
-          {/* Auto Dealer Customer Portal Routes */}
-          <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
-          
-          {/* Main App Routes */}
-          <Route path="/*" element={<MainAppRoutes />} />
-        </Routes>
-        <Toaster richColors position="top-right" />
-      </AuthProvider>
+      <OfflineProvider>
+        <AuthProvider>
+          <Routes>
+            {/* Tenant Portal Routes */}
+            <Route path="/huurder/*" element={<TenantPortalRoutes />} />
+            
+            {/* Employee Portal Routes */}
+            <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
+            
+            {/* Auto Dealer Customer Portal Routes */}
+            <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
+            
+            {/* Main App Routes */}
+            <Route path="/*" element={<MainAppRoutes />} />
+          </Routes>
+          <Toaster richColors position="top-right" />
+          <OfflineIndicator />
+        </AuthProvider>
+      </OfflineProvider>
     </BrowserRouter>
   );
 }

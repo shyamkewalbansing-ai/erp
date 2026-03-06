@@ -1,21 +1,59 @@
 {
-  "name": "Facturatie.sr - Invoice Generator",
+  "name": "Facturatie N.V. - Compleet Bedrijfsbeheer",
   "short_name": "Facturatie",
-  "description": "Gratis facturen en offertes maken, opslaan en beheren",
-  "start_url": "/invoice",
+  "description": "Beheer uw bedrijf volledig - facturen, boekhouding, HRM, voorraadbeheer en meer. Werkt ook offline!",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0d9488",
+  "background_color": "#ffffff",
+  "theme_color": "#10b981",
   "orientation": "any",
+  "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/logo192.png",
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo512.png",
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -26,10 +64,42 @@
       "src": "/screenshot1.png",
       "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
+      "form_factor": "wide",
+      "label": "Dashboard overzicht"
     }
   ],
-  "categories": ["business", "finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Open het dashboard",
+      "url": "/app/dashboard",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Nieuwe Factuur",
+      "short_name": "Factuur",
+      "description": "Maak een nieuwe factuur",
+      "url": "/invoice",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Boekhouding",
+      "short_name": "Boekhouding",
+      "description": "Open boekhouding module",
+      "url": "/app/boekhouding",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    }
+  ],
+  "categories": ["business", "finance", "productivity", "utilities"],
   "lang": "nl",
-  "dir": "ltr"
+  "dir": "ltr",
+  "related_applications": [],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }
