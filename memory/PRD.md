@@ -8,7 +8,29 @@ Comprehensive accounting and business management platform for Suriname businesse
 - Vastgoed Beheer - Real Estate Management
 - Auto Dealer, Beauty Spa, Pompstation - Industry-specific modules
 
-## Current Session: March 4, 2026
+## Current Session: March 6, 2026
+
+### Completed This Session
+
+#### PWA Offline Functionaliteit Fix ✅ (P0 - Kritiek)
+- **Service Worker v7** volledig herschreven met robuuste offline ondersteuning:
+  - Correct cachen van `index.html` en `/` voor SPA navigatie
+  - Aparte cache voor app shell (`facturatie-shell-v7`) en assets (`facturatie-v7`)
+  - Network-first strategie voor navigatie, cache-first voor assets
+  - Stale-while-revalidate voor statische bestanden
+- **OfflinePreloadManager Component** verbeterd:
+  - Cache app shell automatisch via service worker
+  - Download alle 112 React modules voor offline gebruik
+  - Progress indicator tijdens download
+  - "Offline beschikbaar" indicator na succesvolle download
+- **Automatische index.html caching** bij pagina load
+- **Test resultaten**: Alle 6 tests geslaagd (service worker registratie, index.html caching, banner, download, cache populatie, indicator)
+- **Bestanden gewijzigd**:
+  - `frontend/public/service-worker.js` - Herschreven v7
+  - `frontend/src/components/OfflinePreloadManager.js` - Verbeterde caching
+  - `frontend/src/App.js` - Automatische cache trigger
+
+## Previous Session: March 4, 2026
 
 ### Completed This Session
 
@@ -133,16 +155,19 @@ Now supports ALL modules:
 ## Pending/Upcoming Tasks
 
 ### P0 - High Priority
-- **Login redirect issue**: Users incorrectly redirected to `/app/hrm` after login instead of their first module. Requires investigation of user-specific `sidebar-order` config.
+- ✅ **PWA Offline Bug** - OPGELOST: Service worker v7 cachet nu correct index.html
 
 ### P1 - Next Priority
+- **Live Chat Systeem** - WebSocket implementatie voor real-time chat tussen klanten en medewerkers
+- **Login redirect issue**: Users incorrectly redirected to `/app/hrm` after login instead of their first module
 - PDF Payslip Generator for HRM module
-- Verify production server AI assistant (EMERGENT_LLM_KEY configuration)
 
 ### P2 - Future
+- **Login pagina UI fixes** - Spacing, iconen, wachtwoord vergeten knop (verificatie nodig)
+- **AI Assistant conversatie bug** - Context behoud fix (verificatie nodig)
+- Responsive design voor "Boekhouding" module
+- Verify production server AI assistant (EMERGENT_LLM_KEY configuration)
 - Schuldbeheer module core functionality
-- Advanced AI features (phone calls, WhatsApp)
-- POS link removal from sidebar verification
 
 ### Future/Backlog
 - Advanced AI Features (telephony, WhatsApp)
