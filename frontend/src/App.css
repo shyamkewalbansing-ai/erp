@@ -340,7 +340,7 @@ h1, h2, h3, h4, h5, h6 {
    ======================================== */
 .desktop-header {
     height: var(--header-height);
-    background: var(--surface);
+    background: #f9fafb;
     border-bottom: 1px solid var(--border-color);
     padding: 0 24px;
     display: flex;
