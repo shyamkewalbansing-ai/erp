@@ -5,9 +5,47 @@
 
 import React, { useState, useEffect } from 'react';
 import { preloadAllModules, isPreloadComplete, resetPreload } from '../lib/preloadModules';
-import { Download, CheckCircle, Wifi, WifiOff, RefreshCw } from 'lucide-react';
+import { Download, CheckCircle, WifiOff, RefreshCw, CloudDownload } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
+
+// Cache the critical resources via Service Worker
+async function cacheAppShell() {
+  if (!navigator.serviceWorker?.controller) {
+    console.log('[Offline] No service worker controller yet');
+    return false;
+  }
+  
+  try {
+    // Get all CSS and JS from the page
+    const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(l => l.href);
+    const scripts = Array.from(document.querySelectorAll('script[src]')).map(s => s.src);
+    const images = Array.from(document.querySelectorAll('img[src]')).map(i => i.src);
+    
+    // Core URLs to cache
+    const urlsToCache = [
+      '/',
+      '/index.html',
+      '/manifest.json',
+      '/favicon.ico',
+      ...links.filter(url => url.startsWith(window.location.origin)),
+      ...scripts.filter(url => url.startsWith(window.location.origin)),
+      ...images.filter(url => url.startsWith(window.location.origin))
+    ];
+    
+    // Send to service worker
+    navigator.serviceWorker.controller.postMessage({
+      type: 'CACHE_ALL',
+      urls: [...new Set(urlsToCache)]
+    });
+    
+    console.log('[Offline] Requested caching of', urlsToCache.length, 'resources');
+    return true;
+  } catch (e) {
+    console.error('[Offline] Failed to cache app shell:', e);
+    return false;
+  }
+}
 
 export default function OfflinePreloadManager() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -51,20 +89,27 @@ export default function OfflinePreloadManager() {
     toast.info('Offline data wordt gedownload...');
     
     try {
+      // First: Cache the app shell (index.html, CSS, JS) via Service Worker
+      await cacheAppShell();
+      
+      // Then: Preload all React modules
       const result = await preloadAllModules(
         (prog, loaded, failed) => {
           setProgress(prog);
           setStats({ loaded, failed });
         },
-        (loaded, failed) => {
+        async (loaded, failed) => {
+          // After modules are loaded, cache them too
+          await cacheAppShell();
+          
           setIsPreloading(false);
           setPreloadDone(true);
           setShowBanner(false);
           
           if (failed === 0) {
-            toast.success('✅ Offline data volledig gedownload! De app werkt nu offline.');
+            toast.success('Offline data volledig gedownload! De app werkt nu offline.');
           } else {
-            toast.warning(`⚠️ Offline data gedownload met ${failed} fouten. Sommige pagina's werken mogelijk niet offline.`);
+            toast.warning(`Offline data gedownload met ${failed} fouten. Sommige pagina's werken mogelijk niet offline.`);
           }
         }
       );

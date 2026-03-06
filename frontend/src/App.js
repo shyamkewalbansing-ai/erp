@@ -16,6 +16,20 @@ import PublicInvoiceGenerator from "./pages/PublicInvoiceGenerator";
 import Layout from "./components/Layout";
 import "@/App.css";
 
+// Auto-cache index.html when service worker is ready
+if ('serviceWorker' in navigator && typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    // Wait for service worker to be ready
+    navigator.serviceWorker.ready.then((registration) => {
+      if (registration.active) {
+        // Tell service worker to cache the index.html
+        registration.active.postMessage({ type: 'CACHE_INDEX' });
+        console.log('[App] Requested index.html caching');
+      }
+    });
+  });
+}
+
 // Gratis Factuur pages - separate auth system
 const GratisFactuurAuth = lazy(() => import("./pages/GratisFactuurAuth"));
 const GratisFactuurDashboard = lazy(() => import("./pages/GratisFactuurDashboard"));
