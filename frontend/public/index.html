@@ -149,19 +149,42 @@
             });
         </script>
         
-        <!-- Service Worker Registration -->
+        <!-- Service Worker Registration with Cache Priority -->
         <script>
+            // Prioriteit: Cache assets voor offline gebruik
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                    navigator.serviceWorker.register('/service-worker.js')
+                    navigator.serviceWorker.register('/service-worker.js', { scope: '/' })
                         .then(function(registration) {
-                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                            console.log('ServiceWorker registration successful');
+                            
+                            // Forceer update check bij elke pageload
+                            registration.update();
+                            
+                            // Luister naar berichten van service worker
+                            navigator.serviceWorker.addEventListener('message', function(event) {
+                                if (event.data && event.data.type === 'TRIGGER_SYNC') {
+                                    // Trigger sync in de app
+                                    window.dispatchEvent(new CustomEvent('sw-sync'));
+                                }
+                            });
                         })
                         .catch(function(err) {
                             console.log('ServiceWorker registration failed: ', err);
                         });
                 });
             }
+            
+            // Check online status
+            function updateOnlineStatus() {
+                const isOnline = navigator.onLine;
+                document.body.classList.toggle('is-offline', !isOnline);
+                console.log('Online status:', isOnline ? 'online' : 'offline');
+            }
+            
+            window.addEventListener('online', updateOnlineStatus);
+            window.addEventListener('offline', updateOnlineStatus);
+            updateOnlineStatus();
         </script>
     </body>
 </html>
