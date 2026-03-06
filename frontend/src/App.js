@@ -2,12 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
-import { OfflineProvider, OfflineIndicator } from "./context/OfflineContext";
-import OfflinePreloadManager from "./components/OfflinePreloadManager";
-import ChunkErrorBoundary from "./components/ChunkErrorBoundary";
-import React, { lazy, Suspense, memo, useEffect } from "react";
-import { preloadCriticalData } from "./lib/api";
-import { initPerformanceMonitoring, prefetch } from "./lib/performance";
+import React, { lazy, Suspense, memo } from "react";
 
 // Critical pages - load immediately
 import Login from "./pages/Login";
@@ -17,14 +12,10 @@ import PublicInvoiceGenerator from "./pages/PublicInvoiceGenerator";
 import Layout from "./components/Layout";
 import "@/App.css";
 
-// Auto-cache index.html when service worker is ready (lightweight)
-if ('serviceWorker' in navigator && typeof window !== 'undefined') {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.ready.then((registration) => {
-      if (registration.active) {
-        registration.active.postMessage({ type: 'CACHE_INDEX' });
-      }
-    }).catch(() => {});
+// Unregister any existing service workers to fix memory issues
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(r => r.unregister());
   });
 }
 
@@ -37,15 +28,6 @@ const GratisFactuurInstellingen = lazy(() => import("./pages/GratisFactuurInstel
 
 // Staff Chat Dashboard
 const StaffChatDashboard = lazy(() => import("./pages/StaffChatDashboard"));
-
-// Initialize performance monitoring and preload critical data
-initPerformanceMonitoring();
-
-// Preload critical data immediately
-preloadCriticalData();
-
-// Prefetch disabled to prevent memory issues
-// Pages are lazy loaded on demand instead
 
 // Tenant Portal pages
 const TenantLogin = lazy(() => import("./pages/TenantLogin"));
@@ -198,13 +180,11 @@ const PageLoader = memo(() => (
   </div>
 ));
 
-// Suspense wrapper with ChunkErrorBoundary for offline chunk errors
+// Simple Suspense wrapper
 const SafeSuspense = ({ children }) => (
-  <ChunkErrorBoundary>
-    <SafeSuspense>
-      {children}
-    </SafeSuspense>
-  </ChunkErrorBoundary>
+  <Suspense fallback={<PageLoader />}>
+    {children}
+  </Suspense>
 );
 
 // Tenant Protected Route
@@ -489,26 +469,22 @@ function EmployeePortalRoutes() {
 function AppWithRoutes() {
   return (
     <BrowserRouter>
-      <OfflineProvider>
-        <AuthProvider>
-          <Routes>
-            {/* Tenant Portal Routes */}
-            <Route path="/huurder/*" element={<TenantPortalRoutes />} />
-            
-            {/* Employee Portal Routes */}
-            <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
-            
-            {/* Auto Dealer Customer Portal Routes */}
-            <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
-            
-            {/* Main App Routes */}
-            <Route path="/*" element={<MainAppRoutes />} />
-          </Routes>
-          <Toaster richColors position="top-right" />
-          <OfflineIndicator />
-          <OfflinePreloadManager />
-        </AuthProvider>
-      </OfflineProvider>
+      <AuthProvider>
+        <Routes>
+          {/* Tenant Portal Routes */}
+          <Route path="/huurder/*" element={<TenantPortalRoutes />} />
+          
+          {/* Employee Portal Routes */}
+          <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
+          
+          {/* Auto Dealer Customer Portal Routes */}
+          <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
+          
+          {/* Main App Routes */}
+          <Route path="/*" element={<MainAppRoutes />} />
+        </Routes>
+        <Toaster richColors position="top-right" />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
