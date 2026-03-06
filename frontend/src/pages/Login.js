@@ -323,8 +323,8 @@ export default function Login() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1">
                 <Label htmlFor="email" className="font-medium text-slate-700">E-mailadres</Label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
@@ -341,7 +341,7 @@ export default function Login() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="font-medium text-slate-700">Wachtwoord</Label>
                   <button 
@@ -393,7 +393,7 @@ export default function Login() {
                 <div className="w-full border-t border-slate-200"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-gradient-to-br from-slate-50 to-emerald-50/30 text-slate-500">
+                <span className="px-4 bg-[#f6f9f8] text-slate-500">
                   Nog geen account?
                 </span>
               </div>
