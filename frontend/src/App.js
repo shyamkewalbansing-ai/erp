@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
+import BoekhoudingOfflineManager from "./components/BoekhoudingOfflineManager";
 import React, { lazy, Suspense, memo } from "react";
 
 // Critical pages - load immediately
@@ -484,6 +485,7 @@ function AppWithRoutes() {
           <Route path="/*" element={<MainAppRoutes />} />
         </Routes>
         <Toaster richColors position="top-right" />
+        <BoekhoudingOfflineManager />
       </AuthProvider>
     </BrowserRouter>
   );
