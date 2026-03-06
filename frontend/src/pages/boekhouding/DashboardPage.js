@@ -31,19 +31,19 @@ import {
 const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, iconColor }) => {
   return (
     <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow">
-      <CardContent className="p-5">
+      <CardContent className="p-4">
         <div className="flex items-start justify-between">
           {/* Content - LEFT */}
           <div className="flex-1">
             <p className="text-sm text-gray-500 font-medium">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+            <p className="text-2xl font-bold text-gray-900 mt-1">{value}</p>
             {subtitle && (
-              <p className={`text-xs mt-1 ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
+              <p className={`text-xs mt-0.5 ${subtitleColor || 'text-gray-400'}`}>{subtitle}</p>
             )}
           </div>
           {/* Icon - RIGHT */}
-          <div className={`w-12 h-12 rounded-xl ${iconBg} flex items-center justify-center`}>
-            <Icon className={`w-6 h-6 ${iconColor}`} />
+          <div className={`w-11 h-11 rounded-xl ${iconBg} flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 ${iconColor}`} />
           </div>
         </div>
       </CardContent>
@@ -55,8 +55,8 @@ const StatCard = ({ title, value, subtitle, subtitleColor, icon: Icon, iconBg, i
 const BankCard = ({ title, value, icon: Icon }) => {
   return (
     <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
-      <CardContent className="p-5">
-        <div className="flex items-center gap-2 mb-3">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 mb-2">
           <Icon className="w-4 h-4 text-gray-400" />
           <span className="text-sm text-gray-500">{title}</span>
         </div>
@@ -160,10 +160,10 @@ const DashboardPage = () => {
     <div className="min-h-screen bg-gray-50" data-testid="boekhouding-dashboard">
       {/* Header */}
       <div className="bg-white border-b border-gray-100">
-        <div className="px-8 py-6 flex items-center justify-between">
+        <div className="px-6 py-3 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-            <p className="text-gray-500 mt-1">Welkom terug! Hier is uw financiële overzicht.</p>
+            <p className="text-gray-500 text-sm">Welkom terug! Hier is uw financiële overzicht.</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="bg-gray-50 rounded-lg px-4 py-2 border border-gray-200">
@@ -185,9 +185,9 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      <div className="p-8">
+      <div className="px-6 py-4">
         {/* Row 1: Omzet, Kosten, Winst, Openstaande Facturen - 4 columns */}
-        <div className="grid grid-cols-4 gap-5 mb-5">
+        <div className="grid grid-cols-4 gap-4 mb-4">
           {loading ? (
             <>
               <LoadingStatCard />
@@ -236,7 +236,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Row 2: Debiteuren, Crediteuren, BTW te betalen, BTW te vorderen - 4 columns */}
-        <div className="grid grid-cols-4 gap-5 mb-5">
+        <div className="grid grid-cols-4 gap-4 mb-4">
           {loading ? (
             <>
               <LoadingStatCard />
@@ -283,7 +283,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Row 3: Bank SRD, Bank USD, Bank EUR - 3 columns */}
-        <div className="grid grid-cols-3 gap-5 mb-5">
+        <div className="grid grid-cols-3 gap-4 mb-4">
           {loading ? (
             <>
               <LoadingStatCard />
@@ -312,7 +312,7 @@ const DashboardPage = () => {
         </div>
 
         {/* Row 4: Cashflow Overzicht + Ouderdomsanalyse - 2 columns */}
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-2 gap-4">
           {/* Cashflow Overzicht */}
           <Card className="bg-white border border-gray-200 rounded-2xl shadow-sm">
             <CardContent className="p-6">

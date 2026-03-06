@@ -45,7 +45,7 @@
   
   "test_credentials": {
     "demo_spa_workspace_id": "demo-spa",
-    "api_base_url": "https://facturatie-bugfix.preview.emergentagent.com"
+    "api_base_url": "https://dashboard-redesign-44.preview.emergentagent.com"
   },
   
   "seed_data_creation": "Demo spa with treatments, staff, and availability already seeded",

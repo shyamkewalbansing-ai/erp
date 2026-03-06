@@ -11,7 +11,7 @@ import requests
 import os
 from datetime import datetime
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://facturatie-bugfix.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://dashboard-redesign-44.preview.emergentagent.com').rstrip('/')
 
 class TestDashboardAndRentSettings:
     """Test dashboard stats and rent settings features"""
