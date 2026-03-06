@@ -2,9 +2,44 @@
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API_BASE = `${BACKEND_URL}/api`;
 
+// Offline cache key prefix
+const OFFLINE_CACHE_PREFIX = 'boekhouding_cache_';
+
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
+// Check if we're offline
+const isOffline = () => !navigator.onLine;
+
+// Get cached data for endpoint
+const getCachedData = (endpoint) => {
+  try {
+    const cached = localStorage.getItem(OFFLINE_CACHE_PREFIX + endpoint);
+    if (cached) {
+      const { data, timestamp } = JSON.parse(cached);
+      // Cache is valid for 24 hours
+      if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+        return data;
+      }
+    }
+  } catch (e) {
+    console.warn('[Offline] Cache read error:', e);
+  }
+  return null;
+};
+
+// Save data to cache
+const setCachedData = (endpoint, data) => {
+  try {
+    localStorage.setItem(OFFLINE_CACHE_PREFIX + endpoint, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+  } catch (e) {
+    console.warn('[Offline] Cache write error:', e);
+  }
 };
 
 // ============================================================================
@@ -210,21 +245,54 @@ export const getEnglishFieldName = (dutchField) => {
 };
 
 const apiFetch = async (endpoint, options = {}) => {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeader(),
-      ...options.headers,
-    },
-  });
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-    throw { response: { data: error, status: response.status } };
+  // If offline, try to return cached data
+  if (isOffline()) {
+    const cached = getCachedData(endpoint);
+    if (cached) {
+      console.log('[Offline] Serving cached data for:', endpoint);
+      return { data: cached, offline: true };
+    }
+    // No cache available
+    throw { 
+      offline: true, 
+      response: { data: { detail: 'Geen offline data beschikbaar' }, status: 503 } 
+    };
   }
-  
-  return { data: await response.json() };
+
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+        ...options.headers,
+      },
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw { response: { data: error, status: response.status } };
+    }
+    
+    const data = await response.json();
+    
+    // Cache GET responses for offline use
+    if (!options.method || options.method === 'GET') {
+      setCachedData(endpoint, data);
+    }
+    
+    return { data };
+  } catch (error) {
+    // Network error - try cache
+    if (error.name === 'TypeError' || error.message?.includes('fetch')) {
+      const cached = getCachedData(endpoint);
+      if (cached) {
+        console.log('[Offline] Network failed, serving cached:', endpoint);
+        return { data: cached, offline: true };
+      }
+    }
+    throw error;
+  }
 };
 
 /**
@@ -237,6 +305,23 @@ const apiFetch = async (endpoint, options = {}) => {
  * @param {boolean} convertResponse - Whether to convert response to English (default: false for backward compat)
  */
 const apiFetchSmart = async (endpoint, options = {}, convertRequest = true, convertResponse = false) => {
+  // If offline and it's a GET request, try cache
+  if (isOffline() && (!options.method || options.method === 'GET')) {
+    const cached = getCachedData(endpoint);
+    if (cached) {
+      console.log('[Offline] Serving cached data for:', endpoint);
+      let data = cached;
+      if (convertResponse) {
+        data = toFrontendFormat(data);
+      }
+      return { data, offline: true };
+    }
+    throw { 
+      offline: true, 
+      response: { data: { detail: 'Geen offline data beschikbaar' }, status: 503 } 
+    };
+  }
+
   // Convert request body to Dutch format if needed
   let body = options.body;
   if (convertRequest && body) {
@@ -244,29 +329,51 @@ const apiFetchSmart = async (endpoint, options = {}, convertRequest = true, conv
     body = JSON.stringify(toBackendFormat(parsedBody));
   }
   
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    body,
-    headers: {
-      'Content-Type': 'application/json',
-      ...getAuthHeader(),
-      ...options.headers,
-    },
-  });
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-    throw { response: { data: error, status: response.status } };
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      body,
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeader(),
+        ...options.headers,
+      },
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw { response: { data: error, status: response.status } };
+    }
+    
+    let data = await response.json();
+    
+    // Cache GET responses for offline use
+    if (!options.method || options.method === 'GET') {
+      setCachedData(endpoint, data);
+    }
+    
+    // Convert response to English format if needed
+    if (convertResponse) {
+      data = toFrontendFormat(data);
+    }
+    
+    return { data };
+  } catch (error) {
+    // Network error - try cache for GET requests
+    if ((error.name === 'TypeError' || error.message?.includes('fetch')) && 
+        (!options.method || options.method === 'GET')) {
+      const cached = getCachedData(endpoint);
+      if (cached) {
+        console.log('[Offline] Network failed, serving cached:', endpoint);
+        let data = cached;
+        if (convertResponse) {
+          data = toFrontendFormat(data);
+        }
+        return { data, offline: true };
+      }
+    }
+    throw error;
   }
-  
-  let data = await response.json();
-  
-  // Convert response to English format if needed
-  if (convertResponse) {
-    data = toFrontendFormat(data);
-  }
-  
-  return { data };
 };
 
 // Dashboard

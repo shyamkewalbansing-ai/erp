@@ -42,18 +42,26 @@ const BOEKHOUDING_PAGES = [
 
 // API endpoints die gecached moeten worden voor boekhouding
 const BOEKHOUDING_API_ENDPOINTS = [
-  '/api/boekhouding/dashboard',
-  '/api/boekhouding/facturen',
-  '/api/boekhouding/offertes',
-  '/api/boekhouding/debiteuren',
-  '/api/boekhouding/crediteuren',
-  '/api/boekhouding/grootboek',
-  '/api/boekhouding/btw',
-  '/api/boekhouding/voorraad',
-  '/api/boekhouding/producten',
-  '/api/boekhouding/bank',
-  '/api/boekhouding/kas',
-  '/api/boekhouding/instellingen',
+  '/boekhouding/dashboard',
+  '/boekhouding/dashboard/charts',
+  '/boekhouding/facturen',
+  '/boekhouding/offertes',
+  '/boekhouding/debiteuren',
+  '/boekhouding/crediteuren',
+  '/boekhouding/grootboek',
+  '/boekhouding/grootboek/rekeningen',
+  '/boekhouding/btw',
+  '/boekhouding/btw/aangiftes',
+  '/boekhouding/voorraad',
+  '/boekhouding/voorraad/producten',
+  '/boekhouding/bank',
+  '/boekhouding/kas',
+  '/boekhouding/instellingen',
+  '/boekhouding/wisselkoersen',
+  '/boekhouding/projecten',
+  '/boekhouding/vaste-activa',
+  '/boekhouding/documenten',
+  '/boekhouding/herinneringen',
 ];
 
 export default function BoekhoudingOfflineManager() {
@@ -118,12 +126,13 @@ export default function BoekhoudingOfflineManager() {
       
       for (const endpoint of BOEKHOUDING_API_ENDPOINTS) {
         try {
-          const response = await fetch(`${baseUrl}${endpoint}`, {
+          const response = await fetch(`${baseUrl}/api${endpoint}`, {
             headers: token ? { 'Authorization': `Bearer ${token}` } : {}
           });
           if (response.ok) {
             const data = await response.json();
-            localStorage.setItem(`offline_${endpoint}`, JSON.stringify({
+            // Use same cache key format as boekhoudingApi.js
+            localStorage.setItem(`boekhouding_cache_${endpoint}`, JSON.stringify({
               data,
               timestamp: Date.now()
             }));
