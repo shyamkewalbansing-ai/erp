@@ -1,15 +1,16 @@
 /**
- * Boekhouding Offline Manager
- * Veilig - laadt modules één voor één met pauzes
+ * Boekhouding Offline Manager - COMPLETE VERSIE
+ * Download alle boekhouding pagina's en cache API data
  */
 
-import React, { useState, useEffect } from 'react';
-import { Download, CheckCircle, WifiOff, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Download, CheckCircle, WifiOff, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 
-// Alleen essentiële boekhouding pagina's
-const BOEKHOUDING_MODULES = [
+// ALLE boekhouding pagina's
+const BOEKHOUDING_PAGES = [
+  () => import('../pages/boekhouding/BoekhoudingLayout'),
   () => import('../pages/boekhouding/DashboardPage'),
   () => import('../pages/boekhouding/VerkoopPage'),
   () => import('../pages/boekhouding/InkoopPage'),
@@ -20,16 +21,49 @@ const BOEKHOUDING_MODULES = [
   () => import('../pages/boekhouding/BTWPage'),
   () => import('../pages/boekhouding/VoorraadPage'),
   () => import('../pages/boekhouding/RapportagesPage'),
+  () => import('../pages/boekhouding/InstellingenPage'),
+  () => import('../pages/boekhouding/NieuweFactuurPage'),
+  () => import('../pages/boekhouding/NieuweOffertePage'),
+  () => import('../pages/boekhouding/NieuweDebiteurPage'),
+  () => import('../pages/boekhouding/NieuweLeverancierPage'),
+  () => import('../pages/boekhouding/NieuweBTWAangiftePage'),
+  () => import('../pages/boekhouding/POSPage'),
+  () => import('../pages/boekhouding/POSMobileScannerPage'),
+  () => import('../pages/boekhouding/POSPermanentScannerPage'),
+  () => import('../pages/boekhouding/POSPublicScannerPage'),
+  () => import('../pages/boekhouding/VasteActivaPage'),
+  () => import('../pages/boekhouding/ProjectenPage'),
+  () => import('../pages/boekhouding/HRMPage'),
+  () => import('../pages/boekhouding/HerinneringenPage'),
+  () => import('../pages/boekhouding/DocumentenPage'),
+  () => import('../pages/boekhouding/AuditTrailPage'),
+  () => import('../pages/boekhouding/WisselkoersenPage'),
+];
+
+// API endpoints die gecached moeten worden voor boekhouding
+const BOEKHOUDING_API_ENDPOINTS = [
+  '/api/boekhouding/dashboard',
+  '/api/boekhouding/facturen',
+  '/api/boekhouding/offertes',
+  '/api/boekhouding/debiteuren',
+  '/api/boekhouding/crediteuren',
+  '/api/boekhouding/grootboek',
+  '/api/boekhouding/btw',
+  '/api/boekhouding/voorraad',
+  '/api/boekhouding/producten',
+  '/api/boekhouding/bank',
+  '/api/boekhouding/kas',
+  '/api/boekhouding/instellingen',
 ];
 
 export default function BoekhoudingOfflineManager() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isDownloading, setIsDownloading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [isDone, setIsDone] = useState(() => localStorage.getItem('boekhouding_offline') === 'true');
+  const [status, setStatus] = useState('');
+  const [isDone, setIsDone] = useState(() => localStorage.getItem('boekhouding_offline_v2') === 'true');
   const [showBanner, setShowBanner] = useState(false);
 
-  // Check of we op boekhouding pagina zijn
   const isBoekhouding = typeof window !== 'undefined' && 
     window.location.pathname.includes('/boekhouding');
 
@@ -44,58 +78,104 @@ export default function BoekhoudingOfflineManager() {
     };
   }, []);
 
-  // Toon banner na 8 seconden op boekhouding pagina's
   useEffect(() => {
     if (isBoekhouding && isOnline && !isDone && !isDownloading) {
-      const timer = setTimeout(() => setShowBanner(true), 8000);
+      const timer = setTimeout(() => setShowBanner(true), 5000);
       return () => clearTimeout(timer);
     }
   }, [isBoekhouding, isOnline, isDone, isDownloading]);
 
-  const download = async () => {
+  const downloadAll = useCallback(async () => {
     setIsDownloading(true);
     setProgress(0);
-    
+    setStatus('Service Worker registreren...');
+
     try {
-      // Register service worker
+      // 1. Register service worker
       if ('serviceWorker' in navigator) {
         await navigator.serviceWorker.register('/service-worker.js');
         const reg = await navigator.serviceWorker.ready;
         reg.active?.postMessage('CACHE_BOEKHOUDING');
       }
 
-      // Laad modules één voor één met pauze
-      for (let i = 0; i < BOEKHOUDING_MODULES.length; i++) {
-        try {
-          await BOEKHOUDING_MODULES[i]();
-        } catch (e) {
-          // Negeer fouten, ga door
-        }
-        setProgress(Math.round(((i + 1) / BOEKHOUDING_MODULES.length) * 100));
-        // Wacht 200ms tussen elke module
-        await new Promise(r => setTimeout(r, 200));
+      // 2. Download alle pagina's parallel (sneller)
+      setStatus('Pagina\'s downloaden...');
+      const totalItems = BOEKHOUDING_PAGES.length + BOEKHOUDING_API_ENDPOINTS.length;
+      let completed = 0;
+
+      // Download pagina's in batches van 5
+      for (let i = 0; i < BOEKHOUDING_PAGES.length; i += 5) {
+        const batch = BOEKHOUDING_PAGES.slice(i, i + 5);
+        await Promise.allSettled(batch.map(loader => loader()));
+        completed += batch.length;
+        setProgress(Math.round((completed / totalItems) * 100));
       }
 
-      localStorage.setItem('boekhouding_offline', 'true');
+      // 3. Cache API data
+      setStatus('Data cachen...');
+      const token = localStorage.getItem('token');
+      const baseUrl = process.env.REACT_APP_BACKEND_URL || '';
+      
+      for (const endpoint of BOEKHOUDING_API_ENDPOINTS) {
+        try {
+          const response = await fetch(`${baseUrl}${endpoint}`, {
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          });
+          if (response.ok) {
+            const data = await response.json();
+            localStorage.setItem(`offline_${endpoint}`, JSON.stringify({
+              data,
+              timestamp: Date.now()
+            }));
+          }
+        } catch (e) {
+          // Skip failed endpoints
+        }
+        completed++;
+        setProgress(Math.round((completed / totalItems) * 100));
+      }
+
+      // 4. Cache index.html via service worker
+      setStatus('Afronden...');
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage('CACHE_INDEX');
+      }
+
+      // Done!
+      localStorage.setItem('boekhouding_offline_v2', 'true');
+      localStorage.setItem('boekhouding_offline_date', new Date().toISOString());
       setIsDone(true);
       setShowBanner(false);
-      toast.success('Boekhouding is offline beschikbaar!');
-    } catch (e) {
-      toast.error('Download mislukt');
+      toast.success('Boekhouding is volledig offline beschikbaar!');
+
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Download mislukt: ' + error.message);
     } finally {
       setIsDownloading(false);
+      setStatus('');
     }
+  }, []);
+
+  const resetOffline = () => {
+    localStorage.removeItem('boekhouding_offline_v2');
+    localStorage.removeItem('boekhouding_offline_date');
+    // Remove cached API data
+    BOEKHOUDING_API_ENDPOINTS.forEach(endpoint => {
+      localStorage.removeItem(`offline_${endpoint}`);
+    });
+    setIsDone(false);
+    toast.info('Offline data verwijderd');
   };
 
-  // Niet tonen buiten boekhouding
   if (!isBoekhouding) return null;
 
   // Offline indicator
   if (!isOnline) {
     return (
-      <div className="fixed bottom-4 right-4 z-50 bg-amber-500 text-white px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 text-sm">
+      <div className="fixed bottom-4 right-4 z-50 bg-amber-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
         <WifiOff className="w-4 h-4" />
-        <span>Offline</span>
+        <span className="text-sm font-medium">Offline modus</span>
       </div>
     );
   }
@@ -103,26 +183,44 @@ export default function BoekhoudingOfflineManager() {
   // Downloading
   if (isDownloading) {
     return (
-      <div className="fixed bottom-4 right-4 z-50 bg-blue-600 text-white px-4 py-2 rounded-xl shadow-lg">
+      <div className="fixed bottom-4 right-4 z-50 bg-blue-600 text-white px-4 py-3 rounded-xl shadow-lg min-w-[280px]">
         <div className="flex items-center gap-3">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <div>
-            <div className="text-sm font-medium">Downloaden... {progress}%</div>
-            <div className="w-24 h-1.5 bg-blue-400 rounded mt-1">
-              <div className="h-full bg-white rounded" style={{ width: `${progress}%` }} />
+          <Loader2 className="w-5 h-5 animate-spin flex-shrink-0" />
+          <div className="flex-1">
+            <div className="text-sm font-medium">Boekhouding downloaden</div>
+            <div className="text-xs opacity-80 mt-0.5">{status}</div>
+            <div className="w-full h-2 bg-blue-400 rounded mt-2">
+              <div 
+                className="h-full bg-white rounded transition-all duration-300" 
+                style={{ width: `${progress}%` }} 
+              />
             </div>
+            <div className="text-xs mt-1">{progress}% voltooid</div>
           </div>
         </div>
       </div>
     );
   }
 
-  // Done indicator
+  // Done indicator with refresh option
   if (isDone) {
+    const offlineDate = localStorage.getItem('boekhouding_offline_date');
+    const dateStr = offlineDate ? new Date(offlineDate).toLocaleDateString('nl-NL') : '';
+    
     return (
-      <div className="fixed bottom-4 right-4 z-50 bg-emerald-500 text-white px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 text-sm">
+      <div className="fixed bottom-4 right-4 z-50 bg-emerald-500 text-white px-4 py-2 rounded-xl shadow-lg flex items-center gap-3">
         <CheckCircle className="w-4 h-4" />
-        <span>Offline klaar</span>
+        <div>
+          <span className="text-sm font-medium">Offline beschikbaar</span>
+          {dateStr && <span className="text-xs opacity-80 ml-1">({dateStr})</span>}
+        </div>
+        <button 
+          onClick={downloadAll}
+          className="p-1 hover:bg-emerald-600 rounded"
+          title="Opnieuw downloaden"
+        >
+          <RefreshCw className="w-4 h-4" />
+        </button>
       </div>
     );
   }
@@ -130,19 +228,22 @@ export default function BoekhoudingOfflineManager() {
   // Download banner
   if (showBanner) {
     return (
-      <div className="fixed bottom-4 right-4 z-50 bg-white rounded-xl shadow-xl border p-4 max-w-xs">
+      <div className="fixed bottom-4 right-4 z-50 bg-white rounded-xl shadow-2xl border p-4 max-w-sm">
         <div className="flex gap-3">
-          <div className="w-9 h-9 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
-            <Download className="w-4 h-4 text-emerald-600" />
+          <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
+            <Download className="w-5 h-5 text-emerald-600" />
           </div>
-          <div>
-            <div className="font-semibold text-gray-900 text-sm">Offline werken?</div>
-            <p className="text-xs text-gray-500 mt-0.5">Download boekhouding voor offline gebruik</p>
-            <div className="flex gap-2 mt-2">
-              <Button size="sm" onClick={download} className="h-7 text-xs">
-                Download
+          <div className="flex-1">
+            <div className="font-semibold text-gray-900">Boekhouding offline?</div>
+            <p className="text-sm text-gray-500 mt-1">
+              Download alle {BOEKHOUDING_PAGES.length} pagina's om offline te kunnen werken.
+            </p>
+            <div className="flex gap-2 mt-3">
+              <Button onClick={downloadAll} className="bg-emerald-500 hover:bg-emerald-600">
+                <Download className="w-4 h-4 mr-1" />
+                Download alles
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setShowBanner(false)} className="h-7 text-xs">
+              <Button variant="ghost" onClick={() => setShowBanner(false)}>
                 Later
               </Button>
             </div>
