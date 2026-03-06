@@ -332,13 +332,13 @@ const GrootboekPage = () => {
     <div className="min-h-screen bg-gray-50" data-testid="grootboek-page">
       {/* Page Title */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
+        <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
           <h1 className="text-xl font-semibold text-gray-800">Grootboek</h1>
         </div>
       </div>
 
       {/* Tab Buttons Row */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
         <div className="flex items-center gap-3">
           <TabButton active={activeTab === 'rekeningen'} onClick={() => setActiveTab('rekeningen')}>
             Rekeningen
@@ -627,7 +627,7 @@ const GrootboekPage = () => {
       </div>
 
       {/* Status Legend */}
-      <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+      <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
         <div className="flex flex-wrap items-center gap-6">
           <StatusLegendItem icon={Circle} label="Activa" color="text-blue-500" />
           <StatusLegendItem icon={Circle} label="Passiva" color="text-purple-500" />
@@ -638,7 +638,7 @@ const GrootboekPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="p-6">
+      <div className="p-2 sm:p-4 lg:p-6">
         {/* Summary Cards - Zakelijk 3D */}
         <div className="grid grid-cols-4 gap-5 mb-6">
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
@@ -698,7 +698,7 @@ const GrootboekPage = () => {
         <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <CardContent className="p-0">
             {/* Table Header */}
-            <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+            <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">
                   {activeTab === 'rekeningen' && `Rekeningschema (${filteredAccounts.length})`}

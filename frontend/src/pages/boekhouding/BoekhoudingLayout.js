@@ -17,7 +17,9 @@ import {
   RefreshCw,
   Settings,
   LogOut,
-  Euro
+  Euro,
+  Menu,
+  X
 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
@@ -26,6 +28,7 @@ export default function BoekhoudingLayout() {
   const { user, token, logout } = useAuth();
   const location = useLocation();
   const [wisselkoers, setWisselkoers] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     const fetchKoers = async () => {
@@ -43,6 +46,11 @@ export default function BoekhoudingLayout() {
     };
     if (token) fetchKoers();
   }, [token]);
+
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const menuItems = [
     { path: '/app/boekhouding', icon: LayoutDashboard, label: 'Dashboard', exact: true },
@@ -68,18 +76,40 @@ export default function BoekhoudingLayout() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar - Fixed width, no collapse */}
-      <div className="w-56 bg-white border-r border-gray-200 flex flex-col">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Responsive */}
+      <div className={`
+        fixed lg:relative inset-y-0 left-0 z-50
+        w-56 bg-white border-r border-gray-200 flex flex-col
+        transform transition-transform duration-200 ease-in-out
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}>
         {/* Logo */}
-        <div className="p-4 border-b border-gray-100 flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-            FO
+        <div className="p-3 sm:p-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs sm:text-sm">
+              FO
+            </div>
+            <span className="font-semibold text-gray-800 text-sm sm:text-base">Finance OS</span>
           </div>
-          <span className="font-semibold text-gray-800">Finance OS</span>
+          {/* Close button - mobile only */}
+          <button 
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden p-1 text-gray-500 hover:text-gray-700"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 overflow-y-auto">
+        <nav className="flex-1 py-2 sm:py-4 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path, item.exact);
@@ -87,60 +117,71 @@ export default function BoekhoudingLayout() {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg transition-all ${
+                className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2 sm:py-2.5 mx-1 sm:mx-2 rounded-lg transition-all ${
                   active
                     ? 'bg-blue-50 text-blue-600'
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
-                <Icon className={`w-5 h-5 flex-shrink-0 ${active ? 'text-blue-600' : 'text-gray-400'}`} />
-                <span className="text-sm font-medium">{item.label}</span>
+                <Icon className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${active ? 'text-blue-600' : 'text-gray-400'}`} />
+                <span className="text-xs sm:text-sm font-medium">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* User section */}
-        <div className="border-t border-gray-100 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+        <div className="border-t border-gray-100 p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-xs font-medium text-gray-600">
                 {user?.name?.charAt(0) || 'U'}
               </span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
+              <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                 {user?.name || 'Admin'}
               </p>
-              <p className="text-xs text-gray-500 truncate">
+              <p className="text-[10px] sm:text-xs text-gray-500 truncate">
                 {user?.email}
               </p>
             </div>
           </div>
           <button
             onClick={logout}
-            className="mt-3 flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm"
+            className="mt-2 sm:mt-3 flex items-center gap-1.5 sm:gap-2 text-gray-500 hover:text-gray-700 text-xs sm:text-sm"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <span>Uitloggen</span>
           </button>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar with wisselkoers */}
-        <div className="h-14 bg-white border-b border-gray-200 flex items-center justify-end px-6">
-          {wisselkoers && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Euro className="w-4 h-4" />
-              <span>EUR/SRD: <strong>{wisselkoers}</strong></span>
-            </div>
-          )}
+      <div className="flex-1 flex flex-col overflow-hidden w-full">
+        {/* Top bar - Responsive */}
+        <div className="h-10 sm:h-12 lg:h-14 bg-white border-b border-gray-200 flex items-center justify-between px-2 sm:px-4 lg:px-6">
+          {/* Mobile menu button */}
+          <button 
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
+          >
+            <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+          </button>
+
+          {/* Wisselkoers - Right aligned */}
+          <div className="flex items-center gap-2 ml-auto">
+            {wisselkoers && (
+              <div className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600">
+                <Euro className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span>EUR/SRD: <strong>{wisselkoers}</strong></span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Page Content */}
-        <div className="flex-1 overflow-auto p-6">
+        {/* Page Content - NO PADDING */}
+        <div className="flex-1 overflow-auto">
           <Outlet />
         </div>
       </div>

@@ -71,13 +71,13 @@ const NieuweLeverancierPage = () => {
     <div className="min-h-screen bg-gray-50" data-testid="nieuwe-leverancier-page">
       {/* Page Title */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
+        <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
           <h1 className="text-xl font-semibold text-gray-800">Crediteurenbeheer</h1>
         </div>
       </div>
 
       {/* Tab Buttons Row */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <Button 
             variant="ghost" 
@@ -121,7 +121,7 @@ const NieuweLeverancierPage = () => {
       </div>
 
       {/* Filter/Info Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
           <div className="space-y-1">
             <Label className="text-sm text-gray-600 flex items-center gap-2">
@@ -176,10 +176,10 @@ const NieuweLeverancierPage = () => {
       </div>
 
       {/* Form Content */}
-      <div className="p-6">
+      <div className="p-2 sm:p-4 lg:p-6">
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           {/* Form Table Header */}
-          <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+          <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">
                 {activeSection === 'basis' && 'Basisgegevens invullen'}
@@ -192,7 +192,7 @@ const NieuweLeverancierPage = () => {
           </div>
 
           {/* Form Fields */}
-          <div className="p-6">
+          <div className="p-2 sm:p-4 lg:p-6">
             {/* Basisgegevens */}
             {activeSection === 'basis' && (
               <div className="space-y-4">
@@ -362,7 +362,7 @@ const NieuweLeverancierPage = () => {
           </div>
 
           {/* Form Footer */}
-          <div className="bg-gray-50 border-t border-gray-200 px-6 py-3 flex items-center justify-between">
+          <div className="bg-gray-50 border-t border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 flex items-center justify-between">
             <span className="text-sm text-gray-500">
               Vul alle gegevens in en klik op Opslaan
             </span>

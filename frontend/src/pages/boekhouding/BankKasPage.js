@@ -374,13 +374,13 @@ const BankKasPage = () => {
     <div className="min-h-screen bg-gray-50" data-testid="bank-kas-page">
       {/* Page Title */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
+        <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
           <h1 className="text-xl font-semibold text-gray-800">Bank & Kas Beheer</h1>
         </div>
       </div>
 
       {/* Tab Buttons Row - Verkoop Style */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <TabButton active={activeTab === 'transacties'} onClick={() => { setActiveTab('transacties'); setSelectedRows([]); }}>
             Transacties
@@ -416,7 +416,7 @@ const BankKasPage = () => {
       </div>
 
       {/* Filter Section - Verkoop Style */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           {/* Search */}
           <div className="space-y-1">
@@ -496,7 +496,7 @@ const BankKasPage = () => {
       </div>
 
       {/* Status Legend - Verkoop Style */}
-      <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+      <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
         <div className="flex flex-wrap items-center gap-6">
           <StatusLegendItem icon={Circle} label="Concept" color="text-gray-400" />
           <StatusLegendItem icon={Send} label="Geboekt" color="text-blue-500" />
@@ -508,7 +508,7 @@ const BankKasPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="p-6">
+      <div className="p-2 sm:p-4 lg:p-6">
         {/* Summary Cards - 3D Zakelijk */}
         <div className="grid grid-cols-4 gap-5 mb-6">
           <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
@@ -567,7 +567,7 @@ const BankKasPage = () => {
         {/* Data Table Card */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
           {/* Table Header */}
-          <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+          <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">
                 {activeTab === 'transacties' && `Transacties (${filteredTransactions.length})`}

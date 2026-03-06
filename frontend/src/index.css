@@ -522,3 +522,23 @@ button.checkbox-custom[data-state="unchecked"],
     background-position: -200% 0;
   }
 }
+
+
+
+/* Hide scrollbar for horizontal scrolling on mobile */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Responsive page content wrapper */
+.page-content {
+  @apply p-0;
+}
+
+.page-section {
+  @apply px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4;
+}

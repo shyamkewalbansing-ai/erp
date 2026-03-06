@@ -92,13 +92,13 @@ const NieuweBTWAangiftePage = () => {
     <div className="min-h-screen bg-gray-50" data-testid="nieuwe-btw-aangifte-page">
       {/* Page Title */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
+        <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
           <h1 className="text-xl font-semibold text-gray-800">BTW Administratie</h1>
         </div>
       </div>
 
       {/* Tab Buttons Row */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <Button 
             variant="ghost" 
@@ -153,7 +153,7 @@ const NieuweBTWAangiftePage = () => {
       </div>
 
       {/* Filter Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           <div className="space-y-1">
             <Label className="text-sm text-gray-600 flex items-center gap-2">
@@ -232,10 +232,10 @@ const NieuweBTWAangiftePage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="p-6">
+      <div className="p-2 sm:p-4 lg:p-6">
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
           {/* Table Header */}
-          <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+          <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">
                 BTW-aangifte {selectedQuarter} {selectedYear}
@@ -356,7 +356,7 @@ const NieuweBTWAangiftePage = () => {
           </div>
 
           {/* Footer */}
-          <div className="bg-gray-50 border-t border-gray-200 px-6 py-3 flex items-center justify-between">
+          <div className="bg-gray-50 border-t border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 flex items-center justify-between">
             <div className="text-xs text-gray-500">
               <p>Berekening: Verschuldigde BTW ({formatCurrency(totaalVerschuldigdeBTW)}) - Voorbelasting ({formatCurrency(totaalVoorbelasting)}) = {formatCurrency(teBetalen)}</p>
             </div>

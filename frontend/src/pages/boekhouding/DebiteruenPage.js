@@ -183,14 +183,14 @@ const DebiteurenPage = () => {
     <div className="min-h-screen bg-gray-50" data-testid="debiteuren-page">
       {/* Page Title */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
-          <h1 className="text-xl font-semibold text-gray-800">Debiteurenbeheer</h1>
+        <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+          <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-800">Debiteurenbeheer</h1>
         </div>
       </div>
 
       {/* Tab Buttons Row - Like reference design */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
+        <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto pb-1 scrollbar-hide">
           <TabButton active={activeTab === 'overzicht'} onClick={() => setActiveTab('overzicht')}>
             Overzicht
           </TabButton>
@@ -223,8 +223,8 @@ const DebiteurenPage = () => {
       </div>
 
       {/* Filter Section - Like reference design */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 items-end">
           {/* Administratie / Search */}
           <div className="space-y-1">
             <Label className="text-sm text-gray-600 flex items-center gap-2">
@@ -297,7 +297,7 @@ const DebiteurenPage = () => {
       </div>
 
       {/* Data Table - Like reference design */}
-      <div className="p-6">
+      <div className="p-2 sm:p-4 lg:p-6">
         <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <CardContent className="p-0">
             {/* Table */}

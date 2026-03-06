@@ -936,7 +936,7 @@ const InstellingenPage = () => {
           
           {/* Info Card */}
           <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
+            <CardContent className="p-2 sm:p-4 lg:p-6">
               <h3 className="font-semibold text-gray-900 mb-3">Hoe werkt automatische herinneringen?</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="flex gap-3">

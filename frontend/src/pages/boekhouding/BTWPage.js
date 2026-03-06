@@ -221,13 +221,13 @@ const BTWPage = () => {
     <div className="min-h-screen bg-gray-50" data-testid="btw-page">
       {/* Page Title */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4">
+        <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
           <h1 className="text-xl font-semibold text-gray-800">BTW Administratie</h1>
         </div>
       </div>
 
       {/* Tab Buttons Row */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
         <div className="flex items-center gap-2 overflow-x-auto pb-1">
           <TabButton active={activeTab === 'overzicht'} onClick={() => setActiveTab('overzicht')}>
             Overzicht
@@ -267,7 +267,7 @@ const BTWPage = () => {
       </div>
 
       {/* Filter Section */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
           {/* Search */}
           <div className="space-y-1">
@@ -347,7 +347,7 @@ const BTWPage = () => {
       </div>
 
       {/* Status Legend */}
-      <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+      <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
         <div className="flex flex-wrap items-center gap-6">
           <StatusLegendItem icon={Circle} label="Concept" color="text-gray-400" />
           <StatusLegendItem icon={Clock} label="Te betalen" color="text-amber-500" />
@@ -359,7 +359,7 @@ const BTWPage = () => {
       </div>
 
       {/* Main Content */}
-      <div className="p-6">
+      <div className="p-2 sm:p-4 lg:p-6">
         {/* Summary Cards - Compact Row */}
         <div className="grid grid-cols-4 gap-4 mb-6">
           <Card className="bg-white border border-gray-200 rounded-xl">
@@ -425,7 +425,7 @@ const BTWPage = () => {
         <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
           <CardContent className="p-0">
             {/* Table Header Info */}
-            <div className="bg-gray-50 border-b border-gray-200 px-6 py-3">
+            <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">
                   {activeTab === 'overzicht' && 'BTW-aangiftes Overzicht'}

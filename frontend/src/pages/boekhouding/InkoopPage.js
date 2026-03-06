@@ -556,7 +556,7 @@ const InkoopPage = () => {
           </div>
 
           {/* Table */}
-          <div className="p-6">
+          <div className="p-2 sm:p-4 lg:p-6">
             <div className="border border-gray-200 rounded-2xl overflow-hidden">
               {activeTab === 'invoices' ? (
                 <Table>

@@ -425,7 +425,7 @@ const HRMPage = () => {
     <div className="min-h-screen bg-gray-50" data-testid="hrm-page">
       {/* Page Title */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold text-gray-800">HRM / Personeel</h1>
             <p className="text-sm text-gray-500">Beheer medewerkers, verlof, contracten en salarisadministratie</p>
@@ -467,7 +467,7 @@ const HRMPage = () => {
           </div>
 
           {/* Search & Actions - Zakelijk Design */}
-          <div className="px-6 py-4 bg-gray-50/30 border-b border-gray-100">
+          <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4 bg-gray-50/30 border-b border-gray-100">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="relative w-full sm:w-96">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -507,7 +507,7 @@ const HRMPage = () => {
           </div>
 
           {/* Content */}
-          <div className="p-6">
+          <div className="p-2 sm:p-4 lg:p-6">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>
@@ -1114,7 +1114,7 @@ const HRMPage = () => {
         <div className="fixed inset-0 z-50 flex">
           <div className="flex-1 bg-black/50" onClick={() => setShowDetail(false)} />
           <div className="w-full max-w-md bg-white shadow-xl overflow-y-auto">
-            <div className="p-6">
+            <div className="p-2 sm:p-4 lg:p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-semibold">Medewerker Details</h2>
                 <Button variant="ghost" size="sm" onClick={() => setShowDetail(false)}>
