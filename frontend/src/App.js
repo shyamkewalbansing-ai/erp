@@ -3,6 +3,7 @@ import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
 import BoekhoudingOfflineManager from "./components/BoekhoudingOfflineManager";
+import OfflineSyncIndicator from "./components/OfflineSyncIndicator";
 import React, { lazy, Suspense, memo } from "react";
 
 // Critical pages - load immediately
@@ -485,6 +486,7 @@ function AppWithRoutes() {
           <Route path="/*" element={<MainAppRoutes />} />
         </Routes>
         <Toaster richColors position="top-right" />
+        <OfflineSyncIndicator />
         <BoekhoudingOfflineManager />
       </AuthProvider>
     </BrowserRouter>

@@ -1,9 +1,17 @@
 // Boekhouding API Client - matches reference repository structure
+import { 
+  openDatabase, 
+  saveOffline, 
+  getAllOffline, 
+  addToPendingSync, 
+  processSyncQueue,
+  cacheApiResponse,
+  getCachedApiResponse,
+  STORES 
+} from './offlineDatabase';
+
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API_BASE = `${BACKEND_URL}/api`;
-
-// Offline cache key prefix
-const OFFLINE_CACHE_PREFIX = 'boekhouding_cache_';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
@@ -13,30 +21,39 @@ const getAuthHeader = () => {
 // Check if we're offline
 const isOffline = () => !navigator.onLine;
 
-// Get cached data for endpoint
-const getCachedData = (endpoint) => {
-  try {
-    const cached = localStorage.getItem(OFFLINE_CACHE_PREFIX + endpoint);
-    if (cached) {
-      const { data, timestamp } = JSON.parse(cached);
-      // Cache is valid for 24 hours
-      if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
-        return data;
+// Initialize database on load
+openDatabase().catch(console.error);
+
+// Auto-sync when back online
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', async () => {
+    console.log('[API] Back online - starting sync...');
+    try {
+      const result = await processSyncQueue();
+      if (result.synced > 0) {
+        // Trigger page refresh notification
+        window.dispatchEvent(new CustomEvent('offlineDataSynced', { detail: result }));
       }
+    } catch (e) {
+      console.error('[API] Sync failed:', e);
     }
+  });
+}
+
+// Get cached data for endpoint (from IndexedDB)
+const getCachedData = async (endpoint) => {
+  try {
+    return await getCachedApiResponse(endpoint);
   } catch (e) {
     console.warn('[Offline] Cache read error:', e);
+    return null;
   }
-  return null;
 };
 
-// Save data to cache
-const setCachedData = (endpoint, data) => {
+// Save data to cache (to IndexedDB)
+const setCachedData = async (endpoint, data) => {
   try {
-    localStorage.setItem(OFFLINE_CACHE_PREFIX + endpoint, JSON.stringify({
-      data,
-      timestamp: Date.now()
-    }));
+    await cacheApiResponse(endpoint, data);
   } catch (e) {
     console.warn('[Offline] Cache write error:', e);
   }
@@ -245,17 +262,37 @@ export const getEnglishFieldName = (dutchField) => {
 };
 
 const apiFetch = async (endpoint, options = {}) => {
-  // If offline, try to return cached data
+  const method = options.method || 'GET';
+  
+  // If offline
   if (isOffline()) {
-    const cached = getCachedData(endpoint);
-    if (cached) {
-      console.log('[Offline] Serving cached data for:', endpoint);
-      return { data: cached, offline: true };
+    // For GET requests, return cached data
+    if (method === 'GET') {
+      const cached = await getCachedData(endpoint);
+      if (cached) {
+        console.log('[Offline] Serving cached data for:', endpoint);
+        return { data: cached, offline: true };
+      }
+      throw { 
+        offline: true, 
+        response: { data: { detail: 'Geen offline data beschikbaar' }, status: 503 } 
+      };
     }
-    // No cache available
-    throw { 
-      offline: true, 
-      response: { data: { detail: 'Geen offline data beschikbaar' }, status: 503 } 
+    
+    // For POST/PUT/DELETE, save to offline queue
+    console.log('[Offline] Saving to sync queue:', method, endpoint);
+    const body = options.body ? JSON.parse(options.body) : null;
+    await addToPendingSync(
+      method === 'POST' ? 'CREATE' : method === 'PUT' ? 'UPDATE' : 'DELETE',
+      `/api${endpoint}`,
+      body
+    );
+    
+    // Return a fake success response
+    return { 
+      data: { ...body, id: `offline_${Date.now()}`, offline: true },
+      offline: true,
+      queued: true
     };
   }
 
@@ -277,15 +314,15 @@ const apiFetch = async (endpoint, options = {}) => {
     const data = await response.json();
     
     // Cache GET responses for offline use
-    if (!options.method || options.method === 'GET') {
-      setCachedData(endpoint, data);
+    if (method === 'GET') {
+      await setCachedData(endpoint, data);
     }
     
     return { data };
   } catch (error) {
     // Network error - try cache
     if (error.name === 'TypeError' || error.message?.includes('fetch')) {
-      const cached = getCachedData(endpoint);
+      const cached = await getCachedData(endpoint);
       if (cached) {
         console.log('[Offline] Network failed, serving cached:', endpoint);
         return { data: cached, offline: true };
@@ -305,20 +342,47 @@ const apiFetch = async (endpoint, options = {}) => {
  * @param {boolean} convertResponse - Whether to convert response to English (default: false for backward compat)
  */
 const apiFetchSmart = async (endpoint, options = {}, convertRequest = true, convertResponse = false) => {
-  // If offline and it's a GET request, try cache
-  if (isOffline() && (!options.method || options.method === 'GET')) {
-    const cached = getCachedData(endpoint);
-    if (cached) {
-      console.log('[Offline] Serving cached data for:', endpoint);
-      let data = cached;
-      if (convertResponse) {
-        data = toFrontendFormat(data);
+  const method = options.method || 'GET';
+  
+  // If offline
+  if (isOffline()) {
+    // For GET requests, return cached data
+    if (method === 'GET') {
+      const cached = await getCachedData(endpoint);
+      if (cached) {
+        console.log('[Offline] Serving cached data for:', endpoint);
+        let data = cached;
+        if (convertResponse) {
+          data = toFrontendFormat(data);
+        }
+        return { data, offline: true };
       }
-      return { data, offline: true };
+      throw { 
+        offline: true, 
+        response: { data: { detail: 'Geen offline data beschikbaar' }, status: 503 } 
+      };
     }
-    throw { 
-      offline: true, 
-      response: { data: { detail: 'Geen offline data beschikbaar' }, status: 503 } 
+    
+    // For POST/PUT/DELETE, save to offline queue
+    let body = options.body;
+    if (convertRequest && body) {
+      const parsedBody = typeof body === 'string' ? JSON.parse(body) : body;
+      body = toBackendFormat(parsedBody);
+    } else if (body) {
+      body = typeof body === 'string' ? JSON.parse(body) : body;
+    }
+    
+    console.log('[Offline] Saving to sync queue:', method, endpoint);
+    await addToPendingSync(
+      method === 'POST' ? 'CREATE' : method === 'PUT' ? 'UPDATE' : 'DELETE',
+      `/api${endpoint}`,
+      body
+    );
+    
+    return { 
+      data: { ...body, id: `offline_${Date.now()}`, offline: true },
+      offline: true,
+      queued: true
     };
   }
 
@@ -348,8 +412,8 @@ const apiFetchSmart = async (endpoint, options = {}, convertRequest = true, conv
     let data = await response.json();
     
     // Cache GET responses for offline use
-    if (!options.method || options.method === 'GET') {
-      setCachedData(endpoint, data);
+    if (method === 'GET') {
+      await setCachedData(endpoint, data);
     }
     
     // Convert response to English format if needed
@@ -360,9 +424,8 @@ const apiFetchSmart = async (endpoint, options = {}, convertRequest = true, conv
     return { data };
   } catch (error) {
     // Network error - try cache for GET requests
-    if ((error.name === 'TypeError' || error.message?.includes('fetch')) && 
-        (!options.method || options.method === 'GET')) {
-      const cached = getCachedData(endpoint);
+    if ((error.name === 'TypeError' || error.message?.includes('fetch')) && method === 'GET') {
+      const cached = await getCachedData(endpoint);
       if (cached) {
         console.log('[Offline] Network failed, serving cached:', endpoint);
         let data = cached;
