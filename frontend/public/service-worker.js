@@ -1,126 +1,228 @@
 /**
- * Simple but Effective Service Worker for Facturatie N.V.
- * Uses runtime caching for all assets
+ * Enhanced Service Worker for Facturatie N.V.
+ * Handles offline caching with special support for code-split chunks
  */
 
-const CACHE_NAME = 'facturatie-v4';
-const OFFLINE_URL = '/offline.html';
+const CACHE_NAME = 'facturatie-v5';
 
-// Install: Cache offline page only
+// Install event
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing v4...');
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.add(OFFLINE_URL).catch(() => {}))
-      .then(() => self.skipWaiting())
-  );
+  console.log('[SW v5] Installing...');
+  event.waitUntil(self.skipWaiting());
 });
 
-// Activate: Clean old caches and claim clients
+// Activate event
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating v4...');
+  console.log('[SW v5] Activating...');
   event.waitUntil(
     Promise.all([
+      // Clean old caches
       caches.keys().then(keys => 
-        Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+        Promise.all(
+          keys.filter(k => k.startsWith('facturatie-') && k !== CACHE_NAME)
+              .map(k => caches.delete(k))
+        )
       ),
       self.clients.claim()
     ])
   );
 });
 
-// Fetch: Cache everything on the fly
+// Fetch event - the main logic
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // Skip non-GET, cross-origin, and WebSocket
+  // Only handle same-origin GET requests
   if (request.method !== 'GET' || url.origin !== location.origin) {
     return;
   }
   
-  // Skip certain paths
+  // Skip WebSocket and auth endpoints
   if (url.pathname.includes('/ws/') || 
       url.pathname.includes('/api/auth') ||
       url.pathname.includes('/api/login') ||
       url.pathname.includes('/api/ai/chat')) {
     return;
   }
+
+  // Special handling for JavaScript chunks
+  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.chunk.js')) {
+    event.respondWith(handleJSChunk(request));
+    return;
+  }
   
-  // For API calls: network first, cache fallback
+  // CSS files
+  if (url.pathname.endsWith('.css')) {
+    event.respondWith(handleStaticAsset(request));
+    return;
+  }
+  
+  // Images and fonts
+  if (url.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+    event.respondWith(handleStaticAsset(request));
+    return;
+  }
+  
+  // API requests
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then(c => c.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => caches.match(request).then(r => r || new Response(
-          JSON.stringify({ offline: true }),
-          { headers: { 'Content-Type': 'application/json' }, status: 503 }
-        )))
-    );
+    event.respondWith(handleAPI(request));
     return;
   }
   
-  // For navigation (HTML): network first, then cache, then offline page
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(c => c.put(request, clone));
-          return response;
-        })
-        .catch(async () => {
-          const cached = await caches.match(request);
-          if (cached) return cached;
-          
-          // Try index.html for SPA routing
-          const index = await caches.match('/');
-          if (index) return index;
-          
-          // Offline page
-          const offline = await caches.match(OFFLINE_URL);
-          if (offline) return offline;
-          
-          return new Response(getOfflineHTML(), {
-            headers: { 'Content-Type': 'text/html' }
-          });
-        })
-    );
+  // Navigation requests (HTML)
+  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
+    event.respondWith(handleNavigation(request));
     return;
   }
   
-  // For everything else: cache first, network fallback
-  event.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) {
-        // Update cache in background
-        fetch(request).then(r => {
-          if (r.ok) caches.open(CACHE_NAME).then(c => c.put(request, r));
-        }).catch(() => {});
-        return cached;
-      }
-      
-      return fetch(request).then(response => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(c => c.put(request, clone));
-        }
-        return response;
-      });
-    })
-  );
+  // Default: network first
+  event.respondWith(handleDefault(request));
 });
+
+// Handle JavaScript chunks - critical for lazy loading
+async function handleJSChunk(request) {
+  const cache = await caches.open(CACHE_NAME);
+  
+  // Try cache first for JS chunks (they're immutable due to hash)
+  const cached = await cache.match(request);
+  if (cached) {
+    return cached;
+  }
+  
+  // Not in cache, try network
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      // Cache for future use
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    // Offline and not cached - return error that React can handle
+    console.error('[SW] Failed to load JS chunk:', request.url);
+    
+    // Return a response that will trigger the error boundary
+    return new Response(
+      'throw new Error("Chunk loading failed - offline");',
+      { 
+        status: 200,
+        headers: { 'Content-Type': 'application/javascript' }
+      }
+    );
+  }
+}
+
+// Handle static assets - cache first
+async function handleStaticAsset(request) {
+  const cache = await caches.open(CACHE_NAME);
+  
+  const cached = await cache.match(request);
+  if (cached) {
+    // Update cache in background
+    fetch(request).then(r => {
+      if (r.ok) cache.put(request, r);
+    }).catch(() => {});
+    return cached;
+  }
+  
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    return new Response('', { status: 404 });
+  }
+}
+
+// Handle API requests - network first, cache fallback
+async function handleAPI(request) {
+  const cache = await caches.open(CACHE_NAME);
+  
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    
+    return new Response(
+      JSON.stringify({ offline: true, message: 'Je bent offline' }),
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
+
+// Handle navigation - network first, fallback to index.html
+async function handleNavigation(request) {
+  const cache = await caches.open(CACHE_NAME);
+  
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+      // Also cache index.html
+      cache.put(new Request('/'), response.clone());
+    }
+    return response;
+  } catch (error) {
+    // Try to return cached version of the page
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    
+    // Fallback to index.html (for SPA routing)
+    const index = await cache.match('/');
+    if (index) {
+      return index;
+    }
+    
+    // Last resort: offline page
+    return new Response(getOfflineHTML(), {
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    });
+  }
+}
+
+// Default handler
+async function handleDefault(request) {
+  const cache = await caches.open(CACHE_NAME);
+  
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    return cached || new Response('', { status: 404 });
+  }
+}
 
 // Message handler
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
+  }
+  
+  if (event.data?.type === 'CACHE_URLS') {
+    const urls = event.data.urls || [];
+    caches.open(CACHE_NAME).then(cache => {
+      urls.forEach(url => {
+        fetch(url).then(r => {
+          if (r.ok) cache.put(url, r);
+        }).catch(() => {});
+      });
+    });
   }
 });
 
@@ -130,27 +232,42 @@ function getOfflineHTML() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline</title>
+  <title>Offline - Facturatie N.V.</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:system-ui,sans-serif;background:#10b981;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-    .box{background:#fff;border-radius:20px;padding:40px;max-width:380px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.2)}
-    h1{font-size:22px;margin:20px 0 10px}
-    p{color:#666;margin-bottom:20px}
-    button{background:#10b981;color:#fff;border:0;padding:12px 24px;border-radius:10px;font-size:15px;cursor:pointer}
+    body{font-family:system-ui,sans-serif;background:linear-gradient(135deg,#10b981,#059669);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .box{background:#fff;border-radius:20px;padding:40px;max-width:400px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+    .icon{width:80px;height:80px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+    h1{font-size:24px;margin-bottom:12px;color:#111}
+    p{color:#666;margin-bottom:24px;line-height:1.5}
+    button{background:#10b981;color:#fff;border:0;padding:14px 28px;border-radius:12px;font-size:16px;cursor:pointer;width:100%}
     button:hover{background:#059669}
+    .tip{margin-top:20px;font-size:13px;color:#999}
   </style>
 </head>
 <body>
   <div class="box">
-    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M1 1l22 22M9 9a3 3 0 0 0 4.24 4.24M5 12.55a11 11 0 0 1 14.08 1.86l1.42-1.42A13 13 0 0 0 3.5 11.13L5 12.55z"/></svg>
+    <div class="icon">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+        <line x1="1" y1="1" x2="23" y2="23"/>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"/>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
+        <line x1="12" y1="20" x2="12.01" y2="20"/>
+      </svg>
+    </div>
     <h1>Je bent offline</h1>
-    <p>Open de app eerst met internet om offline te kunnen werken.</p>
+    <p>Om offline te werken moet je eerst de app openen met internet en op "Downloaden voor offline" klikken.</p>
     <button onclick="location.reload()">Opnieuw proberen</button>
+    <p class="tip">De pagina herlaadt automatisch wanneer internet terugkomt.</p>
   </div>
-  <script>addEventListener('online',()=>location.reload())</script>
+  <script>
+    window.addEventListener('online', () => location.reload());
+    setInterval(() => { if(navigator.onLine) location.reload(); }, 3000);
+  </script>
 </body>
 </html>`;
 }
 
-console.log('[SW] v4 loaded');
+console.log('[SW v5] Loaded');

@@ -3,6 +3,7 @@ import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
 import { OfflineProvider, OfflineIndicator } from "./context/OfflineContext";
+import OfflinePreloadManager from "./components/OfflinePreloadManager";
 import React, { lazy, Suspense, memo, useEffect } from "react";
 import { preloadCriticalData } from "./lib/api";
 import { initPerformanceMonitoring, prefetch } from "./lib/performance";
@@ -497,6 +498,7 @@ function AppWithRoutes() {
           </Routes>
           <Toaster richColors position="top-right" />
           <OfflineIndicator />
+          <OfflinePreloadManager />
         </AuthProvider>
       </OfflineProvider>
     </BrowserRouter>
