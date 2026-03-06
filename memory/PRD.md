@@ -18,17 +18,26 @@ Comprehensive accounting and business management platform for Suriname businesse
   - Aparte cache voor app shell (`facturatie-shell-v7`) en assets (`facturatie-v7`)
   - Network-first strategie voor navigatie, cache-first voor assets
   - Stale-while-revalidate voor statische bestanden
+  - Verbeterde chunk caching via Performance API
 - **OfflinePreloadManager Component** verbeterd:
   - Cache app shell automatisch via service worker
   - Download alle 112 React modules voor offline gebruik
+  - Smaller batch size (3) met langere delays (150ms) om 429 rate limiting te voorkomen
   - Progress indicator tijdens download
   - "Offline beschikbaar" indicator na succesvolle download
+- **ChunkErrorBoundary** component toegevoegd:
+  - Vangt chunk loading errors op wanneer offline
+  - Toont vriendelijke foutmelding met retry optie
+  - Suggereert offline download als pagina niet beschikbaar is
 - **Automatische index.html caching** bij pagina load
-- **Test resultaten**: Alle 6 tests geslaagd (service worker registratie, index.html caching, banner, download, cache populatie, indicator)
 - **Bestanden gewijzigd**:
   - `frontend/public/service-worker.js` - Herschreven v7
   - `frontend/src/components/OfflinePreloadManager.js` - Verbeterde caching
-  - `frontend/src/App.js` - Automatische cache trigger
+  - `frontend/src/components/ChunkErrorBoundary.js` - NEW: Error boundary
+  - `frontend/src/lib/preloadModules.js` - Verbeterde chunk detectie
+  - `frontend/src/App.js` - SafeSuspense wrapper toegevoegd
+
+**Belangrijke opmerking:** Volledige offline functionaliteit vereist dat de gebruiker eerst de "Downloaden voor offline" functie uitvoert terwijl online. Dit cachet alle 112+ modules. Zonder deze download zullen sommige pagina's niet beschikbaar zijn offline.
 
 ## Previous Session: March 4, 2026
 

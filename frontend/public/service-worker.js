@@ -199,6 +199,7 @@ async function handleApiRequest(request) {
  */
 async function handleStaticAsset(request) {
   const cache = await caches.open(CACHE_NAME);
+  const url = new URL(request.url);
   
   // Check cache first
   const cached = await cache.match(request);
@@ -221,12 +222,25 @@ async function handleStaticAsset(request) {
     if (response.ok) {
       // Cache the response
       cache.put(request, response.clone());
-      console.log('[SW v7] Cached asset:', request.url);
+      console.log('[SW v7] Cached asset:', url.pathname);
     }
     
     return response;
   } catch (error) {
-    console.log('[SW v7] Asset not available offline:', request.url);
+    console.log('[SW v7] Asset not available offline:', url.pathname);
+    
+    // For JS chunks that fail to load offline, return a special error response
+    // that the app can handle gracefully
+    if (url.pathname.endsWith('.js') || url.pathname.includes('.chunk.js')) {
+      // Return an error that webpack can understand
+      return new Response(
+        `console.error('[Offline] Chunk not cached: ${url.pathname}. Please download for offline use first.');`,
+        { 
+          status: 200, 
+          headers: { 'Content-Type': 'application/javascript' } 
+        }
+      );
+    }
     
     // Return empty response for non-critical assets
     return new Response('', { status: 404 });
@@ -338,22 +352,38 @@ async function cacheCurrentResources(urls) {
   let cached = 0;
   let failed = 0;
   
-  for (const url of urls) {
-    try {
-      const response = await fetch(url, { cache: 'reload' });
-      if (response.ok) {
-        if (url === '/' || url === '/index.html') {
-          await shellCache.put(url, response);
+  // Process URLs in parallel batches for speed
+  const batchSize = 10;
+  
+  for (let i = 0; i < urls.length; i += batchSize) {
+    const batch = urls.slice(i, i + batchSize);
+    
+    await Promise.all(batch.map(async (url) => {
+      try {
+        // Normalize URL
+        const normalizedUrl = url.startsWith('http') ? url : url;
+        const response = await fetch(normalizedUrl, { cache: 'reload' });
+        
+        if (response.ok) {
+          const urlPath = url.startsWith('http') ? new URL(url).pathname : url;
+          
+          if (urlPath === '/' || urlPath === '/index.html') {
+            await shellCache.put(urlPath, response.clone());
+            await shellCache.put('/', response.clone());
+            await shellCache.put('/index.html', response);
+          } else {
+            // For chunks, store with full URL as key
+            await cache.put(normalizedUrl, response);
+          }
+          cached++;
         } else {
-          await cache.put(url, response);
+          failed++;
         }
-        cached++;
-      } else {
+      } catch (e) {
         failed++;
+        console.log('[SW v7] Failed to cache:', url);
       }
-    } catch (e) {
-      failed++;
-    }
+    }));
   }
   
   console.log(`[SW v7] Cached ${cached} resources, ${failed} failed`);

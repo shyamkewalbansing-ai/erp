@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
 import { OfflineProvider, OfflineIndicator } from "./context/OfflineContext";
 import OfflinePreloadManager from "./components/OfflinePreloadManager";
+import ChunkErrorBoundary from "./components/ChunkErrorBoundary";
 import React, { lazy, Suspense, memo, useEffect } from "react";
 import { preloadCriticalData } from "./lib/api";
 import { initPerformanceMonitoring, prefetch } from "./lib/performance";
@@ -212,6 +213,15 @@ const PageLoader = memo(() => (
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-500"></div>
   </div>
 ));
+
+// Suspense wrapper with ChunkErrorBoundary for offline chunk errors
+const SafeSuspense = ({ children }) => (
+  <ChunkErrorBoundary>
+    <SafeSuspense>
+      {children}
+    </SafeSuspense>
+  </ChunkErrorBoundary>
+);
 
 // Tenant Protected Route
 const TenantProtectedRoute = ({ children }) => {
@@ -464,7 +474,7 @@ const CustomerOnlyRoute = ({ children }) => {
 function TenantPortalRoutes() {
   return (
     <TenantAuthProvider>
-      <Suspense fallback={<PageLoader />}>
+      <SafeSuspense>
         <Routes>
           <Route path="/login" element={<TenantLogin />} />
           <Route path="/" element={
@@ -472,7 +482,7 @@ function TenantPortalRoutes() {
           } />
           <Route path="*" element={<Navigate to="/huurder" replace />} />
         </Routes>
-      </Suspense>
+      </SafeSuspense>
     </TenantAuthProvider>
   );
 }
@@ -480,14 +490,14 @@ function TenantPortalRoutes() {
 // Employee Portal Routes
 function EmployeePortalRoutes() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <SafeSuspense>
       <Routes>
         <Route path="/login" element={<EmployeePortalLogin />} />
         <Route path="/dashboard" element={<EmployeePortalDashboard />} />
         <Route path="/" element={<Navigate to="/werknemer/login" replace />} />
         <Route path="*" element={<Navigate to="/werknemer/login" replace />} />
       </Routes>
-    </Suspense>
+    </SafeSuspense>
   );
 }
 
@@ -522,7 +532,7 @@ function AppWithRoutes() {
 // Auto Dealer Customer Portal Routes
 function AutoDealerCustomerPortalRoutes() {
   return (
-    <Suspense fallback={<PageLoader />}>
+    <SafeSuspense>
       <Routes>
         <Route path="/login" element={<AutoDealerPortalLogin />} />
         <Route path="/" element={<AutoDealerPortalDashboard />} />
@@ -530,7 +540,7 @@ function AutoDealerCustomerPortalRoutes() {
         <Route path="/aankopen/:id" element={<AutoDealerPortalPurchases />} />
         <Route path="*" element={<Navigate to="/klant-portaal" replace />} />
       </Routes>
-    </Suspense>
+    </SafeSuspense>
   );
 }
 
@@ -582,7 +592,7 @@ function MainAppRoutes() {
   const onMainDomain = shouldRedirectToApp();
   
   return (
-    <Suspense fallback={<PageLoader />}>
+    <SafeSuspense>
       <Routes>
         {/* Landing Page - Only on main domain */}
         <Route path="/" element={
@@ -672,21 +682,21 @@ function MainAppRoutes() {
         
         {/* PUBLIC POS Scanner - NO AUTH REQUIRED */}
         <Route path="/scan/:sessionCode" element={
-          <Suspense fallback={<PageLoader />}>
+          <SafeSuspense>
             <BoekhoudingPOSPublicScanner />
-          </Suspense>
+          </SafeSuspense>
         } />
         <Route path="/scan" element={
-          <Suspense fallback={<PageLoader />}>
+          <SafeSuspense>
             <BoekhoudingPOSPublicScanner />
-          </Suspense>
+          </SafeSuspense>
         } />
         
         {/* PERMANENT POS Scanner - NO AUTH REQUIRED, NEVER EXPIRES */}
         <Route path="/scan/p/:code" element={
-          <Suspense fallback={<PageLoader />}>
+          <SafeSuspense>
             <BoekhoudingPOSPermanentScanner />
-          </Suspense>
+          </SafeSuspense>
         } />
         
         {/* Protected Routes - with Layout */}
@@ -906,18 +916,18 @@ function MainAppRoutes() {
         {/* POS Fullscreen Route - Outside Layout */}
         <Route path="/app/boekhouding/pos" element={
           <ProtectedRoute>
-            <Suspense fallback={<PageLoader />}>
+            <SafeSuspense>
               <BoekhoudingPOS />
-            </Suspense>
+            </SafeSuspense>
           </ProtectedRoute>
         } />
         
         {/* POS Mobile Scanner - Fullscreen Camera */}
         <Route path="/app/boekhouding/pos/scanner" element={
           <ProtectedRoute>
-            <Suspense fallback={<PageLoader />}>
+            <SafeSuspense>
               <BoekhoudingPOSMobileScanner />
-            </Suspense>
+            </SafeSuspense>
           </ProtectedRoute>
         } />
         
@@ -937,7 +947,7 @@ function MainAppRoutes() {
         {/* 404 - redirect to landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </Suspense>
+    </SafeSuspense>
   );
 }
 

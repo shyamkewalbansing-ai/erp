@@ -3,6 +3,61 @@
  * This file contains ALL existing page modules
  */
 
+// Collect all loaded chunk URLs for caching
+function getLoadedChunks() {
+  const chunks = new Set();
+  
+  // Get all script tags (includes dynamically loaded chunks)
+  document.querySelectorAll('script[src]').forEach(script => {
+    if (script.src.startsWith(window.location.origin)) {
+      chunks.add(script.src);
+    }
+  });
+  
+  // Get all link tags for CSS
+  document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+    if (link.href.startsWith(window.location.origin)) {
+      chunks.add(link.href);
+    }
+  });
+  
+  // Try to get webpack chunks from performance entries
+  if (window.performance && window.performance.getEntriesByType) {
+    const resources = window.performance.getEntriesByType('resource');
+    resources.forEach(resource => {
+      if (resource.name.startsWith(window.location.origin) && 
+          (resource.name.includes('/static/') || 
+           resource.name.includes('.chunk.') ||
+           resource.name.endsWith('.js') ||
+           resource.name.endsWith('.css'))) {
+        chunks.add(resource.name);
+      }
+    });
+  }
+  
+  return Array.from(chunks);
+}
+
+// Request service worker to cache specific URLs
+async function cacheChunksViaSW(urls) {
+  if (!navigator.serviceWorker?.controller) {
+    console.log('[Preload] No service worker controller');
+    return;
+  }
+  
+  // Filter to only same-origin URLs
+  const origin = window.location.origin;
+  const sameOriginUrls = urls.filter(url => url.startsWith(origin));
+  
+  if (sameOriginUrls.length > 0) {
+    navigator.serviceWorker.controller.postMessage({
+      type: 'CACHE_ALL',
+      urls: sameOriginUrls
+    });
+    console.log(`[Preload] Requested caching of ${sameOriginUrls.length} chunks`);
+  }
+}
+
 const modulesToPreload = [
   // ==================== ROOT PAGES ====================
   () => import('../pages/AIAssistantPage'),
@@ -137,8 +192,8 @@ export async function preloadAllModules(onProgress, onComplete) {
   let loaded = 0;
   let failed = 0;
   
-  // Load in batches of 5 for faster loading
-  const batchSize = 5;
+  // Load in smaller batches to avoid 429 rate limiting
+  const batchSize = 3;
   
   for (let i = 0; i < modulesToPreload.length; i += batchSize) {
     const batch = modulesToPreload.slice(i, i + batchSize);
@@ -150,7 +205,7 @@ export async function preloadAllModules(onProgress, onComplete) {
           loaded++;
         } catch (error) {
           failed++;
-          console.warn('[Preload] Failed to load module');
+          console.warn('[Preload] Failed to load module:', error.message);
         }
         
         preloadProgress = Math.round(((loaded + failed) / total) * 100);
@@ -158,17 +213,34 @@ export async function preloadAllModules(onProgress, onComplete) {
       })
     );
     
-    // Small delay between batches
-    await new Promise(resolve => setTimeout(resolve, 50));
+    // Longer delay between batches to avoid rate limiting
+    await new Promise(resolve => setTimeout(resolve, 150));
   }
   
+  // Wait a bit before final cache
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Final cache of all chunks
+  const allChunks = getLoadedChunks();
+  await cacheChunksViaSW(allChunks);
+  
+  // Also cache the main bundle and other critical files
+  const criticalUrls = [
+    window.location.origin + '/',
+    window.location.origin + '/index.html',
+    window.location.origin + '/manifest.json',
+    ...allChunks
+  ];
+  await cacheChunksViaSW(criticalUrls);
+  
   preloadComplete = true;
-  console.log(`[Preload] Complete! Loaded: ${loaded}, Failed: ${failed}`);
+  console.log(`[Preload] Complete! Loaded: ${loaded}, Failed: ${failed}, Chunks cached: ${allChunks.length}`);
   
   if (onComplete) onComplete(loaded, failed);
   
   localStorage.setItem('offlinePreloadComplete', 'true');
   localStorage.setItem('offlinePreloadDate', new Date().toISOString());
+  localStorage.setItem('offlineCachedChunks', allChunks.length.toString());
   
   return { loaded, failed };
 }
