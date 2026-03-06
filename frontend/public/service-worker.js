@@ -1,131 +1,115 @@
 /**
- * Service Worker v8 - Simplified and Memory-Efficient
- * Strategy: Cache only essential files, lazy cache on demand
+ * Service Worker v9 - ALLEEN BOEKHOUDING OFFLINE
+ * Simple and efficient - only caches boekhouding pages
  */
 
-const CACHE_NAME = 'facturatie-v8';
+const CACHE_NAME = 'boekhouding-offline-v1';
 
-// Install: Just activate immediately
-self.addEventListener('install', (event) => {
-  console.log('[SW v8] Installing...');
-  event.waitUntil(self.skipWaiting());
+// Install
+self.addEventListener('install', () => {
+  console.log('[SW] Installing...');
+  self.skipWaiting();
 });
 
-// Activate: Clean old caches and take control
+// Activate
 self.addEventListener('activate', (event) => {
-  console.log('[SW v8] Activating...');
+  console.log('[SW] Activating...');
   event.waitUntil(
-    (async () => {
-      // Delete old caches
-      const cacheNames = await caches.keys();
-      await Promise.all(
-        cacheNames
-          .filter(name => name.startsWith('facturatie-') && name !== CACHE_NAME)
-          .map(name => caches.delete(name))
-      );
-      
-      // Take control immediately
-      await self.clients.claim();
-      console.log('[SW v8] Activated');
-    })()
+    caches.keys().then(names => 
+      Promise.all(
+        names.filter(n => n !== CACHE_NAME).map(n => caches.delete(n))
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// Fetch: Handle requests
+// Fetch handler
 self.addEventListener('fetch', (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const url = new URL(event.request.url);
   
-  // Only handle same-origin requests
-  if (url.origin !== location.origin) {
+  // Only handle same-origin GET requests
+  if (url.origin !== location.origin || event.request.method !== 'GET') {
     return;
   }
   
-  // Skip non-GET requests and certain paths
-  if (request.method !== 'GET') return;
-  if (url.pathname.includes('/ws/')) return;
-  if (url.pathname.includes('/api/auth')) return;
-  if (url.pathname.includes('/api/ai/')) return;
-  
-  // Handle navigation requests (page loads)
-  if (request.mode === 'navigate') {
-    event.respondWith(handleNavigation(request));
+  // Skip API, websocket, auth
+  if (url.pathname.startsWith('/api/') || 
+      url.pathname.includes('/ws/') ||
+      url.pathname.includes('/auth')) {
     return;
   }
   
-  // Handle API requests - network only, no caching
-  if (url.pathname.startsWith('/api/')) {
-    return; // Let browser handle API requests normally
+  // Handle navigation (page loads)
+  if (event.request.mode === 'navigate') {
+    event.respondWith(handleNavigation(event.request, url));
+    return;
   }
   
-  // Handle static assets - cache on demand
-  event.respondWith(handleAsset(request));
+  // Handle static assets (JS, CSS)
+  if (url.pathname.includes('/static/') || 
+      url.pathname.endsWith('.js') || 
+      url.pathname.endsWith('.css')) {
+    event.respondWith(handleAsset(event.request));
+    return;
+  }
 });
 
-/**
- * Handle navigation - serve cached index.html when offline
- */
-async function handleNavigation(request) {
+// Handle page navigation
+async function handleNavigation(request, url) {
   const cache = await caches.open(CACHE_NAME);
+  const isBoekhouding = url.pathname.includes('/boekhouding');
   
   try {
     // Try network first
     const response = await fetch(request);
     
-    if (response.ok) {
-      // Cache index.html for offline use
-      cache.put('/', response.clone());
+    // Cache index.html for boekhouding pages
+    if (response.ok && isBoekhouding) {
       cache.put('/index.html', response.clone());
+      cache.put('/', response.clone());
     }
     
     return response;
   } catch (error) {
-    // Offline - try cache
-    console.log('[SW v8] Offline, trying cache...');
+    // Offline - serve cached index.html for boekhouding
+    if (isBoekhouding) {
+      const cached = await cache.match('/index.html') || await cache.match('/');
+      if (cached) {
+        console.log('[SW] Serving cached page for boekhouding');
+        return cached;
+      }
+    }
     
-    let cached = await cache.match('/index.html');
-    if (cached) return cached;
-    
-    cached = await cache.match('/');
-    if (cached) return cached;
-    
-    // Return offline message
-    return new Response(getOfflineHTML(), {
+    // Not boekhouding or not cached - show offline page
+    return new Response(offlineHTML(), {
       status: 200,
       headers: { 'Content-Type': 'text/html' }
     });
   }
 }
 
-/**
- * Handle static assets - stale-while-revalidate
- */
+// Handle static assets
 async function handleAsset(request) {
   const cache = await caches.open(CACHE_NAME);
   
-  // Check cache first
+  // Try cache first
   const cached = await cache.match(request);
+  if (cached) {
+    // Update in background
+    fetch(request).then(r => r.ok && cache.put(request, r)).catch(() => {});
+    return cached;
+  }
   
-  // Fetch from network in background
-  const networkPromise = fetch(request).then(response => {
+  // Fetch from network
+  try {
+    const response = await fetch(request);
     if (response.ok) {
       cache.put(request, response.clone());
     }
     return response;
-  }).catch(() => null);
-  
-  // Return cached if available, otherwise wait for network
-  if (cached) {
-    return cached;
+  } catch (e) {
+    return new Response('', { status: 404 });
   }
-  
-  const networkResponse = await networkPromise;
-  if (networkResponse) {
-    return networkResponse;
-  }
-  
-  // Asset not available
-  return new Response('', { status: 404 });
 }
 
 // Message handler
@@ -133,52 +117,44 @@ self.addEventListener('message', (event) => {
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
-  
   if (event.data?.type === 'CACHE_INDEX') {
-    cacheIndex();
+    caches.open(CACHE_NAME).then(async cache => {
+      try {
+        const r = await fetch('/');
+        if (r.ok) {
+          await cache.put('/', r.clone());
+          await cache.put('/index.html', r);
+        }
+      } catch (e) {}
+    });
   }
 });
 
-async function cacheIndex() {
-  const cache = await caches.open(CACHE_NAME);
-  try {
-    const response = await fetch('/');
-    if (response.ok) {
-      await cache.put('/', response.clone());
-      await cache.put('/index.html', response);
-      console.log('[SW v8] Cached index.html');
-    }
-  } catch (e) {
-    console.log('[SW v8] Could not cache index');
-  }
-}
-
-function getOfflineHTML() {
+function offlineHTML() {
   return `<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Offline - Facturatie N.V.</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Offline</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:system-ui,sans-serif;background:#10b981;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-    .box{background:#fff;border-radius:16px;padding:32px;max-width:360px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.2)}
-    h1{font-size:20px;margin-bottom:8px;color:#111}
-    p{color:#666;margin-bottom:20px;font-size:14px}
-    button{background:#10b981;color:#fff;border:0;padding:12px 24px;border-radius:8px;font-size:14px;cursor:pointer;width:100%}
-    button:hover{background:#059669}
+    body{font-family:system-ui,sans-serif;background:#10b981;min-height:100vh;display:flex;align-items:center;justify-content:center}
+    .box{background:#fff;border-radius:16px;padding:32px;max-width:340px;text-align:center}
+    h1{font-size:18px;margin-bottom:8px}
+    p{color:#666;font-size:14px;margin-bottom:16px}
+    button{background:#10b981;color:#fff;border:0;padding:10px 20px;border-radius:8px;cursor:pointer}
   </style>
 </head>
 <body>
   <div class="box">
     <h1>Je bent offline</h1>
-    <p>Controleer je internetverbinding en probeer opnieuw.</p>
-    <button onclick="location.reload()">Opnieuw proberen</button>
+    <p>Alleen de Boekhouding module werkt offline. Andere pagina's hebben internet nodig.</p>
+    <button onclick="location.reload()">Opnieuw</button>
   </div>
-  <script>window.addEventListener('online',()=>location.reload())</script>
+  <script>addEventListener('online',()=>location.reload())</script>
 </body>
 </html>`;
 }
 
-console.log('[SW v8] Loaded');
+console.log('[SW] Boekhouding Offline Worker loaded');
