@@ -1,48 +1,40 @@
 /**
- * Offline Preload Manager Component
- * Shows preload progress and manages offline data caching
+ * Offline Preload Manager Component - Simplified version
+ * Only caches current page resources, not all modules
  */
 
 import React, { useState, useEffect } from 'react';
-import { preloadAllModules, isPreloadComplete, resetPreload } from '../lib/preloadModules';
-import { Download, CheckCircle, WifiOff, RefreshCw, CloudDownload } from 'lucide-react';
+import { Download, CheckCircle, WifiOff, RefreshCw } from 'lucide-react';
 import { Button } from './ui/button';
 import { toast } from 'sonner';
 
-// Cache the critical resources via Service Worker
-async function cacheAppShell() {
+// Check if offline data was downloaded
+function isPreloadComplete() {
+  return localStorage.getItem('offlinePreloadComplete') === 'true';
+}
+
+// Cache current page resources via Service Worker
+async function cacheCurrentPage() {
   if (!navigator.serviceWorker?.controller) {
-    console.log('[Offline] No service worker controller yet');
     return false;
   }
   
   try {
-    // Get all CSS and JS from the page
-    const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).map(l => l.href);
-    const scripts = Array.from(document.querySelectorAll('script[src]')).map(s => s.src);
-    const images = Array.from(document.querySelectorAll('img[src]')).map(i => i.src);
-    
-    // Core URLs to cache
+    // Only cache essential resources already loaded on the page
     const urlsToCache = [
       '/',
       '/index.html',
-      '/manifest.json',
-      '/favicon.ico',
-      ...links.filter(url => url.startsWith(window.location.origin)),
-      ...scripts.filter(url => url.startsWith(window.location.origin)),
-      ...images.filter(url => url.startsWith(window.location.origin))
+      '/manifest.json'
     ];
     
     // Send to service worker
     navigator.serviceWorker.controller.postMessage({
-      type: 'CACHE_ALL',
-      urls: [...new Set(urlsToCache)]
+      type: 'CACHE_INDEX'
     });
     
-    console.log('[Offline] Requested caching of', urlsToCache.length, 'resources');
     return true;
   } catch (e) {
-    console.error('[Offline] Failed to cache app shell:', e);
+    console.error('[Offline] Failed to cache:', e);
     return false;
   }
 }
@@ -50,10 +42,8 @@ async function cacheAppShell() {
 export default function OfflinePreloadManager() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isPreloading, setIsPreloading] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [preloadDone, setPreloadDone] = useState(isPreloadComplete());
   const [showBanner, setShowBanner] = useState(false);
-  const [stats, setStats] = useState({ loaded: 0, failed: 0 });
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -68,12 +58,12 @@ export default function OfflinePreloadManager() {
     };
   }, []);
 
-  // Show banner if not preloaded and online
+  // Show banner if not preloaded and online (after 10 seconds, not 5)
   useEffect(() => {
     if (isOnline && !preloadDone && !isPreloading) {
       const timer = setTimeout(() => {
         setShowBanner(true);
-      }, 5000); // Show after 5 seconds
+      }, 10000);
       return () => clearTimeout(timer);
     }
   }, [isOnline, preloadDone, isPreloading]);
@@ -85,45 +75,25 @@ export default function OfflinePreloadManager() {
     }
     
     setIsPreloading(true);
-    setProgress(0);
-    toast.info('Offline data wordt gedownload...');
+    toast.info('Basis offline data wordt gedownload...');
     
     try {
-      // First: Cache the app shell (index.html, CSS, JS) via Service Worker
-      await cacheAppShell();
+      // Just cache the current page shell
+      await cacheCurrentPage();
       
-      // Then: Preload all React modules
-      const result = await preloadAllModules(
-        (prog, loaded, failed) => {
-          setProgress(prog);
-          setStats({ loaded, failed });
-        },
-        async (loaded, failed) => {
-          // After modules are loaded, cache them too
-          await cacheAppShell();
-          
-          setIsPreloading(false);
-          setPreloadDone(true);
-          setShowBanner(false);
-          
-          if (failed === 0) {
-            toast.success('Offline data volledig gedownload! De app werkt nu offline.');
-          } else {
-            toast.warning(`Offline data gedownload met ${failed} fouten. Sommige pagina's werken mogelijk niet offline.`);
-          }
-        }
-      );
+      // Mark as complete
+      localStorage.setItem('offlinePreloadComplete', 'true');
+      localStorage.setItem('offlinePreloadDate', new Date().toISOString());
+      
+      setIsPreloading(false);
+      setPreloadDone(true);
+      setShowBanner(false);
+      
+      toast.success('Basis offline ondersteuning ingeschakeld. Pagina\'s die je bezoekt worden automatisch gecached.');
     } catch (error) {
       setIsPreloading(false);
       toast.error('Fout bij downloaden van offline data');
     }
-  };
-
-  const forceReload = () => {
-    resetPreload();
-    setPreloadDone(false);
-    setProgress(0);
-    startPreload();
   };
 
   // Don't render if preload is done and online
@@ -134,7 +104,7 @@ export default function OfflinePreloadManager() {
   // Offline indicator
   if (!isOnline) {
     return (
-      <div className="fixed bottom-20 right-4 z-50 bg-red-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+      <div className="fixed bottom-20 right-4 z-50 bg-amber-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
         <WifiOff className="w-4 h-4" />
         <span className="text-sm font-medium">Offline modus</span>
       </div>
@@ -147,18 +117,7 @@ export default function OfflinePreloadManager() {
       <div className="fixed bottom-20 right-4 z-50 bg-blue-500 text-white px-4 py-3 rounded-xl shadow-lg">
         <div className="flex items-center gap-3">
           <RefreshCw className="w-5 h-5 animate-spin" />
-          <div>
-            <p className="text-sm font-medium">Offline data downloaden...</p>
-            <div className="flex items-center gap-2 mt-1">
-              <div className="w-32 h-2 bg-blue-400 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-white transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <span className="text-xs">{progress}%</span>
-            </div>
-          </div>
+          <span className="text-sm font-medium">Offline data voorbereiden...</span>
         </div>
       </div>
     );
@@ -185,11 +144,11 @@ export default function OfflinePreloadManager() {
           <div className="flex-1">
             <h3 className="font-semibold text-gray-900">Offline beschikbaar maken?</h3>
             <p className="text-sm text-gray-600 mt-1">
-              Download alle pagina's zodat de app ook zonder internet werkt.
+              Pagina's die je bezoekt worden gecached voor offline gebruik.
             </p>
             <div className="flex gap-2 mt-3">
               <Button size="sm" onClick={startPreload}>
-                Downloaden
+                Activeren
               </Button>
               <Button size="sm" variant="ghost" onClick={() => setShowBanner(false)}>
                 Later

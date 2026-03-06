@@ -1,72 +1,37 @@
 /**
- * Service Worker v7 - Robust Offline Support for React SPA
- * Strategy: Network-first for navigation, Cache-first for assets
+ * Service Worker v8 - Simplified and Memory-Efficient
+ * Strategy: Cache only essential files, lazy cache on demand
  */
 
-const CACHE_NAME = 'facturatie-v7';
-const APP_SHELL_CACHE = 'facturatie-shell-v7';
+const CACHE_NAME = 'facturatie-v8';
 
-// Core files that MUST be cached for offline to work
-const APP_SHELL = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.ico'
-];
-
-// Install: Pre-cache app shell
+// Install: Just activate immediately
 self.addEventListener('install', (event) => {
-  console.log('[SW v7] Installing...');
-  event.waitUntil(
-    (async () => {
-      const shellCache = await caches.open(APP_SHELL_CACHE);
-      
-      // Cache each shell file individually, don't fail if one fails
-      for (const url of APP_SHELL) {
-        try {
-          const response = await fetch(url, { cache: 'reload' });
-          if (response.ok) {
-            await shellCache.put(url, response);
-            console.log('[SW v7] Cached shell:', url);
-          }
-        } catch (e) {
-          console.log('[SW v7] Could not cache:', url, e);
-        }
-      }
-      
-      // Force this version to become active
-      await self.skipWaiting();
-      console.log('[SW v7] Install complete');
-    })()
-  );
+  console.log('[SW v8] Installing...');
+  event.waitUntil(self.skipWaiting());
 });
 
-// Activate: Clean old caches and take control immediately
+// Activate: Clean old caches and take control
 self.addEventListener('activate', (event) => {
-  console.log('[SW v7] Activating...');
+  console.log('[SW v8] Activating...');
   event.waitUntil(
     (async () => {
       // Delete old caches
       const cacheNames = await caches.keys();
       await Promise.all(
         cacheNames
-          .filter(name => name.startsWith('facturatie-') && 
-                         name !== CACHE_NAME && 
-                         name !== APP_SHELL_CACHE)
-          .map(name => {
-            console.log('[SW v7] Deleting old cache:', name);
-            return caches.delete(name);
-          })
+          .filter(name => name.startsWith('facturatie-') && name !== CACHE_NAME)
+          .map(name => caches.delete(name))
       );
       
-      // Take control of all clients immediately
+      // Take control immediately
       await self.clients.claim();
-      console.log('[SW v7] Activated and claimed clients');
+      console.log('[SW v8] Activated');
     })()
   );
 });
 
-// Fetch: Main request handler
+// Fetch: Handle requests
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -76,350 +41,118 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Skip WebSocket and auth requests
-  if (url.pathname.includes('/ws/') || 
-      url.pathname.includes('/auth') ||
-      url.pathname.includes('/login') ||
-      url.pathname.includes('/ai/chat')) {
-    return;
-  }
+  // Skip non-GET requests and certain paths
+  if (request.method !== 'GET') return;
+  if (url.pathname.includes('/ws/')) return;
+  if (url.pathname.includes('/api/auth')) return;
+  if (url.pathname.includes('/api/ai/')) return;
   
-  // CRITICAL: Handle navigation requests (page loads, F5 refresh)
+  // Handle navigation requests (page loads)
   if (request.mode === 'navigate') {
     event.respondWith(handleNavigation(request));
     return;
   }
   
-  // Handle API requests - network first, cache fallback
+  // Handle API requests - network only, no caching
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(handleApiRequest(request));
-    return;
+    return; // Let browser handle API requests normally
   }
   
-  // Handle static assets - cache first for speed
-  event.respondWith(handleStaticAsset(request));
+  // Handle static assets - cache on demand
+  event.respondWith(handleAsset(request));
 });
 
 /**
- * Handle navigation requests (HTML pages)
- * This is the MOST IMPORTANT handler for offline to work
+ * Handle navigation - serve cached index.html when offline
  */
 async function handleNavigation(request) {
-  const shellCache = await caches.open(APP_SHELL_CACHE);
-  const dynamicCache = await caches.open(CACHE_NAME);
+  const cache = await caches.open(CACHE_NAME);
   
   try {
     // Try network first
-    const networkResponse = await fetch(request);
+    const response = await fetch(request);
     
-    if (networkResponse.ok) {
-      // Update shell cache with fresh response
-      shellCache.put('/', networkResponse.clone());
-      shellCache.put('/index.html', networkResponse.clone());
-      console.log('[SW v7] Updated shell cache from network');
+    if (response.ok) {
+      // Cache index.html for offline use
+      cache.put('/', response.clone());
+      cache.put('/index.html', response.clone());
     }
     
-    return networkResponse;
+    return response;
   } catch (error) {
-    // Network failed - we're offline
-    console.log('[SW v7] Network failed for navigation, trying cache...');
+    // Offline - try cache
+    console.log('[SW v8] Offline, trying cache...');
     
-    // Try to serve cached index.html - this is ESSENTIAL for SPA
-    let cached = await shellCache.match('/index.html');
-    if (cached) {
-      console.log('[SW v7] Serving cached /index.html for offline');
-      return cached;
-    }
+    let cached = await cache.match('/index.html');
+    if (cached) return cached;
     
-    cached = await shellCache.match('/');
-    if (cached) {
-      console.log('[SW v7] Serving cached / for offline');
-      return cached;
-    }
+    cached = await cache.match('/');
+    if (cached) return cached;
     
-    // Try dynamic cache
-    cached = await dynamicCache.match('/index.html');
-    if (cached) {
-      console.log('[SW v7] Serving from dynamic cache');
-      return cached;
-    }
-    
-    // Last resort: return offline HTML
-    console.log('[SW v7] No cache available, returning offline page');
+    // Return offline message
     return new Response(getOfflineHTML(), {
       status: 200,
-      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      headers: { 'Content-Type': 'text/html' }
     });
   }
 }
 
 /**
- * Handle API requests
- * Network first, fall back to cache for GET requests
+ * Handle static assets - stale-while-revalidate
  */
-async function handleApiRequest(request) {
+async function handleAsset(request) {
   const cache = await caches.open(CACHE_NAME);
-  
-  try {
-    const response = await fetch(request);
-    
-    // Cache successful GET responses
-    if (response.ok && request.method === 'GET') {
-      cache.put(request, response.clone());
-    }
-    
-    return response;
-  } catch (error) {
-    // Offline - try cache for GET requests
-    if (request.method === 'GET') {
-      const cached = await cache.match(request);
-      if (cached) {
-        console.log('[SW v7] Serving API from cache:', request.url);
-        return cached;
-      }
-    }
-    
-    // Return offline error response
-    return new Response(
-      JSON.stringify({ 
-        offline: true, 
-        error: 'Je bent offline. Deze actie wordt uitgevoerd wanneer je weer online bent.' 
-      }),
-      { 
-        status: 503, 
-        headers: { 'Content-Type': 'application/json' } 
-      }
-    );
-  }
-}
-
-/**
- * Handle static assets (JS, CSS, images, fonts)
- * Cache first for speed, update in background
- */
-async function handleStaticAsset(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const url = new URL(request.url);
   
   // Check cache first
   const cached = await cache.match(request);
   
+  // Fetch from network in background
+  const networkPromise = fetch(request).then(response => {
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  }).catch(() => null);
+  
+  // Return cached if available, otherwise wait for network
   if (cached) {
-    // Return cached, but update in background (stale-while-revalidate)
-    fetch(request).then(response => {
-      if (response.ok) {
-        cache.put(request, response);
-      }
-    }).catch(() => {});
-    
     return cached;
   }
   
-  // Not in cache, fetch from network
-  try {
-    const response = await fetch(request);
-    
-    if (response.ok) {
-      // Cache the response
-      cache.put(request, response.clone());
-      console.log('[SW v7] Cached asset:', url.pathname);
-    }
-    
-    return response;
-  } catch (error) {
-    console.log('[SW v7] Asset not available offline:', url.pathname);
-    
-    // For JS chunks that fail to load offline, return a special error response
-    // that the app can handle gracefully
-    if (url.pathname.endsWith('.js') || url.pathname.includes('.chunk.js')) {
-      // Return an error that webpack can understand
-      return new Response(
-        `console.error('[Offline] Chunk not cached: ${url.pathname}. Please download for offline use first.');`,
-        { 
-          status: 200, 
-          headers: { 'Content-Type': 'application/javascript' } 
-        }
-      );
-    }
-    
-    // Return empty response for non-critical assets
-    return new Response('', { status: 404 });
+  const networkResponse = await networkPromise;
+  if (networkResponse) {
+    return networkResponse;
   }
+  
+  // Asset not available
+  return new Response('', { status: 404 });
 }
 
-// Message handler for communication with the app
+// Message handler
 self.addEventListener('message', (event) => {
-  console.log('[SW v7] Message received:', event.data);
-  
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
   
   if (event.data?.type === 'CACHE_INDEX') {
-    // Cache index.html and all loaded resources
-    cacheIndexAndResources();
-  }
-  
-  if (event.data?.type === 'CACHE_ALL') {
-    // Cache multiple URLs at once
-    cacheCurrentResources(event.data.urls || []);
-  }
-  
-  if (event.data?.type === 'GET_CACHE_STATUS') {
-    getCacheStatus().then(status => {
-      event.ports[0]?.postMessage(status);
-    });
+    cacheIndex();
   }
 });
 
-/**
- * Cache index.html and discover/cache all linked resources
- */
-async function cacheIndexAndResources() {
-  const shellCache = await caches.open(APP_SHELL_CACHE);
+async function cacheIndex() {
   const cache = await caches.open(CACHE_NAME);
-  
   try {
-    // Fetch fresh index.html
-    const indexResponse = await fetch('/', { cache: 'reload' });
-    if (indexResponse.ok) {
-      const indexClone = indexResponse.clone();
-      await shellCache.put('/', indexResponse.clone());
-      await shellCache.put('/index.html', indexResponse);
-      console.log('[SW v7] Cached index.html');
-      
-      // Parse the HTML to find all resources
-      const html = await indexClone.text();
-      const resourceUrls = extractResourceUrls(html);
-      
-      // Cache all discovered resources
-      let cached = 0;
-      for (const url of resourceUrls) {
-        try {
-          const res = await fetch(url);
-          if (res.ok) {
-            await cache.put(url, res);
-            cached++;
-          }
-        } catch (e) {
-          // Ignore failed resources
-        }
-      }
-      console.log(`[SW v7] Cached ${cached} additional resources from index.html`);
+    const response = await fetch('/');
+    if (response.ok) {
+      await cache.put('/', response.clone());
+      await cache.put('/index.html', response);
+      console.log('[SW v8] Cached index.html');
     }
   } catch (e) {
-    console.log('[SW v7] Could not cache index:', e);
+    console.log('[SW v8] Could not cache index');
   }
 }
 
-/**
- * Extract resource URLs from HTML
- */
-function extractResourceUrls(html) {
-  const urls = [];
-  
-  // Find CSS links
-  const cssRegex = /href=["']([^"']+\.css[^"']*)/g;
-  let match;
-  while ((match = cssRegex.exec(html)) !== null) {
-    if (match[1].startsWith('/') || match[1].startsWith(location.origin)) {
-      urls.push(match[1].startsWith('/') ? match[1] : new URL(match[1]).pathname);
-    }
-  }
-  
-  // Find JS scripts
-  const jsRegex = /src=["']([^"']+\.js[^"']*)/g;
-  while ((match = jsRegex.exec(html)) !== null) {
-    if (match[1].startsWith('/') || match[1].startsWith(location.origin)) {
-      urls.push(match[1].startsWith('/') ? match[1] : new URL(match[1]).pathname);
-    }
-  }
-  
-  // Add manifest
-  urls.push('/manifest.json');
-  urls.push('/favicon.ico');
-  
-  return [...new Set(urls)];
-}
-
-/**
- * Cache multiple URLs at once
- */
-async function cacheCurrentResources(urls) {
-  const cache = await caches.open(CACHE_NAME);
-  const shellCache = await caches.open(APP_SHELL_CACHE);
-  
-  let cached = 0;
-  let failed = 0;
-  
-  // Process URLs in parallel batches for speed
-  const batchSize = 10;
-  
-  for (let i = 0; i < urls.length; i += batchSize) {
-    const batch = urls.slice(i, i + batchSize);
-    
-    await Promise.all(batch.map(async (url) => {
-      try {
-        // Normalize URL
-        const normalizedUrl = url.startsWith('http') ? url : url;
-        const response = await fetch(normalizedUrl, { cache: 'reload' });
-        
-        if (response.ok) {
-          const urlPath = url.startsWith('http') ? new URL(url).pathname : url;
-          
-          if (urlPath === '/' || urlPath === '/index.html') {
-            await shellCache.put(urlPath, response.clone());
-            await shellCache.put('/', response.clone());
-            await shellCache.put('/index.html', response);
-          } else {
-            // For chunks, store with full URL as key
-            await cache.put(normalizedUrl, response);
-          }
-          cached++;
-        } else {
-          failed++;
-        }
-      } catch (e) {
-        failed++;
-        console.log('[SW v7] Failed to cache:', url);
-      }
-    }));
-  }
-  
-  console.log(`[SW v7] Cached ${cached} resources, ${failed} failed`);
-  
-  // Notify all clients
-  const clients = await self.clients.matchAll();
-  clients.forEach(client => {
-    client.postMessage({
-      type: 'CACHE_COMPLETE',
-      cached,
-      failed
-    });
-  });
-}
-
-/**
- * Get cache status
- */
-async function getCacheStatus() {
-  const cache = await caches.open(CACHE_NAME);
-  const shellCache = await caches.open(APP_SHELL_CACHE);
-  
-  const cacheKeys = await cache.keys();
-  const shellKeys = await shellCache.keys();
-  
-  return {
-    totalCached: cacheKeys.length + shellKeys.length,
-    shellCached: shellKeys.length,
-    assetsCached: cacheKeys.length,
-    hasIndexHtml: await shellCache.match('/index.html') !== undefined
-  };
-}
-
-/**
- * Offline HTML fallback
- */
 function getOfflineHTML() {
   return `<!DOCTYPE html>
 <html lang="nl">
@@ -429,48 +162,23 @@ function getOfflineHTML() {
   <title>Offline - Facturatie N.V.</title>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:linear-gradient(135deg,#10b981,#059669);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-    .box{background:#fff;border-radius:20px;padding:40px;max-width:420px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
-    .icon{width:80px;height:80px;background:#fef3c7;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
-    h1{font-size:24px;margin-bottom:12px;color:#111}
-    p{color:#666;margin-bottom:24px;line-height:1.6}
-    .steps{text-align:left;background:#f9fafb;padding:20px;border-radius:12px;margin-bottom:24px}
-    .steps h3{font-size:14px;color:#111;margin-bottom:12px}
-    .steps ol{margin-left:20px;color:#666;font-size:14px;line-height:1.8}
-    button{background:#10b981;color:#fff;border:0;padding:14px 28px;border-radius:12px;font-size:16px;cursor:pointer;width:100%;font-weight:600}
+    body{font-family:system-ui,sans-serif;background:#10b981;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .box{background:#fff;border-radius:16px;padding:32px;max-width:360px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.2)}
+    h1{font-size:20px;margin-bottom:8px;color:#111}
+    p{color:#666;margin-bottom:20px;font-size:14px}
+    button{background:#10b981;color:#fff;border:0;padding:12px 24px;border-radius:8px;font-size:14px;cursor:pointer;width:100%}
     button:hover{background:#059669}
-    .tip{margin-top:16px;font-size:13px;color:#999}
   </style>
 </head>
 <body>
   <div class="box">
-    <div class="icon">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
-        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-        <line x1="12" y1="9" x2="12" y2="13"/>
-        <line x1="12" y1="17" x2="12.01" y2="17"/>
-      </svg>
-    </div>
-    <h1>Offline modus niet beschikbaar</h1>
-    <p>De app is nog niet klaar voor offline gebruik.</p>
-    <div class="steps">
-      <h3>Om offline te werken:</h3>
-      <ol>
-        <li>Maak verbinding met internet</li>
-        <li>Open de app en log in</li>
-        <li>Klik op "Downloaden voor offline gebruik"</li>
-        <li>Wacht tot alle bestanden zijn gedownload</li>
-      </ol>
-    </div>
+    <h1>Je bent offline</h1>
+    <p>Controleer je internetverbinding en probeer opnieuw.</p>
     <button onclick="location.reload()">Opnieuw proberen</button>
-    <p class="tip">De pagina herlaadt automatisch wanneer internet terugkomt.</p>
   </div>
-  <script>
-    window.addEventListener('online', () => location.reload());
-    setInterval(() => navigator.onLine && location.reload(), 5000);
-  </script>
+  <script>window.addEventListener('online',()=>location.reload())</script>
 </body>
 </html>`;
 }
 
-console.log('[SW v7] Service Worker loaded');
+console.log('[SW v8] Loaded');

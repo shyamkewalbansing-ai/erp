@@ -17,17 +17,14 @@ import PublicInvoiceGenerator from "./pages/PublicInvoiceGenerator";
 import Layout from "./components/Layout";
 import "@/App.css";
 
-// Auto-cache index.html when service worker is ready
+// Auto-cache index.html when service worker is ready (lightweight)
 if ('serviceWorker' in navigator && typeof window !== 'undefined') {
   window.addEventListener('load', () => {
-    // Wait for service worker to be ready
     navigator.serviceWorker.ready.then((registration) => {
       if (registration.active) {
-        // Tell service worker to cache the index.html
         registration.active.postMessage({ type: 'CACHE_INDEX' });
-        console.log('[App] Requested index.html caching');
       }
-    });
+    }).catch(() => {});
   });
 }
 
@@ -47,21 +44,8 @@ initPerformanceMonitoring();
 // Preload critical data immediately
 preloadCriticalData();
 
-// Prefetch commonly used pages when browser is completely idle (after first paint)
-if (typeof window !== 'undefined') {
-  // Use requestIdleCallback for better performance timing
-  const prefetchPages = () => {
-    prefetch(() => import("./pages/Dashboard"));
-    prefetch(() => import("./pages/ModulesPage"));
-    prefetch(() => import("./pages/Login"));
-  };
-  
-  if ('requestIdleCallback' in window) {
-    window.requestIdleCallback(prefetchPages, { timeout: 5000 });
-  } else {
-    setTimeout(prefetchPages, 3000);
-  }
-}
+// Prefetch disabled to prevent memory issues
+// Pages are lazy loaded on demand instead
 
 // Tenant Portal pages
 const TenantLogin = lazy(() => import("./pages/TenantLogin"));
