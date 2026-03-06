@@ -1,466 +1,156 @@
 /**
- * Advanced Service Worker for Facturatie N.V.
- * Handles offline caching, background sync, and push notifications
+ * Simple but Effective Service Worker for Facturatie N.V.
+ * Uses runtime caching for all assets
  */
 
-const CACHE_VERSION = 'v3';
-const CACHE_NAME = `facturatie-${CACHE_VERSION}`;
+const CACHE_NAME = 'facturatie-v4';
+const OFFLINE_URL = '/offline.html';
 
-// Core files die altijd gecached moeten worden
-const CORE_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.ico',
-  '/login',
-  '/register'
-];
-
-// Extensies die gecached moeten worden
-const CACHEABLE_EXTENSIONS = [
-  '.js',
-  '.css',
-  '.html',
-  '.json',
-  '.png',
-  '.jpg',
-  '.jpeg',
-  '.gif',
-  '.svg',
-  '.ico',
-  '.woff',
-  '.woff2',
-  '.ttf',
-  '.eot'
-];
-
-// URLs die NIET gecached moeten worden
-const NO_CACHE_PATTERNS = [
-  '/api/auth',
-  '/api/login',
-  '/api/register',
-  '/api/logout',
-  '/api/ai/chat',
-  '/api/live-chat/ws',
-  'chrome-extension',
-  'hot-update'
-];
-
-// ==================== Helper Functions ====================
-
-function shouldCache(url) {
-  // Niet cachen als het in de no-cache lijst staat
-  if (NO_CACHE_PATTERNS.some(pattern => url.includes(pattern))) {
-    return false;
-  }
-  
-  // Niet cachen als het een externe URL is (behalve fonts)
-  const urlObj = new URL(url);
-  if (urlObj.origin !== self.location.origin) {
-    // Cache alleen externe fonts
-    return url.includes('fonts.googleapis.com') || 
-           url.includes('fonts.gstatic.com');
-  }
-  
-  return true;
-}
-
-function isNavigationRequest(request) {
-  return request.mode === 'navigate' || 
-         (request.method === 'GET' && 
-          request.headers.get('accept')?.includes('text/html'));
-}
-
-function isStaticAsset(url) {
-  return CACHEABLE_EXTENSIONS.some(ext => url.toLowerCase().endsWith(ext)) ||
-         url.includes('/static/');
-}
-
-// ==================== Install Event ====================
+// Install: Cache offline page only
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
-  
+  console.log('[SW] Installing v4...');
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('[SW] Caching core assets');
-        // Cache core assets, maar fail niet als sommige mislukken
-        return Promise.allSettled(
-          CORE_ASSETS.map(url => 
-            cache.add(url).catch(err => {
-              console.warn(`[SW] Failed to cache ${url}:`, err.message);
-            })
-          )
-        );
-      })
-      .then(() => {
-        console.log('[SW] Skip waiting');
-        return self.skipWaiting();
-      })
+      .then(cache => cache.add(OFFLINE_URL).catch(() => {}))
+      .then(() => self.skipWaiting())
   );
 });
 
-// ==================== Activate Event ====================
+// Activate: Clean old caches and claim clients
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating...');
-  
+  console.log('[SW] Activating v4...');
   event.waitUntil(
-    caches.keys()
-      .then(cacheNames => {
-        return Promise.all(
-          cacheNames
-            .filter(name => name.startsWith('facturatie-') && name !== CACHE_NAME)
-            .map(name => {
-              console.log('[SW] Deleting old cache:', name);
-              return caches.delete(name);
-            })
-        );
-      })
-      .then(() => {
-        console.log('[SW] Claiming clients');
-        return self.clients.claim();
-      })
+    Promise.all([
+      caches.keys().then(keys => 
+        Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+      ),
+      self.clients.claim()
+    ])
   );
 });
 
-// ==================== Fetch Event ====================
+// Fetch: Cache everything on the fly
 self.addEventListener('fetch', (event) => {
   const { request } = event;
-  const url = request.url;
+  const url = new URL(request.url);
   
-  // Skip non-GET requests
-  if (request.method !== 'GET') {
+  // Skip non-GET, cross-origin, and WebSocket
+  if (request.method !== 'GET' || url.origin !== location.origin) {
     return;
   }
   
-  // Skip requests that shouldn't be cached
-  if (!shouldCache(url)) {
+  // Skip certain paths
+  if (url.pathname.includes('/ws/') || 
+      url.pathname.includes('/api/auth') ||
+      url.pathname.includes('/api/login') ||
+      url.pathname.includes('/api/ai/chat')) {
     return;
   }
   
-  // For navigation requests (HTML pages) - Network first, then cache, then offline page
-  if (isNavigationRequest(request)) {
+  // For API calls: network first, cache fallback
+  if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request)
         .then(response => {
-          // Clone and cache the response
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, responseClone);
-          });
-          return response;
-        })
-        .catch(async () => {
-          // Try to get from cache
-          const cachedResponse = await caches.match(request);
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          
-          // Fall back to index.html for SPA routing
-          const indexResponse = await caches.match('/index.html');
-          if (indexResponse) {
-            return indexResponse;
-          }
-          
-          // Last resort: show offline page
-          return new Response(getOfflineHTML(), {
-            headers: { 'Content-Type': 'text/html; charset=utf-8' }
-          });
-        })
-    );
-    return;
-  }
-  
-  // For static assets - Cache first, then network
-  if (isStaticAsset(url)) {
-    event.respondWith(
-      caches.match(request)
-        .then(cachedResponse => {
-          if (cachedResponse) {
-            // Return cached version, but also fetch and update cache in background
-            fetch(request)
-              .then(response => {
-                if (response.ok) {
-                  caches.open(CACHE_NAME).then(cache => {
-                    cache.put(request, response);
-                  });
-                }
-              })
-              .catch(() => {});
-            return cachedResponse;
-          }
-          
-          // Not in cache, fetch and cache
-          return fetch(request)
-            .then(response => {
-              if (response.ok) {
-                const responseClone = response.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                  cache.put(request, responseClone);
-                });
-              }
-              return response;
-            });
-        })
-    );
-    return;
-  }
-  
-  // For API requests - Network first, fall back to cache
-  if (url.includes('/api/')) {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          // Cache successful GET responses
           if (response.ok) {
-            const responseClone = response.clone();
-            caches.open(CACHE_NAME).then(cache => {
-              cache.put(request, responseClone);
-            });
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then(c => c.put(request, clone));
           }
           return response;
         })
+        .catch(() => caches.match(request).then(r => r || new Response(
+          JSON.stringify({ offline: true }),
+          { headers: { 'Content-Type': 'application/json' }, status: 503 }
+        )))
+    );
+    return;
+  }
+  
+  // For navigation (HTML): network first, then cache, then offline page
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(c => c.put(request, clone));
+          return response;
+        })
         .catch(async () => {
-          const cachedResponse = await caches.match(request);
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          // Return offline API response
-          return new Response(JSON.stringify({
-            offline: true,
-            message: 'Je bent offline. Data kan niet worden geladen.'
-          }), {
-            status: 503,
-            headers: { 'Content-Type': 'application/json' }
+          const cached = await caches.match(request);
+          if (cached) return cached;
+          
+          // Try index.html for SPA routing
+          const index = await caches.match('/');
+          if (index) return index;
+          
+          // Offline page
+          const offline = await caches.match(OFFLINE_URL);
+          if (offline) return offline;
+          
+          return new Response(getOfflineHTML(), {
+            headers: { 'Content-Type': 'text/html' }
           });
         })
     );
     return;
   }
   
-  // Default: Network first
+  // For everything else: cache first, network fallback
   event.respondWith(
-    fetch(request)
-      .then(response => {
+    caches.match(request).then(cached => {
+      if (cached) {
+        // Update cache in background
+        fetch(request).then(r => {
+          if (r.ok) caches.open(CACHE_NAME).then(c => c.put(request, r));
+        }).catch(() => {});
+        return cached;
+      }
+      
+      return fetch(request).then(response => {
         if (response.ok) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, responseClone);
-          });
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(c => c.put(request, clone));
         }
         return response;
-      })
-      .catch(() => caches.match(request))
+      });
+    })
   );
 });
 
-// ==================== Offline HTML ====================
+// Message handler
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
 function getOfflineHTML() {
   return `<!DOCTYPE html>
 <html lang="nl">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Facturatie N.V. - Offline</title>
+  <title>Offline</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .container {
-      background: white;
-      border-radius: 24px;
-      padding: 48px 32px;
-      max-width: 420px;
-      width: 100%;
-      text-align: center;
-      box-shadow: 0 25px 80px rgba(0,0,0,0.25);
-    }
-    .icon {
-      width: 100px;
-      height: 100px;
-      background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 28px;
-    }
-    .icon svg {
-      width: 50px;
-      height: 50px;
-      color: #ef4444;
-    }
-    h1 {
-      color: #111827;
-      font-size: 28px;
-      font-weight: 700;
-      margin-bottom: 16px;
-    }
-    p {
-      color: #6b7280;
-      font-size: 16px;
-      line-height: 1.6;
-      margin-bottom: 32px;
-    }
-    .status {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #fef3c7;
-      color: #92400e;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 500;
-      margin-bottom: 24px;
-    }
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      background: #f59e0b;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    button {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      border: none;
-      padding: 16px 32px;
-      border-radius: 12px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      width: 100%;
-    }
-    button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-    }
-    button:active {
-      transform: translateY(0);
-    }
-    .hint {
-      margin-top: 24px;
-      font-size: 13px;
-      color: #9ca3af;
-    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:system-ui,sans-serif;background:#10b981;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .box{background:#fff;border-radius:20px;padding:40px;max-width:380px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+    h1{font-size:22px;margin:20px 0 10px}
+    p{color:#666;margin-bottom:20px}
+    button{background:#10b981;color:#fff;border:0;padding:12px 24px;border-radius:10px;font-size:15px;cursor:pointer}
+    button:hover{background:#059669}
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="icon">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414" />
-      </svg>
-    </div>
-    
-    <div class="status">
-      <span class="status-dot"></span>
-      Geen internetverbinding
-    </div>
-    
+  <div class="box">
+    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M1 1l22 22M9 9a3 3 0 0 0 4.24 4.24M5 12.55a11 11 0 0 1 14.08 1.86l1.42-1.42A13 13 0 0 0 3.5 11.13L5 12.55z"/></svg>
     <h1>Je bent offline</h1>
-    <p>Controleer je internetverbinding en probeer het opnieuw. Je data wordt automatisch gesynchroniseerd zodra je weer online bent.</p>
-    
-    <button onclick="window.location.reload()">
-      Opnieuw proberen
-    </button>
-    
-    <p class="hint">Tip: Deze app werkt offline nadat je minimaal één keer bent ingelogd.</p>
+    <p>Open de app eerst met internet om offline te kunnen werken.</p>
+    <button onclick="location.reload()">Opnieuw proberen</button>
   </div>
-  
-  <script>
-    // Auto-reload wanneer weer online
-    window.addEventListener('online', () => {
-      window.location.reload();
-    });
-  </script>
+  <script>addEventListener('online',()=>location.reload())</script>
 </body>
 </html>`;
 }
 
-// ==================== Message Handler ====================
-self.addEventListener('message', (event) => {
-  console.log('[SW] Message:', event.data);
-  
-  if (event.data?.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-  
-  if (event.data?.type === 'CACHE_ALL') {
-    // Cache alle resources van de huidige pagina
-    event.waitUntil(
-      clients.matchAll().then(clients => {
-        clients.forEach(client => {
-          client.postMessage({ type: 'CACHING_STARTED' });
-        });
-      })
-    );
-  }
-  
-  if (event.data?.type === 'CLEAR_CACHE') {
-    event.waitUntil(
-      caches.delete(CACHE_NAME).then(() => {
-        console.log('[SW] Cache cleared');
-      })
-    );
-  }
-});
-
-// ==================== Background Sync ====================
-self.addEventListener('sync', (event) => {
-  console.log('[SW] Background sync:', event.tag);
-  
-  if (event.tag === 'sync-data') {
-    event.waitUntil(
-      self.clients.matchAll().then(clients => {
-        clients.forEach(client => {
-          client.postMessage({ type: 'TRIGGER_SYNC' });
-        });
-      })
-    );
-  }
-});
-
-// ==================== Push Notifications ====================
-self.addEventListener('push', (event) => {
-  const data = event.data?.json() || {
-    title: 'Facturatie N.V.',
-    body: 'Je hebt een nieuwe melding',
-    icon: '/icons/icon-192x192.png'
-  };
-  
-  event.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: data.icon || '/icons/icon-192x192.png',
-      badge: '/icons/icon-96x96.png',
-      vibrate: [100, 50, 100],
-      data: data.data,
-      actions: data.actions || []
-    })
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  
-  event.waitUntil(
-    clients.openWindow(event.notification.data?.url || '/')
-  );
-});
-
-console.log('[SW] Service Worker v3 loaded');
+console.log('[SW] v4 loaded');

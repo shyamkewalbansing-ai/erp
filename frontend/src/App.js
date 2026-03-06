@@ -7,38 +7,6 @@ import React, { lazy, Suspense, memo, useEffect } from "react";
 import { preloadCriticalData } from "./lib/api";
 import { initPerformanceMonitoring, prefetch } from "./lib/performance";
 
-// Register Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js')
-      .then(registration => {
-        console.log('SW registered:', registration.scope);
-        
-        // Check for updates every 5 minutes
-        setInterval(() => {
-          registration.update();
-        }, 5 * 60 * 1000);
-        
-        // Handle updates
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New version available
-              if (window.confirm('Er is een nieuwe versie beschikbaar. Wilt u de pagina herladen?')) {
-                newWorker.postMessage({ type: 'SKIP_WAITING' });
-                window.location.reload();
-              }
-            }
-          });
-        });
-      })
-      .catch(error => {
-        console.error('SW registration failed:', error);
-      });
-  });
-}
-
 // Critical pages - load immediately
 import Login from "./pages/Login";
 import Register from "./pages/Register";

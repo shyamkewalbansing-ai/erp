@@ -65,6 +65,7 @@ const webpackConfig = {
       if (config.enableHealthCheck && healthPluginInstance) {
         webpackConfig.plugins.push(healthPluginInstance);
       }
+      
       return webpackConfig;
     },
   },
