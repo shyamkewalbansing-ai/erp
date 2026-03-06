@@ -1,149 +1,158 @@
 /**
- * Enhanced Service Worker for Facturatie N.V.
- * Handles offline caching with special support for code-split chunks
+ * Service Worker v6 - Fixed caching for React SPA
  */
 
-const CACHE_NAME = 'facturatie-v5';
+const CACHE_NAME = 'facturatie-v6';
 
-// Install event
+// Install: Pre-cache the index.html immediately
 self.addEventListener('install', (event) => {
-  console.log('[SW v5] Installing...');
-  event.waitUntil(self.skipWaiting());
-});
-
-// Activate event
-self.addEventListener('activate', (event) => {
-  console.log('[SW v5] Activating...');
+  console.log('[SW v6] Installing...');
   event.waitUntil(
-    Promise.all([
-      // Clean old caches
-      caches.keys().then(keys => 
-        Promise.all(
-          keys.filter(k => k.startsWith('facturatie-') && k !== CACHE_NAME)
-              .map(k => caches.delete(k))
-        )
-      ),
-      self.clients.claim()
-    ])
+    caches.open(CACHE_NAME).then(async (cache) => {
+      // Fetch and cache the main index.html
+      try {
+        const response = await fetch('/');
+        if (response.ok) {
+          await cache.put('/', response.clone());
+          await cache.put('/index.html', response.clone());
+          console.log('[SW v6] Cached index.html');
+        }
+      } catch (e) {
+        console.log('[SW v6] Could not cache index.html:', e);
+      }
+      return self.skipWaiting();
+    })
   );
 });
 
-// Fetch event - the main logic
+// Activate: Clean old caches and take control
+self.addEventListener('activate', (event) => {
+  console.log('[SW v6] Activating...');
+  event.waitUntil(
+    Promise.all([
+      caches.keys().then(keys => 
+        Promise.all(
+          keys.filter(k => k.startsWith('facturatie-') && k !== CACHE_NAME)
+              .map(k => {
+                console.log('[SW v6] Deleting old cache:', k);
+                return caches.delete(k);
+              })
+        )
+      ),
+      self.clients.claim()
+    ]).then(() => {
+      console.log('[SW v6] Activated and claimed clients');
+    })
+  );
+});
+
+// Fetch handler
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // Only handle same-origin GET requests
-  if (request.method !== 'GET' || url.origin !== location.origin) {
+  // Only handle same-origin requests
+  if (url.origin !== location.origin) {
     return;
   }
   
-  // Skip WebSocket and auth endpoints
-  if (url.pathname.includes('/ws/') || 
-      url.pathname.includes('/api/auth') ||
-      url.pathname.includes('/api/login') ||
-      url.pathname.includes('/api/ai/chat')) {
-    return;
-  }
-
-  // Special handling for JavaScript chunks
-  if (url.pathname.endsWith('.js') || url.pathname.endsWith('.chunk.js')) {
-    event.respondWith(handleJSChunk(request));
+  // Skip WebSocket requests
+  if (url.pathname.includes('/ws/')) {
     return;
   }
   
-  // CSS files
-  if (url.pathname.endsWith('.css')) {
-    event.respondWith(handleStaticAsset(request));
+  // Handle navigation requests (HTML pages)
+  if (request.mode === 'navigate') {
+    event.respondWith(handleNavigate(request));
     return;
   }
   
-  // Images and fonts
-  if (url.pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
-    event.respondWith(handleStaticAsset(request));
-    return;
-  }
-  
-  // API requests
+  // Handle API requests
   if (url.pathname.startsWith('/api/')) {
+    // Skip auth endpoints
+    if (url.pathname.includes('/auth') || 
+        url.pathname.includes('/login') ||
+        url.pathname.includes('/ai/chat')) {
+      return;
+    }
     event.respondWith(handleAPI(request));
     return;
   }
   
-  // Navigation requests (HTML)
-  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(handleNavigation(request));
+  // Handle static assets (JS, CSS, images)
+  if (isStaticAsset(url.pathname)) {
+    event.respondWith(handleStatic(request));
     return;
   }
   
-  // Default: network first
+  // Default: try network, fallback to cache
   event.respondWith(handleDefault(request));
 });
 
-// Handle JavaScript chunks - critical for lazy loading
-async function handleJSChunk(request) {
+// Check if URL is a static asset
+function isStaticAsset(pathname) {
+  return pathname.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json)$/) ||
+         pathname.includes('/static/');
+}
+
+// Handle navigation requests - THIS IS THE KEY FUNCTION
+async function handleNavigate(request) {
   const cache = await caches.open(CACHE_NAME);
   
-  // Try cache first for JS chunks (they're immutable due to hash)
-  const cached = await cache.match(request);
-  if (cached) {
-    return cached;
-  }
-  
-  // Not in cache, try network
   try {
-    const response = await fetch(request);
-    if (response.ok) {
-      // Cache for future use
-      cache.put(request, response.clone());
-    }
-    return response;
-  } catch (error) {
-    // Offline and not cached - return error that React can handle
-    console.error('[SW] Failed to load JS chunk:', request.url);
+    // Try network first
+    const networkResponse = await fetch(request);
     
-    // Return a response that will trigger the error boundary
-    return new Response(
-      'throw new Error("Chunk loading failed - offline");',
-      { 
-        status: 200,
-        headers: { 'Content-Type': 'application/javascript' }
-      }
-    );
-  }
-}
-
-// Handle static assets - cache first
-async function handleStaticAsset(request) {
-  const cache = await caches.open(CACHE_NAME);
-  
-  const cached = await cache.match(request);
-  if (cached) {
-    // Update cache in background
-    fetch(request).then(r => {
-      if (r.ok) cache.put(request, r);
-    }).catch(() => {});
-    return cached;
-  }
-  
-  try {
-    const response = await fetch(request);
-    if (response.ok) {
-      cache.put(request, response.clone());
+    if (networkResponse.ok) {
+      // Cache the response for offline use
+      cache.put('/', networkResponse.clone());
+      cache.put('/index.html', networkResponse.clone());
+      cache.put(request, networkResponse.clone());
+      console.log('[SW v6] Cached navigation response');
     }
-    return response;
+    
+    return networkResponse;
   } catch (error) {
-    return new Response('', { status: 404 });
+    console.log('[SW v6] Network failed, trying cache...');
+    
+    // Network failed, try cache
+    // First try the exact URL
+    let cached = await cache.match(request);
+    if (cached) {
+      console.log('[SW v6] Found exact match in cache');
+      return cached;
+    }
+    
+    // Try index.html (for SPA routing)
+    cached = await cache.match('/index.html');
+    if (cached) {
+      console.log('[SW v6] Returning cached index.html');
+      return cached;
+    }
+    
+    // Try root
+    cached = await cache.match('/');
+    if (cached) {
+      console.log('[SW v6] Returning cached /');
+      return cached;
+    }
+    
+    // Nothing in cache, return offline page
+    console.log('[SW v6] Nothing in cache, returning offline page');
+    return new Response(getOfflineHTML(), {
+      status: 200,
+      headers: { 'Content-Type': 'text/html; charset=utf-8' }
+    });
   }
 }
 
-// Handle API requests - network first, cache fallback
+// Handle API requests
 async function handleAPI(request) {
   const cache = await caches.open(CACHE_NAME);
   
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    if (response.ok && request.method === 'GET') {
       cache.put(request, response.clone());
     }
     return response;
@@ -152,7 +161,6 @@ async function handleAPI(request) {
     if (cached) {
       return cached;
     }
-    
     return new Response(
       JSON.stringify({ offline: true, message: 'Je bent offline' }),
       { status: 503, headers: { 'Content-Type': 'application/json' } }
@@ -160,35 +168,33 @@ async function handleAPI(request) {
   }
 }
 
-// Handle navigation - network first, fallback to index.html
-async function handleNavigation(request) {
+// Handle static assets - cache first for performance
+async function handleStatic(request) {
   const cache = await caches.open(CACHE_NAME);
   
+  // Try cache first
+  const cached = await cache.match(request);
+  if (cached) {
+    // Update cache in background (stale-while-revalidate)
+    fetch(request).then(response => {
+      if (response.ok) {
+        cache.put(request, response);
+      }
+    }).catch(() => {});
+    return cached;
+  }
+  
+  // Not in cache, fetch from network
   try {
     const response = await fetch(request);
     if (response.ok) {
       cache.put(request, response.clone());
-      // Also cache index.html
-      cache.put(new Request('/'), response.clone());
     }
     return response;
   } catch (error) {
-    // Try to return cached version of the page
-    const cached = await cache.match(request);
-    if (cached) {
-      return cached;
-    }
-    
-    // Fallback to index.html (for SPA routing)
-    const index = await cache.match('/');
-    if (index) {
-      return index;
-    }
-    
-    // Last resort: offline page
-    return new Response(getOfflineHTML(), {
-      headers: { 'Content-Type': 'text/html; charset=utf-8' }
-    });
+    // Return empty response for missing assets
+    console.log('[SW v6] Static asset not available:', request.url);
+    return new Response('', { status: 404 });
   }
 }
 
@@ -210,18 +216,21 @@ async function handleDefault(request) {
 
 // Message handler
 self.addEventListener('message', (event) => {
+  console.log('[SW v6] Message:', event.data);
+  
   if (event.data?.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
   
-  if (event.data?.type === 'CACHE_URLS') {
-    const urls = event.data.urls || [];
-    caches.open(CACHE_NAME).then(cache => {
-      urls.forEach(url => {
-        fetch(url).then(r => {
-          if (r.ok) cache.put(url, r);
-        }).catch(() => {});
-      });
+  if (event.data?.type === 'CACHE_INDEX') {
+    // Force cache the index.html
+    caches.open(CACHE_NAME).then(async (cache) => {
+      const response = await fetch('/');
+      if (response.ok) {
+        await cache.put('/', response.clone());
+        await cache.put('/index.html', response);
+        console.log('[SW v6] Force cached index.html');
+      }
     });
   }
 });
@@ -252,8 +261,6 @@ function getOfflineHTML() {
         <line x1="1" y1="1" x2="23" y2="23"/>
         <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/>
         <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/>
-        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"/>
-        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/>
         <line x1="12" y1="20" x2="12.01" y2="20"/>
       </svg>
     </div>
@@ -264,10 +271,9 @@ function getOfflineHTML() {
   </div>
   <script>
     window.addEventListener('online', () => location.reload());
-    setInterval(() => { if(navigator.onLine) location.reload(); }, 3000);
   </script>
 </body>
 </html>`;
 }
 
-console.log('[SW v5] Loaded');
+console.log('[SW v6] Loaded');
