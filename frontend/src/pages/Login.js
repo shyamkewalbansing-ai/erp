@@ -347,7 +347,7 @@ export default function Login() {
                   <button 
                     type="button"
                     onClick={() => setShowForgotPassword(true)}
-                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium bg-transparent border-0 cursor-pointer"
                   >
                     Wachtwoord vergeten?
                   </button>
