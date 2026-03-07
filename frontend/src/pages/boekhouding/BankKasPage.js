@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { bankAccountsAPI, bankTransactionsAPI, bankImportAPI } from '../../lib/boekhoudingApi';
 import { formatDate } from '../../lib/utils';
 import { Button } from '../../components/ui/button';
@@ -172,8 +172,68 @@ const BankKasPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedYear, setSelectedYear] = useState('2024');
+  const [selectedYear, setSelectedYear] = useState('alle');
   const [selectedRows, setSelectedRows] = useState([]);
+  
+  // Calculate available years from transactions
+  const availableYears = useMemo(() => {
+    const years = new Set();
+    transactions.forEach(t => {
+      const datum = t.datum || t.date || '';
+      if (datum) {
+        const year = datum.substring(0, 4);
+        if (year) years.add(year);
+      }
+    });
+    const currentYear = new Date().getFullYear().toString();
+    years.add(currentYear);
+    return Array.from(years).sort((a, b) => b - a);
+  }, [transactions]);
+
+  // Filter transactions by selected year
+  const filteredTransactions = useMemo(() => {
+    let filtered = transactions;
+    
+    // Filter by year
+    if (selectedYear !== 'alle') {
+      filtered = filtered.filter(t => {
+        const datum = t.datum || t.date || '';
+        return datum.startsWith(selectedYear);
+      });
+    }
+    
+    // Filter by account
+    if (selectedAccount) {
+      filtered = filtered.filter(t => t.bankrekening_id === selectedAccount);
+    }
+    
+    // Filter by type
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(t => {
+        if (typeFilter === 'credit') return t.bedrag > 0 || t.type === 'credit';
+        if (typeFilter === 'debit') return t.bedrag < 0 || t.type === 'debit';
+        return true;
+      });
+    }
+    
+    // Filter by search
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(t => 
+        (t.omschrijving || '').toLowerCase().includes(search) ||
+        (t.referentie || '').toLowerCase().includes(search) ||
+        (t.tegenpartij || '').toLowerCase().includes(search)
+      );
+    }
+    
+    return filtered;
+  }, [transactions, selectedYear, selectedAccount, typeFilter, searchTerm]);
+
+  // Calculate period display
+  const periodDisplay = useMemo(() => {
+    if (selectedYear === 'alle') return 'Alle jaren';
+    return `Jan - Dec ${selectedYear}`;
+  }, [selectedYear]);
   
   // Dialogs
   const [showAccountDialog, setShowAccountDialog] = useState(false);
@@ -347,28 +407,13 @@ const BankKasPage = () => {
     }
   };
 
-  // Calculate stats
-  const totalBalance = bankAccounts.reduce((sum, a) => sum + (a.saldo || a.balance || 0), 0);
-  const monthTransactions = transactions.filter(t => {
-    const date = new Date(t.datum || t.date);
-    const now = new Date();
-    return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
-  });
-  const monthIncome = monthTransactions.filter(t => (t.bedrag || t.amount || 0) > 0).reduce((sum, t) => sum + Math.abs(t.bedrag || t.amount || 0), 0);
-  const monthExpense = monthTransactions.filter(t => (t.bedrag || t.amount || 0) < 0).reduce((sum, t) => sum + Math.abs(t.bedrag || t.amount || 0), 0);
-  const pendingReconciliation = transactions.filter(t => !t.afgestemd).length;
-
-  // Filter transactions
-  const filteredTransactions = transactions.filter(t => {
-    const matchesSearch = !searchTerm || 
-      (t.omschrijving || t.description || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (t.referentie || t.reference || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesAccount = !selectedAccount || t.bankrekening_id === selectedAccount.id || t.bank_account_id === selectedAccount.id;
-    const matchesType = typeFilter === 'all' || 
-      (typeFilter === 'credit' && (t.bedrag || t.amount || 0) > 0) ||
-      (typeFilter === 'debit' && (t.bedrag || t.amount || 0) < 0);
-    return matchesSearch && matchesAccount && matchesType;
-  });
+  // Calculate stats based on filtered transactions
+  const totalBalance = bankAccounts.reduce((sum, a) => sum + (a.huidig_saldo || a.saldo || a.balance || 0), 0);
+  
+  // Income/Expense from filtered transactions
+  const periodIncome = filteredTransactions.filter(t => (t.bedrag || t.amount || 0) > 0).reduce((sum, t) => sum + Math.abs(t.bedrag || t.amount || 0), 0);
+  const periodExpense = filteredTransactions.filter(t => (t.bedrag || t.amount || 0) < 0).reduce((sum, t) => sum + Math.abs(t.bedrag || t.amount || 0), 0);
+  const pendingReconciliation = filteredTransactions.filter(t => !t.afgestemd).length;
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="bank-kas-page">
@@ -441,12 +486,13 @@ const BankKasPage = () => {
             <Label className="text-sm text-gray-600">Boekjaar</Label>
             <Select value={selectedYear} onValueChange={setSelectedYear}>
               <SelectTrigger className="rounded-lg">
-                <SelectValue />
+                <SelectValue placeholder="Selecteer jaar" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2023">2023</SelectItem>
-                <SelectItem value="2022">2022</SelectItem>
+                <SelectItem value="alle">Alle jaren</SelectItem>
+                {availableYears.map(year => (
+                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -483,6 +529,12 @@ const BankKasPage = () => {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Periode weergave */}
+          <div className="text-right">
+            <span className="text-sm text-gray-500">Periode</span>
+            <p className="text-sm font-medium text-gray-700">{periodDisplay}</p>
           </div>
 
           {/* Totaal Saldo */}
@@ -528,8 +580,8 @@ const BankKasPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Ontvangsten</p>
-                <p className="text-2xl font-bold text-emerald-600 mt-2">{formatCurrency(monthIncome)}</p>
-                <p className="text-xs text-emerald-500 mt-1">Deze maand</p>
+                <p className="text-2xl font-bold text-emerald-600 mt-2">{formatCurrency(periodIncome)}</p>
+                <p className="text-xs text-emerald-500 mt-1">{selectedYear === 'alle' ? 'Alle jaren' : selectedYear}</p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
                 <ArrowDownRight className="w-6 h-6 text-gray-600" />
@@ -541,8 +593,8 @@ const BankKasPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Uitgaven</p>
-                <p className="text-2xl font-bold text-red-600 mt-2">{formatCurrency(monthExpense)}</p>
-                <p className="text-xs text-red-500 mt-1">Deze maand</p>
+                <p className="text-2xl font-bold text-red-600 mt-2">{formatCurrency(periodExpense)}</p>
+                <p className="text-xs text-red-500 mt-1">{selectedYear === 'alle' ? 'Alle jaren' : selectedYear}</p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
                 <ArrowUpRight className="w-6 h-6 text-gray-600" />

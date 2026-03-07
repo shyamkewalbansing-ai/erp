@@ -305,14 +305,63 @@ const DebiteurenPage = () => {
     );
   };
 
-  // Send reminder
+  // Send reminder - creates herinnering record and optionally sends email
   const handleSendReminder = async (invoiceIds) => {
     setProcessing(true);
+    let successCount = 0;
+    let emailCount = 0;
+    
     try {
       for (const id of invoiceIds) {
+        // First update status to 'herinnering'
         await invoicesAPI.updateStatus(id, 'herinnering');
+        successCount++;
+        
+        // Try to send email via herinnering endpoint
+        try {
+          // Create herinnering record first
+          const herinneringenRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/herinneringen/generate`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ factuur_ids: [id] })
+          });
+          const herinneringenData = await herinneringenRes.json();
+          
+          if (herinneringenData.herinneringen && herinneringenData.herinneringen.length > 0) {
+            const herinneringId = herinneringenData.herinneringen[0].id;
+            
+            // Try to send email
+            const emailRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/herinneringen/${herinneringId}/email`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              }
+            });
+            const emailData = await emailRes.json();
+            
+            if (emailData.success) {
+              emailCount++;
+            } else if (!emailData.smtp_configured) {
+              // SMTP not configured - only show once
+              if (emailCount === 0 && successCount === 1) {
+                toast.info('E-mail niet verzonden: SMTP niet geconfigureerd. Ga naar Instellingen > E-mail om dit in te stellen.');
+              }
+            }
+          }
+        } catch (emailError) {
+          console.log('Email sending skipped:', emailError);
+        }
       }
-      toast.success(`${invoiceIds.length} herinnering(en) verzonden`);
+      
+      if (emailCount > 0) {
+        toast.success(`${successCount} herinnering(en) aangemaakt, ${emailCount} e-mail(s) verzonden`);
+      } else {
+        toast.success(`${successCount} herinnering(en) aangemaakt (status gewijzigd)`);
+      }
+      
       fetchData();
       setSelectedRows([]);
     } catch (error) {
