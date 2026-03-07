@@ -1,18 +1,13 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { customersAPI, invoicesAPI } from '../../lib/boekhoudingApi';
-import { formatDate
-
- } from '../../lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { formatDate } from '../../lib/utils';
+import { Card, CardContent } from '../../components/ui/card';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { Skeleton } from '../../components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Checkbox } from '../../components/ui/checkbox';
-import { Badge } from '../../components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
 import { toast } from 'sonner';
 import { 
   Plus, 
@@ -26,39 +21,50 @@ import {
   Send,
   CheckCircle,
   Circle,
-  ArrowUpDown,
   User,
   Loader2,
   Mail,
   DollarSign,
-  Calendar,
-  TrendingUp,
   Eye,
   Edit,
   Trash2,
-  RefreshCw,
   Download,
   BarChart3,
-  Link2
+  Link2,
+  Receipt
 } from 'lucide-react';
 
-// Tab Button Component
-const TabButton = ({ active, onClick, children, badge }) => (
+// Format currency
+const formatCurrency = (amount, currency = 'SRD') => {
+  const formatted = new Intl.NumberFormat('nl-NL', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Math.abs(amount || 0));
+  if (currency === 'USD') return `$ ${formatted}`;
+  if (currency === 'EUR') return `€ ${formatted}`;
+  return `SRD ${formatted}`;
+};
+
+// Tab Button Component - matching VerkoopPage style
+const TabButton = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
-    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap flex items-center gap-2 ${
+    className={`px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap ${
       active 
         ? 'bg-emerald-600 text-white shadow-sm' 
         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
     }`}
   >
     {children}
-    {badge && (
-      <span className={`px-2 py-0.5 text-xs rounded-full ${active ? 'bg-white/20' : 'bg-red-100 text-red-600'}`}>
-        {badge}
-      </span>
-    )}
   </button>
+);
+
+// Status Legend Item
+const StatusLegendItem = ({ icon: Icon, label, color }) => (
+  <div className="flex items-center gap-2">
+    <Icon className={`w-4 h-4 ${color}`} />
+    <span className="text-xs text-gray-600">{label}</span>
+  </div>
 );
 
 // Status Icon Component
@@ -88,20 +94,8 @@ const DebiteurenPage = () => {
   const [activeTab, setActiveTab] = useState('overzicht');
   const [selectedYear, setSelectedYear] = useState('2024');
   const [selectedRows, setSelectedRows] = useState([]);
-  const [showReminderDialog, setShowReminderDialog] = useState(false);
-  const [showAfletterDialog, setShowAfletterDialog] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all');
   const [processing, setProcessing] = useState(false);
-
-  const formatAmount = (amount, currency = 'SRD') => {
-    const formatted = new Intl.NumberFormat('nl-NL', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(Math.abs(amount || 0));
-    
-    if (currency === 'USD') return `$ ${formatted}`;
-    if (currency === 'EUR') return `€ ${formatted}`;
-    return `SRD ${formatted}`;
-  };
 
   useEffect(() => {
     fetchData();
@@ -129,19 +123,21 @@ const DebiteurenPage = () => {
       if (!i.vervaldatum) return false;
       return new Date(i.vervaldatum) < new Date();
     });
-    const totalOpen = openInvoices.reduce((sum, i) => sum + (i.totaal_bedrag || 0), 0);
-    const totalOverdue = overdueInvoices.reduce((sum, i) => sum + (i.totaal_bedrag || 0), 0);
+    const totalOpen = openInvoices.reduce((sum, i) => sum + (i.totaal_bedrag || i.totaal || 0), 0);
+    const totalOverdue = overdueInvoices.reduce((sum, i) => sum + (i.totaal_bedrag || i.totaal || 0), 0);
+    const totalPaid = invoices.filter(i => i.status === 'betaald').reduce((sum, i) => sum + (i.totaal_bedrag || i.totaal || 0), 0);
     
     return {
       totalCustomers: customers.length,
       openInvoices: openInvoices.length,
       overdueInvoices: overdueInvoices.length,
       totalOpen,
-      totalOverdue
+      totalOverdue,
+      totalPaid
     };
   }, [customers, invoices]);
 
-  // Filter invoices by status
+  // Filter invoices by status for tabs
   const openstaandeFacturen = useMemo(() => {
     return invoices.filter(i => i.status === 'verzonden' || i.status === 'herinnering');
   }, [invoices]);
@@ -167,7 +163,7 @@ const DebiteurenPage = () => {
     invoices.filter(i => i.status !== 'betaald' && i.status !== 'concept').forEach(invoice => {
       const dueDate = new Date(invoice.vervaldatum || invoice.datum);
       const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
-      const amount = invoice.totaal_bedrag || 0;
+      const amount = invoice.totaal_bedrag || invoice.totaal || 0;
       
       if (daysOverdue <= 30) {
         categories['current'].amount += amount;
@@ -187,46 +183,6 @@ const DebiteurenPage = () => {
     return categories;
   }, [invoices]);
 
-  // Send reminder
-  const handleSendReminder = async (invoiceIds) => {
-    setProcessing(true);
-    try {
-      // Update invoice status to 'herinnering'
-      for (const id of invoiceIds) {
-        await invoicesAPI.update(id, { status: 'herinnering' });
-      }
-      toast.success(`${invoiceIds.length} herinnering(en) verzonden`);
-      fetchData();
-      setShowReminderDialog(false);
-      setSelectedRows([]);
-    } catch (error) {
-      toast.error('Fout bij verzenden herinneringen');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  // Reconcile payment
-  const handleAfletteren = async (invoiceId, amount) => {
-    setProcessing(true);
-    try {
-      // Update invoice to paid directly (simplified approach)
-      await invoicesAPI.update(invoiceId, { 
-        status: 'betaald',
-        betaald_bedrag: amount,
-        betaald_datum: new Date().toISOString().split('T')[0]
-      });
-      
-      toast.success('Factuur als betaald gemarkeerd');
-      fetchData();
-      setShowAfletterDialog(false);
-    } catch (error) {
-      toast.error('Fout bij afletteren');
-    } finally {
-      setProcessing(false);
-    }
-  };
-
   // Filter customers
   const filteredCustomers = customers.filter(c =>
     (c.naam || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -239,10 +195,54 @@ const DebiteurenPage = () => {
     return customer ? customer.naam : 'Onbekend';
   };
 
+  // Toggle row selection
+  const toggleRowSelection = (id) => {
+    setSelectedRows(prev => 
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+    );
+  };
+
+  // Send reminder
+  const handleSendReminder = async (invoiceIds) => {
+    setProcessing(true);
+    try {
+      for (const id of invoiceIds) {
+        await invoicesAPI.update(id, { status: 'herinnering' });
+      }
+      toast.success(`${invoiceIds.length} herinnering(en) verzonden`);
+      fetchData();
+      setSelectedRows([]);
+    } catch (error) {
+      toast.error('Fout bij verzenden herinneringen');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // Afletteren
+  const handleAfletteren = async (invoiceId, amount) => {
+    setProcessing(true);
+    try {
+      await invoicesAPI.update(invoiceId, { 
+        status: 'betaald',
+        betaald_bedrag: amount,
+        betaald_datum: new Date().toISOString().split('T')[0]
+      });
+      toast.success('Factuur als betaald gemarkeerd');
+      fetchData();
+    } catch (error) {
+      toast.error('Fout bij afletteren');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 w-full flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+      <div className="min-h-screen bg-gray-50 w-full">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        </div>
       </div>
     );
   }
@@ -250,213 +250,276 @@ const DebiteurenPage = () => {
   return (
     <div className="min-h-screen bg-gray-50" data-testid="debiteuren-page">
       {/* Page Title */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <h1 className="text-xl font-semibold text-gray-800">Debiteurenbeheer</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Beheer uw klanten, facturen en openstaande bedragen • 
-          <span className="text-emerald-600 font-medium"> Grootboek: 1300 (Debiteuren), 4000 (Omzet), 2350 (BTW)</span>
-        </p>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="px-6 py-4 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Totaal Klanten</p>
-                <p className="text-2xl font-bold">{stats.totalCustomers}</p>
-              </div>
-              <Users className="w-8 h-8 text-emerald-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Openstaande Facturen</p>
-                <p className="text-2xl font-bold">{stats.openInvoices}</p>
-              </div>
-              <FileText className="w-8 h-8 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Openstaand Bedrag</p>
-                <p className="text-2xl font-bold text-emerald-600">{formatAmount(stats.totalOpen)}</p>
-              </div>
-              <DollarSign className="w-8 h-8 text-emerald-500" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className={stats.overdueInvoices > 0 ? 'border-red-200 bg-red-50' : ''}>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Verlopen</p>
-                <p className="text-2xl font-bold text-red-600">{formatAmount(stats.totalOverdue)}</p>
-                <p className="text-xs text-red-500">{stats.overdueInvoices} facturen</p>
-              </div>
-              <AlertCircle className="w-8 h-8 text-red-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tab Buttons */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <TabButton active={activeTab === 'overzicht'} onClick={() => setActiveTab('overzicht')}>
-            <Users className="w-4 h-4" /> Overzicht
-          </TabButton>
-          <TabButton active={activeTab === 'verwerken'} onClick={() => setActiveTab('verwerken')}>
-            <RefreshCw className="w-4 h-4" /> Verwerken
-          </TabButton>
-          <TabButton 
-            active={activeTab === 'facturen'} 
-            onClick={() => setActiveTab('facturen')}
-            badge={stats.openInvoices > 0 ? stats.openInvoices : null}
-          >
-            <FileText className="w-4 h-4" /> Openstaande Facturen
-          </TabButton>
-          <TabButton 
-            active={activeTab === 'herinneringen'} 
-            onClick={() => setActiveTab('herinneringen')}
-            badge={stats.overdueInvoices > 0 ? stats.overdueInvoices : null}
-          >
-            <Mail className="w-4 h-4" /> Herinneringen
-          </TabButton>
-          <TabButton active={activeTab === 'afletteren'} onClick={() => setActiveTab('afletteren')}>
-            <Link2 className="w-4 h-4" /> Afletteren
-          </TabButton>
-          <TabButton active={activeTab === 'rapporten'} onClick={() => setActiveTab('rapporten')}>
-            <BarChart3 className="w-4 h-4" /> Ouderdomsanalyse
-          </TabButton>
-          
-          <Button 
-            onClick={() => navigate('/app/boekhouding/debiteuren/nieuw')}
-            className="ml-auto bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nieuwe Debiteur
-          </Button>
+      <div className="bg-white border-b border-gray-200">
+        <div className="px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+          <h1 className="text-xl font-semibold text-gray-800">Debiteurenbeheer</h1>
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="p-6">
-        
-        {/* OVERZICHT TAB */}
-        {activeTab === 'overzicht' && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Klanten Overzicht</CardTitle>
-              <div className="relative w-64">
-                <Input
-                  placeholder="Zoeken..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pr-10"
-                />
-                <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+      {/* Tab Buttons Row */}
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <TabButton active={activeTab === 'overzicht'} onClick={() => { setActiveTab('overzicht'); setSelectedRows([]); }}>
+            Overzicht
+          </TabButton>
+          <TabButton active={activeTab === 'verwerken'} onClick={() => { setActiveTab('verwerken'); setSelectedRows([]); }}>
+            Verwerken
+          </TabButton>
+          <TabButton active={activeTab === 'facturen'} onClick={() => { setActiveTab('facturen'); setSelectedRows([]); }}>
+            Openstaande Facturen
+          </TabButton>
+          <TabButton active={activeTab === 'herinneringen'} onClick={() => { setActiveTab('herinneringen'); setSelectedRows([]); }}>
+            Herinneringen Verzenden
+          </TabButton>
+          <TabButton active={activeTab === 'afletteren'} onClick={() => { setActiveTab('afletteren'); setSelectedRows([]); }}>
+            Afletteren
+          </TabButton>
+          <TabButton active={activeTab === 'rapporten'} onClick={() => { setActiveTab('rapporten'); setSelectedRows([]); }}>
+            Ouderdomsanalyse
+          </TabButton>
+          
+          {/* Action Button */}
+          <div className="ml-auto flex items-center gap-2">
+            <Button 
+              onClick={() => navigate('/app/boekhouding/debiteuren/nieuw')}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg" 
+              data-testid="add-debiteur-btn"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Nieuwe Debiteur
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Filter Section */}
+      <div className="bg-white border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3 lg:py-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
+          {/* Search */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Debiteur
+            </Label>
+            <div className="relative">
+              <Input
+                placeholder="Zoeken..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="rounded-lg pr-10"
+                data-testid="search-input"
+              />
+              <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            </div>
+          </div>
+          
+          {/* Boekjaar */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600">Boekjaar</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="rounded-lg">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2023">2023</SelectItem>
+                <SelectItem value="2022">2022</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Verantwoordelijke */}
+          <div className="space-y-1">
+            <Label className="text-sm text-gray-600 flex items-center gap-2">
+              <User className="w-4 h-4" />
+              Verantwoordelijke
+            </Label>
+            <Select defaultValue="all">
+              <SelectTrigger className="rounded-lg">
+                <SelectValue placeholder="Alle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle</SelectItem>
+                <SelectItem value="me">Alleen mij</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Periode */}
+          <div className="text-right">
+            <span className="text-sm text-gray-500">Periode</span>
+            <p className="text-sm font-medium text-gray-700">Jan - Dec {selectedYear}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Legend */}
+      <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
+        <div className="flex flex-wrap items-center gap-6">
+          <StatusLegendItem icon={Circle} label="Toekomstige actie" color="text-gray-400" />
+          <StatusLegendItem icon={AlertCircle} label="Naderende actie" color="text-amber-500" />
+          <StatusLegendItem icon={Clock} label="Wachten op betaling" color="text-blue-500" />
+          <StatusLegendItem icon={Send} label="Verzonden" color="text-blue-500" />
+          <StatusLegendItem icon={CheckCircle} label="Afgehandeld" color="text-emerald-500" />
+          <StatusLegendItem icon={XCircle} label="Deadline overschreden" color="text-red-500" />
+          <StatusLegendItem icon={AlertCircle} label="Afgekeurd" color="text-red-600" />
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="p-2 sm:p-4 lg:p-6">
+        {/* Summary Cards - Zakelijk 3D style matching VerkoopPage */}
+        <div className="grid grid-cols-4 gap-5 mb-6">
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Totaal Debiteuren</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{stats.totalCustomers}</p>
+                <p className="text-xs text-gray-400 mt-1">Actieve klanten</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b">
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Nummer</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Naam</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Email</th>
-                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-600">Openstaand</th>
-                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Status</th>
-                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Acties</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCustomers.map(customer => {
-                      const customerInvoices = invoices.filter(i => i.debiteur_id === customer.id);
-                      const openAmount = customerInvoices
-                        .filter(i => i.status !== 'betaald')
-                        .reduce((sum, i) => sum + (i.totaal_bedrag || 0), 0);
-                      const hasOverdue = customerInvoices.some(i => 
-                        i.status !== 'betaald' && i.vervaldatum && new Date(i.vervaldatum) < new Date()
-                      );
-                      
-                      return (
-                        <tr key={customer.id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3 font-mono text-sm">{customer.nummer}</td>
-                          <td className="px-4 py-3 font-medium">{customer.naam}</td>
-                          <td className="px-4 py-3 text-gray-600">{customer.email || '-'}</td>
-                          <td className="px-4 py-3 text-right font-medium">
-                            {openAmount > 0 ? (
-                              <span className={hasOverdue ? 'text-red-600' : 'text-amber-600'}>
-                                {formatAmount(openAmount)}
-                              </span>
-                            ) : (
-                              <span className="text-emerald-600">Geen</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            {hasOverdue ? (
-                              <Badge variant="destructive">Verlopen</Badge>
-                            ) : openAmount > 0 ? (
-                              <Badge variant="warning" className="bg-amber-100 text-amber-700">Open</Badge>
-                            ) : (
-                              <Badge variant="success" className="bg-emerald-100 text-emerald-700">OK</Badge>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              <Button variant="ghost" size="sm" onClick={() => navigate(`/app/boekhouding/debiteuren/${customer.id}`)}>
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <FileText className="w-4 h-4" />
-                              </Button>
-                            </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <Users className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Totaal Betaald</p>
+                <p className="text-2xl font-bold text-gray-900 mt-2">{formatCurrency(stats.totalPaid)}</p>
+                <p className="text-xs text-gray-400 mt-1">Ontvangen betalingen</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <CheckCircle className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Openstaand</p>
+                <p className="text-2xl font-bold text-amber-600 mt-2">{formatCurrency(stats.totalOpen)}</p>
+                <p className="text-xs text-gray-400 mt-1">{stats.openInvoices} facturen</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <Clock className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
+          
+          <div className="bg-white border border-gray-200 rounded-xl p-5 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)'}}>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Verlopen</p>
+                <p className="text-2xl font-bold text-red-600 mt-2">{formatCurrency(stats.totalOverdue)}</p>
+                <p className="text-xs text-gray-400 mt-1">{stats.overdueInvoices} facturen</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shadow-inner">
+                <XCircle className="w-6 h-6 text-gray-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        <Card className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+          <CardContent className="p-0">
+            
+            {/* OVERZICHT TAB */}
+            {activeTab === 'overzicht' && (
+              <>
+                <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
+                  <span className="text-sm font-medium text-gray-700">Debiteuren ({filteredCustomers.length})</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50 border-b">
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Nummer</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Naam</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Email</th>
+                        <th className="text-right px-4 py-3 text-xs font-medium text-gray-600">Openstaand</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Status</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Acties</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredCustomers.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                            Geen debiteuren gevonden
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                      ) : (
+                        filteredCustomers.map(customer => {
+                          const customerInvoices = invoices.filter(i => i.debiteur_id === customer.id);
+                          const openAmount = customerInvoices
+                            .filter(i => i.status !== 'betaald')
+                            .reduce((sum, i) => sum + (i.totaal_bedrag || i.totaal || 0), 0);
+                          const hasOverdue = customerInvoices.some(i => 
+                            i.status !== 'betaald' && i.vervaldatum && new Date(i.vervaldatum) < new Date()
+                          );
+                          
+                          return (
+                            <tr key={customer.id} className="border-b hover:bg-gray-50">
+                              <td className="px-4 py-3 font-mono text-sm">{customer.nummer}</td>
+                              <td className="px-4 py-3 font-medium">{customer.naam}</td>
+                              <td className="px-4 py-3 text-gray-600">{customer.email || '-'}</td>
+                              <td className="px-4 py-3 text-right font-medium">
+                                {openAmount > 0 ? (
+                                  <span className={hasOverdue ? 'text-red-600' : 'text-amber-600'}>
+                                    {formatCurrency(openAmount)}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400">-</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <StatusIcon status={hasOverdue ? 'verlopen' : openAmount > 0 ? 'verzonden' : 'betaald'} />
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button variant="ghost" size="sm" onClick={() => navigate(`/app/boekhouding/debiteuren/${customer.id}`)}>
+                                    <Eye className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm">
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm">
+                                    <FileText className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
 
-        {/* VERWERKEN TAB */}
-        {activeTab === 'verwerken' && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Batch Verwerking</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            {/* VERWERKEN TAB */}
+            {activeTab === 'verwerken' && (
+              <div className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <Button 
                     variant="outline" 
-                    className="h-24 flex-col"
+                    className="h-24 flex-col border-2"
                     onClick={() => setActiveTab('herinneringen')}
                   >
                     <Mail className="w-8 h-8 mb-2 text-amber-500" />
                     <span>Herinneringen Versturen</span>
                     {stats.overdueInvoices > 0 && (
-                      <Badge variant="destructive" className="mt-1">{stats.overdueInvoices}</Badge>
+                      <span className="mt-1 px-2 py-0.5 bg-red-100 text-red-600 text-xs rounded-full">{stats.overdueInvoices}</span>
                     )}
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="h-24 flex-col"
+                    className="h-24 flex-col border-2"
                     onClick={() => setActiveTab('afletteren')}
                   >
                     <Link2 className="w-8 h-8 mb-2 text-blue-500" />
@@ -464,154 +527,119 @@ const DebiteurenPage = () => {
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="h-24 flex-col"
+                    className="h-24 flex-col border-2"
                     onClick={() => setActiveTab('rapporten')}
                   >
                     <BarChart3 className="w-8 h-8 mb-2 text-emerald-500" />
                     <span>Rapporten Genereren</span>
                   </Button>
                 </div>
-                
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-800 mb-2">Grootboek Koppeling</h4>
-                  <p className="text-sm text-blue-700">
-                    Bij het verwerken van debiteuren worden de volgende grootboekrekeningen gebruikt:
-                  </p>
-                  <ul className="text-sm text-blue-600 mt-2 space-y-1">
-                    <li>• <strong>1300</strong> - Debiteuren (openstaande vorderingen)</li>
-                    <li>• <strong>4000</strong> - Omzet binnenland (verkoopopbrengsten)</li>
-                    <li>• <strong>2350</strong> - BTW te betalen (verschuldigde BTW)</li>
-                    <li>• <strong>1500</strong> - Bank (bij ontvangst betaling)</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-
-        {/* OPENSTAANDE FACTUREN TAB */}
-        {activeTab === 'facturen' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Openstaande Facturen ({openstaandeFacturen.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b">
-                      <th className="w-12 px-4 py-3">
-                        <Checkbox 
-                          checked={selectedRows.length === openstaandeFacturen.length && openstaandeFacturen.length > 0}
-                          onCheckedChange={() => {
-                            if (selectedRows.length === openstaandeFacturen.length) {
-                              setSelectedRows([]);
-                            } else {
-                              setSelectedRows(openstaandeFacturen.map(f => f.id));
-                            }
-                          }}
-                        />
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Factuurnr</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Klant</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Datum</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Vervaldatum</th>
-                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-600">Bedrag</th>
-                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Status</th>
-                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Acties</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {openstaandeFacturen.length === 0 ? (
-                      <tr>
-                        <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
-                          <CheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-300" />
-                          <p>Geen openstaande facturen</p>
-                        </td>
-                      </tr>
-                    ) : (
-                      openstaandeFacturen.map(invoice => {
-                        const isOverdue = invoice.vervaldatum && new Date(invoice.vervaldatum) < new Date();
-                        return (
-                          <tr key={invoice.id} className={`border-b hover:bg-gray-50 ${isOverdue ? 'bg-red-50' : ''}`}>
-                            <td className="px-4 py-3">
-                              <Checkbox 
-                                checked={selectedRows.includes(invoice.id)}
-                                onCheckedChange={() => {
-                                  setSelectedRows(prev => 
-                                    prev.includes(invoice.id) 
-                                      ? prev.filter(id => id !== invoice.id)
-                                      : [...prev, invoice.id]
-                                  );
-                                }}
-                              />
-                            </td>
-                            <td className="px-4 py-3 font-mono">{invoice.factuurnummer}</td>
-                            <td className="px-4 py-3">{getCustomerName(invoice.debiteur_id)}</td>
-                            <td className="px-4 py-3">{formatDate(invoice.datum)}</td>
-                            <td className="px-4 py-3">
-                              <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
-                                {formatDate(invoice.vervaldatum)}
-                              </span>
-                            </td>
-                            <td className="px-4 py-3 text-right font-medium">{formatAmount(invoice.totaal_bedrag)}</td>
-                            <td className="px-4 py-3 text-center">
-                              <StatusIcon status={isOverdue ? 'verlopen' : invoice.status} />
-                            </td>
-                            <td className="px-4 py-3 text-center">
-                              <div className="flex items-center justify-center gap-1">
-                                <Button variant="ghost" size="sm" onClick={() => handleSendReminder([invoice.id])}>
-                                  <Mail className="w-4 h-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => {
-                                  setSelectedRows([invoice.id]);
-                                  setShowAfletterDialog(true);
-                                }}>
-                                  <Link2 className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
               </div>
-              
-              {selectedRows.length > 0 && (
-                <div className="mt-4 p-4 bg-emerald-50 rounded-lg flex items-center justify-between">
-                  <span>{selectedRows.length} facturen geselecteerd</span>
-                  <div className="flex gap-2">
-                    <Button onClick={() => handleSendReminder(selectedRows)}>
-                      <Mail className="w-4 h-4 mr-2" />
+            )}
+
+            {/* OPENSTAANDE FACTUREN TAB */}
+            {activeTab === 'facturen' && (
+              <>
+                <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
+                  <span className="text-sm font-medium text-gray-700">Openstaande Facturen ({openstaandeFacturen.length})</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50 border-b">
+                        <th className="w-12 px-4 py-3">
+                          <Checkbox 
+                            checked={selectedRows.length === openstaandeFacturen.length && openstaandeFacturen.length > 0}
+                            onCheckedChange={() => {
+                              if (selectedRows.length === openstaandeFacturen.length) {
+                                setSelectedRows([]);
+                              } else {
+                                setSelectedRows(openstaandeFacturen.map(f => f.id));
+                              }
+                            }}
+                          />
+                        </th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Factuurnr</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Klant</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Datum</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Vervaldatum</th>
+                        <th className="text-right px-4 py-3 text-xs font-medium text-gray-600">Bedrag</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Status</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Acties</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {openstaandeFacturen.length === 0 ? (
+                        <tr>
+                          <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                            <CheckCircle className="w-12 h-12 mx-auto mb-3 text-emerald-300" />
+                            <p>Geen openstaande facturen</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        openstaandeFacturen.map(invoice => {
+                          const isOverdue = invoice.vervaldatum && new Date(invoice.vervaldatum) < new Date();
+                          return (
+                            <tr key={invoice.id} className={`border-b hover:bg-gray-50 ${isOverdue ? 'bg-red-50' : ''}`}>
+                              <td className="px-4 py-3">
+                                <Checkbox 
+                                  checked={selectedRows.includes(invoice.id)}
+                                  onCheckedChange={() => toggleRowSelection(invoice.id)}
+                                />
+                              </td>
+                              <td className="px-4 py-3 font-mono">{invoice.factuurnummer || invoice.nummer}</td>
+                              <td className="px-4 py-3">{getCustomerName(invoice.debiteur_id)}</td>
+                              <td className="px-4 py-3">{formatDate(invoice.datum)}</td>
+                              <td className="px-4 py-3">
+                                <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
+                                  {formatDate(invoice.vervaldatum)}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-right font-medium">{formatCurrency(invoice.totaal_bedrag || invoice.totaal)}</td>
+                              <td className="px-4 py-3 text-center">
+                                <StatusIcon status={isOverdue ? 'verlopen' : invoice.status} />
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button variant="ghost" size="sm" onClick={() => handleSendReminder([invoice.id])}>
+                                    <Mail className="w-4 h-4" />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" onClick={() => handleAfletteren(invoice.id, invoice.totaal_bedrag || invoice.totaal)}>
+                                    <Link2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {selectedRows.length > 0 && (
+                  <div className="p-4 bg-emerald-50 border-t flex items-center justify-between">
+                    <span>{selectedRows.length} facturen geselecteerd</span>
+                    <Button onClick={() => handleSendReminder(selectedRows)} disabled={processing}>
+                      {processing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
                       Herinneringen Versturen
                     </Button>
                   </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                )}
+              </>
+            )}
 
-        {/* HERINNERINGEN TAB */}
-        {activeTab === 'herinneringen' && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-red-500" />
-                Verlopen Facturen - Herinneringen ({verlopenFacturen.length})
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {verlopenFacturen.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
-                  <CheckCircle className="w-16 h-16 mx-auto mb-4 text-emerald-300" />
-                  <p className="text-lg font-medium">Geen verlopen facturen</p>
-                  <p className="text-sm">Alle facturen zijn op tijd betaald of nog niet vervallen.</p>
+            {/* HERINNERINGEN TAB */}
+            {activeTab === 'herinneringen' && (
+              <>
+                <div className="bg-red-50 border-b border-red-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
+                  <span className="text-sm font-medium text-red-700">Verlopen Facturen - Herinneringen ({verlopenFacturen.length})</span>
                 </div>
-              ) : (
-                <>
+                {verlopenFacturen.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <CheckCircle className="w-16 h-16 mx-auto mb-4 text-emerald-300" />
+                    <p className="text-lg font-medium">Geen verlopen facturen</p>
+                  </div>
+                ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
@@ -644,29 +672,24 @@ const DebiteurenPage = () => {
                               <td className="px-4 py-3">
                                 <Checkbox 
                                   checked={selectedRows.includes(invoice.id)}
-                                  onCheckedChange={() => {
-                                    setSelectedRows(prev => 
-                                      prev.includes(invoice.id) 
-                                        ? prev.filter(id => id !== invoice.id)
-                                        : [...prev, invoice.id]
-                                    );
-                                  }}
+                                  onCheckedChange={() => toggleRowSelection(invoice.id)}
                                 />
                               </td>
-                              <td className="px-4 py-3 font-mono">{invoice.factuurnummer}</td>
+                              <td className="px-4 py-3 font-mono">{invoice.factuurnummer || invoice.nummer}</td>
                               <td className="px-4 py-3 font-medium">{getCustomerName(invoice.debiteur_id)}</td>
                               <td className="px-4 py-3">{formatDate(invoice.vervaldatum)}</td>
                               <td className="px-4 py-3">
-                                <Badge variant="destructive">{daysOverdue} dagen</Badge>
+                                <span className="px-2 py-1 bg-red-100 text-red-600 text-xs rounded-full">{daysOverdue} dagen</span>
                               </td>
                               <td className="px-4 py-3 text-right font-bold text-red-600">
-                                {formatAmount(invoice.totaal_bedrag)}
+                                {formatCurrency(invoice.totaal_bedrag || invoice.totaal)}
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <Button 
                                   size="sm" 
-                                  variant="destructive"
+                                  className="bg-red-600 hover:bg-red-700"
                                   onClick={() => handleSendReminder([invoice.id])}
+                                  disabled={processing}
                                 >
                                   <Mail className="w-4 h-4 mr-1" />
                                   Herinnering
@@ -678,114 +701,87 @@ const DebiteurenPage = () => {
                       </tbody>
                     </table>
                   </div>
-                  
-                  {selectedRows.length > 0 && (
-                    <div className="mt-4 p-4 bg-red-100 rounded-lg flex items-center justify-between">
-                      <span className="text-red-700 font-medium">{selectedRows.length} facturen geselecteerd</span>
-                      <Button variant="destructive" onClick={() => handleSendReminder(selectedRows)} disabled={processing}>
-                        {processing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
-                        Alle Herinneringen Versturen
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
+                )}
+                {selectedRows.length > 0 && (
+                  <div className="p-4 bg-red-100 border-t flex items-center justify-between">
+                    <span className="text-red-700 font-medium">{selectedRows.length} facturen geselecteerd</span>
+                    <Button className="bg-red-600 hover:bg-red-700" onClick={() => handleSendReminder(selectedRows)} disabled={processing}>
+                      {processing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Mail className="w-4 h-4 mr-2" />}
+                      Alle Herinneringen Versturen
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
 
-        {/* AFLETTEREN TAB */}
-        {activeTab === 'afletteren' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Betalingen Afletteren</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <h4 className="font-medium text-blue-800 mb-2">Wat is afletteren?</h4>
-                <p className="text-sm text-blue-700">
-                  Afletteren is het koppelen van een ontvangen betaling aan een openstaande factuur. 
-                  Hierbij wordt de factuur als 'betaald' gemarkeerd en worden de volgende boekingen gemaakt:
-                </p>
-                <ul className="text-sm text-blue-600 mt-2 space-y-1">
-                  <li>• <strong>Debet 1500</strong> (Bank) - ontvangen bedrag</li>
-                  <li>• <strong>Credit 1300</strong> (Debiteuren) - afgeboekt van klant</li>
-                </ul>
-              </div>
-              
-              <h4 className="font-medium mb-4">Openstaande facturen om af te letteren</h4>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="bg-gray-50 border-b">
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Factuurnr</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Klant</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Vervaldatum</th>
-                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-600">Bedrag</th>
-                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Actie</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {openstaandeFacturen.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
-                          Geen openstaande facturen om af te letteren
-                        </td>
+            {/* AFLETTEREN TAB */}
+            {activeTab === 'afletteren' && (
+              <>
+                <div className="bg-gray-50 border-b border-gray-200 px-2 sm:px-4 lg:px-6 py-2 sm:py-3">
+                  <span className="text-sm font-medium text-gray-700">Betalingen Afletteren</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-gray-50 border-b">
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Factuurnr</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Klant</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Vervaldatum</th>
+                        <th className="text-right px-4 py-3 text-xs font-medium text-gray-600">Bedrag</th>
+                        <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Actie</th>
                       </tr>
-                    ) : (
-                      openstaandeFacturen.map(invoice => (
-                        <tr key={invoice.id} className="border-b hover:bg-gray-50">
-                          <td className="px-4 py-3 font-mono">{invoice.factuurnummer}</td>
-                          <td className="px-4 py-3">{getCustomerName(invoice.debiteur_id)}</td>
-                          <td className="px-4 py-3">{formatDate(invoice.vervaldatum)}</td>
-                          <td className="px-4 py-3 text-right font-medium">{formatAmount(invoice.totaal_bedrag)}</td>
-                          <td className="px-4 py-3 text-center">
-                            <Button 
-                              size="sm"
-                              onClick={() => handleAfletteren(invoice.id, invoice.totaal_bedrag)}
-                              disabled={processing}
-                            >
-                              {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-1" />}
-                              Afletteren
-                            </Button>
+                    </thead>
+                    <tbody>
+                      {openstaandeFacturen.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-4 py-12 text-center text-gray-500">
+                            Geen openstaande facturen om af te letteren
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                      ) : (
+                        openstaandeFacturen.map(invoice => (
+                          <tr key={invoice.id} className="border-b hover:bg-gray-50">
+                            <td className="px-4 py-3 font-mono">{invoice.factuurnummer || invoice.nummer}</td>
+                            <td className="px-4 py-3">{getCustomerName(invoice.debiteur_id)}</td>
+                            <td className="px-4 py-3">{formatDate(invoice.vervaldatum)}</td>
+                            <td className="px-4 py-3 text-right font-medium">{formatCurrency(invoice.totaal_bedrag || invoice.totaal)}</td>
+                            <td className="px-4 py-3 text-center">
+                              <Button 
+                                size="sm"
+                                onClick={() => handleAfletteren(invoice.id, invoice.totaal_bedrag || invoice.totaal)}
+                                disabled={processing}
+                              >
+                                {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-1" />}
+                                Afletteren
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
 
-        {/* OUDERDOMSANALYSE TAB */}
-        {activeTab === 'rapporten' && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
-                  Ouderdomsanalyse Debiteuren
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {/* OUDERDOMSANALYSE TAB */}
+            {activeTab === 'rapporten' && (
+              <div className="p-6">
+                <h3 className="text-lg font-medium mb-4">Ouderdomsanalyse Debiteuren</h3>
+                <div className="grid grid-cols-4 gap-4 mb-6">
                   {Object.entries(ouderdomsAnalyse).map(([key, data]) => (
-                    <Card key={key} className={key === '90+' && data.amount > 0 ? 'border-red-300 bg-red-50' : ''}>
-                      <CardContent className="p-4">
-                        <p className="text-sm text-gray-500">{data.label}</p>
-                        <p className={`text-xl font-bold ${key === '90+' && data.amount > 0 ? 'text-red-600' : ''}`}>
-                          {formatAmount(data.amount)}
-                        </p>
-                        <p className="text-xs text-gray-400">{data.count} facturen</p>
-                      </CardContent>
-                    </Card>
+                    <div key={key} className={`p-4 rounded-lg border ${key === '90+' && data.amount > 0 ? 'border-red-300 bg-red-50' : 'bg-gray-50'}`}>
+                      <p className="text-sm text-gray-500">{data.label}</p>
+                      <p className={`text-xl font-bold ${key === '90+' && data.amount > 0 ? 'text-red-600' : ''}`}>
+                        {formatCurrency(data.amount)}
+                      </p>
+                      <p className="text-xs text-gray-400">{data.count} facturen</p>
+                    </div>
                   ))}
                 </div>
                 
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <h4 className="font-medium mb-3">Analyse</h4>
+                  <h4 className="font-medium mb-3">Visuele Verdeling</h4>
                   <div className="h-8 flex rounded-full overflow-hidden">
                     {Object.entries(ouderdomsAnalyse).map(([key, data], idx) => {
                       const total = Object.values(ouderdomsAnalyse).reduce((sum, d) => sum + d.amount, 0);
@@ -796,7 +792,7 @@ const DebiteurenPage = () => {
                           key={key} 
                           className={`${colors[idx]} flex items-center justify-center text-white text-xs font-medium`}
                           style={{ width: `${percentage}%` }}
-                          title={`${data.label}: ${formatAmount(data.amount)}`}
+                          title={`${data.label}: ${formatCurrency(data.amount)}`}
                         >
                           {percentage > 10 ? `${Math.round(percentage)}%` : ''}
                         </div>
@@ -810,15 +806,8 @@ const DebiteurenPage = () => {
                     <span>90+</span>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader>
-                <CardTitle>Exporteren</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-4">
+                
+                <div className="flex gap-4 mt-6">
                   <Button variant="outline">
                     <Download className="w-4 h-4 mr-2" />
                     Export naar Excel
@@ -828,11 +817,11 @@ const DebiteurenPage = () => {
                     Export naar PDF
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+              </div>
+            )}
 
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
