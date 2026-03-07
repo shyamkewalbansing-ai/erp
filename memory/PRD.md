@@ -18,6 +18,10 @@ Comprehensive accounting and business management platform for Suriname businesse
   - 4 statistiek-cards met 3D shadow effect
   - Emerald groene actieve tab buttons
   - Status legenda met iconen
+- **Actieknoppen nu werkend**:
+  - 👁️ Bekijken - Navigeert naar debiteur detail pagina
+  - ✏️ Bewerken - Opent modal om debiteur te bewerken (naam, email, telefoon, adres, BTW, betalingstermijn)
+  - 📄 Facturen - Opent modal met alle facturen van de debiteur (met totaal openstaand bedrag)
 - **Grootboek integratie werkt correct**:
   - Journaalposten worden automatisch aangemaakt bij verzonden facturen (VK dagboek)
   - Journaalposten worden automatisch aangemaakt bij betalingen (BK dagboek)
@@ -28,11 +32,22 @@ Comprehensive accounting and business management platform for Suriname businesse
   - `PUT /api/boekhouding/verkoopfacturen/{id}/status` - Status wijzigen
   - `POST /api/boekhouding/verkoopfacturen/{id}/betaling` - Afletteren
   - `POST /api/boekhouding/rekeningen/herbereken-saldi` - Saldi herberekenen
-- **Service Worker cleanup**: Dubbele registratie verwijderd om conflicts te voorkomen
 - **Bestanden gewijzigd**:
-  - `frontend/public/index.html` - SW registratie cleanup
-  - `frontend/src/index.js` - Production-only SW registratie
-  - `frontend/src/App.js` - Verwijderde conflicterende SW unregister code
+  - `frontend/src/pages/boekhouding/DebiteruenPage.js` - Modals toegevoegd voor edit en facturen
+
+#### Automatische Betalingsherinneringen ✅ (Reeds Geïmplementeerd)
+- **Scheduler draait dagelijks om 08:00 SRT** (Surinaamse tijd)
+- **Configureerbare instellingen** in Boekhouding > Instellingen > Herinneringen:
+  - Auto-herinneringen aan/uit toggle
+  - Dagen na vervaldatum voor eerste herinnering (standaard 7)
+  - Dagen tussen herinneringen (standaard 7)
+  - Maximum aantal herinneringen (3, inclusief aanmaning)
+- **Escalatie systeem**:
+  1. Eerste herinnering - Vriendelijke herinnering
+  2. Tweede herinnering - Dringender verzoek
+  3. Aanmaning - Laatste waarschuwing met incassomaatregelen
+- **E-mail versturen** (vereist SMTP configuratie)
+- **Handmatige trigger** via "Nu controleren" knop
 
 ## Previous Session: March 6, 2026
 

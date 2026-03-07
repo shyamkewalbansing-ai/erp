@@ -8,6 +8,7 @@ import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Checkbox } from '../../components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { toast } from 'sonner';
 import { 
   Plus, 
@@ -31,7 +32,9 @@ import {
   Download,
   BarChart3,
   Link2,
-  Receipt
+  Receipt,
+  X,
+  Save
 } from 'lucide-react';
 
 // Format currency
@@ -96,6 +99,13 @@ const DebiteurenPage = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
   const [processing, setProcessing] = useState(false);
+  
+  // Modal states
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [invoicesModalOpen, setInvoicesModalOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -115,6 +125,66 @@ const DebiteurenPage = () => {
       setLoading(false);
     }
   };
+
+  // Open edit modal
+  const handleEditCustomer = (customer) => {
+    setSelectedCustomer(customer);
+    setEditForm({
+      naam: customer.naam || '',
+      email: customer.email || '',
+      telefoon: customer.telefoon || '',
+      adres: customer.adres || '',
+      plaats: customer.plaats || '',
+      postcode: customer.postcode || '',
+      land: customer.land || 'Suriname',
+      btw_nummer: customer.btw_nummer || '',
+      betalingstermijn: customer.betalingstermijn || 30
+    });
+    setEditModalOpen(true);
+  };
+
+  // Save edited customer
+  const handleSaveCustomer = async () => {
+    if (!editForm.naam) {
+      toast.error('Naam is verplicht');
+      return;
+    }
+    setSaving(true);
+    try {
+      await customersAPI.update(selectedCustomer.id, editForm);
+      toast.success('Debiteur bijgewerkt');
+      setEditModalOpen(false);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij opslaan');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Delete customer
+  const handleDeleteCustomer = async (customerId) => {
+    if (!window.confirm('Weet u zeker dat u deze debiteur wilt verwijderen?')) return;
+    try {
+      await customersAPI.delete(customerId);
+      toast.success('Debiteur verwijderd');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
+    }
+  };
+
+  // Show customer invoices
+  const handleShowInvoices = (customer) => {
+    setSelectedCustomer(customer);
+    setInvoicesModalOpen(true);
+  };
+
+  // Get invoices for selected customer
+  const customerInvoices = useMemo(() => {
+    if (!selectedCustomer) return [];
+    return invoices.filter(i => i.debiteur_id === selectedCustomer.id);
+  }, [selectedCustomer, invoices]);
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -481,13 +551,31 @@ const DebiteurenPage = () => {
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <div className="flex items-center justify-center gap-1">
-                                  <Button variant="ghost" size="sm" onClick={() => navigate(`/app/boekhouding/debiteuren/${customer.id}`)}>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => navigate(`/app/boekhouding/debiteuren/${customer.id}`)}
+                                    title="Bekijken"
+                                    data-testid={`view-customer-${customer.id}`}
+                                  >
                                     <Eye className="w-4 h-4" />
                                   </Button>
-                                  <Button variant="ghost" size="sm">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => handleEditCustomer(customer)}
+                                    title="Bewerken"
+                                    data-testid={`edit-customer-${customer.id}`}
+                                  >
                                     <Edit className="w-4 h-4" />
                                   </Button>
-                                  <Button variant="ghost" size="sm">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={() => handleShowInvoices(customer)}
+                                    title="Facturen bekijken"
+                                    data-testid={`invoices-customer-${customer.id}`}
+                                  >
                                     <FileText className="w-4 h-4" />
                                   </Button>
                                 </div>
@@ -823,6 +911,198 @@ const DebiteurenPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Customer Modal */}
+      <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Debiteur Bewerken</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2">
+                <Label>Naam *</Label>
+                <Input 
+                  value={editForm.naam || ''} 
+                  onChange={(e) => setEditForm({...editForm, naam: e.target.value})}
+                  placeholder="Bedrijfsnaam"
+                />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input 
+                  type="email"
+                  value={editForm.email || ''} 
+                  onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                  placeholder="email@voorbeeld.sr"
+                />
+              </div>
+              <div>
+                <Label>Telefoon</Label>
+                <Input 
+                  value={editForm.telefoon || ''} 
+                  onChange={(e) => setEditForm({...editForm, telefoon: e.target.value})}
+                  placeholder="+597..."
+                />
+              </div>
+              <div className="col-span-2">
+                <Label>Adres</Label>
+                <Input 
+                  value={editForm.adres || ''} 
+                  onChange={(e) => setEditForm({...editForm, adres: e.target.value})}
+                  placeholder="Straat en huisnummer"
+                />
+              </div>
+              <div>
+                <Label>Plaats</Label>
+                <Input 
+                  value={editForm.plaats || ''} 
+                  onChange={(e) => setEditForm({...editForm, plaats: e.target.value})}
+                  placeholder="Paramaribo"
+                />
+              </div>
+              <div>
+                <Label>Land</Label>
+                <Input 
+                  value={editForm.land || ''} 
+                  onChange={(e) => setEditForm({...editForm, land: e.target.value})}
+                  placeholder="Suriname"
+                />
+              </div>
+              <div>
+                <Label>BTW Nummer</Label>
+                <Input 
+                  value={editForm.btw_nummer || ''} 
+                  onChange={(e) => setEditForm({...editForm, btw_nummer: e.target.value})}
+                  placeholder="BTW nummer"
+                />
+              </div>
+              <div>
+                <Label>Betalingstermijn (dagen)</Label>
+                <Input 
+                  type="number"
+                  value={editForm.betalingstermijn || 30} 
+                  onChange={(e) => setEditForm({...editForm, betalingstermijn: parseInt(e.target.value) || 30})}
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setEditModalOpen(false)}>
+                Annuleren
+              </Button>
+              <Button onClick={handleSaveCustomer} disabled={saving}>
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                Opslaan
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Customer Invoices Modal */}
+      <Dialog open={invoicesModalOpen} onOpenChange={setInvoicesModalOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Facturen van {selectedCustomer?.naam}</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {customerInvoices.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                <p>Geen facturen gevonden voor deze debiteur</p>
+                <Button 
+                  className="mt-4" 
+                  onClick={() => {
+                    setInvoicesModalOpen(false);
+                    navigate('/app/boekhouding/verkoop/nieuw');
+                  }}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nieuwe Factuur
+                </Button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="bg-gray-50 border-b">
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Factuurnr</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Datum</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-600">Vervaldatum</th>
+                      <th className="text-right px-4 py-3 text-xs font-medium text-gray-600">Bedrag</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Status</th>
+                      <th className="text-center px-4 py-3 text-xs font-medium text-gray-600">Actie</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerInvoices.map(invoice => {
+                      const isOverdue = invoice.vervaldatum && new Date(invoice.vervaldatum) < new Date() && invoice.status !== 'betaald';
+                      return (
+                        <tr key={invoice.id} className={`border-b hover:bg-gray-50 ${isOverdue ? 'bg-red-50' : ''}`}>
+                          <td className="px-4 py-3 font-mono">{invoice.factuurnummer || invoice.nummer}</td>
+                          <td className="px-4 py-3">{formatDate(invoice.datum || invoice.factuurdatum)}</td>
+                          <td className="px-4 py-3">
+                            <span className={isOverdue ? 'text-red-600 font-medium' : ''}>
+                              {formatDate(invoice.vervaldatum)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-right font-medium">
+                            {formatCurrency(invoice.totaal_incl_btw || invoice.totaal_bedrag || invoice.totaal)}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <StatusIcon status={isOverdue ? 'verlopen' : invoice.status} />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => navigate(`/app/boekhouding/verkoop/${invoice.id}`)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              {invoice.status !== 'betaald' && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm"
+                                  onClick={() => {
+                                    setInvoicesModalOpen(false);
+                                    setActiveTab('afletteren');
+                                  }}
+                                >
+                                  <Link2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg flex justify-between items-center">
+                  <span className="text-sm text-gray-600">
+                    Totaal openstaand: <strong className="text-amber-600">
+                      {formatCurrency(customerInvoices.filter(i => i.status !== 'betaald').reduce((sum, i) => sum + (i.totaal_incl_btw || i.totaal_bedrag || i.totaal || 0), 0))}
+                    </strong>
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setInvoicesModalOpen(false);
+                      navigate('/app/boekhouding/verkoop/nieuw');
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nieuwe Factuur
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
