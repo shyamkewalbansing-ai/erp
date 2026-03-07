@@ -3394,27 +3394,138 @@ async def update_vast_activum(activum_id: str, data: VastActivumCreate, authoriz
     return {"message": "Activum bijgewerkt"}
 
 @router.post("/vaste-activa/{activum_id}/afschrijven")
-async def afschrijven_activum(activum_id: str, authorization: str = Header(None)):
-    """Voer afschrijving uit voor specifiek activum"""
+async def afschrijven_activum(activum_id: str, create_journal: bool = True, authorization: str = Header(None)):
+    """
+    Voer afschrijving uit voor specifiek activum met grootboek boeking.
+    
+    Journaalpost structuur (GROOTBOEK KOPPELING):
+    - Debet 4800: Afschrijvingskosten (kosten)
+    - Credit 10x1: Cum. afschrijving op betreffend activum (bijv. 1021 voor machines)
+    
+    De rekening wordt bepaald op basis van de activum categorie:
+    - Gebouwen: 4810 (kosten) / 1011 (cum. afschr.)
+    - Machines: 4820 (kosten) / 1021 (cum. afschr.)
+    - Inventaris: 4830 (kosten) / 1031 (cum. afschr.)
+    - Voertuigen: 4840 (kosten) / 1041 (cum. afschr.)
+    - Computers: 4850 (kosten) / 1051 (cum. afschr.)
+    """
     user = await get_current_user(authorization)
     user_id = user.get('id')
+    workspace_id = user.get('workspace_id')
     
     activum = await db.boekhouding_vaste_activa.find_one({"id": activum_id, "user_id": user_id})
     if not activum:
         raise HTTPException(status_code=404, detail="Activum niet gevonden")
     
+    # Check if already fully depreciated
+    if activum.get("boekwaarde", 0) <= activum.get("restwaarde", 0):
+        raise HTTPException(status_code=400, detail="Activum is al volledig afgeschreven")
+    
     maandelijks = activum.get("jaarlijkse_afschrijving", 0) / 12
-    nieuwe_boekwaarde = activum.get("boekwaarde", 0) - maandelijks
+    if maandelijks <= 0:
+        raise HTTPException(status_code=400, detail="Geen afschrijving mogelijk (methode: geen)")
+    
+    huidige_boekwaarde = activum.get("boekwaarde", activum.get("aankoopwaarde", 0))
+    restwaarde = activum.get("restwaarde", 0)
+    
+    # Cap depreciation at book value minus residual value
+    max_afschrijving = huidige_boekwaarde - restwaarde
+    afschrijving_bedrag = min(maandelijks, max_afschrijving)
+    
+    nieuwe_boekwaarde = huidige_boekwaarde - afschrijving_bedrag
+    
+    journal_entry = None
+    
+    if create_journal and afschrijving_bedrag > 0:
+        # Determine accounts based on category
+        categorie = activum.get("categorie", "inventaris").lower()
+        
+        account_mapping = {
+            "gebouwen": {"kosten": "4810", "kosten_naam": "Afschrijving gebouwen", "afschr": "1011", "afschr_naam": "Cum. afschrijving gebouwen"},
+            "machines": {"kosten": "4820", "kosten_naam": "Afschrijving machines", "afschr": "1021", "afschr_naam": "Cum. afschrijving machines"},
+            "inventaris": {"kosten": "4830", "kosten_naam": "Afschrijving inventaris", "afschr": "1031", "afschr_naam": "Cum. afschrijving inventaris"},
+            "voertuigen": {"kosten": "4840", "kosten_naam": "Afschrijving voertuigen", "afschr": "1041", "afschr_naam": "Cum. afschrijving voertuigen"},
+            "computers": {"kosten": "4850", "kosten_naam": "Afschrijving computers", "afschr": "1051", "afschr_naam": "Cum. afschrijving computers"},
+            "software": {"kosten": "4850", "kosten_naam": "Afschrijving software", "afschr": "1051", "afschr_naam": "Cum. afschrijving software"},
+        }
+        
+        accounts = account_mapping.get(categorie, account_mapping["inventaris"])
+        
+        # Get next journal number
+        count = await db.boekhouding_journaalposten.count_documents({
+            "user_id": user_id,
+            "dagboek_code": "AFR"
+        })
+        volgnummer = f"AFR{datetime.now().year}-{count + 1:05d}"
+        
+        activum_naam = activum.get("naam", "Onbekend")
+        periode = datetime.now().strftime("%Y-%m")
+        
+        journal_entry = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "workspace_id": workspace_id,
+            "dagboek_code": "AFR",  # Afschrijvingen dagboek
+            "volgnummer": volgnummer,
+            "datum": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "omschrijving": f"Afschrijving {activum_naam} - {periode}",
+            "regels": [
+                {
+                    "rekening_code": accounts["kosten"],
+                    "rekening_naam": accounts["kosten_naam"],
+                    "omschrijving": f"Afschrijving {activum_naam}",
+                    "debet": afschrijving_bedrag,
+                    "credit": 0
+                },
+                {
+                    "rekening_code": accounts["afschr"],
+                    "rekening_naam": accounts["afschr_naam"],
+                    "omschrijving": f"Cum. afschrijving {activum_naam}",
+                    "debet": 0,
+                    "credit": afschrijving_bedrag
+                }
+            ],
+            "totaal_debet": afschrijving_bedrag,
+            "totaal_credit": afschrijving_bedrag,
+            "status": "geboekt",
+            "activum_id": activum_id,
+            "auto_generated": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.boekhouding_journaalposten.insert_one(journal_entry)
+        
+        # Clean for response
+        if "_id" in journal_entry:
+            del journal_entry["_id"]
+    
+    # Update the asset
+    new_status = activum.get("status", "actief")
+    if nieuwe_boekwaarde <= restwaarde:
+        new_status = "volledig_afgeschreven"
     
     await db.boekhouding_vaste_activa.update_one(
         {"id": activum_id},
         {
-            "$inc": {"totaal_afgeschreven": maandelijks},
-            "$set": {"boekwaarde": max(activum.get("restwaarde", 0), nieuwe_boekwaarde)}
+            "$inc": {"totaal_afgeschreven": afschrijving_bedrag},
+            "$set": {
+                "boekwaarde": nieuwe_boekwaarde,
+                "status": new_status,
+                "laatste_afschrijving": datetime.now(timezone.utc).isoformat()
+            }
         }
     )
     
-    return {"message": "Afschrijving geboekt", "bedrag": maandelijks}
+    return {
+        "message": "Afschrijving geboekt in grootboek",
+        "depreciation_amount": afschrijving_bedrag,
+        "new_book_value": nieuwe_boekwaarde,
+        "journal_entry": journal_entry,
+        "grootboek_info": {
+            "kosten_rekening": f"{accounts['kosten']} - {accounts['kosten_naam']}",
+            "afschrijving_rekening": f"{accounts['afschr']} - {accounts['afschr_naam']}"
+        }
+    }
 
 # ==================== PROJECTEN ====================
 

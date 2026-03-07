@@ -130,6 +130,7 @@ const BoekhoudingPOSPermanentScanner = lazy(() => import("./pages/boekhouding/PO
 const BoekhoudingVoorraad = lazy(() => import("./pages/boekhouding/VoorraadPage"));
 const BoekhoudingHRM = lazy(() => import("./pages/boekhouding/HRMPage"));
 const BoekhoudingVasteActiva = lazy(() => import("./pages/boekhouding/VasteActivaPage"));
+const BoekhoudingKostenplaatsen = lazy(() => import("./pages/boekhouding/KostenplaatsenPage"));
 const BoekhoudingProjecten = lazy(() => import("./pages/boekhouding/ProjectenPage"));
 const BoekhoudingRapportages = lazy(() => import("./pages/boekhouding/RapportagesPage"));
 const BoekhoudingWisselkoersen = lazy(() => import("./pages/boekhouding/WisselkoersenPage"));
@@ -849,6 +850,7 @@ function MainAppRoutes() {
           <Route path="boekhouding/voorraad" element={<BoekhoudingVoorraad />} />
           <Route path="boekhouding/hrm" element={<BoekhoudingHRM />} />
           <Route path="boekhouding/vaste-activa" element={<BoekhoudingVasteActiva />} />
+          <Route path="boekhouding/kostenplaatsen" element={<BoekhoudingKostenplaatsen />} />
           <Route path="boekhouding/projecten" element={<BoekhoudingProjecten />} />
           <Route path="boekhouding/rapportages" element={<BoekhoudingRapportages />} />
           <Route path="boekhouding/wisselkoersen" element={<BoekhoudingWisselkoersen />} />
