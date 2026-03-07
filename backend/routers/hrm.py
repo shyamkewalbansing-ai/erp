@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime, timezone
 from bson import ObjectId
+import uuid
 
 router = APIRouter(prefix="/hrm", tags=["HRM"])
 
@@ -944,6 +945,9 @@ async def generate_payroll_with_tax(
             
             result = await db.hrm_payroll.insert_one(pay_dict)
             pay_dict["id"] = str(result.inserted_id)
+            # Remove _id from response
+            if "_id" in pay_dict:
+                del pay_dict["_id"]
             generated.append(pay_dict)
     
     return {
@@ -953,20 +957,20 @@ async def generate_payroll_with_tax(
     }
 
 
-@router.put("/payroll/{payroll_id}/pay")
+@router.put("/payroll/{payroll_id}/pay-with-journal")
 async def process_payroll_payment(
     payroll_id: str,
     create_journal: bool = True,
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Process payroll payment and optionally create automatic journal entries.
+    Process payroll payment and create automatic journal entries.
     
-    Journal entries created:
-    - Debit: Salariskosten (expense account)
-    - Credit: Te betalen loonbelasting (liability)
-    - Credit: Te betalen AOV (liability)
-    - Credit: Bank/Kas (asset - net payment)
+    Journal entries created (GROOTBOEK KOPPELING):
+    - Debit 6000: Salariskosten (bruto salaris)
+    - Credit 2360: Te betalen loonbelasting
+    - Credit 2380: Te betalen AOV-premie
+    - Credit 1500: Bank (netto uitbetaling)
     """
     db = await get_db()
     wf = workspace_filter(current_user)
@@ -979,19 +983,8 @@ async def process_payroll_payment(
     if payroll.get("status") == "paid":
         raise HTTPException(status_code=400, detail="Dit salaris is al uitbetaald")
     
-    # Update payroll status
-    await db.hrm_payroll.update_one(
-        {"_id": ObjectId(payroll_id)},
-        {
-            "$set": {
-                "status": "paid",
-                "paid_at": datetime.now(timezone.utc).isoformat(),
-                "paid_by": current_user.get("id")
-            }
-        }
-    )
-    
     journal_entry = None
+    journal_entry_id = None
     
     if create_journal:
         # Create automatic journal entry in grootboek
@@ -1002,47 +995,68 @@ async def process_payroll_payment(
         employee_name = payroll.get("employee_name", "Onbekend")
         period = payroll.get("period", "")
         
-        # Journal entry lines - correct grootboek codes matching the standard chart
+        # Get next journal number
+        count = await db.boekhouding_journaalposten.count_documents({
+            "user_id": current_user.get("id"),
+            "dagboek_code": "SAL"
+        })
+        volgnummer = f"SAL{datetime.now().year}-{count + 1:05d}"
+        
+        # Journal entry lines - correct grootboek codes
         journal_lines = [
             {
-                "rekening_code": "6000",  # Salarissen
-                "omschrijving": f"Salaris {employee_name} - {period}",
+                "rekening_code": "6000",  # Salarissen (kosten)
+                "rekening_naam": "Salarissen",
+                "omschrijving": f"Bruto salaris {employee_name} - {period}",
                 "debet": gross_salary,
                 "credit": 0
-            },
-            {
-                "rekening_code": "2360",  # Loonheffing te betalen
-                "omschrijving": f"Loonbelasting {employee_name} - {period}",
-                "debet": 0,
-                "credit": income_tax
-            },
-            {
-                "rekening_code": "2380",  # AOV te betalen
-                "omschrijving": f"AOV-premie {employee_name} - {period}",
-                "debet": 0,
-                "credit": aov
-            },
-            {
-                "rekening_code": "1500",  # Bank DSB SRD
-                "omschrijving": f"Netto salaris {employee_name} - {period}",
-                "debet": 0,
-                "credit": net_salary
             }
         ]
         
+        # Only add loonbelasting if > 0
+        if income_tax > 0:
+            journal_lines.append({
+                "rekening_code": "2360",  # Loonheffing te betalen (passiva)
+                "rekening_naam": "Loonheffing te betalen",
+                "omschrijving": f"Loonbelasting {employee_name} - {period}",
+                "debet": 0,
+                "credit": income_tax
+            })
+        
+        # Only add AOV if > 0
+        if aov > 0:
+            journal_lines.append({
+                "rekening_code": "2380",  # AOV te betalen (passiva)
+                "rekening_naam": "AOV-premie te betalen",
+                "omschrijving": f"AOV-premie {employee_name} - {period}",
+                "debet": 0,
+                "credit": aov
+            })
+        
+        # Net salary to bank
+        journal_lines.append({
+            "rekening_code": "1500",  # Bank
+            "rekening_naam": "Bank",
+            "omschrijving": f"Netto salaris {employee_name} - {period}",
+            "debet": 0,
+            "credit": net_salary
+        })
+        
+        journal_entry_id = str(uuid.uuid4())
+        
         # Create the journal entry with correct structure
         journal_entry = {
-            "id": str(uuid.uuid4()),
+            "id": journal_entry_id,
             "user_id": current_user.get("id"),
             "workspace_id": current_user.get("workspace_id"),
             "dagboek_code": "SAL",  # Salaris dagboek
-            "volgnummer": f"SAL{datetime.now().year}-{payroll_id[-6:].upper()}",
+            "volgnummer": volgnummer,
             "datum": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
             "omschrijving": f"Salarisbetaling {employee_name} - {period}",
             "regels": journal_lines,
             "totaal_debet": gross_salary,
-            "totaal_credit": gross_salary,
-            "status": "geboekt",  # Important for saldo calculation
+            "totaal_credit": gross_salary,  # income_tax + aov + net_salary = gross_salary
+            "status": "geboekt",
             "payroll_id": payroll_id,
             "employee_id": payroll.get("employee_id"),
             "auto_generated": True,
@@ -1051,16 +1065,34 @@ async def process_payroll_payment(
         
         await db.boekhouding_journaalposten.insert_one(journal_entry)
         
-        # Update payroll with journal reference
-        await db.hrm_payroll.update_one(
-            {"_id": ObjectId(payroll_id)},
-            {"$set": {"journal_entry_id": str(result.inserted_id)}}
-        )
+        # Remove _id from response
+        if "_id" in journal_entry:
+            del journal_entry["_id"]
+    
+    # Update payroll status
+    update_data = {
+        "status": "paid",
+        "paid_at": datetime.now(timezone.utc).isoformat(),
+        "paid_by": current_user.get("id")
+    }
+    if journal_entry_id:
+        update_data["journal_entry_id"] = journal_entry_id
+    
+    await db.hrm_payroll.update_one(
+        {"_id": ObjectId(payroll_id)},
+        {"$set": update_data}
+    )
     
     return {
-        "message": "Salaris uitbetaald",
+        "message": "Salaris uitbetaald en geboekt in grootboek",
         "payroll_id": payroll_id,
-        "journal_entry": journal_entry
+        "journal_entry": journal_entry,
+        "grootboek_info": {
+            "6000": "Salariskosten (Debet)",
+            "2360": "Loonbelasting te betalen (Credit)",
+            "2380": "AOV-premie te betalen (Credit)",
+            "1500": "Bank (Credit - netto betaling)"
+        }
     }
 
 

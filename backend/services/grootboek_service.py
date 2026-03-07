@@ -27,7 +27,10 @@ DEFAULT_REKENINGEN = {
     "inkoop": "5000",
     "bank": "1500",
     "kas": "1400",
-    "voorraad": "1200"
+    "voorraad": "1200",
+    "salarissen": "6000",
+    "loonbelasting": "2360",
+    "aov_premie": "2380"
 }
 
 # Alternatieve codes die ook geaccepteerd worden (voor verschillende schema's)
@@ -40,7 +43,10 @@ ALTERNATIEVE_CODES = {
     "inkoop": ["5000", "4000", "4100"],
     "bank": ["1500", "1110", "1120"],
     "kas": ["1400", "1000", "1100"],
-    "voorraad": ["1200", "3000", "3100"]
+    "voorraad": ["1200", "3000", "3100"],
+    "salarissen": ["6000", "4000", "4100"],
+    "loonbelasting": ["2360", "2300", "2310"],
+    "aov_premie": ["2380", "2370", "2390"]
 }
 
 

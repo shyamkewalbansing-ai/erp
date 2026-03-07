@@ -12,6 +12,38 @@ Comprehensive accounting and business management platform for Suriname businesse
 
 ### Completed This Session
 
+#### HRM / Personeel Loonlijst - Grootboek Koppeling ✅ (P0 - NEW)
+- **Loonbelasting (2360) en AOV Premie (2380) integratie met Grootboek**:
+  - Bij uitbetaling van salarissen worden automatisch journaalposten aangemaakt
+  - **Rekeningen gebruikt**:
+    - 6000 Salarissen (Debet - bruto salaris)
+    - 2360 Loonheffing te betalen (Credit - indien belasting > 0)
+    - 2380 AOV-premie te betalen (Credit - 4% van bruto)
+    - 1500 Bank (Credit - netto uitbetaling)
+- **Suriname belastingtarieven 2024 geïmplementeerd**:
+  - Belastingvrije som: SRD 9.000/maand
+  - Schijf 1: 0-3.500 SRD = 8%
+  - Schijf 2: 3.501-7.000 SRD = 18%
+  - Schijf 3: 7.001-10.500 SRD = 28%
+  - Schijf 4: boven 10.500 SRD = 38%
+  - AOV Premie: 4%
+- **Frontend HRMLoonlijst.js herschreven met**:
+  - Tabs: Loonstroken | Belasting Overzicht | Grootboek Info
+  - Statistieken: Bruto, Loonbelasting, AOV, Netto totalen
+  - Details dropdown per loonstrook met belasting breakdown
+  - "Geboekt" badge bij uitbetaalde salarissen
+  - Belasting rapport met per-periode overzicht
+  - Grootboek documentatie met voorbeeld journaalpost
+- **Backend endpoints**:
+  - `POST /api/hrm/payroll/generate-with-tax` - Genereer loonstroken met belasting
+  - `PUT /api/hrm/payroll/{id}/pay-with-journal` - Uitbetalen + grootboek boeking
+  - `GET /api/hrm/payroll/tax-report` - Belastingrapport
+  - `POST /api/hrm/payroll/calculate-tax` - Belasting calculator
+- **Bestanden gewijzigd**:
+  - `backend/routers/hrm.py` - uuid import, fix process_payroll_payment, _id cleanup
+  - `backend/services/grootboek_service.py` - salarissen/loonbelasting/aov_premie rekeningen
+  - `frontend/src/pages/HRMLoonlijst.js` - Volledig herschreven met tabs en grootboek info
+
 #### Bank & Kas Beheer Grootboek Koppeling ✅ (P1)
 - **Automatische journaalposten bij banktransacties**:
   - Elke transactie wordt nu automatisch geboekt naar het grootboek

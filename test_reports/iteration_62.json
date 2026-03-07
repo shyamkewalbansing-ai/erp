@@ -55,5 +55,5 @@
   },
   "retest_needed": false,
   "should_main_agent_self_test": false,
-  "context_for_next_testing_agent": "Invoice PDF preview redesign fully tested on /gratis-factuur page. Modern geometric design with diagonal shapes, 5 color templates, currency switching (SRD/EUR/USD), BTW region switching (SR/NL/Geen), PDF download, and Factuur/Offerte document types all working correctly. Page URL: https://debiteuren-fix.preview.emergentagent.com/gratis-factuur"
+  "context_for_next_testing_agent": "Invoice PDF preview redesign fully tested on /gratis-factuur page. Modern geometric design with diagonal shapes, 5 color templates, currency switching (SRD/EUR/USD), BTW region switching (SR/NL/Geen), PDF download, and Factuur/Offerte document types all working correctly. Page URL: https://accounting-fixes-5.preview.emergentagent.com/gratis-factuur"
 }

@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 # Get BASE_URL from environment
 BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 if not BASE_URL:
-    BASE_URL = "https://debiteuren-fix.preview.emergentagent.com"
+    BASE_URL = "https://accounting-fixes-5.preview.emergentagent.com"
 
 API_BASE = f"{BASE_URL}/api/gratis-factuur"
 
