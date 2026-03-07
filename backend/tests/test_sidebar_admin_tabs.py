@@ -9,7 +9,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://chat-sync-beta.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://debiteuren-fix.preview.emergentagent.com')
 
 class TestLoginFunctionality:
     """Test login with demo and admin credentials"""

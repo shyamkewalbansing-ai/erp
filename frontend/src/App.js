@@ -14,13 +14,6 @@ import PublicInvoiceGenerator from "./pages/PublicInvoiceGenerator";
 import Layout from "./components/Layout";
 import "@/App.css";
 
-// Unregister any existing service workers to fix memory issues
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.getRegistrations().then(registrations => {
-    registrations.forEach(r => r.unregister());
-  });
-}
-
 // Gratis Factuur pages - separate auth system
 const GratisFactuurAuth = lazy(() => import("./pages/GratisFactuurAuth"));
 const GratisFactuurDashboard = lazy(() => import("./pages/GratisFactuurDashboard"));

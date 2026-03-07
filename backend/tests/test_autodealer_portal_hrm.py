@@ -6,7 +6,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://chat-sync-beta.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://debiteuren-fix.preview.emergentagent.com').rstrip('/')
 
 # ==================== FIXTURES ====================
 

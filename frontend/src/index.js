@@ -3,8 +3,8 @@ import ReactDOM from "react-dom/client";
 import "@/index.css";
 import App from "@/App";
 
-// Register Service Worker and cache index.html immediately
-if ('serviceWorker' in navigator) {
+// Register Service Worker (only in production or when explicitly needed)
+if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
   window.addEventListener('load', async () => {
     try {
       const registration = await navigator.serviceWorker.register('/service-worker.js');
@@ -14,7 +14,6 @@ if ('serviceWorker' in navigator) {
       const sw = await navigator.serviceWorker.ready;
       if (sw.active) {
         sw.active.postMessage('CACHE_INDEX');
-        console.log('[App] Requested index.html caching');
       }
       
       // Check for updates
@@ -29,7 +28,10 @@ if ('serviceWorker' in navigator) {
         }
       });
     } catch (error) {
-      console.error('[App] SW registration failed:', error);
+      // Silently handle SW errors in development
+      if (process.env.NODE_ENV === 'production') {
+        console.error('[App] SW registration failed:', error);
+      }
     }
   });
 }

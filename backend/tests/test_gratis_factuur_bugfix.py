@@ -12,7 +12,7 @@ import string
 from datetime import datetime
 
 # Get BASE_URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://chat-sync-beta.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://debiteuren-fix.preview.emergentagent.com').rstrip('/')
 API_BASE = f"{BASE_URL}/api/invoice"
 
 # Test credentials
