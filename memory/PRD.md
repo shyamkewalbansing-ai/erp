@@ -12,6 +12,29 @@ Comprehensive accounting and business management platform for Suriname businesse
 
 ### Completed This Session
 
+#### Bank & Kas Beheer Grootboek Koppeling ✅ (P1)
+- **Automatische journaalposten bij banktransacties**:
+  - Elke transactie wordt nu automatisch geboekt naar het grootboek
+  - Ontvangsten: Bank (1500) Debet, Tegenrekening Credit
+  - Uitgaven: Tegenrekening Debet, Bank (1500) Credit
+- **Categorie selectie voor tegenrekening**:
+  - Verkoop (4000)
+  - Inkoop (4400)
+  - Kosten (4600)
+  - Salaris (4100)
+  - Huur (4200)
+  - Bankkosten (8510)
+  - Rente Ontvangen (8000)
+  - Rente Betaald (8500)
+  - Privé (3100)
+  - Overig (8999)
+- **Grootboek Preview** in transactie dialog:
+  - Toont exact welke rekeningen worden geboekt
+  - Debet en credit bedragen zichtbaar
+- **Bestanden gewijzigd**:
+  - `backend/routers/boekhouding_legacy.py` - Grootboek boeking toegevoegd aan create_banktransactie
+  - `frontend/src/pages/boekhouding/BankKasPage.js` - Categorie selectie en preview toegevoegd
+
 #### Crediteuren Pagina Fix ✅ (P0 - Kritiek)
 - **UI volledig werkend** en komt exact overeen met VerkoopPage/DebiteurenPage styling:
   - Alle 6 tabs zichtbaar: Overzicht, Verwerken, Openstaande Facturen, Betalingen Verwerken, Afletteren, Ouderdomsanalyse

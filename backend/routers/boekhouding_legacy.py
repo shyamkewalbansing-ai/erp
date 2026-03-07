@@ -513,8 +513,9 @@ class BanktransactieCreate(BaseModel):
     datum: date
     omschrijving: str
     bedrag: float
-    tegenrekening: Optional[str] = None
+    tegenrekening: Optional[str] = None  # Grootboek tegenrekening code
     tegenpartij: Optional[str] = None
+    categorie: Optional[str] = None  # Voor automatische tegenrekening
 
 class JournaalpostCreate(BaseModel):
     dagboek_code: str
@@ -2002,26 +2003,129 @@ async def get_banktransacties(bank_id: str = None, van: str = None, tot: str = N
 
 @router.post("/banktransacties")
 async def create_banktransactie(data: BanktransactieCreate, authorization: str = Header(None)):
-    """Maak nieuwe banktransactie"""
+    """Maak nieuwe banktransactie en boek naar grootboek"""
     user = await get_current_user(authorization)
     user_id = user.get('id')
     
+    transactie_id = str(uuid.uuid4())
     transactie = {
-        "id": str(uuid.uuid4()),
+        "id": transactie_id,
         "user_id": user_id,
         **data.dict(),
         "datum": data.datum.isoformat(),
         "status": "nieuw",
+        "geboekt": False,
         "created_at": datetime.now(timezone.utc)
     }
     await db.boekhouding_banktransacties.insert_one(transactie)
     
     # Update bankrekening saldo
+    bankrekening = await db.boekhouding_bankrekeningen.find_one({"id": data.bankrekening_id, "user_id": user_id})
     await db.boekhouding_bankrekeningen.update_one(
         {"id": data.bankrekening_id, "user_id": user_id},
         {"$inc": {"huidig_saldo": data.bedrag}}
     )
     
+    # Bepaal de grootboek rekening code voor deze bankrekening
+    bank_code = None
+    if bankrekening:
+        # Kijk of de bankrekening een gekoppelde grootboekrekening heeft
+        bank_naam = (bankrekening.get("naam") or bankrekening.get("name") or "").lower()
+        valuta = bankrekening.get("valuta", "SRD")
+        
+        # Standaard codes op basis van type
+        if "kas" in bank_naam:
+            bank_code = "1400" if valuta == "SRD" else ("1410" if valuta == "USD" else "1420")
+        else:
+            bank_code = "1500"  # Standaard bank
+    
+    if not bank_code:
+        bank_code = "1500"  # Fallback naar standaard bank
+    
+    # Bepaal tegenrekening
+    tegenrekening = data.tegenrekening
+    if not tegenrekening:
+        # Automatische tegenrekening op basis van categorie
+        categorie_mapping = {
+            "verkoop": "4000",
+            "inkoop": "4400",
+            "kosten": "4600",
+            "salaris": "4100",
+            "huur": "4200",
+            "bankkosten": "8510",
+            "rente_ontvangen": "8000",
+            "rente_betaald": "8500",
+            "privé": "3100",
+            "overig": "8999"
+        }
+        tegenrekening = categorie_mapping.get(data.categorie, "8999")  # Default: diverse baten/lasten
+    
+    # Maak journaalpost aan
+    if data.bedrag > 0:
+        # Ontvangst: Bank debet, Tegenrekening credit
+        regels = [
+            {"rekening_code": bank_code, "debet": abs(data.bedrag), "credit": 0, "omschrijving": f"Bank ontvangst - {data.omschrijving}"},
+            {"rekening_code": tegenrekening, "debet": 0, "credit": abs(data.bedrag), "omschrijving": data.omschrijving}
+        ]
+        dagboek = "BK"  # Bank dagboek
+    else:
+        # Uitgave: Tegenrekening debet, Bank credit
+        regels = [
+            {"rekening_code": tegenrekening, "debet": abs(data.bedrag), "credit": 0, "omschrijving": data.omschrijving},
+            {"rekening_code": bank_code, "debet": 0, "credit": abs(data.bedrag), "omschrijving": f"Bank uitgave - {data.omschrijving}"}
+        ]
+        dagboek = "BK"  # Bank dagboek
+    
+    # Genereer volgnummer
+    laatste = await db.boekhouding_journaalposten.find_one(
+        {"user_id": user_id, "dagboek_code": dagboek},
+        sort=[("volgnummer", -1)]
+    )
+    if laatste and laatste.get("volgnummer"):
+        try:
+            num = int(laatste["volgnummer"].split("-")[-1]) + 1
+        except:
+            num = 1
+    else:
+        num = 1
+    volgnummer = f"{dagboek}{data.datum.year}-{num:05d}"
+    
+    journaalpost = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "dagboek_code": dagboek,
+        "volgnummer": volgnummer,
+        "datum": data.datum.isoformat(),
+        "omschrijving": f"Banktransactie: {data.omschrijving}",
+        "regels": regels,
+        "document_ref": f"BT-{transactie_id[:8]}",
+        "status": "geboekt",
+        "created_at": datetime.now(timezone.utc)
+    }
+    await db.boekhouding_journaalposten.insert_one(journaalpost)
+    
+    # Update transactie met journaalpost referentie
+    await db.boekhouding_banktransacties.update_one(
+        {"id": transactie_id},
+        {"$set": {"geboekt": True, "journaalpost_id": journaalpost["id"]}}
+    )
+    
+    # Update rekening saldi
+    for regel in regels:
+        if regel["debet"] > 0:
+            await db.boekhouding_rekeningen.update_one(
+                {"user_id": user_id, "code": regel["rekening_code"]},
+                {"$inc": {"saldo": regel["debet"]}}
+            )
+        if regel["credit"] > 0:
+            await db.boekhouding_rekeningen.update_one(
+                {"user_id": user_id, "code": regel["rekening_code"]},
+                {"$inc": {"saldo": -regel["credit"]}}
+            )
+    
+    # Return updated transactie
+    transactie["geboekt"] = True
+    transactie["journaalpost_id"] = journaalpost["id"]
     return clean_doc(transactie)
 
 # ==================== BANK IMPORT ====================

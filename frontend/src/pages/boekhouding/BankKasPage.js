@@ -193,7 +193,7 @@ const BankKasPage = () => {
 
   const [transactionForm, setTransactionForm] = useState({
     bankrekening_id: '', datum: new Date().toISOString().split('T')[0],
-    omschrijving: '', referentie: '', bedrag: 0, type: 'credit'
+    omschrijving: '', referentie: '', bedrag: 0, type: 'credit', categorie: 'overig'
   });
 
   useEffect(() => {
@@ -272,11 +272,11 @@ const BankKasPage = () => {
         bedrag: transactionForm.type === 'debit' ? -Math.abs(transactionForm.bedrag) : Math.abs(transactionForm.bedrag)
       };
       await bankTransactionsAPI.create(data);
-      toast.success('Transactie aangemaakt');
+      toast.success('Transactie aangemaakt en geboekt naar grootboek');
       setShowTransactionDialog(false);
       setTransactionForm({
         bankrekening_id: '', datum: new Date().toISOString().split('T')[0],
-        omschrijving: '', referentie: '', bedrag: 0, type: 'credit'
+        omschrijving: '', referentie: '', bedrag: 0, type: 'credit', categorie: 'overig'
       });
       fetchData();
     } catch (error) {
@@ -976,7 +976,7 @@ const BankKasPage = () => {
 
       {/* Create Transaction Dialog */}
       <Dialog open={showTransactionDialog} onOpenChange={setShowTransactionDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
@@ -1013,23 +1013,77 @@ const BankKasPage = () => {
                 </Select>
               </div>
             </div>
-            <div>
-              <Label className="text-xs text-gray-500">Bedrag *</Label>
-              <Input type="number" value={transactionForm.bedrag} onChange={(e) => setTransactionForm({...transactionForm, bedrag: parseFloat(e.target.value) || 0})} className="mt-1 rounded-lg" />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-xs text-gray-500">Bedrag *</Label>
+                <Input type="number" step="0.01" value={transactionForm.bedrag} onChange={(e) => setTransactionForm({...transactionForm, bedrag: parseFloat(e.target.value) || 0})} className="mt-1 rounded-lg" />
+              </div>
+              <div>
+                <Label className="text-xs text-gray-500">Categorie (Grootboek)</Label>
+                <Select value={transactionForm.categorie} onValueChange={(v) => setTransactionForm({...transactionForm, categorie: v})}>
+                  <SelectTrigger className="mt-1 rounded-lg"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="verkoop">Verkoop (4000)</SelectItem>
+                    <SelectItem value="inkoop">Inkoop (4400)</SelectItem>
+                    <SelectItem value="kosten">Algemene Kosten (4600)</SelectItem>
+                    <SelectItem value="salaris">Salariskosten (4100)</SelectItem>
+                    <SelectItem value="huur">Huurkosten (4200)</SelectItem>
+                    <SelectItem value="bankkosten">Bankkosten (8510)</SelectItem>
+                    <SelectItem value="rente_ontvangen">Rente Ontvangen (8000)</SelectItem>
+                    <SelectItem value="rente_betaald">Rente Betaald (8500)</SelectItem>
+                    <SelectItem value="prive">Privé (3100)</SelectItem>
+                    <SelectItem value="overig">Overig (8999)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div>
               <Label className="text-xs text-gray-500">Omschrijving</Label>
-              <Input value={transactionForm.omschrijving} onChange={(e) => setTransactionForm({...transactionForm, omschrijving: e.target.value})} className="mt-1 rounded-lg" />
+              <Input value={transactionForm.omschrijving} onChange={(e) => setTransactionForm({...transactionForm, omschrijving: e.target.value})} className="mt-1 rounded-lg" placeholder="Bijv. Factuur betaling XYZ" />
             </div>
             <div>
               <Label className="text-xs text-gray-500">Referentie</Label>
-              <Input value={transactionForm.referentie} onChange={(e) => setTransactionForm({...transactionForm, referentie: e.target.value})} className="mt-1 rounded-lg" />
+              <Input value={transactionForm.referentie} onChange={(e) => setTransactionForm({...transactionForm, referentie: e.target.value})} className="mt-1 rounded-lg" placeholder="Bijv. Factuurnummer" />
             </div>
+            
+            {/* Grootboek Preview */}
+            {transactionForm.bedrag > 0 && (
+              <div className="bg-blue-50 rounded-lg p-3 text-sm border border-blue-100">
+                <p className="text-blue-800 font-medium mb-2 flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Grootboek Boeking Preview
+                </p>
+                {transactionForm.type === 'credit' ? (
+                  <>
+                    <p className="text-blue-600">• Bank (1500): Debet {formatCurrency(transactionForm.bedrag)}</p>
+                    <p className="text-blue-600">• {
+                      transactionForm.categorie === 'verkoop' ? 'Omzet (4000)' :
+                      transactionForm.categorie === 'inkoop' ? 'Inkoop (4400)' :
+                      transactionForm.categorie === 'rente_ontvangen' ? 'Rente Baten (8000)' :
+                      'Tegenrekening'
+                    }: Credit {formatCurrency(transactionForm.bedrag)}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-blue-600">• {
+                      transactionForm.categorie === 'kosten' ? 'Kosten (4600)' :
+                      transactionForm.categorie === 'salaris' ? 'Salariskosten (4100)' :
+                      transactionForm.categorie === 'huur' ? 'Huurkosten (4200)' :
+                      transactionForm.categorie === 'bankkosten' ? 'Bankkosten (8510)' :
+                      transactionForm.categorie === 'rente_betaald' ? 'Rente Lasten (8500)' :
+                      transactionForm.categorie === 'prive' ? 'Privé (3100)' :
+                      'Tegenrekening'
+                    }: Debet {formatCurrency(transactionForm.bedrag)}</p>
+                    <p className="text-blue-600">• Bank (1500): Credit {formatCurrency(transactionForm.bedrag)}</p>
+                  </>
+                )}
+              </div>
+            )}
           </div>
           <DialogFooter className="mt-6">
             <Button variant="outline" onClick={() => setShowTransactionDialog(false)} className="rounded-lg">Annuleren</Button>
             <Button onClick={handleCreateTransaction} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 rounded-lg">
-              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Aanmaken
+              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />} Aanmaken & Boeken
             </Button>
           </DialogFooter>
         </DialogContent>
