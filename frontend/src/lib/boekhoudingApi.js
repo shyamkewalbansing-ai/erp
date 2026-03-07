@@ -573,6 +573,7 @@ export const purchaseInvoicesAPI = {
   create: (data) => apiFetch('/boekhouding/inkoopfacturen', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) => apiFetch(`/boekhouding/inkoopfacturen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   updateStatus: (id, status) => apiFetch(`/boekhouding/inkoopfacturen/${id}/status?status=${status}`, { method: 'PUT' }),
+  addPayment: (id, paymentData) => apiFetch(`/boekhouding/inkoopfacturen/${id}/betaling`, { method: 'POST', body: JSON.stringify(paymentData) }),
 };
 
 // Products
