@@ -722,6 +722,23 @@ export const remindersAPI = {
   },
 };
 
+// Payments API
+export const paymentsAPI = {
+  getAll: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/boekhouding/betalingen${query ? `?${query}` : ''}`);
+  },
+  getOne: (id) => apiFetch(`/boekhouding/betalingen/${id}`),
+  create: (data) => apiFetch('/boekhouding/betalingen', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => apiFetch(`/boekhouding/betalingen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => apiFetch(`/boekhouding/betalingen/${id}`, { method: 'DELETE' }),
+  // Afletteren - koppel betaling aan factuur
+  afletteren: (invoiceId, paymentData) => apiFetch(`/boekhouding/verkoopfacturen/${invoiceId}/afletteren`, { 
+    method: 'POST', 
+    body: JSON.stringify(paymentData) 
+  }),
+};
+
 // Documents
 export const documentsAPI = {
   getAll: (params = {}) => {
@@ -794,6 +811,7 @@ export default {
   settings: settingsAPI,
   pdf: pdfAPI,
   reminders: remindersAPI,
+  payments: paymentsAPI,
   documents: documentsAPI,
   bedrijven: bedrijvenAPI,
   charts: chartsAPI,

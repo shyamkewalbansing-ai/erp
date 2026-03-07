@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { customersAPI, invoicesAPI, paymentsAPI } from '../../lib/boekhoudingApi';
+import { customersAPI, invoicesAPI } from '../../lib/boekhoudingApi';
 import { formatDate
 
  } from '../../lib/utils';
@@ -210,18 +210,14 @@ const DebiteurenPage = () => {
   const handleAfletteren = async (invoiceId, amount) => {
     setProcessing(true);
     try {
-      // Create payment record
-      await paymentsAPI.create({
-        factuur_id: invoiceId,
-        bedrag: amount,
-        datum: new Date().toISOString().split('T')[0],
-        methode: 'bank'
+      // Update invoice to paid directly (simplified approach)
+      await invoicesAPI.update(invoiceId, { 
+        status: 'betaald',
+        betaald_bedrag: amount,
+        betaald_datum: new Date().toISOString().split('T')[0]
       });
       
-      // Update invoice to paid
-      await invoicesAPI.update(invoiceId, { status: 'betaald' });
-      
-      toast.success('Betaling verwerkt');
+      toast.success('Factuur als betaald gemarkeerd');
       fetchData();
       setShowAfletterDialog(false);
     } catch (error) {
