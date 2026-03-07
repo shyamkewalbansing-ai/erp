@@ -95,7 +95,7 @@ const DebiteurenPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('overzicht');
-  const [selectedYear, setSelectedYear] = useState('2024');
+  const [selectedYear, setSelectedYear] = useState('alle');
   const [selectedRows, setSelectedRows] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
   const [processing, setProcessing] = useState(false);
@@ -106,6 +106,39 @@ const DebiteurenPage = () => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+
+  // Calculate available years from invoices
+  const availableYears = useMemo(() => {
+    const years = new Set();
+    invoices.forEach(inv => {
+      const datum = inv.datum || inv.factuurdatum || '';
+      if (datum) {
+        const year = datum.substring(0, 4);
+        if (year) years.add(year);
+      }
+    });
+    // Add current year if not present
+    const currentYear = new Date().getFullYear().toString();
+    years.add(currentYear);
+    return Array.from(years).sort((a, b) => b - a); // Sort descending
+  }, [invoices]);
+
+  // Filter invoices by selected year
+  const filteredInvoices = useMemo(() => {
+    if (selectedYear === 'alle') return invoices;
+    return invoices.filter(inv => {
+      const datum = inv.datum || inv.factuurdatum || '';
+      return datum.startsWith(selectedYear);
+    });
+  }, [invoices, selectedYear]);
+
+  // Calculate period display
+  const periodDisplay = useMemo(() => {
+    if (selectedYear === 'alle') {
+      return 'Alle jaren';
+    }
+    return `Jan - Dec ${selectedYear}`;
+  }, [selectedYear]);
 
   useEffect(() => {
     fetchData();
@@ -183,12 +216,12 @@ const DebiteurenPage = () => {
   // Get invoices for selected customer
   const customerInvoices = useMemo(() => {
     if (!selectedCustomer) return [];
-    return invoices.filter(i => i.debiteur_id === selectedCustomer.id);
-  }, [selectedCustomer, invoices]);
+    return filteredInvoices.filter(i => i.debiteur_id === selectedCustomer.id);
+  }, [selectedCustomer, filteredInvoices]);
 
-  // Calculate statistics
+  // Calculate statistics based on filtered invoices
   const stats = useMemo(() => {
-    const openInvoices = invoices.filter(i => i.status !== 'betaald' && i.status !== 'concept');
+    const openInvoices = filteredInvoices.filter(i => i.status !== 'betaald' && i.status !== 'concept');
     const overdueInvoices = openInvoices.filter(i => {
       if (!i.vervaldatum) return false;
       return new Date(i.vervaldatum) < new Date();
@@ -205,22 +238,22 @@ const DebiteurenPage = () => {
       totalOverdue,
       totalPaid
     };
-  }, [customers, invoices]);
+  }, [customers, filteredInvoices]);
 
-  // Filter invoices by status for tabs
+  // Filter invoices by status for tabs (using filtered invoices)
   const openstaandeFacturen = useMemo(() => {
-    return invoices.filter(i => i.status === 'verzonden' || i.status === 'herinnering');
-  }, [invoices]);
+    return filteredInvoices.filter(i => i.status === 'verzonden' || i.status === 'herinnering');
+  }, [filteredInvoices]);
 
   const verlopenFacturen = useMemo(() => {
-    return invoices.filter(i => {
+    return filteredInvoices.filter(i => {
       if (i.status === 'betaald' || i.status === 'concept') return false;
       if (!i.vervaldatum) return false;
       return new Date(i.vervaldatum) < new Date();
     });
-  }, [invoices]);
+  }, [filteredInvoices]);
 
-  // Aging analysis
+  // Aging analysis (using filtered invoices)
   const ouderdomsAnalyse = useMemo(() => {
     const now = new Date();
     const categories = {
@@ -230,7 +263,7 @@ const DebiteurenPage = () => {
       '90+': { label: '90+ dagen', amount: 0, count: 0 }
     };
     
-    invoices.filter(i => i.status !== 'betaald' && i.status !== 'concept').forEach(invoice => {
+    filteredInvoices.filter(i => i.status !== 'betaald' && i.status !== 'concept').forEach(invoice => {
       const dueDate = new Date(invoice.vervaldatum || invoice.datum);
       const daysOverdue = Math.floor((now - dueDate) / (1000 * 60 * 60 * 24));
       const amount = invoice.totaal_bedrag || invoice.totaal || 0;
@@ -251,7 +284,7 @@ const DebiteurenPage = () => {
     });
     
     return categories;
-  }, [invoices]);
+  }, [filteredInvoices]);
 
   // Filter customers
   const filteredCustomers = customers.filter(c =>
@@ -388,12 +421,13 @@ const DebiteurenPage = () => {
             <Label className="text-sm text-gray-600">Boekjaar</Label>
             <Select value={selectedYear} onValueChange={setSelectedYear}>
               <SelectTrigger className="rounded-lg">
-                <SelectValue />
+                <SelectValue placeholder="Selecteer jaar" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2023">2023</SelectItem>
-                <SelectItem value="2022">2022</SelectItem>
+                <SelectItem value="alle">Alle jaren</SelectItem>
+                {availableYears.map(year => (
+                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -418,7 +452,7 @@ const DebiteurenPage = () => {
           {/* Periode */}
           <div className="text-right">
             <span className="text-sm text-gray-500">Periode</span>
-            <p className="text-sm font-medium text-gray-700">Jan - Dec {selectedYear}</p>
+            <p className="text-sm font-medium text-gray-700">{periodDisplay}</p>
           </div>
         </div>
       </div>
