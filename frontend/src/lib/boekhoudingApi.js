@@ -466,10 +466,12 @@ export const btwAPI = {
 // Accounts (Chart of Accounts)
 export const accountsAPI = {
   getAll: () => apiFetch('/boekhouding/rekeningen'),
+  getAllMetSaldi: () => apiFetch('/boekhouding/rekeningen/met-saldi'),
   create: (data) => apiFetch('/boekhouding/rekeningen', { method: 'POST', body: JSON.stringify(data) }),
   update: (id, data) => apiFetch(`/boekhouding/rekeningen/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   delete: (id) => apiFetch(`/boekhouding/rekeningen/${id}`, { method: 'DELETE' }),
   initStandaard: () => apiFetch('/boekhouding/rekeningen/init-standaard', { method: 'POST' }),
+  herberekenSaldi: () => apiFetch('/boekhouding/rekeningen/herbereken-saldi', { method: 'POST' }),
   updateExterneCode: (id, externeCode) => apiFetch(`/boekhouding/rekeningen/${id}/externe-code?externe_code=${externeCode}`, { method: 'PUT' }),
   zoekOpExterneCode: (externeCode) => apiFetch(`/boekhouding/rekeningen/zoek-op-externe-code/${externeCode}`),
 };

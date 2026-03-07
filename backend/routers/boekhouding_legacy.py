@@ -1511,6 +1511,135 @@ async def zoek_rekening_op_externe_code(externe_code: str, authorization: str = 
     return clean_doc(rekening)
 
 
+@router.post("/rekeningen/herbereken-saldi")
+async def herbereken_alle_saldi(authorization: str = Header(None)):
+    """
+    Herbereken alle grootboekrekening saldi op basis van geboekte journaalposten.
+    Gebruik dit als de saldi niet kloppen.
+    """
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Reset alle saldi naar 0
+    await db.boekhouding_rekeningen.update_many(
+        {"user_id": user_id},
+        {"$set": {"saldo": 0}}
+    )
+    
+    # Haal alle geboekte journaalposten op
+    journaalposten = await db.boekhouding_journaalposten.find({
+        "user_id": user_id,
+        "status": "geboekt"
+    }).to_list(10000)
+    
+    # Bereken saldi per rekening
+    saldi = {}
+    for post in journaalposten:
+        for regel in post.get("regels", []):
+            code = regel.get("rekening_code")
+            if not code:
+                continue
+            
+            debet = float(regel.get("debet", 0) or 0)
+            credit = float(regel.get("credit", 0) or 0)
+            
+            if code not in saldi:
+                saldi[code] = {"debet": 0, "credit": 0}
+            
+            saldi[code]["debet"] += debet
+            saldi[code]["credit"] += credit
+    
+    # Update saldi in database
+    updated = 0
+    for code, bedragen in saldi.items():
+        rekening = await db.boekhouding_rekeningen.find_one({"user_id": user_id, "code": code})
+        if not rekening:
+            continue
+        
+        rekening_type = rekening.get("type", "")
+        
+        # Bij activa en kosten: saldo = debet - credit
+        # Bij passiva en opbrengsten: saldo = credit - debet
+        if rekening_type in ["activa", "kosten"]:
+            saldo = bedragen["debet"] - bedragen["credit"]
+        else:
+            saldo = bedragen["credit"] - bedragen["debet"]
+        
+        await db.boekhouding_rekeningen.update_one(
+            {"user_id": user_id, "code": code},
+            {"$set": {"saldo": saldo}}
+        )
+        updated += 1
+    
+    return {
+        "message": f"Saldi herberekend voor {updated} rekeningen",
+        "journaalposten_verwerkt": len(journaalposten),
+        "rekeningen_bijgewerkt": updated
+    }
+
+
+@router.get("/rekeningen/met-saldi")
+async def get_rekeningen_met_berekende_saldi(type: str = None, authorization: str = Header(None)):
+    """
+    Haal alle grootboekrekeningen op met saldi berekend uit journaalposten.
+    Dit geeft altijd accurate saldi, ongeacht de cached waarden.
+    """
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    # Haal rekeningen op
+    query = {"user_id": user_id}
+    if type:
+        query["type"] = type
+    
+    rekeningen = await db.boekhouding_rekeningen.find(query).sort("code", 1).to_list(500)
+    
+    # Haal alle geboekte journaalposten op
+    journaalposten = await db.boekhouding_journaalposten.find({
+        "user_id": user_id,
+        "status": "geboekt"
+    }).to_list(10000)
+    
+    # Bereken saldi per rekening
+    saldi = {}
+    for post in journaalposten:
+        for regel in post.get("regels", []):
+            code = regel.get("rekening_code")
+            if not code:
+                continue
+            
+            debet = float(regel.get("debet", 0) or 0)
+            credit = float(regel.get("credit", 0) or 0)
+            
+            if code not in saldi:
+                saldi[code] = {"debet": 0, "credit": 0}
+            
+            saldi[code]["debet"] += debet
+            saldi[code]["credit"] += credit
+    
+    # Voeg berekende saldi toe aan rekeningen
+    result = []
+    for rekening in rekeningen:
+        code = rekening.get("code")
+        rekening_type = rekening.get("type", "")
+        
+        bedragen = saldi.get(code, {"debet": 0, "credit": 0})
+        
+        # Bij activa en kosten: saldo = debet - credit
+        # Bij passiva en opbrengsten: saldo = credit - debet
+        if rekening_type in ["activa", "kosten"]:
+            berekend_saldo = bedragen["debet"] - bedragen["credit"]
+        else:
+            berekend_saldo = bedragen["credit"] - bedragen["debet"]
+        
+        rekening["saldo"] = berekend_saldo
+        rekening["totaal_debet"] = bedragen["debet"]
+        rekening["totaal_credit"] = bedragen["credit"]
+        result.append(clean_doc(rekening))
+    
+    return result
+
+
 
 # ==================== JOURNAALPOSTEN ====================
 

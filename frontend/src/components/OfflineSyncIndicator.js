@@ -1,10 +1,10 @@
 /**
  * Offline Sync Indicator
- * Shows sync status and pending items
+ * Shows sync status and pending items - ONLY shows pending count, not offline status
  */
 
 import React, { useState, useEffect } from 'react';
-import { Cloud, CloudOff, RefreshCw, Check, AlertCircle } from 'lucide-react';
+import { RefreshCw, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { processSyncQueue, getPendingSyncItems } from '../lib/offlineDatabase';
 
@@ -12,7 +12,6 @@ export default function OfflineSyncIndicator() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isSyncing, setIsSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
-  const [lastSyncResult, setLastSyncResult] = useState(null);
 
   // Check pending items
   useEffect(() => {
@@ -22,7 +21,7 @@ export default function OfflineSyncIndicator() {
         const unsynced = items.filter(i => !i.synced);
         setPendingCount(unsynced.length);
       } catch (e) {
-        console.error('Error checking pending items:', e);
+        // Ignore errors
       }
     };
     
@@ -31,7 +30,7 @@ export default function OfflineSyncIndicator() {
     return () => clearInterval(interval);
   }, []);
 
-  // Online/offline detection
+  // Online/offline detection and auto-sync
   useEffect(() => {
     const handleOnline = async () => {
       setIsOnline(true);
@@ -43,11 +42,9 @@ export default function OfflineSyncIndicator() {
         
         try {
           const result = await processSyncQueue();
-          setLastSyncResult(result);
           
           if (result.synced > 0) {
             toast.success(`${result.synced} items gesynchroniseerd!`);
-            // Refresh pending count
             const items = await getPendingSyncItems();
             setPendingCount(items.filter(i => !i.synced).length);
           }
@@ -64,7 +61,6 @@ export default function OfflineSyncIndicator() {
     
     const handleOffline = () => {
       setIsOnline(false);
-      toast.warning('Je bent offline. Wijzigingen worden lokaal opgeslagen.');
     };
     
     window.addEventListener('online', handleOnline);
@@ -83,7 +79,6 @@ export default function OfflineSyncIndicator() {
     setIsSyncing(true);
     try {
       const result = await processSyncQueue();
-      setLastSyncResult(result);
       
       if (result.synced > 0) {
         toast.success(`${result.synced} items gesynchroniseerd!`);
@@ -115,30 +110,8 @@ export default function OfflineSyncIndicator() {
     );
   }
 
-  // Offline with pending items
-  if (!isOnline && pendingCount > 0) {
-    return (
-      <div className="fixed top-4 right-4 z-50 bg-amber-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-        <CloudOff className="w-4 h-4" />
-        <span className="text-sm font-medium">
-          Offline - {pendingCount} wachtend
-        </span>
-      </div>
-    );
-  }
-
-  // Offline without pending
-  if (!isOnline) {
-    return (
-      <div className="fixed top-4 right-4 z-50 bg-gray-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-        <CloudOff className="w-4 h-4" />
-        <span className="text-sm font-medium">Offline</span>
-      </div>
-    );
-  }
-
-  // Online with pending items
-  if (pendingCount > 0) {
+  // Online with pending items - show sync button
+  if (isOnline && pendingCount > 0) {
     return (
       <button 
         onClick={handleManualSync}
@@ -150,6 +123,6 @@ export default function OfflineSyncIndicator() {
     );
   }
 
-  // Online, all synced
+  // Don't show anything else - BoekhoudingOfflineManager handles offline status
   return null;
 }

@@ -36,7 +36,8 @@ import {
   Filter,
   MoreHorizontal,
   Printer,
-  Mail
+  Mail,
+  Calculator
 } from 'lucide-react';
 
 // Format currency
@@ -135,7 +136,7 @@ const GrootboekPage = () => {
   const fetchData = async () => {
     try {
       const [accountsRes, journalRes] = await Promise.all([
-        accountsAPI.getAll(),
+        accountsAPI.getAllMetSaldi(),  // Gebruik endpoint met berekende saldi
         journalAPI.getAll()
       ]);
       setAccounts(accountsRes.data || []);
@@ -143,6 +144,21 @@ const GrootboekPage = () => {
     } catch (error) {
       toast.error('Fout bij laden gegevens');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleHerberekenSaldi = async () => {
+    if (!window.confirm('Wilt u alle saldi herberekenen op basis van de journaalposten? Dit kan even duren.')) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await accountsAPI.herberekenSaldi();
+      toast.success(response.data.message || 'Saldi herberekend');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij herberekenen saldi');
       setLoading(false);
     }
   };
@@ -367,6 +383,16 @@ const GrootboekPage = () => {
                 Standaard Schema
               </Button>
             )}
+            <Button 
+              variant="outline" 
+              onClick={handleHerberekenSaldi} 
+              className="rounded-lg"
+              data-testid="herbereken-saldi-btn"
+              title="Herbereken alle saldi op basis van journaalposten"
+            >
+              <Calculator className="w-4 h-4 mr-2" />
+              Herbereken Saldi
+            </Button>
             <Button variant="outline" className="rounded-lg" data-testid="import-btn">
               <Upload className="w-4 h-4 mr-2" />
               Import
