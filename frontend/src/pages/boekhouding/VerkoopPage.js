@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { invoicesAPI, quotesAPI } from '../../lib/boekhoudingApi';
 import { formatDate, getStatusLabel } from '../../lib/utils';
@@ -9,6 +9,7 @@ import { Label } from '../../components/ui/label';
 import { Skeleton } from '../../components/ui/skeleton';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { Checkbox } from '../../components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../components/ui/dialog';
 import { toast } from 'sonner';
 import { 
   Plus, 
@@ -29,7 +30,12 @@ import {
   Receipt,
   Eye,
   Loader2,
-  Printer
+  Printer,
+  CreditCard,
+  Banknote,
+  BarChart3,
+  TrendingUp,
+  Save
 } from 'lucide-react';
 
 // Format currency
@@ -109,9 +115,15 @@ const VerkoopPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('facturen');
-  const [selectedYear, setSelectedYear] = useState('2024');
+  const [selectedYear, setSelectedYear] = useState('alle');
   const [selectedRows, setSelectedRows] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
+  
+  // Payment modal states
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState(null);
+  const [paymentForm, setPaymentForm] = useState({ bedrag: 0, datum: '', betaalmethode: 'bank', referentie: '' });
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -132,16 +144,66 @@ const VerkoopPage = () => {
     }
   };
 
-  // Simple loading state - spinner in content area
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 w-full">
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
-        </div>
-      </div>
-    );
-  }
+  // Calculate available years from invoices
+  const availableYears = useMemo(() => {
+    const years = new Set();
+    invoices.forEach(inv => {
+      const datum = inv.datum || inv.factuurdatum || '';
+      if (datum) {
+        const year = datum.substring(0, 4);
+        if (year) years.add(year);
+      }
+    });
+    const currentYear = new Date().getFullYear().toString();
+    years.add(currentYear);
+    return Array.from(years).sort((a, b) => b - a);
+  }, [invoices]);
+
+  // Filter invoices by year
+  const yearFilteredInvoices = useMemo(() => {
+    if (selectedYear === 'alle') return invoices;
+    return invoices.filter(inv => {
+      const datum = inv.datum || inv.factuurdatum || '';
+      return datum.startsWith(selectedYear);
+    });
+  }, [invoices, selectedYear]);
+
+  // Period display
+  const periodDisplay = useMemo(() => {
+    if (selectedYear === 'alle') return 'Alle jaren';
+    return `Jan - Dec ${selectedYear}`;
+  }, [selectedYear]);
+
+  // Open payment modal
+  const handleOpenPayment = (invoice) => {
+    setSelectedInvoice(invoice);
+    setPaymentForm({
+      bedrag: invoice.openstaand_bedrag || invoice.totaal_incl_btw || invoice.totaal || 0,
+      datum: new Date().toISOString().split('T')[0],
+      betaalmethode: 'bank',
+      referentie: ''
+    });
+    setPaymentModalOpen(true);
+  };
+
+  // Process payment
+  const handleProcessPayment = async () => {
+    if (!paymentForm.bedrag || paymentForm.bedrag <= 0) {
+      toast.error('Vul een geldig bedrag in');
+      return;
+    }
+    setSaving(true);
+    try {
+      await invoicesAPI.addPayment(selectedInvoice.id, paymentForm);
+      toast.success('Betaling verwerkt en geboekt naar grootboek');
+      setPaymentModalOpen(false);
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwerken betaling');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Toggle row selection
   const toggleRowSelection = (id) => {
@@ -161,23 +223,38 @@ const VerkoopPage = () => {
   };
 
   // Filter invoices
-  const filteredInvoices = invoices.filter(inv => {
-    const matchesSearch = 
-      (inv.nummer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (inv.debiteur_naam || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredInvoices = useMemo(() => {
+    return yearFilteredInvoices.filter(inv => {
+      const matchesSearch = 
+        (inv.nummer || inv.factuurnummer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (inv.debiteur_naam || '').toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [yearFilteredInvoices, searchTerm, statusFilter]);
 
   // Filter quotes
-  const filteredQuotes = quotes.filter(quote =>
-    (quote.nummer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (quote.klant_naam || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredQuotes = useMemo(() => {
+    return quotes.filter(quote =>
+      (quote.nummer || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (quote.klant_naam || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [quotes, searchTerm]);
 
-  // Calculate totals
-  const totaalOmzet = invoices.filter(i => i.status === 'betaald').reduce((sum, i) => sum + (i.totaal || 0), 0);
-  const totaalOpenstaand = invoices.filter(i => i.status !== 'betaald').reduce((sum, i) => sum + (i.totaal || 0), 0);
+  // Calculate totals from year-filtered invoices
+  const totaalOmzet = yearFilteredInvoices.filter(i => i.status === 'betaald').reduce((sum, i) => sum + (i.totaal_incl_btw || i.totaal || 0), 0);
+  const totaalOpenstaand = yearFilteredInvoices.filter(i => i.status !== 'betaald' && i.status !== 'concept').reduce((sum, i) => sum + (i.totaal_incl_btw || i.totaal || 0), 0);
+
+  // Simple loading state - spinner in content area
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 w-full">
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+        </div>
+      </div>
+    );
+  }
   const aantalFacturen = invoices.length;
   const aantalOffertes = quotes.length;
 
@@ -249,12 +326,13 @@ const VerkoopPage = () => {
             <Label className="text-sm text-gray-600">Boekjaar</Label>
             <Select value={selectedYear} onValueChange={setSelectedYear}>
               <SelectTrigger className="rounded-lg">
-                <SelectValue />
+                <SelectValue placeholder="Selecteer jaar" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2023">2023</SelectItem>
-                <SelectItem value="2022">2022</SelectItem>
+                <SelectItem value="alle">Alle jaren</SelectItem>
+                {availableYears.map(year => (
+                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -276,21 +354,10 @@ const VerkoopPage = () => {
             </Select>
           </div>
           
-          {/* Verantwoordelijke */}
-          <div className="space-y-1">
-            <Label className="text-sm text-gray-600 flex items-center gap-2">
-              <User className="w-4 h-4" />
-              Verantwoordelijke
-            </Label>
-            <Select defaultValue="all">
-              <SelectTrigger className="rounded-lg">
-                <SelectValue placeholder="Alle" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Alle</SelectItem>
-                <SelectItem value="me">Alleen mij</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Periode display */}
+          <div className="text-right">
+            <span className="text-sm text-gray-500">Periode</span>
+            <p className="text-sm font-medium text-gray-700">{periodDisplay}</p>
           </div>
 
           {/* Totaal info */}
@@ -477,16 +544,35 @@ const VerkoopPage = () => {
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <button className="text-gray-500 hover:text-gray-700">
+                            <div className="flex items-center gap-1">
+                              <button 
+                                className="text-gray-500 hover:text-gray-700 p-1"
+                                onClick={() => navigate(`/app/boekhouding/verkoop/${invoice.id}`)}
+                                title="Bekijken"
+                              >
                                 <Eye className="w-4 h-4" />
                               </button>
-                              <button className="text-gray-500 hover:text-gray-700">
+                              <button 
+                                className="text-gray-500 hover:text-gray-700 p-1"
+                                title="E-mail"
+                              >
                                 <Mail className="w-4 h-4" />
                               </button>
-                              <button className="text-gray-500 hover:text-gray-700">
+                              <button 
+                                className="text-gray-500 hover:text-gray-700 p-1"
+                                title="Printen"
+                              >
                                 <Printer className="w-4 h-4" />
                               </button>
+                              {invoice.status !== 'betaald' && invoice.status !== 'concept' && (
+                                <button 
+                                  className="text-emerald-600 hover:text-emerald-700 p-1"
+                                  onClick={() => handleOpenPayment(invoice)}
+                                  title="Betaling registreren"
+                                >
+                                  <Banknote className="w-4 h-4" />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -625,16 +711,116 @@ const VerkoopPage = () => {
               </div>
             )}
 
-            {/* Placeholder for other tabs */}
-            {(activeTab === 'orders' || activeTab === 'creditnota' || activeTab === 'rapporten') && (
-              <div className="px-4 py-16 text-center">
-                <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-200" />
-                <p className="text-lg font-semibold text-gray-700 mb-2">
-                  {activeTab === 'orders' && 'Verkooporders'}
-                  {activeTab === 'creditnota' && "Creditnota's"}
-                  {activeTab === 'rapporten' && 'Verkooprapporten'}
-                </p>
-                <p className="text-sm text-gray-500">Deze sectie wordt binnenkort beschikbaar.</p>
+            {/* Verkooporders Tab */}
+            {activeTab === 'orders' && (
+              <div className="p-6">
+                <div className="text-center py-8">
+                  <ShoppingCart className="w-16 h-16 mx-auto mb-4 text-gray-200" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Verkooporders</h3>
+                  <p className="text-gray-500 mb-6">Verkooporders worden automatisch aangemaakt wanneer een offerte wordt geaccepteerd.</p>
+                  <Button onClick={() => setActiveTab('offertes')} variant="outline">
+                    Ga naar Offertes
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Creditnota's Tab */}
+            {activeTab === 'creditnota' && (
+              <div className="p-6">
+                <div className="mb-4 flex justify-between items-center">
+                  <h3 className="text-lg font-semibold text-gray-800">Creditnota's</h3>
+                  <Button onClick={() => navigate('/app/boekhouding/verkoop/creditnota')} className="bg-emerald-600 hover:bg-emerald-700">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Nieuwe Creditnota
+                  </Button>
+                </div>
+                <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-blue-800">
+                    <strong>Grootboek Koppeling:</strong> Creditnota's worden omgekeerd geboekt t.o.v. facturen:
+                  </p>
+                  <ul className="text-sm text-blue-700 mt-2 space-y-1">
+                    <li>• <strong>Omzet (4000):</strong> Debet (omzet verminderd)</li>
+                    <li>• <strong>Debiteuren (1300):</strong> Credit (vordering verminderd)</li>
+                    <li>• <strong>BTW (2350):</strong> Debet (BTW schuld verminderd)</li>
+                  </ul>
+                </div>
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>Nog geen creditnota's aangemaakt</p>
+                </div>
+              </div>
+            )}
+
+            {/* Rapporten Tab */}
+            {activeTab === 'rapporten' && (
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-6 flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5" />
+                  Verkooprapporten
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <Card className="border rounded-lg">
+                    <CardContent className="p-4">
+                      <h4 className="font-medium text-gray-800 mb-3 flex items-center gap-2">
+                        <TrendingUp className="w-4 h-4 text-emerald-600" />
+                        Omzet Overzicht ({selectedYear === 'alle' ? 'Alle jaren' : selectedYear})
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Totaal Gefactureerd:</span>
+                          <span className="font-medium">{formatCurrency(yearFilteredInvoices.reduce((sum, i) => sum + (i.totaal_incl_btw || i.totaal || 0), 0))}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Totaal Betaald:</span>
+                          <span className="font-medium text-emerald-600">{formatCurrency(totaalOmzet)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Totaal Openstaand:</span>
+                          <span className="font-medium text-amber-600">{formatCurrency(totaalOpenstaand)}</span>
+                        </div>
+                        <hr />
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Aantal Facturen:</span>
+                          <span className="font-medium">{yearFilteredInvoices.length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Betaald:</span>
+                          <span className="font-medium text-emerald-600">{yearFilteredInvoices.filter(i => i.status === 'betaald').length}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Openstaand:</span>
+                          <span className="font-medium text-amber-600">{yearFilteredInvoices.filter(i => i.status !== 'betaald' && i.status !== 'concept').length}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border rounded-lg">
+                    <CardContent className="p-4">
+                      <h4 className="font-medium text-gray-800 mb-3">Grootboek Koppeling</h4>
+                      <div className="bg-blue-50 rounded-lg p-3 text-sm">
+                        <p className="text-blue-800 mb-2"><strong>Verkoopfacturen boeken naar:</strong></p>
+                        <ul className="text-blue-700 space-y-1">
+                          <li>• <strong>Debiteuren (1300):</strong> Debet (vordering)</li>
+                          <li>• <strong>Omzet (4000):</strong> Credit (opbrengst)</li>
+                          <li>• <strong>BTW (2350):</strong> Credit (BTW schuld)</li>
+                        </ul>
+                        <p className="text-blue-800 mt-3 mb-2"><strong>Betalingen boeken naar:</strong></p>
+                        <ul className="text-blue-700 space-y-1">
+                          <li>• <strong>Bank (1500):</strong> Debet (geld ontvangen)</li>
+                          <li>• <strong>Debiteuren (1300):</strong> Credit (vordering verminderd)</li>
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <Button variant="outline" onClick={() => navigate('/app/boekhouding/grootboek')}>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Bekijk Grootboek
+                </Button>
               </div>
             )}
 
@@ -659,6 +845,78 @@ const VerkoopPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Payment Modal */}
+      <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Betaling Registreren</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <p className="text-sm text-gray-600">Factuur: <strong>{selectedInvoice?.nummer || selectedInvoice?.factuurnummer}</strong></p>
+              <p className="text-sm text-gray-600">Klant: <strong>{selectedInvoice?.debiteur_naam || 'Onbekend'}</strong></p>
+              <p className="text-sm text-gray-600">Openstaand: <strong className="text-amber-600">{formatCurrency(selectedInvoice?.openstaand_bedrag || selectedInvoice?.totaal_incl_btw || selectedInvoice?.totaal)}</strong></p>
+            </div>
+            
+            <div>
+              <Label>Bedrag *</Label>
+              <Input 
+                type="number"
+                step="0.01"
+                value={paymentForm.bedrag} 
+                onChange={(e) => setPaymentForm({...paymentForm, bedrag: parseFloat(e.target.value) || 0})}
+              />
+            </div>
+            <div>
+              <Label>Datum *</Label>
+              <Input 
+                type="date"
+                value={paymentForm.datum} 
+                onChange={(e) => setPaymentForm({...paymentForm, datum: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label>Betaalmethode</Label>
+              <Select value={paymentForm.betaalmethode} onValueChange={(v) => setPaymentForm({...paymentForm, betaalmethode: v})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bank">Bankoverschrijving</SelectItem>
+                  <SelectItem value="kas">Contant</SelectItem>
+                  <SelectItem value="pin">PIN</SelectItem>
+                  <SelectItem value="creditcard">Creditcard</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Referentie / Omschrijving</Label>
+              <Input 
+                value={paymentForm.referentie} 
+                onChange={(e) => setPaymentForm({...paymentForm, referentie: e.target.value})}
+                placeholder="Bijv. bankreferentie"
+              />
+            </div>
+            
+            <div className="bg-blue-50 rounded-lg p-3 text-sm">
+              <p className="text-blue-800 font-medium">Grootboek boeking:</p>
+              <p className="text-blue-600">• Bank (1500): Debet {formatCurrency(paymentForm.bedrag)}</p>
+              <p className="text-blue-600">• Debiteuren (1300): Credit {formatCurrency(paymentForm.bedrag)}</p>
+            </div>
+            
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => setPaymentModalOpen(false)}>
+                Annuleren
+              </Button>
+              <Button onClick={handleProcessPayment} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+                {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+                Betaling Verwerken
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
