@@ -37,8 +37,145 @@ import {
   MoreHorizontal,
   Printer,
   Mail,
-  Calculator
+  Calculator,
+  HelpCircle,
+  Info
 } from 'lucide-react';
+
+// Standard account mappings - which codes link to which modules
+const STANDAARD_KOPPELINGEN = [
+  { code: '1300', naam: 'Debiteuren', module: 'Verkoop', omschrijving: 'Openstaande vorderingen van klanten' },
+  { code: '1400', naam: 'Kas SRD', module: 'Bank & Kas', omschrijving: 'Contante betalingen in SRD' },
+  { code: '1410', naam: 'Kas USD', module: 'Bank & Kas', omschrijving: 'Contante betalingen in USD' },
+  { code: '1500', naam: 'Bank DSB SRD', module: 'Bank & Kas', omschrijving: 'Bankrekening voor betalingen' },
+  { code: '2300', naam: 'Crediteuren', module: 'Inkoop', omschrijving: 'Openstaande schulden aan leveranciers' },
+  { code: '2350', naam: 'BTW te betalen', module: 'BTW', omschrijving: 'Verschuldigde BTW over verkopen' },
+  { code: '1350', naam: 'BTW te vorderen', module: 'BTW', omschrijving: 'Te verrekenen BTW over inkopen' },
+  { code: '4000', naam: 'Omzet binnenland', module: 'Verkoop', omschrijving: 'Verkoopopbrengsten binnenland' },
+  { code: '5000', naam: 'Inkoopwaarde omzet', module: 'Inkoop', omschrijving: 'Kosten van ingekochte goederen' },
+  { code: '6000', naam: 'Salarissen', module: 'HRM/Personeel', omschrijving: 'Bruto salarissen personeel' },
+  { code: '2360', naam: 'Loonheffing te betalen', module: 'HRM/Personeel', omschrijving: 'Ingehouden loonbelasting' },
+  { code: '2380', naam: 'AOV te betalen', module: 'HRM/Personeel', omschrijving: 'Af te dragen AOV premie' },
+  { code: '1200', naam: 'Voorraad goederen', module: 'Voorraad', omschrijving: 'Waarde van voorraad' },
+  { code: '8400', naam: 'Afschrijvingskosten', module: 'Vaste Activa', omschrijving: 'Jaarlijkse afschrijvingen' },
+];
+
+// Koppelingen Help Modal Component
+const KoppelingenHelpModal = ({ open, onOpenChange }) => (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2 text-xl">
+          <Link2 className="w-5 h-5 text-emerald-600" />
+          Grootboekrekeningen Koppelen
+        </DialogTitle>
+      </DialogHeader>
+      
+      <div className="space-y-6 py-4">
+        {/* Uitleg */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="font-semibold text-blue-800 flex items-center gap-2 mb-2">
+            <Info className="w-4 h-4" />
+            Hoe werkt het koppelen?
+          </h3>
+          <p className="text-sm text-blue-700">
+            Elke module in de boekhouding (Verkoop, Inkoop, HRM, etc.) gebruikt specifieke grootboekrekeningen 
+            om transacties te boeken. Als u eigen rekeningcodes gebruikt, moet u deze koppelen aan de juiste 
+            functies zodat het systeem weet waar boekingen naar toe moeten.
+          </p>
+        </div>
+
+        {/* Standaard koppelingen tabel */}
+        <div>
+          <h3 className="font-semibold mb-3">Standaard Rekeningkoppelingen</h3>
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600">Code</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600">Rekening</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600">Module</th>
+                  <th className="px-4 py-3 text-left font-medium text-gray-600">Omschrijving</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {STANDAARD_KOPPELINGEN.map((koppeling, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-4 py-2 font-mono text-emerald-600 font-semibold">{koppeling.code}</td>
+                    <td className="px-4 py-2 font-medium">{koppeling.naam}</td>
+                    <td className="px-4 py-2">
+                      <Badge variant="outline" className="text-xs">{koppeling.module}</Badge>
+                    </td>
+                    <td className="px-4 py-2 text-gray-600">{koppeling.omschrijving}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Eigen codes koppelen */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+          <h3 className="font-semibold text-amber-800 mb-2">Eigen codes koppelen</h3>
+          <p className="text-sm text-amber-700 mb-3">
+            Gebruikt u een andere code voor bijvoorbeeld Debiteuren? Zo koppelt u deze:
+          </p>
+          <ol className="list-decimal list-inside text-sm text-amber-700 space-y-2">
+            <li>Zoek de rekening in de lijst hieronder</li>
+            <li>Klik op het <Edit className="w-3 h-3 inline" /> icoon om te bewerken</li>
+            <li>Vul bij <strong>"Externe Code"</strong> de standaardcode in (bijv. "1300" voor Debiteuren)</li>
+            <li>Nu weet het systeem dat uw eigen code dezelfde functie heeft</li>
+          </ol>
+        </div>
+
+        {/* Module overzicht */}
+        <div>
+          <h3 className="font-semibold mb-3">Welke rekeningen gebruikt elke module?</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-emerald-700 mb-2">📦 Verkoop</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li><span className="font-mono">1300</span> - Debiteuren (klant schuld)</li>
+                <li><span className="font-mono">4000</span> - Omzet (opbrengst)</li>
+                <li><span className="font-mono">2350</span> - BTW te betalen</li>
+              </ul>
+            </div>
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-orange-700 mb-2">🛒 Inkoop</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li><span className="font-mono">2300</span> - Crediteuren (schuld aan leverancier)</li>
+                <li><span className="font-mono">5000</span> - Inkoopwaarde (kosten)</li>
+                <li><span className="font-mono">1350</span> - BTW te vorderen</li>
+              </ul>
+            </div>
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-blue-700 mb-2">👥 HRM/Personeel</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li><span className="font-mono">6000</span> - Salarissen (kosten)</li>
+                <li><span className="font-mono">2360</span> - Loonheffing te betalen</li>
+                <li><span className="font-mono">2380</span> - AOV te betalen</li>
+                <li><span className="font-mono">1500</span> - Bank (uitbetaling)</li>
+              </ul>
+            </div>
+            <div className="border rounded-lg p-4">
+              <h4 className="font-medium text-purple-700 mb-2">🏦 Bank & Kas</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li><span className="font-mono">1400</span> - Kas SRD</li>
+                <li><span className="font-mono">1410</span> - Kas USD</li>
+                <li><span className="font-mono">1500</span> - Bank DSB SRD</li>
+                <li><span className="font-mono">1510</span> - Bank DSB USD</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <DialogFooter>
+        <Button onClick={() => onOpenChange(false)}>Sluiten</Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+);
 
 // Format currency
 const formatCurrency = (amount, currency = 'SRD') => {
@@ -100,6 +237,7 @@ const GrootboekPage = () => {
   const [showJournalDialog, setShowJournalDialog] = useState(false);
   const [showExterneCodeDialog, setShowExterneCodeDialog] = useState(false);
   const [showBulkCodeDialog, setShowBulkCodeDialog] = useState(false);
+  const [showKoppelingenHelp, setShowKoppelingenHelp] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [externeCode, setExterneCode] = useState('');
   const [bulkCodePrefix, setBulkCodePrefix] = useState('');
@@ -383,6 +521,16 @@ const GrootboekPage = () => {
                 Standaard Schema
               </Button>
             )}
+            <Button 
+              variant="outline" 
+              onClick={() => setShowKoppelingenHelp(true)} 
+              className="rounded-lg bg-blue-50 hover:bg-blue-100 border-blue-200"
+              data-testid="help-koppelingen-btn"
+              title="Hulp bij koppelen van rekeningen"
+            >
+              <HelpCircle className="w-4 h-4 mr-2 text-blue-600" />
+              <span className="text-blue-700">Koppelingen Uitleg</span>
+            </Button>
             <Button 
               variant="outline" 
               onClick={handleHerberekenSaldi} 
@@ -1011,6 +1159,12 @@ const GrootboekPage = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Koppelingen Help Modal */}
+      <KoppelingenHelpModal 
+        open={showKoppelingenHelp} 
+        onOpenChange={setShowKoppelingenHelp} 
+      />
     </div>
   );
 };
