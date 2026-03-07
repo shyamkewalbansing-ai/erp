@@ -1515,10 +1515,37 @@ async def zoek_rekening_op_externe_code(externe_code: str, authorization: str = 
 async def herbereken_alle_saldi(authorization: str = Header(None)):
     """
     Herbereken alle grootboekrekening saldi op basis van geboekte journaalposten.
-    Gebruik dit als de saldi niet kloppen.
+    Repareert ook oude journaalposten met verkeerde structuur.
     """
     user = await get_current_user(authorization)
     user_id = user.get('id')
+    
+    # Eerst: repareer oude journaalposten met verkeerde structuur
+    # (grootboek_code -> rekening_code)
+    await db.boekhouding_journaalposten.update_many(
+        {"user_id": user_id, "regels.grootboek_code": {"$exists": True}},
+        [{"$set": {
+            "regels": {
+                "$map": {
+                    "input": "$regels",
+                    "as": "regel",
+                    "in": {
+                        "$mergeObjects": [
+                            "$$regel",
+                            {"rekening_code": {"$ifNull": ["$$regel.rekening_code", "$$regel.grootboek_code"]}}
+                        ]
+                    }
+                }
+            },
+            "status": {"$ifNull": ["$status", "geboekt"]}
+        }}]
+    )
+    
+    # Zet status op "geboekt" voor alle journaalposten zonder status
+    await db.boekhouding_journaalposten.update_many(
+        {"user_id": user_id, "status": {"$exists": False}},
+        {"$set": {"status": "geboekt"}}
+    )
     
     # Reset alle saldi naar 0
     await db.boekhouding_rekeningen.update_many(
@@ -1536,7 +1563,8 @@ async def herbereken_alle_saldi(authorization: str = Header(None)):
     saldi = {}
     for post in journaalposten:
         for regel in post.get("regels", []):
-            code = regel.get("rekening_code")
+            # Ondersteun zowel rekening_code als grootboek_code
+            code = regel.get("rekening_code") or regel.get("grootboek_code")
             if not code:
                 continue
             
@@ -1560,7 +1588,7 @@ async def herbereken_alle_saldi(authorization: str = Header(None)):
         
         # Bij activa en kosten: saldo = debet - credit
         # Bij passiva en opbrengsten: saldo = credit - debet
-        if rekening_type in ["activa", "kosten"]:
+        if rekening_type.lower() in ["activa", "kosten"]:
             saldo = bedragen["debet"] - bedragen["credit"]
         else:
             saldo = bedragen["credit"] - bedragen["debet"]
@@ -1594,17 +1622,21 @@ async def get_rekeningen_met_berekende_saldi(type: str = None, authorization: st
     
     rekeningen = await db.boekhouding_rekeningen.find(query).sort("code", 1).to_list(500)
     
-    # Haal alle geboekte journaalposten op
+    # Haal alle geboekte journaalposten op (inclusief die zonder status)
     journaalposten = await db.boekhouding_journaalposten.find({
         "user_id": user_id,
-        "status": "geboekt"
+        "$or": [
+            {"status": "geboekt"},
+            {"status": {"$exists": False}}  # Oude entries zonder status
+        ]
     }).to_list(10000)
     
     # Bereken saldi per rekening
     saldi = {}
     for post in journaalposten:
         for regel in post.get("regels", []):
-            code = regel.get("rekening_code")
+            # Ondersteun zowel rekening_code als grootboek_code
+            code = regel.get("rekening_code") or regel.get("grootboek_code")
             if not code:
                 continue
             
@@ -1627,7 +1659,7 @@ async def get_rekeningen_met_berekende_saldi(type: str = None, authorization: st
         
         # Bij activa en kosten: saldo = debet - credit
         # Bij passiva en opbrengsten: saldo = credit - debet
-        if rekening_type in ["activa", "kosten"]:
+        if rekening_type.lower() in ["activa", "kosten"]:
             berekend_saldo = bedragen["debet"] - bedragen["credit"]
         else:
             berekend_saldo = bedragen["credit"] - bedragen["debet"]

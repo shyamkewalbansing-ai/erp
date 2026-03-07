@@ -1002,56 +1002,54 @@ async def process_payroll_payment(
         employee_name = payroll.get("employee_name", "Onbekend")
         period = payroll.get("period", "")
         
-        # Journal entry lines
+        # Journal entry lines - correct grootboek codes matching the standard chart
         journal_lines = [
             {
-                "grootboek_code": "4100",
-                "grootboek_naam": "Salariskosten",
+                "rekening_code": "6000",  # Salarissen
                 "omschrijving": f"Salaris {employee_name} - {period}",
                 "debet": gross_salary,
                 "credit": 0
             },
             {
-                "grootboek_code": "2100",
-                "grootboek_naam": "Te betalen loonbelasting",
+                "rekening_code": "2360",  # Loonheffing te betalen
                 "omschrijving": f"Loonbelasting {employee_name} - {period}",
                 "debet": 0,
                 "credit": income_tax
             },
             {
-                "grootboek_code": "2110",
-                "grootboek_naam": "Te betalen AOV",
+                "rekening_code": "2380",  # AOV te betalen
                 "omschrijving": f"AOV-premie {employee_name} - {period}",
                 "debet": 0,
                 "credit": aov
             },
             {
-                "grootboek_code": "1100",
-                "grootboek_naam": "Bank",
+                "rekening_code": "1500",  # Bank DSB SRD
                 "omschrijving": f"Netto salaris {employee_name} - {period}",
                 "debet": 0,
                 "credit": net_salary
             }
         ]
         
-        # Create the journal entry
+        # Create the journal entry with correct structure
         journal_entry = {
-            "type": "salaris",
+            "id": str(uuid.uuid4()),
+            "user_id": current_user.get("id"),
+            "workspace_id": current_user.get("workspace_id"),
+            "dagboek_code": "SAL",  # Salaris dagboek
+            "volgnummer": f"SAL{datetime.now().year}-{payroll_id[-6:].upper()}",
             "datum": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-            "boekstuk_nummer": f"SAL-{payroll_id[-6:].upper()}",
             "omschrijving": f"Salarisbetaling {employee_name} - {period}",
             "regels": journal_lines,
             "totaal_debet": gross_salary,
             "totaal_credit": gross_salary,
+            "status": "geboekt",  # Important for saldo calculation
             "payroll_id": payroll_id,
             "employee_id": payroll.get("employee_id"),
-            "workspace_id": current_user.get("workspace_id"),
-            "user_id": current_user.get("id"),
+            "auto_generated": True,
             "created_at": datetime.now(timezone.utc).isoformat()
         }
         
-        result = await db.boekhouding_journaalposten.insert_one(journal_entry)
-        journal_entry["id"] = str(result.inserted_id)
+        await db.boekhouding_journaalposten.insert_one(journal_entry)
         
         # Update payroll with journal reference
         await db.hrm_payroll.update_one(
