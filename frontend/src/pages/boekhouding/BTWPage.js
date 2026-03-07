@@ -123,8 +123,8 @@ const BTWPage = () => {
   const [activeTab, setActiveTab] = useState('overzicht');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [selectedYear, setSelectedYear] = useState('2024');
-  const [selectedQuarter, setSelectedQuarter] = useState('Q4');
+  const [selectedYear, setSelectedYear] = useState('alle');
+  const [selectedQuarter, setSelectedQuarter] = useState('all');
   const [selectedRows, setSelectedRows] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -132,13 +132,9 @@ const BTWPage = () => {
     code: '', naam: '', percentage: 0, type: 'both'
   });
 
-  // Periode data voor de tabel
-  const [periodes, setPeriodes] = useState([
-    { id: '2024-Q4', periode: 'Q4 2024', maanden: 'Okt - Dec', status: 'concept', verkoop_btw: 45000, inkoop_btw: 32000, saldo: 13000, deadline: '2025-01-31' },
-    { id: '2024-Q3', periode: 'Q3 2024', maanden: 'Jul - Sep', status: 'ingediend', verkoop_btw: 52000, inkoop_btw: 38000, saldo: 14000, deadline: '2024-10-31' },
-    { id: '2024-Q2', periode: 'Q2 2024', maanden: 'Apr - Jun', status: 'ingediend', verkoop_btw: 48000, inkoop_btw: 35000, saldo: 13000, deadline: '2024-07-31' },
-    { id: '2024-Q1', periode: 'Q1 2024', maanden: 'Jan - Mar', status: 'ingediend', verkoop_btw: 41000, inkoop_btw: 29000, saldo: 12000, deadline: '2024-04-30' },
-  ]);
+  // Periode data wordt dynamisch berekend uit de echte factuurdata
+  const [periodes, setPeriodes] = useState([]);
+  const [facturen, setFacturen] = useState({ verkoop: [], inkoop: [] });
 
   useEffect(() => {
     fetchData();
@@ -147,17 +143,133 @@ const BTWPage = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [codesRes, reportRes] = await Promise.all([
+      const [codesRes, reportRes, verkoopRes, inkoopRes] = await Promise.all([
         btwAPI.getAll(),
-        reportsAPI.btw()
+        reportsAPI.btw(),
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/verkoopfacturen`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        }).then(r => r.json()),
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/inkoopfacturen`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        }).then(r => r.json())
       ]);
       setBtwCodes(codesRes.data || []);
       setBtwReport(reportRes.data || {});
+      
+      const verkoopFacturen = Array.isArray(verkoopRes) ? verkoopRes : [];
+      const inkoopFacturen = Array.isArray(inkoopRes) ? inkoopRes : [];
+      setFacturen({ verkoop: verkoopFacturen, inkoop: inkoopFacturen });
+      
+      // Bereken periodes uit echte factuurdata
+      const periodesMap = {};
+      const currentYear = new Date().getFullYear();
+      
+      // Verwerk verkoopfacturen
+      verkoopFacturen.forEach(f => {
+        if (f.status === 'concept') return; // Skip concept facturen
+        const datum = new Date(f.datum || f.factuurdatum);
+        const year = datum.getFullYear();
+        const quarter = Math.ceil((datum.getMonth() + 1) / 3);
+        const key = `${year}-Q${quarter}`;
+        
+        if (!periodesMap[key]) {
+          periodesMap[key] = {
+            id: key,
+            periode: `Q${quarter} ${year}`,
+            maanden: getQuarterMonths(quarter),
+            status: 'concept',
+            verkoop_btw: 0,
+            inkoop_btw: 0,
+            verkoop_excl: 0,
+            inkoop_excl: 0,
+            saldo: 0,
+            deadline: getQuarterDeadline(year, quarter),
+            year,
+            quarter
+          };
+        }
+        
+        // BTW bedrag uit factuur
+        const btwBedrag = f.btw_bedrag || (f.totaal_incl_btw - f.totaal_excl_btw) || 0;
+        periodesMap[key].verkoop_btw += btwBedrag;
+        periodesMap[key].verkoop_excl += f.totaal_excl_btw || f.subtotaal || 0;
+      });
+      
+      // Verwerk inkoopfacturen
+      inkoopFacturen.forEach(f => {
+        if (f.status === 'concept') return;
+        const datum = new Date(f.datum || f.factuurdatum);
+        const year = datum.getFullYear();
+        const quarter = Math.ceil((datum.getMonth() + 1) / 3);
+        const key = `${year}-Q${quarter}`;
+        
+        if (!periodesMap[key]) {
+          periodesMap[key] = {
+            id: key,
+            periode: `Q${quarter} ${year}`,
+            maanden: getQuarterMonths(quarter),
+            status: 'concept',
+            verkoop_btw: 0,
+            inkoop_btw: 0,
+            verkoop_excl: 0,
+            inkoop_excl: 0,
+            saldo: 0,
+            deadline: getQuarterDeadline(year, quarter),
+            year,
+            quarter
+          };
+        }
+        
+        const btwBedrag = f.btw_bedrag || (f.totaal_incl_btw - f.totaal_excl_btw) || 0;
+        periodesMap[key].inkoop_btw += btwBedrag;
+        periodesMap[key].inkoop_excl += f.totaal_excl_btw || f.subtotaal || 0;
+      });
+      
+      // Bereken saldo en sorteer periodes
+      const sortedPeriodes = Object.values(periodesMap)
+        .map(p => ({
+          ...p,
+          saldo: p.verkoop_btw - p.inkoop_btw
+        }))
+        .sort((a, b) => {
+          if (a.year !== b.year) return b.year - a.year;
+          return b.quarter - a.quarter;
+        });
+      
+      setPeriodes(sortedPeriodes);
+      
+      // Update selectedYear naar het meest recente jaar met data
+      if (sortedPeriodes.length > 0) {
+        setSelectedYear(sortedPeriodes[0].year.toString());
+      }
+      
     } catch (error) {
+      console.error('BTW fetch error:', error);
       toast.error('Fout bij laden BTW gegevens');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper functions
+  const getQuarterMonths = (quarter) => {
+    const months = {
+      1: 'Jan - Mar',
+      2: 'Apr - Jun',
+      3: 'Jul - Sep',
+      4: 'Okt - Dec'
+    };
+    return months[quarter] || '';
+  };
+
+  const getQuarterDeadline = (year, quarter) => {
+    const deadlines = {
+      1: `${year}-04-30`,
+      2: `${year}-07-31`,
+      3: `${year}-10-31`,
+      4: `${year + 1}-01-31`
+    };
+    return deadlines[quarter] || '';
   };
 
   // Simple loading state - just spinner
@@ -199,10 +311,10 @@ const BTWPage = () => {
 
   // Toggle all rows
   const toggleAllRows = () => {
-    if (selectedRows.length === periodes.length) {
+    if (selectedRows.length === filteredPeriodes.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(periodes.map(p => p.id));
+      setSelectedRows(filteredPeriodes.map(p => p.id));
     }
   };
 
@@ -212,10 +324,18 @@ const BTWPage = () => {
     (code.naam || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Calculate totals from report
-  const totaalVerkoop = btwReport?.verkoop_btw || periodes.reduce((sum, p) => sum + p.verkoop_btw, 0);
-  const totaalInkoop = btwReport?.inkoop_btw || periodes.reduce((sum, p) => sum + p.inkoop_btw, 0);
+  // Filter periodes by selected year
+  const filteredPeriodes = periodes.filter(p => 
+    selectedYear === 'alle' || p.year?.toString() === selectedYear
+  );
+
+  // Calculate totals from filtered periods
+  const totaalVerkoop = filteredPeriodes.reduce((sum, p) => sum + (p.verkoop_btw || 0), 0);
+  const totaalInkoop = filteredPeriodes.reduce((sum, p) => sum + (p.inkoop_btw || 0), 0);
   const totaalSaldo = totaalVerkoop - totaalInkoop;
+
+  // Available years from periodes
+  const availableYears = [...new Set(periodes.map(p => p.year?.toString()).filter(Boolean))].sort((a, b) => b - a);
 
   return (
     <div className="min-h-screen bg-gray-50" data-testid="btw-page">
@@ -291,12 +411,13 @@ const BTWPage = () => {
             <Label className="text-sm text-gray-600">Boekjaar</Label>
             <Select value={selectedYear} onValueChange={setSelectedYear}>
               <SelectTrigger className="rounded-lg">
-                <SelectValue />
+                <SelectValue placeholder="Selecteer jaar" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2023">2023</SelectItem>
-                <SelectItem value="2022">2022</SelectItem>
+                <SelectItem value="alle">Alle jaren</SelectItem>
+                {availableYears.map(year => (
+                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -449,7 +570,7 @@ const BTWPage = () => {
                     <tr className="bg-gray-50 border-b border-gray-200">
                       <th className="w-12 px-4 py-3">
                         <Checkbox 
-                          checked={selectedRows.length === periodes.length && periodes.length > 0}
+                          checked={selectedRows.length === filteredPeriodes.length && filteredPeriodes.length > 0}
                           onCheckedChange={toggleAllRows}
                         />
                       </th>
@@ -497,8 +618,8 @@ const BTWPage = () => {
                           <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>
                         </tr>
                       ))
-                    ) : periodes.length > 0 ? (
-                      periodes.map((periode) => (
+                    ) : filteredPeriodes.length > 0 ? (
+                      filteredPeriodes.map((periode) => (
                         <tr 
                           key={periode.id} 
                           className={`border-b border-gray-100 hover:bg-emerald-50/30 transition-colors ${
@@ -639,14 +760,97 @@ const BTWPage = () => {
               </div>
             )}
 
-            {/* Placeholder for other tabs */}
-            {(activeTab === 'transacties' || activeTab === 'rapporten') && (
-              <div className="px-4 py-16 text-center">
-                <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-200" />
-                <p className="text-lg font-semibold text-gray-700 mb-2">
-                  {activeTab === 'transacties' ? 'BTW Transacties' : 'BTW Rapporten'}
-                </p>
-                <p className="text-sm text-gray-500">Deze sectie wordt binnenkort beschikbaar.</p>
+            {/* BTW Transacties Tab - Toont journaalposten met BTW rekening 2350 */}
+            {activeTab === 'transacties' && (
+              <div className="p-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <Receipt className="w-5 h-5" />
+                    BTW Transacties (Grootboek 2350)
+                  </h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Alle journaalposten die de BTW rekening (2350) beïnvloeden
+                  </p>
+                </div>
+                
+                <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-blue-800">
+                    <strong>Grootboek Koppeling:</strong> BTW bedragen worden automatisch geboekt naar rekening <strong>2350 - BTW Af te dragen</strong>
+                  </p>
+                  <ul className="text-sm text-blue-700 mt-2 space-y-1">
+                    <li>• <strong>Verkoop:</strong> Credit op 2350 (BTW schuld aan belastingdienst)</li>
+                    <li>• <strong>Inkoop:</strong> Debet op 2350 (BTW vordering te verrekenen)</li>
+                    <li>• <strong>Aangifte:</strong> Debet op 2350, Credit op 1100 Bank (betaling aan belastingdienst)</li>
+                  </ul>
+                </div>
+
+                <div className="text-center py-8 text-gray-500">
+                  <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p>Bekijk het Grootboek voor gedetailleerde BTW transacties</p>
+                  <Button 
+                    variant="outline" 
+                    className="mt-4"
+                    onClick={() => navigate('/app/boekhouding/grootboek')}
+                  >
+                    Ga naar Grootboek
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* BTW Rapporten Tab */}
+            {activeTab === 'rapporten' && (
+              <div className="p-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <BarChart3 className="w-5 h-5" />
+                    BTW Rapporten
+                  </h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card className="border rounded-lg">
+                    <CardContent className="p-4">
+                      <h4 className="font-medium text-gray-800 mb-2">BTW Samenvatting</h4>
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Totaal BTW Verkoop:</span>
+                          <span className="font-medium text-emerald-600">{formatCurrency(totaalVerkoop)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Totaal BTW Inkoop:</span>
+                          <span className="font-medium text-red-600">-{formatCurrency(totaalInkoop)}</span>
+                        </div>
+                        <hr />
+                        <div className="flex justify-between font-bold">
+                          <span>Af te dragen:</span>
+                          <span className={totaalSaldo >= 0 ? 'text-amber-600' : 'text-emerald-600'}>
+                            {formatCurrency(Math.abs(totaalSaldo))} {totaalSaldo < 0 ? '(terug te vorderen)' : ''}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  
+                  <Card className="border rounded-lg">
+                    <CardContent className="p-4">
+                      <h4 className="font-medium text-gray-800 mb-2">Per Kwartaal</h4>
+                      <div className="space-y-2">
+                        {filteredPeriodes.map(p => (
+                          <div key={p.id} className="flex justify-between text-sm">
+                            <span className="text-gray-600">{p.periode}:</span>
+                            <span className={`font-medium ${p.saldo >= 0 ? 'text-amber-600' : 'text-emerald-600'}`}>
+                              {formatCurrency(p.saldo)}
+                            </span>
+                          </div>
+                        ))}
+                        {filteredPeriodes.length === 0 && (
+                          <p className="text-gray-500 text-sm">Geen data voor geselecteerde periode</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             )}
 
