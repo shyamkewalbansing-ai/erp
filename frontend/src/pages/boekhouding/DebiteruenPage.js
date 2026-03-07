@@ -310,12 +310,13 @@ const DebiteurenPage = () => {
     setProcessing(true);
     try {
       for (const id of invoiceIds) {
-        await invoicesAPI.update(id, { status: 'herinnering' });
+        await invoicesAPI.updateStatus(id, 'herinnering');
       }
       toast.success(`${invoiceIds.length} herinnering(en) verzonden`);
       fetchData();
       setSelectedRows([]);
     } catch (error) {
+      console.error('Herinnering error:', error);
       toast.error('Fout bij verzenden herinneringen');
     } finally {
       setProcessing(false);
