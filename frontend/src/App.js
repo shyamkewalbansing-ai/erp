@@ -30,6 +30,8 @@ const KassaLogin = lazy(() => import("./pages/kassa/KassaLogin"));
 const KassaPOS = lazy(() => import("./pages/kassa/KassaPOS"));
 const KassaProducten = lazy(() => import("./pages/kassa/KassaProducten"));
 const KassaRapporten = lazy(() => import("./pages/kassa/KassaRapporten"));
+const KassaInstellingen = lazy(() => import("./pages/kassa/KassaInstellingen"));
+const KassaSuperAdmin = lazy(() => import("./pages/kassa/KassaSuperAdmin"));
 
 // Tenant Portal pages
 const TenantLogin = lazy(() => import("./pages/TenantLogin"));
@@ -465,6 +467,8 @@ function KassaRoutesContent() {
       <Route path="/pos" element={isAuthenticated ? <KassaPOS /> : <Navigate to="/kassa/login" replace />} />
       <Route path="/producten" element={isAuthenticated ? <KassaProducten /> : <Navigate to="/kassa/login" replace />} />
       <Route path="/rapporten" element={isAuthenticated ? <KassaRapporten /> : <Navigate to="/kassa/login" replace />} />
+      <Route path="/instellingen" element={isAuthenticated ? <KassaInstellingen /> : <Navigate to="/kassa/login" replace />} />
+      <Route path="/superadmin" element={<KassaSuperAdmin />} />
       <Route path="/" element={<Navigate to="/kassa/login" replace />} />
       <Route path="*" element={<Navigate to="/kassa/login" replace />} />
     </Routes>

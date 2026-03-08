@@ -7,8 +7,7 @@ import { toast } from 'sonner';
 import { 
   Search, RotateCcw, Receipt, Trash2, X, Loader2,
   CreditCard, Banknote, QrCode, Check, Printer, Settings, LogOut,
-  Package, BarChart3, Clock, ChevronLeft, ChevronRight, User,
-  ShoppingCart, Layers, Filter
+  Package, BarChart3, Clock, User, ShoppingCart
 } from 'lucide-react';
 
 const formatPrice = (amount) => {
@@ -182,8 +181,214 @@ export default function KassaPOS() {
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden" data-testid="kassa-pos">
-      {/* LEFT SIDEBAR - Cart */}
-      <div className="w-80 bg-white flex flex-col border-r border-gray-100 shadow-sm">
+      {/* LEFT SIDEBAR - Categories & Search */}
+      <div className="w-52 bg-gray-50 border-r border-gray-100 flex flex-col">
+        {/* Search */}
+        <div className="p-4 border-b border-gray-100 bg-white">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Zoek producten..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+              data-testid="search-input"
+            />
+          </div>
+        </div>
+
+        {/* Categories */}
+        <div className="flex-1 p-3 overflow-auto">
+          <div className="space-y-2">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`w-full py-3 px-4 rounded-xl text-left font-medium transition-all duration-200 ${
+                selectedCategory === null
+                  ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                  : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-100'
+              }`}
+              data-testid="category-all"
+            >
+              Alles
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`w-full py-3 px-4 rounded-xl text-left font-medium transition-all duration-200 ${
+                  selectedCategory === cat.id
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
+                    : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-100'
+                }`}
+                data-testid={`category-${cat.id}`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* User Info & Logout */}
+        <div className="p-3 border-t border-gray-100 bg-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
+                <User className="w-4 h-4 text-gray-500" />
+              </div>
+              <span className="text-xs text-gray-600 truncate">{user?.name}</span>
+            </div>
+            <button 
+              onClick={logout}
+              className="p-2 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+              title="Uitloggen"
+            >
+              <LogOut className="w-4 h-4 text-red-500" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* MAIN CONTENT - Products */}
+      <div className="flex-1 flex flex-col bg-white">
+        {/* Top Header Bar */}
+        <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-6">
+            {/* Business Name */}
+            <h1 className="font-bold text-xl text-gray-900">{business?.name || 'Kassa POS'}</h1>
+          </div>
+          
+          {/* Header Actions */}
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={loadData}
+              className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors" 
+              title="Ververs"
+            >
+              <RotateCcw className="w-5 h-5 text-gray-500" />
+            </button>
+            <button 
+              onClick={() => window.location.href = '/kassa/rapporten'}
+              className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors" 
+              title="Rapporten"
+            >
+              <BarChart3 className="w-5 h-5 text-gray-500" />
+            </button>
+            <button 
+              onClick={() => window.location.href = '/kassa/instellingen'}
+              className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors" 
+              title="Instellingen"
+              data-testid="settings-btn"
+            >
+              <Settings className="w-5 h-5 text-gray-500" />
+            </button>
+            <button 
+              onClick={() => window.location.href = '/kassa/producten'}
+              className="p-2.5 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors" 
+              title="Producten beheren"
+            >
+              <Package className="w-5 h-5 text-blue-600" />
+            </button>
+            <button 
+              onClick={() => window.location.href = '/kassa/rapporten'}
+              className="p-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors" 
+              title="Rapporten"
+            >
+              <BarChart3 className="w-5 h-5 text-white" />
+            </button>
+            
+            {/* Time Display */}
+            <div className="ml-4 text-right">
+              <div className="text-sm font-medium text-gray-900">{currentTime}</div>
+              <div className="text-xs text-gray-500">{currentDate}</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Products Grid Area */}
+        <div className="flex-1 p-6 overflow-auto">
+          {filteredProducts.length === 0 ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-12 h-12 text-gray-300" />
+                </div>
+                <p className="text-lg font-medium text-gray-700 mb-2">Geen producten gevonden</p>
+                <p className="text-sm text-gray-500 mb-4">Voeg producten toe via productbeheer</p>
+                <button 
+                  onClick={() => window.location.href = '/kassa/producten'}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  Producten toevoegen
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
+              {filteredProducts.map(product => {
+                const inCart = cart.find(item => item.product_id === product.id);
+                return (
+                  <button
+                    key={product.id}
+                    onClick={() => addToCart(product)}
+                    className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 aspect-square border border-gray-100"
+                    data-testid={`product-${product.id}`}
+                  >
+                    {/* Product Image */}
+                    <img
+                      src={product.image_url || getProductImage(product.name)}
+                      alt={product.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => { e.target.src = productImages.default; }}
+                    />
+                    
+                    {/* Product Name Label - Vertical on left side */}
+                    <div className="absolute top-0 left-0 h-full flex items-start pt-3">
+                      <div 
+                        className="bg-white/95 backdrop-blur-sm px-2 py-1.5 rounded-r-lg shadow-sm"
+                        style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
+                      >
+                        <span className="text-xs font-semibold text-gray-800 whitespace-nowrap">
+                          {product.name}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Price Label - Bottom left */}
+                    <div className="absolute bottom-3 left-3">
+                      <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg shadow-sm">
+                        <span className="text-xs font-bold text-blue-600">SRD</span>
+                        <span className="text-sm font-bold text-gray-900 ml-1">
+                          {formatPrice(product.price)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Cart Quantity Badge */}
+                    {inCart && (
+                      <div className="absolute top-3 right-3 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg">
+                        {inCart.quantity}
+                      </div>
+                    )}
+                    
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/10 transition-colors duration-300" />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Bottom Status Bar */}
+        <div className="bg-gray-50 border-t border-gray-100 px-6 py-2 flex items-center justify-between text-xs text-gray-500">
+          <span>Totaal producten: {products.length}</span>
+          <span>{business?.name} - Kassa POS</span>
+        </div>
+      </div>
+
+      {/* RIGHT SIDEBAR - Cart/Bestelling */}
+      <div className="w-80 bg-white flex flex-col border-l border-gray-100 shadow-sm">
         {/* Cart Header */}
         <div className="px-5 py-4 border-b border-gray-100">
           <div className="flex items-center justify-between">
@@ -287,206 +492,6 @@ export default function KassaPOS() {
           >
             Afrekenen
           </button>
-        </div>
-      </div>
-
-      {/* MAIN CONTENT - Products */}
-      <div className="flex-1 flex flex-col bg-white">
-        {/* Top Header Bar */}
-        <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            {/* Business Name */}
-            <h1 className="font-bold text-xl text-gray-900">{business?.name || 'Kassa POS'}</h1>
-          </div>
-          
-          {/* Header Actions */}
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={loadData}
-              className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors" 
-              title="Ververs"
-            >
-              <RotateCcw className="w-5 h-5 text-gray-500" />
-            </button>
-            <button className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors" title="Statistieken">
-              <BarChart3 className="w-5 h-5 text-gray-500" />
-            </button>
-            <button className="p-2.5 hover:bg-gray-100 rounded-xl transition-colors" title="Instellingen">
-              <Settings className="w-5 h-5 text-gray-500" />
-            </button>
-            <button 
-              onClick={() => window.location.href = '/kassa/producten'}
-              className="p-2.5 bg-blue-50 hover:bg-blue-100 rounded-xl transition-colors" 
-              title="Producten beheren"
-            >
-              <Package className="w-5 h-5 text-blue-600" />
-            </button>
-            <button 
-              onClick={() => window.location.href = '/kassa/rapporten'}
-              className="p-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors" 
-              title="Rapporten"
-            >
-              <BarChart3 className="w-5 h-5 text-white" />
-            </button>
-            
-            {/* Time Display */}
-            <div className="ml-4 text-right">
-              <div className="text-sm font-medium text-gray-900">{currentTime}</div>
-              <div className="text-xs text-gray-500">{currentDate}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Products Grid Area */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Products */}
-          <div className="flex-1 p-6 overflow-auto">
-            {filteredProducts.length === 0 ? (
-              <div className="h-full flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Package className="w-12 h-12 text-gray-300" />
-                  </div>
-                  <p className="text-lg font-medium text-gray-700 mb-2">Geen producten gevonden</p>
-                  <p className="text-sm text-gray-500 mb-4">Voeg producten toe via productbeheer</p>
-                  <button 
-                    onClick={() => window.location.href = '/kassa/producten'}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                  >
-                    Producten toevoegen
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-4">
-                {filteredProducts.map(product => {
-                  const inCart = cart.find(item => item.product_id === product.id);
-                  return (
-                    <button
-                      key={product.id}
-                      onClick={() => addToCart(product)}
-                      className="group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 aspect-square border border-gray-100"
-                      data-testid={`product-${product.id}`}
-                    >
-                      {/* Product Image */}
-                      <img
-                        src={product.image_url || getProductImage(product.name)}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onError={(e) => { e.target.src = productImages.default; }}
-                      />
-                      
-                      {/* Product Name Label - Vertical on left side */}
-                      <div className="absolute top-0 left-0 h-full flex items-start pt-3">
-                        <div 
-                          className="bg-white/95 backdrop-blur-sm px-2 py-1.5 rounded-r-lg shadow-sm"
-                          style={{ writingMode: 'vertical-rl', textOrientation: 'mixed', transform: 'rotate(180deg)' }}
-                        >
-                          <span className="text-xs font-semibold text-gray-800 whitespace-nowrap">
-                            {product.name}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Price Label - Bottom left */}
-                      <div className="absolute bottom-3 left-3">
-                        <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1.5 rounded-lg shadow-sm">
-                          <span className="text-xs font-bold text-blue-600">SRD</span>
-                          <span className="text-sm font-bold text-gray-900 ml-1">
-                            {formatPrice(product.price)}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Cart Quantity Badge */}
-                      {inCart && (
-                        <div className="absolute top-3 right-3 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-sm font-bold shadow-lg">
-                          {inCart.quantity}
-                        </div>
-                      )}
-                      
-                      {/* Hover Overlay */}
-                      <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/10 transition-colors duration-300" />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* RIGHT SIDEBAR - Categories & Search */}
-          <div className="w-52 bg-gray-50 border-l border-gray-100 flex flex-col">
-            {/* Search */}
-            <div className="p-4 border-b border-gray-100 bg-white">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Zoek producten..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-                  data-testid="search-input"
-                />
-              </div>
-            </div>
-
-            {/* Categories */}
-            <div className="flex-1 p-3 overflow-auto">
-              <div className="space-y-2">
-                <button
-                  onClick={() => setSelectedCategory(null)}
-                  className={`w-full py-3 px-4 rounded-xl text-left font-medium transition-all duration-200 ${
-                    selectedCategory === null
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
-                      : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-100'
-                  }`}
-                  data-testid="category-all"
-                >
-                  Alles
-                </button>
-                {categories.map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`w-full py-3 px-4 rounded-xl text-left font-medium transition-all duration-200 ${
-                      selectedCategory === cat.id
-                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/25'
-                        : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-100'
-                    }`}
-                    data-testid={`category-${cat.id}`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* User Info & Logout */}
-            <div className="p-3 border-t border-gray-100 bg-white">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
-                    <User className="w-4 h-4 text-gray-500" />
-                  </div>
-                  <span className="text-xs text-gray-600 truncate">{user?.name}</span>
-                </div>
-                <button 
-                  onClick={logout}
-                  className="p-2 hover:bg-red-50 rounded-lg transition-colors shrink-0"
-                  title="Uitloggen"
-                >
-                  <LogOut className="w-4 h-4 text-red-500" />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Status Bar */}
-        <div className="bg-gray-50 border-t border-gray-100 px-6 py-2 flex items-center justify-between text-xs text-gray-500">
-          <span>Totaal producten: {products.length}</span>
-          <span>{business?.name} - Kassa POS</span>
         </div>
       </div>
 
