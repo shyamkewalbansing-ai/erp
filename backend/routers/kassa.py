@@ -841,11 +841,15 @@ async def update_settings(data: dict, auth: dict = Depends(get_kassa_user)):
 SUPERADMIN_EMAIL = "admin@kassapos.sr"
 SUPERADMIN_PASSWORD = "KassaAdmin2026!"
 
+class SuperAdminLoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
 @router.post("/superadmin/login")
-async def superadmin_login(email: str, password: str):
+async def superadmin_login(data: SuperAdminLoginRequest):
     """Superadmin login"""
     
-    if email != SUPERADMIN_EMAIL or password != SUPERADMIN_PASSWORD:
+    if data.email != SUPERADMIN_EMAIL or data.password != SUPERADMIN_PASSWORD:
         raise HTTPException(status_code=401, detail="Ongeldige inloggegevens")
     
     token = jwt.encode({

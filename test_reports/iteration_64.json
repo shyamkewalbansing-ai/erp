@@ -12,7 +12,7 @@
   "test_results": {
     "service_worker_registration": {
       "status": "PASS",
-      "details": "SW v7 registered at scope https://accounting-fixes-5.preview.emergentagent.com/, state: activated"
+      "details": "SW v7 registered at scope https://sumup-style-kassa.preview.emergentagent.com/, state: activated"
     },
     "index_html_caching": {
       "status": "PASS",
