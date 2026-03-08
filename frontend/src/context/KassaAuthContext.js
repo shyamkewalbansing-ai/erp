@@ -54,12 +54,12 @@ export const KassaAuthProvider = ({ children }) => {
       body: JSON.stringify({ email, password })
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Login mislukt');
+      throw new Error(data.detail || 'Login mislukt');
     }
 
-    const data = await response.json();
     localStorage.setItem('kassa_token', data.access_token);
     setToken(data.access_token);
     setUser(data.user);
@@ -67,19 +67,19 @@ export const KassaAuthProvider = ({ children }) => {
     return data;
   };
 
-  const register = async (data) => {
+  const register = async (regData) => {
     const response = await fetch(`${API_URL}/api/kassa/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
+      body: JSON.stringify(regData)
     });
 
+    const result = await response.json();
+    
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Registratie mislukt');
+      throw new Error(result.detail || 'Registratie mislukt');
     }
 
-    const result = await response.json();
     localStorage.setItem('kassa_token', result.access_token);
     setToken(result.access_token);
     setUser(result.user);
