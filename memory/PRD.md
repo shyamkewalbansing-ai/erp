@@ -7,77 +7,17 @@ Comprehensive accounting and business management platform for Suriname businesse
 - Schuldbeheer - Personal Debt Management
 - Vastgoed Beheer - Real Estate Management
 - Auto Dealer, Beauty Spa, Pompstation - Industry-specific modules
-- **Kassa POS - Standalone Point of Sale system (NEW)**
 
 ## Current Session: March 8, 2026 (Updated)
 
-### Latest Updates - Kassa POS UI Redesign ✅
+### Latest Update - Kassa POS Verwijderd
 
-#### Kassa POS UI Herontwerp naar SumUp-stijl ✅ (P0 - VOLTOOID)
-De POS interface is volledig herontworpen om precies te lijken op de SumUp referentieafbeelding:
-
-**Nieuwe UI Kenmerken:**
-- **Witte, minimalistische achtergrond** - Clean modern design
-- **Product cards met grote afbeeldingen** - Vierkante kaarten met hover effect
-- **Verticale productnamen** - Geroteerde tekst aan de linkerkant van elke kaart
-- **Prijslabels** - "SRD XX,00" format links onderaan elke kaart
-- **Hoeveelheid badges** - Blauwe rondjes rechtsboven bij toegevoegde producten
-- **Categorie-tabs aan de rechterkant** - Alles, Koffie, Gebak, Dranken, Snacks, etc.
-- **Zoekbalk** - Bovenaan het categorie paneel
-- **Winkelwagen sidebar links** - Met +/- knoppen en item totalen
-- **Subtotaal, BTW (8%), Totaal** - Correct berekend
-- **Afrekenen knop** - Actief wanneer cart items heeft
-- **Betaling modal** - Cash/PIN/QR opties met quick amount buttons
-
-**Nieuw Login Scherm:**
-- **Split-screen design** - Features links, formulier rechts
-- **Blauwe gradient achtergrond** - Met subtiele patronen
-- **Feature cards** - Snelle Verkoop, Voorraadbeheer, etc.
-- **14-dagen trial banner** - "Geen creditcard nodig"
-- **Toggle** - Tussen inloggen en registreren
-- **Moderne vormgeving** - Rounded corners, shadows, transitions
-
-**Superadmin Fix:**
-- Endpoint `/api/kassa/superadmin/login` accepteert nu JSON body i.p.v. query parameters
-- Credentials: admin@kassapos.sr / KassaAdmin2026!
-
-**Test Resultaten (100% geslaagd):**
-- 25 backend API tests - PASSED
-- Frontend UI tests - ALL PASSED
-- Login/Registration flows - WORKING
-- Cart management - WORKING
-- Payment processing - WORKING
-- Category filtering - WORKING
-
-#### Kassa POS System ✅ (Backend - Eerder voltooid)
-Complete standalone Point of Sale system met:
-
-**Backend (`/app/backend/routers/kassa.py`):**
-- Separate JWT authentication system
-- Multi-tenant architecture (each business has own account)
-- SaaS subscription plans (Basic SRD 49/mo, Pro SRD 99/mo, Enterprise SRD 199/mo)
-- **Endpoints:**
-  - Auth: `/api/kassa/auth/register`, `/api/kassa/auth/login`, `/api/kassa/auth/me`
-  - Categories: CRUD operations
-  - Products: CRUD + barcode lookup + stock tracking
-  - Orders: Create sales, refunds, automatic stock updates
-  - Customers: CRUD + loyalty points
-  - Reports: Daily sales, inventory alerts
-  - Settings: Business configuration
-  - Superadmin: Manage all businesses and subscriptions
-
-**Frontend Pages:**
-- `/kassa/login` - Login/Register page (REDESIGNED - Modern professional)
-- `/kassa/pos` - Main POS interface (REDESIGNED - SumUp-style)
-- `/kassa/producten` - Product management
-- `/kassa/rapporten` - Sales and inventory reports
-
-**Features Implemented:**
-- Product grid with category filtering
-- Barcode scanning support
-- Shopping cart with quantity controls
-- Multiple payment methods (Cash, PIN, QR)
-- Change calculation for cash payments
+Het complete Kassa POS systeem is verwijderd op verzoek van de gebruiker. De volgende bestanden zijn verwijderd:
+- `/app/frontend/src/pages/kassa/*` - Alle frontend pagina's
+- `/app/frontend/src/lib/kassaApi.js` - API service
+- `/app/frontend/src/context/KassaAuthContext.js` - Auth context
+- `/app/backend/routers/kassa.py` - Backend router
+- Routes uit App.js en server.py
 - Quick amount buttons
 - Customer selection with loyalty points
 - Automatic stock deduction on sale
