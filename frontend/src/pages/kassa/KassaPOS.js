@@ -2,19 +2,16 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useKassaAuth } from '../../context/KassaAuthContext';
 import { productsAPI, categoriesAPI, ordersAPI, customersAPI } from '../../lib/kassaApi';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Badge } from '../../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../../components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select';
 import { toast } from 'sonner';
 import { 
-  Search, Grid3X3, List, Plus, Minus, Trash2, CreditCard, Banknote, 
-  QrCode, Receipt, User, Settings, LogOut, BarChart3, Package,
-  Users, ShoppingCart, X, Check, Loader2, Printer, Tag
+  User, Settings, LogOut, Receipt, Percent, Trash2, 
+  CreditCard, Banknote, QrCode, Printer, X, Check, Loader2,
+  Package, BarChart3, ShoppingBag, Euro, DollarSign
 } from 'lucide-react';
 
-const formatCurrency = (amount) => {
-  return `SRD ${new Intl.NumberFormat('nl-NL', {
+const formatCurrency = (amount, symbol = 'SRD') => {
+  return `${symbol} ${new Intl.NumberFormat('nl-NL', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(amount || 0)}`;
@@ -26,36 +23,52 @@ export default function KassaPOS() {
   const [categories, setCategories] = useState([]);
   const [cart, setCart] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-  const [customers, setCustomers] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [amountPaid, setAmountPaid] = useState('');
   const [lastOrder, setLastOrder] = useState(null);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
-  const searchRef = useRef(null);
+  const [inputValue, setInputValue] = useState('');
+  const [inputMode, setInputMode] = useState('quantity'); // quantity, price, discount
 
   const btw_percentage = business?.btw_percentage || 8;
 
-  // Load data
+  // Category colors for the right sidebar
+  const categoryColors = [
+    '#dc2626', // red
+    '#f97316', // orange
+    '#eab308', // yellow
+    '#22c55e', // green
+    '#06b6d4', // cyan
+    '#3b82f6', // blue
+    '#8b5cf6', // purple
+    '#ec4899', // pink
+    '#6b7280', // gray
+    '#78716c', // stone
+    '#84cc16', // lime
+    '#14b8a6', // teal
+  ];
+
   useEffect(() => {
     loadData();
   }, []);
 
   const loadData = async () => {
     try {
-      const [prods, cats, custs] = await Promise.all([
+      const [prods, cats] = await Promise.all([
         productsAPI.getAll(),
-        categoriesAPI.getAll(),
-        customersAPI.getAll()
+        categoriesAPI.getAll()
       ]);
       setProducts(prods);
-      setCategories([{ id: null, name: 'Alles', color: '#1f2937' }, ...cats]);
-      setCustomers(custs);
+      // Assign colors to categories
+      const catsWithColors = cats.map((cat, idx) => ({
+        ...cat,
+        color: cat.color || categoryColors[idx % categoryColors.length]
+      }));
+      setCategories(catsWithColors);
     } catch (error) {
       toast.error('Fout bij laden gegevens');
     } finally {
@@ -63,72 +76,75 @@ export default function KassaPOS() {
     }
   };
 
-  // Filter products
+  // Filter products by category
   const filteredProducts = useMemo(() => {
-    let filtered = products;
-    
-    if (selectedCategory) {
-      filtered = filtered.filter(p => p.category_id === selectedCategory);
-    }
-    
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(query) ||
-        (p.barcode && p.barcode.includes(query)) ||
-        (p.sku && p.sku.toLowerCase().includes(query))
-      );
-    }
-    
-    return filtered;
-  }, [products, selectedCategory, searchQuery]);
+    if (!selectedCategory) return products;
+    return products.filter(p => p.category_id === selectedCategory);
+  }, [products, selectedCategory]);
 
-  // Cart functions
+  // Add product to cart
   const addToCart = useCallback((product) => {
+    const qty = inputValue ? parseInt(inputValue) || 1 : 1;
     setCart(prev => {
       const existing = prev.find(item => item.product_id === product.id);
       if (existing) {
         return prev.map(item => 
           item.product_id === product.id 
-            ? { ...item, quantity: item.quantity + 1 }
+            ? { ...item, quantity: item.quantity + qty }
             : item
         );
       }
       return [...prev, {
         product_id: product.id,
         product_name: product.name,
-        quantity: 1,
+        quantity: qty,
         unit_price: product.price,
         discount: 0
       }];
     });
+    setInputValue('');
     
-    // Play sound
+    // Beep sound
     if (business?.settings?.sound_enabled !== false) {
       const audio = new Audio('/beep.mp3');
-      audio.volume = 0.3;
+      audio.volume = 0.2;
       audio.play().catch(() => {});
     }
-  }, [business]);
+  }, [inputValue, business]);
 
-  const updateQuantity = (productId, delta) => {
-    setCart(prev => prev.map(item => {
-      if (item.product_id === productId) {
-        const newQty = item.quantity + delta;
-        if (newQty <= 0) return null;
-        return { ...item, quantity: newQty };
+  // Numpad handlers
+  const handleNumpad = (value) => {
+    if (value === 'clear') {
+      setInputValue('');
+    } else if (value === 'backspace') {
+      setInputValue(prev => prev.slice(0, -1));
+    } else if (value === 'enter') {
+      // Apply input based on mode
+      if (inputMode === 'quantity' && cart.length > 0) {
+        const lastItem = cart[cart.length - 1];
+        const newQty = parseInt(inputValue) || 1;
+        setCart(prev => prev.map((item, idx) => 
+          idx === prev.length - 1 ? { ...item, quantity: newQty } : item
+        ));
       }
-      return item;
-    }).filter(Boolean));
+      setInputValue('');
+    } else if (value === '00') {
+      setInputValue(prev => prev + '00');
+    } else {
+      setInputValue(prev => prev + value);
+    }
   };
 
+  // Remove item from cart
   const removeFromCart = (productId) => {
     setCart(prev => prev.filter(item => item.product_id !== productId));
   };
 
+  // Clear entire cart
   const clearCart = () => {
     setCart([]);
     setSelectedCustomer(null);
+    setInputValue('');
   };
 
   // Calculate totals
@@ -136,27 +152,14 @@ export default function KassaPOS() {
     const subtotal = cart.reduce((sum, item) => sum + (item.quantity * item.unit_price - item.discount), 0);
     const btw = subtotal * (btw_percentage / 100);
     const total = subtotal + btw;
-    return { subtotal, btw, total };
+    return { subtotal, btw, total, itemCount: cart.reduce((sum, item) => sum + item.quantity, 0) };
   }, [cart, btw_percentage]);
-
-  // Handle barcode scan
-  const handleBarcodeSearch = async (e) => {
-    if (e.key === 'Enter' && searchQuery) {
-      try {
-        const product = await productsAPI.getByBarcode(searchQuery);
-        addToCart(product);
-        setSearchQuery('');
-      } catch {
-        // Not a barcode, keep as search
-      }
-    }
-  };
 
   // Process payment
   const processPayment = async () => {
     if (cart.length === 0) return;
     
-    const paid = parseFloat(amountPaid) || 0;
+    const paid = parseFloat(amountPaid) || cartTotals.total;
     if (paymentMethod === 'cash' && paid < cartTotals.total) {
       toast.error('Onvoldoende betaling');
       return;
@@ -187,40 +190,46 @@ export default function KassaPOS() {
     }
   };
 
-  // Quick amount buttons
-  const quickAmounts = [10, 20, 50, 100, 200, 500];
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-600" />
+      <div className="min-h-screen bg-slate-800 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-white" />
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-gray-100 flex flex-col overflow-hidden" data-testid="kassa-pos">
-      {/* Top Bar */}
-      <header className="bg-white border-b px-4 py-2 flex items-center justify-between shrink-0">
+    <div className="h-screen bg-slate-100 flex flex-col overflow-hidden" data-testid="kassa-pos">
+      {/* Top Header Bar - Blue */}
+      <header className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 flex items-center justify-between shrink-0 shadow-lg">
         <div className="flex items-center gap-4">
-          <h1 className="text-lg font-bold text-gray-900">{business?.name || 'Kassa'}</h1>
-          <Badge variant="outline" className="hidden sm:flex">
-            {user?.name}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+            <span className="font-bold text-lg">{business?.name || 'Kassa POS'}</span>
+          </div>
+          <div className="hidden md:flex items-center gap-2 text-sm bg-white/10 px-3 py-1 rounded">
+            <span>Kassa 1</span>
+          </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => window.location.href = '/kassa/producten'}>
-            <Package className="w-4 h-4" />
-            <span className="hidden sm:inline ml-1">Producten</span>
+          <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={() => window.location.href = '/kassa/producten'}>
+            <Package className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Producten</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => window.location.href = '/kassa/rapporten'}>
-            <BarChart3 className="w-4 h-4" />
-            <span className="hidden sm:inline ml-1">Rapporten</span>
+          <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={() => window.location.href = '/kassa/rapporten'}>
+            <BarChart3 className="w-4 h-4 mr-1" />
+            <span className="hidden sm:inline">Rapporten</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={() => window.location.href = '/kassa/instellingen'}>
+          <Button variant="ghost" size="sm" className="text-white hover:bg-white/10" onClick={() => window.location.href = '/kassa/instellingen'}>
             <Settings className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="sm" onClick={logout} className="text-red-600">
+          <div className="flex items-center gap-2 ml-2 pl-2 border-l border-white/20">
+            <User className="w-4 h-4" />
+            <span className="text-sm hidden sm:inline">{user?.name}</span>
+          </div>
+          <Button variant="ghost" size="sm" className="text-white hover:bg-red-500/50" onClick={logout}>
             <LogOut className="w-4 h-4" />
           </Button>
         </div>
@@ -228,83 +237,135 @@ export default function KassaPOS() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Products Section - Left */}
-        <div className="flex-1 flex flex-col bg-white border-r overflow-hidden">
-          {/* Category Tabs */}
-          <div className="flex items-center gap-2 p-3 border-b overflow-x-auto shrink-0">
-            {categories.map(cat => (
-              <Button
-                key={cat.id || 'all'}
-                variant={selectedCategory === cat.id ? 'default' : 'outline'}
-                size="sm"
-                className="shrink-0"
-                style={selectedCategory === cat.id ? { backgroundColor: cat.color } : {}}
-                onClick={() => setSelectedCategory(cat.id)}
-                data-testid={`category-${cat.id || 'all'}`}
-              >
-                {cat.name}
-              </Button>
-            ))}
+        {/* Left Panel - Receipt/Cart */}
+        <div className="w-72 lg:w-80 bg-white flex flex-col border-r shadow-sm shrink-0">
+          {/* Cart Header */}
+          <div className="bg-blue-600 text-white px-3 py-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Receipt className="w-4 h-4" />
+              <span className="font-medium">Bon</span>
+            </div>
+            <span className="text-sm">{cart.length} artikel(en)</span>
           </div>
 
-          {/* Search Bar */}
-          <div className="p-3 border-b shrink-0">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                ref={searchRef}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleBarcodeSearch}
-                placeholder="Zoek product of scan barcode..."
-                className="pl-10"
-                data-testid="search-input"
-              />
+          {/* Cart Items Table */}
+          <div className="flex-1 overflow-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-100 sticky top-0">
+                <tr className="text-left">
+                  <th className="px-2 py-2 font-medium text-slate-600">Artikel</th>
+                  <th className="px-2 py-2 font-medium text-slate-600 text-center w-12">Qty</th>
+                  <th className="px-2 py-2 font-medium text-slate-600 text-right w-20">Prijs</th>
+                  <th className="w-8"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {cart.map((item, idx) => (
+                  <tr key={item.product_id} className={idx === cart.length - 1 ? 'bg-blue-50' : ''}>
+                    <td className="px-2 py-2 truncate max-w-[120px]">{item.product_name}</td>
+                    <td className="px-2 py-2 text-center font-medium">{item.quantity}</td>
+                    <td className="px-2 py-2 text-right">{formatCurrency(item.quantity * item.unit_price)}</td>
+                    <td className="px-1">
+                      <button 
+                        onClick={() => removeFromCart(item.product_id)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {cart.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-2 py-8 text-center text-slate-400">
+                      Geen artikelen
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Totals */}
+          <div className="border-t bg-slate-50 p-3 space-y-1">
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600">Subtotaal</span>
+              <span>{formatCurrency(cartTotals.subtotal)}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-slate-600">BTW ({btw_percentage}%)</span>
+              <span>{formatCurrency(cartTotals.btw)}</span>
+            </div>
+            <div className="flex justify-between text-xl font-bold pt-2 border-t border-slate-200">
+              <span>Totaal</span>
+              <span className="text-blue-600">{formatCurrency(cartTotals.total)}</span>
             </div>
           </div>
 
-          {/* Product Grid */}
-          <div className="flex-1 overflow-auto p-3">
+          {/* Bottom Action Buttons */}
+          <div className="border-t p-2 grid grid-cols-5 gap-1">
+            <button className="flex flex-col items-center p-2 rounded hover:bg-slate-100" title="Bon printen">
+              <Printer className="w-5 h-5 text-slate-600" />
+              <span className="text-[10px] text-slate-500 mt-0.5">Print</span>
+            </button>
+            <button className="flex flex-col items-center p-2 rounded hover:bg-slate-100" title="Korting">
+              <Percent className="w-5 h-5 text-slate-600" />
+              <span className="text-[10px] text-slate-500 mt-0.5">Korting</span>
+            </button>
+            <button className="flex flex-col items-center p-2 rounded hover:bg-slate-100" title="Klant">
+              <User className="w-5 h-5 text-slate-600" />
+              <span className="text-[10px] text-slate-500 mt-0.5">Klant</span>
+            </button>
+            <button 
+              className="flex flex-col items-center p-2 rounded hover:bg-red-50" 
+              title="Wissen"
+              onClick={clearCart}
+            >
+              <Trash2 className="w-5 h-5 text-red-500" />
+              <span className="text-[10px] text-red-500 mt-0.5">Wissen</span>
+            </button>
+            <button className="flex flex-col items-center p-2 rounded bg-blue-600 text-white hover:bg-blue-700" title="Betalen">
+              <DollarSign className="w-5 h-5" />
+              <span className="text-[10px] mt-0.5">SRD</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Center Panel - Products Grid + Numpad */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Products Grid */}
+          <div className="flex-1 p-3 overflow-auto">
             {filteredProducts.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">
-                <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Geen producten gevonden</p>
-                <Button 
-                  variant="outline" 
-                  className="mt-3"
-                  onClick={() => window.location.href = '/kassa/producten'}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Product Toevoegen
-                </Button>
+              <div className="h-full flex items-center justify-center text-slate-400">
+                <div className="text-center">
+                  <Package className="w-16 h-16 mx-auto mb-3 opacity-50" />
+                  <p>Geen producten in deze categorie</p>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
                 {filteredProducts.map(product => {
+                  const category = categories.find(c => c.id === product.category_id);
+                  const bgColor = category?.color || '#3b82f6';
                   const inCart = cart.find(item => item.product_id === product.id);
+                  
                   return (
                     <button
                       key={product.id}
                       onClick={() => addToCart(product)}
-                      className={`relative p-4 rounded-lg border-2 text-left transition-all hover:shadow-md ${
-                        inCart ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 bg-white hover:border-gray-300'
-                      }`}
+                      className="relative p-3 rounded-lg text-white text-left transition-all hover:scale-105 hover:shadow-lg active:scale-95"
+                      style={{ backgroundColor: bgColor }}
                       data-testid={`product-${product.id}`}
                     >
                       {inCart && (
-                        <Badge className="absolute -top-2 -right-2 bg-emerald-500">
+                        <span className="absolute -top-1 -right-1 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold shadow">
                           {inCart.quantity}
-                        </Badge>
+                        </span>
                       )}
-                      {product.stock_quantity <= 5 && product.track_stock && (
-                        <Badge variant="outline" className="absolute top-1 left-1 text-xs bg-amber-50 text-amber-700 border-amber-200">
-                          {product.stock_quantity <= 0 ? 'Op' : product.stock_quantity}
-                        </Badge>
-                      )}
-                      <div className="font-medium text-gray-900 text-sm line-clamp-2 min-h-[2.5rem]">
+                      <div className="font-medium text-sm leading-tight line-clamp-2 min-h-[2.5rem]">
                         {product.name}
                       </div>
-                      <div className="text-lg font-bold text-gray-900 mt-2">
+                      <div className="text-white/90 text-xs mt-1">
                         {formatCurrency(product.price)}
                       </div>
                     </button>
@@ -313,121 +374,149 @@ export default function KassaPOS() {
               </div>
             )}
           </div>
+
+          {/* Numpad + Pay Button */}
+          <div className="border-t bg-white p-3 flex gap-3">
+            {/* Input Display */}
+            <div className="flex-1 flex flex-col">
+              <div className="bg-slate-100 rounded px-3 py-2 text-right text-xl font-mono mb-2 h-10">
+                {inputValue || '0'}
+              </div>
+              
+              {/* Numpad Grid */}
+              <div className="grid grid-cols-4 gap-1">
+                {['7', '8', '9', 'X'].map(key => (
+                  <button
+                    key={key}
+                    onClick={() => key === 'X' ? handleNumpad('backspace') : handleNumpad(key)}
+                    className={`p-3 rounded text-lg font-medium transition-colors ${
+                      key === 'X' 
+                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                        : 'bg-slate-100 hover:bg-slate-200'
+                    }`}
+                  >
+                    {key}
+                  </button>
+                ))}
+                {['4', '5', '6', 'Clear'].map(key => (
+                  <button
+                    key={key}
+                    onClick={() => key === 'Clear' ? handleNumpad('clear') : handleNumpad(key)}
+                    className={`p-3 rounded text-lg font-medium transition-colors ${
+                      key === 'Clear' 
+                        ? 'bg-amber-100 text-amber-700 hover:bg-amber-200 text-sm' 
+                        : 'bg-slate-100 hover:bg-slate-200'
+                    }`}
+                  >
+                    {key}
+                  </button>
+                ))}
+                {['1', '2', '3'].map(key => (
+                  <button
+                    key={key}
+                    onClick={() => handleNumpad(key)}
+                    className="p-3 rounded bg-slate-100 hover:bg-slate-200 text-lg font-medium"
+                  >
+                    {key}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handleNumpad('enter')}
+                  className="p-3 rounded bg-green-500 text-white hover:bg-green-600 text-sm font-medium row-span-2"
+                >
+                  Enter
+                </button>
+                <button
+                  onClick={() => handleNumpad('0')}
+                  className="p-3 rounded bg-slate-100 hover:bg-slate-200 text-lg font-medium"
+                >
+                  0
+                </button>
+                <button
+                  onClick={() => handleNumpad('00')}
+                  className="p-3 rounded bg-slate-100 hover:bg-slate-200 text-lg font-medium"
+                >
+                  00
+                </button>
+                <button
+                  onClick={() => handleNumpad('.')}
+                  className="p-3 rounded bg-slate-100 hover:bg-slate-200 text-lg font-medium"
+                >
+                  .
+                </button>
+              </div>
+            </div>
+
+            {/* Pay Buttons */}
+            <div className="flex flex-col gap-2 w-32">
+              <button
+                onClick={() => {
+                  setPaymentMethod('cash');
+                  setAmountPaid(cartTotals.total.toFixed(2));
+                  setShowPaymentModal(true);
+                }}
+                disabled={cart.length === 0}
+                className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white rounded-lg flex flex-col items-center justify-center gap-1 transition-colors"
+              >
+                <Banknote className="w-8 h-8" />
+                <span className="text-sm font-medium">Contant</span>
+              </button>
+              <button
+                onClick={() => {
+                  setPaymentMethod('pin');
+                  setAmountPaid(cartTotals.total.toFixed(2));
+                  setShowPaymentModal(true);
+                }}
+                disabled={cart.length === 0}
+                className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 text-white rounded-lg flex flex-col items-center justify-center gap-1 transition-colors"
+              >
+                <CreditCard className="w-8 h-8" />
+                <span className="text-sm font-medium">PIN</span>
+              </button>
+              <button
+                onClick={() => {
+                  setPaymentMethod('qr');
+                  setAmountPaid(cartTotals.total.toFixed(2));
+                  setShowPaymentModal(true);
+                }}
+                disabled={cart.length === 0}
+                className="flex-1 bg-purple-500 hover:bg-purple-600 disabled:bg-slate-300 text-white rounded-lg flex flex-col items-center justify-center gap-1 transition-colors"
+              >
+                <QrCode className="w-8 h-8" />
+                <span className="text-sm font-medium">QR</span>
+              </button>
+            </div>
+          </div>
         </div>
 
-        {/* Cart Section - Right */}
-        <div className="w-80 lg:w-96 bg-gray-50 flex flex-col shrink-0">
-          {/* Cart Header */}
-          <div className="p-3 border-b bg-white flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5" />
-              <span className="font-medium">{cart.length} items</span>
-            </div>
-            {cart.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={clearCart} className="text-red-600">
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-
-          {/* Customer Selection */}
-          <div className="p-3 border-b bg-white shrink-0">
-            <Button 
-              variant="outline" 
-              className="w-full justify-start"
-              onClick={() => setShowCustomerModal(true)}
+        {/* Right Panel - Categories */}
+        <div className="w-28 lg:w-32 bg-slate-200 flex flex-col shrink-0 overflow-y-auto">
+          {/* All Products Button */}
+          <button
+            onClick={() => setSelectedCategory(null)}
+            className={`p-3 text-center text-sm font-medium transition-colors ${
+              selectedCategory === null 
+                ? 'bg-slate-700 text-white' 
+                : 'bg-slate-300 hover:bg-slate-400 text-slate-700'
+            }`}
+          >
+            Alles
+          </button>
+          
+          {/* Category Buttons */}
+          {categories.map((category, idx) => (
+            <button
+              key={category.id}
+              onClick={() => setSelectedCategory(category.id)}
+              className={`p-3 text-center text-sm font-medium text-white transition-all hover:brightness-110 ${
+                selectedCategory === category.id ? 'ring-2 ring-white ring-inset' : ''
+              }`}
+              style={{ backgroundColor: category.color || categoryColors[idx % categoryColors.length] }}
+              data-testid={`category-btn-${category.id}`}
             >
-              <User className="w-4 h-4 mr-2" />
-              {selectedCustomer ? selectedCustomer.name : 'Selecteer klant'}
-              {selectedCustomer && (
-                <Badge variant="secondary" className="ml-auto">
-                  {selectedCustomer.loyalty_points} pts
-                </Badge>
-              )}
-            </Button>
-          </div>
-
-          {/* Cart Items */}
-          <div className="flex-1 overflow-auto">
-            {cart.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
-                <ShoppingCart className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Winkelwagen is leeg</p>
-              </div>
-            ) : (
-              <div className="divide-y">
-                {cart.map(item => (
-                  <div key={item.product_id} className="p-3 bg-white flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">{item.product_name}</div>
-                      <div className="text-gray-500 text-xs">{formatCurrency(item.unit_price)}</div>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-7 w-7"
-                        onClick={() => updateQuantity(item.product_id, -1)}
-                      >
-                        <Minus className="w-3 h-3" />
-                      </Button>
-                      <span className="w-8 text-center font-medium">{item.quantity}</span>
-                      <Button 
-                        variant="outline" 
-                        size="icon" 
-                        className="h-7 w-7"
-                        onClick={() => updateQuantity(item.product_id, 1)}
-                      >
-                        <Plus className="w-3 h-3" />
-                      </Button>
-                    </div>
-                    <div className="w-20 text-right font-medium">
-                      {formatCurrency(item.quantity * item.unit_price)}
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-7 w-7 text-red-500 shrink-0"
-                      onClick={() => removeFromCart(item.product_id)}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Cart Totals */}
-          <div className="border-t bg-white p-4 shrink-0 space-y-2">
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>Subtotaal</span>
-              <span>{formatCurrency(cartTotals.subtotal)}</span>
-            </div>
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>BTW ({btw_percentage}%)</span>
-              <span>{formatCurrency(cartTotals.btw)}</span>
-            </div>
-            <div className="flex justify-between text-xl font-bold pt-2 border-t">
-              <span>Totaal</span>
-              <span>{formatCurrency(cartTotals.total)}</span>
-            </div>
-          </div>
-
-          {/* Charge Button */}
-          <div className="p-3 bg-white border-t shrink-0">
-            <Button 
-              className="w-full h-14 text-lg bg-gray-900 hover:bg-gray-800"
-              disabled={cart.length === 0}
-              onClick={() => {
-                setAmountPaid(cartTotals.total.toFixed(2));
-                setShowPaymentModal(true);
-              }}
-              data-testid="charge-btn"
-            >
-              Afrekenen {formatCurrency(cartTotals.total)}
-            </Button>
-          </div>
+              {category.name}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -435,76 +524,68 @@ export default function KassaPOS() {
       <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Betaling - {formatCurrency(cartTotals.total)}</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              {paymentMethod === 'cash' && <Banknote className="w-5 h-5 text-green-600" />}
+              {paymentMethod === 'pin' && <CreditCard className="w-5 h-5 text-blue-600" />}
+              {paymentMethod === 'qr' && <QrCode className="w-5 h-5 text-purple-600" />}
+              Betaling - {formatCurrency(cartTotals.total)}
+            </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
-            {/* Payment Method */}
-            <div className="grid grid-cols-3 gap-2">
-              <Button
-                variant={paymentMethod === 'cash' ? 'default' : 'outline'}
-                onClick={() => setPaymentMethod('cash')}
-                className="h-16 flex-col"
-              >
-                <Banknote className="w-6 h-6 mb-1" />
-                Contant
-              </Button>
-              <Button
-                variant={paymentMethod === 'pin' ? 'default' : 'outline'}
-                onClick={() => setPaymentMethod('pin')}
-                className="h-16 flex-col"
-              >
-                <CreditCard className="w-6 h-6 mb-1" />
-                PIN
-              </Button>
-              <Button
-                variant={paymentMethod === 'qr' ? 'default' : 'outline'}
-                onClick={() => setPaymentMethod('qr')}
-                className="h-16 flex-col"
-              >
-                <QrCode className="w-6 h-6 mb-1" />
-                QR
-              </Button>
-            </div>
-
-            {/* Amount Input (for cash) */}
             {paymentMethod === 'cash' && (
               <>
                 <div>
-                  <label className="text-sm font-medium">Ontvangen bedrag</label>
-                  <Input
+                  <label className="text-sm font-medium text-slate-600">Ontvangen bedrag</label>
+                  <input
                     type="number"
                     step="0.01"
                     value={amountPaid}
                     onChange={(e) => setAmountPaid(e.target.value)}
-                    className="text-2xl h-14 text-center font-bold"
+                    className="w-full mt-1 px-4 py-3 text-2xl text-center font-bold border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     autoFocus
                   />
                 </div>
                 
                 {/* Quick Amount Buttons */}
                 <div className="grid grid-cols-3 gap-2">
-                  {quickAmounts.map(amount => (
-                    <Button
+                  {[20, 50, 100, 200, 500, 1000].map(amount => (
+                    <button
                       key={amount}
-                      variant="outline"
                       onClick={() => setAmountPaid(amount.toString())}
+                      className="py-2 px-3 bg-slate-100 hover:bg-slate-200 rounded text-sm font-medium"
                     >
                       {formatCurrency(amount)}
-                    </Button>
+                    </button>
                   ))}
                 </div>
 
-                {/* Change Calculation */}
+                {/* Change */}
                 {parseFloat(amountPaid) >= cartTotals.total && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
                     <div className="text-sm text-green-700">Wisselgeld</div>
-                    <div className="text-2xl font-bold text-green-700">
+                    <div className="text-3xl font-bold text-green-700">
                       {formatCurrency(parseFloat(amountPaid) - cartTotals.total)}
                     </div>
                   </div>
                 )}
               </>
+            )}
+
+            {paymentMethod === 'pin' && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
+                <CreditCard className="w-12 h-12 mx-auto mb-3 text-blue-600" />
+                <p className="text-blue-700">Wacht op PIN betaling...</p>
+                <p className="text-2xl font-bold text-blue-700 mt-2">{formatCurrency(cartTotals.total)}</p>
+              </div>
+            )}
+
+            {paymentMethod === 'qr' && (
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-6 text-center">
+                <QrCode className="w-12 h-12 mx-auto mb-3 text-purple-600" />
+                <p className="text-purple-700">Scan QR code...</p>
+                <p className="text-2xl font-bold text-purple-700 mt-2">{formatCurrency(cartTotals.total)}</p>
+              </div>
             )}
           </div>
 
@@ -518,46 +599,9 @@ export default function KassaPOS() {
               className="bg-green-600 hover:bg-green-700"
             >
               {processing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
-              Betaling Bevestigen
+              Bevestigen
             </Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Customer Modal */}
-      <Dialog open={showCustomerModal} onOpenChange={setShowCustomerModal}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Selecteer Klant</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-3">
-            <Input placeholder="Zoek klant..." />
-            
-            <div className="max-h-64 overflow-auto divide-y">
-              <button
-                className="w-full p-3 text-left hover:bg-gray-50 flex items-center gap-3"
-                onClick={() => { setSelectedCustomer(null); setShowCustomerModal(false); }}
-              >
-                <User className="w-8 h-8 p-1.5 bg-gray-100 rounded-full" />
-                <span className="text-gray-500">Geen klant (loopklant)</span>
-              </button>
-              {customers.map(customer => (
-                <button
-                  key={customer.id}
-                  className="w-full p-3 text-left hover:bg-gray-50 flex items-center gap-3"
-                  onClick={() => { setSelectedCustomer(customer); setShowCustomerModal(false); }}
-                >
-                  <User className="w-8 h-8 p-1.5 bg-emerald-100 text-emerald-700 rounded-full" />
-                  <div className="flex-1">
-                    <div className="font-medium">{customer.name}</div>
-                    <div className="text-sm text-gray-500">{customer.phone || customer.email}</div>
-                  </div>
-                  <Badge variant="secondary">{customer.loyalty_points} pts</Badge>
-                </button>
-              ))}
-            </div>
-          </div>
         </DialogContent>
       </Dialog>
 
@@ -565,14 +609,14 @@ export default function KassaPOS() {
       <Dialog open={showReceiptModal} onOpenChange={setShowReceiptModal}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle className="text-center">Verkoop Voltooid!</DialogTitle>
+            <DialogTitle className="text-center text-green-600">✓ Verkoop Voltooid!</DialogTitle>
           </DialogHeader>
           
           {lastOrder && (
             <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded-lg text-center">
-                <div className="text-sm text-gray-500">Bonnummer</div>
-                <div className="text-xl font-bold">{lastOrder.order_number}</div>
+              <div className="bg-slate-50 p-4 rounded-lg text-center">
+                <div className="text-sm text-slate-500">Bonnummer</div>
+                <div className="text-xl font-bold font-mono">{lastOrder.order_number}</div>
               </div>
               
               <div className="space-y-2 text-sm">
@@ -589,7 +633,7 @@ export default function KassaPOS() {
                   <span>{formatCurrency(lastOrder.total)}</span>
                 </div>
                 {lastOrder.change > 0 && (
-                  <div className="flex justify-between text-green-600">
+                  <div className="flex justify-between text-green-600 font-medium">
                     <span>Wisselgeld</span>
                     <span>{formatCurrency(lastOrder.change)}</span>
                   </div>
@@ -603,7 +647,7 @@ export default function KassaPOS() {
               <Printer className="w-4 h-4 mr-2" />
               Bon Printen
             </Button>
-            <Button className="w-full" onClick={() => setShowReceiptModal(false)}>
+            <Button className="w-full bg-blue-600 hover:bg-blue-700" onClick={() => setShowReceiptModal(false)}>
               Nieuwe Verkoop
             </Button>
           </DialogFooter>
