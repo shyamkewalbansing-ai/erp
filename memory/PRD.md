@@ -7,12 +7,59 @@ Comprehensive accounting and business management platform for Suriname businesse
 - Schuldbeheer - Personal Debt Management
 - Vastgoed Beheer - Real Estate Management
 - Auto Dealer, Beauty Spa, Pompstation - Industry-specific modules
+- **Kassa POS - Standalone Point of Sale system (NEW)**
 
-## Current Session: March 7, 2026
+## Current Session: March 8, 2026
 
 ### Completed This Session
 
-#### HRM / Personeel Loonlijst - Grootboek Koppeling ✅ (P0 - NEW)
+#### Kassa POS System ✅ (P0 - NEW MAJOR FEATURE)
+A complete standalone Point of Sale system for Suriname businesses with:
+
+**Backend (`/app/backend/routers/kassa.py`):**
+- Separate JWT authentication system
+- Multi-tenant architecture (each business has own account)
+- SaaS subscription plans (Basic SRD 49/mo, Pro SRD 99/mo, Enterprise SRD 199/mo)
+- **Endpoints:**
+  - Auth: `/api/kassa/auth/register`, `/api/kassa/auth/login`, `/api/kassa/auth/me`
+  - Categories: CRUD operations
+  - Products: CRUD + barcode lookup + stock tracking
+  - Orders: Create sales, refunds, automatic stock updates
+  - Customers: CRUD + loyalty points
+  - Reports: Daily sales, inventory alerts
+  - Settings: Business configuration
+  - Superadmin: Manage all businesses and subscriptions
+
+**Frontend Pages:**
+- `/kassa/login` - Login/Register page with features overview
+- `/kassa/pos` - Main POS interface (SumUp-style design)
+- `/kassa/producten` - Product management
+- `/kassa/rapporten` - Sales and inventory reports
+
+**Features Implemented:**
+- Product grid with category filtering
+- Barcode scanning support
+- Shopping cart with quantity controls
+- Multiple payment methods (Cash, PIN, QR)
+- Change calculation for cash payments
+- Quick amount buttons
+- Customer selection with loyalty points
+- Automatic stock deduction on sale
+- Receipt modal after sale
+- Daily sales reports
+- Low stock alerts
+- BTW (8%) automatic calculation
+
+**Files Created:**
+- `backend/routers/kassa.py` - Complete backend API
+- `frontend/src/context/KassaAuthContext.js` - Auth provider
+- `frontend/src/lib/kassaApi.js` - API service
+- `frontend/src/pages/kassa/KassaLogin.js` - Login page
+- `frontend/src/pages/kassa/KassaPOS.js` - Main POS interface
+- `frontend/src/pages/kassa/KassaProducten.js` - Product management
+- `frontend/src/pages/kassa/KassaRapporten.js` - Reports
+
+#### HRM / Personeel Loonlijst - Grootboek Koppeling ✅ (P0)
 - **Loonbelasting (2360) en AOV Premie (2380) integratie met Grootboek**:
   - Bij uitbetaling van salarissen worden automatisch journaalposten aangemaakt
   - **Rekeningen gebruikt**:

@@ -70,6 +70,7 @@ from routers.boekhouding import router as boekhouding_router
 from routers.schuldbeheer import router as schuldbeheer_router
 from routers.gratis_factuur import router as gratis_factuur_router, set_database as set_gratis_factuur_db
 from routers.live_chat import router as live_chat_router, set_database as set_live_chat_db, set_jwt_config as set_live_chat_jwt
+from routers.kassa import router as kassa_router
 from services.unified_email_service import get_email_service, EMAIL_TEMPLATES
 from services.scheduled_tasks import get_scheduled_tasks
 
@@ -14516,6 +14517,7 @@ api_router.include_router(spa_booking_router)
 api_router.include_router(suribet_router)
 api_router.include_router(boekhouding_router)
 api_router.include_router(schuldbeheer_router)
+api_router.include_router(kassa_router)
 
 # Initialize and include gratis factuur router
 set_gratis_factuur_db(db)

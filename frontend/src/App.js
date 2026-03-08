@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { TenantAuthProvider, useTenantAuth } from "./context/TenantAuthContext";
+import { KassaAuthProvider, useKassaAuth } from "./context/KassaAuthContext";
 import BoekhoudingOfflineManager from "./components/BoekhoudingOfflineManager";
 import OfflineSyncIndicator from "./components/OfflineSyncIndicator";
 import React, { lazy, Suspense, memo } from "react";
@@ -23,6 +24,12 @@ const GratisFactuurInstellingen = lazy(() => import("./pages/GratisFactuurInstel
 
 // Staff Chat Dashboard
 const StaffChatDashboard = lazy(() => import("./pages/StaffChatDashboard"));
+
+// Kassa POS System - Standalone public pages
+const KassaLogin = lazy(() => import("./pages/kassa/KassaLogin"));
+const KassaPOS = lazy(() => import("./pages/kassa/KassaPOS"));
+const KassaProducten = lazy(() => import("./pages/kassa/KassaProducten"));
+const KassaRapporten = lazy(() => import("./pages/kassa/KassaRapporten"));
 
 // Tenant Portal pages
 const TenantLogin = lazy(() => import("./pages/TenantLogin"));
@@ -430,6 +437,40 @@ const CustomerOnlyRoute = ({ children }) => {
   return children;
 };
 
+// Kassa POS Routes - Standalone system with own auth
+function KassaRoutes() {
+  return (
+    <KassaAuthProvider>
+      <SafeSuspense>
+        <KassaRoutesContent />
+      </SafeSuspense>
+    </KassaAuthProvider>
+  );
+}
+
+function KassaRoutesContent() {
+  const { isAuthenticated, loading } = useKassaAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+  
+  return (
+    <Routes>
+      <Route path="/login" element={!isAuthenticated ? <KassaLogin /> : <Navigate to="/kassa/pos" replace />} />
+      <Route path="/pos" element={isAuthenticated ? <KassaPOS /> : <Navigate to="/kassa/login" replace />} />
+      <Route path="/producten" element={isAuthenticated ? <KassaProducten /> : <Navigate to="/kassa/login" replace />} />
+      <Route path="/rapporten" element={isAuthenticated ? <KassaRapporten /> : <Navigate to="/kassa/login" replace />} />
+      <Route path="/" element={<Navigate to="/kassa/login" replace />} />
+      <Route path="*" element={<Navigate to="/kassa/login" replace />} />
+    </Routes>
+  );
+}
+
 // Tenant Portal App - separate from main app
 function TenantPortalRoutes() {
   return (
@@ -467,6 +508,9 @@ function AppWithRoutes() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
+          {/* Kassa POS Routes - Standalone system */}
+          <Route path="/kassa/*" element={<KassaRoutes />} />
+          
           {/* Tenant Portal Routes */}
           <Route path="/huurder/*" element={<TenantPortalRoutes />} />
           
