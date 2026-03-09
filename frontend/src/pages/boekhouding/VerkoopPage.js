@@ -365,6 +365,31 @@ Met vriendelijke groet`,
     }
   };
 
+  // View quote modal
+  const [quoteModalOpen, setQuoteModalOpen] = useState(false);
+  const [selectedQuote, setSelectedQuote] = useState(null);
+
+  const handleViewQuote = (quote) => {
+    setSelectedQuote(quote);
+    setQuoteModalOpen(true);
+  };
+
+  // Delete quote
+  const handleDeleteQuote = async (quote) => {
+    const offertenummer = quote.nummer || quote.offertenummer || 'Onbekend';
+    if (!window.confirm(`Weet u zeker dat u offerte ${offertenummer} wilt verwijderen?\n\nDeze actie kan niet ongedaan worden gemaakt.`)) return;
+    
+    try {
+      await quotesAPI.delete(quote.id);
+      toast.success(`Offerte ${offertenummer} is verwijderd`);
+      fetchData();
+    } catch (error) {
+      console.error('Delete error:', error);
+      const errorMsg = error.response?.data?.detail || error.message || 'Fout bij verwijderen';
+      toast.error(errorMsg);
+    }
+  };
+
   // Toggle row selection
   const toggleRowSelection = (id) => {
     setSelectedRows(prev => 
@@ -714,7 +739,7 @@ Met vriendelijke groet`,
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button 
-                                className="text-gray-500 hover:text-emerald-600 p-1.5 rounded-lg hover:bg-emerald-50 transition-colors"
+                                className="text-gray-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"
                                 onClick={() => handleSendEmail(invoice)}
                                 title="E-mail versturen"
                                 data-testid={`email-invoice-${invoice.id}`}
@@ -722,7 +747,7 @@ Met vriendelijke groet`,
                                 <Mail className="w-4 h-4" />
                               </button>
                               <button 
-                                className="text-gray-500 hover:text-purple-600 p-1.5 rounded-lg hover:bg-purple-50 transition-colors"
+                                className="text-gray-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"
                                 onClick={() => handlePrint(invoice)}
                                 title="Printen / PDF"
                                 data-testid={`print-invoice-${invoice.id}`}
@@ -731,7 +756,7 @@ Met vriendelijke groet`,
                               </button>
                               {invoice.status !== 'betaald' && invoice.status !== 'concept' && (
                                 <button 
-                                  className="text-emerald-600 hover:text-emerald-700 p-1.5 rounded-lg hover:bg-emerald-50 transition-colors"
+                                  className="text-gray-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"
                                   onClick={() => handleOpenPayment(invoice)}
                                   title="Betaling registreren"
                                   data-testid={`payment-invoice-${invoice.id}`}
@@ -856,12 +881,27 @@ Met vriendelijke groet`,
                             </span>
                           </td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <button className="text-gray-500 hover:text-gray-700">
+                            <div className="flex items-center gap-1">
+                              <button 
+                                className="text-gray-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                                onClick={() => handleViewQuote(quote)}
+                                title="Bekijken"
+                              >
                                 <Eye className="w-4 h-4" />
                               </button>
-                              <button className="text-gray-500 hover:text-gray-700">
+                              <button 
+                                className="text-gray-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                                onClick={() => toast.info('Offerte naar factuur omzetten komt binnenkort')}
+                                title="Naar factuur"
+                              >
                                 <FileText className="w-4 h-4" />
+                              </button>
+                              <button 
+                                className="text-gray-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                onClick={() => handleDeleteQuote(quote)}
+                                title="Verwijderen"
+                              >
+                                <Trash2 className="w-4 h-4" />
                               </button>
                             </div>
                           </td>
@@ -1213,14 +1253,18 @@ Met vriendelijke groet`,
                         </tr>
                       </thead>
                       <tbody>
-                        {selectedInvoice.regels.map((regel, idx) => (
-                          <tr key={idx} className="border-t border-gray-200">
-                            <td className="px-3 py-2">{regel.omschrijving || regel.description}</td>
-                            <td className="px-3 py-2 text-right">{regel.aantal || regel.quantity || 1}</td>
-                            <td className="px-3 py-2 text-right">{formatCurrency(regel.prijs || regel.price || 0)}</td>
-                            <td className="px-3 py-2 text-right font-medium">{formatCurrency((regel.aantal || 1) * (regel.prijs || regel.price || 0))}</td>
-                          </tr>
-                        ))}
+                        {selectedInvoice.regels.map((regel, idx) => {
+                          const aantal = regel.aantal || regel.quantity || 1;
+                          const prijs = regel.eenheidsprijs || regel.prijs || regel.price || regel.unit_price || 0;
+                          return (
+                            <tr key={idx} className="border-t border-gray-200">
+                              <td className="px-3 py-2">{regel.omschrijving || regel.description || regel.artikel_naam || '-'}</td>
+                              <td className="px-3 py-2 text-right">{aantal}</td>
+                              <td className="px-3 py-2 text-right">{formatCurrency(prijs)}</td>
+                              <td className="px-3 py-2 text-right font-medium">{formatCurrency(aantal * prijs)}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -1358,6 +1402,96 @@ Met vriendelijke groet`,
                 >
                   {emailSending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
                   Versturen
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Quote View Modal */}
+      <Dialog open={quoteModalOpen} onOpenChange={setQuoteModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-blue-600" />
+              Offerte Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedQuote && (
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
+                <div>
+                  <p className="text-sm text-gray-500">Offertenummer</p>
+                  <p className="font-semibold text-lg">{selectedQuote.nummer || selectedQuote.offertenummer}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <StatusBadge status={selectedQuote.status} />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Klant</p>
+                  <p className="font-medium">{selectedQuote.klant_naam || selectedQuote.debiteur_naam || 'Onbekend'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Datum</p>
+                  <p className="font-medium">{formatDate(selectedQuote.datum)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Geldig tot</p>
+                  <p className="font-medium">{formatDate(selectedQuote.geldig_tot)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Totaal</p>
+                  <p className="font-semibold text-emerald-600">{formatCurrency(selectedQuote.totaal_incl_btw || selectedQuote.totaal)}</p>
+                </div>
+              </div>
+
+              {selectedQuote.regels && selectedQuote.regels.length > 0 && (
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-2">Offerte Regels</p>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="text-left px-3 py-2 font-medium text-gray-600">Omschrijving</th>
+                          <th className="text-right px-3 py-2 font-medium text-gray-600">Aantal</th>
+                          <th className="text-right px-3 py-2 font-medium text-gray-600">Prijs</th>
+                          <th className="text-right px-3 py-2 font-medium text-gray-600">Totaal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedQuote.regels.map((regel, idx) => {
+                          const aantal = regel.aantal || regel.quantity || 1;
+                          const prijs = regel.eenheidsprijs || regel.prijs || regel.price || 0;
+                          return (
+                            <tr key={idx} className="border-t border-gray-200">
+                              <td className="px-3 py-2">{regel.omschrijving || regel.description || '-'}</td>
+                              <td className="px-3 py-2 text-right">{aantal}</td>
+                              <td className="px-3 py-2 text-right">{formatCurrency(prijs)}</td>
+                              <td className="px-3 py-2 text-right font-medium">{formatCurrency(aantal * prijs)}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button variant="outline" onClick={() => setQuoteModalOpen(false)}>
+                  Sluiten
+                </Button>
+                <Button 
+                  onClick={() => {
+                    toast.info('Offerte naar factuur omzetten komt binnenkort');
+                    setQuoteModalOpen(false);
+                  }}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Naar Factuur
                 </Button>
               </div>
             </div>

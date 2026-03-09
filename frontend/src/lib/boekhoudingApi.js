@@ -642,6 +642,7 @@ export const quotesAPI = {
   getAll: () => apiFetch('/boekhouding/offertes'),
   create: (data) => apiFetch('/boekhouding/offertes', { method: 'POST', body: JSON.stringify(data) }),
   updateStatus: (id, status) => apiFetch(`/boekhouding/offertes/${id}/status?status=${status}`, { method: 'PUT' }),
+  delete: (id) => apiFetch(`/boekhouding/offertes/${id}`, { method: 'DELETE' }),
 };
 
 // Sales Orders

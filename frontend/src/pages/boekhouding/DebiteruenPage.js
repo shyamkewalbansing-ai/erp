@@ -1337,9 +1337,9 @@ const DebiteurenPage = () => {
               {(() => {
                 const custInvoices = invoices.filter(i => i.debiteur_id === selectedCustomer.id);
                 const openInv = custInvoices.filter(i => i.status !== 'betaald' && i.status !== 'concept');
-                const totalOpen = openInv.reduce((sum, i) => sum + (i.totaal_bedrag || i.totaal || 0), 0);
+                const totalOpen = openInv.reduce((sum, i) => sum + (i.totaal_incl_btw || i.totaal_bedrag || i.totaal || 0), 0);
                 const paidInv = custInvoices.filter(i => i.status === 'betaald');
-                const totalPaid = paidInv.reduce((sum, i) => sum + (i.totaal_bedrag || i.totaal || 0), 0);
+                const totalPaid = paidInv.reduce((sum, i) => sum + (i.totaal_incl_btw || i.totaal_bedrag || i.totaal || 0), 0);
                 
                 return (
                   <div className="grid grid-cols-2 gap-3">

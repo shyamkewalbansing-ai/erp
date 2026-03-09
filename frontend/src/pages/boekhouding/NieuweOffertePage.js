@@ -286,11 +286,11 @@ const NieuweOffertePage = () => {
           </div>
           
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="text-slate-600">
+            <Button variant="outline" size="sm" className="text-slate-600" onClick={() => toast.info('Voorbeeld functie komt binnenkort')}>
               <Eye className="w-4 h-4 mr-2" />
               Voorbeeld
             </Button>
-            <Button variant="outline" size="sm" className="text-slate-600">
+            <Button variant="outline" size="sm" className="text-slate-600" onClick={() => toast.info('Sla eerst de offerte op om een PDF te genereren')}>
               <Download className="w-4 h-4 mr-2" />
               PDF
             </Button>

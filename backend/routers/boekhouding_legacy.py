@@ -3912,7 +3912,15 @@ async def get_offertes(authorization: str = Header(None)):
     user = await get_current_user(authorization)
     user_id = user.get('id')
     offertes = await db.boekhouding_offertes.find({"user_id": user_id}).sort("datum", -1).to_list(500)
-    return [clean_doc(o) for o in offertes]
+    
+    # Normalize field names for frontend consistency
+    result = []
+    for o in offertes:
+        offerte = clean_doc(o)
+        offerte["nummer"] = offerte.get("offertenummer") or offerte.get("nummer")
+        result.append(offerte)
+    
+    return result
 
 @router.post("/offertes")
 async def create_offerte(data: OfferteCreate, authorization: str = Header(None)):
@@ -3952,6 +3960,19 @@ async def update_offerte_status(offerte_id: str, status: str, authorization: str
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Offerte niet gevonden")
     return {"message": f"Status gewijzigd naar {status}"}
+
+
+@router.delete("/offertes/{offerte_id}")
+async def delete_offerte(offerte_id: str, authorization: str = Header(None)):
+    """Verwijder offerte"""
+    user = await get_current_user(authorization)
+    user_id = user.get('id')
+    
+    result = await db.boekhouding_offertes.delete_one({"id": offerte_id, "user_id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Offerte niet gevonden")
+    return {"message": "Offerte verwijderd"}
+
 
 # ==================== VERKOOPORDERS ====================
 
