@@ -1,6 +1,7 @@
 """
 PDF Generator Module - Professionele factuur PDFs
 Met moderne, clean design gebaseerd op Nederlandse facturatiestandaarden
+Inclusief decoratieve diagonale strepen in groen/donkerblauw thema
 """
 import io
 from datetime import datetime
@@ -12,6 +13,13 @@ from reportlab.lib.units import mm, cm
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image, HRFlowable
 from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
 from reportlab.pdfgen import canvas
+
+
+# Brand kleuren
+BRAND_GREEN = '#1EB870'  # Primaire groene kleur
+BRAND_NAVY = '#1e3a5f'   # Donkerblauwe accent
+TEXT_DARK = '#1e293b'
+TEXT_LIGHT = '#64748b'
 
 
 def format_currency(amount: float, currency: str = "SRD") -> str:
@@ -34,6 +42,51 @@ def format_date(date_str: str) -> str:
         return str(date_str)
 
 
+class InvoicePDFCanvas(canvas.Canvas):
+    """Custom canvas met decoratieve elementen (diagonale strepen)"""
+    
+    def __init__(self, *args, accent_color=BRAND_GREEN, secondary_color=BRAND_NAVY, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.accent_color = accent_color
+        self.secondary_color = secondary_color
+        self.pages = []
+    
+    def showPage(self):
+        self.pages.append(dict(self.__dict__))
+        self._startPage()
+    
+    def save(self):
+        page_count = len(self.pages)
+        for page in self.pages:
+            self.__dict__.update(page)
+            self.draw_decorations()
+            canvas.Canvas.showPage(self)
+        canvas.Canvas.save(self)
+    
+    def draw_decorations(self):
+        """Teken decoratieve diagonale strepen"""
+        page_width, page_height = A4
+        
+        # Donkerblauwe diagonale streep rechtsboven
+        self.setFillColor(colors.HexColor(self.secondary_color))
+        # Driehoek rechtsboven
+        self.beginPath()
+        self.moveTo(page_width - 80*mm, page_height)  # Linker punt boven
+        self.lineTo(page_width, page_height)  # Rechter hoek boven
+        self.lineTo(page_width, page_height - 40*mm)  # Rechter punt onder
+        self.closePath()
+        self.fill()
+        
+        # Groene diagonale streep rechtsonder
+        self.setFillColor(colors.HexColor(self.accent_color))
+        self.beginPath()
+        self.moveTo(page_width - 50*mm, 0)  # Linker punt onder
+        self.lineTo(page_width, 0)  # Rechter hoek onder
+        self.lineTo(page_width, 30*mm)  # Rechter punt boven
+        self.closePath()
+        self.fill()
+
+
 def generate_invoice_pdf(
     factuur: Dict[str, Any],
     bedrijf: Dict[str, Any],
@@ -41,114 +94,129 @@ def generate_invoice_pdf(
     template_settings: Optional[Dict[str, Any]] = None
 ) -> bytes:
     """
-    Genereer professionele factuur PDF met moderne, clean design
+    Genereer professionele factuur PDF met modern design
     
     Design kenmerken:
-    - Groene accent kleur header strip
-    - Bedrijfslogo rechts bovenaan met adresgegevens
-    - Klantgegevens links
-    - Duidelijke factuurgegevens met labels
-    - Professionele regelitems tabel
-    - BTW breakdown
-    - Totaal sectie prominent weergegeven
+    - Logo met initialen in groene cirkel
+    - Bedrijfsnaam naast logo
+    - FACTUUR titel prominent
+    - Donkerblauwe diagonale streep rechtsboven
+    - Groene diagonale streep rechtsonder
+    - Tabel met groene header
+    - Betalingsvoorwaarden sectie
+    - Totaal met groene achtergrond
+    - Handtekening sectie
     """
     buffer = io.BytesIO()
     
     # Get template settings with defaults
     settings = template_settings or {}
     
-    # Brand kleuren - groen accent zoals in referentie
-    accent_color = settings.get('factuur_primaire_kleur', '#22c55e')  # Groene accent
-    text_dark = '#1e293b'  # Donkere tekst
-    text_light = '#64748b'  # Lichte tekst
+    # Brand kleuren
+    accent_color = settings.get('factuur_primaire_kleur', BRAND_GREEN)
+    secondary_color = settings.get('factuur_secundaire_kleur', BRAND_NAVY)
     
-    # Setup document
+    # Setup document met custom canvas
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
         rightMargin=15*mm,
         leftMargin=15*mm,
-        topMargin=10*mm,
-        bottomMargin=15*mm
+        topMargin=15*mm,
+        bottomMargin=20*mm
     )
+    
+    # Custom canvas builder
+    def make_canvas(*args, **kwargs):
+        return InvoicePDFCanvas(*args, accent_color=accent_color, secondary_color=secondary_color, **kwargs)
     
     # Styles
     styles = getSampleStyleSheet()
     
     # Custom styles
+    company_name_style = ParagraphStyle(
+        'CompanyName',
+        parent=styles['Normal'],
+        fontSize=16,
+        textColor=colors.HexColor(TEXT_DARK),
+        fontName='Helvetica-Bold',
+        leading=20
+    )
+    
     company_info_style = ParagraphStyle(
         'CompanyInfo',
         parent=styles['Normal'],
         fontSize=8,
-        textColor=colors.HexColor(text_light),
+        textColor=colors.HexColor(TEXT_LIGHT),
         leading=11
     )
     
     title_style = ParagraphStyle(
         'InvoiceTitle',
         parent=styles['Normal'],
-        fontSize=24,
-        textColor=colors.HexColor(text_dark),
+        fontSize=28,
+        textColor=colors.HexColor(TEXT_DARK),
         fontName='Helvetica-Bold',
         spaceAfter=15
     )
     
-    label_style = ParagraphStyle(
-        'Label',
+    section_label_style = ParagraphStyle(
+        'SectionLabel',
         parent=styles['Normal'],
-        fontSize=8,
+        fontSize=9,
         textColor=colors.HexColor(accent_color),
         fontName='Helvetica-Bold',
-        leading=10
+        leading=12
     )
     
     value_style = ParagraphStyle(
         'Value',
         parent=styles['Normal'],
         fontSize=10,
-        textColor=colors.HexColor(text_dark),
+        textColor=colors.HexColor(TEXT_DARK),
         leading=13
     )
     
     small_label_style = ParagraphStyle(
         'SmallLabel',
         parent=styles['Normal'],
-        fontSize=7,
-        textColor=colors.HexColor(text_light),
-        leading=9
+        fontSize=8,
+        textColor=colors.HexColor(TEXT_LIGHT),
+        fontName='Helvetica-Bold',
+        leading=10
     )
     
     client_name_style = ParagraphStyle(
         'ClientName',
         parent=styles['Normal'],
-        fontSize=10,
-        textColor=colors.HexColor(text_dark),
+        fontSize=11,
+        textColor=colors.HexColor(TEXT_DARK),
         fontName='Helvetica-Bold',
-        leading=13
+        leading=14
     )
     
     client_info_style = ParagraphStyle(
         'ClientInfo',
         parent=styles['Normal'],
         fontSize=9,
-        textColor=colors.HexColor(text_dark),
+        textColor=colors.HexColor(TEXT_DARK),
         leading=12
     )
     
     table_header_style = ParagraphStyle(
         'TableHeader',
         parent=styles['Normal'],
-        fontSize=8,
-        textColor=colors.HexColor(text_light),
+        fontSize=9,
+        textColor=colors.white,
         fontName='Helvetica-Bold',
-        leading=10
+        leading=12
     )
     
     table_cell_style = ParagraphStyle(
         'TableCell',
         parent=styles['Normal'],
         fontSize=9,
-        textColor=colors.HexColor(text_dark),
+        textColor=colors.HexColor(TEXT_DARK),
         leading=12
     )
     
@@ -156,346 +224,287 @@ def generate_invoice_pdf(
         'TotalLabel',
         parent=styles['Normal'],
         fontSize=9,
-        textColor=colors.HexColor(text_light),
+        textColor=colors.HexColor(TEXT_LIGHT),
         leading=12
     )
     
     # Build content
     content = []
     
-    # === GROENE HEADER STRIP ===
-    # Simuleren met een gekleurde tabel
-    header_strip = Table([['']], colWidths=[180*mm], rowHeights=[3*mm])
-    header_strip.setStyle(TableStyle([
+    # === HEADER: LOGO + BEDRIJFSNAAM ===
+    bedrijfsnaam = bedrijf.get('bedrijfsnaam', 'Mijn Bedrijf')
+    initialen = ''.join([w[0].upper() for w in bedrijfsnaam.split()[:2]]) or 'FB'
+    
+    # Logo als cirkel met initialen (gesimuleerd met tabel)
+    logo_circle = Table(
+        [[Paragraph(f"<font color='white' size='14'><b>{initialen}</b></font>", 
+                   ParagraphStyle('Logo', alignment=TA_CENTER))]],
+        colWidths=[12*mm],
+        rowHeights=[12*mm]
+    )
+    logo_circle.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor(accent_color)),
-        ('TOPPADDING', (0, 0), (-1, -1), 0),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 0),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ROUNDEDCORNERS', [6*mm, 6*mm, 6*mm, 6*mm]),
     ]))
-    content.append(header_strip)
+    
+    header_data = [[
+        logo_circle,
+        Paragraph(bedrijfsnaam, company_name_style),
+        ''  # Placeholder for top-right decoration area
+    ]]
+    
+    header_table = Table(header_data, colWidths=[15*mm, 100*mm, 65*mm])
+    header_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('LEFTPADDING', (1, 0), (1, 0), 5),
+    ]))
+    content.append(header_table)
     content.append(Spacer(1, 8*mm))
     
-    # === HEADER: KLANT LINKS, BEDRIJF RECHTS ===
-    bedrijfsnaam = bedrijf.get('bedrijfsnaam', 'Mijn Bedrijf')
+    # === FACTUUR TITEL ===
+    content.append(Paragraph("FACTUUR", title_style))
+    content.append(Spacer(1, 5*mm))
     
-    # Bedrijfsgegevens rechts
-    bedrijf_info_lines = []
-    if bedrijf.get('adres'):
-        bedrijf_info_lines.append(bedrijf['adres'])
-    if bedrijf.get('postcode') and bedrijf.get('plaats'):
-        bedrijf_info_lines.append(f"{bedrijf.get('postcode', '')} {bedrijf.get('plaats', '')}")
-    elif bedrijf.get('plaats'):
-        bedrijf_info_lines.append(bedrijf['plaats'])
+    # === FACTUUR INFO: LINKS KLANT, RECHTS FACTUURDETAILS ===
+    factuurnummer = factuur.get('factuurnummer', factuur.get('nummer', 'CONCEPT'))
+    factuurdatum = format_date(factuur.get('factuurdatum', factuur.get('datum')))
+    vervaldatum = format_date(factuur.get('vervaldatum'))
+    valuta = factuur.get('valuta', 'SRD')
     
-    bedrijf_info_lines.append('')  # Lege regel
-    
-    if bedrijf.get('kvk_nummer'):
-        bedrijf_info_lines.append(f"KvK nr: {bedrijf['kvk_nummer']}")
-    if bedrijf.get('btw_nummer'):
-        bedrijf_info_lines.append(f"BTW nr: {bedrijf['btw_nummer']}")
-    
-    bedrijf_info_lines.append('')  # Lege regel
-    
-    if bedrijf.get('bank_naam') and bedrijf.get('bank_rekening'):
-        bedrijf_info_lines.append(f"Bank: {bedrijf['bank_naam']}")
-        bedrijf_info_lines.append(f"IBAN: {bedrijf['bank_rekening']}")
-    
-    bedrijf_info_lines.append('')  # Lege regel
-    
-    if bedrijf.get('telefoon'):
-        bedrijf_info_lines.append(f"Tel: {bedrijf['telefoon']}")
-    if bedrijf.get('email'):
-        bedrijf_info_lines.append(f"Email: {bedrijf['email']}")
-    if bedrijf.get('website'):
-        bedrijf_info_lines.append(bedrijf['website'])
-    
-    # Klantgegevens links
+    # Klantgegevens
     klant_naam = debiteur.get('naam') if debiteur else factuur.get('debiteur_naam', '')
     klant_adres = debiteur.get('adres', '') if debiteur else ''
     klant_postcode = debiteur.get('postcode', '') if debiteur else ''
     klant_plaats = debiteur.get('plaats', '') if debiteur else ''
     
-    klant_info_lines = [f"Aan: {klant_naam}"]
-    if klant_adres:
-        klant_info_lines.append(klant_adres)
-    if klant_postcode and klant_plaats:
-        klant_info_lines.append(f"{klant_postcode} {klant_plaats}")
-    elif klant_plaats:
-        klant_info_lines.append(klant_plaats)
-    
-    # Header tabel
-    header_data = [[
-        # Links: Klantgegevens (later ingevuld)
-        '',
-        # Rechts: Logo en bedrijfsgegevens
-        Paragraph(f"<font color='{accent_color}' size='14'><b>{bedrijfsnaam}</b></font>", styles['Normal'])
-    ]]
-    
-    header_table = Table(header_data, colWidths=[100*mm, 80*mm])
-    header_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-    ]))
-    content.append(header_table)
-    
-    # Bedrijfsinfo rechts uitgelijnd
-    bedrijf_info_text = '<br/>'.join(bedrijf_info_lines)
-    bedrijf_info_table = Table([['', Paragraph(bedrijf_info_text, company_info_style)]], 
-                                colWidths=[100*mm, 80*mm])
-    bedrijf_info_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-    ]))
-    content.append(bedrijf_info_table)
-    
-    content.append(Spacer(1, 10*mm))
-    
-    # === FACTUUR TITEL ===
-    content.append(Paragraph("Factuur", title_style))
-    
-    # === FACTUUR INFO & KLANT INFO ===
-    factuurnummer = factuur.get('factuurnummer', 'CONCEPT')
-    factuurdatum = format_date(factuur.get('factuurdatum'))
-    vervaldatum = format_date(factuur.get('vervaldatum'))
-    referentie = factuur.get('referentie', '')
-    valuta = factuur.get('valuta', 'SRD')
-    
-    # Links: Klantgegevens, Rechts: Factuurdetails
-    klant_content = []
-    klant_content.append(Paragraph("Aan:", small_label_style))
-    klant_content.append(Paragraph(klant_naam or '-', client_name_style))
+    # Links: Factuur Aan
+    klant_content = [
+        Paragraph("FACTUUR AAN:", section_label_style),
+        Spacer(1, 2*mm),
+        Paragraph(klant_naam or '-', client_name_style),
+    ]
     if klant_adres:
         klant_content.append(Paragraph(klant_adres, client_info_style))
     if klant_postcode or klant_plaats:
         klant_content.append(Paragraph(f"{klant_postcode} {klant_plaats}".strip(), client_info_style))
     
-    # Factuurdetails rechts
-    details_data = [
-        [Paragraph("Factuurnummer", label_style), Paragraph(factuurnummer, value_style)],
-        [Paragraph("", styles['Normal']), Paragraph("", styles['Normal'])],
-        [Paragraph("DATUM", small_label_style), Paragraph("Factuurdatum", small_label_style)],
-        [Paragraph("", styles['Normal']), Paragraph(factuurdatum, value_style)],
-        [Paragraph("", styles['Normal']), Paragraph("", styles['Normal'])],
-        [Paragraph("", styles['Normal']), Paragraph("Vervaldatum", small_label_style)],
-        [Paragraph("", styles['Normal']), Paragraph(vervaldatum, value_style)],
-    ]
-    
-    if referentie:
-        details_data.append([Paragraph("", styles['Normal']), Paragraph("", styles['Normal'])])
-        details_data.append([Paragraph("", styles['Normal']), Paragraph("Uw referentie", small_label_style)])
-        details_data.append([Paragraph("", styles['Normal']), Paragraph(referentie, value_style)])
-    
-    details_table = Table(details_data, colWidths=[30*mm, 50*mm])
-    details_table.setStyle(TableStyle([
+    klant_table = Table([[c] for c in klant_content], colWidths=[90*mm])
+    klant_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('TOPPADDING', (0, 0), (-1, -1), 1),
+        ('TOPPADDING', (0, 0), (-1, -1), 0),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 1),
     ]))
     
-    # Bouw klant info als losse paragraphs
-    info_left = Paragraph('<br/>'.join([
-        f"<font color='{text_light}' size='7'>Aan:</font>",
-        f"<font color='{text_dark}' size='10'><b>{klant_naam or '-'}</b></font>",
-        f"<font color='{text_dark}' size='9'>{klant_adres}</font>" if klant_adres else '',
-        f"<font color='{text_dark}' size='9'>{klant_postcode} {klant_plaats}</font>" if klant_postcode or klant_plaats else ''
-    ]), styles['Normal'])
+    # Rechts: Factuur nummer en datum
+    factuur_details = [
+        [Paragraph("FACTUUR NR:", section_label_style), Paragraph(factuurnummer, value_style)],
+        [Paragraph("DATUM:", section_label_style), Paragraph(factuurdatum, value_style)],
+    ]
+    if vervaldatum and vervaldatum != '-':
+        factuur_details.append([Paragraph("VERVALDATUM:", section_label_style), Paragraph(vervaldatum, value_style)])
     
-    main_info_table = Table([[info_left, details_table]], colWidths=[100*mm, 80*mm])
+    details_table = Table(factuur_details, colWidths=[35*mm, 40*mm])
+    details_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+    ]))
+    
+    # Combineer links en rechts
+    main_info_table = Table([[klant_table, details_table]], colWidths=[105*mm, 75*mm])
     main_info_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
     content.append(main_info_table)
-    
     content.append(Spacer(1, 10*mm))
     
     # === FACTUURREGELS TABEL ===
     regels = factuur.get('regels', [])
     
-    # Header met groene accent
+    # Header met groene achtergrond
     table_header = [
         Paragraph("OMSCHRIJVING", table_header_style),
-        Paragraph("AANTAL", ParagraphStyle('RightHeader', parent=table_header_style, alignment=TA_RIGHT)),
-        Paragraph("STUKSPRIJS", ParagraphStyle('RightHeader', parent=table_header_style, alignment=TA_RIGHT)),
-        Paragraph("BTW", ParagraphStyle('RightHeader', parent=table_header_style, alignment=TA_RIGHT)),
+        Paragraph("PRIJS", ParagraphStyle('RightHeader', parent=table_header_style, alignment=TA_RIGHT)),
+        Paragraph("AANTAL", ParagraphStyle('RightHeader', parent=table_header_style, alignment=TA_CENTER)),
+        Paragraph("BTW", ParagraphStyle('RightHeader', parent=table_header_style, alignment=TA_CENTER)),
         Paragraph("TOTAAL", ParagraphStyle('RightHeader', parent=table_header_style, alignment=TA_RIGHT)),
     ]
     
     regels_data = [table_header]
     
     # Factuurregels
+    subtotaal_calc = 0
+    btw_calc = 0
     for regel in regels:
         omschrijving = regel.get('omschrijving', regel.get('artikel_naam', 'Product/Dienst'))
         aantal = regel.get('aantal', 1)
-        prijs = regel.get('eenheidsprijs', 0)
+        prijs = regel.get('eenheidsprijs', regel.get('prijs', 0))
         btw_perc = regel.get('btw_percentage', 0)
-        bedrag = regel.get('bedrag_incl', regel.get('bedrag_excl', aantal * prijs))
+        bedrag_excl = aantal * prijs
+        bedrag_btw = bedrag_excl * (btw_perc / 100)
+        bedrag_incl = regel.get('bedrag_incl', bedrag_excl + bedrag_btw)
+        
+        subtotaal_calc += bedrag_excl
+        btw_calc += bedrag_btw
         
         regels_data.append([
             Paragraph(omschrijving, table_cell_style),
-            Paragraph(str(aantal), ParagraphStyle('RightCell', parent=table_cell_style, alignment=TA_RIGHT)),
             Paragraph(format_currency(prijs, valuta), ParagraphStyle('RightCell', parent=table_cell_style, alignment=TA_RIGHT)),
-            Paragraph(f"{btw_perc}%", ParagraphStyle('RightCell', parent=table_cell_style, alignment=TA_RIGHT)),
-            Paragraph(format_currency(bedrag, valuta), ParagraphStyle('RightCell', parent=table_cell_style, alignment=TA_RIGHT)),
+            Paragraph(str(aantal), ParagraphStyle('CenterCell', parent=table_cell_style, alignment=TA_CENTER)),
+            Paragraph(f"{btw_perc}%", ParagraphStyle('CenterCell', parent=table_cell_style, alignment=TA_CENTER)),
+            Paragraph(format_currency(bedrag_incl, valuta), ParagraphStyle('RightCell', parent=table_cell_style, alignment=TA_RIGHT)),
         ])
     
-    # Tabel styling
-    regels_table = Table(regels_data, colWidths=[70*mm, 22*mm, 30*mm, 20*mm, 38*mm])
+    # Tabel styling met groene header
+    regels_table = Table(regels_data, colWidths=[65*mm, 28*mm, 22*mm, 20*mm, 35*mm])
     
     table_style_commands = [
-        # Header styling
-        ('BACKGROUND', (0, 0), (-1, 0), colors.white),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor(text_light)),
+        # Header styling - groene achtergrond
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor(accent_color)),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.HexColor(accent_color)),
         
         # Body styling
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor(text_dark)),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor(TEXT_DARK)),
         
         # Alternerende rijen
         ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
         
         # Padding
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
-        ('LEFTPADDING', (0, 0), (-1, -1), 5),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+        ('TOPPADDING', (0, 0), (-1, 0), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('TOPPADDING', (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('LEFTPADDING', (0, 0), (-1, -1), 8),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
         
         # Alignment
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         
-        # Lijnen tussen rijen
-        ('LINEBELOW', (0, 1), (-1, -2), 0.5, colors.HexColor('#e2e8f0')),
+        # Lijnen
+        ('LINEBELOW', (0, 0), (-1, -2), 0.5, colors.HexColor('#e2e8f0')),
+        ('LINEBELOW', (0, -1), (-1, -1), 1, colors.HexColor('#e2e8f0')),
     ]
     
     regels_table.setStyle(TableStyle(table_style_commands))
     content.append(regels_table)
-    
     content.append(Spacer(1, 8*mm))
     
-    # === BTW BREAKDOWN ===
-    # Verzamel BTW per percentage
-    btw_breakdown = {}
-    for regel in regels:
-        btw_perc = regel.get('btw_percentage', 0)
-        bedrag_excl = regel.get('bedrag_excl', regel.get('aantal', 1) * regel.get('eenheidsprijs', 0))
-        btw_bedrag = bedrag_excl * (btw_perc / 100)
-        
-        if btw_perc not in btw_breakdown:
-            btw_breakdown[btw_perc] = {'over': 0, 'bedrag': 0}
-        btw_breakdown[btw_perc]['over'] += bedrag_excl
-        btw_breakdown[btw_perc]['bedrag'] += btw_bedrag
+    # === BETALINGSVOORWAARDEN EN TOTALEN ===
+    subtotaal = factuur.get('subtotaal', subtotaal_calc)
+    btw_bedrag = factuur.get('btw_bedrag', btw_calc)
+    totaal = factuur.get('totaal_incl_btw', factuur.get('totaal', subtotaal + btw_bedrag))
     
-    # BTW tabel
-    btw_header = [
-        Paragraph("BTW%", small_label_style),
-        Paragraph("OVER", ParagraphStyle('Right', parent=small_label_style, alignment=TA_RIGHT)),
-        Paragraph("BEDRAG", ParagraphStyle('Right', parent=small_label_style, alignment=TA_RIGHT)),
+    # Betalingsvoorwaarden links
+    betaling_termijn = factuur.get('betalingstermijn', 14)
+    betaling_content = [
+        Paragraph("BETALINGSVOORWAARDEN:", section_label_style),
+        Spacer(1, 2*mm),
+        Paragraph(f"Betaling binnen {betaling_termijn} dagen na factuurdatum.", client_info_style),
     ]
     
-    btw_data = [btw_header]
-    for perc in sorted(btw_breakdown.keys()):
-        btw_data.append([
-            Paragraph(f"{perc}%", table_cell_style),
-            Paragraph(format_currency(btw_breakdown[perc]['over'], valuta), 
-                     ParagraphStyle('Right', parent=table_cell_style, alignment=TA_RIGHT)),
-            Paragraph(format_currency(btw_breakdown[perc]['bedrag'], valuta), 
-                     ParagraphStyle('Right', parent=table_cell_style, alignment=TA_RIGHT)),
-        ])
-    
-    btw_table = Table(btw_data, colWidths=[25*mm, 40*mm, 40*mm])
-    btw_table.setStyle(TableStyle([
-        ('LINEBELOW', (0, 0), (-1, 0), 0.5, colors.HexColor('#e2e8f0')),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-    ]))
-    
-    # === TOTALEN ===
-    subtotaal = factuur.get('subtotaal', 0)
-    btw_bedrag = factuur.get('btw_bedrag', 0)
-    totaal = factuur.get('totaal_incl_btw', subtotaal + btw_bedrag)
-    
-    totaal_data = [
-        ['', Paragraph("TOTAAL EXCL BTW", total_label_style), 
-         Paragraph(format_currency(subtotaal, valuta), ParagraphStyle('Right', parent=value_style, alignment=TA_RIGHT))],
-    ]
-    
-    totaal_table = Table(totaal_data, colWidths=[75*mm, 50*mm, 55*mm])
-    totaal_table.setStyle(TableStyle([
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-    ]))
-    
-    # BTW en Totalen combineren
-    btw_totaal_layout = Table([
-        [btw_table, totaal_table]
-    ], colWidths=[105*mm, 75*mm])
-    btw_totaal_layout.setStyle(TableStyle([
+    betaling_table = Table([[c] for c in betaling_content], colWidths=[80*mm])
+    betaling_table.setStyle(TableStyle([
         ('VALIGN', (0, 0), (-1, -1), 'TOP'),
     ]))
-    content.append(btw_totaal_layout)
     
-    content.append(Spacer(1, 3*mm))
-    
-    # Groot totaal
-    grand_total_data = [
-        ['', Paragraph("<b>TOTAAL</b>", ParagraphStyle('TotalLabel', parent=styles['Normal'], fontSize=12, alignment=TA_RIGHT)), 
-         Paragraph(f"<b>{format_currency(totaal, valuta)}</b>", ParagraphStyle('TotalValue', parent=styles['Normal'], fontSize=14, alignment=TA_RIGHT, textColor=colors.HexColor(accent_color)))]
+    # Totalen rechts
+    totaal_rows = [
+        [Paragraph("Subtotaal", total_label_style), 
+         Paragraph(format_currency(subtotaal, valuta), ParagraphStyle('Right', parent=value_style, alignment=TA_RIGHT))],
+        [Paragraph("BTW", total_label_style), 
+         Paragraph(format_currency(btw_bedrag, valuta), ParagraphStyle('Right', parent=value_style, alignment=TA_RIGHT))],
     ]
     
-    grand_total_table = Table(grand_total_data, colWidths=[75*mm, 50*mm, 55*mm])
-    grand_total_table.setStyle(TableStyle([
-        ('LINEABOVE', (1, 0), (-1, 0), 1.5, colors.HexColor(accent_color)),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    totaal_subtable = Table(totaal_rows, colWidths=[40*mm, 40*mm])
+    totaal_subtable.setStyle(TableStyle([
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ('LINEBELOW', (0, -1), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
     ]))
-    content.append(grand_total_table)
     
-    content.append(Spacer(1, 10*mm))
-    
-    # === BETALINGSGEGEVENS ===
-    betaling_style = ParagraphStyle(
-        'Betaling',
-        parent=styles['Normal'],
-        fontSize=8,
-        textColor=colors.HexColor(text_light),
-        leading=11
+    # Groot totaal met groene achtergrond
+    grand_total_cell = Table(
+        [[Paragraph(f"<b>TOTAAL</b>", ParagraphStyle('TotalLabel', fontSize=10, textColor=colors.white)),
+          Paragraph(f"<b>{format_currency(totaal, valuta)}</b>", ParagraphStyle('TotalValue', fontSize=12, textColor=colors.white, alignment=TA_RIGHT))]],
+        colWidths=[40*mm, 40*mm]
     )
+    grand_total_cell.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor(accent_color)),
+        ('TOPPADDING', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ('LEFTPADDING', (0, 0), (-1, -1), 10),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 10),
+    ]))
     
-    betaling_text = f"Gelieve het bedrag van {format_currency(totaal, valuta)} over te maken onder vermelding van factuurnummer {factuurnummer}."
-    content.append(Paragraph(betaling_text, betaling_style))
+    # Totalen kolom
+    totaal_column = Table([[totaal_subtable], [grand_total_cell]], colWidths=[80*mm])
+    totaal_column.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
     
+    # Combineer betalingsvoorwaarden en totalen
+    footer_layout = Table([[betaling_table, totaal_column]], colWidths=[100*mm, 80*mm])
+    footer_layout.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+    ]))
+    content.append(footer_layout)
+    
+    content.append(Spacer(1, 15*mm))
+    
+    # === HANDTEKENING SECTIE ===
+    # Horizontale lijn
+    hr_line = Table([['']], colWidths=[180*mm], rowHeights=[0.5*mm])
+    hr_line.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#e2e8f0')),
+    ]))
+    content.append(hr_line)
     content.append(Spacer(1, 5*mm))
+    
+    signature_data = [[
+        Paragraph(bedrijfsnaam, client_name_style),
+        '',
+        Paragraph("HANDTEKENING", small_label_style)
+    ]]
+    signature_table = Table(signature_data, colWidths=[70*mm, 60*mm, 50*mm])
+    signature_table.setStyle(TableStyle([
+        ('VALIGN', (0, 0), (-1, -1), 'BOTTOM'),
+    ]))
+    content.append(signature_table)
     
     # === OPMERKINGEN ===
     if factuur.get('opmerkingen'):
-        content.append(Spacer(1, 5*mm))
-        content.append(Paragraph("<b>Opmerkingen:</b>", small_label_style))
-        content.append(Paragraph(factuur['opmerkingen'], betaling_style))
+        content.append(Spacer(1, 8*mm))
+        content.append(Paragraph("OPMERKINGEN:", section_label_style))
+        content.append(Spacer(1, 2*mm))
+        content.append(Paragraph(factuur['opmerkingen'], client_info_style))
     
-    # === VOORWAARDEN (Footer) ===
-    footer_text = settings.get('factuur_voorwaarden', '') or bedrijf.get('factuur_voorwaarden', '')
-    if footer_text:
+    # === BEDRIJFSGEGEVENS FOOTER ===
+    footer_info = []
+    if bedrijf.get('kvk_nummer'):
+        footer_info.append(f"KvK: {bedrijf['kvk_nummer']}")
+    if bedrijf.get('btw_nummer'):
+        footer_info.append(f"BTW: {bedrijf['btw_nummer']}")
+    if bedrijf.get('bank_rekening'):
+        footer_info.append(f"IBAN: {bedrijf['bank_rekening']}")
+    
+    if footer_info:
         content.append(Spacer(1, 10*mm))
-        # Groene lijn
-        footer_line = Table([['']], colWidths=[180*mm], rowHeights=[1*mm])
-        footer_line.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor(accent_color)),
-        ]))
-        content.append(footer_line)
-        content.append(Spacer(1, 3*mm))
-        
+        footer_text = ' | '.join(footer_info)
         footer_style = ParagraphStyle(
-            'Footer',
+            'FooterInfo',
             parent=styles['Normal'],
             fontSize=7,
-            textColor=colors.HexColor(text_light),
-            leading=9
+            textColor=colors.HexColor(TEXT_LIGHT),
+            alignment=TA_CENTER
         )
-        for line in footer_text.split('\n'):
-            content.append(Paragraph(line, footer_style))
+        content.append(Paragraph(footer_text, footer_style))
     
-    # Build PDF
-    doc.build(content)
+    # Build PDF met custom canvas
+    doc.build(content, canvasmaker=make_canvas)
     
     return buffer.getvalue()
 

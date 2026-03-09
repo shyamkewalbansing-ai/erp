@@ -2449,10 +2449,13 @@ async def get_verkoopfacturen(status: str = None, debiteur_id: str = None, autho
     
     facturen = await db.boekhouding_verkoopfacturen.find(query).sort("factuurdatum", -1).to_list(500)
     
-    # Enrich facturen with debiteur_email if missing
+    # Enrich facturen with debiteur_email if missing and normalize field names
     result = []
     for f in facturen:
         factuur = clean_doc(f)
+        # Normalize field names for frontend consistency
+        factuur["nummer"] = factuur.get("factuurnummer") or factuur.get("nummer")
+        factuur["datum"] = factuur.get("factuurdatum") or factuur.get("datum")
         # Als debiteur_email ontbreekt, haal het op van de debiteur
         if not factuur.get("debiteur_email") and factuur.get("debiteur_id"):
             debiteur = await db.boekhouding_debiteuren.find_one({"id": factuur["debiteur_id"], "user_id": user_id})
@@ -2824,7 +2827,7 @@ async def send_factuur_email(factuur_id: str, data: SendEmailRequest, authorizat
     return {
         "success": True,
         "message": f"E-mail verstuurd naar {data.to}",
-        "factuur_status": factuur.get('status', 'verzonden')
+        "factuur_status": "verzonden" if factuur.get('status') == 'concept' else factuur.get('status')
     }
 
 

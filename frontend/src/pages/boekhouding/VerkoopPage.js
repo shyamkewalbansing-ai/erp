@@ -154,6 +154,7 @@ const VerkoopPage = () => {
   // Email modal state
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
+  const [emailForm, setEmailForm] = useState({ subject: '', message: '' });
 
   useEffect(() => {
     fetchData();
@@ -241,28 +242,42 @@ const VerkoopPage = () => {
     setViewModalOpen(true);
   };
 
-  // Send email
+  // Send email - open modal with editable content
   const handleSendEmail = async (invoice) => {
+    const factuurnummer = invoice.nummer || invoice.factuurnummer || 'Onbekend';
     setSelectedInvoice(invoice);
+    setEmailForm({
+      subject: `Factuur ${factuurnummer}`,
+      message: `Geachte ${invoice.debiteur_naam || 'klant'},
+
+Hierbij sturen wij u factuur ${factuurnummer}.
+
+In de bijlage vindt u de factuur als PDF bestand.
+
+Wij verzoeken u het bedrag binnen de gestelde betalingstermijn over te maken onder vermelding van het factuurnummer.
+
+Mocht u vragen hebben, neem dan gerust contact met ons op.
+
+Met vriendelijke groet`
+    });
     setEmailModalOpen(true);
   };
 
   const handleConfirmSendEmail = async () => {
-    if (!selectedInvoice) return;
+    if (!selectedInvoice || !selectedInvoice.debiteur_email) return;
     setEmailSending(true);
     try {
-      const factuurnummer = selectedInvoice.nummer || selectedInvoice.factuurnummer || 'Onbekend';
       const emailData = {
         to: selectedInvoice.debiteur_email,
-        subject: `Factuur ${factuurnummer}`,
-        message: `Geachte ${selectedInvoice.debiteur_naam || 'klant'},\n\nBijgevoegd vindt u factuur ${factuurnummer}.\n\nMet vriendelijke groet`
+        subject: emailForm.subject,
+        message: emailForm.message
       };
       
       const result = await invoicesAPI.sendEmail(selectedInvoice.id, emailData);
       console.log('Email result:', result);
       
       if (result.success) {
-        toast.success(`E-mail verzonden naar ${selectedInvoice.debiteur_email || 'klant'}`);
+        toast.success(`E-mail verzonden naar ${selectedInvoice.debiteur_email}`);
         setEmailModalOpen(false);
         fetchData(); // Refresh data to update status
       } else if (result.smtp_configured === false) {
@@ -285,10 +300,10 @@ const VerkoopPage = () => {
     }
   };
 
-  // Print invoice - download PDF
+  // Print invoice - open print dialog directly
   const handlePrint = async (invoice) => {
     try {
-      toast.info('PDF wordt gegenereerd...');
+      toast.info('PDF wordt geladen...');
       const token = localStorage.getItem('token');
       const pdfUrl = `${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/verkoopfacturen/${invoice.id}/pdf`;
       
@@ -304,18 +319,19 @@ const VerkoopPage = () => {
         throw new Error(errorData.detail || 'Kon PDF niet genereren');
       }
       
-      // Create blob and download
+      // Create blob and open in new window for printing
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `factuur_${invoice.nummer || invoice.factuurnummer || invoice.id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
       
-      toast.success('PDF gedownload');
+      // Open PDF in new window and trigger print
+      const printWindow = window.open(url, '_blank');
+      if (printWindow) {
+        printWindow.onload = () => {
+          printWindow.print();
+        };
+      }
+      
+      toast.success('Print dialoog geopend');
     } catch (error) {
       console.error('Print error:', error);
       toast.error(error.message || 'Fout bij genereren PDF');
@@ -657,13 +673,13 @@ const VerkoopPage = () => {
                             />
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-sm font-medium text-gray-900">{invoice.nummer}</span>
+                            <span className="text-sm font-medium text-gray-900">{invoice.nummer || invoice.factuurnummer || '-'}</span>
                           </td>
                           <td className="px-4 py-3">
                             <span className="text-sm text-gray-700">{invoice.debiteur_naam || 'Onbekend'}</span>
                           </td>
                           <td className="px-4 py-3">
-                            <span className="text-sm text-gray-600">{formatDate(invoice.datum)}</span>
+                            <span className="text-sm text-gray-600">{formatDate(invoice.datum || invoice.factuurdatum)}</span>
                           </td>
                           <td className="px-4 py-3">
                             <span className="text-sm text-gray-600">{formatDate(invoice.vervaldatum)}</span>
@@ -1240,43 +1256,74 @@ const VerkoopPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Email Confirmation Modal */}
+      {/* Email Modal - with editable content */}
       <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="w-5 h-5 text-emerald-600" />
-              Factuur Versturen
+              Factuur Versturen per E-mail
             </DialogTitle>
           </DialogHeader>
           {selectedInvoice && (
             <div className="space-y-4 py-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600 mb-2">
-                  <strong>Factuur:</strong> {selectedInvoice.nummer || selectedInvoice.factuurnummer}
-                </p>
-                <p className="text-sm text-gray-600 mb-2">
-                  <strong>Klant:</strong> {selectedInvoice.debiteur_naam || 'Onbekend'}
-                </p>
-                <p className="text-sm text-gray-600">
-                  <strong>E-mailadres:</strong> {selectedInvoice.debiteur_email || 'Geen e-mail bekend'}
-                </p>
+              {/* Invoice info */}
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 rounded-lg p-4">
+                <div>
+                  <p className="text-sm text-gray-500">Factuur</p>
+                  <p className="font-medium">{selectedInvoice.nummer || selectedInvoice.factuurnummer}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Klant</p>
+                  <p className="font-medium">{selectedInvoice.debiteur_naam || 'Onbekend'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-sm text-gray-500">Verzenden naar</p>
+                  <p className="font-medium text-emerald-600">{selectedInvoice.debiteur_email || 'Geen e-mail bekend'}</p>
+                </div>
               </div>
               
               {!selectedInvoice.debiteur_email ? (
                 <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                  <p className="text-amber-800 text-sm">
-                    <AlertCircle className="w-4 h-4 inline mr-2" />
+                  <p className="text-amber-800 text-sm flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-2 flex-shrink-0" />
                     Deze klant heeft geen e-mailadres. Voeg eerst een e-mailadres toe bij de klantgegevens.
                   </p>
                 </div>
               ) : (
-                <p className="text-sm text-gray-600">
-                  De factuur wordt per e-mail verzonden naar <strong>{selectedInvoice.debiteur_email}</strong>.
-                </p>
+                <>
+                  {/* Subject field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Onderwerp</label>
+                    <Input 
+                      value={emailForm.subject}
+                      onChange={(e) => setEmailForm({...emailForm, subject: e.target.value})}
+                      placeholder="Onderwerp van de e-mail"
+                    />
+                  </div>
+                  
+                  {/* Message field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Bericht</label>
+                    <textarea
+                      value={emailForm.message}
+                      onChange={(e) => setEmailForm({...emailForm, message: e.target.value})}
+                      rows={10}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 text-sm resize-none"
+                      placeholder="Typ hier uw bericht..."
+                    />
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-blue-700 text-sm flex items-center">
+                      <FileText className="w-4 h-4 mr-2 flex-shrink-0" />
+                      De factuur wordt automatisch als PDF bijlage toegevoegd.
+                    </p>
+                  </div>
+                </>
               )}
               
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="flex justify-end gap-2 pt-4 border-t">
                 <Button variant="outline" onClick={() => setEmailModalOpen(false)}>
                   Annuleren
                 </Button>
