@@ -222,37 +222,42 @@ const NieuweOffertePage = () => {
     }
     setSaving(true);
     try {
+      // Get customer name for display
+      const selectedCustomer = customers.find(c => c.id === offerte.customer_id);
+      
       const offerteData = {
-        nummer: offerteNumber,
-        klant_id: offerte.customer_id,
-        contactpersoon: offerte.contact_person,
-        project_naam: offerte.project_name,
+        debiteur_id: offerte.customer_id,
+        debiteur_naam: selectedCustomer?.naam || 'Onbekend',
         datum: offerte.date,
         geldig_tot: offerte.valid_until,
-        valuta: offerte.currency,
-        betalingstermijn: offerte.payment_terms,
-        levertijd: offerte.delivery_time,
-        korting_type: offerte.discount_type,
-        korting_waarde: parseFloat(offerte.discount_value) || 0,
-        aanbetaling_percentage: parseFloat(offerte.deposit_percentage) || 0,
-        opmerkingen: offerte.notes,
-        interne_notities: offerte.internal_notes,
-        status: sendAfterSave ? 'verzonden' : 'concept',
+        opmerkingen: offerte.notes || '',
         regels: offerte.lines.map(line => ({
           omschrijving: line.description,
-          aantal: parseFloat(line.quantity) || 0,
-          eenheid: line.unit,
-          prijs: parseFloat(line.unit_price) || 0,
-          korting: parseFloat(line.discount) || 0,
+          aantal: parseFloat(line.quantity) || 1,
+          eenheidsprijs: parseFloat(line.unit_price) || 0,
           btw_percentage: parseFloat(line.btw_percentage) || 0
-        }))
+        })),
+        subtotaal: subtotalAfterDiscount,
+        btw_bedrag: btwTotal,
+        totaal_incl_btw: total
       };
       
-      await quotesAPI.create(offerteData);
-      toast.success(sendAfterSave ? 'Offerte verzonden naar klant' : 'Offerte opgeslagen als concept');
-      navigate('/app/boekhouding/verkoop');
+      const result = await quotesAPI.create(offerteData);
+      const data = result.data || result;
+      
+      if (data.id || data.offertenummer) {
+        toast.success(sendAfterSave ? 'Offerte verzonden naar klant' : 'Offerte opgeslagen als concept');
+        navigate('/app/boekhouding/verkoop');
+      } else if (data.detail) {
+        toast.error(data.detail);
+      } else {
+        toast.success('Offerte opgeslagen');
+        navigate('/app/boekhouding/verkoop');
+      }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij aanmaken');
+      console.error('Save error:', error);
+      const errorMsg = error.response?.data?.detail || error.message || 'Fout bij opslaan offerte';
+      toast.error(typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : errorMsg);
     } finally {
       setSaving(false);
     }
