@@ -49,18 +49,14 @@ class InvoicePDFCanvas(canvas.Canvas):
         super().__init__(*args, **kwargs)
         self.accent_color = accent_color
         self.secondary_color = secondary_color
-        self.pages = []
+        self._page_count = 0
     
     def showPage(self):
-        self.pages.append(dict(self.__dict__))
-        self._startPage()
+        self._page_count += 1
+        self.draw_decorations()
+        canvas.Canvas.showPage(self)
     
     def save(self):
-        page_count = len(self.pages)
-        for page in self.pages:
-            self.__dict__.update(page)
-            self.draw_decorations()
-            canvas.Canvas.showPage(self)
         canvas.Canvas.save(self)
     
     def draw_decorations(self):
@@ -69,22 +65,22 @@ class InvoicePDFCanvas(canvas.Canvas):
         
         # Donkerblauwe diagonale streep rechtsboven
         self.setFillColor(colors.HexColor(self.secondary_color))
-        # Driehoek rechtsboven
-        self.beginPath()
-        self.moveTo(page_width - 80*mm, page_height)  # Linker punt boven
-        self.lineTo(page_width, page_height)  # Rechter hoek boven
-        self.lineTo(page_width, page_height - 40*mm)  # Rechter punt onder
-        self.closePath()
-        self.fill()
+        # Driehoek rechtsboven - gebruik drawPath met een Path object
+        p = self.beginPath()
+        p.moveTo(page_width - 80*mm, page_height)  # Linker punt boven
+        p.lineTo(page_width, page_height)  # Rechter hoek boven
+        p.lineTo(page_width, page_height - 40*mm)  # Rechter punt onder
+        p.close()
+        self.drawPath(p, fill=1, stroke=0)
         
         # Groene diagonale streep rechtsonder
         self.setFillColor(colors.HexColor(self.accent_color))
-        self.beginPath()
-        self.moveTo(page_width - 50*mm, 0)  # Linker punt onder
-        self.lineTo(page_width, 0)  # Rechter hoek onder
-        self.lineTo(page_width, 30*mm)  # Rechter punt boven
-        self.closePath()
-        self.fill()
+        p2 = self.beginPath()
+        p2.moveTo(page_width - 50*mm, 0)  # Linker punt onder
+        p2.lineTo(page_width, 0)  # Rechter hoek onder
+        p2.lineTo(page_width, 30*mm)  # Rechter punt boven
+        p2.close()
+        self.drawPath(p2, fill=1, stroke=0)
 
 
 def generate_invoice_pdf(
