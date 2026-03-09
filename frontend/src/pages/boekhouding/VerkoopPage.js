@@ -35,7 +35,11 @@ import {
   Banknote,
   BarChart3,
   TrendingUp,
-  Save
+  Save,
+  Trash2,
+  Edit,
+  Calendar,
+  DollarSign
 } from 'lucide-react';
 
 // Format currency
@@ -91,6 +95,25 @@ const StatusIcon = ({ status }) => {
   }
 };
 
+// Status Badge Component
+const StatusBadge = ({ status }) => {
+  const config = {
+    concept: { bg: 'bg-gray-100', text: 'text-gray-600', label: 'Concept' },
+    verzonden: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Verzonden' },
+    herinnering: { bg: 'bg-amber-100', text: 'text-amber-700', label: 'Herinnering' },
+    betaald: { bg: 'bg-emerald-100', text: 'text-emerald-700', label: 'Betaald' },
+    deelbetaling: { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Deelbetaling' },
+    vervallen: { bg: 'bg-red-100', text: 'text-red-700', label: 'Vervallen' },
+    geannuleerd: { bg: 'bg-gray-100', text: 'text-gray-500', label: 'Geannuleerd' }
+  };
+  const { bg, text, label } = config[status] || config.concept;
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bg} ${text}`}>
+      {label}
+    </span>
+  );
+};
+
 // Action Badge Component
 const ActionBadge = ({ type, label }) => {
   const colors = {
@@ -124,6 +147,13 @@ const VerkoopPage = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [paymentForm, setPaymentForm] = useState({ bedrag: 0, datum: '', betaalmethode: 'bank', referentie: '' });
   const [saving, setSaving] = useState(false);
+  
+  // View modal state
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  
+  // Email modal state
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -202,6 +232,68 @@ const VerkoopPage = () => {
       toast.error(error.response?.data?.detail || 'Fout bij verwerken betaling');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // View invoice details
+  const handleViewInvoice = (invoice) => {
+    setSelectedInvoice(invoice);
+    setViewModalOpen(true);
+  };
+
+  // Send email
+  const handleSendEmail = async (invoice) => {
+    setSelectedInvoice(invoice);
+    setEmailModalOpen(true);
+  };
+
+  const handleConfirmSendEmail = async () => {
+    if (!selectedInvoice) return;
+    setEmailSending(true);
+    try {
+      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/verkoopfacturen/${selectedInvoice.id}/send-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ to_email: selectedInvoice.debiteur_email })
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        toast.success(`E-mail verzonden naar ${selectedInvoice.debiteur_email || 'klant'}`);
+        setEmailModalOpen(false);
+      } else if (data.smtp_configured === false) {
+        toast.warning('SMTP niet geconfigureerd. Ga naar Instellingen → E-mail');
+      } else {
+        toast.error(data.error || data.detail || 'Fout bij verzenden e-mail');
+      }
+    } catch (error) {
+      console.error('Email error:', error);
+      toast.error('Fout bij verzenden e-mail');
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  // Print invoice
+  const handlePrint = (invoice) => {
+    // Open in new window for printing
+    const printUrl = `${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/verkoopfacturen/${invoice.id}/pdf`;
+    window.open(printUrl, '_blank');
+    toast.info('PDF wordt gegenereerd...');
+  };
+
+  // Delete invoice
+  const handleDelete = async (invoice) => {
+    if (!window.confirm(`Weet u zeker dat u factuur ${invoice.nummer || invoice.factuurnummer} wilt verwijderen?`)) return;
+    try {
+      await invoicesAPI.delete(invoice.id);
+      toast.success('Factuur verwijderd');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
     }
   };
 
@@ -546,33 +638,47 @@ const VerkoopPage = () => {
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-1">
                               <button 
-                                className="text-gray-500 hover:text-gray-700 p-1"
-                                onClick={() => navigate(`/app/boekhouding/verkoop/${invoice.id}`)}
+                                className="text-gray-500 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50 transition-colors"
+                                onClick={() => handleViewInvoice(invoice)}
                                 title="Bekijken"
+                                data-testid={`view-invoice-${invoice.id}`}
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button 
-                                className="text-gray-500 hover:text-gray-700 p-1"
-                                title="E-mail"
+                                className="text-gray-500 hover:text-emerald-600 p-1.5 rounded-lg hover:bg-emerald-50 transition-colors"
+                                onClick={() => handleSendEmail(invoice)}
+                                title="E-mail versturen"
+                                data-testid={`email-invoice-${invoice.id}`}
                               >
                                 <Mail className="w-4 h-4" />
                               </button>
                               <button 
-                                className="text-gray-500 hover:text-gray-700 p-1"
-                                title="Printen"
+                                className="text-gray-500 hover:text-purple-600 p-1.5 rounded-lg hover:bg-purple-50 transition-colors"
+                                onClick={() => handlePrint(invoice)}
+                                title="Printen / PDF"
+                                data-testid={`print-invoice-${invoice.id}`}
                               >
                                 <Printer className="w-4 h-4" />
                               </button>
                               {invoice.status !== 'betaald' && invoice.status !== 'concept' && (
                                 <button 
-                                  className="text-emerald-600 hover:text-emerald-700 p-1"
+                                  className="text-emerald-600 hover:text-emerald-700 p-1.5 rounded-lg hover:bg-emerald-50 transition-colors"
                                   onClick={() => handleOpenPayment(invoice)}
                                   title="Betaling registreren"
+                                  data-testid={`payment-invoice-${invoice.id}`}
                                 >
                                   <Banknote className="w-4 h-4" />
                                 </button>
                               )}
+                              <button 
+                                className="text-gray-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                                onClick={() => handleDelete(invoice)}
+                                title="Verwijderen"
+                                data-testid={`delete-invoice-${invoice.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </td>
                         </tr>
@@ -846,75 +952,304 @@ const VerkoopPage = () => {
         </Card>
       </div>
 
-      {/* Payment Modal */}
+      {/* Payment Modal - Improved Design */}
       <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Betaling Registreren</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                <Banknote className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div>
+                <span className="text-lg">Betaling Registreren</span>
+                <p className="text-sm font-normal text-gray-500">Registreer een ontvangen betaling</p>
+              </div>
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-600">Factuur: <strong>{selectedInvoice?.nummer || selectedInvoice?.factuurnummer}</strong></p>
-              <p className="text-sm text-gray-600">Klant: <strong>{selectedInvoice?.debiteur_naam || 'Onbekend'}</strong></p>
-              <p className="text-sm text-gray-600">Openstaand: <strong className="text-amber-600">{formatCurrency(selectedInvoice?.openstaand_bedrag || selectedInvoice?.totaal_incl_btw || selectedInvoice?.totaal)}</strong></p>
+          
+          <div className="space-y-5 py-4">
+            {/* Invoice Info Card */}
+            <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-5 border border-gray-200">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Factuur</p>
+                  <p className="text-lg font-bold text-gray-900">{selectedInvoice?.nummer || selectedInvoice?.factuurnummer}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Openstaand</p>
+                  <p className="text-2xl font-bold text-amber-600">
+                    {formatCurrency(selectedInvoice?.openstaand_bedrag || selectedInvoice?.totaal_incl_btw || selectedInvoice?.totaal)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <User className="w-4 h-4" />
+                <span>{selectedInvoice?.debiteur_naam || 'Onbekend'}</span>
+              </div>
+            </div>
+            
+            {/* Payment Form */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 sm:col-span-1">
+                <Label className="text-gray-700 font-medium">Ontvangen Bedrag *</Label>
+                <div className="relative mt-1.5">
+                  <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input 
+                    type="number"
+                    step="0.01"
+                    value={paymentForm.bedrag} 
+                    onChange={(e) => setPaymentForm({...paymentForm, bedrag: parseFloat(e.target.value) || 0})}
+                    className="pl-10 h-12 text-lg font-semibold"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <Label className="text-gray-700 font-medium">Datum *</Label>
+                <div className="relative mt-1.5">
+                  <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Input 
+                    type="date"
+                    value={paymentForm.datum} 
+                    onChange={(e) => setPaymentForm({...paymentForm, datum: e.target.value})}
+                    className="pl-10 h-12"
+                  />
+                </div>
+              </div>
             </div>
             
             <div>
-              <Label>Bedrag *</Label>
-              <Input 
-                type="number"
-                step="0.01"
-                value={paymentForm.bedrag} 
-                onChange={(e) => setPaymentForm({...paymentForm, bedrag: parseFloat(e.target.value) || 0})}
-              />
+              <Label className="text-gray-700 font-medium">Betaalmethode</Label>
+              <div className="grid grid-cols-4 gap-2 mt-1.5">
+                {[
+                  { value: 'bank', label: 'Bank', icon: Building2 },
+                  { value: 'kas', label: 'Contant', icon: Banknote },
+                  { value: 'pin', label: 'PIN', icon: CreditCard },
+                  { value: 'creditcard', label: 'Credit', icon: CreditCard }
+                ].map(method => (
+                  <button
+                    key={method.value}
+                    onClick={() => setPaymentForm({...paymentForm, betaalmethode: method.value})}
+                    className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
+                      paymentForm.betaalmethode === method.value
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                  >
+                    <method.icon className="w-5 h-5" />
+                    <span className="text-xs font-medium">{method.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
+            
             <div>
-              <Label>Datum *</Label>
-              <Input 
-                type="date"
-                value={paymentForm.datum} 
-                onChange={(e) => setPaymentForm({...paymentForm, datum: e.target.value})}
-              />
-            </div>
-            <div>
-              <Label>Betaalmethode</Label>
-              <Select value={paymentForm.betaalmethode} onValueChange={(v) => setPaymentForm({...paymentForm, betaalmethode: v})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bank">Bankoverschrijving</SelectItem>
-                  <SelectItem value="kas">Contant</SelectItem>
-                  <SelectItem value="pin">PIN</SelectItem>
-                  <SelectItem value="creditcard">Creditcard</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Referentie / Omschrijving</Label>
+              <Label className="text-gray-700 font-medium">Referentie / Omschrijving</Label>
               <Input 
                 value={paymentForm.referentie} 
                 onChange={(e) => setPaymentForm({...paymentForm, referentie: e.target.value})}
-                placeholder="Bijv. bankreferentie"
+                placeholder="Bijv. bankreferentie of omschrijving"
+                className="mt-1.5"
               />
             </div>
             
-            <div className="bg-blue-50 rounded-lg p-3 text-sm">
-              <p className="text-blue-800 font-medium">Grootboek boeking:</p>
-              <p className="text-blue-600">• Bank (1500): Debet {formatCurrency(paymentForm.bedrag)}</p>
-              <p className="text-blue-600">• Debiteuren (1300): Credit {formatCurrency(paymentForm.bedrag)}</p>
+            {/* Grootboek Preview */}
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+              <p className="text-sm font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Grootboek boeking (automatisch)
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-blue-700">Bank (1500)</span>
+                  <span className="font-mono text-blue-800">Debet {formatCurrency(paymentForm.bedrag)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-blue-700">Debiteuren (1300)</span>
+                  <span className="font-mono text-blue-800">Credit {formatCurrency(paymentForm.bedrag)}</span>
+                </div>
+              </div>
             </div>
             
-            <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => setPaymentModalOpen(false)}>
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="outline" onClick={() => setPaymentModalOpen(false)} className="px-6">
                 Annuleren
               </Button>
-              <Button onClick={handleProcessPayment} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700">
+              <Button 
+                onClick={handleProcessPayment} 
+                disabled={saving || !paymentForm.bedrag || paymentForm.bedrag <= 0} 
+                className="bg-emerald-600 hover:bg-emerald-700 px-6"
+              >
                 {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
                 Betaling Verwerken
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Invoice Modal */}
+      <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Receipt className="w-5 h-5 text-emerald-600" />
+              Factuur Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-4 py-4">
+              {/* Header Info */}
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">{selectedInvoice.nummer || selectedInvoice.factuurnummer}</p>
+                  <p className="text-gray-500">{selectedInvoice.debiteur_naam || 'Onbekende klant'}</p>
+                </div>
+                <div className="text-right">
+                  <StatusBadge status={selectedInvoice.status} />
+                  <p className="text-sm text-gray-500 mt-1">
+                    {formatDate(selectedInvoice.datum || selectedInvoice.factuurdatum)}
+                  </p>
+                </div>
+              </div>
+              
+              {/* Amount Cards */}
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <p className="text-xs text-gray-500 mb-1">Totaal excl. BTW</p>
+                  <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedInvoice.totaal_excl_btw || selectedInvoice.subtotaal || 0)}</p>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4 text-center">
+                  <p className="text-xs text-gray-500 mb-1">BTW</p>
+                  <p className="text-lg font-bold text-gray-900">{formatCurrency(selectedInvoice.btw_bedrag || 0)}</p>
+                </div>
+                <div className="bg-emerald-50 rounded-xl p-4 text-center">
+                  <p className="text-xs text-emerald-600 mb-1">Totaal incl. BTW</p>
+                  <p className="text-xl font-bold text-emerald-700">{formatCurrency(selectedInvoice.totaal_incl_btw || selectedInvoice.totaal || 0)}</p>
+                </div>
+              </div>
+              
+              {/* Invoice Lines */}
+              {selectedInvoice.regels && selectedInvoice.regels.length > 0 && (
+                <div>
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Factuurregels</p>
+                  <div className="bg-gray-50 rounded-lg overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-100">
+                        <tr>
+                          <th className="text-left px-3 py-2 text-gray-600">Omschrijving</th>
+                          <th className="text-right px-3 py-2 text-gray-600">Aantal</th>
+                          <th className="text-right px-3 py-2 text-gray-600">Prijs</th>
+                          <th className="text-right px-3 py-2 text-gray-600">Totaal</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedInvoice.regels.map((regel, idx) => (
+                          <tr key={idx} className="border-t border-gray-200">
+                            <td className="px-3 py-2">{regel.omschrijving || regel.description}</td>
+                            <td className="px-3 py-2 text-right">{regel.aantal || regel.quantity || 1}</td>
+                            <td className="px-3 py-2 text-right">{formatCurrency(regel.prijs || regel.price || 0)}</td>
+                            <td className="px-3 py-2 text-right font-medium">{formatCurrency((regel.aantal || 1) * (regel.prijs || regel.price || 0))}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              
+              {/* Payment Status */}
+              {selectedInvoice.status !== 'betaald' && selectedInvoice.status !== 'concept' && (
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800">Openstaand bedrag</p>
+                      <p className="text-2xl font-bold text-amber-700">{formatCurrency(selectedInvoice.openstaand_bedrag || selectedInvoice.totaal_incl_btw || selectedInvoice.totaal)}</p>
+                    </div>
+                    <Button 
+                      onClick={() => { setViewModalOpen(false); handleOpenPayment(selectedInvoice); }}
+                      className="bg-amber-600 hover:bg-amber-700"
+                    >
+                      <Banknote className="w-4 h-4 mr-2" />
+                      Betaling Registreren
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              {/* Actions */}
+              <div className="flex justify-between pt-4 border-t">
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => handleSendEmail(selectedInvoice)}>
+                    <Mail className="w-4 h-4 mr-2" />
+                    E-mail
+                  </Button>
+                  <Button variant="outline" onClick={() => handlePrint(selectedInvoice)}>
+                    <Printer className="w-4 h-4 mr-2" />
+                    PDF
+                  </Button>
+                </div>
+                <Button variant="outline" onClick={() => setViewModalOpen(false)}>
+                  Sluiten
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Email Confirmation Modal */}
+      <Dialog open={emailModalOpen} onOpenChange={setEmailModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-emerald-600" />
+              Factuur Versturen
+            </DialogTitle>
+          </DialogHeader>
+          {selectedInvoice && (
+            <div className="space-y-4 py-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Factuur:</strong> {selectedInvoice.nummer || selectedInvoice.factuurnummer}
+                </p>
+                <p className="text-sm text-gray-600 mb-2">
+                  <strong>Klant:</strong> {selectedInvoice.debiteur_naam || 'Onbekend'}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>E-mailadres:</strong> {selectedInvoice.debiteur_email || 'Geen e-mail bekend'}
+                </p>
+              </div>
+              
+              {!selectedInvoice.debiteur_email ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-amber-800 text-sm">
+                    <AlertCircle className="w-4 h-4 inline mr-2" />
+                    Deze klant heeft geen e-mailadres. Voeg eerst een e-mailadres toe bij de klantgegevens.
+                  </p>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  De factuur wordt per e-mail verzonden naar <strong>{selectedInvoice.debiteur_email}</strong>.
+                </p>
+              )}
+              
+              <div className="flex justify-end gap-2 pt-4">
+                <Button variant="outline" onClick={() => setEmailModalOpen(false)}>
+                  Annuleren
+                </Button>
+                <Button 
+                  onClick={handleConfirmSendEmail}
+                  disabled={emailSending || !selectedInvoice.debiteur_email}
+                  className="bg-emerald-600 hover:bg-emerald-700"
+                >
+                  {emailSending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
+                  Versturen
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
