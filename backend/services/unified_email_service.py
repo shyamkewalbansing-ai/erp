@@ -145,19 +145,27 @@ class UnifiedEmailService:
             }
         
         try:
-            # Create email message
-            msg = MIMEMultipart('alternative')
+            # Create email message - use 'mixed' for attachments, 'alternative' for plain text/html only
+            if attachments:
+                msg = MIMEMultipart('mixed')
+                # Create alternative part for text/html
+                alt_part = MIMEMultipart('alternative')
+                if body_text:
+                    alt_part.attach(MIMEText(body_text, 'plain', 'utf-8'))
+                alt_part.attach(MIMEText(body_html, 'html', 'utf-8'))
+                msg.attach(alt_part)
+            else:
+                msg = MIMEMultipart('alternative')
+                if body_text:
+                    msg.attach(MIMEText(body_text, 'plain', 'utf-8'))
+                msg.attach(MIMEText(body_html, 'html', 'utf-8'))
+            
             msg['Subject'] = subject
             msg['From'] = f"{settings.get('from_name', 'Facturatie.sr')} <{settings.get('from_email', settings['smtp_user'])}>"
             msg['To'] = to_email
             
             if cc:
                 msg['Cc'] = ', '.join(cc)
-            
-            # Add text and HTML body
-            if body_text:
-                msg.attach(MIMEText(body_text, 'plain', 'utf-8'))
-            msg.attach(MIMEText(body_html, 'html', 'utf-8'))
             
             # Add attachments
             if attachments:
@@ -200,9 +208,29 @@ class UnifiedEmailService:
             }
             
         except Exception as e:
+            error_str = str(e)
+            # Parse common SMTP errors for better user feedback
+            if 'authentication failed' in error_str.lower():
+                return {
+                    "success": False,
+                    "error": "SMTP authenticatie mislukt. Controleer uw SMTP gebruikersnaam en wachtwoord in Instellingen → E-mail.",
+                    "timestamp": datetime.now().isoformat()
+                }
+            elif 'connection refused' in error_str.lower() or 'connect' in error_str.lower():
+                return {
+                    "success": False,
+                    "error": "Kan geen verbinding maken met SMTP server. Controleer de server en poort instellingen.",
+                    "timestamp": datetime.now().isoformat()
+                }
+            elif 'timeout' in error_str.lower():
+                return {
+                    "success": False,
+                    "error": "SMTP verbinding timeout. Probeer het later opnieuw.",
+                    "timestamp": datetime.now().isoformat()
+                }
             return {
                 "success": False,
-                "error": str(e),
+                "error": error_str,
                 "timestamp": datetime.now().isoformat()
             }
     

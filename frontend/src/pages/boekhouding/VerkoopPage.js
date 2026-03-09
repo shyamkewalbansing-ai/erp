@@ -259,18 +259,23 @@ const VerkoopPage = () => {
       };
       
       const result = await invoicesAPI.sendEmail(selectedInvoice.id, emailData);
+      console.log('Email result:', result);
       
       if (result.success) {
         toast.success(`E-mail verzonden naar ${selectedInvoice.debiteur_email || 'klant'}`);
         setEmailModalOpen(false);
         fetchData(); // Refresh data to update status
+      } else if (result.smtp_configured === false) {
+        toast.warning('SMTP niet geconfigureerd. Ga naar Instellingen → E-mail');
       } else {
-        toast.error(result.error || result.detail || 'Fout bij verzenden e-mail');
+        const errorMsg = result.error || result.detail || 'Fout bij verzenden e-mail';
+        console.error('Email failed:', errorMsg);
+        toast.error(errorMsg);
       }
     } catch (error) {
       console.error('Email error:', error);
-      const errorMsg = error.response?.data?.detail || error.message || 'Fout bij verzenden e-mail';
-      if (errorMsg.includes('SMTP')) {
+      const errorMsg = error.response?.data?.detail || error.response?.data?.error || error.message || 'Fout bij verzenden e-mail';
+      if (errorMsg.toLowerCase().includes('smtp') || errorMsg.toLowerCase().includes('geconfigureerd')) {
         toast.warning('SMTP niet geconfigureerd. Ga naar Instellingen → E-mail');
       } else {
         toast.error(errorMsg);

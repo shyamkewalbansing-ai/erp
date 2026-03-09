@@ -2809,9 +2809,10 @@ async def send_factuur_email(factuur_id: str, data: SendEmailRequest, authorizat
     
     if not result.get('success'):
         error_msg = result.get('error', 'Onbekende fout')
+        print(f"Email sending failed: {error_msg}")  # Debug log
         if result.get('simulated'):
-            raise HTTPException(status_code=400, detail=error_msg)
-        raise HTTPException(status_code=500, detail=f"E-mail versturen mislukt: {error_msg}")
+            return {"success": False, "error": error_msg, "smtp_configured": False}
+        return {"success": False, "error": f"E-mail versturen mislukt: {error_msg}"}
     
     # Update factuur status naar verzonden als het nog concept is
     if factuur.get('status') == 'concept':
