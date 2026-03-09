@@ -2907,6 +2907,8 @@ async def send_factuur_email(factuur_id: str, data: SendEmailRequest, authorizat
         user_id=user_id
     )
     
+    print(f"Email send result: {result}")  # Debug log
+    
     if not result.get('success'):
         error_msg = result.get('error', 'Onbekende fout')
         print(f"Email sending failed: {error_msg}")  # Debug log
@@ -2915,11 +2917,14 @@ async def send_factuur_email(factuur_id: str, data: SendEmailRequest, authorizat
         return {"success": False, "error": f"E-mail versturen mislukt: {error_msg}"}
     
     # Update factuur status naar verzonden als het nog concept is
-    if factuur.get('status') == 'concept':
-        await db.boekhouding_verkoopfacturen.update_one(
-            {"id": factuur_id, "user_id": user_id},
-            {"$set": {"status": "verzonden", "updated_at": datetime.now(timezone.utc)}}
-        )
+    try:
+        if factuur.get('status') == 'concept':
+            await db.boekhouding_verkoopfacturen.update_one(
+                {"id": factuur_id, "user_id": user_id},
+                {"$set": {"status": "verzonden", "updated_at": datetime.now(timezone.utc)}}
+            )
+    except Exception as e:
+        print(f"Error updating factuur status: {e}")  # Non-critical, don't fail
     
     return {
         "success": True,

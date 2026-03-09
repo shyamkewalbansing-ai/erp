@@ -283,15 +283,18 @@ Met vriendelijke groet`,
       const result = await invoicesAPI.sendEmail(selectedInvoice.id, emailData);
       console.log('Email result:', result);
       
-      if (result.success) {
+      // Handle wrapped response from apiFetch
+      const data = result.data || result;
+      
+      if (data.success) {
         const ccMsg = ccList.length > 0 ? ` (+ ${ccList.length} CC)` : '';
         toast.success(`E-mail verzonden naar ${selectedInvoice.debiteur_email}${ccMsg}`);
         setEmailModalOpen(false);
         fetchData(); // Refresh data to update status
-      } else if (result.smtp_configured === false) {
+      } else if (data.smtp_configured === false) {
         toast.warning('SMTP niet geconfigureerd. Ga naar Instellingen → E-mail');
       } else {
-        const errorMsg = result.error || result.detail || 'Fout bij verzenden e-mail';
+        const errorMsg = data.error || data.detail || 'Fout bij verzenden e-mail';
         console.error('Email failed:', errorMsg);
         toast.error(errorMsg);
       }
