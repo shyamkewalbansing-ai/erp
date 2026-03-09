@@ -2448,7 +2448,19 @@ async def get_verkoopfacturen(status: str = None, debiteur_id: str = None, autho
         query["debiteur_id"] = debiteur_id
     
     facturen = await db.boekhouding_verkoopfacturen.find(query).sort("factuurdatum", -1).to_list(500)
-    return [clean_doc(f) for f in facturen]
+    
+    # Enrich facturen with debiteur_email if missing
+    result = []
+    for f in facturen:
+        factuur = clean_doc(f)
+        # Als debiteur_email ontbreekt, haal het op van de debiteur
+        if not factuur.get("debiteur_email") and factuur.get("debiteur_id"):
+            debiteur = await db.boekhouding_debiteuren.find_one({"id": factuur["debiteur_id"], "user_id": user_id})
+            if debiteur:
+                factuur["debiteur_email"] = debiteur.get("email")
+        result.append(factuur)
+    
+    return result
 
 @router.get("/verkoopfacturen/{factuur_id}")
 async def get_verkoopfactuur(factuur_id: str, authorization: str = Header(None)):
@@ -2458,7 +2470,15 @@ async def get_verkoopfactuur(factuur_id: str, authorization: str = Header(None))
     factuur = await db.boekhouding_verkoopfacturen.find_one({"id": factuur_id, "user_id": user_id})
     if not factuur:
         raise HTTPException(status_code=404, detail="Factuur niet gevonden")
-    return clean_doc(factuur)
+    
+    result = clean_doc(factuur)
+    # Als debiteur_email ontbreekt, haal het op van de debiteur
+    if not result.get("debiteur_email") and result.get("debiteur_id"):
+        debiteur = await db.boekhouding_debiteuren.find_one({"id": result["debiteur_id"], "user_id": user_id})
+        if debiteur:
+            result["debiteur_email"] = debiteur.get("email")
+    
+    return result
 
 @router.post("/verkoopfacturen")
 async def create_verkoopfactuur(data: VerkoopfactuurCreate, authorization: str = Header(None)):
@@ -2518,6 +2538,7 @@ async def create_verkoopfactuur(data: VerkoopfactuurCreate, authorization: str =
         "factuurnummer": factuurnummer,
         "debiteur_id": data.debiteur_id,
         "debiteur_naam": debiteur.get("naam") if debiteur else "Onbekend",
+        "debiteur_email": debiteur.get("email") if debiteur else None,
         "factuurdatum": data.factuurdatum.isoformat(),
         "vervaldatum": vervaldatum.isoformat() if isinstance(vervaldatum, date) else vervaldatum,
         "valuta": data.valuta,
