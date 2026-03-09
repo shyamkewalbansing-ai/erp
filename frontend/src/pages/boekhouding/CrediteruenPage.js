@@ -28,6 +28,7 @@ import {
   DollarSign,
   Eye,
   Edit,
+  Trash2,
   BarChart3,
   Link2,
   Receipt,
@@ -119,6 +120,7 @@ const CrediteruenPage = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [invoicesModalOpen, setInvoicesModalOpen] = useState(false);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [editForm, setEditForm] = useState({});
@@ -210,6 +212,18 @@ const CrediteruenPage = () => {
       toast.error(error.response?.data?.detail || 'Fout bij opslaan');
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Delete supplier
+  const handleDeleteSupplier = async (supplierId) => {
+    if (!window.confirm('Weet u zeker dat u deze leverancier wilt verwijderen?')) return;
+    try {
+      await suppliersAPI.delete(supplierId);
+      toast.success('Leverancier verwijderd');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
     }
   };
 
@@ -599,7 +613,7 @@ const CrediteruenPage = () => {
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
-                                onClick={() => navigate(`/app/boekhouding/crediteuren/${supplier.id}`)}
+                                onClick={() => { setSelectedSupplier(supplier); setViewModalOpen(true); }}
                                 title="Bekijken"
                                 data-testid={`view-supplier-${supplier.id}`}
                               >
@@ -622,6 +636,16 @@ const CrediteruenPage = () => {
                                 data-testid={`invoices-supplier-${supplier.id}`}
                               >
                                 <FileText className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => handleDeleteSupplier(supplier.id)}
+                                title="Verwijderen"
+                                data-testid={`delete-supplier-${supplier.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
                               </Button>
                             </div>
                           </td>
@@ -1096,6 +1120,115 @@ const CrediteruenPage = () => {
               </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* VIEW SUPPLIER MODAL */}
+      <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Truck className="w-5 h-5 text-emerald-600" />
+              Leverancier Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedSupplier && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                    <Truck className="w-6 h-6 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{selectedSupplier.naam || selectedSupplier.name}</h3>
+                    <p className="text-sm text-gray-500">Leverancier</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-500">E-mail</p>
+                    <p className="font-medium text-gray-900">{selectedSupplier.email || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Telefoon</p>
+                    <p className="font-medium text-gray-900">{selectedSupplier.telefoon || '-'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-gray-500">Adres</p>
+                    <p className="font-medium text-gray-900">{selectedSupplier.adres || '-'}</p>
+                  </div>
+                  {selectedSupplier.kvk_nummer && (
+                    <div>
+                      <p className="text-gray-500">KvK Nummer</p>
+                      <p className="font-medium text-gray-900">{selectedSupplier.kvk_nummer}</p>
+                    </div>
+                  )}
+                  {selectedSupplier.btw_nummer && (
+                    <div>
+                      <p className="text-gray-500">BTW Nummer</p>
+                      <p className="font-medium text-gray-900">{selectedSupplier.btw_nummer}</p>
+                    </div>
+                  )}
+                  {selectedSupplier.iban && (
+                    <div className="col-span-2">
+                      <p className="text-gray-500">IBAN</p>
+                      <p className="font-medium text-gray-900 font-mono">{selectedSupplier.iban}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Invoice summary for this supplier */}
+              {(() => {
+                const suppInvoices = invoices.filter(i => i.crediteur_id === selectedSupplier.id);
+                const openInv = suppInvoices.filter(i => i.status !== 'betaald' && i.status !== 'geannuleerd');
+                const totalOpen = openInv.reduce((sum, i) => sum + (i.totaal_bedrag || i.totaal || 0), 0);
+                const paidInv = suppInvoices.filter(i => i.status === 'betaald');
+                const totalPaid = paidInv.reduce((sum, i) => sum + (i.totaal_bedrag || i.totaal || 0), 0);
+                
+                return (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-red-50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-red-600 mb-1">Te Betalen</p>
+                      <p className="text-lg font-bold text-red-700">{formatCurrency(totalOpen)}</p>
+                      <p className="text-xs text-red-500">{openInv.length} facturen</p>
+                    </div>
+                    <div className="bg-emerald-50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-emerald-600 mb-1">Betaald</p>
+                      <p className="text-lg font-bold text-emerald-700">{formatCurrency(totalPaid)}</p>
+                      <p className="text-xs text-emerald-500">{paidInv.length} facturen</p>
+                    </div>
+                  </div>
+                );
+              })()}
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setViewModalOpen(false);
+                    handleShowInvoices(selectedSupplier);
+                  }}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Facturen Bekijken
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setViewModalOpen(false);
+                    handleEditSupplier(selectedSupplier);
+                  }}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Bewerken
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

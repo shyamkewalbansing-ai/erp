@@ -103,6 +103,7 @@ const DebiteurenPage = () => {
   // Modal states
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [invoicesModalOpen, setInvoicesModalOpen] = useState(false);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
@@ -204,6 +205,18 @@ const DebiteurenPage = () => {
       fetchData();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
+    }
+  };
+
+  // Delete invoice
+  const handleDeleteInvoice = async (invoiceId) => {
+    if (!window.confirm('Weet u zeker dat u deze factuur wilt verwijderen?')) return;
+    try {
+      await invoicesAPI.delete(invoiceId);
+      toast.success('Factuur verwijderd');
+      fetchData();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Fout bij verwijderen factuur');
     }
   };
 
@@ -310,6 +323,7 @@ const DebiteurenPage = () => {
     setProcessing(true);
     let successCount = 0;
     let emailCount = 0;
+    let emailFailReason = '';
     
     try {
       for (const id of invoiceIds) {
@@ -319,19 +333,19 @@ const DebiteurenPage = () => {
         
         // Try to send email via herinnering endpoint
         try {
-          // Create herinnering record first
-          const herinneringenRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/herinneringen/generate`, {
+          // Create herinnering record first (uses /genereren not /generate)
+          const herinneringenRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/herinneringen/genereren`, {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
               'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({ factuur_ids: [id] })
+            }
           });
           const herinneringenData = await herinneringenRes.json();
           
           if (herinneringenData.herinneringen && herinneringenData.herinneringen.length > 0) {
-            const herinneringId = herinneringenData.herinneringen[0].id;
+            // Get the herinnering for this specific invoice
+            const herinnering = herinneringenData.herinneringen.find(h => h.factuur_id === id) || herinneringenData.herinneringen[0];
+            const herinneringId = herinnering.id;
             
             // Try to send email
             const emailRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/herinneringen/${herinneringId}/email`, {
@@ -344,11 +358,10 @@ const DebiteurenPage = () => {
             
             if (emailData.success) {
               emailCount++;
-            } else if (!emailData.smtp_configured) {
-              // SMTP not configured - only show once
-              if (emailCount === 0 && successCount === 1) {
-                toast.info('E-mail niet verzonden: SMTP niet geconfigureerd. Ga naar Instellingen > E-mail om dit in te stellen.');
-              }
+            } else if (!emailData.smtp_configured || emailData.error?.includes('niet geconfigureerd')) {
+              emailFailReason = 'smtp_not_configured';
+            } else if (emailData.error) {
+              emailFailReason = emailData.error;
             }
           }
         } catch (emailError) {
@@ -357,7 +370,16 @@ const DebiteurenPage = () => {
       }
       
       if (emailCount > 0) {
-        toast.success(`${successCount} herinnering(en) aangemaakt, ${emailCount} e-mail(s) verzonden`);
+        toast.success(`${successCount} herinnering(en) aangemaakt en ${emailCount} e-mail(s) verzonden naar klant(en)`);
+      } else if (emailFailReason === 'smtp_not_configured') {
+        toast.warning(
+          <div>
+            <strong>{successCount} herinnering(en) aangemaakt</strong>
+            <p className="text-sm mt-1">E-mails niet verzonden: SMTP niet geconfigureerd.</p>
+            <p className="text-xs mt-1">Ga naar <strong>Instellingen → E-mail</strong> om dit in te stellen.</p>
+          </div>,
+          { duration: 6000 }
+        );
       } else {
         toast.success(`${successCount} herinnering(en) aangemaakt (status gewijzigd)`);
       }
@@ -372,19 +394,29 @@ const DebiteurenPage = () => {
     }
   };
 
-  // Afletteren
+  // Afletteren - gebruik addPayment endpoint voor correcte boeking
   const handleAfletteren = async (invoiceId, amount) => {
     setProcessing(true);
     try {
-      await invoicesAPI.update(invoiceId, { 
-        status: 'betaald',
-        betaald_bedrag: amount,
-        betaald_datum: new Date().toISOString().split('T')[0]
+      // Gebruik addPayment voor correcte aflettering met grootboek boeking
+      await invoicesAPI.addPayment(invoiceId, { 
+        bedrag: amount,
+        datum: new Date().toISOString().split('T')[0],
+        methode: 'bank',
+        omschrijving: 'Aflettering debiteur'
       });
-      toast.success('Factuur als betaald gemarkeerd');
+      toast.success('Betaling geregistreerd en factuur afgeletterd');
       fetchData();
     } catch (error) {
-      toast.error('Fout bij afletteren');
+      console.error('Afletteren error:', error);
+      // Fallback: probeer direct status update
+      try {
+        await invoicesAPI.updateStatus(invoiceId, 'betaald');
+        toast.success('Factuur als betaald gemarkeerd');
+        fetchData();
+      } catch (statusError) {
+        toast.error('Fout bij afletteren: ' + (error.message || 'Onbekende fout'));
+      }
     } finally {
       setProcessing(false);
     }
@@ -638,7 +670,7 @@ const DebiteurenPage = () => {
                                   <Button 
                                     variant="ghost" 
                                     size="sm" 
-                                    onClick={() => navigate(`/app/boekhouding/debiteuren/${customer.id}`)}
+                                    onClick={() => { setSelectedCustomer(customer); setViewModalOpen(true); }}
                                     title="Bekijken"
                                     data-testid={`view-customer-${customer.id}`}
                                   >
@@ -661,6 +693,16 @@ const DebiteurenPage = () => {
                                     data-testid={`invoices-customer-${customer.id}`}
                                   >
                                     <FileText className="w-4 h-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => handleDeleteCustomer(customer.id)}
+                                    title="Verwijderen"
+                                    data-testid={`delete-customer-${customer.id}`}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </div>
                               </td>
@@ -773,11 +815,20 @@ const DebiteurenPage = () => {
                               </td>
                               <td className="px-4 py-3 text-center">
                                 <div className="flex items-center justify-center gap-1">
-                                  <Button variant="ghost" size="sm" onClick={() => handleSendReminder([invoice.id])}>
+                                  <Button variant="ghost" size="sm" title="Herinnering versturen" onClick={() => handleSendReminder([invoice.id])}>
                                     <Mail className="w-4 h-4" />
                                   </Button>
-                                  <Button variant="ghost" size="sm" onClick={() => handleAfletteren(invoice.id, invoice.totaal_bedrag || invoice.totaal)}>
+                                  <Button variant="ghost" size="sm" title="Afletteren" onClick={() => handleAfletteren(invoice.id, invoice.totaal_bedrag || invoice.totaal)}>
                                     <Link2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    title="Verwijderen"
+                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => handleDeleteInvoice(invoice.id)}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
                                   </Button>
                                 </div>
                               </td>
@@ -1185,6 +1236,113 @@ const DebiteurenPage = () => {
               </div>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* VIEW CUSTOMER MODAL */}
+      <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="w-5 h-5 text-emerald-600" />
+              Debiteur Details
+            </DialogTitle>
+          </DialogHeader>
+          {selectedCustomer && (
+            <div className="space-y-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+                    {selectedCustomer.type === 'bedrijf' ? (
+                      <Building2 className="w-6 h-6 text-emerald-600" />
+                    ) : (
+                      <User className="w-6 h-6 text-emerald-600" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{selectedCustomer.naam}</h3>
+                    <p className="text-sm text-gray-500 capitalize">{selectedCustomer.type || 'Particulier'}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-500">E-mail</p>
+                    <p className="font-medium text-gray-900">{selectedCustomer.email || '-'}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-500">Telefoon</p>
+                    <p className="font-medium text-gray-900">{selectedCustomer.telefoon || '-'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-gray-500">Adres</p>
+                    <p className="font-medium text-gray-900">{selectedCustomer.adres || '-'}</p>
+                  </div>
+                  {selectedCustomer.kvk_nummer && (
+                    <div>
+                      <p className="text-gray-500">KvK Nummer</p>
+                      <p className="font-medium text-gray-900">{selectedCustomer.kvk_nummer}</p>
+                    </div>
+                  )}
+                  {selectedCustomer.btw_nummer && (
+                    <div>
+                      <p className="text-gray-500">BTW Nummer</p>
+                      <p className="font-medium text-gray-900">{selectedCustomer.btw_nummer}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Invoice summary for this customer */}
+              {(() => {
+                const custInvoices = invoices.filter(i => i.debiteur_id === selectedCustomer.id);
+                const openInv = custInvoices.filter(i => i.status !== 'betaald' && i.status !== 'concept');
+                const totalOpen = openInv.reduce((sum, i) => sum + (i.totaal_bedrag || i.totaal || 0), 0);
+                const paidInv = custInvoices.filter(i => i.status === 'betaald');
+                const totalPaid = paidInv.reduce((sum, i) => sum + (i.totaal_bedrag || i.totaal || 0), 0);
+                
+                return (
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="bg-amber-50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-amber-600 mb-1">Openstaand</p>
+                      <p className="text-lg font-bold text-amber-700">{formatCurrency(totalOpen)}</p>
+                      <p className="text-xs text-amber-500">{openInv.length} facturen</p>
+                    </div>
+                    <div className="bg-emerald-50 rounded-lg p-3 text-center">
+                      <p className="text-xs text-emerald-600 mb-1">Betaald</p>
+                      <p className="text-lg font-bold text-emerald-700">{formatCurrency(totalPaid)}</p>
+                      <p className="text-xs text-emerald-500">{paidInv.length} facturen</p>
+                    </div>
+                  </div>
+                );
+              })()}
+              
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setViewModalOpen(false);
+                    handleShowInvoices(selectedCustomer);
+                  }}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Facturen Bekijken
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => {
+                    setViewModalOpen(false);
+                    handleEditCustomer(selectedCustomer);
+                  }}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Bewerken
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
