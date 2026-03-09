@@ -8,16 +8,45 @@ Comprehensive accounting and business management platform for Suriname businesse
 - Vastgoed Beheer - Real Estate Management
 - Auto Dealer, Beauty Spa, Pompstation - Industry-specific modules
 
-## Current Session: March 8, 2026 (Updated)
+## Current Session: March 9, 2026 (Updated)
 
-### Latest Update - Kassa POS Verwijderd
+### ✅ HRM/Personeel Grootboek Koppeling VOLTOOID
 
-Het complete Kassa POS systeem is verwijderd op verzoek van de gebruiker. De volgende bestanden zijn verwijderd:
-- `/app/frontend/src/pages/kassa/*` - Alle frontend pagina's
-- `/app/frontend/src/lib/kassaApi.js` - API service
-- `/app/frontend/src/context/KassaAuthContext.js` - Auth context
-- `/app/backend/routers/kassa.py` - Backend router
-- Routes uit App.js en server.py
+De HRM/Personeel module binnen de Boekhouding is nu volledig gekoppeld aan het Grootboek:
+
+**Salarisboeking Journaalpost:**
+| Rekening | Naam | Type |
+|----------|------|------|
+| **6000** | Salariskosten | Debet (bruto salaris) |
+| **2360** | Loonheffing te betalen | Credit (loonbelasting 8%) |
+| **2380** | AOV te betalen | Credit (AOV premie 5.25%) |
+| **1100** | Bank | Credit (netto uitbetaling) |
+
+**Functionaliteit:**
+- Automatische berekening loonbelasting (8%) en AOV (5.25%)
+- Bij "Uitbetalen" wordt automatisch een journaalpost aangemaakt
+- Salarisrun genereert automatisch alle inhoudingen
+- Frontend toont loonbelasting en AOV kolommen in de payroll tabel
+- Status "Geboekt naar grootboek" wordt getoond na betaling
+
+**Backend endpoint:** `PUT /api/hrm/payroll/{id}/pay?create_journal=true`
+
+### ✅ Vaste Activa Grootboek Koppeling (Bestaand - Geverifieerd)
+
+**Afschrijving Journaalpost:**
+| Categorie | Kosten (Debet) | Cum. Afschr. (Credit) |
+|-----------|----------------|----------------------|
+| Gebouwen | 4810 | 1011 |
+| Machines | 4820 | 1021 |
+| Inventaris | 4830 | 1031 |
+| Voertuigen | 4840 | 1041 |
+| Computers | 4850 | 1051 |
+
+**Backend endpoint:** `POST /api/vaste-activa/{id}/afschrijven?create_journal=true`
+
+### ❌ Kassa POS Verwijderd
+
+Het Kassa POS systeem is verwijderd op verzoek van de gebruiker.
 - Quick amount buttons
 - Customer selection with loyalty points
 - Automatic stock deduction on sale

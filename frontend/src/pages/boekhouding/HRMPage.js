@@ -809,9 +809,9 @@ const HRMPage = () => {
                               <TableRow key={pay.id} className="hover:bg-gray-50/50">
                                 <TableCell className="font-medium text-gray-900">{pay.employee_name || '-'}</TableCell>
                                 <TableCell className="text-sm text-gray-600">{pay.period}</TableCell>
-                                <TableCell className="text-right text-sm text-gray-900">{formatCurrency(pay.gross_salary || pay.basic_salary)}</TableCell>
-                                <TableCell className="text-right text-sm text-red-600">-{formatCurrency(pay.income_tax || 0)}</TableCell>
-                                <TableCell className="text-right text-sm text-amber-600">-{formatCurrency(pay.aov_contribution || 0)}</TableCell>
+                                <TableCell className="text-right text-sm text-gray-900">{formatCurrency(pay.basic_salary)}</TableCell>
+                                <TableCell className="text-right text-sm text-red-600">-{formatCurrency(pay.loonbelasting || 0)}</TableCell>
+                                <TableCell className="text-right text-sm text-amber-600">-{formatCurrency(pay.aov_premie || 0)}</TableCell>
                                 <TableCell className="text-right text-sm font-medium text-emerald-600">{formatCurrency(pay.net_salary)}</TableCell>
                                 <TableCell><StatusBadge status={pay.status} /></TableCell>
                                 <TableCell>
@@ -826,9 +826,9 @@ const HRMPage = () => {
                                         Uitbetalen
                                       </Button>
                                     )}
-                                    {pay.status === 'paid' && pay.journal_entry_id && (
+                                    {pay.status === 'paid' && (
                                       <span className="text-xs text-gray-400 flex items-center gap-1">
-                                        <CheckCircle className="w-3 h-3" /> Geboekt
+                                        <CheckCircle className="w-3 h-3" /> Geboekt naar grootboek
                                       </span>
                                     )}
                                   </div>

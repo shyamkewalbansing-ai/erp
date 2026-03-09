@@ -652,15 +652,135 @@ async def approve_hrm_payroll(payroll_id: str, current_user: dict = Depends(get_
     return {"message": "Salaris goedgekeurd"}
 
 @router.put("/payroll/{payroll_id}/pay")
-async def pay_hrm_payroll(payroll_id: str, current_user: dict = Depends(get_current_user)):
+async def pay_hrm_payroll(payroll_id: str, create_journal: bool = True, current_user: dict = Depends(get_current_user)):
+    """
+    Betaal salaris en maak automatisch een journaalpost aan met grootboek koppeling.
+    
+    Grootboek rekeningen voor salarisboeking:
+    - Debet 6000: Salariskosten (bruto salaris)
+    - Credit 2360: Loonheffing te betalen (loonbelasting)
+    - Credit 2380: AOV te betalen (AOV premie)
+    - Credit 1100: Bank (netto uitbetaling)
+    
+    Standaard percentages (Suriname):
+    - Loonbelasting: 8% van bruto
+    - AOV premie: 5.25% van bruto
+    """
     db = await get_db()
+    
+    # Get payroll record
+    payroll = await db.hrm_payroll.find_one({
+        "_id": ObjectId(payroll_id), 
+        **workspace_filter(current_user)
+    })
+    
+    if not payroll:
+        raise HTTPException(status_code=404, detail="Salarisrecord niet gevonden")
+    
+    if payroll.get("status") == "paid":
+        raise HTTPException(status_code=400, detail="Salaris is al betaald")
+    
+    # Calculate taxes (standard Suriname rates)
+    bruto_salaris = payroll.get("basic_salary", 0) + payroll.get("allowances", 0)
+    loonbelasting_percentage = 8.0  # 8% loonbelasting
+    aov_percentage = 5.25  # 5.25% AOV premie
+    
+    loonbelasting = round(bruto_salaris * (loonbelasting_percentage / 100), 2)
+    aov_premie = round(bruto_salaris * (aov_percentage / 100), 2)
+    
+    # Net salary = bruto - loonbelasting - aov - other deductions
+    other_deductions = payroll.get("deductions", 0)
+    netto_salaris = bruto_salaris - loonbelasting - aov_premie - other_deductions
+    
+    # Update payroll record
     result = await db.hrm_payroll.update_one(
         {"_id": ObjectId(payroll_id), **workspace_filter(current_user)},
-        {"$set": {"status": "paid", "paid_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {
+            "status": "paid", 
+            "paid_at": datetime.now(timezone.utc).isoformat(),
+            "loonbelasting": loonbelasting,
+            "aov_premie": aov_premie,
+            "net_salary": netto_salaris
+        }}
     )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Salarisrecord niet gevonden")
-    return {"message": "Salaris betaald"}
+    
+    journal_entry = None
+    
+    if create_journal and bruto_salaris > 0:
+        user_id = current_user.get("id")
+        workspace_id = current_user.get("workspace_id")
+        
+        # Get next journal number
+        count = await db.boekhouding_journaalposten.count_documents({
+            "user_id": user_id,
+            "dagboek_code": "SAL"
+        })
+        volgnummer = f"SAL{datetime.now().year}-{count + 1:05d}"
+        
+        employee_name = payroll.get("employee_name", "Medewerker")
+        periode = payroll.get("period", datetime.now().strftime("%Y-%m"))
+        
+        journal_entry = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "workspace_id": workspace_id,
+            "dagboek_code": "SAL",  # Salaris dagboek
+            "boekstuk_nummer": volgnummer,
+            "datum": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "omschrijving": f"Salarisbetaling {employee_name} - {periode}",
+            "regels": [
+                {
+                    "rekening_code": "6000",
+                    "rekening_naam": "Salariskosten",
+                    "omschrijving": f"Bruto salaris {employee_name}",
+                    "debet": bruto_salaris,
+                    "credit": 0
+                },
+                {
+                    "rekening_code": "2360",
+                    "rekening_naam": "Loonheffing te betalen",
+                    "omschrijving": f"Loonbelasting {loonbelasting_percentage}% - {employee_name}",
+                    "debet": 0,
+                    "credit": loonbelasting
+                },
+                {
+                    "rekening_code": "2380",
+                    "rekening_naam": "AOV te betalen",
+                    "omschrijving": f"AOV premie {aov_percentage}% - {employee_name}",
+                    "debet": 0,
+                    "credit": aov_premie
+                },
+                {
+                    "rekening_code": "1100",
+                    "rekening_naam": "Bank",
+                    "omschrijving": f"Netto uitbetaling {employee_name}",
+                    "debet": 0,
+                    "credit": netto_salaris + other_deductions  # Include other deductions in bank credit
+                }
+            ],
+            "totaal_debet": bruto_salaris,
+            "totaal_credit": bruto_salaris,
+            "status": "geboekt",
+            "payroll_id": payroll_id,
+            "auto_generated": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.boekhouding_journaalposten.insert_one(journal_entry)
+        
+        # Clean for response
+        if "_id" in journal_entry:
+            del journal_entry["_id"]
+    
+    return {
+        "message": "Salaris betaald en geboekt naar grootboek",
+        "payroll_id": payroll_id,
+        "bruto_salaris": bruto_salaris,
+        "loonbelasting": loonbelasting,
+        "aov_premie": aov_premie,
+        "netto_salaris": netto_salaris,
+        "journal_entry": journal_entry
+    }
 
 @router.delete("/payroll/{payroll_id}")
 async def delete_hrm_payroll(payroll_id: str, current_user: dict = Depends(get_current_user)):
@@ -675,6 +795,10 @@ async def delete_hrm_payroll(payroll_id: str, current_user: dict = Depends(get_c
 
 @router.post("/payroll/generate")
 async def generate_payroll(period: str, current_user: dict = Depends(get_current_user)):
+    """
+    Genereer salarisrun voor alle actieve medewerkers.
+    Berekent automatisch loonbelasting (8%) en AOV premie (5.25%).
+    """
     db = await get_db()
     
     # Get all active employees
@@ -682,6 +806,10 @@ async def generate_payroll(period: str, current_user: dict = Depends(get_current
         **workspace_filter(current_user),
         "status": "active"
     }).to_list(1000)
+    
+    # Standard Suriname tax rates
+    loonbelasting_percentage = 8.0
+    aov_percentage = 5.25
     
     generated = []
     for emp in employees:
@@ -693,14 +821,21 @@ async def generate_payroll(period: str, current_user: dict = Depends(get_current
         })
         
         if not existing:
+            bruto_salaris = emp.get("salary", 0)
+            loonbelasting = round(bruto_salaris * (loonbelasting_percentage / 100), 2)
+            aov_premie = round(bruto_salaris * (aov_percentage / 100), 2)
+            netto_salaris = bruto_salaris - loonbelasting - aov_premie
+            
             pay_dict = {
                 "employee_id": str(emp["_id"]),
                 "employee_name": f"{emp.get('first_name', '')} {emp.get('last_name', '')}",
                 "period": period,
-                "basic_salary": emp.get("salary", 0),
+                "basic_salary": bruto_salaris,
                 "allowances": 0,
                 "deductions": 0,
-                "net_salary": emp.get("salary", 0),
+                "loonbelasting": loonbelasting,
+                "aov_premie": aov_premie,
+                "net_salary": netto_salaris,
                 "status": "draft",
                 "workspace_id": current_user.get("workspace_id"),
                 "user_id": current_user.get("id"),
@@ -708,9 +843,11 @@ async def generate_payroll(period: str, current_user: dict = Depends(get_current
             }
             result = await db.hrm_payroll.insert_one(pay_dict)
             pay_dict["id"] = str(result.inserted_id)
+            if "_id" in pay_dict:
+                del pay_dict["_id"]
             generated.append(pay_dict)
     
-    return {"message": f"{len(generated)} salarisrecords gegenereerd", "records": generated}
+    return {"message": f"{len(generated)} salarisrecords gegenereerd", "generated": generated}
 
 
 # ==================== SETTINGS ENDPOINTS ====================
