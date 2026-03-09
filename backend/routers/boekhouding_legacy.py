@@ -2776,19 +2776,114 @@ async def send_factuur_email(factuur_id: str, data: SendEmailRequest, authorizat
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Fout bij genereren PDF: {str(e)}")
     
-    # Maak HTML email body
+    # Maak HTML email body met professionele card design
     factuurnummer = factuur.get('factuurnummer', factuur_id)
+    bedrijfsnaam = instellingen.get('bedrijfsnaam', 'Facturatie.sr')
     html_body = f"""
+    <!DOCTYPE html>
     <html>
-    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-        <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-            {data.message.replace(chr(10), '<br>')}
-            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-            <p style="color: #666; font-size: 12px;">
-                Deze e-mail is verzonden via Facturatie.sr<br>
-                Factuur {factuurnummer} is bijgevoegd als PDF.
-            </p>
-        </div>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f4f4f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f5; padding: 40px 20px;">
+            <tr>
+                <td align="center">
+                    <!-- Main Card Container -->
+                    <table width="600" cellpadding="0" cellspacing="0" style="max-width: 600px; width: 100%;">
+                        <!-- Header with Logo -->
+                        <tr>
+                            <td style="padding-bottom: 24px; text-align: center;">
+                                <table cellpadding="0" cellspacing="0" style="margin: 0 auto;">
+                                    <tr>
+                                        <td style="background-color: #1EB870; width: 44px; height: 44px; border-radius: 50%; text-align: center; vertical-align: middle;">
+                                            <span style="color: white; font-size: 18px; font-weight: bold;">{bedrijfsnaam[:2].upper()}</span>
+                                        </td>
+                                        <td style="padding-left: 12px;">
+                                            <span style="font-size: 20px; font-weight: 600; color: #1e293b;">{bedrijfsnaam}</span>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        
+                        <!-- Main Card -->
+                        <tr>
+                            <td>
+                                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
+                                    <!-- Green Top Border -->
+                                    <tr>
+                                        <td style="background-color: #1EB870; height: 4px; border-radius: 12px 12px 0 0;"></td>
+                                    </tr>
+                                    
+                                    <!-- Card Content -->
+                                    <tr>
+                                        <td style="padding: 40px 40px 32px 40px;">
+                                            <!-- Message Content -->
+                                            <div style="color: #374151; font-size: 15px; line-height: 1.7; text-align: left;">
+                                                {data.message.replace(chr(10), '<br>')}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Attachment Info Box -->
+                                    <tr>
+                                        <td style="padding: 0 40px 32px 40px;">
+                                            <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+                                                <tr>
+                                                    <td style="padding: 16px 20px;">
+                                                        <table cellpadding="0" cellspacing="0">
+                                                            <tr>
+                                                                <td style="vertical-align: middle; padding-right: 12px;">
+                                                                    <div style="background-color: #1EB870; width: 36px; height: 36px; border-radius: 8px; text-align: center; line-height: 36px;">
+                                                                        <span style="color: white; font-size: 16px;">&#128196;</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td style="vertical-align: middle;">
+                                                                    <div style="font-size: 14px; font-weight: 600; color: #166534;">Bijlage</div>
+                                                                    <div style="font-size: 13px; color: #15803d;">factuur_{factuurnummer}.pdf</div>
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Divider -->
+                                    <tr>
+                                        <td style="padding: 0 40px;">
+                                            <div style="border-top: 1px solid #e5e7eb;"></div>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Footer inside card -->
+                                    <tr>
+                                        <td style="padding: 24px 40px 32px 40px;">
+                                            <p style="margin: 0; font-size: 13px; color: #9ca3af; text-align: left;">
+                                                Met vriendelijke groet,<br>
+                                                <strong style="color: #6b7280;">{bedrijfsnaam}</strong>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer below card -->
+                        <tr>
+                            <td style="padding-top: 24px; text-align: center;">
+                                <p style="margin: 0; font-size: 12px; color: #9ca3af;">
+                                    Verzonden via <span style="color: #1EB870; font-weight: 500;">Facturatie.sr</span>
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
     </body>
     </html>
     """
