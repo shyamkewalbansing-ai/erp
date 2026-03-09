@@ -2730,6 +2730,7 @@ class SendEmailRequest(BaseModel):
     to: str
     subject: str
     message: str
+    cc: Optional[List[str]] = []
 
 
 @router.post("/verkoopfacturen/{factuur_id}/send-email")
@@ -2902,6 +2903,7 @@ async def send_factuur_email(factuur_id: str, data: SendEmailRequest, authorizat
             "content": pdf_content,
             "mime_type": "application/pdf"
         }],
+        cc=data.cc if data.cc else None,
         user_id=user_id
     )
     

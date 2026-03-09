@@ -154,7 +154,7 @@ const VerkoopPage = () => {
   // Email modal state
   const [emailModalOpen, setEmailModalOpen] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
-  const [emailForm, setEmailForm] = useState({ subject: '', message: '' });
+  const [emailForm, setEmailForm] = useState({ subject: '', message: '', cc: '' });
 
   useEffect(() => {
     fetchData();
@@ -258,7 +258,8 @@ Wij verzoeken u het bedrag binnen de gestelde betalingstermijn over te maken ond
 
 Mocht u vragen hebben, neem dan gerust contact met ons op.
 
-Met vriendelijke groet`
+Met vriendelijke groet`,
+      cc: ''
     });
     setEmailModalOpen(true);
   };
@@ -267,17 +268,24 @@ Met vriendelijke groet`
     if (!selectedInvoice || !selectedInvoice.debiteur_email) return;
     setEmailSending(true);
     try {
+      // Parse CC emails (comma or semicolon separated)
+      const ccList = emailForm.cc
+        ? emailForm.cc.split(/[,;]/).map(e => e.trim()).filter(e => e.length > 0)
+        : [];
+      
       const emailData = {
         to: selectedInvoice.debiteur_email,
         subject: emailForm.subject,
-        message: emailForm.message
+        message: emailForm.message,
+        cc: ccList
       };
       
       const result = await invoicesAPI.sendEmail(selectedInvoice.id, emailData);
       console.log('Email result:', result);
       
       if (result.success) {
-        toast.success(`E-mail verzonden naar ${selectedInvoice.debiteur_email}`);
+        const ccMsg = ccList.length > 0 ? ` (+ ${ccList.length} CC)` : '';
+        toast.success(`E-mail verzonden naar ${selectedInvoice.debiteur_email}${ccMsg}`);
         setEmailModalOpen(false);
         fetchData(); // Refresh data to update status
       } else if (result.smtp_configured === false) {
@@ -1300,6 +1308,19 @@ Met vriendelijke groet`
                       onChange={(e) => setEmailForm({...emailForm, subject: e.target.value})}
                       placeholder="Onderwerp van de e-mail"
                     />
+                  </div>
+                  
+                  {/* CC field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      CC <span className="text-gray-400 font-normal">(optioneel)</span>
+                    </label>
+                    <Input 
+                      value={emailForm.cc}
+                      onChange={(e) => setEmailForm({...emailForm, cc: e.target.value})}
+                      placeholder="email1@voorbeeld.com, email2@voorbeeld.com"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Meerdere adressen scheiden met een komma</p>
                   </div>
                   
                   {/* Message field */}
