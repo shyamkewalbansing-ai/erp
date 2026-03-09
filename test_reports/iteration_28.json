@@ -45,7 +45,7 @@
   
   "test_credentials": {
     "demo_spa_workspace_id": "demo-spa",
-    "api_base_url": "https://sumup-style-kassa.preview.emergentagent.com"
+    "api_base_url": "https://verkoop-debug.preview.emergentagent.com"
   },
   
   "seed_data_creation": "Demo spa with treatments, staff, and availability already seeded",

@@ -251,49 +251,85 @@ const VerkoopPage = () => {
     if (!selectedInvoice) return;
     setEmailSending(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/verkoopfacturen/${selectedInvoice.id}/send-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ to_email: selectedInvoice.debiteur_email })
-      });
-      const data = await response.json();
+      const factuurnummer = selectedInvoice.nummer || selectedInvoice.factuurnummer || 'Onbekend';
+      const emailData = {
+        to: selectedInvoice.debiteur_email,
+        subject: `Factuur ${factuurnummer}`,
+        message: `Geachte ${selectedInvoice.debiteur_naam || 'klant'},\n\nBijgevoegd vindt u factuur ${factuurnummer}.\n\nMet vriendelijke groet`
+      };
       
-      if (data.success) {
+      const result = await invoicesAPI.sendEmail(selectedInvoice.id, emailData);
+      
+      if (result.success) {
         toast.success(`E-mail verzonden naar ${selectedInvoice.debiteur_email || 'klant'}`);
         setEmailModalOpen(false);
-      } else if (data.smtp_configured === false) {
-        toast.warning('SMTP niet geconfigureerd. Ga naar Instellingen → E-mail');
+        fetchData(); // Refresh data to update status
       } else {
-        toast.error(data.error || data.detail || 'Fout bij verzenden e-mail');
+        toast.error(result.error || result.detail || 'Fout bij verzenden e-mail');
       }
     } catch (error) {
       console.error('Email error:', error);
-      toast.error('Fout bij verzenden e-mail');
+      const errorMsg = error.response?.data?.detail || error.message || 'Fout bij verzenden e-mail';
+      if (errorMsg.includes('SMTP')) {
+        toast.warning('SMTP niet geconfigureerd. Ga naar Instellingen → E-mail');
+      } else {
+        toast.error(errorMsg);
+      }
     } finally {
       setEmailSending(false);
     }
   };
 
-  // Print invoice
-  const handlePrint = (invoice) => {
-    // Open in new window for printing
-    const printUrl = `${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/verkoopfacturen/${invoice.id}/pdf`;
-    window.open(printUrl, '_blank');
-    toast.info('PDF wordt gegenereerd...');
+  // Print invoice - download PDF
+  const handlePrint = async (invoice) => {
+    try {
+      toast.info('PDF wordt gegenereerd...');
+      const token = localStorage.getItem('token');
+      const pdfUrl = `${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/verkoopfacturen/${invoice.id}/pdf`;
+      
+      // Fetch the PDF with authentication
+      const response = await fetch(pdfUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Kon PDF niet genereren');
+      }
+      
+      // Create blob and download
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `factuur_${invoice.nummer || invoice.factuurnummer || invoice.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast.success('PDF gedownload');
+    } catch (error) {
+      console.error('Print error:', error);
+      toast.error(error.message || 'Fout bij genereren PDF');
+    }
   };
 
   // Delete invoice
   const handleDelete = async (invoice) => {
-    if (!window.confirm(`Weet u zeker dat u factuur ${invoice.nummer || invoice.factuurnummer} wilt verwijderen?`)) return;
+    const factuurnummer = invoice.nummer || invoice.factuurnummer || 'Onbekend';
+    if (!window.confirm(`Weet u zeker dat u factuur ${factuurnummer} wilt verwijderen?\n\nDeze actie kan niet ongedaan worden gemaakt.`)) return;
+    
     try {
       await invoicesAPI.delete(invoice.id);
-      toast.success('Factuur verwijderd');
+      toast.success(`Factuur ${factuurnummer} is verwijderd`);
       fetchData();
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Fout bij verwijderen');
+      console.error('Delete error:', error);
+      const errorMsg = error.response?.data?.detail || error.message || 'Fout bij verwijderen';
+      toast.error(errorMsg);
     }
   };
 
