@@ -323,17 +323,26 @@ const DebiteurenPage = () => {
     setProcessing(true);
     let successCount = 0;
     let emailCount = 0;
-    let emailFailReason = '';
+    let emailErrors = [];
     
     try {
       for (const id of invoiceIds) {
+        const invoice = invoices.find(i => i.id === id);
+        const customer = customers.find(c => c.id === invoice?.debiteur_id);
+        
         // First update status to 'herinnering'
         await invoicesAPI.updateStatus(id, 'herinnering');
         successCount++;
         
+        // Check if customer has email
+        if (!customer?.email) {
+          emailErrors.push(`${invoice?.factuurnummer || id}: Klant heeft geen e-mailadres`);
+          continue;
+        }
+        
         // Try to send email via herinnering endpoint
         try {
-          // Create herinnering record first (uses /genereren not /generate)
+          // Create herinnering record first
           const herinneringenRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/herinneringen/genereren`, {
             method: 'POST',
             headers: {
@@ -341,6 +350,7 @@ const DebiteurenPage = () => {
             }
           });
           const herinneringenData = await herinneringenRes.json();
+          console.log('Herinneringen generated:', herinneringenData);
           
           if (herinneringenData.herinneringen && herinneringenData.herinneringen.length > 0) {
             // Get the herinnering for this specific invoice
@@ -348,6 +358,7 @@ const DebiteurenPage = () => {
             const herinneringId = herinnering.id;
             
             // Try to send email
+            console.log(`Sending email for herinnering ${herinneringId}...`);
             const emailRes = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/boekhouding/herinneringen/${herinneringId}/email`, {
               method: 'POST',
               headers: {
@@ -355,23 +366,41 @@ const DebiteurenPage = () => {
               }
             });
             const emailData = await emailRes.json();
+            console.log('Email response:', emailData);
             
             if (emailData.success) {
               emailCount++;
-            } else if (!emailData.smtp_configured || emailData.error?.includes('niet geconfigureerd')) {
-              emailFailReason = 'smtp_not_configured';
+            } else if (emailData.smtp_configured === false) {
+              emailErrors.push('SMTP niet geconfigureerd - Ga naar Instellingen → E-mail');
+              break; // Stop trying other emails
             } else if (emailData.error) {
-              emailFailReason = emailData.error;
+              emailErrors.push(`${invoice?.factuurnummer || id}: ${emailData.error}`);
+            } else if (emailData.detail) {
+              emailErrors.push(`${invoice?.factuurnummer || id}: ${emailData.detail}`);
             }
           }
         } catch (emailError) {
-          console.log('Email sending skipped:', emailError);
+          console.error('Email sending error:', emailError);
+          emailErrors.push(`${invoice?.factuurnummer || id}: ${emailError.message || 'Onbekende fout'}`);
         }
       }
       
-      if (emailCount > 0) {
+      // Show appropriate toast messages
+      if (emailCount > 0 && emailErrors.length === 0) {
         toast.success(`${successCount} herinnering(en) aangemaakt en ${emailCount} e-mail(s) verzonden naar klant(en)`);
-      } else if (emailFailReason === 'smtp_not_configured') {
+      } else if (emailCount > 0 && emailErrors.length > 0) {
+        toast.success(`${emailCount} e-mail(s) verzonden`);
+        toast.warning(
+          <div>
+            <strong>Sommige e-mails niet verzonden:</strong>
+            <ul className="text-sm mt-1 list-disc pl-4">
+              {emailErrors.slice(0, 3).map((err, i) => <li key={i}>{err}</li>)}
+              {emailErrors.length > 3 && <li>...en {emailErrors.length - 3} meer</li>}
+            </ul>
+          </div>,
+          { duration: 8000 }
+        );
+      } else if (emailErrors.some(e => e.includes('SMTP niet geconfigureerd'))) {
         toast.warning(
           <div>
             <strong>{successCount} herinnering(en) aangemaakt</strong>
@@ -379,6 +408,17 @@ const DebiteurenPage = () => {
             <p className="text-xs mt-1">Ga naar <strong>Instellingen → E-mail</strong> om dit in te stellen.</p>
           </div>,
           { duration: 6000 }
+        );
+      } else if (emailErrors.length > 0) {
+        toast.warning(
+          <div>
+            <strong>{successCount} herinnering(en) aangemaakt</strong>
+            <p className="text-sm mt-1">E-mails niet verzonden:</p>
+            <ul className="text-xs mt-1 list-disc pl-4">
+              {emailErrors.slice(0, 3).map((err, i) => <li key={i}>{err}</li>)}
+            </ul>
+          </div>,
+          { duration: 8000 }
         );
       } else {
         toast.success(`${successCount} herinnering(en) aangemaakt (status gewijzigd)`);

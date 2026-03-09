@@ -4730,21 +4730,9 @@ async def send_herinnering_email(herinnering_id: str, authorization: str = Heade
     if not debiteur or not debiteur.get('email'):
         raise HTTPException(status_code=400, detail="Debiteur heeft geen email adres")
     
-    # Haal bedrijfsinstellingen (inclusief SMTP)
+    # Haal bedrijfsinstellingen
     instellingen = await db.boekhouding_instellingen.find_one({"user_id": user_id})
     instellingen = clean_doc(instellingen) if instellingen else {}
-    
-    # Check SMTP configuratie
-    smtp_host = instellingen.get('smtp_host') or os.environ.get('SMTP_HOST')
-    smtp_user = instellingen.get('smtp_user') or os.environ.get('SMTP_USER')
-    smtp_password = instellingen.get('smtp_password') or os.environ.get('SMTP_PASSWORD')
-    
-    if not smtp_host or not smtp_user or not smtp_password:
-        return {
-            "success": False,
-            "error": "Email niet geconfigureerd. Ga naar Instellingen om SMTP in te stellen.",
-            "smtp_configured": False
-        }
     
     # Genereer email HTML
     if EMAIL_ENABLED:
@@ -4754,7 +4742,42 @@ async def send_herinnering_email(herinnering_id: str, authorization: str = Heade
             factuur=factuur
         )
     else:
-        html = f"<h1>Betalingsherinnering</h1><p>Factuur: {herinnering.get('factuurnummer')}</p>"
+        # Fallback HTML template
+        bedrijfsnaam = instellingen.get('bedrijfsnaam', 'Facturatie.sr')
+        openstaand = herinnering.get('openstaand_bedrag', factuur.get('totaal_bedrag', 0))
+        html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #d97706;">Betalingsherinnering</h2>
+                <p>Geachte {debiteur.get('naam', 'klant')},</p>
+                <p>Wij willen u vriendelijk herinneren aan onderstaande openstaande factuur:</p>
+                <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+                    <tr style="background: #f3f4f6;">
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;"><strong>Factuurnummer</strong></td>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">{herinnering.get('factuurnummer', '-')}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;"><strong>Factuurdatum</strong></td>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">{factuur.get('factuurdatum', '-')}</td>
+                    </tr>
+                    <tr style="background: #f3f4f6;">
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;"><strong>Vervaldatum</strong></td>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;">{factuur.get('vervaldatum', '-')}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb;"><strong>Openstaand bedrag</strong></td>
+                        <td style="padding: 10px; border: 1px solid #e5e7eb; font-weight: bold; color: #d97706;">SRD {openstaand:,.2f}</td>
+                    </tr>
+                </table>
+                <p>Wij verzoeken u vriendelijk het openstaande bedrag zo spoedig mogelijk over te maken.</p>
+                <p>Mocht u reeds betaald hebben, dan kunt u deze herinnering als niet verzonden beschouwen.</p>
+                <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+                <p style="color: #6b7280; font-size: 14px;">Met vriendelijke groet,<br><strong>{bedrijfsnaam}</strong></p>
+            </div>
+        </body>
+        </html>
+        """
     
     # Type labels
     type_labels = {
@@ -4764,27 +4787,19 @@ async def send_herinnering_email(herinnering_id: str, authorization: str = Heade
     }
     subject = f"{type_labels.get(herinnering.get('type', 'eerste'), 'Herinnering')} - Factuur {herinnering.get('factuurnummer', '')}"
     
-    # Verzend email via SMTP
-    try:
-        import aiosmtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
-        
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = f"{instellingen.get('smtp_from_name', instellingen.get('bedrijfsnaam', 'Facturatie'))} <{instellingen.get('smtp_from_email', smtp_user)}>"
-        msg['To'] = debiteur['email']
-        msg.attach(MIMEText(html, 'html', 'utf-8'))
-        
-        await aiosmtplib.send(
-            msg,
-            hostname=smtp_host,
-            port=instellingen.get('smtp_port', 587),
-            username=smtp_user,
-            password=smtp_password,
-            start_tls=True
-        )
-        
+    # Verzend email via UnifiedEmailService (zelfde als factuur email)
+    from services.unified_email_service import UnifiedEmailService
+    email_svc = UnifiedEmailService(db)
+    
+    result = await email_svc.send_email(
+        to_email=debiteur['email'],
+        subject=subject,
+        body_html=html,
+        body_text=f"Betalingsherinnering voor factuur {herinnering.get('factuurnummer', '')}",
+        user_id=user_id
+    )
+    
+    if result.get('success'):
         # Update herinnering status
         await db.boekhouding_herinneringen.update_one(
             {"id": herinnering_id},
@@ -4801,9 +4816,32 @@ async def send_herinnering_email(herinnering_id: str, authorization: str = Heade
         })
         
         return {"success": True, "message": f"Email verzonden naar {debiteur['email']}"}
+    else:
+        error_msg = result.get('error', 'Onbekende fout')
         
-    except Exception as e:
-        return {"success": False, "error": str(e)}
+        # Provide more helpful error messages
+        if 'authentication failed' in str(error_msg).lower():
+            return {
+                "success": False,
+                "error": "SMTP authenticatie mislukt. Controleer uw SMTP gebruikersnaam en wachtwoord in Instellingen → E-mail.",
+                "smtp_configured": True,
+                "original_error": str(error_msg)
+            }
+        elif 'connection refused' in str(error_msg).lower() or 'connect' in str(error_msg).lower():
+            return {
+                "success": False,
+                "error": "Kan geen verbinding maken met SMTP server. Controleer de server en poort instellingen.",
+                "smtp_configured": True,
+                "original_error": str(error_msg)
+            }
+        elif result.get('simulated'):
+            return {
+                "success": False,
+                "error": "SMTP niet geconfigureerd. Ga naar Instellingen → E-mail om dit in te stellen.",
+                "smtp_configured": False
+            }
+        else:
+            return {"success": False, "error": error_msg}
 
 
 @router.post("/instellingen/test-email")
