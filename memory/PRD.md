@@ -146,12 +146,12 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
 #### PIN Login Feature ✅
 1. **PIN login op landing pagina** - Bedrijven kunnen inloggen met 4-cijferige PIN of wachtwoord
    - Nieuw backend endpoint: `POST /api/kiosk/auth/pin`
-   - PIN keypad met numerieke toetsen op login pagina
+   - PIN keypad met vierkante blokken en zichtbare cijfers
    - Auto-submit bij 4 cijfers, direct redirect naar kiosk
-2. **Kiosk PIN beveiliging** - Kiosk pagina vraagt PIN bij direct URL bezoek
+2. **Unieke PIN** - Backend valideert dat geen twee bedrijven dezelfde PIN hebben
+3. **Kiosk PIN beveiliging** - Kiosk pagina vraagt PIN bij direct URL bezoek
    - SessionStorage wordt gewist bij uitloggen
-   - PIN login zet sessionStorage zodat kiosk niet opnieuw om PIN vraagt
-3. **Logout verbeterd** - Wist zowel localStorage (token) als sessionStorage (PIN verificatie)
+4. **Logout verbeterd** - Wist zowel localStorage (token) als sessionStorage (PIN verificatie)
 
 #### Gewijzigde Bestanden
 - `frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` - Direct redirect na login, auto-redirect
