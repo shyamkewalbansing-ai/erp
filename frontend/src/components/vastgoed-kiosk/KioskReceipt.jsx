@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle, Printer, Home } from 'lucide-react';
+import { CheckCircle, Printer, Home, Check } from 'lucide-react';
 import ReceiptTicket from './ReceiptTicket';
 import axios from 'axios';
 
@@ -9,6 +9,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   const [countdown, setCountdown] = useState(15);
   const [stampData, setStampData] = useState(null);
   const [isPrinting, setIsPrinting] = useState(false);
+  const [printStatus, setPrintStatus] = useState('waiting'); // waiting, printing, done
   const [autoPrinted, setAutoPrinted] = useState(false);
   const timerRef = useRef(null);
   const printFrameRef = useRef(null);
@@ -21,14 +22,14 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
     }
   }, [companyId]);
 
-  // Auto-print on mount
+  // Auto-print on mount - Silent printing for kiosk mode
   useEffect(() => {
     if (payment && stampData !== null && !autoPrinted) {
       // Wait a moment for the receipt to render, then auto-print
       const autoPrintTimer = setTimeout(() => {
-        handlePrint(true);
+        handleSilentPrint();
         setAutoPrinted(true);
-      }, 1500);
+      }, 1000);
       return () => clearTimeout(autoPrintTimer);
     }
   }, [payment, stampData, autoPrinted]);
@@ -54,97 +55,125 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
 
   const kwNr = payment.kwitantie_nummer || payment.receipt_number || '';
 
-  const handlePrint = (isAutoPrint = false) => {
+  // Silent print function - works with Chrome --kiosk-printing flag
+  const handleSilentPrint = () => {
     setIsPrinting(true);
+    setPrintStatus('printing');
     clearInterval(timerRef.current);
 
-    // Create a hidden iframe for printing
     const printContent = document.getElementById('receipt-print-content');
     if (!printContent) {
       setIsPrinting(false);
+      setPrintStatus('done');
       return;
     }
 
-    // Create iframe for silent printing
-    let printFrame = printFrameRef.current;
-    if (!printFrame) {
-      printFrame = document.createElement('iframe');
-      printFrame.style.position = 'absolute';
-      printFrame.style.top = '-9999px';
-      printFrame.style.left = '-9999px';
-      printFrame.style.width = '210mm';
-      printFrame.style.height = '297mm';
-      document.body.appendChild(printFrame);
-      printFrameRef.current = printFrame;
-    }
-
-    const printDocument = printFrame.contentWindow || printFrame.contentDocument;
-    const doc = printDocument.document || printDocument;
-
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Kwitantie ${kwNr}</title>
-          <style>
-            @page {
-              size: A4;
-              margin: 0;
-            }
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            body {
-              font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-              color-adjust: exact !important;
-            }
-            @media print {
+    // Create a new window for printing (works better with kiosk mode)
+    const printWindow = window.open('', '_blank', 'width=794,height=1123');
+    
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Kwitantie ${kwNr}</title>
+            <style>
+              @page {
+                size: A4;
+                margin: 0;
+              }
+              * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+              }
               body {
+                font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+              }
+              @media print {
+                body {
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                }
+              }
+            </style>
+          </head>
+          <body>
+            ${printContent.innerHTML}
+            <script>
+              // Auto-print and close - Chrome kiosk mode will print silently
+              window.onload = function() {
+                window.print();
+                // Close window after print (will work in kiosk mode)
+                setTimeout(function() { window.close(); }, 500);
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } else {
+      // Fallback: use iframe method
+      let printFrame = printFrameRef.current;
+      if (!printFrame) {
+        printFrame = document.createElement('iframe');
+        printFrame.style.position = 'absolute';
+        printFrame.style.top = '-9999px';
+        printFrame.style.left = '-9999px';
+        printFrame.style.width = '210mm';
+        printFrame.style.height = '297mm';
+        document.body.appendChild(printFrame);
+        printFrameRef.current = printFrame;
+      }
+
+      const doc = printFrame.contentWindow.document;
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Kwitantie ${kwNr}</title>
+            <style>
+              @page { size: A4; margin: 0; }
+              * { margin: 0; padding: 0; box-sizing: border-box; }
+              body {
+                font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
               }
-            }
-          </style>
-        </head>
-        <body>
-          ${printContent.innerHTML}
-        </body>
-      </html>
-    `);
-    doc.close();
+            </style>
+          </head>
+          <body>${printContent.innerHTML}</body>
+        </html>
+      `);
+      doc.close();
 
-    // Wait for content to load then print
-    printFrame.onload = () => {
-      setTimeout(() => {
-        try {
-          printFrame.contentWindow.focus();
-          printFrame.contentWindow.print();
-        } catch (e) {
-          // Fallback to regular window.print()
-          window.print();
-        }
-        
-        setIsPrinting(false);
-        
-        // Restart countdown
-        setCountdown(isAutoPrint ? 12 : 8);
-        timerRef.current = setInterval(() => {
-          setCountdown(prev => {
-            if (prev <= 1) {
-              clearInterval(timerRef.current);
-              onDone();
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-      }, 500);
-    };
+      printFrame.onload = () => {
+        printFrame.contentWindow.print();
+      };
+    }
+
+    // Mark as done after a short delay
+    setTimeout(() => {
+      setIsPrinting(false);
+      setPrintStatus('done');
+      
+      // Restart countdown
+      setCountdown(10);
+      timerRef.current = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timerRef.current);
+            onDone();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }, 2000);
   };
 
   return (
@@ -160,16 +189,31 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
           <h1 className="text-6xl font-bold mb-4">Betaling geslaagd!</h1>
           <p className="text-3xl text-green-100 mb-4">Kwitantie: {kwNr}</p>
           
-          {autoPrinted && (
-            <p className="text-xl text-green-200 mb-8 flex items-center justify-center gap-2">
-              <Printer className="w-6 h-6" />
-              Kwitantie wordt automatisch geprint...
-            </p>
-          )}
+          {/* Print Status */}
+          <div className="mb-8">
+            {printStatus === 'waiting' && (
+              <p className="text-xl text-green-200 flex items-center justify-center gap-2">
+                <Printer className="w-6 h-6" />
+                Voorbereiden om te printen...
+              </p>
+            )}
+            {printStatus === 'printing' && (
+              <p className="text-xl text-yellow-200 flex items-center justify-center gap-2 animate-pulse">
+                <Printer className="w-6 h-6" />
+                Kwitantie wordt geprint...
+              </p>
+            )}
+            {printStatus === 'done' && (
+              <p className="text-xl text-green-200 flex items-center justify-center gap-2">
+                <Check className="w-6 h-6" />
+                Kwitantie geprint!
+              </p>
+            )}
+          </div>
           
           <div className="flex flex-col gap-4">
             <button
-              onClick={() => handlePrint(false)}
+              onClick={handleSilentPrint}
               disabled={isPrinting}
               className="kiosk-btn-xl bg-white text-green-600 hover:bg-green-50 shadow-lg disabled:opacity-50"
             >
