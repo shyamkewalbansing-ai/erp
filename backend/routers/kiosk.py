@@ -395,6 +395,12 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
             {"$set": update_fields}
         )
     
+    # Get updated tenant balances for receipt
+    updated_tenant = await db.kiosk_tenants.find_one({"tenant_id": data.tenant_id})
+    remaining_rent = updated_tenant.get("outstanding_rent", 0) if updated_tenant else 0
+    remaining_service = updated_tenant.get("service_costs", 0) if updated_tenant else 0
+    remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
+    
     return {
         "payment_id": payment_id,
         "kwitantie_nummer": kwitantie_nummer,
@@ -405,7 +411,10 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "tenant_code": tenant.get("tenant_code", ""),
         "apartment_number": tenant.get("apartment_number", ""),
         "rent_month": data.rent_month,
-        "created_at": now.isoformat()
+        "created_at": now.isoformat(),
+        "remaining_rent": remaining_rent,
+        "remaining_service": remaining_service,
+        "remaining_fines": remaining_fines
     }
 
 # ============== ADMIN ENDPOINTS (authenticated) ==============
