@@ -4,7 +4,7 @@ import {
   Building2, Users, CreditCard, Home, Plus, Pencil, Trash2, 
   ArrowLeft, DollarSign, Loader2, Settings, ExternalLink,
   Copy, Check, Receipt, Zap, Crown, Search, Calendar,
-  AlertTriangle, User, Banknote, FileText, Save, Eye
+  AlertTriangle, User, Banknote, FileText, Save, Eye, LogIn
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -41,6 +41,12 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     } else {
       navigate('/vastgoed');
     }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    localStorage.removeItem('kiosk_token');
+    navigate('/vastgoed');
   };
 
   useEffect(() => {
@@ -163,6 +169,14 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             >
               <ExternalLink className="w-4 h-4" />
               <span className="hidden sm:inline">Terug naar Kiosk</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              data-testid="admin-logout-button"
+              className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-slate-100 border border-slate-200 text-slate-600 rounded-lg text-xs lg:text-sm hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"
+            >
+              <LogIn className="w-4 h-4 rotate-180" />
+              <span className="hidden sm:inline">Uitloggen</span>
             </button>
           </div>
         </div>

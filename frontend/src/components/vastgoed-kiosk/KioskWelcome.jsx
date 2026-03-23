@@ -1,12 +1,19 @@
-import { Building2, ArrowRight, Banknote, Droplets, Receipt, Settings } from 'lucide-react';
+import { Building2, ArrowRight, Banknote, Droplets, Receipt, Settings, LogIn } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function KioskWelcome({ onStart, onAdmin, companyName, companyId }) {
+  const navigate = useNavigate();
   const today = new Date().toLocaleDateString('nl-NL', { 
     weekday: 'long', 
     day: 'numeric', 
     month: 'long', 
     year: 'numeric' 
   });
+
+  const handleLogout = () => {
+    localStorage.removeItem('kiosk_token');
+    navigate('/vastgoed');
+  };
 
   return (
     <div className="kiosk-fullscreen flex flex-col lg:flex-row bg-slate-50">
@@ -48,7 +55,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
           </button>
         </div>
 
-        {/* Admin link */}
+        {/* Admin & Logout links */}
         <div className="relative z-10 flex items-center gap-4">
           <button 
             onClick={onAdmin}
@@ -56,6 +63,14 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
           >
             <Settings className="w-4 h-4" />
             Beheerder
+          </button>
+          <button 
+            onClick={handleLogout}
+            data-testid="kiosk-welcome-logout"
+            className="inline-flex items-center gap-2 text-slate-400 hover:text-red-500 text-sm transition"
+          >
+            <LogIn className="w-4 h-4 rotate-180" />
+            Uitloggen
           </button>
         </div>
       </div>

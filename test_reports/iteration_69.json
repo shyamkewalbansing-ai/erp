@@ -1,0 +1,63 @@
+{
+  "summary": "Frontend testing of Vastgoed Kiosk module - 3 new features: direct redirect after login, Uitloggen button on Kiosk Welcome, Uitloggen button on Admin Dashboard. All 10 tests passed (100% success rate).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "direct_redirect_after_login": "PASS - After login, user is redirected directly to /vastgoed/{company_id} kiosk page",
+    "intermediate_page_skipped": "PASS - 'Welcome Back' page with 'Open Kiosk' button is skipped after login",
+    "auto_redirect_when_logged_in": "PASS - Visiting /vastgoed while logged in auto-redirects to kiosk page",
+    "uitloggen_on_kiosk_welcome": "PASS - Uitloggen button visible at bottom left of Kiosk Welcome page",
+    "uitloggen_kiosk_works": "PASS - Clicking Uitloggen clears token and redirects to /vastgoed login",
+    "uitloggen_on_admin": "PASS - Uitloggen button visible in Admin Dashboard header",
+    "uitloggen_admin_works": "PASS - Admin Uitloggen clears token and redirects to /vastgoed login",
+    "beheerder_button_present": "PASS - Beheerder button still present on Kiosk Welcome page",
+    "start_button_present": "PASS - Start button still present on Kiosk Welcome page",
+    "terug_naar_kiosk_present": "PASS - 'Terug naar Kiosk' button still present on Admin Dashboard",
+    "kopieer_url_present": "PASS - 'Kopieer Kiosk URL' button still present on Admin Dashboard"
+  },
+  "features_tested": [
+    "After login on /vastgoed, user is redirected directly to /vastgoed/{company_id} kiosk page",
+    "Intermediate 'Welcome back' page with 'Open Kiosk' button is skipped after login",
+    "If already logged in and visiting /vastgoed, redirect to kiosk page automatically",
+    "Kiosk welcome page (/vastgoed/{company_id}) shows 'Uitloggen' button at bottom left",
+    "Kiosk welcome page 'Uitloggen' button works (clears token and redirects to /vastgoed login)",
+    "Admin Dashboard (/vastgoed/admin) shows 'Uitloggen' button in header",
+    "Admin Dashboard 'Uitloggen' button works (clears token and redirects to /vastgoed login)",
+    "Kiosk welcome page still shows 'Beheerder' and 'Start' buttons",
+    "Admin Dashboard still shows 'Terug naar Kiosk' and 'Kopieer Kiosk URL' buttons"
+  ],
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CompanySelect.jsx correctly navigates to kiosk page after login (line 185)",
+    "CompanySelect.jsx correctly auto-redirects logged-in users to kiosk page (line 34)",
+    "KioskWelcome.jsx has Uitloggen button with data-testid='kiosk-welcome-logout' (line 69)",
+    "KioskAdminDashboard.jsx has Uitloggen button with data-testid='admin-logout-button' (line 175)",
+    "Both Uitloggen buttons correctly clear localStorage token and navigate to /vastgoed"
+  ],
+  "updated_files": [],
+  "success_rate": {
+    "backend": "N/A (frontend only testing)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "test_account": {
+      "email": "testnzf3ku@vastgoed.sr",
+      "password": "test123"
+    }
+  },
+  "seed_data_creation": "None - used existing test account",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 3 new features verified working: 1) Direct redirect after login to kiosk page (intermediate page skipped), 2) Uitloggen button on Kiosk Welcome page (data-testid='kiosk-welcome-logout'), 3) Uitloggen button on Admin Dashboard (data-testid='admin-logout-button'). Both Uitloggen buttons clear localStorage token and redirect to /vastgoed. Tuya circuit breaker API is MOCKED in backend.",
+  "mocked_apis": {
+    "note": "Tuya circuit breaker API in kiosk.py is MOCKED"
+  }
+}

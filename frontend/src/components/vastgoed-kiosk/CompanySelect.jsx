@@ -21,7 +21,7 @@ export default function KioskLanding() {
     };
   }, []);
 
-  // Check if already logged in
+  // Check if already logged in - redirect to kiosk
   useEffect(() => {
     const token = localStorage.getItem('kiosk_token');
     if (token) {
@@ -30,13 +30,15 @@ export default function KioskLanding() {
       }).then(res => {
         setCompany(res.data);
         setIsLoggedIn(true);
+        // Direct redirect to kiosk page
+        navigate(`/vastgoed/${res.data.company_id}`);
       }).catch(() => {
         localStorage.removeItem('kiosk_token');
       }).finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('kiosk_token');
@@ -179,6 +181,8 @@ export default function KioskLanding() {
           onSuccess={(data) => {
             setCompany(data);
             setIsLoggedIn(true);
+            // Direct navigate to kiosk page after login
+            navigate(`/vastgoed/${data.company_id}`);
           }}
         />
       </div>
