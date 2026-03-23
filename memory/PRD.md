@@ -54,7 +54,30 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
 - `GET /api/kiosk/admin/dashboard`
 - `POST /api/kiosk/admin/apply-fines`
 
-### Updates 23 maart 2026
+### Updates 23 maart 2026 - Sessie 2
+
+#### Beheerder Toegang via PIN ✅
+- Als je via PIN bent ingelogd op de kiosk, kun je nu direct naar het Admin Dashboard via de "Beheerder" knop
+- Geen email/wachtwoord nodig als PIN al is geverifieerd
+- Token wordt automatisch gegenereerd bij PIN verificatie
+- "Terug naar Kiosk" knop in Admin Dashboard header
+
+#### Responsive Design Verbeteringen ✅
+- Alle kiosk schermen nu responsive voor kleine laptop schermen (1366x768 en kleiner)
+- PIN invoer scherm: kleinere invoervelden en keypad op mobiel
+- Welkom scherm: gestapelde layout op kleine schermen
+- Appartement selectie: 2 kolommen op mobiel, 4 op desktop
+- Admin Dashboard header: aangepast voor kleine schermen
+
+#### Gewijzigde Bestanden
+- `frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx` - Responsive + onAdmin callback
+- `frontend/src/components/vastgoed-kiosk/KioskPinEntry.jsx` - Responsive + token opslag
+- `frontend/src/components/vastgoed-kiosk/KioskApartmentSelect.jsx` - Responsive grid
+- `frontend/src/components/vastgoed-kiosk/KioskLayout.jsx` - Admin step toegevoegd
+- `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - PIN auth support + responsive header
+- `backend/routers/kiosk.py` - Token generatie bij PIN verificatie
+
+### Updates 23 maart 2026 - Sessie 1
 
 #### Kwitantie Verbeteringen ✅
 1. **Maand weergave toegevoegd** - Bij gedeeltelijke/volledige huurbetalingen wordt nu de betalingsmaand duidelijk getoond:

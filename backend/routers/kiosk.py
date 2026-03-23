@@ -258,7 +258,13 @@ async def verify_kiosk_pin(company_id: str, data: KioskPinVerify):
     if data.pin != stored_pin:
         raise HTTPException(status_code=401, detail="Ongeldige PIN")
     
-    return {"valid": True, "message": "PIN correct"}
+    # Generate a temporary token for admin access
+    token = jwt.encode(
+        {"company_id": company_id, "exp": datetime.now(timezone.utc) + timedelta(hours=8), "iat": datetime.now(timezone.utc)},
+        JWT_SECRET, algorithm="HS256"
+    )
+    
+    return {"valid": True, "message": "PIN correct", "token": token}
 
 @router.get("/public/{company_id}/company/stamp")
 async def get_company_stamp(company_id: str):

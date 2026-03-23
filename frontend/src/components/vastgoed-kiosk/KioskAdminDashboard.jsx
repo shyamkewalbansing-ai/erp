@@ -10,7 +10,7 @@ import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
-export default function KioskAdminDashboard() {
+export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthenticated = false, onBack }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState(null);
@@ -34,13 +34,25 @@ export default function KioskAdminDashboard() {
 
   const token = localStorage.getItem('kiosk_token');
 
+  // Handle back navigation
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+    } else {
+      navigate('/vastgoed');
+    }
+  };
+
   useEffect(() => {
     if (!token) {
-      navigate('/vastgoed');
-      return;
+      // If no token and not PIN authenticated, redirect to login
+      if (!pinAuthenticated) {
+        navigate('/vastgoed');
+        return;
+      }
     }
     loadData();
-  }, [token, navigate]);
+  }, [token, navigate, pinAuthenticated]);
 
   const loadData = async () => {
     try {
@@ -121,36 +133,36 @@ export default function KioskAdminDashboard() {
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 py-4 px-8">
+      <header className="bg-white border-b border-slate-200 py-3 lg:py-4 px-4 lg:px-8">
         <div className="w-full flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/vastgoed')} className="text-slate-400 hover:text-slate-600">
+          <div className="flex items-center gap-3 lg:gap-4">
+            <button onClick={handleBack} className="text-slate-400 hover:text-slate-600">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-2 lg:gap-3">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl bg-orange-500 flex items-center justify-center">
+                <Building2 className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-slate-900">{company?.name}</h1>
-                <p className="text-sm text-slate-500">Beheerder</p>
+                <h1 className="text-base lg:text-lg font-bold text-slate-900">{company?.name}</h1>
+                <p className="text-xs lg:text-sm text-slate-500">Beheerder</p>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 lg:gap-3">
             <button
               onClick={copyKioskUrl}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm hover:bg-slate-200 transition"
+              className="hidden sm:flex items-center gap-2 px-3 lg:px-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-xs lg:text-sm hover:bg-slate-200 transition"
             >
               {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-              Kopieer Kiosk URL
+              <span className="hidden md:inline">Kopieer Kiosk URL</span>
             </button>
             <button
-              onClick={() => navigate(`/vastgoed/${company?.company_id}`)}
-              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 transition"
+              onClick={handleBack}
+              className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg text-xs lg:text-sm hover:bg-orange-600 transition"
             >
               <ExternalLink className="w-4 h-4" />
-              Open Kiosk
+              <span className="hidden sm:inline">Terug naar Kiosk</span>
             </button>
           </div>
         </div>

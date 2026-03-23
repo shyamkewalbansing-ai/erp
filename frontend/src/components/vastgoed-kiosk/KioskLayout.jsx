@@ -9,6 +9,7 @@ import KioskTenantOverview from './KioskTenantOverview';
 import KioskPaymentSelect from './KioskPaymentSelect';
 import KioskPaymentConfirm from './KioskPaymentConfirm';
 import KioskReceipt from './KioskReceipt';
+import KioskAdminDashboard from './KioskAdminDashboard';
 
 // Local API
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
@@ -115,8 +116,17 @@ export default function KioskLayout() {
         return (
           <KioskWelcome 
             onStart={() => goTo('select')} 
+            onAdmin={() => goTo('admin')}
             companyName={companyName} 
             companyId={companyId} 
+          />
+        );
+      case 'admin':
+        return (
+          <KioskAdminDashboard 
+            companyId={companyId}
+            pinAuthenticated={pinVerified}
+            onBack={() => goTo('welcome')}
           />
         );
       case 'select':

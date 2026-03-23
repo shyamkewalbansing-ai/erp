@@ -72,54 +72,54 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
   }
 
   return (
-    <div className="kiosk-fullscreen bg-slate-50 flex flex-col">
+    <div className="kiosk-fullscreen bg-slate-50 flex flex-col overflow-hidden">
       {/* Header - Light */}
-      <div className="bg-white border-b border-slate-200 p-6 flex items-center justify-between">
-        <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-lg font-medium">
-          <ArrowLeft className="w-6 h-6" />
-          <span>Terug</span>
+      <div className="bg-white border-b border-slate-200 p-4 lg:p-6 flex items-center justify-between shrink-0">
+        <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-base lg:text-lg font-medium">
+          <ArrowLeft className="w-5 h-5 lg:w-6 lg:h-6" />
+          <span className="hidden sm:inline">Terug</span>
         </button>
         
-        <h1 className="text-3xl font-bold text-slate-900">Kies uw appartement</h1>
+        <h1 className="text-xl lg:text-3xl font-bold text-slate-900">Kies uw appartement</h1>
         
         {/* Mode Toggle */}
         <div className="flex gap-2">
           <button
             onClick={() => { setMode('grid'); setError(''); }}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition ${
+            className={`flex items-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base transition ${
               mode === 'grid' 
                 ? 'bg-orange-500 text-white' 
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            <Building2 className="w-5 h-5" />
-            Appartement
+            <Building2 className="w-4 h-4 lg:w-5 lg:h-5" />
+            <span className="hidden sm:inline">Appartement</span>
           </button>
           <button
             onClick={() => { setMode('code'); setError(''); }}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition ${
+            className={`flex items-center gap-1 lg:gap-2 px-3 lg:px-5 py-2 lg:py-3 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base transition ${
               mode === 'code' 
                 ? 'bg-orange-500 text-white' 
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            <Keyboard className="w-5 h-5" />
-            Huurderscode
+            <Keyboard className="w-4 h-4 lg:w-5 lg:h-5" />
+            <span className="hidden sm:inline">Huurderscode</span>
           </button>
         </div>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="mx-8 mt-4 p-6 bg-red-50 border-2 border-red-200 text-red-600 rounded-2xl text-center text-xl font-medium">
+        <div className="mx-4 lg:mx-8 mt-4 p-4 lg:p-6 bg-red-50 border-2 border-red-200 text-red-600 rounded-xl lg:rounded-2xl text-center text-base lg:text-xl font-medium">
           {error}
         </div>
       )}
 
       {/* Content */}
-      <div className="flex-1 p-8 overflow-auto">
+      <div className="flex-1 p-4 lg:p-8 overflow-auto">
         {mode === 'grid' ? (
-          <div className="grid grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 lg:gap-6">
             {apartments.map((apt) => {
               const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
               const hasTenant = !!tenant;
@@ -129,27 +129,27 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
                   key={apt.apartment_id}
                   onClick={() => handleApartmentClick(apt)}
                   disabled={!hasTenant}
-                  className={`flex flex-col items-center justify-center p-8 rounded-2xl border-3 transition min-h-[200px] ${
+                  className={`flex flex-col items-center justify-center p-4 lg:p-8 rounded-xl lg:rounded-2xl border-2 lg:border-3 transition min-h-[120px] lg:min-h-[200px] ${
                     hasTenant 
                       ? 'bg-white border-slate-200 hover:border-orange-500 hover:shadow-lg cursor-pointer' 
                       : 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed'
                   }`}
                 >
-                  <span className="text-4xl font-bold text-slate-900 mb-2">{apt.number}</span>
+                  <span className="text-2xl lg:text-4xl font-bold text-slate-900 mb-1 lg:mb-2">{apt.number}</span>
                   {hasTenant ? (
                     <>
-                      <div className="flex items-center gap-2 text-slate-500 mb-3">
-                        <User className="w-5 h-5" />
-                        <span className="text-lg">{tenant.name}</span>
+                      <div className="flex items-center gap-1 lg:gap-2 text-slate-500 mb-2 lg:mb-3">
+                        <User className="w-4 h-4 lg:w-5 lg:h-5" />
+                        <span className="text-sm lg:text-lg truncate max-w-[100px] lg:max-w-none">{tenant.name}</span>
                       </div>
-                      <span className="px-4 py-2 rounded-full text-sm font-semibold bg-green-100 text-green-600">
+                      <span className="px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-semibold bg-green-100 text-green-600">
                         Bewoond
                       </span>
                     </>
                   ) : (
                     <>
-                      <span className="text-slate-400 text-lg mb-3">Leegstaand</span>
-                      <span className="px-4 py-2 rounded-full text-sm font-semibold bg-slate-200 text-slate-500">
+                      <span className="text-slate-400 text-sm lg:text-lg mb-2 lg:mb-3">Leegstaand</span>
+                      <span className="px-3 lg:px-4 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-semibold bg-slate-200 text-slate-500">
                         Leeg
                       </span>
                     </>
@@ -160,24 +160,24 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
           </div>
         ) : (
           <div className="max-w-lg mx-auto">
-            <p className="text-slate-500 text-center text-xl mb-8">
+            <p className="text-slate-500 text-center text-base lg:text-xl mb-6 lg:mb-8">
               Voer uw huurderscode of appartementnummer in
             </p>
             
             {/* Display */}
-            <div className="bg-white border-3 border-slate-200 rounded-2xl p-8 mb-8 text-center shadow-sm">
-              <span className="text-5xl font-mono font-bold text-slate-900 tracking-[0.3em]">
+            <div className="bg-white border-2 lg:border-3 border-slate-200 rounded-xl lg:rounded-2xl p-4 lg:p-8 mb-6 lg:mb-8 text-center shadow-sm">
+              <span className="text-3xl lg:text-5xl font-mono font-bold text-slate-900 tracking-[0.2em] lg:tracking-[0.3em]">
                 {searchCode || '_ _ _ _ _'}
               </span>
             </div>
 
             {/* Keypad */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2 lg:gap-4">
               {['A', 'B', 'C', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'DEL', '0', 'OK'].map((key) => (
                 <button
                   key={key}
                   onClick={() => handleKeypadPress(key)}
-                  className={`h-20 text-2xl font-bold rounded-xl transition active:scale-95 ${
+                  className={`h-14 lg:h-20 text-xl lg:text-2xl font-bold rounded-lg lg:rounded-xl transition active:scale-95 ${
                     key === 'OK' 
                       ? 'bg-orange-500 text-white hover:bg-orange-600' 
                       : key === 'DEL' 
