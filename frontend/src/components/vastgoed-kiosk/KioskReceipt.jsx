@@ -291,11 +291,10 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
         </div>
       </div>
 
-      {/* Right Panel - Receipt Preview (hidden when printing) */}
-      <div className="w-1/2 bg-slate-100 flex items-center justify-center p-8 overflow-auto print:hidden">
-        <div className="text-center">
-          <p className="text-slate-500 mb-6 text-lg font-medium">Kwitantie voorbeeld</p>
-          <div className="bg-white shadow-2xl rounded-lg overflow-hidden border border-slate-200">
+      {/* Right Panel - Receipt Preview FULL SIZE */}
+      <div className="w-1/2 bg-slate-50 flex items-center justify-center overflow-auto print:hidden">
+        <div className="w-full h-full flex items-center justify-center p-4">
+          <div className="bg-white shadow-2xl rounded-lg overflow-hidden border border-slate-200" style={{ transform: 'scale(0.85)', transformOrigin: 'center center' }}>
             <ReceiptTicket payment={payment} tenant={tenant} preview={true} stampData={stampData} />
           </div>
         </div>
