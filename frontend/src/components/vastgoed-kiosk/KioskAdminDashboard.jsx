@@ -348,15 +348,18 @@ function TenantsTab({ tenants, apartments, formatSRD, getInitials, onAddTenant, 
               {/* Header Section */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
-                  {/* Blue Avatar */}
-                  <div className="w-16 h-16 rounded-2xl bg-blue-700 text-white flex items-center justify-center text-2xl font-bold">
+                  {/* Blue Avatar - Deep Royal Blue #2E3A8C */}
+                  <div 
+                    className="w-16 h-16 rounded-2xl text-white flex items-center justify-center text-2xl font-bold"
+                    style={{ backgroundColor: '#2E3A8C' }}
+                  >
                     {getInitials(tenant.name).charAt(0)}
                   </div>
                   <div>
                     <h3 className="font-bold text-slate-900 text-xl">{tenant.name}</h3>
                     <p className="text-slate-500">
                       Appt. {tenant.apartment_number} · {tenant.tenant_code} · 
-                      <span className="text-green-600 font-semibold ml-1">Actief</span>
+                      <span style={{ color: '#4CAF50' }} className="font-semibold ml-1">Actief</span>
                     </p>
                     <div className="flex items-center gap-4 mt-1 text-slate-500 text-sm">
                       {tenant.telefoon && (
@@ -383,14 +386,14 @@ function TenantsTab({ tenants, apartments, formatSRD, getInitials, onAddTenant, 
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onEditTenant(tenant)}
-                    className="w-12 h-12 rounded-2xl border-2 border-slate-200 flex items-center justify-center text-slate-500 hover:border-slate-300 hover:text-slate-700 transition"
+                    className="w-12 h-12 rounded-2xl border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:border-slate-300 hover:text-slate-700 transition"
                   >
                     <Pencil className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => handleDelete(tenant)}
                     disabled={deleting === tenant.tenant_id}
-                    className="w-12 h-12 rounded-2xl border-2 border-slate-200 flex items-center justify-center text-slate-500 hover:border-red-200 hover:text-red-500 transition disabled:opacity-50"
+                    className="w-12 h-12 rounded-2xl border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:border-red-200 hover:text-red-500 transition disabled:opacity-50"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
@@ -402,40 +405,49 @@ function TenantsTab({ tenants, apartments, formatSRD, getInitials, onAddTenant, 
 
               {/* Financial Cards Grid */}
               <div className="grid grid-cols-5 gap-3 mb-5">
-                {/* Maand */}
-                <div className="bg-blue-50 rounded-2xl p-4 text-center">
-                  <p className="text-xs text-blue-400 uppercase font-medium mb-1">Maand</p>
-                  <p className="font-bold text-blue-700 text-lg">{monthName}</p>
+                {/* Maand - Light Blue Background #F4F8FD */}
+                <div className="rounded-2xl p-4 text-center" style={{ backgroundColor: '#F4F8FD' }}>
+                  <p className="text-xs uppercase font-medium mb-1" style={{ color: '#E53935' }}>Maand</p>
+                  <p className="font-bold text-lg" style={{ color: '#1E3A8A' }}>{monthName}</p>
                 </div>
                 
-                {/* Huur */}
+                {/* Huur - Red #E53935 for amounts > 0, Green #4CAF50 for 0 */}
                 <div className="bg-slate-50 rounded-2xl p-4 text-center">
                   <p className="text-xs text-slate-400 uppercase font-medium mb-1">Huur</p>
-                  <p className={`font-bold text-lg ${(tenant.outstanding_rent || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  <p 
+                    className="font-bold text-lg"
+                    style={{ color: (tenant.outstanding_rent || 0) > 0 ? '#E53935' : '#4CAF50' }}
+                  >
                     SRD<br />{Number(tenant.outstanding_rent || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 
-                {/* Service */}
+                {/* Service - Green #4CAF50 for 0, Red #E53935 for > 0 */}
                 <div className="bg-slate-50 rounded-2xl p-4 text-center">
                   <p className="text-xs text-slate-400 uppercase font-medium mb-1">Service</p>
-                  <p className={`font-bold text-lg ${(tenant.service_costs || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  <p 
+                    className="font-bold text-lg"
+                    style={{ color: (tenant.service_costs || 0) > 0 ? '#E53935' : '#4CAF50' }}
+                  >
                     SRD<br />{Number(tenant.service_costs || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 
-                {/* Boetes */}
+                {/* Boetes - Red #E53935 */}
                 <div className="bg-slate-50 rounded-2xl p-4 text-center">
                   <p className="text-xs text-slate-400 uppercase font-medium mb-1">Boetes</p>
-                  <p className={`font-bold text-lg ${(tenant.fines || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  <p 
+                    className="font-bold text-lg"
+                    style={{ color: (tenant.fines || 0) > 0 ? '#E53935' : '#4CAF50' }}
+                  >
                     SRD<br />{Number(tenant.fines || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 
-                {/* Totaal */}
+                {/* Totaal - Blue #1E88E5 */}
                 <div className="bg-slate-50 rounded-2xl p-4 text-center">
                   <p className="text-xs text-slate-400 uppercase font-medium mb-1">Totaal</p>
-                  <p className="font-bold text-lg text-blue-700">
+                  <p className="font-bold text-lg" style={{ color: '#1E88E5' }}>
                     SRD<br />{Number(total).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}
                   </p>
                 </div>
