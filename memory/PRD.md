@@ -124,15 +124,28 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
 ### Updates 23 maart 2026 - Sessie 3
 
 #### Virtueel Toetsenbord & Input Fix ✅
-1. **Toetsenbord breedte** - Virtueel toetsenbord vult nu de volledige breedte van het rechterpaneel (1152px breed)
+1. **Toetsenbord breedte** - Virtueel toetsenbord vult nu de volledige breedte van het rechterpaneel
    - Toetsenbord verplaatst buiten de `max-w-lg` container
    - Formuliervelden blijven gecentreerd op comfortabele breedte
 2. **Fysiek toetsenbord** - Werkt correct op alle invoervelden (readOnly verwijderd)
-3. **Foutafhandeling** - FastAPI validatiefouten worden correct geparsed (array van objecten → leesbare string)
-4. **Data-testid attributen** - Toegevoegd aan alle interactieve elementen voor testbaarheid
+3. **Foutafhandeling** - FastAPI validatiefouten worden correct geparsed
+4. **Data-testid attributen** - Toegevoegd aan alle interactieve elementen
+
+#### Formulier Centrering & Tekst Correcties ✅
+1. **Formulier gecentreerd** - Inlogformulier verticaal gecentreerd in rechterpaneel
+   - Schuift omhoog wanneer toetsenbord opengaat (smooth transitie)
+   - Schuift terug naar midden wanneer toetsenbord sluit
+2. **Touchscreen auto-detect** - Schermtoetsenbord opent automatisch op touchscreen apparaten
+3. **Tekst verhuurder perspectief** - Alle teksten aangepast van huurder naar verhuurder perspectief:
+   - Landing: "Appartement Kiosk" + "Beheer uw appartementen en ontvang huurbetalingen"
+   - Kiosk welkom: "Beheer huurbetalingen, servicekosten en meer"
+   - Kiosk rechts: "Snel, eenvoudig en veilig huurbetalingen ontvangen"
+   - Kiosk URL: "Plaats deze URL op uw kiosk apparaat"
+4. **Uitloggen knop** - Prominenter gemaakt met icoon op ingelogde pagina
 
 #### Gewijzigde Bestanden
-- `frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` - Keyboard layout fix, error handling, data-testid's
+- `frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` - Keyboard layout, form centering, tekst correcties, touchscreen detect
+- `frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx` - Tekst correcties verhuurder perspectief
 
 ### Toekomstige Taken (Backlog)
 - P1: Tuya API integratie voor echte stroombrekers
