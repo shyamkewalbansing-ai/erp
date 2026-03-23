@@ -200,7 +200,7 @@ function KioskModal({ children, onClose }) {
   );
 }
 
-// Virtual Keyboard Component - Inline in form area
+// Virtual Keyboard Component - FULL WIDTH in form area
 function VirtualKeyboard({ onKeyPress, onBackspace, onEnter }) {
   const row1 = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
   const row2 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
@@ -208,15 +208,15 @@ function VirtualKeyboard({ onKeyPress, onBackspace, onEnter }) {
   const row4 = ['Z', 'X', 'C', 'V', 'B', 'N', 'M', '.', '-', '_'];
 
   return (
-    <div className="bg-slate-100 rounded-xl p-3 mt-4">
+    <div className="bg-slate-100 rounded-xl p-4 mt-4 w-full">
       {/* Numbers row */}
-      <div className="flex gap-1 justify-center mb-1">
+      <div className="flex gap-1.5 justify-center mb-2">
         {row1.map(key => (
           <button
             key={key}
             type="button"
             onClick={() => onKeyPress(key)}
-            className="flex-1 h-10 bg-white rounded-lg text-base font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
+            className="flex-1 h-12 bg-white rounded-lg text-lg font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
           >
             {key}
           </button>
@@ -224,13 +224,13 @@ function VirtualKeyboard({ onKeyPress, onBackspace, onEnter }) {
       </div>
       
       {/* Row 2 - QWERTY */}
-      <div className="flex gap-1 justify-center mb-1">
+      <div className="flex gap-1.5 justify-center mb-2">
         {row2.map(key => (
           <button
             key={key}
             type="button"
             onClick={() => onKeyPress(key.toLowerCase())}
-            className="flex-1 h-10 bg-white rounded-lg text-base font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
+            className="flex-1 h-12 bg-white rounded-lg text-lg font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
           >
             {key}
           </button>
@@ -238,13 +238,13 @@ function VirtualKeyboard({ onKeyPress, onBackspace, onEnter }) {
       </div>
       
       {/* Row 3 */}
-      <div className="flex gap-1 justify-center mb-1">
+      <div className="flex gap-1.5 justify-center mb-2">
         {row3.map(key => (
           <button
             key={key}
             type="button"
             onClick={() => onKeyPress(key === '@' ? '@' : key.toLowerCase())}
-            className="flex-1 h-10 bg-white rounded-lg text-base font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
+            className="flex-1 h-12 bg-white rounded-lg text-lg font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
           >
             {key}
           </button>
@@ -252,13 +252,13 @@ function VirtualKeyboard({ onKeyPress, onBackspace, onEnter }) {
       </div>
       
       {/* Row 4 */}
-      <div className="flex gap-1 justify-center mb-1">
+      <div className="flex gap-1.5 justify-center mb-2">
         {row4.map(key => (
           <button
             key={key}
             type="button"
             onClick={() => onKeyPress(key.toLowerCase())}
-            className="flex-1 h-10 bg-white rounded-lg text-base font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
+            className="flex-1 h-12 bg-white rounded-lg text-lg font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
           >
             {key}
           </button>
@@ -266,25 +266,25 @@ function VirtualKeyboard({ onKeyPress, onBackspace, onEnter }) {
       </div>
       
       {/* Bottom row - Space, Backspace, Enter */}
-      <div className="flex gap-1 justify-center">
+      <div className="flex gap-1.5 justify-center">
         <button
           type="button"
           onClick={onBackspace}
-          className="w-20 h-10 bg-red-100 rounded-lg text-sm font-bold text-red-600 hover:bg-red-200 active:bg-red-300 transition shadow-sm"
+          className="w-24 h-12 bg-red-100 rounded-lg text-base font-bold text-red-600 hover:bg-red-200 active:bg-red-300 transition shadow-sm"
         >
           ⌫ Wis
         </button>
         <button
           type="button"
           onClick={() => onKeyPress(' ')}
-          className="flex-1 h-10 bg-white rounded-lg text-sm font-bold text-slate-500 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
+          className="flex-1 h-12 bg-white rounded-lg text-base font-bold text-slate-500 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
         >
           SPATIE
         </button>
         <button
           type="button"
           onClick={onEnter}
-          className="w-20 h-10 bg-orange-500 rounded-lg text-sm font-bold text-white hover:bg-orange-600 active:bg-orange-700 transition shadow-sm"
+          className="w-24 h-12 bg-orange-500 rounded-lg text-base font-bold text-white hover:bg-orange-600 active:bg-orange-700 transition shadow-sm"
         >
           OK ✓
         </button>
@@ -371,14 +371,9 @@ function KioskAuthForm({ onSuccess }) {
     }
   };
 
-  const handleFieldClick = (field) => {
-    setActiveField(field);
-    setShowKeyboard(true);
-  };
-
   return (
-    <div className="flex-1 flex flex-col justify-center p-4 lg:p-6 overflow-auto">
-      <div className="w-full max-w-md mx-auto">
+    <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-auto">
+      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col">
         {/* Title */}
         <div className="text-center mb-4">
           <h2 className="text-2xl font-bold text-slate-900">
@@ -404,12 +399,12 @@ function KioskAuthForm({ onSuccess }) {
               <input
                 type="text"
                 value={name}
-                readOnly
-                onClick={() => handleFieldClick('name')}
-                className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 cursor-pointer ${
+                onChange={(e) => setName(e.target.value)}
+                onFocus={() => setActiveField('name')}
+                className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 focus:outline-none ${
                   activeField === 'name' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
                 }`}
-                placeholder="Tik om te typen..."
+                placeholder="Uw Vastgoed B.V."
               />
             </div>
           )}
@@ -418,14 +413,14 @@ function KioskAuthForm({ onSuccess }) {
           <div>
             <label className="block text-slate-700 font-medium mb-1 text-sm">E-mailadres</label>
             <input
-              type="text"
+              type="email"
               value={email}
-              readOnly
-              onClick={() => handleFieldClick('email')}
-              className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 cursor-pointer ${
+              onChange={(e) => setEmail(e.target.value)}
+              onFocus={() => setActiveField('email')}
+              className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 focus:outline-none ${
                 activeField === 'email' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
               }`}
-              placeholder="Tik om te typen..."
+              placeholder="uw@email.com"
             />
           </div>
 
@@ -434,14 +429,14 @@ function KioskAuthForm({ onSuccess }) {
             <div>
               <label className="block text-slate-700 font-medium mb-1 text-sm">Telefoon (optioneel)</label>
               <input
-                type="text"
+                type="tel"
                 value={telefoon}
-                readOnly
-                onClick={() => handleFieldClick('telefoon')}
-                className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 cursor-pointer ${
+                onChange={(e) => setTelefoon(e.target.value)}
+                onFocus={() => setActiveField('telefoon')}
+                className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 focus:outline-none ${
                   activeField === 'telefoon' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
                 }`}
-                placeholder="Tik om te typen..."
+                placeholder="+597 123 4567"
               />
             </div>
           )}
@@ -453,12 +448,12 @@ function KioskAuthForm({ onSuccess }) {
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                readOnly
-                onClick={() => handleFieldClick('password')}
-                className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 cursor-pointer pr-10 ${
+                onChange={(e) => setPassword(e.target.value)}
+                onFocus={() => setActiveField('password')}
+                className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 focus:outline-none pr-10 ${
                   activeField === 'password' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
                 }`}
-                placeholder="Tik om te typen..."
+                placeholder="••••••••"
               />
               <button
                 type="button"
@@ -534,17 +529,19 @@ function KioskAuthForm({ onSuccess }) {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
             </svg>
-            {showKeyboard ? 'Toetsenbord verbergen' : 'Toetsenbord tonen'}
+            {showKeyboard ? 'Toetsenbord verbergen' : 'Schermtoetsenbord (touchscreen)'}
           </button>
         </div>
 
-        {/* Virtual Keyboard - Inline below form */}
+        {/* Virtual Keyboard - Full width, fills remaining space */}
         {showKeyboard && (
-          <VirtualKeyboard 
-            onKeyPress={handleKeyPress}
-            onBackspace={handleBackspace}
-            onEnter={handleSubmit}
-          />
+          <div className="flex-1 flex flex-col justify-end pb-2">
+            <VirtualKeyboard 
+              onKeyPress={handleKeyPress}
+              onBackspace={handleBackspace}
+              onEnter={handleSubmit}
+            />
+          </div>
         )}
       </div>
     </div>
