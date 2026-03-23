@@ -12,7 +12,7 @@
   "test_results": {
     "service_worker_registration": {
       "status": "PASS",
-      "details": "SW v7 registered at scope https://vastgoed-pay.preview.emergentagent.com/, state: activated"
+      "details": "SW v7 registered at scope https://kiosk-payment.preview.emergentagent.com/, state: activated"
     },
     "index_html_caching": {
       "status": "PASS",
