@@ -58,9 +58,26 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   // Get the receipt HTML for print server
   const getReceiptHTML = () => {
     const printContent = document.querySelector('.print-receipt-content');
-    if (!printContent) return null;
-    
-    return `
+    if (printContent) {
+      return printContent.innerHTML;
+    }
+    return null;
+  };
+
+  // Direct print function that creates a print-friendly window
+  const printReceipt = () => {
+    const printContent = document.querySelector('.print-receipt-content');
+    if (!printContent) return;
+
+    // Create a new window for printing
+    const printWindow = window.open('', 'PrintWindow', 'width=800,height=600');
+    if (!printWindow) {
+      // Popup blocked, fallback to window.print
+      window.print();
+      return;
+    }
+
+    printWindow.document.write(`
 <!DOCTYPE html>
 <html>
 <head>
@@ -69,17 +86,35 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   <style>
     @page { size: A4; margin: 0; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
+    html, body { 
+      width: 210mm; 
+      min-height: 297mm; 
+      background: white;
       font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    body {
       -webkit-print-color-adjust: exact !important;
       print-color-adjust: exact !important;
+      color-adjust: exact !important;
     }
   </style>
 </head>
 <body>
   ${printContent.innerHTML}
+  <script>
+    window.onload = function() {
+      setTimeout(function() {
+        window.print();
+        window.onafterprint = function() { window.close(); };
+        // Fallback close after 3 seconds
+        setTimeout(function() { window.close(); }, 3000);
+      }, 300);
+    };
+  </script>
 </body>
-</html>`;
+</html>
+    `);
+    printWindow.document.close();
   };
 
   // Try to print via local print server first, fallback to browser print
@@ -118,10 +153,10 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
       console.log('Print server niet beschikbaar, gebruik browser print');
     }
     
-    // Fallback: use browser print (works with --kiosk-printing flag)
+    // Fallback: use browser print
     setPrintMethod('browser');
     setTimeout(() => {
-      window.print();
+      printReceipt();
       setPrintStatus('done');
       setCountdown(10);
     }, 200);
@@ -165,7 +200,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
     
     // Fallback to browser print
     setPrintMethod('browser');
-    window.print();
+    printReceipt();
     setPrintStatus('done');
     restartCountdown(8);
   };
@@ -267,12 +302,12 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
       </div>
 
       {/* Hidden print content for print server */}
-      <div className="print-receipt-content hidden">
+      <div className="print-receipt-content" style={{ display: 'none' }}>
         <ReceiptTicket payment={payment} tenant={tenant} preview={false} stampData={stampData} />
       </div>
 
-      {/* Print version - only visible when browser printing */}
-      <div className="hidden print:block print:w-full">
+      {/* Print version - hidden on screen, visible when printing */}
+      <div className="print-receipt-area" style={{ display: 'none' }}>
         <ReceiptTicket payment={payment} tenant={tenant} preview={false} stampData={stampData} />
       </div>
     </div>
