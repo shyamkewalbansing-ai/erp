@@ -425,8 +425,10 @@ function KioskAuthForm({ onSuccess }) {
 
           {/* Numeric Keypad */}
           <div className="grid grid-cols-3 gap-2 max-w-[240px] mx-auto mb-6">
-            {['1','2','3','4','5','6','7','8','9','','0','DEL'].map((key, idx) => (
-              key ? (
+            {['1','2','3','4','5','6','7','8','9','_empty','0','DEL'].map((key) => (
+              key === '_empty' ? (
+                <div key={key} className="h-14" />
+              ) : (
                 <button
                   key={key}
                   type="button"
@@ -441,8 +443,6 @@ function KioskAuthForm({ onSuccess }) {
                 >
                   {key === 'DEL' ? <Delete className="w-5 h-5" /> : key}
                 </button>
-              ) : (
-                <div key={idx} className="h-14" />
               )
             ))}
           </div>

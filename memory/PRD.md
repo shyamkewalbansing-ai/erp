@@ -143,13 +143,15 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
    - Kiosk URL: "Plaats deze URL op uw kiosk apparaat"
 4. **Uitloggen knop** - Prominenter gemaakt met icoon op ingelogde pagina
 
-#### Direct Kiosk Redirect & Uitloggen ✅
-1. **Direct naar kiosk** - Na inloggen gaat gebruiker direct naar de kiosk pagina
-   - Tussenliggende "Welkom terug" pagina volledig verwijderd (alleen laad-spinner)
-   - Automatische redirect bij bezoek `/vastgoed` als al ingelogd
-2. **Uitloggen op Kiosk** - Duidelijk zichtbare knop met achtergrondkleur en border naast "Beheerder"
-3. **Uitloggen op Dashboard** - Uitloggen knop in Admin Dashboard header
-4. **Huis logo** - Building icoon boven het inlogformulier
+#### PIN Login Feature ✅
+1. **PIN login op landing pagina** - Bedrijven kunnen inloggen met 4-cijferige PIN of wachtwoord
+   - Nieuw backend endpoint: `POST /api/kiosk/auth/pin`
+   - PIN keypad met numerieke toetsen op login pagina
+   - Auto-submit bij 4 cijfers, direct redirect naar kiosk
+2. **Kiosk PIN beveiliging** - Kiosk pagina vraagt PIN bij direct URL bezoek
+   - SessionStorage wordt gewist bij uitloggen
+   - PIN login zet sessionStorage zodat kiosk niet opnieuw om PIN vraagt
+3. **Logout verbeterd** - Wist zowel localStorage (token) als sessionStorage (PIN verificatie)
 
 #### Gewijzigde Bestanden
 - `frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` - Direct redirect na login, auto-redirect
