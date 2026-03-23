@@ -25,8 +25,9 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
   const totalRemaining = remainingRent + remainingService + remainingFines;
   const hasRemainingBalance = totalRemaining > 0;
 
-  // Preview scale: 0.52 for screen display, 1 for print (full A4)
-  const s = preview ? 0.52 : 1;
+  // Preview fills the panel (scale to fit screen height ~800px), print is full A4
+  // Screen: 100vh ~= 800-900px, A4 = 297mm, so preview scale ~0.85 to fill height
+  const s = preview ? 0.85 : 1;
 
   return (
     <div style={{ 
