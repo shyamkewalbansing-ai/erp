@@ -121,6 +121,19 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
 - `frontend/src/components/vastgoed-kiosk/KioskReceipt.jsx` - Verbeterde print functie
 - `backend/routers/kiosk.py` - PIN endpoints en /auth/me uitgebreid
 
+### Updates 23 maart 2026 - Sessie 3
+
+#### Virtueel Toetsenbord & Input Fix ✅
+1. **Toetsenbord breedte** - Virtueel toetsenbord vult nu de volledige breedte van het rechterpaneel (1152px breed)
+   - Toetsenbord verplaatst buiten de `max-w-lg` container
+   - Formuliervelden blijven gecentreerd op comfortabele breedte
+2. **Fysiek toetsenbord** - Werkt correct op alle invoervelden (readOnly verwijderd)
+3. **Foutafhandeling** - FastAPI validatiefouten worden correct geparsed (array van objecten → leesbare string)
+4. **Data-testid attributen** - Toegevoegd aan alle interactieve elementen voor testbaarheid
+
+#### Gewijzigde Bestanden
+- `frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` - Keyboard layout fix, error handling, data-testid's
+
 ### Toekomstige Taken (Backlog)
 - P1: Tuya API integratie voor echte stroombrekers
 - P2: SMS/WhatsApp herinneringen
