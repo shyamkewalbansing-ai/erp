@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import axios from 'axios';
 import KioskWelcome from './KioskWelcome';
+import KioskPinEntry from './KioskPinEntry';
 import KioskApartmentSelect from './KioskApartmentSelect';
 import KioskTenantOverview from './KioskTenantOverview';
 import KioskPaymentSelect from './KioskPaymentSelect';
@@ -21,19 +22,34 @@ const slideVariants = {
 export default function KioskLayout() {
   const { companyId } = useParams();
   const navigate = useNavigate();
-  const [step, setStep] = useState('welcome');
+  const [step, setStep] = useState('loading');
   const [tenant, setTenant] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
   const [companyName, setCompanyName] = useState('');
   const [companyNotFound, setCompanyNotFound] = useState(false);
+  const [requiresPin, setRequiresPin] = useState(false);
+  const [pinVerified, setPinVerified] = useState(false);
 
   useEffect(() => {
     if (companyId) {
       axios.get(`${API}/public/${companyId}/company`).then(res => {
         setCompanyName(res.data.name);
+        const hasPin = res.data.has_pin;
+        setRequiresPin(hasPin);
+        
+        // Check if already verified in this session
+        const alreadyVerified = sessionStorage.getItem(`kiosk_pin_verified_${companyId}`) === 'true';
+        
+        if (hasPin && !alreadyVerified) {
+          setStep('pin');
+        } else {
+          setPinVerified(true);
+          setStep('welcome');
+        }
       }).catch(() => {
         setCompanyNotFound(true);
+        setStep('welcome');
       });
     }
   }, [companyId]);
@@ -77,6 +93,24 @@ export default function KioskLayout() {
 
   const renderStep = () => {
     switch (step) {
+      case 'loading':
+        return (
+          <div className="kiosk-fullscreen bg-slate-50 flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-xl text-slate-500">Laden...</p>
+            </div>
+          </div>
+        );
+      case 'pin':
+        return (
+          <KioskPinEntry
+            companyId={companyId}
+            companyName={companyName}
+            onSuccess={() => { setPinVerified(true); goTo('welcome'); }}
+            onBack={() => navigate('/vastgoed')}
+          />
+        );
       case 'welcome':
         return (
           <KioskWelcome 

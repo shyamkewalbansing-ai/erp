@@ -551,6 +551,8 @@ function SettingsTab({ company, token, onRefresh }) {
   const [stampAddress, setStampAddress] = useState(company?.stamp_address || '');
   const [stampPhone, setStampPhone] = useState(company?.stamp_phone || '');
   const [stampWhatsapp, setStampWhatsapp] = useState(company?.stamp_whatsapp || '');
+  const [kioskPin, setKioskPin] = useState(company?.kiosk_pin || '');
+  const [showPin, setShowPin] = useState(false);
   const [saving, setSaving] = useState(false);
   const [applyingFines, setApplyingFines] = useState(false);
 
@@ -563,7 +565,8 @@ function SettingsTab({ company, token, onRefresh }) {
         stamp_company_name: stampName,
         stamp_address: stampAddress,
         stamp_phone: stampPhone,
-        stamp_whatsapp: stampWhatsapp
+        stamp_whatsapp: stampWhatsapp,
+        kiosk_pin: kioskPin || null
       }, { headers: { Authorization: `Bearer ${token}` } });
       onRefresh();
     } catch (err) {
@@ -650,6 +653,81 @@ function SettingsTab({ company, token, onRefresh }) {
             {applyingFines ? 'Toepassen...' : 'Boetes nu toepassen'}
           </button>
         </div>
+      </div>
+
+      {/* Kiosk PIN Beveiliging */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Kiosk PIN Beveiliging</h3>
+            <p className="text-sm text-slate-500">Beveilig uw kiosk met een 4-cijferige PIN code</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              4-cijferige PIN
+            </label>
+            <p className="text-xs text-slate-400 mb-2">
+              Huurders moeten deze PIN invoeren om de kiosk te gebruiken. Laat leeg om PIN uit te schakelen.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type={showPin ? "text" : "password"}
+                maxLength={4}
+                value={kioskPin}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 4);
+                  setKioskPin(val);
+                }}
+                placeholder="bijv. 1234"
+                className="flex-1 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-2xl tracking-widest font-mono text-center"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPin(!showPin)}
+                className="px-4 py-3 border border-slate-200 rounded-xl hover:bg-slate-50"
+              >
+                <Eye className={`w-5 h-5 ${showPin ? 'text-orange-500' : 'text-slate-400'}`} />
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Status</label>
+            <div className={`p-4 rounded-xl border ${kioskPin && kioskPin.length === 4 ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
+              {kioskPin && kioskPin.length === 4 ? (
+                <div className="flex items-center gap-2 text-green-700">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span className="font-medium">PIN beveiliging actief</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-slate-500">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                  </svg>
+                  <span>Geen PIN - Kiosk is open voor iedereen</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50 mt-6"
+        >
+          <Save className="w-4 h-4" />
+          {saving ? 'Opslaan...' : 'PIN Opslaan'}
+        </button>
       </div>
 
       {/* Bedrijfsstempel */}

@@ -61,17 +61,42 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
    - Nieuwe "Voor welke maand?" sectie in betalingsflow
    - Maand keuze uit huidige maand + 3 voorgaande maanden
    - Maand getoond in bevestigingsscherm
-   - Maand op kwitantie onder "Huurbetaling" (bijv. "Maand: December 2025")
+   - **Prominente oranje box** op kwitantie: "HUURBETALING VOOR [Maand]"
    
 2. **Dynamische bedrijfsnaam** - De kwitantie toont nu de echte bedrijfsnaam van de gebruiker:
    - Header toont bedrijfsnaam in plaats van "APPARTEMENT KIOSK SURINAME"
    - Initialen worden automatisch gegenereerd uit bedrijfsnaam
    - Bedrijfsstempel rechtsonder met bedrijfsnaam
 
+3. **Layout fix betalingsscherm** - "Volgende" knop nu altijd zichtbaar onderaan scherm
+
+#### Kiosk PIN Beveiliging ✅
+1. **4-cijferige PIN code** voor kiosk toegang:
+   - Admin kan PIN instellen in Instellingen tab
+   - Huurders moeten PIN invoeren voordat ze de kiosk kunnen gebruiken
+   - PIN wordt opgeslagen per bedrijf
+   - Session-based verificatie (hoeft maar 1x per sessie)
+
+2. **PIN invoer scherm**:
+   - Professioneel beveiligd scherm met bedrijfsnaam
+   - Nummerpad voor PIN invoer
+   - Foutmelding bij verkeerde PIN
+   - "Terug naar home" optie
+
+#### Verbeterde Print Functie ✅
+- Print functie nu via iframe (betrouwbaarder dan popup)
+- Betere error handling
+- A4 formaat met exacte kleuren
+
 #### Gewijzigde Bestanden
-- `frontend/src/components/vastgoed-kiosk/ReceiptTicket.jsx` - Dynamische bedrijfsnaam, maand formatting
-- `frontend/src/components/vastgoed-kiosk/KioskPaymentSelect.jsx` - Maand selectie UI toegevoegd
-- `frontend/src/components/vastgoed-kiosk/KioskPaymentConfirm.jsx` - Maand weergave in bevestiging
+- `frontend/src/components/vastgoed-kiosk/ReceiptTicket.jsx` - Dynamische bedrijfsnaam, prominente maand box
+- `frontend/src/components/vastgoed-kiosk/KioskPaymentSelect.jsx` - Maand selectie, vaste Volgende knop
+- `frontend/src/components/vastgoed-kiosk/KioskPaymentConfirm.jsx` - Maand weergave
+- `frontend/src/components/vastgoed-kiosk/KioskPinEntry.jsx` - NIEUW: PIN invoer component
+- `frontend/src/components/vastgoed-kiosk/KioskLayout.jsx` - PIN verificatie flow
+- `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - PIN instellingen sectie
+- `frontend/src/components/vastgoed-kiosk/KioskReceipt.jsx` - Verbeterde print functie
+- `backend/routers/kiosk.py` - PIN endpoints en /auth/me uitgebreid
 
 ### Toekomstige Taken (Backlog)
 - P1: Tuya API integratie voor echte stroombrekers

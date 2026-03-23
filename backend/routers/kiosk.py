@@ -86,6 +86,10 @@ class CompanyUpdate(BaseModel):
     stamp_address: Optional[str] = None
     stamp_phone: Optional[str] = None
     stamp_whatsapp: Optional[str] = None
+    kiosk_pin: Optional[str] = None  # 4-digit PIN for kiosk access
+
+class KioskPinVerify(BaseModel):
+    pin: str  # 4-digit PIN
 
 class ApartmentCreate(BaseModel):
     number: str
@@ -203,6 +207,11 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "adres": company.get("adres"),
         "billing_day": company.get("billing_day", 1),
         "fine_amount": company.get("fine_amount", 0),
+        "stamp_company_name": company.get("stamp_company_name", ""),
+        "stamp_address": company.get("stamp_address", ""),
+        "stamp_phone": company.get("stamp_phone", ""),
+        "stamp_whatsapp": company.get("stamp_whatsapp", ""),
+        "kiosk_pin": company.get("kiosk_pin", ""),
         "status": company.get("status")
     }
 
@@ -230,8 +239,26 @@ async def get_company_public(company_id: str):
     
     return {
         "name": company["name"],
-        "company_id": company["company_id"]
+        "company_id": company["company_id"],
+        "has_pin": bool(company.get("kiosk_pin"))  # Indicate if PIN is required
     }
+
+@router.post("/public/{company_id}/verify-pin")
+async def verify_kiosk_pin(company_id: str, data: KioskPinVerify):
+    """Verify 4-digit PIN for kiosk access"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    stored_pin = company.get("kiosk_pin")
+    if not stored_pin:
+        # No PIN set, allow access
+        return {"valid": True, "message": "Geen PIN ingesteld"}
+    
+    if data.pin != stored_pin:
+        raise HTTPException(status_code=401, detail="Ongeldige PIN")
+    
+    return {"valid": True, "message": "PIN correct"}
 
 @router.get("/public/{company_id}/company/stamp")
 async def get_company_stamp(company_id: str):

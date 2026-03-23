@@ -64,57 +64,97 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
     return null;
   };
 
-  // Direct print function that creates a print-friendly window
+  // Direct print function that uses an iframe (more reliable than popup)
   const printReceipt = () => {
     const printContent = document.querySelector('.print-receipt-content');
-    if (!printContent) return;
-
-    // Create a new window for printing
-    const printWindow = window.open('', 'PrintWindow', 'width=800,height=600');
-    if (!printWindow) {
-      // Popup blocked, fallback to window.print
-      window.print();
+    if (!printContent) {
+      console.error('Print content not found');
+      alert('Kwitantie kon niet worden afgedrukt. Probeer opnieuw.');
       return;
     }
 
-    printWindow.document.write(`
+    // Get the inner HTML of the receipt
+    const receiptHTML = printContent.innerHTML;
+    
+    // Create iframe for printing (more reliable than popup)
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.right = '0';
+    iframe.style.bottom = '0';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.style.visibility = 'hidden';
+    document.body.appendChild(iframe);
+    
+    const printDoc = iframe.contentDocument || iframe.contentWindow.document;
+    printDoc.open();
+    printDoc.write(`
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <title>Kwitantie ${kwNr}</title>
   <style>
-    @page { size: A4; margin: 0; }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    @page { 
+      size: A4; 
+      margin: 0; 
+    }
+    * { 
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
     html, body { 
       width: 210mm; 
       min-height: 297mm; 
-      background: white;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-    }
-    body {
-      -webkit-print-color-adjust: exact !important;
-      print-color-adjust: exact !important;
-      color-adjust: exact !important;
+      background: white !important;
+      font-family: 'Segoe UI', 'Inter', system-ui, -apple-system, sans-serif;
     }
   </style>
 </head>
 <body>
-  ${printContent.innerHTML}
-  <script>
-    window.onload = function() {
-      setTimeout(function() {
-        window.print();
-        window.onafterprint = function() { window.close(); };
-        // Fallback close after 3 seconds
-        setTimeout(function() { window.close(); }, 3000);
-      }, 300);
-    };
-  </script>
+  ${receiptHTML}
 </body>
 </html>
     `);
-    printWindow.document.close();
+    printDoc.close();
+    
+    // Wait for content to render, then print
+    iframe.onload = () => {
+      setTimeout(() => {
+        try {
+          iframe.contentWindow.focus();
+          iframe.contentWindow.print();
+        } catch (e) {
+          console.error('Print error:', e);
+        }
+        // Remove iframe after printing
+        setTimeout(() => {
+          if (iframe.parentNode) {
+            document.body.removeChild(iframe);
+          }
+        }, 2000);
+      }, 500);
+    };
+    
+    // Trigger load for inline content
+    iframe.contentWindow.focus();
+    setTimeout(() => {
+      try {
+        iframe.contentWindow.print();
+      } catch (e) {
+        console.error('Print error:', e);
+      }
+      setTimeout(() => {
+        if (iframe.parentNode) {
+          document.body.removeChild(iframe);
+        }
+      }, 2000);
+    }, 800);
   };
 
   // Try to print via local print server first, fallback to browser print
