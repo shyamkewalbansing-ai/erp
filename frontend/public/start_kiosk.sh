@@ -5,8 +5,8 @@
 # ==========================================
 
 # === CONFIGURATIE ===
-# Pas deze URL aan naar uw eigen domein en company ID
-KIOSK_URL="https://UW-DOMEIN.com/vastgoed/UW-COMPANY-ID"
+# Pas deze URL aan naar uw eigen domein
+KIOSK_URL="https://vastgoed-kiosk.preview.emergentagent.com/vastgoed"
 
 # === CHROME/CHROMIUM DETECTIE ===
 if command -v chromium-browser &> /dev/null; then

@@ -19,9 +19,9 @@
 ## Windows - Snelkoppeling maken
 
 1. **Rechtermuisknop** op bureaublad → **Nieuw** → **Snelkoppeling**
-2. Plak dit (pas URL aan!):
+2. Plak dit:
 ```
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing "https://UW-DOMEIN/vastgoed/UW-COMPANY-ID"
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing "https://vastgoed-kiosk.preview.emergentagent.com/vastgoed"
 ```
 3. Noem het: **Appartement Kiosk**
 4. **SLUIT ALLE CHROME VENSTERS** eerst!
@@ -29,7 +29,7 @@
 
 ## Linux
 ```bash
-chromium-browser --kiosk --kiosk-printing "https://UW-DOMEIN/vastgoed/UW-COMPANY-ID"
+chromium-browser --kiosk --kiosk-printing "https://vastgoed-kiosk.preview.emergentagent.com/vastgoed"
 ```
 
 ## Afsluiten
