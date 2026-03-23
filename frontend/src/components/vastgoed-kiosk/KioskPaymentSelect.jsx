@@ -100,25 +100,25 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
   };
 
   return (
-    <div className="kiosk-fullscreen bg-slate-50 flex flex-col">
+    <div className="kiosk-fullscreen bg-slate-50 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 p-6 flex items-center justify-between">
+      <div className="bg-white border-b border-slate-200 p-4 flex items-center justify-between shrink-0">
         <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-lg font-medium">
           <ArrowLeft className="w-6 h-6" />
           <span>Terug</span>
         </button>
-        <h1 className="text-3xl font-bold text-slate-900">Wat wilt u betalen?</h1>
+        <h1 className="text-2xl font-bold text-slate-900">Wat wilt u betalen?</h1>
         <div className="text-right">
           <p className="text-slate-900 font-medium">{tenant.name}</p>
           <p className="text-slate-500">Appt. {tenant.apartment_number}</p>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 p-8 flex gap-8">
+      {/* Content - Scrollable */}
+      <div className="flex-1 p-6 flex gap-6 overflow-auto">
         {/* Left - Payment Options */}
-        <div className="flex-1 flex flex-col">
-          <div className="space-y-5 flex-1">
+        <div className="flex-1 flex flex-col min-w-0">
+          <div className="space-y-3">
             {PAYMENT_TYPES.map((type) => {
               const disabled = isTypeDisabled(type.id);
               const isSelected = selectedType === type.id;
@@ -130,7 +130,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                   key={type.id}
                   disabled={disabled}
                   onClick={() => setSelectedType(type.id)}
-                  className={`flex items-center justify-between w-full p-6 rounded-2xl border-3 transition ${
+                  className={`flex items-center justify-between w-full p-4 rounded-xl border-2 transition ${
                     disabled 
                       ? 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed' 
                       : isSelected 
@@ -138,24 +138,24 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                         : 'bg-white border-slate-200 hover:border-orange-300'
                   }`}
                 >
-                  <div className="flex items-center gap-6">
-                    <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                       isSelected ? 'bg-orange-100' : 'bg-slate-100'
                     }`}>
-                      <Icon className={`w-8 h-8 ${isSelected ? 'text-orange-500' : 'text-slate-500'}`} />
+                      <Icon className={`w-6 h-6 ${isSelected ? 'text-orange-500' : 'text-slate-500'}`} />
                     </div>
                     <div className="text-left">
-                      <p className="text-xl font-bold text-slate-900">{type.label}</p>
-                      <p className="text-slate-500">{type.desc}</p>
+                      <p className="text-lg font-bold text-slate-900">{type.label}</p>
+                      <p className="text-sm text-slate-500">{type.desc}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     {type.id !== 'partial_rent' && (
-                      <p className={`text-2xl font-bold ${disabled ? 'text-slate-400' : 'text-slate-900'}`}>
+                      <p className={`text-xl font-bold ${disabled ? 'text-slate-400' : 'text-slate-900'}`}>
                         {formatSRD(amount)}
                       </p>
                     )}
-                    {isSelected && <CheckCircle className="w-8 h-8 text-orange-500" />}
+                    {isSelected && <CheckCircle className="w-6 h-6 text-orange-500" />}
                   </div>
                 </button>
               );
@@ -164,61 +164,51 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
 
           {/* Month Selection - shown when rent or partial_rent selected */}
           {(selectedType === 'rent' || selectedType === 'partial_rent') && (
-            <div className="bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm">
-              <div className="flex items-center gap-3 mb-4">
-                <Calendar className="w-6 h-6 text-orange-500" />
-                <h4 className="text-xl font-bold text-slate-900">Voor welke maand?</h4>
+            <div className="bg-white rounded-xl p-4 border-2 border-slate-100 shadow-sm mt-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Calendar className="w-5 h-5 text-orange-500" />
+                <h4 className="text-lg font-bold text-slate-900">Voor welke maand?</h4>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 {monthOptions.map((month) => (
                   <button
                     key={month.value}
                     onClick={() => setSelectedMonth(month.value)}
-                    className={`p-4 rounded-xl text-left transition ${
+                    className={`p-3 rounded-lg text-left transition ${
                       selectedMonth === month.value
                         ? 'bg-orange-500 text-white'
                         : 'bg-slate-50 text-slate-900 hover:bg-slate-100'
                     }`}
                   >
-                    <p className="font-bold">{month.label}</p>
+                    <p className="font-semibold text-sm">{month.label}</p>
                   </button>
                 ))}
               </div>
             </div>
           )}
-
-          {/* Confirm Button */}
-          <button
-            onClick={handleConfirm}
-            disabled={!canProceed}
-            className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:text-slate-500 text-white mt-8 shadow-lg shadow-orange-500/30"
-          >
-            <span>Volgende</span>
-            <ArrowRight className="w-8 h-8" />
-          </button>
         </div>
 
         {/* Right - Custom Amount Keypad (only for partial) */}
         {selectedType === 'partial_rent' && (
-          <div className="w-96 bg-white rounded-3xl p-8 border-2 border-slate-100 shadow-sm">
-            <h4 className="text-2xl font-bold text-slate-900 mb-2">Bedrag invoeren</h4>
-            <p className="text-slate-500 mb-8">Max: {formatSRD(tenant.outstanding_rent)}</p>
+          <div className="w-80 bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm shrink-0">
+            <h4 className="text-xl font-bold text-slate-900 mb-1">Bedrag invoeren</h4>
+            <p className="text-slate-500 text-sm mb-4">Max: {formatSRD(tenant.outstanding_rent)}</p>
 
             {/* Amount Display */}
-            <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-6 mb-8">
-              <p className="text-slate-500 text-sm mb-1">SRD</p>
-              <p className="text-4xl font-bold text-slate-900 font-mono">
+            <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-4 mb-4">
+              <p className="text-slate-500 text-xs mb-1">SRD</p>
+              <p className="text-3xl font-bold text-slate-900 font-mono">
                 {customAmount || '0.00'}
               </p>
             </div>
 
             {/* Keypad */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
                 <button
                   key={key}
                   onClick={() => handleKeypadPress(key)}
-                  className={`h-16 text-xl font-bold rounded-xl transition active:scale-95 ${
+                  className={`h-12 text-lg font-bold rounded-lg transition active:scale-95 ${
                     key === 'DEL' 
                       ? 'bg-red-100 text-red-600 hover:bg-red-200' 
                       : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
@@ -230,6 +220,18 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
             </div>
           </div>
         )}
+      </div>
+
+      {/* Fixed Bottom - Confirm Button */}
+      <div className="bg-white border-t border-slate-200 p-4 shrink-0">
+        <button
+          onClick={handleConfirm}
+          disabled={!canProceed}
+          className="w-full py-4 px-8 rounded-xl text-xl font-bold flex items-center justify-center gap-3 transition bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:text-slate-500 text-white shadow-lg shadow-orange-500/30"
+        >
+          <span>Volgende</span>
+          <ArrowRight className="w-6 h-6" />
+        </button>
       </div>
     </div>
   );
