@@ -122,7 +122,7 @@ export default function KioskAdminDashboard() {
     <div className="min-h-screen bg-slate-50">
       {/* Header */}
       <header className="bg-white border-b border-slate-200 py-4 px-8">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate('/vastgoed')} className="text-slate-400 hover:text-slate-600">
               <ArrowLeft className="w-5 h-5" />
@@ -156,7 +156,7 @@ export default function KioskAdminDashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-8 py-6">
+      <div className="w-full px-8 py-6">
         {/* Tabs */}
         <div className="flex gap-2 mb-6 flex-wrap">
           {TABS.map(tab => (
@@ -319,14 +319,14 @@ function TenantsTab({ tenants, apartments, formatSRD, getInitials, onAddTenant, 
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="space-y-4">
         {activeTenants.map(tenant => {
           const total = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0);
           const hasArrears = (tenant.outstanding_rent || 0) > (tenant.monthly_rent || 0);
           const currentMonth = new Date().toLocaleDateString('nl-NL', { month: 'short' });
 
           return (
-            <div key={tenant.tenant_id} className="bg-white rounded-xl border border-slate-200 p-5">
+            <div key={tenant.tenant_id} className="bg-white rounded-xl border border-slate-200 p-5 w-full">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-4">
                   <div className="w-14 h-14 rounded-full bg-slate-900 text-white flex items-center justify-center text-lg font-bold">
