@@ -65,35 +65,43 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
 
   if (loading) {
     return (
-      <div className="kiosk-fullscreen kiosk-bg-gradient flex items-center justify-center">
-        <div className="kiosk-spinner" />
+      <div className="kiosk-fullscreen bg-slate-50 flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="kiosk-fullscreen bg-slate-900 flex flex-col">
-      {/* Header */}
-      <div className="kiosk-header">
-        <button onClick={onBack} className="kiosk-back-btn">
+    <div className="kiosk-fullscreen bg-slate-50 flex flex-col">
+      {/* Header - Light */}
+      <div className="bg-white border-b border-slate-200 p-6 flex items-center justify-between">
+        <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-lg font-medium">
           <ArrowLeft className="w-6 h-6" />
           <span>Terug</span>
         </button>
         
-        <h1 className="text-3xl font-bold text-white">Kies uw appartement</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Kies uw appartement</h1>
         
         {/* Mode Toggle */}
         <div className="flex gap-2">
           <button
             onClick={() => { setMode('grid'); setError(''); }}
-            className={`kiosk-tab-btn ${mode === 'grid' ? 'kiosk-tab-active' : ''}`}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition ${
+              mode === 'grid' 
+                ? 'bg-orange-500 text-white' 
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
           >
             <Building2 className="w-5 h-5" />
             Appartement
           </button>
           <button
             onClick={() => { setMode('code'); setError(''); }}
-            className={`kiosk-tab-btn ${mode === 'code' ? 'kiosk-tab-active' : ''}`}
+            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition ${
+              mode === 'code' 
+                ? 'bg-orange-500 text-white' 
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
           >
             <Keyboard className="w-5 h-5" />
             Huurderscode
@@ -103,7 +111,7 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
 
       {/* Error Message */}
       {error && (
-        <div className="mx-8 mb-4 p-6 bg-red-500/20 border-2 border-red-500/50 text-red-300 rounded-2xl text-center text-xl font-medium">
+        <div className="mx-8 mt-4 p-6 bg-red-50 border-2 border-red-200 text-red-600 rounded-2xl text-center text-xl font-medium">
           {error}
         </div>
       )}
@@ -121,21 +129,29 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
                   key={apt.apartment_id}
                   onClick={() => handleApartmentClick(apt)}
                   disabled={!hasTenant}
-                  className={`kiosk-apartment-card ${hasTenant ? 'kiosk-apartment-occupied' : 'kiosk-apartment-empty'}`}
+                  className={`flex flex-col items-center justify-center p-8 rounded-2xl border-3 transition min-h-[200px] ${
+                    hasTenant 
+                      ? 'bg-white border-slate-200 hover:border-orange-500 hover:shadow-lg cursor-pointer' 
+                      : 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed'
+                  }`}
                 >
-                  <span className="text-4xl font-bold mb-2">{apt.number}</span>
+                  <span className="text-4xl font-bold text-slate-900 mb-2">{apt.number}</span>
                   {hasTenant ? (
                     <>
-                      <div className="flex items-center gap-2 text-slate-400 mb-3">
+                      <div className="flex items-center gap-2 text-slate-500 mb-3">
                         <User className="w-5 h-5" />
                         <span className="text-lg">{tenant.name}</span>
                       </div>
-                      <span className="kiosk-badge-green">Bewoond</span>
+                      <span className="px-4 py-2 rounded-full text-sm font-semibold bg-green-100 text-green-600">
+                        Bewoond
+                      </span>
                     </>
                   ) : (
                     <>
-                      <span className="text-slate-500 text-lg mb-3">Leegstaand</span>
-                      <span className="kiosk-badge-gray">Leeg</span>
+                      <span className="text-slate-400 text-lg mb-3">Leegstaand</span>
+                      <span className="px-4 py-2 rounded-full text-sm font-semibold bg-slate-200 text-slate-500">
+                        Leeg
+                      </span>
                     </>
                   )}
                 </button>
@@ -144,13 +160,13 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
           </div>
         ) : (
           <div className="max-w-lg mx-auto">
-            <p className="text-slate-400 text-center text-xl mb-8">
+            <p className="text-slate-500 text-center text-xl mb-8">
               Voer uw huurderscode of appartementnummer in
             </p>
             
             {/* Display */}
-            <div className="bg-slate-800 border-4 border-slate-700 rounded-2xl p-8 mb-8 text-center">
-              <span className="text-5xl font-mono font-bold text-white tracking-[0.3em]">
+            <div className="bg-white border-3 border-slate-200 rounded-2xl p-8 mb-8 text-center shadow-sm">
+              <span className="text-5xl font-mono font-bold text-slate-900 tracking-[0.3em]">
                 {searchCode || '_ _ _ _ _'}
               </span>
             </div>
@@ -161,10 +177,12 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
                 <button
                   key={key}
                   onClick={() => handleKeypadPress(key)}
-                  className={`kiosk-keypad ${
-                    key === 'OK' ? 'kiosk-keypad-ok' :
-                    key === 'DEL' ? 'kiosk-keypad-del' :
-                    'kiosk-keypad-default'
+                  className={`h-20 text-2xl font-bold rounded-xl transition active:scale-95 ${
+                    key === 'OK' 
+                      ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                      : key === 'DEL' 
+                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                        : 'bg-white border-2 border-slate-200 text-slate-900 hover:bg-slate-50'
                   }`}
                 >
                   {key}

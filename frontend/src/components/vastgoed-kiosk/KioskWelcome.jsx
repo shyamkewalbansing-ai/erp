@@ -9,39 +9,39 @@ export default function KioskWelcome({ onStart, companyName, companyId }) {
   });
 
   return (
-    <div className="kiosk-fullscreen flex">
-      {/* Left Panel - Dark */}
-      <div className="w-2/5 kiosk-bg-gradient p-12 flex flex-col text-white relative overflow-hidden">
+    <div className="kiosk-fullscreen flex bg-slate-50">
+      {/* Left Panel - White with accent */}
+      <div className="w-2/5 bg-white p-12 flex flex-col relative overflow-hidden border-r border-slate-200">
         {/* Decorative circles */}
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-white/5 rounded-full" />
-        <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-orange-500/20 rounded-full" />
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-orange-500/5 rounded-full" />
+        <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-orange-500/10 rounded-full" />
         
         {/* Header */}
         <div className="relative z-10">
           <div className="flex items-center gap-4 mb-2">
-            <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center shadow-2xl">
+            <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
               <Building2 className="w-9 h-9 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold">{companyName || 'Appartement Kiosk'}</h1>
-              <p className="text-white/60 text-lg">{today}</p>
+              <h1 className="text-2xl font-bold text-slate-900">{companyName || 'Appartement Kiosk'}</h1>
+              <p className="text-slate-500 text-lg">{today}</p>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col justify-center relative z-10">
-          <h2 className="text-7xl font-bold mb-6 leading-tight">
+          <h2 className="text-7xl font-bold text-slate-900 mb-6 leading-tight">
             Welkom
           </h2>
-          <p className="text-2xl text-white/70 mb-12 leading-relaxed max-w-md">
+          <p className="text-2xl text-slate-500 mb-12 leading-relaxed max-w-md">
             Betaal uw huur, servicekosten en meer via deze zelfbedieningskiosk.
           </p>
           
           <button
             onClick={onStart}
             data-testid="kiosk-start-btn"
-            className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 text-white shadow-2xl shadow-orange-500/30"
+            className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30"
           >
             <span>Start</span>
             <ArrowRight className="w-8 h-8" />
@@ -52,7 +52,7 @@ export default function KioskWelcome({ onStart, companyName, companyId }) {
         <div className="relative z-10">
           <a 
             href={`/vastgoed/admin`}
-            className="inline-flex items-center gap-2 text-white/40 hover:text-white/70 text-sm"
+            className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-600 text-sm"
           >
             <Settings className="w-4 h-4" />
             Beheerder
@@ -60,7 +60,7 @@ export default function KioskWelcome({ onStart, companyName, companyId }) {
         </div>
       </div>
 
-      {/* Right Panel - Light */}
+      {/* Right Panel - Light gray */}
       <div className="flex-1 bg-slate-50 p-12 flex flex-col justify-center">
         <div className="max-w-xl mx-auto">
           <h3 className="text-5xl font-bold text-slate-900 mb-3">

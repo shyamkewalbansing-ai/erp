@@ -12,14 +12,14 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
   const hasArrears = (tenant.outstanding_rent || 0) > (tenant.monthly_rent || 0);
 
   return (
-    <div className="kiosk-fullscreen bg-slate-900 flex flex-col">
+    <div className="kiosk-fullscreen bg-slate-50 flex flex-col">
       {/* Header */}
-      <div className="kiosk-header">
-        <button onClick={onBack} className="kiosk-back-btn">
+      <div className="bg-white border-b border-slate-200 p-6 flex items-center justify-between">
+        <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-lg font-medium">
           <ArrowLeft className="w-6 h-6" />
           <span>Terug</span>
         </button>
-        <h1 className="text-3xl font-bold text-white">Uw overzicht</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Uw overzicht</h1>
         <div className="w-32" />
       </div>
 
@@ -28,19 +28,19 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
         {/* Left Panel - Profile & Total */}
         <div className="w-96 flex flex-col gap-6">
           {/* Profile Card */}
-          <div className="bg-slate-800 rounded-3xl p-8 text-center border border-slate-700">
-            <div className="w-24 h-24 rounded-full bg-slate-700 text-white flex items-center justify-center mx-auto mb-6">
+          <div className="bg-white rounded-3xl p-8 text-center border-2 border-slate-100 shadow-sm">
+            <div className="w-24 h-24 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center mx-auto mb-6">
               <User className="w-12 h-12" />
             </div>
-            <h3 className="text-3xl font-bold text-white mb-2">{tenant.name}</h3>
-            <p className="text-xl text-slate-400">
+            <h3 className="text-3xl font-bold text-slate-900 mb-2">{tenant.name}</h3>
+            <p className="text-xl text-slate-500">
               Appt. {tenant.apartment_number} | {tenant.tenant_code}
             </p>
           </div>
 
           {/* Total Card */}
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 text-center border border-slate-700">
-            <p className="text-slate-400 text-lg mb-2">Totaal te betalen</p>
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-8 text-center shadow-lg shadow-orange-500/30">
+            <p className="text-orange-100 text-lg mb-2">Totaal te betalen</p>
             <p className="text-5xl font-bold text-white" data-testid="total-amount">
               {formatSRD(total)}
             </p>
@@ -48,11 +48,11 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
 
           {/* Arrears Warning */}
           {hasArrears && (
-            <div className="bg-amber-500/20 border-2 border-amber-500/50 rounded-2xl p-6 flex items-center gap-4">
-              <AlertTriangle className="w-10 h-10 text-amber-400 flex-shrink-0" />
+            <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-6 flex items-center gap-4">
+              <AlertTriangle className="w-10 h-10 text-amber-500 flex-shrink-0" />
               <div>
-                <p className="text-xl font-bold text-amber-300">Achterstand</p>
-                <p className="text-amber-400/80">
+                <p className="text-xl font-bold text-amber-700">Achterstand</p>
+                <p className="text-amber-600">
                   {formatSRD((tenant.outstanding_rent || 0) - (tenant.monthly_rent || 0))} boven huidige maandhuur
                 </p>
               </div>
@@ -61,11 +61,11 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
 
           {/* Deposit Status */}
           {(tenant.deposit_required || 0) > 0 && (
-            <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 flex items-center gap-4">
+            <div className="bg-white border-2 border-slate-100 rounded-2xl p-6 flex items-center gap-4 shadow-sm">
               <Shield className="w-8 h-8 text-slate-400 flex-shrink-0" />
               <div>
-                <p className="text-lg font-bold text-white">Borgsom</p>
-                <p className="text-slate-400">
+                <p className="text-lg font-bold text-slate-900">Borgsom</p>
+                <p className="text-slate-500">
                   {formatSRD(tenant.deposit_paid || 0)} / {formatSRD(tenant.deposit_required)}
                 </p>
               </div>
@@ -77,83 +77,95 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
             <button 
               onClick={onPay} 
               data-testid="pay-btn" 
-              className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 text-white shadow-2xl shadow-orange-500/30 mt-auto"
+              className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 mt-auto"
             >
               <CreditCard className="w-8 h-8" />
               <span>Betalen</span>
             </button>
           ) : (
-            <div className="bg-emerald-500/20 border-2 border-emerald-500/50 rounded-3xl p-8 text-center mt-auto">
-              <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto mb-4" />
-              <p className="text-3xl font-bold text-emerald-300">Alles is betaald!</p>
-              <p className="text-xl text-emerald-400/80">Geen openstaand saldo.</p>
+            <div className="bg-green-50 border-2 border-green-200 rounded-3xl p-8 text-center mt-auto">
+              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <p className="text-3xl font-bold text-green-700">Alles is betaald!</p>
+              <p className="text-xl text-green-600">Geen openstaand saldo.</p>
             </div>
           )}
         </div>
 
         {/* Right Panel - Financial Breakdown */}
         <div className="flex-1">
-          <h4 className="text-2xl font-bold text-white mb-6">Financieel overzicht</h4>
+          <h4 className="text-2xl font-bold text-slate-900 mb-6">Financieel overzicht</h4>
           
           <div className="space-y-5">
             {/* Monthly Rent */}
-            <div className="kiosk-finance-card">
+            <div className="bg-white rounded-2xl p-6 flex items-center justify-between border-2 border-slate-100 shadow-sm">
               <div className="flex items-center gap-6">
-                <div className="w-16 h-16 rounded-xl bg-indigo-500/20 flex items-center justify-center">
-                  <Home className="w-8 h-8 text-indigo-400" />
+                <div className="w-16 h-16 rounded-xl bg-indigo-100 flex items-center justify-center">
+                  <Home className="w-8 h-8 text-indigo-600" />
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-white">Maandhuur</p>
-                  <p className="text-slate-400">
+                  <p className="text-xl font-bold text-slate-900">Maandhuur</p>
+                  <p className="text-slate-500">
                     {new Date().toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' })}
                   </p>
                 </div>
               </div>
-              <p className="text-3xl font-bold text-white">{formatSRD(tenant.monthly_rent)}</p>
+              <p className="text-3xl font-bold text-slate-900">{formatSRD(tenant.monthly_rent)}</p>
             </div>
 
             {/* Outstanding Rent */}
-            <div className={`kiosk-finance-card ${(tenant.outstanding_rent || 0) > 0 ? 'kiosk-finance-danger' : 'kiosk-finance-success'}`}>
+            <div className={`bg-white rounded-2xl p-6 flex items-center justify-between border-2 shadow-sm ${
+              (tenant.outstanding_rent || 0) > 0 ? 'border-red-200' : 'border-green-200'
+            }`}>
               <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${(tenant.outstanding_rent || 0) > 0 ? 'bg-red-500/20' : 'bg-emerald-500/20'}`}>
-                  <Wallet className={`w-8 h-8 ${(tenant.outstanding_rent || 0) > 0 ? 'text-red-400' : 'text-emerald-400'}`} />
+                <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
+                  (tenant.outstanding_rent || 0) > 0 ? 'bg-red-100' : 'bg-green-100'
+                }`}>
+                  <Wallet className={`w-8 h-8 ${(tenant.outstanding_rent || 0) > 0 ? 'text-red-600' : 'text-green-600'}`} />
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-white">Openstaande huur</p>
+                  <p className="text-xl font-bold text-slate-900">Openstaande huur</p>
                 </div>
               </div>
-              <p className={`text-3xl font-bold ${(tenant.outstanding_rent || 0) > 0 ? 'text-red-400' : 'text-emerald-400'}`} data-testid="outstanding-rent">
+              <p className={`text-3xl font-bold ${(tenant.outstanding_rent || 0) > 0 ? 'text-red-600' : 'text-green-600'}`} data-testid="outstanding-rent">
                 {formatSRD(tenant.outstanding_rent)}
               </p>
             </div>
 
             {/* Service Costs */}
-            <div className={`kiosk-finance-card ${(tenant.service_costs || 0) > 0 ? 'kiosk-finance-warning' : 'kiosk-finance-success'}`}>
+            <div className={`bg-white rounded-2xl p-6 flex items-center justify-between border-2 shadow-sm ${
+              (tenant.service_costs || 0) > 0 ? 'border-orange-200' : 'border-green-200'
+            }`}>
               <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${(tenant.service_costs || 0) > 0 ? 'bg-orange-500/20' : 'bg-emerald-500/20'}`}>
-                  <FileText className={`w-8 h-8 ${(tenant.service_costs || 0) > 0 ? 'text-orange-400' : 'text-emerald-400'}`} />
+                <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
+                  (tenant.service_costs || 0) > 0 ? 'bg-orange-100' : 'bg-green-100'
+                }`}>
+                  <FileText className={`w-8 h-8 ${(tenant.service_costs || 0) > 0 ? 'text-orange-600' : 'text-green-600'}`} />
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-white">Servicekosten</p>
-                  <p className="text-slate-400">water, stroom, overig</p>
+                  <p className="text-xl font-bold text-slate-900">Servicekosten</p>
+                  <p className="text-slate-500">water, stroom, overig</p>
                 </div>
               </div>
-              <p className={`text-3xl font-bold ${(tenant.service_costs || 0) > 0 ? 'text-orange-400' : 'text-emerald-400'}`} data-testid="service-costs">
+              <p className={`text-3xl font-bold ${(tenant.service_costs || 0) > 0 ? 'text-orange-600' : 'text-green-600'}`} data-testid="service-costs">
                 {formatSRD(tenant.service_costs)}
               </p>
             </div>
 
             {/* Fines */}
-            <div className={`kiosk-finance-card ${(tenant.fines || 0) > 0 ? 'kiosk-finance-danger' : 'kiosk-finance-success'}`}>
+            <div className={`bg-white rounded-2xl p-6 flex items-center justify-between border-2 shadow-sm ${
+              (tenant.fines || 0) > 0 ? 'border-red-200' : 'border-green-200'
+            }`}>
               <div className="flex items-center gap-6">
-                <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${(tenant.fines || 0) > 0 ? 'bg-red-500/20' : 'bg-emerald-500/20'}`}>
-                  <AlertTriangle className={`w-8 h-8 ${(tenant.fines || 0) > 0 ? 'text-red-400' : 'text-emerald-400'}`} />
+                <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
+                  (tenant.fines || 0) > 0 ? 'bg-red-100' : 'bg-green-100'
+                }`}>
+                  <AlertTriangle className={`w-8 h-8 ${(tenant.fines || 0) > 0 ? 'text-red-600' : 'text-green-600'}`} />
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-white">Boetes</p>
+                  <p className="text-xl font-bold text-slate-900">Boetes</p>
                 </div>
               </div>
-              <p className={`text-3xl font-bold ${(tenant.fines || 0) > 0 ? 'text-red-400' : 'text-emerald-400'}`} data-testid="fines-amount">
+              <p className={`text-3xl font-bold ${(tenant.fines || 0) > 0 ? 'text-red-600' : 'text-green-600'}`} data-testid="fines-amount">
                 {formatSRD(tenant.fines)}
               </p>
             </div>

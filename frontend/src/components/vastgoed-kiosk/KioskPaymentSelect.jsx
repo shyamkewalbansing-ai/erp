@@ -74,17 +74,17 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
   };
 
   return (
-    <div className="kiosk-fullscreen bg-slate-900 flex flex-col">
+    <div className="kiosk-fullscreen bg-slate-50 flex flex-col">
       {/* Header */}
-      <div className="kiosk-header">
-        <button onClick={onBack} className="kiosk-back-btn">
+      <div className="bg-white border-b border-slate-200 p-6 flex items-center justify-between">
+        <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-lg font-medium">
           <ArrowLeft className="w-6 h-6" />
           <span>Terug</span>
         </button>
-        <h1 className="text-3xl font-bold text-white">Wat wilt u betalen?</h1>
+        <h1 className="text-3xl font-bold text-slate-900">Wat wilt u betalen?</h1>
         <div className="text-right">
-          <p className="text-white font-medium">{tenant.name}</p>
-          <p className="text-slate-400">Appt. {tenant.apartment_number}</p>
+          <p className="text-slate-900 font-medium">{tenant.name}</p>
+          <p className="text-slate-500">Appt. {tenant.apartment_number}</p>
         </div>
       </div>
 
@@ -104,33 +104,33 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                   key={type.id}
                   disabled={disabled}
                   onClick={() => setSelectedType(type.id)}
-                  className={`kiosk-payment-option ${
-                    disabled ? 'kiosk-payment-disabled' :
-                    isSelected ? 'kiosk-payment-selected' : 'kiosk-payment-default'
+                  className={`flex items-center justify-between w-full p-6 rounded-2xl border-3 transition ${
+                    disabled 
+                      ? 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed' 
+                      : isSelected 
+                        ? 'bg-orange-50 border-orange-500' 
+                        : 'bg-white border-slate-200 hover:border-orange-300'
                   }`}
                 >
                   <div className="flex items-center gap-6">
                     <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${
-                      isSelected ? 'bg-orange-500/30' : 'bg-slate-700'
+                      isSelected ? 'bg-orange-100' : 'bg-slate-100'
                     }`}>
-                      <Icon className={`w-8 h-8 ${isSelected ? 'text-orange-400' : 'text-slate-400'}`} />
+                      <Icon className={`w-8 h-8 ${isSelected ? 'text-orange-500' : 'text-slate-500'}`} />
                     </div>
                     <div className="text-left">
-                      <p className="text-xl font-bold text-white">{type.label}</p>
-                      <p className="text-slate-400">{type.desc}</p>
+                      <p className="text-xl font-bold text-slate-900">{type.label}</p>
+                      <p className="text-slate-500">{type.desc}</p>
                     </div>
                   </div>
-                  {type.id !== 'partial_rent' && (
-                    <div className="flex items-center gap-3">
-                      <p className={`text-2xl font-bold ${disabled ? 'text-slate-600' : 'text-white'}`}>
+                  <div className="flex items-center gap-3">
+                    {type.id !== 'partial_rent' && (
+                      <p className={`text-2xl font-bold ${disabled ? 'text-slate-400' : 'text-slate-900'}`}>
                         {formatSRD(amount)}
                       </p>
-                      {isSelected && <CheckCircle className="w-8 h-8 text-orange-500" />}
-                    </div>
-                  )}
-                  {type.id === 'partial_rent' && isSelected && (
-                    <CheckCircle className="w-8 h-8 text-orange-500" />
-                  )}
+                    )}
+                    {isSelected && <CheckCircle className="w-8 h-8 text-orange-500" />}
+                  </div>
                 </button>
               );
             })}
@@ -140,7 +140,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
           <button
             onClick={handleConfirm}
             disabled={!canProceed}
-            className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 disabled:bg-slate-700 disabled:text-slate-500 text-white mt-8"
+            className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:text-slate-500 text-white mt-8 shadow-lg shadow-orange-500/30"
           >
             <span>Volgende</span>
             <ArrowRight className="w-8 h-8" />
@@ -149,14 +149,14 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
 
         {/* Right - Custom Amount Keypad (only for partial) */}
         {selectedType === 'partial_rent' && (
-          <div className="w-96 bg-slate-800 rounded-3xl p-8 border border-slate-700">
-            <h4 className="text-2xl font-bold text-white mb-2">Bedrag invoeren</h4>
-            <p className="text-slate-400 mb-8">Max: {formatSRD(tenant.outstanding_rent)}</p>
+          <div className="w-96 bg-white rounded-3xl p-8 border-2 border-slate-100 shadow-sm">
+            <h4 className="text-2xl font-bold text-slate-900 mb-2">Bedrag invoeren</h4>
+            <p className="text-slate-500 mb-8">Max: {formatSRD(tenant.outstanding_rent)}</p>
 
             {/* Amount Display */}
-            <div className="bg-slate-900 border-2 border-slate-700 rounded-2xl p-6 mb-8">
-              <p className="text-slate-400 text-sm mb-1">SRD</p>
-              <p className="text-4xl font-bold text-white font-mono">
+            <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-6 mb-8">
+              <p className="text-slate-500 text-sm mb-1">SRD</p>
+              <p className="text-4xl font-bold text-slate-900 font-mono">
                 {customAmount || '0.00'}
               </p>
             </div>
@@ -167,8 +167,10 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                 <button
                   key={key}
                   onClick={() => handleKeypadPress(key)}
-                  className={`kiosk-keypad-sm ${
-                    key === 'DEL' ? 'kiosk-keypad-del' : 'kiosk-keypad-default'
+                  className={`h-16 text-xl font-bold rounded-xl transition active:scale-95 ${
+                    key === 'DEL' 
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
                   }`}
                 >
                   {key}
