@@ -200,113 +200,114 @@ function KioskModal({ children, onClose }) {
   );
 }
 
-// Virtual Keyboard Component for Kiosk Mode
-function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, showNumbers = true }) {
-  const row1 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
-  const row2 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'];
-  const row3 = ['Z', 'X', 'C', 'V', 'B', 'N', 'M'];
-  const numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
-  const special = ['@', '.', '-', '_'];
+// Virtual Keyboard Component for Kiosk Mode - FULL SIZE
+function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onClose }) {
+  const row1 = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+  const row2 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
+  const row3 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '@'];
+  const row4 = ['Z', 'X', 'C', 'V', 'B', 'N', 'M', '.', '-', '_'];
 
   return (
-    <div className="bg-slate-100 rounded-xl p-2 lg:p-3">
-      {/* Numbers row */}
-      {showNumbers && (
-        <div className="flex gap-1 lg:gap-1.5 justify-center mb-1 lg:mb-1.5">
-          {numbers.map(key => (
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
+      <div className="w-full bg-slate-100 p-4 lg:p-6 rounded-t-3xl shadow-2xl">
+        {/* Close button */}
+        <div className="flex justify-between items-center mb-4">
+          <span className="text-slate-500 font-medium">Schermtoetsenbord</span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-slate-200 rounded-lg text-slate-600 hover:bg-slate-300 font-medium"
+          >
+            Sluiten
+          </button>
+        </div>
+        
+        {/* Numbers row */}
+        <div className="flex gap-1.5 lg:gap-2 justify-center mb-2">
+          {row1.map(key => (
             <button
               key={key}
               type="button"
               onClick={() => onKeyPress(key)}
-              className="w-8 h-8 lg:w-10 lg:h-10 bg-white rounded-lg text-sm lg:text-base font-semibold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
+              className="flex-1 max-w-16 h-12 lg:h-16 bg-white rounded-xl text-lg lg:text-2xl font-bold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
             >
               {key}
             </button>
           ))}
         </div>
-      )}
-      
-      {/* Row 1 */}
-      <div className="flex gap-1 lg:gap-1.5 justify-center mb-1 lg:mb-1.5">
-        {row1.map(key => (
+        
+        {/* Row 2 - QWERTY */}
+        <div className="flex gap-1.5 lg:gap-2 justify-center mb-2">
+          {row2.map(key => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onKeyPress(key.toLowerCase())}
+              className="flex-1 max-w-16 h-12 lg:h-16 bg-white rounded-xl text-lg lg:text-2xl font-bold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
+            >
+              {key}
+            </button>
+          ))}
+        </div>
+        
+        {/* Row 3 */}
+        <div className="flex gap-1.5 lg:gap-2 justify-center mb-2">
+          {row3.map(key => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onKeyPress(key.toLowerCase())}
+              className="flex-1 max-w-16 h-12 lg:h-16 bg-white rounded-xl text-lg lg:text-2xl font-bold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
+            >
+              {key}
+            </button>
+          ))}
+        </div>
+        
+        {/* Row 4 */}
+        <div className="flex gap-1.5 lg:gap-2 justify-center mb-2">
+          {row4.map(key => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onKeyPress(key.toLowerCase())}
+              className="flex-1 max-w-16 h-12 lg:h-16 bg-white rounded-xl text-lg lg:text-2xl font-bold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
+            >
+              {key}
+            </button>
+          ))}
+        </div>
+        
+        {/* Bottom row - Space, Backspace, Enter */}
+        <div className="flex gap-2 lg:gap-3 justify-center">
           <button
-            key={key}
             type="button"
-            onClick={() => onKeyPress(key.toLowerCase())}
-            className="w-8 h-8 lg:w-10 lg:h-10 bg-white rounded-lg text-sm lg:text-base font-semibold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
+            onClick={onBackspace}
+            className="w-24 lg:w-32 h-12 lg:h-16 bg-red-100 rounded-xl text-base lg:text-xl font-bold text-red-600 hover:bg-red-200 active:bg-red-300 transition shadow-sm flex items-center justify-center gap-2"
           >
-            {key}
+            ⌫ Wis
           </button>
-        ))}
-      </div>
-      
-      {/* Row 2 */}
-      <div className="flex gap-1 lg:gap-1.5 justify-center mb-1 lg:mb-1.5">
-        {row2.map(key => (
           <button
-            key={key}
             type="button"
-            onClick={() => onKeyPress(key.toLowerCase())}
-            className="w-8 h-8 lg:w-10 lg:h-10 bg-white rounded-lg text-sm lg:text-base font-semibold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
+            onClick={() => onKeyPress(' ')}
+            className="flex-1 max-w-md h-12 lg:h-16 bg-white rounded-xl text-base lg:text-xl font-bold text-slate-500 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
           >
-            {key}
+            SPATIE
           </button>
-        ))}
-      </div>
-      
-      {/* Row 3 */}
-      <div className="flex gap-1 lg:gap-1.5 justify-center mb-1 lg:mb-1.5">
-        {row3.map(key => (
           <button
-            key={key}
             type="button"
-            onClick={() => onKeyPress(key.toLowerCase())}
-            className="w-8 h-8 lg:w-10 lg:h-10 bg-white rounded-lg text-sm lg:text-base font-semibold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
+            onClick={onEnter}
+            className="w-24 lg:w-32 h-12 lg:h-16 bg-orange-500 rounded-xl text-base lg:text-xl font-bold text-white hover:bg-orange-600 active:bg-orange-700 transition shadow-sm"
           >
-            {key}
+            OK ✓
           </button>
-        ))}
-      </div>
-      
-      {/* Special keys row */}
-      <div className="flex gap-1 lg:gap-1.5 justify-center">
-        {special.map(key => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => onKeyPress(key)}
-            className="w-10 h-8 lg:w-12 lg:h-10 bg-white rounded-lg text-sm lg:text-base font-semibold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
-          >
-            {key}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => onKeyPress(' ')}
-          className="flex-1 max-w-32 h-8 lg:h-10 bg-white rounded-lg text-xs lg:text-sm font-semibold text-slate-500 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
-        >
-          SPATIE
-        </button>
-        <button
-          type="button"
-          onClick={onBackspace}
-          className="w-14 h-8 lg:w-16 lg:h-10 bg-red-100 rounded-lg text-xs lg:text-sm font-semibold text-red-600 hover:bg-red-200 active:bg-red-300 transition shadow-sm"
-        >
-          ⌫
-        </button>
-        <button
-          type="button"
-          onClick={onEnter}
-          className="w-14 h-8 lg:w-16 lg:h-10 bg-orange-500 rounded-lg text-xs lg:text-sm font-semibold text-white hover:bg-orange-600 active:bg-orange-700 transition shadow-sm"
-        >
-          OK
-        </button>
+        </div>
       </div>
     </div>
   );
 }
 
-// Full Auth Form with Toggle and Virtual Keyboard
+// Full Auth Form - Centered, Clean design
 function KioskAuthForm({ onSuccess }) {
   const [mode, setMode] = useState('login'); // 'login' or 'register'
   const [email, setEmail] = useState('');
@@ -316,7 +317,7 @@ function KioskAuthForm({ onSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [activeField, setActiveField] = useState(null); // Which field is focused for virtual keyboard
+  const [activeField, setActiveField] = useState(null);
   const [showKeyboard, setShowKeyboard] = useState(false);
 
   const handleKeyPress = (key) => {
@@ -361,56 +362,37 @@ function KioskAuthForm({ onSuccess }) {
   };
 
   return (
-    <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-auto">
-      {/* Toggle Tabs */}
-      <div className="flex gap-2 mb-4 lg:mb-6 max-w-xl mx-auto w-full">
-        <button
-          type="button"
-          onClick={() => { setMode('login'); setError(''); }}
-          className={`flex-1 py-3 lg:py-4 px-4 rounded-xl font-bold text-base lg:text-lg transition flex items-center justify-center gap-2 ${
-            mode === 'login' 
-              ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' 
-              : 'bg-white text-slate-600 border-2 border-slate-200 hover:border-slate-300'
-          }`}
-        >
-          <LogIn className="w-5 h-5" />
-          Inloggen
-        </button>
-        <button
-          type="button"
-          onClick={() => { setMode('register'); setError(''); }}
-          className={`flex-1 py-3 lg:py-4 px-4 rounded-xl font-bold text-base lg:text-lg transition flex items-center justify-center gap-2 ${
-            mode === 'register' 
-              ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' 
-              : 'bg-white text-slate-600 border-2 border-slate-200 hover:border-slate-300'
-          }`}
-        >
-          <UserPlus className="w-5 h-5" />
-          Registreren
-        </button>
-      </div>
+    <div className="flex-1 flex flex-col justify-center items-center p-6 lg:p-8">
+      <div className="w-full max-w-md">
+        {/* Title */}
+        <div className="text-center mb-6">
+          <h2 className="text-2xl lg:text-3xl font-bold text-slate-900">
+            {mode === 'login' ? 'Inloggen' : 'Account Aanmaken'}
+          </h2>
+          <p className="text-slate-500 mt-1">
+            {mode === 'login' ? 'Log in op uw account' : 'Maak een nieuw account aan'}
+          </p>
+        </div>
 
-      {/* Form Container */}
-      <div className="flex-1 flex flex-col max-w-xl mx-auto w-full">
         {/* Error Message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center text-sm lg:text-base">
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-3 lg:space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           {/* Name field - only for register */}
           {mode === 'register' && (
             <div>
-              <label className="block text-slate-700 font-medium mb-1.5 text-sm lg:text-base">Bedrijfsnaam *</label>
+              <label className="block text-slate-700 font-medium mb-1.5 text-sm">Bedrijfsnaam</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                onFocus={() => { setActiveField('name'); setShowKeyboard(true); }}
+                onFocus={() => setActiveField('name')}
                 required
-                className={`w-full px-4 py-3 lg:py-4 bg-white border-2 rounded-xl text-slate-900 text-base lg:text-lg focus:outline-none transition ${
+                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-slate-900 text-lg focus:outline-none transition ${
                   activeField === 'name' ? 'border-orange-500' : 'border-slate-200'
                 }`}
                 placeholder="Uw Vastgoed B.V."
@@ -420,14 +402,14 @@ function KioskAuthForm({ onSuccess }) {
 
           {/* Email field */}
           <div>
-            <label className="block text-slate-700 font-medium mb-1.5 text-sm lg:text-base">E-mailadres {mode === 'register' && '*'}</label>
+            <label className="block text-slate-700 font-medium mb-1.5 text-sm">E-mailadres</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              onFocus={() => { setActiveField('email'); setShowKeyboard(true); }}
+              onFocus={() => setActiveField('email')}
               required
-              className={`w-full px-4 py-3 lg:py-4 bg-white border-2 rounded-xl text-slate-900 text-base lg:text-lg focus:outline-none transition ${
+              className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-slate-900 text-lg focus:outline-none transition ${
                 activeField === 'email' ? 'border-orange-500' : 'border-slate-200'
               }`}
               placeholder="uw@email.com"
@@ -437,13 +419,13 @@ function KioskAuthForm({ onSuccess }) {
           {/* Telefoon field - only for register */}
           {mode === 'register' && (
             <div>
-              <label className="block text-slate-700 font-medium mb-1.5 text-sm lg:text-base">Telefoon</label>
+              <label className="block text-slate-700 font-medium mb-1.5 text-sm">Telefoon (optioneel)</label>
               <input
                 type="tel"
                 value={telefoon}
                 onChange={(e) => setTelefoon(e.target.value)}
-                onFocus={() => { setActiveField('telefoon'); setShowKeyboard(true); }}
-                className={`w-full px-4 py-3 lg:py-4 bg-white border-2 rounded-xl text-slate-900 text-base lg:text-lg focus:outline-none transition ${
+                onFocus={() => setActiveField('telefoon')}
+                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-slate-900 text-lg focus:outline-none transition ${
                   activeField === 'telefoon' ? 'border-orange-500' : 'border-slate-200'
                 }`}
                 placeholder="+597 123 4567"
@@ -453,16 +435,16 @@ function KioskAuthForm({ onSuccess }) {
 
           {/* Password field */}
           <div>
-            <label className="block text-slate-700 font-medium mb-1.5 text-sm lg:text-base">Wachtwoord {mode === 'register' && '*'}</label>
+            <label className="block text-slate-700 font-medium mb-1.5 text-sm">Wachtwoord</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => { setActiveField('password'); setShowKeyboard(true); }}
+                onFocus={() => setActiveField('password')}
                 required
                 minLength={mode === 'register' ? 6 : undefined}
-                className={`w-full px-4 py-3 lg:py-4 bg-white border-2 rounded-xl text-slate-900 text-base lg:text-lg focus:outline-none transition pr-12 ${
+                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-slate-900 text-lg focus:outline-none transition pr-12 ${
                   activeField === 'password' ? 'border-orange-500' : 'border-slate-200'
                 }`}
                 placeholder={mode === 'register' ? "Min. 6 karakters" : "••••••••"}
@@ -472,7 +454,7 @@ function KioskAuthForm({ onSuccess }) {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
               >
-                {showPassword ? <EyeOff className="w-5 h-5 lg:w-6 lg:h-6" /> : <Eye className="w-5 h-5 lg:w-6 lg:h-6" />}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
@@ -480,7 +462,7 @@ function KioskAuthForm({ onSuccess }) {
           {/* Forgot password link - only for login */}
           {mode === 'login' && (
             <div className="text-right">
-              <button type="button" className="text-orange-500 hover:text-orange-600 text-sm lg:text-base font-medium">
+              <button type="button" className="text-orange-500 hover:text-orange-600 text-sm font-medium">
                 Wachtwoord vergeten?
               </button>
             </div>
@@ -490,7 +472,7 @@ function KioskAuthForm({ onSuccess }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 lg:py-5 px-6 rounded-xl text-lg lg:text-xl font-bold flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 text-white transition shadow-lg shadow-orange-500/30"
+            className="w-full py-4 px-6 rounded-xl text-lg font-bold flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 text-white transition shadow-lg shadow-orange-500/30"
           >
             {loading ? (
               <Loader2 className="w-6 h-6 animate-spin" />
@@ -502,31 +484,55 @@ function KioskAuthForm({ onSuccess }) {
           </button>
         </form>
 
+        {/* Toggle mode link */}
+        <p className="text-center text-slate-500 mt-6 text-sm">
+          {mode === 'login' ? (
+            <>
+              Nog geen account?{' '}
+              <button 
+                onClick={() => { setMode('register'); setError(''); }}
+                className="text-orange-500 font-semibold hover:underline"
+              >
+                Registreer hier
+              </button>
+            </>
+          ) : (
+            <>
+              Al een account?{' '}
+              <button 
+                onClick={() => { setMode('login'); setError(''); }}
+                className="text-orange-500 font-semibold hover:underline"
+              >
+                Log hier in
+              </button>
+            </>
+          )}
+        </p>
+
         {/* Virtual Keyboard Toggle */}
-        <div className="mt-4 text-center">
+        <div className="mt-6 text-center">
           <button
             type="button"
-            onClick={() => setShowKeyboard(!showKeyboard)}
-            className="text-slate-500 hover:text-slate-700 text-sm lg:text-base font-medium inline-flex items-center gap-2"
+            onClick={() => setShowKeyboard(true)}
+            className="text-slate-500 hover:text-slate-700 text-sm font-medium inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
             </svg>
-            {showKeyboard ? 'Verberg toetsenbord' : 'Toon schermtoetsenbord'}
+            Schermtoetsenbord openen
           </button>
         </div>
-
-        {/* Virtual Keyboard */}
-        {showKeyboard && (
-          <div className="mt-4">
-            <VirtualKeyboard 
-              onKeyPress={handleKeyPress}
-              onBackspace={handleBackspace}
-              onEnter={handleSubmit}
-            />
-          </div>
-        )}
       </div>
+
+      {/* Virtual Keyboard - Full Screen Overlay */}
+      {showKeyboard && (
+        <VirtualKeyboard 
+          onKeyPress={handleKeyPress}
+          onBackspace={handleBackspace}
+          onEnter={() => { setShowKeyboard(false); handleSubmit(); }}
+          onClose={() => setShowKeyboard(false)}
+        />
+      )}
     </div>
   );
 }
