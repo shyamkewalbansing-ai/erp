@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Building2, LogIn, UserPlus, ArrowRight, Shield, BarChart3, Users, Loader2, X, Eye, EyeOff } from 'lucide-react';
+import { Building2, LogIn, UserPlus, ArrowRight, X, Eye, EyeOff, Loader2, Home, Users, CreditCard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-// Local API - use REACT_APP_BACKEND_URL
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 export default function KioskLanding() {
@@ -13,6 +12,16 @@ export default function KioskLanding() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Disable scroll for kiosk mode
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, []);
 
   // Check if already logged in
   useEffect(() => {
@@ -39,181 +48,245 @@ export default function KioskLanding() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#f97316]" />
+      <div className="kiosk-fullscreen kiosk-bg-gradient flex items-center justify-center">
+        <div className="kiosk-spinner" />
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-[#f8fafc]">
-      {/* Header */}
-      <header className="bg-white border-b border-[#e2e8f0] py-4 px-8">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#f97316] flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
+  // If logged in, show different screen
+  if (isLoggedIn && company) {
+    return (
+      <div className="kiosk-fullscreen flex">
+        {/* Left Panel */}
+        <div className="w-2/5 kiosk-bg-gradient p-12 flex flex-col text-white relative overflow-hidden">
+          <div className="absolute -top-32 -left-32 w-96 h-96 bg-white/5 rounded-full" />
+          <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-orange-500/20 rounded-full" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center shadow-2xl">
+                <Building2 className="w-9 h-9 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Appartement Kiosk</h1>
+                <p className="text-white/60">Huurbetalingen Suriname</p>
+              </div>
             </div>
-            <span className="text-xl font-bold text-[#0f172a]">Appartement Kiosk</span>
           </div>
-          <div className="flex items-center gap-3">
-            {isLoggedIn ? (
-              <>
-                <span className="text-sm text-[#64748b]">Welkom, {company?.name}</span>
-                <button
-                  onClick={() => navigate(`/vastgoed/${company?.company_id}`)}
-                  className="kiosk-btn-primary h-12 text-base px-6"
-                >
-                  Open Kiosk
-                </button>
-                <button
-                  onClick={() => navigate('/vastgoed/admin')}
-                  className="kiosk-tab kiosk-tab-active"
-                >
-                  Dashboard
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="text-sm text-[#64748b] hover:text-[#0f172a]"
-                >
-                  Uitloggen
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => setShowLoginModal(true)}
-                  className="kiosk-tab kiosk-tab-active"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Inloggen
-                </button>
-                <button
-                  onClick={() => setShowRegisterModal(true)}
-                  className="kiosk-btn-primary h-12 text-base px-6"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  Registreren
-                </button>
-              </>
-            )}
+
+          <div className="flex-1 flex flex-col justify-center relative z-10">
+            <p className="text-white/60 text-xl mb-2">Welkom terug,</p>
+            <h2 className="text-5xl font-bold mb-8">{company.name}</h2>
+            
+            <div className="space-y-4">
+              <button
+                onClick={() => navigate(`/vastgoed/${company.company_id}`)}
+                className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 text-white shadow-2xl shadow-orange-500/30 w-full"
+              >
+                <CreditCard className="w-8 h-8" />
+                <span>Open Kiosk</span>
+              </button>
+              
+              <button
+                onClick={() => navigate('/vastgoed/admin')}
+                className="kiosk-btn-xl bg-slate-700 hover:bg-slate-600 text-white w-full"
+              >
+                <Home className="w-8 h-8" />
+                <span>Admin Dashboard</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="relative z-10">
+            <button 
+              onClick={handleLogout}
+              className="text-white/40 hover:text-white/70 text-lg"
+            >
+              Uitloggen
+            </button>
           </div>
         </div>
-      </header>
 
-      {/* Hero */}
-      <div className="max-w-6xl mx-auto px-8 py-16">
-        <div className="flex gap-12">
-          {/* Left */}
-          <div className="flex-1">
-            <span className="inline-block bg-[#f97316]/10 text-[#f97316] text-sm font-semibold px-4 py-2 rounded-full mb-6">
-              SaaS Platform voor Vastgoedbeheer
-            </span>
-            <h1 className="text-5xl font-bold text-[#0f172a] mb-6 leading-tight">
-              Huur Betalings<br /><span className="text-[#f97316]">Kiosk</span>
-            </h1>
-            <p className="text-xl text-[#64748b] mb-8">
-              Zelfbedieningskiosk voor uw huurders. Beheer meerdere panden, huurders en betalingen vanuit één platform.
-            </p>
-            <div className="flex gap-4">
-              {isLoggedIn ? (
-                <button
-                  onClick={() => navigate(`/vastgoed/${company?.company_id}`)}
-                  className="kiosk-btn-primary"
-                >
-                  Open Kiosk
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setShowRegisterModal(true)}
-                    className="kiosk-btn-primary"
-                  >
-                    Gratis starten
-                    <ArrowRight className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setShowLoginModal(true)}
-                    className="kiosk-btn-secondary h-16 px-8 text-lg"
-                  >
-                    Inloggen
-                  </button>
-                </>
-              )}
+        {/* Right Panel */}
+        <div className="flex-1 bg-slate-900 p-12 flex flex-col justify-center items-center">
+          <div className="text-center max-w-lg">
+            <div className="w-32 h-32 rounded-3xl bg-slate-800 flex items-center justify-center mx-auto mb-8 border border-slate-700">
+              <Building2 className="w-16 h-16 text-orange-500" />
             </div>
-          </div>
-
-          {/* Right panel */}
-          <div className="w-96 bg-white rounded-2xl shadow-xl p-8 border border-[#e2e8f0]">
-            <h3 className="text-xl font-bold text-[#0f172a] mb-4">Uw eigen kiosk</h3>
-            <p className="text-[#64748b] mb-6">Elk bedrijf krijgt een unieke kiosk-URL voor hun huurders</p>
-            <div className="bg-[#f8fafc] rounded-xl p-4 border border-[#e2e8f0]">
-              <p className="text-sm text-[#64748b] mb-2">Uw kiosk URL</p>
-              <code className="text-[#f97316] font-mono text-sm">
-                {isLoggedIn ? `/vastgoed/${company?.company_id}` : '/vastgoed/uw-bedrijf-id'}
+            <h3 className="text-4xl font-bold text-white mb-4">Uw Kiosk URL</h3>
+            <p className="text-slate-400 text-xl mb-8">Deel deze URL met uw huurders</p>
+            
+            <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+              <code className="text-orange-400 text-lg font-mono break-all">
+                {window.location.origin}/vastgoed/{company.company_id}
               </code>
             </div>
+            
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/vastgoed/${company.company_id}`);
+              }}
+              className="mt-6 px-8 py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-lg font-medium transition"
+            >
+              Kopieer URL
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Not logged in - show landing
+  return (
+    <div className="kiosk-fullscreen flex">
+      {/* Left Panel - Dark */}
+      <div className="w-2/5 kiosk-bg-gradient p-12 flex flex-col text-white relative overflow-hidden">
+        {/* Decorative circles */}
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-white/5 rounded-full" />
+        <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-orange-500/20 rounded-full" />
+        
+        {/* Header */}
+        <div className="relative z-10">
+          <div className="flex items-center gap-4 mb-2">
+            <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center shadow-2xl">
+              <Building2 className="w-9 h-9 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold">Appartement Kiosk</h1>
+              <p className="text-white/60">Huurbetalingen Suriname</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col justify-center relative z-10">
+          <h2 className="text-6xl font-bold mb-6 leading-tight">
+            Huur Betalings<br />
+            <span className="text-orange-500">Kiosk</span>
+          </h2>
+          <p className="text-2xl text-white/70 mb-12 leading-relaxed max-w-md">
+            Zelfbedieningskiosk voor uw huurders. Beheer meerdere panden vanuit één platform.
+          </p>
+          
+          <div className="space-y-4">
+            <button
+              onClick={() => setShowRegisterModal(true)}
+              className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 text-white shadow-2xl shadow-orange-500/30 w-full"
+            >
+              <UserPlus className="w-8 h-8" />
+              <span>Gratis Starten</span>
+            </button>
+            
+            <button
+              onClick={() => setShowLoginModal(true)}
+              className="kiosk-btn-xl bg-slate-700 hover:bg-slate-600 text-white w-full"
+            >
+              <LogIn className="w-8 h-8" />
+              <span>Inloggen</span>
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Features */}
-      <div className="max-w-6xl mx-auto px-8 pb-16">
-        <div className="grid grid-cols-3 gap-6">
-          {[
-            { icon: Building2, label: 'Multi-Pand Beheer', desc: 'Beheer al uw gebouwen vanuit één dashboard' },
-            { icon: Users, label: 'Huurder Kiosk', desc: 'Zelfbediening voor huur en servicekosten' },
-            { icon: BarChart3, label: 'Realtime Overzicht', desc: 'Direct inzicht in betalingen en achterstand' },
-          ].map((item) => (
-            <div key={item.label} className="bg-white rounded-xl p-6 border border-[#e2e8f0] hover:shadow-lg transition">
-              <div className="w-12 h-12 rounded-lg bg-[#f97316]/10 flex items-center justify-center mb-4">
-                <item.icon className="w-6 h-6 text-[#f97316]" />
+      {/* Right Panel - Features */}
+      <div className="flex-1 bg-slate-900 p-12 flex flex-col justify-center">
+        <div className="max-w-xl mx-auto">
+          <p className="text-orange-500 font-semibold text-lg uppercase tracking-widest mb-6">
+            Waarom Appartement Kiosk?
+          </p>
+
+          <div className="space-y-6">
+            {[
+              { 
+                icon: Building2, 
+                title: 'Multi-Pand Beheer', 
+                desc: 'Beheer al uw gebouwen en appartementen vanuit één centraal dashboard' 
+              },
+              { 
+                icon: Users, 
+                title: 'Zelfbediening Kiosk', 
+                desc: 'Huurders kunnen zelf hun huur, servicekosten en boetes betalen' 
+              },
+              { 
+                icon: CreditCard, 
+                title: 'Directe Verwerking', 
+                desc: 'Contante betalingen direct verwerkt met automatische kwitantie' 
+              },
+            ].map((item) => (
+              <div 
+                key={item.title} 
+                className="flex items-start gap-6 p-6 bg-slate-800 rounded-2xl border border-slate-700"
+              >
+                <div className="w-16 h-16 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                  <item.icon className="w-8 h-8 text-orange-500" />
+                </div>
+                <div>
+                  <h4 className="text-xl font-bold text-white mb-2">{item.title}</h4>
+                  <p className="text-slate-400 text-lg">{item.desc}</p>
+                </div>
               </div>
-              <h4 className="font-semibold text-[#0f172a] mb-2">{item.label}</h4>
-              <p className="text-sm text-[#64748b]">{item.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Login Modal */}
       {showLoginModal && (
-        <LoginModal 
-          onClose={() => setShowLoginModal(false)} 
-          onSuccess={(data) => {
-            setCompany(data);
-            setIsLoggedIn(true);
-            setShowLoginModal(false);
-          }}
-          onRegister={() => {
-            setShowLoginModal(false);
-            setShowRegisterModal(true);
-          }}
-        />
+        <KioskModal onClose={() => setShowLoginModal(false)}>
+          <LoginForm 
+            onSuccess={(data) => {
+              setCompany(data);
+              setIsLoggedIn(true);
+              setShowLoginModal(false);
+            }}
+            onRegister={() => {
+              setShowLoginModal(false);
+              setShowRegisterModal(true);
+            }}
+          />
+        </KioskModal>
       )}
 
       {/* Register Modal */}
       {showRegisterModal && (
-        <RegisterModal 
-          onClose={() => setShowRegisterModal(false)} 
-          onSuccess={(data) => {
-            setCompany(data);
-            setIsLoggedIn(true);
-            setShowRegisterModal(false);
-          }}
-          onLogin={() => {
-            setShowRegisterModal(false);
-            setShowLoginModal(true);
-          }}
-        />
+        <KioskModal onClose={() => setShowRegisterModal(false)}>
+          <RegisterForm 
+            onSuccess={(data) => {
+              setCompany(data);
+              setIsLoggedIn(true);
+              setShowRegisterModal(false);
+            }}
+            onLogin={() => {
+              setShowRegisterModal(false);
+              setShowLoginModal(true);
+            }}
+          />
+        </KioskModal>
       )}
     </div>
   );
 }
 
-// Login Modal Component
-function LoginModal({ onClose, onSuccess, onRegister }) {
+// Kiosk Modal Wrapper
+function KioskModal({ children, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+      <div className="bg-slate-800 rounded-3xl w-full max-w-lg p-10 relative border border-slate-700 shadow-2xl">
+        <button 
+          onClick={onClose} 
+          className="absolute top-6 right-6 text-slate-500 hover:text-white transition"
+        >
+          <X className="w-8 h-8" />
+        </button>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Login Form
+function LoginForm({ onSuccess, onRegister }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -237,80 +310,74 @@ function LoginModal({ onClose, onSuccess, onRegister }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl w-full max-w-md p-8 relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-[#94a3b8] hover:text-[#0f172a]">
-          <X className="w-6 h-6" />
-        </button>
-        
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 rounded-xl bg-[#f97316] flex items-center justify-center mx-auto mb-4">
-            <Building2 className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-[#0f172a]">Inloggen</h2>
-          <p className="text-[#64748b]">Log in op uw Kiosk account</p>
+    <div>
+      <div className="text-center mb-8">
+        <div className="w-20 h-20 rounded-2xl bg-orange-500 flex items-center justify-center mx-auto mb-6">
+          <LogIn className="w-10 h-10 text-white" />
         </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[#0f172a] mb-1">E-mailadres</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#f97316]"
-              placeholder="uw@email.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#0f172a] mb-1">Wachtwoord</label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#f97316] pr-12"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8]"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#f97316] hover:bg-[#ea580c] text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Inloggen'}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-[#64748b] mt-6">
-          Nog geen account?{' '}
-          <button onClick={onRegister} className="text-[#f97316] font-semibold hover:underline">
-            Registreer hier
-          </button>
-        </p>
+        <h2 className="text-3xl font-bold text-white">Inloggen</h2>
+        <p className="text-slate-400 text-lg mt-2">Log in op uw Kiosk account</p>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 text-red-300 rounded-xl text-center">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleLogin} className="space-y-5">
+        <div>
+          <label className="block text-white font-medium mb-2 text-lg">E-mailadres</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-5 py-4 bg-slate-900 border-2 border-slate-700 rounded-xl text-white text-lg focus:outline-none focus:border-orange-500 transition"
+            placeholder="uw@email.com"
+          />
+        </div>
+        <div>
+          <label className="block text-white font-medium mb-2 text-lg">Wachtwoord</label>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-5 py-4 bg-slate-900 border-2 border-slate-700 rounded-xl text-white text-lg focus:outline-none focus:border-orange-500 transition pr-14"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+            >
+              {showPassword ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full kiosk-btn-xl bg-orange-500 hover:bg-orange-600 disabled:bg-slate-700 text-white mt-4"
+        >
+          {loading ? <Loader2 className="w-7 h-7 animate-spin" /> : 'Inloggen'}
+        </button>
+      </form>
+
+      <p className="text-center text-slate-400 mt-8 text-lg">
+        Nog geen account?{' '}
+        <button onClick={onRegister} className="text-orange-500 font-semibold hover:underline">
+          Registreer hier
+        </button>
+      </p>
     </div>
   );
 }
 
-// Register Modal Component
-function RegisterModal({ onClose, onSuccess, onLogin }) {
+// Register Form
+function RegisterForm({ onSuccess, onLogin }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -341,96 +408,90 @@ function RegisterModal({ onClose, onSuccess, onLogin }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl w-full max-w-md p-8 relative max-h-[90vh] overflow-y-auto">
-        <button onClick={onClose} className="absolute top-4 right-4 text-[#94a3b8] hover:text-[#0f172a]">
-          <X className="w-6 h-6" />
-        </button>
-        
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 rounded-xl bg-[#f97316] flex items-center justify-center mx-auto mb-4">
-            <Building2 className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-[#0f172a]">Registreren</h2>
-          <p className="text-[#64748b]">Maak een nieuw Kiosk account aan</p>
+    <div>
+      <div className="text-center mb-8">
+        <div className="w-20 h-20 rounded-2xl bg-orange-500 flex items-center justify-center mx-auto mb-6">
+          <UserPlus className="w-10 h-10 text-white" />
         </div>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-[#0f172a] mb-1">Bedrijfsnaam *</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#f97316]"
-              placeholder="Uw Vastgoed B.V."
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#0f172a] mb-1">E-mailadres *</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#f97316]"
-              placeholder="uw@email.com"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#0f172a] mb-1">Telefoonnummer</label>
-            <input
-              type="tel"
-              value={telefoon}
-              onChange={(e) => setTelefoon(e.target.value)}
-              className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#f97316]"
-              placeholder="+597 123 4567"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-[#0f172a] mb-1">Wachtwoord *</label>
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl focus:outline-none focus:border-[#f97316] pr-12"
-                placeholder="Min. 6 karakters"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#94a3b8]"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-[#f97316] hover:bg-[#ea580c] text-white py-4 rounded-xl font-semibold flex items-center justify-center gap-2 disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Registreren'}
-          </button>
-        </form>
-
-        <p className="text-center text-sm text-[#64748b] mt-6">
-          Al een account?{' '}
-          <button onClick={onLogin} className="text-[#f97316] font-semibold hover:underline">
-            Log hier in
-          </button>
-        </p>
+        <h2 className="text-3xl font-bold text-white">Registreren</h2>
+        <p className="text-slate-400 text-lg mt-2">Maak een nieuw Kiosk account</p>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 text-red-300 rounded-xl text-center">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleRegister} className="space-y-4">
+        <div>
+          <label className="block text-white font-medium mb-2">Bedrijfsnaam *</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            className="w-full px-5 py-4 bg-slate-900 border-2 border-slate-700 rounded-xl text-white text-lg focus:outline-none focus:border-orange-500 transition"
+            placeholder="Uw Vastgoed B.V."
+          />
+        </div>
+        <div>
+          <label className="block text-white font-medium mb-2">E-mailadres *</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-5 py-4 bg-slate-900 border-2 border-slate-700 rounded-xl text-white text-lg focus:outline-none focus:border-orange-500 transition"
+            placeholder="uw@email.com"
+          />
+        </div>
+        <div>
+          <label className="block text-white font-medium mb-2">Telefoon</label>
+          <input
+            type="tel"
+            value={telefoon}
+            onChange={(e) => setTelefoon(e.target.value)}
+            className="w-full px-5 py-4 bg-slate-900 border-2 border-slate-700 rounded-xl text-white text-lg focus:outline-none focus:border-orange-500 transition"
+            placeholder="+597 123 4567"
+          />
+        </div>
+        <div>
+          <label className="block text-white font-medium mb-2">Wachtwoord *</label>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              className="w-full px-5 py-4 bg-slate-900 border-2 border-slate-700 rounded-xl text-white text-lg focus:outline-none focus:border-orange-500 transition pr-14"
+              placeholder="Min. 6 karakters"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+            >
+              {showPassword ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full kiosk-btn-xl bg-orange-500 hover:bg-orange-600 disabled:bg-slate-700 text-white mt-4"
+        >
+          {loading ? <Loader2 className="w-7 h-7 animate-spin" /> : 'Registreren'}
+        </button>
+      </form>
+
+      <p className="text-center text-slate-400 mt-6 text-lg">
+        Al een account?{' '}
+        <button onClick={onLogin} className="text-orange-500 font-semibold hover:underline">
+          Log hier in
+        </button>
+      </p>
     </div>
   );
 }
