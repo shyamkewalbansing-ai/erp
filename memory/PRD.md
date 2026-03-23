@@ -143,9 +143,16 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
    - Kiosk URL: "Plaats deze URL op uw kiosk apparaat"
 4. **Uitloggen knop** - Prominenter gemaakt met icoon op ingelogde pagina
 
+#### Direct Kiosk Redirect & Uitloggen ✅
+1. **Direct naar kiosk** - Na inloggen gaat gebruiker direct naar de kiosk pagina (tussenliggende pagina verwijderd)
+   - Automatische redirect bij bezoek `/vastgoed` als al ingelogd
+2. **Uitloggen op Kiosk** - Uitloggen knop toegevoegd naast "Beheerder" op kiosk welkom pagina
+3. **Uitloggen op Dashboard** - Uitloggen knop toegevoegd in Admin Dashboard header
+
 #### Gewijzigde Bestanden
-- `frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` - Keyboard layout, form centering, tekst correcties, touchscreen detect
-- `frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx` - Tekst correcties verhuurder perspectief
+- `frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` - Direct redirect na login, auto-redirect
+- `frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx` - Uitloggen knop toegevoegd
+- `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - Uitloggen knop in header
 
 ### Toekomstige Taken (Backlog)
 - P1: Tuya API integratie voor echte stroombrekers
