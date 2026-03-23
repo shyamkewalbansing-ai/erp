@@ -237,6 +237,15 @@ async def update_company_settings(data: CompanyUpdate, company: dict = Depends(g
     update_data = {k: v for k, v in data.dict().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc)
     
+    # Check for unique PIN if PIN is being set/changed
+    if "kiosk_pin" in update_data and update_data["kiosk_pin"]:
+        existing = await db.kiosk_companies.find_one({
+            "kiosk_pin": update_data["kiosk_pin"],
+            "company_id": {"$ne": company["company_id"]}
+        })
+        if existing:
+            raise HTTPException(status_code=400, detail="Deze PIN code is al in gebruik door een ander bedrijf. Kies een andere PIN.")
+    
     await db.kiosk_companies.update_one(
         {"company_id": company["company_id"]},
         {"$set": update_data}

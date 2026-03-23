@@ -398,36 +398,36 @@ function KioskAuthForm({ onSuccess }) {
             </div>
           )}
 
-          {/* PIN Input */}
-          <div className="flex justify-center gap-3 mb-6">
+          {/* PIN Input - Square blocks with visible digits */}
+          <div className="flex justify-center gap-4 mb-8">
             {pin.map((digit, index) => (
               <input
                 key={index}
                 ref={pinRefs[index]}
-                type="password"
+                type="text"
                 inputMode="numeric"
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handlePinChange(index, e.target.value)}
                 onKeyDown={(e) => handlePinKeyDown(index, e)}
                 data-testid={`pin-input-${index}`}
-                className={`w-14 h-16 lg:w-16 lg:h-20 text-center text-2xl lg:text-3xl font-bold rounded-xl border-2 transition-all outline-none ${
+                className={`w-16 h-16 lg:w-20 lg:h-20 text-center text-3xl lg:text-4xl font-black rounded-2xl border-3 transition-all outline-none shadow-sm ${
                   error 
-                    ? 'border-red-500 bg-red-50' 
+                    ? 'border-red-400 bg-red-50 text-red-600' 
                     : digit 
-                      ? 'border-orange-500 bg-orange-50' 
-                      : 'border-slate-200 bg-slate-50 focus:border-orange-500'
+                      ? 'border-orange-500 bg-orange-50 text-orange-600' 
+                      : 'border-slate-300 bg-white text-slate-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-200'
                 }`}
                 disabled={loading}
               />
             ))}
           </div>
 
-          {/* Numeric Keypad */}
-          <div className="grid grid-cols-3 gap-2 max-w-[240px] mx-auto mb-6">
+          {/* Numeric Keypad - Larger square buttons */}
+          <div className="grid grid-cols-3 gap-3 max-w-[280px] mx-auto mb-6">
             {['1','2','3','4','5','6','7','8','9','_empty','0','DEL'].map((key) => (
               key === '_empty' ? (
-                <div key={key} className="h-14" />
+                <div key={key} className="h-16" />
               ) : (
                 <button
                   key={key}
@@ -435,13 +435,13 @@ function KioskAuthForm({ onSuccess }) {
                   onClick={() => handlePinKeypad(key)}
                   disabled={loading}
                   data-testid={`pin-key-${key}`}
-                  className={`h-14 text-xl font-bold rounded-xl transition active:scale-95 disabled:opacity-50 ${
+                  className={`h-16 text-2xl font-bold rounded-2xl transition active:scale-95 disabled:opacity-50 shadow-sm ${
                     key === 'DEL' 
-                      ? 'bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center' 
-                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200 border border-red-200 flex items-center justify-center' 
+                      : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-200'
                   }`}
                 >
-                  {key === 'DEL' ? <Delete className="w-5 h-5" /> : key}
+                  {key === 'DEL' ? <Delete className="w-6 h-6" /> : key}
                 </button>
               )
             ))}
