@@ -12,6 +12,9 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
 
   const handleLogout = () => {
     localStorage.removeItem('kiosk_token');
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
+    });
     navigate('/vastgoed');
   };
 

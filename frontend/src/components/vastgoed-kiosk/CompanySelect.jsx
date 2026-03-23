@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Building2, LogIn, UserPlus, ArrowRight, X, Eye, EyeOff, Loader2, Home, Users, CreditCard } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Building2, LogIn, UserPlus, ArrowRight, X, Eye, EyeOff, Loader2, Home, Users, CreditCard, Lock, Delete } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -42,6 +42,10 @@ export default function KioskLanding() {
 
   const handleLogout = () => {
     localStorage.removeItem('kiosk_token');
+    // Clear all PIN verification sessions
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
+    });
     setIsLoggedIn(false);
     setCompany(null);
   };
@@ -227,7 +231,7 @@ function VirtualKeyboard({ onKeyPress, onBackspace, onEnter }) {
 
 // Full Auth Form - Centered, Clean design with inline keyboard
 function KioskAuthForm({ onSuccess }) {
-  const [mode, setMode] = useState('login'); // 'login' or 'register'
+  const [mode, setMode] = useState('login'); // 'login', 'register', or 'pin'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -235,11 +239,13 @@ function KioskAuthForm({ onSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [activeField, setActiveField] = useState('email'); // Default to email
+  const [activeField, setActiveField] = useState('email');
   const [showKeyboard, setShowKeyboard] = useState(() => {
-    // Auto-detect touchscreen
     return typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0;
   });
+  // PIN state
+  const [pin, setPin] = useState(['', '', '', '']);
+  const pinRefs = [useRef(), useRef(), useRef(), useRef()];
 
   const handleKeyPress = (key) => {
     switch(activeField) {
@@ -289,7 +295,7 @@ function KioskAuthForm({ onSuccess }) {
         const res = await axios.post(`${API}/auth/login`, { email, password });
         localStorage.setItem('kiosk_token', res.data.token);
         onSuccess(res.data);
-      } else {
+      } else if (mode === 'register') {
         const res = await axios.post(`${API}/auth/register`, { 
           name, 
           email, 
@@ -312,6 +318,163 @@ function KioskAuthForm({ onSuccess }) {
       setLoading(false);
     }
   };
+
+  // PIN handlers
+  const handlePinChange = (index, value) => {
+    if (value && !/^\d$/.test(value)) return;
+    const newPin = [...pin];
+    newPin[index] = value;
+    setPin(newPin);
+    setError('');
+    if (value && index < 3) {
+      pinRefs[index + 1].current?.focus();
+    }
+    if (value && index === 3 && newPin.every(d => d !== '')) {
+      verifyPinLogin(newPin.join(''));
+    }
+  };
+
+  const handlePinKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !pin[index] && index > 0) {
+      pinRefs[index - 1].current?.focus();
+    }
+  };
+
+  const handlePinKeypad = (value) => {
+    if (value === 'DEL') {
+      for (let i = 3; i >= 0; i--) {
+        if (pin[i]) {
+          const newPin = [...pin];
+          newPin[i] = '';
+          setPin(newPin);
+          pinRefs[i].current?.focus();
+          break;
+        }
+      }
+    } else {
+      for (let i = 0; i < 4; i++) {
+        if (!pin[i]) {
+          handlePinChange(i, value);
+          break;
+        }
+      }
+    }
+  };
+
+  const verifyPinLogin = async (pinCode) => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.post(`${API}/auth/pin`, { pin: pinCode });
+      localStorage.setItem('kiosk_token', res.data.token);
+      // Mark PIN as verified so kiosk page won't ask again
+      sessionStorage.setItem(`kiosk_pin_verified_${res.data.company_id}`, 'true');
+      onSuccess(res.data);
+    } catch (err) {
+      setError('Ongeldige PIN code. Probeer opnieuw.');
+      setPin(['', '', '', '']);
+      pinRefs[0].current?.focus();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // PIN login screen
+  if (mode === 'pin') {
+    return (
+      <div className="flex-1 flex flex-col overflow-auto" data-testid="kiosk-auth-form">
+        <div className="w-full max-w-md mx-auto px-4 lg:px-6 flex-1 flex flex-col justify-center">
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-orange-500/30">
+              <Lock className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900">Inloggen met PIN</h2>
+            <p className="text-slate-500 text-sm mt-1">Voer uw 4-cijferige PIN code in</p>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-2 bg-red-50 border border-red-200 text-red-600 rounded-lg text-center text-sm" data-testid="auth-error-message">
+              {error}
+            </div>
+          )}
+
+          {/* PIN Input */}
+          <div className="flex justify-center gap-3 mb-6">
+            {pin.map((digit, index) => (
+              <input
+                key={index}
+                ref={pinRefs[index]}
+                type="password"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handlePinChange(index, e.target.value)}
+                onKeyDown={(e) => handlePinKeyDown(index, e)}
+                data-testid={`pin-input-${index}`}
+                className={`w-14 h-16 lg:w-16 lg:h-20 text-center text-2xl lg:text-3xl font-bold rounded-xl border-2 transition-all outline-none ${
+                  error 
+                    ? 'border-red-500 bg-red-50' 
+                    : digit 
+                      ? 'border-orange-500 bg-orange-50' 
+                      : 'border-slate-200 bg-slate-50 focus:border-orange-500'
+                }`}
+                disabled={loading}
+              />
+            ))}
+          </div>
+
+          {/* Numeric Keypad */}
+          <div className="grid grid-cols-3 gap-2 max-w-[240px] mx-auto mb-6">
+            {['1','2','3','4','5','6','7','8','9','','0','DEL'].map((key, idx) => (
+              key ? (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handlePinKeypad(key)}
+                  disabled={loading}
+                  data-testid={`pin-key-${key}`}
+                  className={`h-14 text-xl font-bold rounded-xl transition active:scale-95 disabled:opacity-50 ${
+                    key === 'DEL' 
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center' 
+                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                  }`}
+                >
+                  {key === 'DEL' ? <Delete className="w-5 h-5" /> : key}
+                </button>
+              ) : (
+                <div key={idx} className="h-14" />
+              )
+            ))}
+          </div>
+
+          {loading && (
+            <p className="text-center text-slate-500 animate-pulse mb-4">PIN verifiëren...</p>
+          )}
+
+          {/* Switch to password login */}
+          <p className="text-center text-slate-500 text-sm">
+            <button 
+              onClick={() => { setMode('login'); setError(''); setPin(['','','','']); }}
+              className="text-orange-500 font-semibold hover:underline"
+              data-testid="switch-to-password-login"
+            >
+              Inloggen met wachtwoord
+            </button>
+          </p>
+          <p className="text-center text-slate-500 mt-2 text-sm">
+            Nog geen account?{' '}
+            <button 
+              onClick={() => { setMode('register'); setError(''); setPin(['','','','']); setActiveField('name'); }}
+              className="text-orange-500 font-semibold hover:underline"
+              data-testid="switch-to-register"
+            >
+              Registreer hier
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 flex flex-col overflow-auto" data-testid="kiosk-auth-form">
@@ -470,6 +633,20 @@ function KioskAuthForm({ onSuccess }) {
             </>
           )}
         </p>
+
+        {/* PIN login link - only for login mode */}
+        {mode === 'login' && (
+          <div className="mt-2 text-center">
+            <button 
+              onClick={() => { setMode('pin'); setError(''); setPin(['','','','']); }}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-orange-500 transition"
+              data-testid="switch-to-pin-login"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Inloggen met PIN code
+            </button>
+          </div>
+        )}
 
         {/* Keyboard Toggle */}
         <div className="mt-3 text-center">

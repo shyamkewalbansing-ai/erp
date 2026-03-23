@@ -43,9 +43,11 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     }
   };
 
-  // Handle logout
   const handleLogout = () => {
     localStorage.removeItem('kiosk_token');
+    Object.keys(sessionStorage).forEach(key => {
+      if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
+    });
     navigate('/vastgoed');
   };
 

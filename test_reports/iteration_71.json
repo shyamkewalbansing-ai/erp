@@ -1,0 +1,92 @@
+{
+  "summary": "Tested Vastgoed Kiosk PIN login features - 2 new features verified: 1) PIN login on /vastgoed landing page with 4-digit PIN entry and numeric keypad, 2) Kiosk page PIN protection with sessionStorage clearing on logout. All 14 frontend tests and 8 backend tests passed (100% success rate).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "PIN entry keypad",
+        "issues": ["React console warning: 'Encountered two children with the same key' - minor issue with keypad rendering, does not affect functionality"]
+      }
+    ]
+  },
+  "test_results": {
+    "pin_login_link_visible": "PASS - 'Inloggen met PIN code' link visible below login form",
+    "pin_entry_screen_shows": "PASS - Clicking PIN link shows PIN entry with 4 input fields and numeric keypad",
+    "pin_keypad_buttons": "PASS - All 11 keypad buttons (0-9 + DEL) present with data-testid",
+    "invalid_pin_error": "PASS - Invalid PIN (9999) shows error 'Ongeldige PIN code. Probeer opnieuw.'",
+    "valid_pin_redirect": "PASS - Valid PIN (1234) auto-submits and redirects to kiosk page",
+    "kiosk_welcome_after_pin_login": "PASS - After PIN login, kiosk welcome page shows directly (no second PIN entry)",
+    "switch_to_password_link": "PASS - 'Inloggen met wachtwoord' link visible on PIN screen",
+    "register_link_on_pin_screen": "PASS - 'Registreer hier' link visible on PIN screen",
+    "beheerder_button_visible": "PASS - Beheerder button visible on kiosk welcome page",
+    "uitloggen_button_visible": "PASS - Uitloggen button visible on kiosk welcome page",
+    "logout_clears_session": "PASS - Logout clears sessionStorage and redirects to /vastgoed",
+    "direct_kiosk_url_requires_pin": "PASS - Direct visit to /vastgoed/{company_id} shows PIN entry for companies with PIN set",
+    "pin_required_after_logout": "PASS - After logout, kiosk requires PIN again",
+    "password_login_works": "PASS - Password login (email + password) still works correctly"
+  },
+  "backend_test_results": {
+    "test_pin_login_valid_pin": "PASS - POST /api/kiosk/auth/pin with PIN 1234 returns company_id, name, email, token",
+    "test_pin_login_invalid_pin": "PASS - Invalid PIN returns 401 with 'Ongeldige PIN code'",
+    "test_pin_login_empty_pin": "PASS - Empty PIN returns 401",
+    "test_pin_login_short_pin": "PASS - Short PIN (123) returns 401",
+    "test_company_with_pin_shows_has_pin_true": "PASS - Company public endpoint shows has_pin: true",
+    "test_company_not_found": "PASS - Non-existent company returns 404",
+    "test_verify_pin_valid": "PASS - PIN verification endpoint returns valid: true with token",
+    "test_verify_pin_invalid": "PASS - Invalid PIN verification returns 401"
+  },
+  "features_tested": [
+    "Login page shows 'Inloggen met PIN code' link below the login form",
+    "Clicking 'Inloggen met PIN code' shows PIN entry screen with 4 input fields and numeric keypad",
+    "Entering valid PIN (1234) on login page auto-submits and redirects to kiosk page",
+    "After PIN login, kiosk welcome page shows directly (no second PIN entry required)",
+    "Entering invalid PIN shows error message 'Ongeldige PIN code'",
+    "PIN login page has 'Inloggen met wachtwoord' link to switch back",
+    "PIN login page has 'Registreer hier' link",
+    "Password login still works (email + password flow)",
+    "Logout clears sessionStorage (PIN verification) so kiosk requires PIN again",
+    "Direct visit to kiosk URL shows PIN entry for companies with PIN set",
+    "Beheerder and Uitloggen buttons visible on kiosk welcome page"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_kiosk_pin_login.py",
+    "/app/test_reports/pytest/pytest_kiosk_pin_login.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "CompanySelect.jsx correctly implements PIN login mode with KioskAuthForm (line 234-476)",
+    "PIN login sets sessionStorage to prevent double PIN entry on kiosk page (line 371)",
+    "KioskLayout.jsx correctly checks sessionStorage for PIN verification (line 43-48)",
+    "KioskWelcome.jsx logout correctly clears both localStorage and sessionStorage (line 13-18)",
+    "Backend POST /api/kiosk/auth/pin endpoint correctly validates PIN and returns token (line 199-213)",
+    "Minor: React key warning in keypad - consider using unique keys for keypad buttons"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_kiosk_pin_login.py"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "100% (14/14 tests passed)"
+  },
+  "test_credentials": {
+    "test_pin": "1234",
+    "test_account": {
+      "email": "testnzf3ku@vastgoed.sr",
+      "password": "test123"
+    },
+    "test_company_id": "95a0cd46-b374-4bda-9118-f1e2f6cb4835",
+    "test_company_name": "Test Vastgoed BV"
+  },
+  "seed_data_creation": "None - used existing test data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "PIN login feature fully working: 1) /vastgoed landing page has 'Inloggen met PIN code' link that shows PIN entry screen with 4 input fields and numeric keypad, 2) Valid PIN (1234) auto-submits and redirects to kiosk page with sessionStorage set, 3) Kiosk page checks sessionStorage and shows PIN entry if not verified, 4) Logout clears both localStorage and sessionStorage so PIN is required again. Password login also works. Tuya circuit breaker API is MOCKED in backend.",
+  "mocked_apis": {
+    "note": "Tuya circuit breaker API in kiosk.py is MOCKED"
+  }
+}

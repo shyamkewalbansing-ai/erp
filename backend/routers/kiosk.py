@@ -196,6 +196,22 @@ async def login_company(data: CompanyLogin):
         "token": token
     }
 
+@router.post("/auth/pin")
+async def login_with_pin(data: KioskPinVerify):
+    """Login to company account using 4-digit PIN code"""
+    company = await db.kiosk_companies.find_one({"kiosk_pin": data.pin, "status": "active"})
+    if not company:
+        raise HTTPException(status_code=401, detail="Ongeldige PIN code")
+    
+    token = create_token(company["company_id"])
+    
+    return {
+        "company_id": company["company_id"],
+        "name": company["name"],
+        "email": company.get("email", ""),
+        "token": token
+    }
+
 @router.get("/auth/me")
 async def get_current_company_info(company: dict = Depends(get_current_company)):
     """Get current logged in company info"""
