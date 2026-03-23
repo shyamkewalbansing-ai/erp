@@ -365,15 +365,23 @@ function KioskAuthForm({ onSuccess }) {
         onSuccess(res.data);
       }
     } catch (err) {
-      setError(err.response?.data?.detail || (mode === 'login' ? 'Inloggen mislukt' : 'Registratie mislukt'));
+      const detail = err.response?.data?.detail;
+      if (typeof detail === 'string') {
+        setError(detail);
+      } else if (Array.isArray(detail)) {
+        setError(detail.map(d => d.msg || d.message || JSON.stringify(d)).join(', '));
+      } else {
+        setError(mode === 'login' ? 'Inloggen mislukt' : 'Registratie mislukt');
+      }
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-auto">
-      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col overflow-auto" data-testid="kiosk-auth-form">
+      {/* Form area - centered with max width */}
+      <div className="w-full max-w-lg mx-auto px-4 lg:px-6 pt-4 lg:pt-6">
         {/* Title */}
         <div className="text-center mb-4">
           <h2 className="text-2xl font-bold text-slate-900">
@@ -386,7 +394,7 @@ function KioskAuthForm({ onSuccess }) {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-3 p-2 bg-red-50 border border-red-200 text-red-600 rounded-lg text-center text-sm">
+          <div className="mb-3 p-2 bg-red-50 border border-red-200 text-red-600 rounded-lg text-center text-sm" data-testid="auth-error-message">
             {error}
           </div>
         )}
@@ -401,6 +409,7 @@ function KioskAuthForm({ onSuccess }) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onFocus={() => setActiveField('name')}
+                data-testid="register-name-input"
                 className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 focus:outline-none ${
                   activeField === 'name' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
                 }`}
@@ -417,6 +426,7 @@ function KioskAuthForm({ onSuccess }) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onFocus={() => setActiveField('email')}
+              data-testid="auth-email-input"
               className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 focus:outline-none ${
                 activeField === 'email' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
               }`}
@@ -433,6 +443,7 @@ function KioskAuthForm({ onSuccess }) {
                 value={telefoon}
                 onChange={(e) => setTelefoon(e.target.value)}
                 onFocus={() => setActiveField('telefoon')}
+                data-testid="register-phone-input"
                 className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 focus:outline-none ${
                   activeField === 'telefoon' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
                 }`}
@@ -450,6 +461,7 @@ function KioskAuthForm({ onSuccess }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onFocus={() => setActiveField('password')}
+                data-testid="auth-password-input"
                 className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 focus:outline-none pr-10 ${
                   activeField === 'password' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
                 }`}
@@ -459,6 +471,7 @@ function KioskAuthForm({ onSuccess }) {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                data-testid="toggle-password-visibility"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -478,6 +491,7 @@ function KioskAuthForm({ onSuccess }) {
           <button
             type="submit"
             disabled={loading}
+            data-testid="auth-submit-button"
             className="w-full py-3 px-4 rounded-lg text-base font-bold flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 text-white transition shadow-lg shadow-orange-500/30"
           >
             {loading ? (
@@ -498,6 +512,7 @@ function KioskAuthForm({ onSuccess }) {
               <button 
                 onClick={() => { setMode('register'); setError(''); setActiveField('name'); }}
                 className="text-orange-500 font-semibold hover:underline"
+                data-testid="switch-to-register"
               >
                 Registreer hier
               </button>
@@ -508,6 +523,7 @@ function KioskAuthForm({ onSuccess }) {
               <button 
                 onClick={() => { setMode('login'); setError(''); setActiveField('email'); }}
                 className="text-orange-500 font-semibold hover:underline"
+                data-testid="switch-to-login"
               >
                 Log hier in
               </button>
@@ -520,6 +536,7 @@ function KioskAuthForm({ onSuccess }) {
           <button
             type="button"
             onClick={() => setShowKeyboard(!showKeyboard)}
+            data-testid="toggle-virtual-keyboard"
             className={`text-sm font-medium inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition ${
               showKeyboard 
                 ? 'bg-orange-100 text-orange-600' 
@@ -532,18 +549,18 @@ function KioskAuthForm({ onSuccess }) {
             {showKeyboard ? 'Toetsenbord verbergen' : 'Schermtoetsenbord (touchscreen)'}
           </button>
         </div>
-
-        {/* Virtual Keyboard - Full width, fills remaining space */}
-        {showKeyboard && (
-          <div className="flex-1 flex flex-col justify-end pb-2">
-            <VirtualKeyboard 
-              onKeyPress={handleKeyPress}
-              onBackspace={handleBackspace}
-              onEnter={handleSubmit}
-            />
-          </div>
-        )}
       </div>
+
+      {/* Virtual Keyboard - FULL WIDTH of right panel, outside max-w-lg */}
+      {showKeyboard && (
+        <div className="flex-1 flex flex-col justify-end px-4 lg:px-6 pb-3" data-testid="virtual-keyboard-container">
+          <VirtualKeyboard 
+            onKeyPress={handleKeyPress}
+            onBackspace={handleBackspace}
+            onEnter={handleSubmit}
+          />
+        </div>
+      )}
     </div>
   );
 }
