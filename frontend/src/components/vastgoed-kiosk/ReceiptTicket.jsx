@@ -101,6 +101,41 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
         </div>
       </div>
 
+      {/* ====== HUURMAAND INFO (alleen bij huur betalingen) ====== */}
+      {rentMonth && (payment.payment_type === 'rent' || payment.payment_type === 'partial_rent') && (
+        <div style={{ padding: `${3 * s}mm ${15 * s}mm` }}>
+          <div style={{ 
+            background: '#fff7ed', 
+            border: `${0.5 * s}mm solid #fdba74`,
+            borderRadius: `${2.5 * s}mm`, 
+            padding: `${4 * s}mm`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: `${4 * s}mm`
+          }}>
+            <div style={{ 
+              width: `${12 * s}mm`, 
+              height: `${12 * s}mm`, 
+              background: '#f97316', 
+              borderRadius: `${2 * s}mm`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <span style={{ fontSize: `${5 * s}mm`, color: 'white', fontWeight: 'bold' }}>📅</span>
+            </div>
+            <div>
+              <p style={{ fontSize: `${3 * s}mm`, color: '#9a3412', margin: 0, textTransform: 'uppercase', fontWeight: '600' }}>
+                {payment.payment_type === 'partial_rent' ? 'Gedeeltelijke betaling voor' : 'Huurbetaling voor'}
+              </p>
+              <p style={{ fontSize: `${5.5 * s}mm`, color: '#c2410c', margin: 0, fontWeight: 'bold' }}>
+                {rentMonth}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ====== BETALING DETAILS - 38mm ====== */}
       <div style={{ padding: `${5 * s}mm ${15 * s}mm` }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -115,11 +150,6 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
             <tr>
               <td style={{ padding: `${4 * s}mm ${3 * s}mm`, fontSize: `${4 * s}mm`, color: '#0f172a', fontWeight: '500' }}>
                 {TYPE_LABELS[payment.payment_type] || payment.payment_type}
-                {rentMonth && (payment.payment_type === 'rent' || payment.payment_type === 'partial_rent') && (
-                  <span style={{ display: 'block', fontSize: `${3 * s}mm`, color: '#f97316', fontWeight: '600', marginTop: `${1 * s}mm` }}>
-                    Maand: {rentMonth}
-                  </span>
-                )}
               </td>
               <td style={{ padding: `${4 * s}mm ${3 * s}mm`, textAlign: 'center', fontSize: `${3.5 * s}mm`, color: '#64748b' }}>Contant</td>
               <td style={{ padding: `${4 * s}mm ${3 * s}mm`, textAlign: 'right', fontSize: `${4 * s}mm`, color: '#0f172a', fontWeight: '600' }}>{formatSRD(payment.amount)}</td>
