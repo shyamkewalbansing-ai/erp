@@ -7,7 +7,6 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 export default function KioskLanding() {
   const navigate = useNavigate();
-  const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [company, setCompany] = useState(null);
@@ -57,43 +56,43 @@ export default function KioskLanding() {
   // If logged in, show different screen
   if (isLoggedIn && company) {
     return (
-      <div className="kiosk-fullscreen flex bg-slate-50">
+      <div className="kiosk-fullscreen flex flex-col lg:flex-row bg-slate-50">
         {/* Left Panel - Light with Orange accent */}
-        <div className="w-2/5 bg-white p-12 flex flex-col relative overflow-hidden border-r border-slate-200">
+        <div className="w-full lg:w-2/5 bg-white p-6 lg:p-12 flex flex-col relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-200 min-h-[50vh] lg:min-h-0">
           {/* Decorative elements */}
           <div className="absolute -top-32 -left-32 w-96 h-96 bg-orange-500/5 rounded-full" />
           <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-orange-500/10 rounded-full" />
           
           <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-2">
-              <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-                <Building2 className="w-9 h-9 text-white" />
+            <div className="flex items-center gap-3 lg:gap-4 mb-2">
+              <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-xl lg:rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                <Building2 className="w-6 h-6 lg:w-9 lg:h-9 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900">Appartement Kiosk</h1>
-                <p className="text-slate-500">Huurbetalingen Suriname</p>
+                <h1 className="text-xl lg:text-2xl font-bold text-slate-900">Appartement Kiosk</h1>
+                <p className="text-slate-500 text-sm lg:text-base">Huurbetalingen Suriname</p>
               </div>
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col justify-center relative z-10">
-            <p className="text-slate-500 text-xl mb-2">Welkom terug,</p>
-            <h2 className="text-5xl font-bold text-slate-900 mb-8">{company.name}</h2>
+          <div className="flex-1 flex flex-col justify-center relative z-10 py-6 lg:py-0">
+            <p className="text-slate-500 text-lg lg:text-xl mb-2">Welkom terug,</p>
+            <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mb-6 lg:mb-8">{company.name}</h2>
             
-            <div className="space-y-4">
+            <div className="space-y-3 lg:space-y-4">
               <button
                 onClick={() => navigate(`/vastgoed/${company.company_id}`)}
-                className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 w-full"
+                className="w-full py-4 lg:py-5 px-6 rounded-xl text-lg lg:text-xl font-bold flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 transition"
               >
-                <CreditCard className="w-8 h-8" />
+                <CreditCard className="w-6 h-6 lg:w-8 lg:h-8" />
                 <span>Open Kiosk</span>
               </button>
               
               <button
                 onClick={() => navigate('/vastgoed/admin')}
-                className="kiosk-btn-xl bg-slate-100 hover:bg-slate-200 text-slate-700 w-full"
+                className="w-full py-4 lg:py-5 px-6 rounded-xl text-lg lg:text-xl font-bold flex items-center justify-center gap-3 bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
               >
-                <Home className="w-8 h-8" />
+                <Home className="w-6 h-6 lg:w-8 lg:h-8" />
                 <span>Admin Dashboard</span>
               </button>
             </div>
@@ -102,7 +101,7 @@ export default function KioskLanding() {
           <div className="relative z-10">
             <button 
               onClick={handleLogout}
-              className="text-slate-400 hover:text-slate-600 text-lg"
+              className="text-slate-400 hover:text-slate-600 text-base lg:text-lg"
             >
               Uitloggen
             </button>
@@ -110,16 +109,16 @@ export default function KioskLanding() {
         </div>
 
         {/* Right Panel */}
-        <div className="flex-1 bg-slate-50 p-12 flex flex-col justify-center items-center">
-          <div className="text-center max-w-lg">
-            <div className="w-32 h-32 rounded-3xl bg-white flex items-center justify-center mx-auto mb-8 border-2 border-slate-200 shadow-sm">
-              <Building2 className="w-16 h-16 text-orange-500" />
+        <div className="flex-1 bg-slate-50 p-6 lg:p-12 flex flex-col justify-center items-center">
+          <div className="text-center max-w-lg w-full">
+            <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-2xl lg:rounded-3xl bg-white flex items-center justify-center mx-auto mb-6 lg:mb-8 border-2 border-slate-200 shadow-sm">
+              <Building2 className="w-12 h-12 lg:w-16 lg:h-16 text-orange-500" />
             </div>
-            <h3 className="text-4xl font-bold text-slate-900 mb-4">Uw Kiosk URL</h3>
-            <p className="text-slate-500 text-xl mb-8">Deel deze URL met uw huurders</p>
+            <h3 className="text-2xl lg:text-4xl font-bold text-slate-900 mb-3 lg:mb-4">Uw Kiosk URL</h3>
+            <p className="text-slate-500 text-lg lg:text-xl mb-6 lg:mb-8">Deel deze URL met uw huurders</p>
             
-            <div className="bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-sm">
-              <code className="text-orange-600 text-lg font-mono break-all">
+            <div className="bg-white rounded-xl lg:rounded-2xl p-4 lg:p-6 border-2 border-slate-200 shadow-sm">
+              <code className="text-orange-600 text-sm lg:text-lg font-mono break-all">
                 {window.location.origin}/vastgoed/{company.company_id}
               </code>
             </div>
@@ -128,7 +127,7 @@ export default function KioskLanding() {
               onClick={() => {
                 navigator.clipboard.writeText(`${window.location.origin}/vastgoed/${company.company_id}`);
               }}
-              className="mt-6 px-8 py-4 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 rounded-xl text-lg font-medium transition shadow-sm"
+              className="mt-4 lg:mt-6 px-6 lg:px-8 py-3 lg:py-4 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 rounded-xl text-base lg:text-lg font-medium transition shadow-sm"
             >
               Kopieer URL
             </button>
@@ -140,114 +139,58 @@ export default function KioskLanding() {
 
   // Not logged in - show landing
   return (
-    <div className="kiosk-fullscreen flex bg-slate-50">
+    <div className="kiosk-fullscreen flex flex-col lg:flex-row bg-slate-50">
       {/* Left Panel - Light with accent */}
-      <div className="w-2/5 bg-white p-12 flex flex-col relative overflow-hidden border-r border-slate-200">
+      <div className="w-full lg:w-2/5 bg-white p-6 lg:p-12 flex flex-col relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-200 min-h-[40vh] lg:min-h-0">
         {/* Decorative circles */}
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-orange-500/5 rounded-full" />
         <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-orange-500/10 rounded-full" />
         
         {/* Header */}
         <div className="relative z-10">
-          <div className="flex items-center gap-4 mb-2">
-            <div className="w-16 h-16 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-              <Building2 className="w-9 h-9 text-white" />
+          <div className="flex items-center gap-3 lg:gap-4 mb-2">
+            <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-xl lg:rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+              <Building2 className="w-6 h-6 lg:w-9 lg:h-9 text-white" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Appartement Kiosk</h1>
-              <p className="text-slate-500">Huurbetalingen Suriname</p>
+              <h1 className="text-xl lg:text-2xl font-bold text-slate-900">Appartement Kiosk</h1>
+              <p className="text-slate-500 text-sm lg:text-base">Huurbetalingen Suriname</p>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col justify-center relative z-10">
-          <h2 className="text-6xl font-bold text-slate-900 mb-6 leading-tight">
+        <div className="flex-1 flex flex-col justify-center relative z-10 py-6 lg:py-0">
+          <h2 className="text-4xl lg:text-6xl font-bold text-slate-900 mb-4 lg:mb-6 leading-tight">
             Huur Betalings<br />
             <span className="text-orange-500">Kiosk</span>
           </h2>
-          <p className="text-2xl text-slate-500 mb-12 leading-relaxed max-w-md">
+          <p className="text-lg lg:text-2xl text-slate-500 mb-8 lg:mb-12 leading-relaxed max-w-md">
             Zelfbedieningskiosk voor uw huurders. Beheer meerdere panden vanuit één platform.
           </p>
           
-          <div className="space-y-4">
-            <button
-              onClick={() => setShowRegisterModal(true)}
-              className="kiosk-btn-xl bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 w-full"
-            >
-              <UserPlus className="w-8 h-8" />
-              <span>Gratis Starten</span>
-            </button>
-            
-            <button
-              onClick={() => setShowLoginModal(true)}
-              className="kiosk-btn-xl bg-slate-100 hover:bg-slate-200 text-slate-700 w-full"
-            >
-              <LogIn className="w-8 h-8" />
-              <span>Inloggen</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setShowRegisterModal(true)}
+            className="w-full lg:w-auto py-4 lg:py-5 px-8 rounded-xl text-lg lg:text-xl font-bold flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 transition"
+          >
+            <UserPlus className="w-6 h-6 lg:w-8 lg:h-8" />
+            <span>Gratis Starten</span>
+          </button>
         </div>
       </div>
 
-      {/* Right Panel - Features */}
-      <div className="flex-1 bg-slate-50 p-12 flex flex-col justify-center">
-        <div className="max-w-xl mx-auto">
-          <p className="text-orange-500 font-semibold text-lg uppercase tracking-widest mb-6">
-            Waarom Appartement Kiosk?
-          </p>
-
-          <div className="space-y-6">
-            {[
-              { 
-                icon: Building2, 
-                title: 'Multi-Pand Beheer', 
-                desc: 'Beheer al uw gebouwen en appartementen vanuit één centraal dashboard' 
-              },
-              { 
-                icon: Users, 
-                title: 'Zelfbediening Kiosk', 
-                desc: 'Huurders kunnen zelf hun huur, servicekosten en boetes betalen' 
-              },
-              { 
-                icon: CreditCard, 
-                title: 'Directe Verwerking', 
-                desc: 'Contante betalingen direct verwerkt met automatische kwitantie' 
-              },
-            ].map((item) => (
-              <div 
-                key={item.title} 
-                className="flex items-start gap-6 p-6 bg-white rounded-2xl border-2 border-slate-100 shadow-sm"
-              >
-                <div className="w-16 h-16 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
-                  <item.icon className="w-8 h-8 text-orange-500" />
-                </div>
-                <div>
-                  <h4 className="text-xl font-bold text-slate-900 mb-2">{item.title}</h4>
-                  <p className="text-slate-500 text-lg">{item.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Login Modal */}
-      {showLoginModal && (
-        <KioskModal onClose={() => setShowLoginModal(false)}>
-          <LoginForm 
+      {/* Right Panel - Direct Login Form */}
+      <div className="flex-1 bg-slate-50 p-6 lg:p-12 flex flex-col justify-center">
+        <div className="max-w-md mx-auto w-full">
+          <DirectLoginForm 
             onSuccess={(data) => {
               setCompany(data);
               setIsLoggedIn(true);
-              setShowLoginModal(false);
             }}
-            onRegister={() => {
-              setShowLoginModal(false);
-              setShowRegisterModal(true);
-            }}
+            onRegister={() => setShowRegisterModal(true)}
           />
-        </KioskModal>
-      )}
+        </div>
+      </div>
 
       {/* Register Modal */}
       {showRegisterModal && (
@@ -260,7 +203,6 @@ export default function KioskLanding() {
             }}
             onLogin={() => {
               setShowRegisterModal(false);
-              setShowLoginModal(true);
             }}
           />
         </KioskModal>
@@ -272,16 +214,115 @@ export default function KioskLanding() {
 // Kiosk Modal Wrapper - Light Mode
 function KioskModal({ children, onClose }) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-3xl w-full max-w-lg p-10 relative border border-slate-200 shadow-2xl">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl lg:rounded-3xl w-full max-w-lg p-6 lg:p-10 relative border border-slate-200 shadow-2xl">
         <button 
           onClick={onClose} 
-          className="absolute top-6 right-6 text-slate-400 hover:text-slate-600 transition"
+          className="absolute top-4 right-4 lg:top-6 lg:right-6 text-slate-400 hover:text-slate-600 transition"
         >
-          <X className="w-8 h-8" />
+          <X className="w-6 h-6 lg:w-8 lg:h-8" />
         </button>
         {children}
       </div>
+    </div>
+  );
+}
+
+// Direct Login Form - Shown inline on landing page (not in modal)
+function DirectLoginForm({ onSuccess, onRegister }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    
+    try {
+      const res = await axios.post(`${API}/auth/login`, { email, password });
+      localStorage.setItem('kiosk_token', res.data.token);
+      onSuccess(res.data);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Inloggen mislukt');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl lg:rounded-3xl p-6 lg:p-10 border-2 border-slate-100 shadow-lg">
+      <div className="text-center mb-6 lg:mb-8">
+        <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-xl lg:rounded-2xl bg-orange-500 flex items-center justify-center mx-auto mb-4 lg:mb-6 shadow-lg shadow-orange-500/30">
+          <LogIn className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
+        </div>
+        <h2 className="text-2xl lg:text-3xl font-bold text-slate-900">Inloggen</h2>
+        <p className="text-slate-500 text-base lg:text-lg mt-2">Log in op uw Kiosk account</p>
+      </div>
+
+      {error && (
+        <div className="mb-4 lg:mb-6 p-3 lg:p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center text-sm lg:text-base">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleLogin} className="space-y-4 lg:space-y-5">
+        <div>
+          <label className="block text-slate-700 font-medium mb-2 text-base lg:text-lg">E-mailadres</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="w-full px-4 lg:px-5 py-3 lg:py-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 text-base lg:text-lg focus:outline-none focus:border-orange-500 transition"
+            placeholder="uw@email.com"
+          />
+        </div>
+        <div>
+          <label className="block text-slate-700 font-medium mb-2 text-base lg:text-lg">Wachtwoord</label>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 lg:px-5 py-3 lg:py-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-slate-900 text-base lg:text-lg focus:outline-none focus:border-orange-500 transition pr-12 lg:pr-14"
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 lg:right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5 lg:w-6 lg:h-6" /> : <Eye className="w-5 h-5 lg:w-6 lg:h-6" />}
+            </button>
+          </div>
+        </div>
+        
+        {/* Wachtwoord vergeten link */}
+        <div className="text-right">
+          <button type="button" className="text-orange-500 hover:text-orange-600 text-sm lg:text-base font-medium">
+            Wachtwoord vergeten?
+          </button>
+        </div>
+        
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 lg:py-4 px-6 rounded-xl text-base lg:text-xl font-bold flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 text-white transition"
+        >
+          {loading ? <Loader2 className="w-5 h-5 lg:w-7 lg:h-7 animate-spin" /> : 'Inloggen'}
+        </button>
+      </form>
+
+      <p className="text-center text-slate-500 mt-6 lg:mt-8 text-base lg:text-lg">
+        Nog geen account?{' '}
+        <button onClick={onRegister} className="text-orange-500 font-semibold hover:underline">
+          Registreer hier
+        </button>
+      </p>
     </div>
   );
 }
