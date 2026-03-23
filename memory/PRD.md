@@ -144,10 +144,12 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
 4. **Uitloggen knop** - Prominenter gemaakt met icoon op ingelogde pagina
 
 #### Direct Kiosk Redirect & Uitloggen ✅
-1. **Direct naar kiosk** - Na inloggen gaat gebruiker direct naar de kiosk pagina (tussenliggende pagina verwijderd)
+1. **Direct naar kiosk** - Na inloggen gaat gebruiker direct naar de kiosk pagina
+   - Tussenliggende "Welkom terug" pagina volledig verwijderd (alleen laad-spinner)
    - Automatische redirect bij bezoek `/vastgoed` als al ingelogd
-2. **Uitloggen op Kiosk** - Uitloggen knop toegevoegd naast "Beheerder" op kiosk welkom pagina
-3. **Uitloggen op Dashboard** - Uitloggen knop toegevoegd in Admin Dashboard header
+2. **Uitloggen op Kiosk** - Duidelijk zichtbare knop met achtergrondkleur en border naast "Beheerder"
+3. **Uitloggen op Dashboard** - Uitloggen knop in Admin Dashboard header
+4. **Huis logo** - Building icoon boven het inlogformulier
 
 #### Gewijzigde Bestanden
 - `frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` - Direct redirect na login, auto-redirect
