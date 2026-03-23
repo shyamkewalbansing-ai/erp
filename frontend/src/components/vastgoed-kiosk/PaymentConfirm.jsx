@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { ArrowLeft, Banknote, CheckCircle, Loader2, User, Home, ShieldAlert } from 'lucide-react';
 import axios from 'axios';
 
-// External KIOSK API URL
-const API = 'https://kiosk-huur.preview.emergentagent.com/api';
+// Local API - use REACT_APP_BACKEND_URL
+const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 function formatSRD(amount) {
   return `SRD ${Number(amount).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -26,7 +26,7 @@ export default function PaymentConfirm({ tenant, paymentData, onBack, onSuccess,
     setProcessing(true);
     setError('');
     try {
-      const res = await axios.post(`${API}/kiosk/${companyId}/payments`, {
+      const res = await axios.post(`${API}/public/${companyId}/payments`, {
         tenant_id: tenant.tenant_id,
         amount: paymentData.amount,
         payment_type: paymentData.payment_type,

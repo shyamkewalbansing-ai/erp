@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Search, Building2, Keyboard } from 'lucide-react';
 import axios from 'axios';
 
-// External KIOSK API URL
-const API = 'https://kiosk-huur.preview.emergentagent.com/api';
+// Local API - use REACT_APP_BACKEND_URL
+const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 export default function ApartmentSelect({ onBack, onSelect, companyId }) {
   const [mode, setMode] = useState('grid');
@@ -17,8 +17,8 @@ export default function ApartmentSelect({ onBack, onSelect, companyId }) {
     const fetchData = async () => {
       try {
         const [aptRes, tenRes] = await Promise.all([
-          axios.get(`${API}/kiosk/${companyId}/apartments`),
-          axios.get(`${API}/kiosk/${companyId}/tenants`)
+          axios.get(`${API}/public/${companyId}/apartments`),
+          axios.get(`${API}/public/${companyId}/tenants`)
         ]);
         setApartments(aptRes.data);
         setTenants(tenRes.data);
@@ -45,7 +45,7 @@ export default function ApartmentSelect({ onBack, onSelect, companyId }) {
     if (!searchCode.trim()) return;
     setError('');
     try {
-      const res = await axios.get(`${API}/kiosk/${companyId}/tenants/lookup/${searchCode.trim()}`);
+      const res = await axios.get(`${API}/public/${companyId}/tenants/lookup/${searchCode.trim()}`);
       onSelect(res.data);
     } catch {
       setError('Huurder niet gevonden. Controleer uw code.');

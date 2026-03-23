@@ -9,8 +9,8 @@ import PaymentSelect from './PaymentSelect';
 import PaymentConfirm from './PaymentConfirm';
 import ReceiptScreen from './ReceiptScreen';
 
-// External KIOSK API URL
-const API = 'https://kiosk-huur.preview.emergentagent.com/api';
+// Local API - use REACT_APP_BACKEND_URL
+const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 const slideVariants = {
   enter: { opacity: 0, scale: 0.98 },
@@ -28,7 +28,7 @@ export default function KioskLayout() {
 
   useEffect(() => {
     if (companyId) {
-      axios.get(`${API}/kiosk/${companyId}/company`).then(res => {
+      axios.get(`${API}/public/${companyId}/company`).then(res => {
         setCompanyName(res.data.name);
       }).catch(() => {});
     }

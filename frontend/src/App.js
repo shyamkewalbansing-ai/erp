@@ -171,6 +171,7 @@ const SuribetMobileUpload = lazy(() => import("./pages/suribet/MobileUploadPage"
 // Vastgoed Kiosk Module - Public Pages (connects to external KIOSK backend)
 const VastgoedKioskLayout = lazy(() => import("./components/vastgoed-kiosk/KioskLayout"));
 const VastgoedKioskCompanySelect = lazy(() => import("./components/vastgoed-kiosk/CompanySelect"));
+const VastgoedKioskAdmin = lazy(() => import("./components/vastgoed-kiosk/KioskAdminDashboard"));
 
 
 // Loading component for lazy loaded pages - minimal flash
@@ -619,6 +620,11 @@ function MainAppRoutes() {
         <Route path="/vastgoed" element={
           <SafeSuspense>
             <VastgoedKioskCompanySelect />
+          </SafeSuspense>
+        } />
+        <Route path="/vastgoed/admin" element={
+          <SafeSuspense>
+            <VastgoedKioskAdmin />
           </SafeSuspense>
         } />
         <Route path="/vastgoed/:companyId" element={

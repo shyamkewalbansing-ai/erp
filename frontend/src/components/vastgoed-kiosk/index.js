@@ -1,5 +1,6 @@
 export { default as KioskLayout } from './KioskLayout';
-export { default as CompanySelect } from './CompanySelect';
+export { default as KioskLanding } from './CompanySelect';
+export { default as KioskAdminDashboard } from './KioskAdminDashboard';
 export { default as WelcomeScreen } from './WelcomeScreen';
 export { default as ApartmentSelect } from './ApartmentSelect';
 export { default as TenantOverview } from './TenantOverview';

@@ -3,8 +3,8 @@ import { CheckCircle, Printer } from 'lucide-react';
 import ReceiptTicket from './ReceiptTicket';
 import axios from 'axios';
 
-// External KIOSK API URL
-const API = 'https://kiosk-huur.preview.emergentagent.com/api';
+// Local API - use REACT_APP_BACKEND_URL
+const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 export default function ReceiptScreen({ payment, tenant, companyId, onDone }) {
   const [countdown, setCountdown] = useState(8);
@@ -13,7 +13,7 @@ export default function ReceiptScreen({ payment, tenant, companyId, onDone }) {
 
   useEffect(() => {
     if (companyId) {
-      axios.get(`${API}/kiosk/${companyId}/company/stamp`).then(res => {
+      axios.get(`${API}/public/${companyId}/company/stamp`).then(res => {
         setStampData(res.data);
       }).catch(() => {});
     }
