@@ -56,10 +56,10 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
         </div>
 
         {/* Admin & Logout links */}
-        <div className="relative z-10 flex items-center gap-4">
+        <div className="relative z-10 flex items-center gap-3">
           <button 
             onClick={onAdmin}
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-orange-500 text-sm transition"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-orange-50 text-slate-600 hover:text-orange-600 text-sm font-medium transition border border-slate-200 hover:border-orange-200"
           >
             <Settings className="w-4 h-4" />
             Beheerder
@@ -67,7 +67,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
           <button 
             onClick={handleLogout}
             data-testid="kiosk-welcome-logout"
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-red-500 text-sm transition"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 text-sm font-medium transition border border-slate-200 hover:border-red-200"
           >
             <LogIn className="w-4 h-4 rotate-180" />
             Uitloggen
