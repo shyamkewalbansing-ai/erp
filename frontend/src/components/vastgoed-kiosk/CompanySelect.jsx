@@ -200,114 +200,100 @@ function KioskModal({ children, onClose }) {
   );
 }
 
-// Virtual Keyboard Component for Kiosk Mode - FULL SIZE
-function VirtualKeyboard({ onKeyPress, onBackspace, onEnter, onClose }) {
+// Virtual Keyboard Component - Inline in form area
+function VirtualKeyboard({ onKeyPress, onBackspace, onEnter }) {
   const row1 = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
   const row2 = ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'];
   const row3 = ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', '@'];
   const row4 = ['Z', 'X', 'C', 'V', 'B', 'N', 'M', '.', '-', '_'];
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-end">
-      <div className="w-full bg-slate-100 p-4 lg:p-6 rounded-t-3xl shadow-2xl">
-        {/* Close button */}
-        <div className="flex justify-between items-center mb-4">
-          <span className="text-slate-500 font-medium">Schermtoetsenbord</span>
+    <div className="bg-slate-100 rounded-xl p-3 mt-4">
+      {/* Numbers row */}
+      <div className="flex gap-1 justify-center mb-1">
+        {row1.map(key => (
           <button
+            key={key}
             type="button"
-            onClick={onClose}
-            className="px-4 py-2 bg-slate-200 rounded-lg text-slate-600 hover:bg-slate-300 font-medium"
+            onClick={() => onKeyPress(key)}
+            className="flex-1 h-10 bg-white rounded-lg text-base font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
           >
-            Sluiten
+            {key}
           </button>
-        </div>
-        
-        {/* Numbers row */}
-        <div className="flex gap-1.5 lg:gap-2 justify-center mb-2">
-          {row1.map(key => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onKeyPress(key)}
-              className="flex-1 max-w-16 h-12 lg:h-16 bg-white rounded-xl text-lg lg:text-2xl font-bold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
-            >
-              {key}
-            </button>
-          ))}
-        </div>
-        
-        {/* Row 2 - QWERTY */}
-        <div className="flex gap-1.5 lg:gap-2 justify-center mb-2">
-          {row2.map(key => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onKeyPress(key.toLowerCase())}
-              className="flex-1 max-w-16 h-12 lg:h-16 bg-white rounded-xl text-lg lg:text-2xl font-bold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
-            >
-              {key}
-            </button>
-          ))}
-        </div>
-        
-        {/* Row 3 */}
-        <div className="flex gap-1.5 lg:gap-2 justify-center mb-2">
-          {row3.map(key => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onKeyPress(key.toLowerCase())}
-              className="flex-1 max-w-16 h-12 lg:h-16 bg-white rounded-xl text-lg lg:text-2xl font-bold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
-            >
-              {key}
-            </button>
-          ))}
-        </div>
-        
-        {/* Row 4 */}
-        <div className="flex gap-1.5 lg:gap-2 justify-center mb-2">
-          {row4.map(key => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onKeyPress(key.toLowerCase())}
-              className="flex-1 max-w-16 h-12 lg:h-16 bg-white rounded-xl text-lg lg:text-2xl font-bold text-slate-700 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
-            >
-              {key}
-            </button>
-          ))}
-        </div>
-        
-        {/* Bottom row - Space, Backspace, Enter */}
-        <div className="flex gap-2 lg:gap-3 justify-center">
+        ))}
+      </div>
+      
+      {/* Row 2 - QWERTY */}
+      <div className="flex gap-1 justify-center mb-1">
+        {row2.map(key => (
           <button
+            key={key}
             type="button"
-            onClick={onBackspace}
-            className="w-24 lg:w-32 h-12 lg:h-16 bg-red-100 rounded-xl text-base lg:text-xl font-bold text-red-600 hover:bg-red-200 active:bg-red-300 transition shadow-sm flex items-center justify-center gap-2"
+            onClick={() => onKeyPress(key.toLowerCase())}
+            className="flex-1 h-10 bg-white rounded-lg text-base font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
           >
-            ⌫ Wis
+            {key}
           </button>
+        ))}
+      </div>
+      
+      {/* Row 3 */}
+      <div className="flex gap-1 justify-center mb-1">
+        {row3.map(key => (
           <button
+            key={key}
             type="button"
-            onClick={() => onKeyPress(' ')}
-            className="flex-1 max-w-md h-12 lg:h-16 bg-white rounded-xl text-base lg:text-xl font-bold text-slate-500 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
+            onClick={() => onKeyPress(key === '@' ? '@' : key.toLowerCase())}
+            className="flex-1 h-10 bg-white rounded-lg text-base font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
           >
-            SPATIE
+            {key}
           </button>
+        ))}
+      </div>
+      
+      {/* Row 4 */}
+      <div className="flex gap-1 justify-center mb-1">
+        {row4.map(key => (
           <button
+            key={key}
             type="button"
-            onClick={onEnter}
-            className="w-24 lg:w-32 h-12 lg:h-16 bg-orange-500 rounded-xl text-base lg:text-xl font-bold text-white hover:bg-orange-600 active:bg-orange-700 transition shadow-sm"
+            onClick={() => onKeyPress(key.toLowerCase())}
+            className="flex-1 h-10 bg-white rounded-lg text-base font-bold text-slate-700 hover:bg-slate-50 active:bg-orange-100 transition shadow-sm"
           >
-            OK ✓
+            {key}
           </button>
-        </div>
+        ))}
+      </div>
+      
+      {/* Bottom row - Space, Backspace, Enter */}
+      <div className="flex gap-1 justify-center">
+        <button
+          type="button"
+          onClick={onBackspace}
+          className="w-20 h-10 bg-red-100 rounded-lg text-sm font-bold text-red-600 hover:bg-red-200 active:bg-red-300 transition shadow-sm"
+        >
+          ⌫ Wis
+        </button>
+        <button
+          type="button"
+          onClick={() => onKeyPress(' ')}
+          className="flex-1 h-10 bg-white rounded-lg text-sm font-bold text-slate-500 hover:bg-slate-50 active:bg-slate-200 transition shadow-sm"
+        >
+          SPATIE
+        </button>
+        <button
+          type="button"
+          onClick={onEnter}
+          className="w-20 h-10 bg-orange-500 rounded-lg text-sm font-bold text-white hover:bg-orange-600 active:bg-orange-700 transition shadow-sm"
+        >
+          OK ✓
+        </button>
       </div>
     </div>
   );
 }
 
-// Full Auth Form - Centered, Clean design
+// Full Auth Form - Centered, Clean design with inline keyboard
 function KioskAuthForm({ onSuccess }) {
   const [mode, setMode] = useState('login'); // 'login' or 'register'
   const [email, setEmail] = useState('');
@@ -317,21 +303,45 @@ function KioskAuthForm({ onSuccess }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [activeField, setActiveField] = useState(null);
+  const [activeField, setActiveField] = useState('email'); // Default to email
   const [showKeyboard, setShowKeyboard] = useState(false);
 
   const handleKeyPress = (key) => {
-    if (activeField === 'email') setEmail(prev => prev + key);
-    else if (activeField === 'password') setPassword(prev => prev + key);
-    else if (activeField === 'name') setName(prev => prev + key);
-    else if (activeField === 'telefoon') setTelefoon(prev => prev + key);
+    switch(activeField) {
+      case 'email':
+        setEmail(prev => prev + key);
+        break;
+      case 'password':
+        setPassword(prev => prev + key);
+        break;
+      case 'name':
+        setName(prev => prev + key);
+        break;
+      case 'telefoon':
+        setTelefoon(prev => prev + key);
+        break;
+      default:
+        break;
+    }
   };
 
   const handleBackspace = () => {
-    if (activeField === 'email') setEmail(prev => prev.slice(0, -1));
-    else if (activeField === 'password') setPassword(prev => prev.slice(0, -1));
-    else if (activeField === 'name') setName(prev => prev.slice(0, -1));
-    else if (activeField === 'telefoon') setTelefoon(prev => prev.slice(0, -1));
+    switch(activeField) {
+      case 'email':
+        setEmail(prev => prev.slice(0, -1));
+        break;
+      case 'password':
+        setPassword(prev => prev.slice(0, -1));
+        break;
+      case 'name':
+        setName(prev => prev.slice(0, -1));
+        break;
+      case 'telefoon':
+        setTelefoon(prev => prev.slice(0, -1));
+        break;
+      default:
+        break;
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -361,98 +371,99 @@ function KioskAuthForm({ onSuccess }) {
     }
   };
 
+  const handleFieldClick = (field) => {
+    setActiveField(field);
+    setShowKeyboard(true);
+  };
+
   return (
-    <div className="flex-1 flex flex-col justify-center items-center p-6 lg:p-8">
-      <div className="w-full max-w-md">
+    <div className="flex-1 flex flex-col justify-center p-4 lg:p-6 overflow-auto">
+      <div className="w-full max-w-md mx-auto">
         {/* Title */}
-        <div className="text-center mb-6">
-          <h2 className="text-2xl lg:text-3xl font-bold text-slate-900">
+        <div className="text-center mb-4">
+          <h2 className="text-2xl font-bold text-slate-900">
             {mode === 'login' ? 'Inloggen' : 'Account Aanmaken'}
           </h2>
-          <p className="text-slate-500 mt-1">
+          <p className="text-slate-500 text-sm mt-1">
             {mode === 'login' ? 'Log in op uw account' : 'Maak een nieuw account aan'}
           </p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center text-sm">
+          <div className="mb-3 p-2 bg-red-50 border border-red-200 text-red-600 rounded-lg text-center text-sm">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           {/* Name field - only for register */}
           {mode === 'register' && (
             <div>
-              <label className="block text-slate-700 font-medium mb-1.5 text-sm">Bedrijfsnaam</label>
+              <label className="block text-slate-700 font-medium mb-1 text-sm">Bedrijfsnaam</label>
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                onFocus={() => setActiveField('name')}
-                required
-                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-slate-900 text-lg focus:outline-none transition ${
-                  activeField === 'name' ? 'border-orange-500' : 'border-slate-200'
+                readOnly
+                onClick={() => handleFieldClick('name')}
+                className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 cursor-pointer ${
+                  activeField === 'name' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
                 }`}
-                placeholder="Uw Vastgoed B.V."
+                placeholder="Tik om te typen..."
               />
             </div>
           )}
 
           {/* Email field */}
           <div>
-            <label className="block text-slate-700 font-medium mb-1.5 text-sm">E-mailadres</label>
+            <label className="block text-slate-700 font-medium mb-1 text-sm">E-mailadres</label>
             <input
-              type="email"
+              type="text"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onFocus={() => setActiveField('email')}
-              required
-              className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-slate-900 text-lg focus:outline-none transition ${
-                activeField === 'email' ? 'border-orange-500' : 'border-slate-200'
+              readOnly
+              onClick={() => handleFieldClick('email')}
+              className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 cursor-pointer ${
+                activeField === 'email' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
               }`}
-              placeholder="uw@email.com"
+              placeholder="Tik om te typen..."
             />
           </div>
 
           {/* Telefoon field - only for register */}
           {mode === 'register' && (
             <div>
-              <label className="block text-slate-700 font-medium mb-1.5 text-sm">Telefoon (optioneel)</label>
+              <label className="block text-slate-700 font-medium mb-1 text-sm">Telefoon (optioneel)</label>
               <input
-                type="tel"
+                type="text"
                 value={telefoon}
-                onChange={(e) => setTelefoon(e.target.value)}
-                onFocus={() => setActiveField('telefoon')}
-                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-slate-900 text-lg focus:outline-none transition ${
-                  activeField === 'telefoon' ? 'border-orange-500' : 'border-slate-200'
+                readOnly
+                onClick={() => handleFieldClick('telefoon')}
+                className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 cursor-pointer ${
+                  activeField === 'telefoon' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
                 }`}
-                placeholder="+597 123 4567"
+                placeholder="Tik om te typen..."
               />
             </div>
           )}
 
           {/* Password field */}
           <div>
-            <label className="block text-slate-700 font-medium mb-1.5 text-sm">Wachtwoord</label>
+            <label className="block text-slate-700 font-medium mb-1 text-sm">Wachtwoord</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onFocus={() => setActiveField('password')}
-                required
-                minLength={mode === 'register' ? 6 : undefined}
-                className={`w-full px-4 py-3 bg-white border-2 rounded-xl text-slate-900 text-lg focus:outline-none transition pr-12 ${
-                  activeField === 'password' ? 'border-orange-500' : 'border-slate-200'
+                readOnly
+                onClick={() => handleFieldClick('password')}
+                className={`w-full px-3 py-2.5 bg-white border-2 rounded-lg text-slate-900 cursor-pointer pr-10 ${
+                  activeField === 'password' ? 'border-orange-500 ring-2 ring-orange-200' : 'border-slate-200'
                 }`}
-                placeholder={mode === 'register' ? "Min. 6 karakters" : "••••••••"}
+                placeholder="Tik om te typen..."
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -472,10 +483,10 @@ function KioskAuthForm({ onSuccess }) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 px-6 rounded-xl text-lg font-bold flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 text-white transition shadow-lg shadow-orange-500/30"
+            className="w-full py-3 px-4 rounded-lg text-base font-bold flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 text-white transition shadow-lg shadow-orange-500/30"
           >
             {loading ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
+              <Loader2 className="w-5 h-5 animate-spin" />
             ) : mode === 'login' ? (
               'Inloggen'
             ) : (
@@ -485,12 +496,12 @@ function KioskAuthForm({ onSuccess }) {
         </form>
 
         {/* Toggle mode link */}
-        <p className="text-center text-slate-500 mt-6 text-sm">
+        <p className="text-center text-slate-500 mt-3 text-sm">
           {mode === 'login' ? (
             <>
               Nog geen account?{' '}
               <button 
-                onClick={() => { setMode('register'); setError(''); }}
+                onClick={() => { setMode('register'); setError(''); setActiveField('name'); }}
                 className="text-orange-500 font-semibold hover:underline"
               >
                 Registreer hier
@@ -500,7 +511,7 @@ function KioskAuthForm({ onSuccess }) {
             <>
               Al een account?{' '}
               <button 
-                onClick={() => { setMode('login'); setError(''); }}
+                onClick={() => { setMode('login'); setError(''); setActiveField('email'); }}
                 className="text-orange-500 font-semibold hover:underline"
               >
                 Log hier in
@@ -509,30 +520,33 @@ function KioskAuthForm({ onSuccess }) {
           )}
         </p>
 
-        {/* Virtual Keyboard Toggle */}
-        <div className="mt-6 text-center">
+        {/* Keyboard Toggle */}
+        <div className="mt-3 text-center">
           <button
             type="button"
-            onClick={() => setShowKeyboard(true)}
-            className="text-slate-500 hover:text-slate-700 text-sm font-medium inline-flex items-center gap-2 px-4 py-2 bg-slate-100 rounded-lg hover:bg-slate-200 transition"
+            onClick={() => setShowKeyboard(!showKeyboard)}
+            className={`text-sm font-medium inline-flex items-center gap-2 px-3 py-1.5 rounded-lg transition ${
+              showKeyboard 
+                ? 'bg-orange-100 text-orange-600' 
+                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+            }`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
             </svg>
-            Schermtoetsenbord openen
+            {showKeyboard ? 'Toetsenbord verbergen' : 'Toetsenbord tonen'}
           </button>
         </div>
-      </div>
 
-      {/* Virtual Keyboard - Full Screen Overlay */}
-      {showKeyboard && (
-        <VirtualKeyboard 
-          onKeyPress={handleKeyPress}
-          onBackspace={handleBackspace}
-          onEnter={() => { setShowKeyboard(false); handleSubmit(); }}
-          onClose={() => setShowKeyboard(false)}
-        />
-      )}
+        {/* Virtual Keyboard - Inline below form */}
+        {showKeyboard && (
+          <VirtualKeyboard 
+            onKeyPress={handleKeyPress}
+            onBackspace={handleBackspace}
+            onEnter={handleSubmit}
+          />
+        )}
+      </div>
     </div>
   );
 }
