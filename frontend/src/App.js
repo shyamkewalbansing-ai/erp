@@ -168,6 +168,10 @@ const SuribetWerknemerPortaal = lazy(() => import("./pages/suribet/WerknemerPort
 const SuribetPortaalLink = lazy(() => import("./pages/suribet/PortaalLinkPage"));
 const SuribetMobileUpload = lazy(() => import("./pages/suribet/MobileUploadPage"));
 
+// Vastgoed Kiosk Module - Public Pages (connects to external KIOSK backend)
+const VastgoedKioskLayout = lazy(() => import("./components/vastgoed-kiosk/KioskLayout"));
+const VastgoedKioskCompanySelect = lazy(() => import("./components/vastgoed-kiosk/CompanySelect"));
+
 
 // Loading component for lazy loaded pages - minimal flash
 const PageLoader = memo(() => (
@@ -610,6 +614,18 @@ function MainAppRoutes() {
         
         {/* Public Spa Booking Portal - Always available */}
         <Route path="/booking/spa/:workspaceId" element={<SpaBookingPage />} />
+        
+        {/* Vastgoed Kiosk - Public Pages (connects to external KIOSK backend) */}
+        <Route path="/vastgoed" element={
+          <SafeSuspense>
+            <VastgoedKioskCompanySelect />
+          </SafeSuspense>
+        } />
+        <Route path="/vastgoed/:companyId" element={
+          <SafeSuspense>
+            <VastgoedKioskLayout />
+          </SafeSuspense>
+        } />
         
         {/* AI Assistant Standalone Page - Always available */}
         <Route path="/ai" element={<AIAssistantPage />} />

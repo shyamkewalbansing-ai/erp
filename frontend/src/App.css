@@ -990,3 +990,176 @@ button[class*="variant-ghost"]:hover {
 .grain-overlay::before {
     display: none;
 }
+
+
+/* ========================================
+   KIOSK MODULE STYLES
+   ======================================== */
+
+/* Kiosk Tabs */
+.kiosk-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 14px;
+    color: #94a3b8;
+    background: transparent;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kiosk-tab:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.kiosk-tab-active {
+    background: #f97316;
+    color: white;
+    border-color: #f97316;
+}
+
+/* Kiosk Buttons */
+.kiosk-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 32px;
+    background: #f97316;
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 14px -3px rgba(249, 115, 22, 0.4);
+}
+
+.kiosk-btn-primary:hover {
+    background: #ea580c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px -3px rgba(249, 115, 22, 0.5);
+}
+
+.kiosk-btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 32px;
+    background: white;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 18px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kiosk-btn-secondary:hover {
+    border-color: #f97316;
+    color: #f97316;
+}
+
+/* Kiosk Apartment Cards */
+.kiosk-apt-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 24px 16px;
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kiosk-apt-card-active {
+    border-color: #e2e8f0;
+}
+
+.kiosk-apt-card-active:hover {
+    border-color: #f97316;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 25px -5px rgba(249, 115, 22, 0.15);
+}
+
+.kiosk-apt-card-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f8fafc;
+}
+
+/* Kiosk Keypad */
+.kiosk-keypad-btn {
+    height: 64px;
+    font-size: 24px;
+    font-weight: 600;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.kiosk-keypad-btn:hover {
+    transform: scale(1.02);
+}
+
+.kiosk-keypad-btn:active {
+    transform: scale(0.98);
+}
+
+/* Kiosk Option Cards */
+.kiosk-option-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 20px;
+    border-radius: 16px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.kiosk-option-default:hover {
+    border-color: #f97316;
+}
+
+.kiosk-option-selected {
+    border-color: #f97316;
+    background: #fff7ed;
+}
+
+.kiosk-option-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f8fafc;
+}
+
+/* Kiosk Print Styles */
+@media print {
+    .kiosk-print-hide {
+        display: none !important;
+    }
+    
+    body {
+        background: white !important;
+    }
+    
+    * {
+        -webkit-print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+}
