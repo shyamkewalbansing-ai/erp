@@ -1,10 +1,10 @@
 export { default as KioskLayout } from './KioskLayout';
 export { default as KioskLanding } from './CompanySelect';
 export { default as KioskAdminDashboard } from './KioskAdminDashboard';
-export { default as WelcomeScreen } from './WelcomeScreen';
-export { default as ApartmentSelect } from './ApartmentSelect';
-export { default as TenantOverview } from './TenantOverview';
-export { default as PaymentSelect } from './PaymentSelect';
-export { default as PaymentConfirm } from './PaymentConfirm';
-export { default as ReceiptScreen } from './ReceiptScreen';
+export { default as KioskWelcome } from './KioskWelcome';
+export { default as KioskApartmentSelect } from './KioskApartmentSelect';
+export { default as KioskTenantOverview } from './KioskTenantOverview';
+export { default as KioskPaymentSelect } from './KioskPaymentSelect';
+export { default as KioskPaymentConfirm } from './KioskPaymentConfirm';
+export { default as KioskReceipt } from './KioskReceipt';
 export { default as ReceiptTicket } from './ReceiptTicket';

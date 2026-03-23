@@ -1,38 +1,52 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import axios from 'axios';
-import WelcomeScreen from './WelcomeScreen';
-import ApartmentSelect from './ApartmentSelect';
-import TenantOverview from './TenantOverview';
-import PaymentSelect from './PaymentSelect';
-import PaymentConfirm from './PaymentConfirm';
-import ReceiptScreen from './ReceiptScreen';
+import KioskWelcome from './KioskWelcome';
+import KioskApartmentSelect from './KioskApartmentSelect';
+import KioskTenantOverview from './KioskTenantOverview';
+import KioskPaymentSelect from './KioskPaymentSelect';
+import KioskPaymentConfirm from './KioskPaymentConfirm';
+import KioskReceipt from './KioskReceipt';
 
-// Local API - use REACT_APP_BACKEND_URL
+// Local API
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 const slideVariants = {
-  enter: { opacity: 0, scale: 0.98 },
-  center: { opacity: 1, scale: 1 },
-  exit: { opacity: 0, scale: 1.02 },
+  enter: { opacity: 0, x: 100 },
+  center: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -100 },
 };
 
 export default function KioskLayout() {
   const { companyId } = useParams();
+  const navigate = useNavigate();
   const [step, setStep] = useState('welcome');
   const [tenant, setTenant] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
   const [companyName, setCompanyName] = useState('');
+  const [companyNotFound, setCompanyNotFound] = useState(false);
 
   useEffect(() => {
     if (companyId) {
       axios.get(`${API}/public/${companyId}/company`).then(res => {
         setCompanyName(res.data.name);
-      }).catch(() => {});
+      }).catch(() => {
+        setCompanyNotFound(true);
+      });
     }
   }, [companyId]);
+
+  // Disable scroll and set fullscreen kiosk mode
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, []);
 
   const goTo = useCallback((newStep) => setStep(newStep), []);
 
@@ -43,13 +57,37 @@ export default function KioskLayout() {
     setStep('welcome');
   }, []);
 
+  if (companyNotFound) {
+    return (
+      <div className="kiosk-fullscreen kiosk-bg-gradient flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="text-9xl mb-8">🏢</div>
+          <h1 className="text-5xl font-bold mb-4">Bedrijf niet gevonden</h1>
+          <p className="text-2xl text-white/70 mb-8">Deze kiosk is niet geconfigureerd.</p>
+          <button 
+            onClick={() => navigate('/vastgoed')}
+            className="kiosk-btn-lg bg-white text-slate-900"
+          >
+            Terug naar Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const renderStep = () => {
     switch (step) {
       case 'welcome':
-        return <WelcomeScreen onStart={() => goTo('select')} companyName={companyName} companyId={companyId} />;
+        return (
+          <KioskWelcome 
+            onStart={() => goTo('select')} 
+            companyName={companyName} 
+            companyId={companyId} 
+          />
+        );
       case 'select':
         return (
-          <ApartmentSelect
+          <KioskApartmentSelect
             onBack={() => goTo('welcome')}
             onSelect={(t) => { setTenant(t); goTo('overview'); }}
             companyId={companyId}
@@ -57,7 +95,7 @@ export default function KioskLayout() {
         );
       case 'overview':
         return (
-          <TenantOverview
+          <KioskTenantOverview
             tenant={tenant}
             onBack={() => goTo('select')}
             onPay={() => goTo('payment')}
@@ -65,7 +103,7 @@ export default function KioskLayout() {
         );
       case 'payment':
         return (
-          <PaymentSelect
+          <KioskPaymentSelect
             tenant={tenant}
             onBack={() => goTo('overview')}
             onConfirm={(data) => { setPaymentData(data); goTo('confirm'); }}
@@ -73,7 +111,7 @@ export default function KioskLayout() {
         );
       case 'confirm':
         return (
-          <PaymentConfirm
+          <KioskPaymentConfirm
             tenant={tenant}
             paymentData={paymentData}
             onBack={() => goTo('payment')}
@@ -83,7 +121,7 @@ export default function KioskLayout() {
         );
       case 'receipt':
         return (
-          <ReceiptScreen
+          <KioskReceipt
             payment={paymentResult}
             tenant={tenant}
             companyId={companyId}
@@ -91,12 +129,18 @@ export default function KioskLayout() {
           />
         );
       default:
-        return <WelcomeScreen onStart={() => goTo('select')} companyName={companyName} companyId={companyId} />;
+        return (
+          <KioskWelcome 
+            onStart={() => goTo('select')} 
+            companyName={companyName} 
+            companyId={companyId} 
+          />
+        );
     }
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center p-4">
+    <div className="kiosk-fullscreen">
       <AnimatePresence mode="wait">
         <motion.div
           key={step}
@@ -104,8 +148,8 @@ export default function KioskLayout() {
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="w-full max-w-6xl"
+          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          className="kiosk-fullscreen"
         >
           {renderStep()}
         </motion.div>
