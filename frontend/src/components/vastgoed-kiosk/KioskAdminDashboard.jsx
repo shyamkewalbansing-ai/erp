@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, CreditCard, Home, Plus, Pencil, Trash2, 
   ArrowLeft, DollarSign, Loader2, Settings, ExternalLink,
-  Copy, Check
+  Copy, Check, Receipt, Zap, Crown, Search, Calendar,
+  AlertTriangle, User, Banknote, FileText, Save, Eye
 } from 'lucide-react';
 import axios from 'axios';
 
-// Local API
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 export default function KioskAdminDashboard() {
@@ -24,7 +24,13 @@ export default function KioskAdminDashboard() {
   // Modal states
   const [showApartmentModal, setShowApartmentModal] = useState(false);
   const [showTenantModal, setShowTenantModal] = useState(false);
+  const [showAddRentModal, setShowAddRentModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [selectedTenant, setSelectedTenant] = useState(null);
+
+  // Search & Filter
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('all');
 
   const token = localStorage.getItem('kiosk_token');
 
@@ -72,44 +78,76 @@ export default function KioskAdminDashboard() {
     return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
   };
 
+  const getInitials = (name) => {
+    return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??';
+  };
+
+  // Filter payments
+  const filteredPayments = payments.filter(p => {
+    const matchesSearch = !searchTerm || 
+      p.tenant_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.kwitantie_nummer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.apartment_number?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    if (selectedMonth === 'all') return matchesSearch;
+    
+    const paymentDate = new Date(p.created_at);
+    const [year, month] = selectedMonth.split('-');
+    return matchesSearch && 
+      paymentDate.getFullYear() === parseInt(year) && 
+      paymentDate.getMonth() === parseInt(month) - 1;
+  });
+
+  const totalFiltered = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#f97316]" />
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
       </div>
     );
   }
 
+  const TABS = [
+    { id: 'dashboard', label: 'Dashboard', icon: Building2 },
+    { id: 'tenants', label: 'Huurders', icon: Users },
+    { id: 'apartments', label: 'Appartementen', icon: Home },
+    { id: 'payments', label: 'Kwitanties', icon: Receipt },
+    { id: 'settings', label: 'Instellingen', icon: Settings },
+    { id: 'power', label: 'Stroombrekers', icon: Zap },
+    { id: 'subscription', label: 'Abonnement', icon: Crown },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
+    <div className="min-h-screen bg-slate-50">
       {/* Header */}
-      <header className="bg-white border-b border-[#e2e8f0] py-4 px-8">
+      <header className="bg-white border-b border-slate-200 py-4 px-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/vastgoed')} className="text-[#64748b] hover:text-[#0f172a]">
+            <button onClick={() => navigate('/vastgoed')} className="text-slate-400 hover:text-slate-600">
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#f97316] flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-[#0f172a]">{company?.name}</h1>
-                <p className="text-sm text-[#64748b]">Admin Dashboard</p>
+                <h1 className="text-lg font-bold text-slate-900">{company?.name}</h1>
+                <p className="text-sm text-slate-500">Beheerder</p>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <button
               onClick={copyKioskUrl}
-              className="flex items-center gap-2 px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-sm hover:bg-[#f1f5f9]"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm hover:bg-slate-200 transition"
             >
               {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
               Kopieer Kiosk URL
             </button>
             <button
               onClick={() => navigate(`/vastgoed/${company?.company_id}`)}
-              className="flex items-center gap-2 px-4 py-2 bg-[#f97316] text-white rounded-lg text-sm hover:bg-[#ea580c]"
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 transition"
             >
               <ExternalLink className="w-4 h-4" />
               Open Kiosk
@@ -120,20 +158,15 @@ export default function KioskAdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-8 py-6">
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {[
-            { id: 'dashboard', label: 'Dashboard', icon: Building2 },
-            { id: 'apartments', label: 'Appartementen', icon: Home },
-            { id: 'tenants', label: 'Huurders', icon: Users },
-            { id: 'payments', label: 'Betalingen', icon: CreditCard },
-          ].map(tab => (
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition ${
                 activeTab === tab.id 
-                  ? 'bg-[#f97316] text-white' 
-                  : 'bg-white text-[#64748b] hover:bg-[#f1f5f9]'
+                  ? 'bg-orange-500 text-white' 
+                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -143,166 +176,64 @@ export default function KioskAdminDashboard() {
         </div>
 
         {/* Dashboard Tab */}
-        {activeTab === 'dashboard' && dashboard && (
-          <div className="grid grid-cols-4 gap-4">
-            <StatCard icon={Home} label="Appartementen" value={dashboard.total_apartments} color="blue" />
-            <StatCard icon={Users} label="Actieve Huurders" value={dashboard.total_tenants} color="green" />
-            <StatCard icon={DollarSign} label="Openstaand" value={formatSRD(dashboard.total_outstanding)} color="red" />
-            <StatCard icon={CreditCard} label="Ontvangen (maand)" value={formatSRD(dashboard.total_received_month)} color="orange" />
-          </div>
+        {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} formatSRD={formatSRD} />}
+
+        {/* Tenants Tab */}
+        {activeTab === 'tenants' && (
+          <TenantsTab 
+            tenants={tenants}
+            apartments={apartments}
+            formatSRD={formatSRD}
+            getInitials={getInitials}
+            onAddTenant={() => { setEditingItem(null); setShowTenantModal(true); }}
+            onEditTenant={(t) => { setEditingItem(t); setShowTenantModal(true); }}
+            onAddRent={(t) => { setSelectedTenant(t); setShowAddRentModal(true); }}
+            onRefresh={loadData}
+            token={token}
+          />
         )}
 
         {/* Apartments Tab */}
         {activeTab === 'apartments' && (
-          <div className="bg-white rounded-xl border border-[#e2e8f0]">
-            <div className="p-4 border-b border-[#e2e8f0] flex justify-between items-center">
-              <h2 className="font-semibold text-[#0f172a]">Appartementen ({apartments.length})</h2>
-              <button
-                onClick={() => { setEditingItem(null); setShowApartmentModal(true); }}
-                className="flex items-center gap-2 px-4 py-2 bg-[#f97316] text-white rounded-lg text-sm hover:bg-[#ea580c]"
-              >
-                <Plus className="w-4 h-4" />
-                Nieuw Appartement
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-[#f8fafc]">
-                  <tr>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Nummer</th>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Omschrijving</th>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Huur</th>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Status</th>
-                    <th className="text-right p-4 text-sm font-medium text-[#64748b]">Acties</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {apartments.map(apt => (
-                    <tr key={apt.apartment_id} className="border-t border-[#e2e8f0]">
-                      <td className="p-4 font-medium">{apt.number}</td>
-                      <td className="p-4 text-[#64748b]">{apt.description || '-'}</td>
-                      <td className="p-4">{formatSRD(apt.monthly_rent)}</td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          apt.status === 'occupied' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
-                        }`}>
-                          {apt.status === 'occupied' ? 'Bewoond' : 'Beschikbaar'}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <button 
-                          onClick={() => { setEditingItem(apt); setShowApartmentModal(true); }}
-                          className="text-[#64748b] hover:text-[#f97316] p-1"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <ApartmentsTab 
+            apartments={apartments}
+            tenants={tenants}
+            formatSRD={formatSRD}
+            onAdd={() => { setEditingItem(null); setShowApartmentModal(true); }}
+            onEdit={(a) => { setEditingItem(a); setShowApartmentModal(true); }}
+          />
         )}
 
-        {/* Tenants Tab */}
-        {activeTab === 'tenants' && (
-          <div className="bg-white rounded-xl border border-[#e2e8f0]">
-            <div className="p-4 border-b border-[#e2e8f0] flex justify-between items-center">
-              <h2 className="font-semibold text-[#0f172a]">Huurders ({tenants.length})</h2>
-              <button
-                onClick={() => { setEditingItem(null); setShowTenantModal(true); }}
-                className="flex items-center gap-2 px-4 py-2 bg-[#f97316] text-white rounded-lg text-sm hover:bg-[#ea580c]"
-              >
-                <Plus className="w-4 h-4" />
-                Nieuwe Huurder
-              </button>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-[#f8fafc]">
-                  <tr>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Naam</th>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Appt</th>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Code</th>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Openstaand</th>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Status</th>
-                    <th className="text-right p-4 text-sm font-medium text-[#64748b]">Acties</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tenants.map(t => (
-                    <tr key={t.tenant_id} className="border-t border-[#e2e8f0]">
-                      <td className="p-4 font-medium">{t.name}</td>
-                      <td className="p-4">{t.apartment_number}</td>
-                      <td className="p-4 font-mono text-sm">{t.tenant_code}</td>
-                      <td className="p-4">
-                        <span className={t.outstanding_rent > 0 ? 'text-red-600' : 'text-green-600'}>
-                          {formatSRD(t.outstanding_rent)}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          t.status === 'active' ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          {t.status === 'active' ? 'Actief' : 'Inactief'}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <button 
-                          onClick={() => { setEditingItem(t); setShowTenantModal(true); }}
-                          className="text-[#64748b] hover:text-[#f97316] p-1"
-                        >
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* Payments Tab */}
+        {/* Payments/Kwitanties Tab */}
         {activeTab === 'payments' && (
-          <div className="bg-white rounded-xl border border-[#e2e8f0]">
-            <div className="p-4 border-b border-[#e2e8f0]">
-              <h2 className="font-semibold text-[#0f172a]">Betalingsgeschiedenis ({payments.length})</h2>
-            </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-[#f8fafc]">
-                  <tr>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Datum</th>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Kwitantie</th>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Huurder</th>
-                    <th className="text-left p-4 text-sm font-medium text-[#64748b]">Type</th>
-                    <th className="text-right p-4 text-sm font-medium text-[#64748b]">Bedrag</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map(p => (
-                    <tr key={p.payment_id} className="border-t border-[#e2e8f0]">
-                      <td className="p-4 text-sm">
-                        {new Date(p.created_at).toLocaleDateString('nl-NL')}
-                      </td>
-                      <td className="p-4 font-mono text-sm">{p.kwitantie_nummer}</td>
-                      <td className="p-4">{p.tenant_name}</td>
-                      <td className="p-4 capitalize">{p.payment_type.replace('_', ' ')}</td>
-                      <td className="p-4 text-right font-medium text-green-600">
-                        {formatSRD(p.amount)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <PaymentsTab 
+            payments={filteredPayments}
+            totalFiltered={totalFiltered}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            selectedMonth={selectedMonth}
+            setSelectedMonth={setSelectedMonth}
+            formatSRD={formatSRD}
+          />
+        )}
+
+        {/* Settings Tab */}
+        {activeTab === 'settings' && (
+          <SettingsTab company={company} token={token} onRefresh={loadData} />
+        )}
+
+        {/* Power/Stroombrekers Tab */}
+        {activeTab === 'power' && (
+          <PowerTab apartments={apartments} tenants={tenants} token={token} onRefresh={loadData} />
+        )}
+
+        {/* Subscription Tab */}
+        {activeTab === 'subscription' && (
+          <SubscriptionTab company={company} />
         )}
       </div>
 
-      {/* Apartment Modal */}
+      {/* Modals */}
       {showApartmentModal && (
         <ApartmentModal
           apartment={editingItem}
@@ -312,7 +243,6 @@ export default function KioskAdminDashboard() {
         />
       )}
 
-      {/* Tenant Modal */}
       {showTenantModal && (
         <TenantModal
           tenant={editingItem}
@@ -322,47 +252,629 @@ export default function KioskAdminDashboard() {
           token={token}
         />
       )}
+
+      {showAddRentModal && selectedTenant && (
+        <AddRentModal
+          tenant={selectedTenant}
+          onClose={() => { setShowAddRentModal(false); setSelectedTenant(null); }}
+          onSave={() => { setShowAddRentModal(false); setSelectedTenant(null); loadData(); }}
+          token={token}
+        />
+      )}
     </div>
   );
 }
 
-// Stat Card Component
-function StatCard({ icon: Icon, label, value, color }) {
+// ============== DASHBOARD TAB ==============
+function DashboardTab({ dashboard, formatSRD }) {
+  if (!dashboard) return null;
+
+  const stats = [
+    { icon: Home, label: 'Appartementen', value: dashboard.total_apartments, color: 'blue' },
+    { icon: Users, label: 'Actieve Huurders', value: dashboard.total_tenants, color: 'green' },
+    { icon: DollarSign, label: 'Openstaande Huur', value: formatSRD(dashboard.total_outstanding), color: 'red' },
+    { icon: FileText, label: 'Open Servicekosten', value: formatSRD(dashboard.total_service_costs), color: 'orange' },
+    { icon: AlertTriangle, label: 'Open Boetes', value: formatSRD(dashboard.total_fines), color: 'purple' },
+    { icon: CreditCard, label: 'Ontvangen (maand)', value: formatSRD(dashboard.total_received_month), color: 'emerald' },
+  ];
+
   const colors = {
     blue: 'bg-blue-50 text-blue-600',
     green: 'bg-green-50 text-green-600',
     red: 'bg-red-50 text-red-600',
-    orange: 'bg-orange-50 text-orange-600'
+    orange: 'bg-orange-50 text-orange-600',
+    purple: 'bg-purple-50 text-purple-600',
+    emerald: 'bg-emerald-50 text-emerald-600'
   };
-  
+
   return (
-    <div className="bg-white rounded-xl border border-[#e2e8f0] p-6">
-      <div className={`w-12 h-12 rounded-lg ${colors[color]} flex items-center justify-center mb-4`}>
-        <Icon className="w-6 h-6" />
-      </div>
-      <p className="text-sm text-[#64748b] mb-1">{label}</p>
-      <p className="text-2xl font-bold text-[#0f172a]">{value}</p>
+    <div className="grid grid-cols-3 gap-4">
+      {stats.map((stat, i) => (
+        <div key={i} className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className={`w-12 h-12 rounded-lg ${colors[stat.color]} flex items-center justify-center mb-4`}>
+            <stat.icon className="w-6 h-6" />
+          </div>
+          <p className="text-sm text-slate-500 mb-1">{stat.label}</p>
+          <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+        </div>
+      ))}
     </div>
   );
 }
 
-// Apartment Modal
+// ============== TENANTS TAB ==============
+function TenantsTab({ tenants, apartments, formatSRD, getInitials, onAddTenant, onEditTenant, onAddRent, onRefresh, token }) {
+  const activeTenants = tenants.filter(t => t.status === 'active');
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold text-slate-900">Huurders ({activeTenants.length})</h2>
+        <button
+          onClick={onAddTenant}
+          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+        >
+          <Plus className="w-4 h-4" />
+          Nieuwe Huurder
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        {activeTenants.map(tenant => {
+          const total = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0);
+          const hasArrears = (tenant.outstanding_rent || 0) > (tenant.monthly_rent || 0);
+          const currentMonth = new Date().toLocaleDateString('nl-NL', { month: 'short' });
+
+          return (
+            <div key={tenant.tenant_id} className="bg-white rounded-xl border border-slate-200 p-5">
+              <div className="flex items-start justify-between mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-slate-900 text-white flex items-center justify-center text-lg font-bold">
+                    {getInitials(tenant.name)}
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 text-lg">{tenant.name}</h3>
+                    <p className="text-slate-500">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
+                  </div>
+                </div>
+                {hasArrears && (
+                  <span className="px-3 py-1 bg-red-100 text-red-600 rounded-full text-xs font-semibold">
+                    Achterstand
+                  </span>
+                )}
+              </div>
+
+              {/* Financial Grid */}
+              <div className="grid grid-cols-5 gap-2 mb-4 text-center">
+                <div className="bg-slate-50 rounded-lg p-2">
+                  <p className="text-xs text-slate-400 uppercase">Maand</p>
+                  <p className="font-semibold text-slate-900">{currentMonth}</p>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-2">
+                  <p className="text-xs text-slate-400 uppercase">Huur</p>
+                  <p className={`font-semibold ${(tenant.outstanding_rent || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {formatSRD(tenant.outstanding_rent).replace('SRD ', '')}
+                  </p>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-2">
+                  <p className="text-xs text-slate-400 uppercase">Service</p>
+                  <p className={`font-semibold ${(tenant.service_costs || 0) > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                    {formatSRD(tenant.service_costs).replace('SRD ', '')}
+                  </p>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-2">
+                  <p className="text-xs text-slate-400 uppercase">Boetes</p>
+                  <p className={`font-semibold ${(tenant.fines || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                    {formatSRD(tenant.fines).replace('SRD ', '')}
+                  </p>
+                </div>
+                <div className="bg-orange-50 rounded-lg p-2">
+                  <p className="text-xs text-orange-600 uppercase">Totaal</p>
+                  <p className="font-bold text-orange-600">{formatSRD(total).replace('SRD ', '')}</p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onAddRent(tenant)}
+                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+                >
+                  <Plus className="w-4 h-4" />
+                  Maandhuur
+                </button>
+                <button
+                  onClick={() => onEditTenant(tenant)}
+                  className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ============== APARTMENTS TAB ==============
+function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit }) {
+  return (
+    <div className="bg-white rounded-xl border border-slate-200">
+      <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+        <h2 className="font-semibold text-slate-900">Appartementen ({apartments.length})</h2>
+        <button
+          onClick={onAdd}
+          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+        >
+          <Plus className="w-4 h-4" />
+          Nieuw Appartement
+        </button>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Nummer</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Omschrijving</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Huur</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Status</th>
+              <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
+            </tr>
+          </thead>
+          <tbody>
+            {apartments.map(apt => {
+              const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
+              return (
+                <tr key={apt.apartment_id} className="border-t border-slate-100">
+                  <td className="p-4 font-bold text-slate-900">{apt.number}</td>
+                  <td className="p-4 text-slate-500">{apt.description || '-'}</td>
+                  <td className="p-4">{tenant?.name || <span className="text-slate-400">-</span>}</td>
+                  <td className="p-4">{formatSRD(apt.monthly_rent)}</td>
+                  <td className="p-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                      apt.status === 'occupied' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                    }`}>
+                      {apt.status === 'occupied' ? 'Bewoond' : 'Beschikbaar'}
+                    </span>
+                  </td>
+                  <td className="p-4 text-right">
+                    <button onClick={() => onEdit(apt)} className="text-slate-400 hover:text-orange-500 p-1">
+                      <Pencil className="w-4 h-4" />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ============== PAYMENTS/KWITANTIES TAB ==============
+function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD }) {
+  const months = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    months.push({
+      value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      label: d.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' })
+    });
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200">
+      {/* Filters */}
+      <div className="p-4 border-b border-slate-200 flex items-center gap-4">
+        <div className="flex-1 relative">
+          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Zoek op naam, appartement, kwitantienummer..."
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-orange-500"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-slate-400" />
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-orange-500"
+          >
+            <option value="all">Alle maanden</option>
+            {months.map(m => (
+              <option key={m.value} value={m.value}>{m.label}</option>
+            ))}
+          </select>
+        </div>
+        <div className="text-right px-4 py-2 bg-orange-50 rounded-lg">
+          <p className="text-xs text-orange-600">{payments.length} betalingen</p>
+          <p className="text-lg font-bold text-orange-600">{formatSRD(totalFiltered)}</p>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        {payments.length === 0 ? (
+          <div className="p-12 text-center text-slate-400">
+            Geen betalingen gevonden
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="text-left p-4 text-sm font-medium text-slate-500">Datum</th>
+                <th className="text-left p-4 text-sm font-medium text-slate-500">Kwitantie</th>
+                <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
+                <th className="text-left p-4 text-sm font-medium text-slate-500">Appt</th>
+                <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
+                <th className="text-right p-4 text-sm font-medium text-slate-500">Bedrag</th>
+              </tr>
+            </thead>
+            <tbody>
+              {payments.map(p => (
+                <tr key={p.payment_id} className="border-t border-slate-100 hover:bg-slate-50">
+                  <td className="p-4 text-sm text-slate-600">
+                    {new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </td>
+                  <td className="p-4 font-mono text-sm text-orange-600">{p.kwitantie_nummer}</td>
+                  <td className="p-4 font-medium text-slate-900">{p.tenant_name}</td>
+                  <td className="p-4 text-slate-600">{p.apartment_number}</td>
+                  <td className="p-4">
+                    <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs capitalize">
+                      {p.payment_type?.replace('_', ' ')}
+                    </span>
+                  </td>
+                  <td className="p-4 text-right font-bold text-green-600">{formatSRD(p.amount)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============== SETTINGS TAB ==============
+function SettingsTab({ company, token, onRefresh }) {
+  const [billingDay, setBillingDay] = useState(company?.billing_day || 1);
+  const [fineAmount, setFineAmount] = useState(company?.fine_amount || 0);
+  const [stampName, setStampName] = useState(company?.stamp_company_name || '');
+  const [stampAddress, setStampAddress] = useState(company?.stamp_address || '');
+  const [stampPhone, setStampPhone] = useState(company?.stamp_phone || '');
+  const [stampWhatsapp, setStampWhatsapp] = useState(company?.stamp_whatsapp || '');
+  const [saving, setSaving] = useState(false);
+  const [applyingFines, setApplyingFines] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/auth/settings`, {
+        billing_day: billingDay,
+        fine_amount: fineAmount,
+        stamp_company_name: stampName,
+        stamp_address: stampAddress,
+        stamp_phone: stampPhone,
+        stamp_whatsapp: stampWhatsapp
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      onRefresh();
+    } catch (err) {
+      alert('Opslaan mislukt');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleApplyFines = async () => {
+    if (!confirm('Weet u zeker dat u boetes wilt toepassen op alle huurders met achterstand?')) return;
+    setApplyingFines(true);
+    try {
+      await axios.post(`${API}/admin/apply-fines`, {}, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      });
+      onRefresh();
+      alert('Boetes zijn toegepast');
+    } catch (err) {
+      alert('Boetes toepassen mislukt');
+    } finally {
+      setApplyingFines(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Facturering & Boetes */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <Settings className="w-5 h-5 text-slate-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Facturering & Boetes</h3>
+            <p className="text-sm text-slate-500">Configureer wanneer huur vervalt en het boetebedrag</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Huur vervalt op dag
+            </label>
+            <p className="text-xs text-slate-400 mb-2">De dag van de maand waarop de huur betaald moet zijn (1-28)</p>
+            <input
+              type="number"
+              min="1"
+              max="28"
+              value={billingDay}
+              onChange={(e) => setBillingDay(parseInt(e.target.value))}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Boetebedrag (SRD)
+            </label>
+            <p className="text-xs text-slate-400 mb-2">Vast bedrag dat eenmalig wordt toegevoegd bij te late betaling</p>
+            <input
+              type="number"
+              value={fineAmount}
+              onChange={(e) => setFineAmount(parseFloat(e.target.value))}
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-4 mt-6">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50"
+          >
+            <Save className="w-4 h-4" />
+            {saving ? 'Opslaan...' : 'Opslaan'}
+          </button>
+          <button
+            onClick={handleApplyFines}
+            disabled={applyingFines}
+            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 disabled:opacity-50"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            {applyingFines ? 'Toepassen...' : 'Boetes nu toepassen'}
+          </button>
+        </div>
+      </div>
+
+      {/* Bedrijfsstempel */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+            <FileText className="w-5 h-5 text-orange-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Bedrijfsstempel</h3>
+            <p className="text-sm text-slate-500">Configureer de stempel die op kwitanties wordt getoond</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Bedrijfsnaam</label>
+              <input
+                type="text"
+                value={stampName}
+                onChange={(e) => setStampName(e.target.value)}
+                placeholder="bijv. Stichting Perraysarbha"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Adres</label>
+              <input
+                type="text"
+                value={stampAddress}
+                onChange={(e) => setStampAddress(e.target.value)}
+                placeholder="bijv. Kewalbasingweg nr.7"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Telefoon</label>
+              <input
+                type="text"
+                value={stampPhone}
+                onChange={(e) => setStampPhone(e.target.value)}
+                placeholder="bijv. 8624141"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">WhatsApp</label>
+              <input
+                type="text"
+                value={stampWhatsapp}
+                onChange={(e) => setStampWhatsapp(e.target.value)}
+                placeholder="bijv. +597 8624141"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
+              />
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Voorbeeld</label>
+            <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
+              {stampName || stampAddress || stampPhone ? (
+                <div className="border border-slate-300 rounded-lg p-4 text-center">
+                  <Home className="w-8 h-8 mx-auto mb-2 text-slate-700" />
+                  {stampName && <p className="font-bold text-slate-900">{stampName}</p>}
+                  {stampAddress && <p className="text-sm text-slate-500">{stampAddress}</p>}
+                  {stampPhone && <p className="text-sm text-slate-500">Tel: {stampPhone}</p>}
+                  {stampWhatsapp && <p className="text-sm text-slate-500">WhatsApp: {stampWhatsapp}</p>}
+                </div>
+              ) : (
+                <p className="text-center text-slate-400">Vul de velden in om een voorbeeld te zien</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50 mt-6"
+        >
+          <Save className="w-4 h-4" />
+          {saving ? 'Opslaan...' : 'Opslaan'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ============== POWER/STROOMBREKERS TAB ==============
+function PowerTab({ apartments, tenants, token, onRefresh }) {
+  const [updating, setUpdating] = useState(null);
+
+  const togglePower = async (tenantId, currentStatus) => {
+    setUpdating(tenantId);
+    try {
+      await axios.put(`${API}/admin/tenants/${tenantId}`, {
+        power_status: currentStatus === 'on' ? 'off' : 'on'
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      onRefresh();
+    } catch (err) {
+      alert('Status wijzigen mislukt');
+    } finally {
+      setUpdating(null);
+    }
+  };
+
+  const activeTenants = tenants.filter(t => t.status === 'active');
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200">
+      <div className="p-4 border-b border-slate-200">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
+            <Zap className="w-5 h-5 text-yellow-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Stroombrekers</h3>
+            <p className="text-sm text-slate-500">Beheer de stroomstatus per appartement</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 grid grid-cols-3 gap-4">
+        {activeTenants.map(tenant => {
+          const apt = apartments.find(a => a.apartment_id === tenant.apartment_id);
+          const powerOn = tenant.power_status !== 'off';
+          const hasDebt = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0) > 0;
+
+          return (
+            <div key={tenant.tenant_id} className={`rounded-xl border-2 p-4 ${
+              powerOn ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
+            }`}>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="font-bold text-slate-900">Appt. {apt?.number}</p>
+                  <p className="text-sm text-slate-500">{tenant.name}</p>
+                </div>
+                <div className={`w-4 h-4 rounded-full ${powerOn ? 'bg-green-500' : 'bg-red-500'}`} />
+              </div>
+              
+              {hasDebt && (
+                <p className="text-xs text-red-600 mb-3">
+                  <AlertTriangle className="w-3 h-3 inline mr-1" />
+                  Openstaand saldo
+                </p>
+              )}
+
+              <button
+                onClick={() => togglePower(tenant.tenant_id, powerOn ? 'on' : 'off')}
+                disabled={updating === tenant.tenant_id}
+                className={`w-full py-2 rounded-lg font-medium text-sm transition ${
+                  powerOn 
+                    ? 'bg-red-500 text-white hover:bg-red-600' 
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                } disabled:opacity-50`}
+              >
+                {updating === tenant.tenant_id ? 'Bezig...' : powerOn ? 'Stroom UIT' : 'Stroom AAN'}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ============== SUBSCRIPTION TAB ==============
+function SubscriptionTab({ company }) {
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
+      <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-6">
+        <Crown className="w-10 h-10 text-orange-500" />
+      </div>
+      <h2 className="text-2xl font-bold text-slate-900 mb-2">Gratis Plan</h2>
+      <p className="text-slate-500 mb-8">U gebruikt momenteel het gratis plan van Appartement Kiosk</p>
+      
+      <div className="bg-slate-50 rounded-xl p-6 max-w-md mx-auto mb-8">
+        <h4 className="font-semibold text-slate-900 mb-4">Inbegrepen:</h4>
+        <ul className="text-left space-y-2 text-slate-600">
+          <li className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-green-500" />
+            Onbeperkt appartementen
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-green-500" />
+            Onbeperkt huurders
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-green-500" />
+            Kiosk voor betalingen
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-green-500" />
+            Kwitanties genereren
+          </li>
+          <li className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-green-500" />
+            Stroombrekers beheer
+          </li>
+        </ul>
+      </div>
+
+      <p className="text-sm text-slate-400">
+        Bedrijfs-ID: {company?.company_id}
+      </p>
+    </div>
+  );
+}
+
+// ============== MODALS ==============
+
 function ApartmentModal({ apartment, onClose, onSave, token }) {
   const [number, setNumber] = useState(apartment?.number || '');
   const [description, setDescription] = useState(apartment?.description || '');
   const [monthlyRent, setMonthlyRent] = useState(apartment?.monthly_rent || 0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const data = { number, description, monthly_rent: parseFloat(monthlyRent) };
-      
       if (apartment) {
         await axios.put(`${API}/admin/apartments/${apartment.apartment_id}`, data, { headers });
       } else {
@@ -370,7 +882,7 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
       }
       onSave();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Opslaan mislukt');
+      alert('Opslaan mislukt');
     } finally {
       setLoading(false);
     }
@@ -380,49 +892,25 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl w-full max-w-md p-6">
         <h3 className="text-xl font-bold mb-4">{apartment ? 'Bewerk' : 'Nieuw'} Appartement</h3>
-        
-        {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
-        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Nummer *</label>
-            <input
-              type="text"
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              required
-              className="w-full px-4 py-3 border rounded-xl"
-              placeholder="A1"
-            />
+            <input type="text" value={number} onChange={(e) => setNumber(e.target.value)} required
+              className="w-full px-4 py-3 border rounded-xl" placeholder="A1" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Omschrijving</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl"
-              placeholder="2 slaapkamers, balkon"
-            />
+            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl" placeholder="2 slaapkamers" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Maandhuur (SRD)</label>
-            <input
-              type="number"
-              value={monthlyRent}
-              onChange={(e) => setMonthlyRent(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl"
-            />
+            <input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl" />
           </div>
           <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">
-              Annuleren
-            </button>
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="flex-1 py-3 bg-[#f97316] text-white rounded-xl disabled:opacity-50"
-            >
+            <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">Annuleren</button>
+            <button type="submit" disabled={loading} className="flex-1 py-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">
               {loading ? 'Opslaan...' : 'Opslaan'}
             </button>
           </div>
@@ -432,7 +920,6 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
   );
 }
 
-// Tenant Modal
 function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   const [name, setName] = useState(tenant?.name || '');
   const [apartmentId, setApartmentId] = useState(tenant?.apartment_id || '');
@@ -441,24 +928,16 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   const [monthlyRent, setMonthlyRent] = useState(tenant?.monthly_rent || 0);
   const [depositRequired, setDepositRequired] = useState(tenant?.deposit_required || 0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+
+  const availableApartments = apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
-    
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const data = { 
-        name, 
-        apartment_id: apartmentId,
-        email: email || null,
-        telefoon: telefoon || null,
-        monthly_rent: parseFloat(monthlyRent),
-        deposit_required: parseFloat(depositRequired)
-      };
-      
+      const data = { name, apartment_id: apartmentId, email: email || null, telefoon: telefoon || null,
+        monthly_rent: parseFloat(monthlyRent), deposit_required: parseFloat(depositRequired) };
       if (tenant) {
         await axios.put(`${API}/admin/tenants/${tenant.tenant_id}`, data, { headers });
       } else {
@@ -466,92 +945,136 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
       }
       onSave();
     } catch (err) {
-      setError(err.response?.data?.detail || 'Opslaan mislukt');
+      alert('Opslaan mislukt');
     } finally {
       setLoading(false);
     }
   };
 
-  const availableApartments = apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id);
-
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-2xl w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-bold mb-4">{tenant ? 'Bewerk' : 'Nieuwe'} Huurder</h3>
-        
-        {error && <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-lg text-sm">{error}</div>}
-        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">Naam *</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full px-4 py-3 border rounded-xl"
-            />
+            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
+              className="w-full px-4 py-3 border rounded-xl" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Appartement *</label>
-            <select
-              value={apartmentId}
-              onChange={(e) => setApartmentId(e.target.value)}
-              required
-              className="w-full px-4 py-3 border rounded-xl"
-            >
+            <select value={apartmentId} onChange={(e) => setApartmentId(e.target.value)} required
+              className="w-full px-4 py-3 border rounded-xl">
               <option value="">Selecteer...</option>
-              {availableApartments.map(a => (
-                <option key={a.apartment_id} value={a.apartment_id}>{a.number}</option>
-              ))}
+              {availableApartments.map(a => <option key={a.apartment_id} value={a.apartment_id}>{a.number}</option>)}
             </select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">E-mail</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl"
-            />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Telefoon</label>
-            <input
-              type="tel"
-              value={telefoon}
-              onChange={(e) => setTelefoon(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl"
-            />
+            <input type="tel" value={telefoon} onChange={(e) => setTelefoon(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Maandhuur (SRD)</label>
-            <input
-              type="number"
-              value={monthlyRent}
-              onChange={(e) => setMonthlyRent(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl"
-            />
+            <input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Borgsom vereist (SRD)</label>
+            <label className="block text-sm font-medium mb-1">Borgsom (SRD)</label>
+            <input type="number" value={depositRequired} onChange={(e) => setDepositRequired(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl" />
+          </div>
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">Annuleren</button>
+            <button type="submit" disabled={loading} className="flex-1 py-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">
+              {loading ? 'Opslaan...' : 'Opslaan'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+function AddRentModal({ tenant, onClose, onSave, token }) {
+  const [amount, setAmount] = useState(tenant?.monthly_rent || 0);
+  const [type, setType] = useState('rent');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const update = {};
+      if (type === 'rent') {
+        update.outstanding_rent = (tenant.outstanding_rent || 0) + parseFloat(amount);
+      } else if (type === 'service') {
+        update.service_costs = (tenant.service_costs || 0) + parseFloat(amount);
+      } else if (type === 'fine') {
+        update.fines = (tenant.fines || 0) + parseFloat(amount);
+      }
+      
+      await axios.put(`${API}/admin/tenants/${tenant.tenant_id}`, update, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      onSave();
+    } catch (err) {
+      alert('Toevoegen mislukt');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-2xl w-full max-w-md p-6">
+        <h3 className="text-xl font-bold mb-2">Bedrag Toevoegen</h3>
+        <p className="text-slate-500 mb-4">{tenant.name} - Appt. {tenant.apartment_number}</p>
+        
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Type</label>
+            <div className="flex gap-2">
+              {[
+                { id: 'rent', label: 'Maandhuur' },
+                { id: 'service', label: 'Servicekosten' },
+                { id: 'fine', label: 'Boete' },
+              ].map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setType(t.id)}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${
+                    type === t.id 
+                      ? 'bg-orange-500 text-white' 
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Bedrag (SRD)</label>
             <input
               type="number"
-              value={depositRequired}
-              onChange={(e) => setDepositRequired(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              className="w-full px-4 py-3 border rounded-xl text-2xl font-bold text-center"
             />
           </div>
           <div className="flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">
               Annuleren
             </button>
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="flex-1 py-3 bg-[#f97316] text-white rounded-xl disabled:opacity-50"
-            >
-              {loading ? 'Opslaan...' : 'Opslaan'}
+            <button type="submit" disabled={loading} className="flex-1 py-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">
+              {loading ? 'Toevoegen...' : 'Toevoegen'}
             </button>
           </div>
         </form>

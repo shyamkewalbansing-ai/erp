@@ -685,3 +685,50 @@ async def get_payment(payment_id: str, company: dict = Depends(get_current_compa
         "kwitantie_nummer": payment.get("kwitantie_nummer"),
         "created_at": payment["created_at"]
     }
+
+
+
+# ============== APPLY FINES ==============
+
+@router.post("/admin/apply-fines")
+async def apply_fines(company: dict = Depends(get_current_company)):
+    """Apply fines to all tenants with outstanding rent past the billing day"""
+    company_id = company["company_id"]
+    billing_day = company.get("billing_day", 1)
+    fine_amount = company.get("fine_amount", 0)
+    
+    if fine_amount <= 0:
+        raise HTTPException(status_code=400, detail="Boetebedrag is niet ingesteld")
+    
+    now = datetime.now(timezone.utc)
+    current_day = now.day
+    
+    # Only apply if we're past the billing day
+    if current_day <= billing_day:
+        raise HTTPException(status_code=400, detail=f"Boetes kunnen pas na dag {billing_day} worden toegepast")
+    
+    # Find all tenants with outstanding rent
+    tenants = await db.kiosk_tenants.find({
+        "company_id": company_id,
+        "status": "active",
+        "outstanding_rent": {"$gt": 0}
+    }).to_list(1000)
+    
+    updated_count = 0
+    for tenant in tenants:
+        # Add fine to existing fines
+        current_fines = tenant.get("fines", 0)
+        await db.kiosk_tenants.update_one(
+            {"tenant_id": tenant["tenant_id"]},
+            {"$set": {
+                "fines": current_fines + fine_amount,
+                "updated_at": now
+            }}
+        )
+        updated_count += 1
+    
+    return {
+        "message": f"Boetes toegepast op {updated_count} huurders",
+        "amount_per_tenant": fine_amount,
+        "tenants_affected": updated_count
+    }
