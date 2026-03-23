@@ -1,14 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { CheckCircle, Printer, Home, Check } from 'lucide-react';
+import { CheckCircle, Printer, Home, Check, AlertCircle } from 'lucide-react';
 import ReceiptTicket from './ReceiptTicket';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
+const PRINT_SERVER_URL = 'http://localhost:5555';
 
 export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   const [countdown, setCountdown] = useState(12);
   const [stampData, setStampData] = useState(null);
-  const [printStatus, setPrintStatus] = useState('waiting'); // waiting, printing, done
+  const [printStatus, setPrintStatus] = useState('waiting'); // waiting, printing, done, error
+  const [printMethod, setPrintMethod] = useState(null); // 'server' or 'browser'
   const timerRef = useRef(null);
   const hasPrintedRef = useRef(false);
 
@@ -53,31 +55,123 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
 
   const kwNr = payment.kwitantie_nummer || payment.receipt_number || '';
 
-  // Trigger automatic print - works with Chrome --kiosk-printing flag
-  const triggerAutoPrint = () => {
+  // Get the receipt HTML for print server
+  const getReceiptHTML = () => {
+    const printContent = document.querySelector('.print-receipt-content');
+    if (!printContent) return null;
+    
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Kwitantie ${kwNr}</title>
+  <style>
+    @page { size: A4; margin: 0; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  </style>
+</head>
+<body>
+  ${printContent.innerHTML}
+</body>
+</html>`;
+  };
+
+  // Try to print via local print server first, fallback to browser print
+  const triggerAutoPrint = async () => {
     setPrintStatus('printing');
     
-    // Direct window.print() - Chrome kiosk mode will handle it silently
-    // The --kiosk-printing flag makes this print without dialog
+    // First, try the local print server
+    try {
+      const healthCheck = await fetch(`${PRINT_SERVER_URL}/health`, {
+        method: 'GET',
+        mode: 'cors',
+      }).catch(() => null);
+      
+      if (healthCheck && healthCheck.ok) {
+        // Print server is running - use it
+        const html = getReceiptHTML();
+        if (html) {
+          const response = await fetch(`${PRINT_SERVER_URL}/print`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              html: html,
+              receipt_number: kwNr
+            })
+          });
+          
+          if (response.ok) {
+            setPrintMethod('server');
+            setPrintStatus('done');
+            setCountdown(10);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.log('Print server niet beschikbaar, gebruik browser print');
+    }
+    
+    // Fallback: use browser print (works with --kiosk-printing flag)
+    setPrintMethod('browser');
     setTimeout(() => {
       window.print();
       setPrintStatus('done');
-      
-      // Reset countdown after print
       setCountdown(10);
     }, 200);
   };
 
   // Manual reprint function
-  const handleManualPrint = () => {
+  const handleManualPrint = async () => {
     setPrintStatus('printing');
     clearInterval(timerRef.current);
     
+    // Try print server first
+    try {
+      const healthCheck = await fetch(`${PRINT_SERVER_URL}/health`, {
+        method: 'GET',
+        mode: 'cors',
+      }).catch(() => null);
+      
+      if (healthCheck && healthCheck.ok) {
+        const html = getReceiptHTML();
+        if (html) {
+          const response = await fetch(`${PRINT_SERVER_URL}/print`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              html: html,
+              receipt_number: kwNr
+            })
+          });
+          
+          if (response.ok) {
+            setPrintMethod('server');
+            setPrintStatus('done');
+            restartCountdown(8);
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      // Fall through to browser print
+    }
+    
+    // Fallback to browser print
+    setPrintMethod('browser');
     window.print();
-    
     setPrintStatus('done');
-    setCountdown(8);
-    
+    restartCountdown(8);
+  };
+
+  const restartCountdown = (seconds) => {
+    setCountdown(seconds);
     timerRef.current = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -118,9 +212,20 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
               </p>
             )}
             {printStatus === 'done' && (
-              <p className="text-xl text-green-200 flex items-center justify-center gap-2">
-                <Check className="w-6 h-6" />
-                Kwitantie afgedrukt!
+              <div>
+                <p className="text-xl text-green-200 flex items-center justify-center gap-2">
+                  <Check className="w-6 h-6" />
+                  Kwitantie afgedrukt!
+                </p>
+                {printMethod === 'server' && (
+                  <p className="text-sm text-green-300 mt-1">via Print Server</p>
+                )}
+              </div>
+            )}
+            {printStatus === 'error' && (
+              <p className="text-xl text-red-200 flex items-center justify-center gap-2">
+                <AlertCircle className="w-6 h-6" />
+                Printen mislukt - probeer opnieuw
               </p>
             )}
           </div>
@@ -161,7 +266,12 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
         </div>
       </div>
 
-      {/* Print version - only visible when printing */}
+      {/* Hidden print content for print server */}
+      <div className="print-receipt-content hidden">
+        <ReceiptTicket payment={payment} tenant={tenant} preview={false} stampData={stampData} />
+      </div>
+
+      {/* Print version - only visible when browser printing */}
       <div className="hidden print:block print:w-full">
         <ReceiptTicket payment={payment} tenant={tenant} preview={false} stampData={stampData} />
       </div>

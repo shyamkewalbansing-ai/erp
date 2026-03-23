@@ -1,125 +1,118 @@
 # Kiosk Setup Handleiding - Automatisch Printen
 
-## BELANGRIJK: Automatisch Printen Instellen
+## 2 MANIEREN OM AUTOMATISCH TE PRINTEN
 
-Om kwitanties **100% automatisch af te drukken zonder klikken**, moet Chrome in kiosk mode draaien.
+### Methode 1: Chrome Kiosk Mode (voor dedicated kiosk PC)
+- Chrome start in volledig scherm
+- Print automatisch naar standaard printer
+- Geen print dialoog
 
----
-
-## Snelle Start
-
-### Windows
-1. Download `START_KIOSK.bat` van uw kiosk URL
-2. Open het bestand met Kladblok
-3. Pas de URL aan: `SET KIOSK_URL=https://uw-domein.com/vastgoed/uw-company-id`
-4. Sla op en dubbelklik om te starten
-
-### Linux
-1. Download `start_kiosk.sh`
-2. Pas de URL aan in het bestand
-3. Maak uitvoerbaar: `chmod +x start_kiosk.sh`
-4. Start: `./start_kiosk.sh`
+### Methode 2: Print Server (voor normale browser)
+- Werkt in elke browser (Chrome, Edge, Firefox)
+- Kleine applicatie draait op achtergrond
+- Print automatisch naar standaard printer
 
 ---
 
-## Handmatige Start
+# METHODE 1: CHROME KIOSK MODE
 
-### Windows (CMD of PowerShell)
-```batch
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing "https://UW-DOMEIN/vastgoed/COMPANY-ID"
+## Windows - Snelkoppeling maken
+
+1. **Rechtermuisknop** op bureaublad → **Nieuw** → **Snelkoppeling**
+2. Plak dit (pas URL aan!):
 ```
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing "https://UW-DOMEIN/vastgoed/UW-COMPANY-ID"
+```
+3. Noem het: **Appartement Kiosk**
+4. **SLUIT ALLE CHROME VENSTERS** eerst!
+5. Dubbelklik op de snelkoppeling
 
-### Linux
+## Linux
 ```bash
-chromium-browser --kiosk --kiosk-printing "https://UW-DOMEIN/vastgoed/COMPANY-ID"
+chromium-browser --kiosk --kiosk-printing "https://UW-DOMEIN/vastgoed/UW-COMPANY-ID"
 ```
 
-### macOS
-```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --kiosk --kiosk-printing "https://UW-DOMEIN/vastgoed/COMPANY-ID"
-```
+## Afsluiten
+- **Alt+F4** of **Ctrl+Shift+Q**
 
 ---
 
-## Alle Chrome Flags Uitgelegd
+# METHODE 2: PRINT SERVER (Normale Browser)
 
-| Flag | Functie |
-|------|---------|
-| `--kiosk` | Volledig scherm, geen adresbalk |
-| `--kiosk-printing` | **AUTOMATISCH PRINTEN zonder dialoog** |
-| `--disable-pinch` | Geen zoom met vingers (touchscreen) |
-| `--noerrdialogs` | Geen foutmeldingen tonen |
-| `--disable-infobars` | Geen info balken |
-| `--disable-session-crashed-bubble` | Geen herstel popup |
+## Stap 1: Installeer Python
+1. Download van: https://www.python.org/downloads/
+2. **BELANGRIJK**: Vink aan "Add Python to PATH"
+3. Installeer
+
+## Stap 2: Download bestanden
+Download deze bestanden naar uw computer:
+- `print_server.py`
+- `START_PRINT_SERVER.bat`
+
+## Stap 3: Start de Print Server
+1. Dubbelklik op `START_PRINT_SERVER.bat`
+2. Laat het venster open (server moet draaien)
+3. U ziet: "Server draait op http://localhost:5555"
+
+## Stap 4: Open de Kiosk
+1. Open Chrome of Edge
+2. Ga naar uw kiosk URL
+3. Kwitanties worden nu automatisch afgedrukt!
+
+## Print Server stoppen
+- Druk **Ctrl+C** in het server venster
+- Of sluit het venster
 
 ---
 
-## Printer Instellen
+# PRINTER INSTELLEN
 
-### Stap 1: Stel uw bonprinter in als STANDAARD printer
+## Windows
+1. **Instellingen** → **Bluetooth en apparaten** → **Printers**
+2. Klik op uw printer
+3. Klik **Als standaard instellen**
 
-**Windows:**
-1. Instellingen → Apparaten → Printers
-2. Klik op uw printer → Beheren → Als standaard instellen
-
-**Linux:**
+## Linux
 ```bash
 lpstat -p -d          # Lijst printers
 lpoptions -d PRINTER  # Stel standaard in
 ```
 
-### Stap 2: Test de printer
-Print een testpagina om te controleren dat de printer werkt.
+---
+
+# AUTOSTART BIJ OPSTARTEN
+
+## Print Server autostart (Windows)
+1. Druk **Win+R**, typ: `shell:startup`
+2. Kopieer `START_PRINT_SERVER.bat` naar deze map
+
+## Kiosk autostart (Windows)
+1. Druk **Win+R**, typ: `shell:startup`
+2. Kopieer de Kiosk snelkoppeling naar deze map
 
 ---
 
-## Autostart bij Opstarten
+# PROBLEMEN OPLOSSEN
 
-### Windows
-1. Druk `Win+R`, typ `shell:startup`
-2. Maak snelkoppeling naar `START_KIOSK.bat`
+## Print server werkt niet
+1. Controleer of Python is geïnstalleerd: `python --version`
+2. Installeer packages: `pip install flask flask-cors`
+3. Controleer of poort 5555 vrij is
 
-### Linux (Raspberry Pi)
-Maak bestand: `~/.config/autostart/kiosk.desktop`
-```ini
-[Desktop Entry]
-Type=Application
-Name=Appartement Kiosk
-Exec=/pad/naar/start_kiosk.sh
-X-GNOME-Autostart-enabled=true
-```
+## Kiosk mode print niet automatisch
+1. Sluit ALLE Chrome vensters
+2. Start de kiosk snelkoppeling opnieuw
+3. Controleer of `--kiosk-printing` in het commando staat
 
----
-
-## Afsluiten
-
-- **Windows**: `Ctrl+Shift+Q` of `Alt+F4`
-- **Linux**: `Alt+F4`
-- **Nood**: `Ctrl+Alt+Delete` → Taakbeheer
+## Printer print niet
+1. Test printer met andere software
+2. Controleer of printer standaard is ingesteld
+3. Controleer papier en inkt
 
 ---
 
-## Problemen Oplossen
-
-### Print dialoog verschijnt nog steeds
-- Controleer of `--kiosk-printing` correct is toegevoegd
-- Sluit ALLE Chrome vensters en start opnieuw
-- Controleer of standaard printer is ingesteld
-
-### Printer print niet
-- Test printer met andere software
-- Controleer papier en inkt
-- Controleer USB/netwerk verbinding
-
-### Kiosk start niet op
-- Controleer Chrome pad in script
-- Controleer internet verbinding
-- Controleer of URL correct is
-
----
-
-## Aanbevolen Hardware
+# AANBEVOLEN HARDWARE
 
 - **Bonprinter**: Epson TM-T20III, Star TSP143III
-- **Touchscreen**: 15-22 inch capacitief
+- **Touchscreen**: 15-22 inch
 - **Computer**: Mini PC of Raspberry Pi 4
