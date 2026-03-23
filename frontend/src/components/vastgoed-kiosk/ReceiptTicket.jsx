@@ -17,6 +17,27 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
   const dateStr = date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'long', year: 'numeric' });
   const timeStr = date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
   const kwNr = payment.kwitantie_nummer || payment.receipt_number || '';
+  
+  // Company name from stamp data or fallback
+  const companyName = stampData?.stamp_company_name || 'Vastgoed Beheer';
+  const companyInitials = companyName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+  
+  // Rent month display - format nicely
+  const formatRentMonth = (monthStr) => {
+    if (!monthStr) return null;
+    // Handle YYYY-MM format
+    if (monthStr.includes('-')) {
+      const [year, month] = monthStr.split('-');
+      const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
+                          'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
+      const monthIndex = parseInt(month, 10) - 1;
+      if (monthIndex >= 0 && monthIndex < 12) {
+        return `${monthNames[monthIndex]} ${year}`;
+      }
+    }
+    return monthStr;
+  };
+  const rentMonth = formatRentMonth(payment.rent_month);
 
   // Calculate remaining balance
   const remainingRent = payment.remaining_rent ?? (tenant?.outstanding_rent || 0);
@@ -47,10 +68,10 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
         <div style={{ position: 'relative', zIndex: 10, padding: `${10 * s}mm ${15 * s}mm`, color: 'white' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: `${4 * s}mm`, marginBottom: `${5 * s}mm` }}>
             <div style={{ width: `${14 * s}mm`, height: `${14 * s}mm`, background: '#f97316', borderRadius: `${3 * s}mm`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: `${6 * s}mm`, fontWeight: 'bold', color: 'white' }}>AK</span>
+              <span style={{ fontSize: `${6 * s}mm`, fontWeight: 'bold', color: 'white' }}>{companyInitials}</span>
             </div>
             <div>
-              <p style={{ fontSize: `${5 * s}mm`, fontWeight: 'bold', margin: 0, letterSpacing: '0.05em' }}>APPARTEMENT KIOSK</p>
+              <p style={{ fontSize: `${5 * s}mm`, fontWeight: 'bold', margin: 0, letterSpacing: '0.05em' }}>{companyName.toUpperCase()}</p>
               <p style={{ fontSize: `${2.8 * s}mm`, color: '#94a3b8', margin: 0 }}>Huurbetalingssysteem · Suriname</p>
             </div>
           </div>
@@ -94,6 +115,11 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
             <tr>
               <td style={{ padding: `${4 * s}mm ${3 * s}mm`, fontSize: `${4 * s}mm`, color: '#0f172a', fontWeight: '500' }}>
                 {TYPE_LABELS[payment.payment_type] || payment.payment_type}
+                {rentMonth && (payment.payment_type === 'rent' || payment.payment_type === 'partial_rent') && (
+                  <span style={{ display: 'block', fontSize: `${3 * s}mm`, color: '#f97316', fontWeight: '600', marginTop: `${1 * s}mm` }}>
+                    Maand: {rentMonth}
+                  </span>
+                )}
               </td>
               <td style={{ padding: `${4 * s}mm ${3 * s}mm`, textAlign: 'center', fontSize: `${3.5 * s}mm`, color: '#64748b' }}>Contant</td>
               <td style={{ padding: `${4 * s}mm ${3 * s}mm`, textAlign: 'right', fontSize: `${4 * s}mm`, color: '#0f172a', fontWeight: '600' }}>{formatSRD(payment.amount)}</td>

@@ -1,8 +1,25 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Banknote, Wallet, Droplets, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Banknote, Wallet, Droplets, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
 
 function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+// Generate month options for selection
+function getMonthOptions() {
+  const months = [];
+  const now = new Date();
+  const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
+                      'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
+  
+  // Current month and 3 previous months
+  for (let i = 0; i < 4; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+    months.push({ value, label });
+  }
+  return months;
 }
 
 const PAYMENT_TYPES = [
@@ -15,6 +32,12 @@ const PAYMENT_TYPES = [
 export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
   const [selectedType, setSelectedType] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+  
+  const monthOptions = getMonthOptions();
 
   if (!tenant) return null;
 
@@ -35,13 +58,15 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
   const handleConfirm = () => {
     let amount = 0;
     let description = '';
+    const selectedMonthLabel = monthOptions.find(m => m.value === selectedMonth)?.label || selectedMonth;
+    
     if (selectedType === 'rent') {
       amount = tenant.outstanding_rent;
-      description = 'Volledige huurbetaling';
+      description = `Volledige huurbetaling - ${selectedMonthLabel}`;
     } else if (selectedType === 'partial_rent') {
       amount = parseFloat(customAmount);
       if (isNaN(amount) || amount <= 0 || amount > tenant.outstanding_rent) return;
-      description = 'Gedeeltelijke huurbetaling';
+      description = `Gedeeltelijke huurbetaling - ${selectedMonthLabel}`;
     } else if (selectedType === 'service_costs') {
       amount = tenant.service_costs;
       description = 'Servicekosten betaling';
@@ -49,12 +74,13 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
       amount = tenant.fines;
       description = 'Boetes betaling';
     }
+    
     onConfirm({ 
       payment_type: selectedType, 
       amount, 
       description, 
       payment_method: 'cash', 
-      rent_month: new Date().toISOString().slice(0, 7) 
+      rent_month: (selectedType === 'rent' || selectedType === 'partial_rent') ? selectedMonth : null 
     });
   };
 
@@ -135,6 +161,31 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
               );
             })}
           </div>
+
+          {/* Month Selection - shown when rent or partial_rent selected */}
+          {(selectedType === 'rent' || selectedType === 'partial_rent') && (
+            <div className="bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <Calendar className="w-6 h-6 text-orange-500" />
+                <h4 className="text-xl font-bold text-slate-900">Voor welke maand?</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {monthOptions.map((month) => (
+                  <button
+                    key={month.value}
+                    onClick={() => setSelectedMonth(month.value)}
+                    className={`p-4 rounded-xl text-left transition ${
+                      selectedMonth === month.value
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-slate-50 text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    <p className="font-bold">{month.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Confirm Button */}
           <button

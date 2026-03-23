@@ -15,6 +15,21 @@ const TYPE_LABELS = {
   fines: 'Boetes',
 };
 
+// Format month string to readable Dutch
+function formatRentMonth(monthStr) {
+  if (!monthStr) return null;
+  if (monthStr.includes('-')) {
+    const [year, month] = monthStr.split('-');
+    const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
+                        'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
+    const monthIndex = parseInt(month, 10) - 1;
+    if (monthIndex >= 0 && monthIndex < 12) {
+      return `${monthNames[monthIndex]} ${year}`;
+    }
+  }
+  return monthStr;
+}
+
 export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuccess, companyId }) {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
@@ -88,6 +103,12 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
                 <span className="text-slate-500">Type</span>
                 <span className="text-slate-900">{TYPE_LABELS[paymentData.payment_type]}</span>
               </div>
+              {paymentData.rent_month && (paymentData.payment_type === 'rent' || paymentData.payment_type === 'partial_rent') && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Maand</span>
+                  <span className="text-orange-500 font-bold">{formatRentMonth(paymentData.rent_month)}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-500">Bedrag</span>
                 <span className="text-slate-900 font-bold">{formatSRD(paymentData.amount)}</span>

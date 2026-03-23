@@ -54,12 +54,31 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
 - `GET /api/kiosk/admin/dashboard`
 - `POST /api/kiosk/admin/apply-fines`
 
+### Updates 23 maart 2026
+
+#### Kwitantie Verbeteringen ✅
+1. **Maand weergave toegevoegd** - Bij gedeeltelijke/volledige huurbetalingen wordt nu de betalingsmaand duidelijk getoond:
+   - Nieuwe "Voor welke maand?" sectie in betalingsflow
+   - Maand keuze uit huidige maand + 3 voorgaande maanden
+   - Maand getoond in bevestigingsscherm
+   - Maand op kwitantie onder "Huurbetaling" (bijv. "Maand: December 2025")
+   
+2. **Dynamische bedrijfsnaam** - De kwitantie toont nu de echte bedrijfsnaam van de gebruiker:
+   - Header toont bedrijfsnaam in plaats van "APPARTEMENT KIOSK SURINAME"
+   - Initialen worden automatisch gegenereerd uit bedrijfsnaam
+   - Bedrijfsstempel rechtsonder met bedrijfsnaam
+
+#### Gewijzigde Bestanden
+- `frontend/src/components/vastgoed-kiosk/ReceiptTicket.jsx` - Dynamische bedrijfsnaam, maand formatting
+- `frontend/src/components/vastgoed-kiosk/KioskPaymentSelect.jsx` - Maand selectie UI toegevoegd
+- `frontend/src/components/vastgoed-kiosk/KioskPaymentConfirm.jsx` - Maand weergave in bevestiging
+
 ### Toekomstige Taken (Backlog)
-- P2: Tuya API integratie voor echte stroombrekers
-- P3: SMS/WhatsApp herinneringen
-- P3: CSV/PDF export van betalingsrapporten
-- P3: Multi-building support per bedrijf
-- P3: E-mail notificaties voor verlopen abonnementen
+- P1: Tuya API integratie voor echte stroombrekers
+- P2: SMS/WhatsApp herinneringen
+- P2: CSV/PDF export van betalingsrapporten
+- P2: Multi-building support per bedrijf
+- P2: E-mail notificaties voor verlopen abonnementen
 
 ---
 
