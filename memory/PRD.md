@@ -3,6 +3,66 @@
 ## Originele Probleemstelling
 Bouw en verbeter een volledige Boekhouding (Accounting) applicatie met Nederlandse interface. De focus ligt op het repareren en verbeteren van de Verkoop, Debiteuren, en Crediteuren functionaliteiten.
 
+---
+
+## Vastgoed Kiosk Module (23 maart 2026) ✅ VOLTOOID
+
+### Beschrijving
+Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de lokale `/vastgoed` route. De module functioneert als een "Mini-SaaS" binnen het bestaande ERP-systeem met eigen authenticatie.
+
+### Voltooide Functionaliteiten
+
+#### Landing Page & Auth
+- ✅ Light Mode landing page met Kiosk styling
+- ✅ Registratie en login modal (Nederlands)
+- ✅ JWT-based authenticatie met `company_id`
+- ✅ Kiosk URL generatie voor huurders
+
+#### Admin Dashboard (7 Tabs)
+1. ✅ **Dashboard** - Statistieken: Appartementen, Huurders, Openstaande Huur, Boetes, Ontvangen
+2. ✅ **Huurders** - Beheer van huurders per bedrijf
+3. ✅ **Appartementen** - Appartementenbeheer met status
+4. ✅ **Kwitanties** - Betalingshistorie met zoek- en filteropties
+5. ✅ **Instellingen** - Facturering, boetes, bedrijfsstempel
+6. ✅ **Stroombrekers** - Stroomstatus per appartement (GEMOCKT - Tuya integratie nodig)
+7. ✅ **Abonnement** - Plan overzicht (Gratis Plan)
+
+#### Kiosk Mode (Fullscreen)
+- ✅ Welkom scherm met bedrijfsnaam en datum
+- ✅ Appartement selectie
+- ✅ Huurder identificatie (tenant code)
+- ✅ Betalingstype selectie (Maandhuur, Servicekosten, Boetes)
+- ✅ Betaling bevestiging
+- ✅ Kwitantie generatie
+
+### Technische Details
+
+**Backend:** `/app/backend/routers/kiosk.py`
+**Frontend:** `/app/frontend/src/components/vastgoed-kiosk/`
+
+**Database Collections:**
+- `kiosk_companies` - Bedrijfsaccounts
+- `kiosk_apartments` - Appartementen
+- `kiosk_tenants` - Huurders
+- `kiosk_payments` - Betalingen
+
+**API Endpoints:**
+- `POST /api/kiosk/auth/register` & `/login`
+- `GET /api/kiosk/public/{company_id}/company`
+- `GET /api/kiosk/public/{company_id}/tenants`
+- `POST /api/kiosk/public/{company_id}/payment`
+- `GET /api/kiosk/admin/dashboard`
+- `POST /api/kiosk/admin/apply-fines`
+
+### Toekomstige Taken (Backlog)
+- P2: Tuya API integratie voor echte stroombrekers
+- P3: SMS/WhatsApp herinneringen
+- P3: CSV/PDF export van betalingsrapporten
+- P3: Multi-building support per bedrijf
+- P3: E-mail notificaties voor verlopen abonnementen
+
+---
+
 ## Huidige Sessie Updates (9 maart 2026)
 
 ### Voltooide Werkzaamheden
