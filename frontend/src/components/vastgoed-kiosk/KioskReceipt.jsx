@@ -6,13 +6,11 @@ import axios from 'axios';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
-  const [countdown, setCountdown] = useState(15);
+  const [countdown, setCountdown] = useState(12);
   const [stampData, setStampData] = useState(null);
-  const [isPrinting, setIsPrinting] = useState(false);
   const [printStatus, setPrintStatus] = useState('waiting'); // waiting, printing, done
-  const [autoPrinted, setAutoPrinted] = useState(false);
   const timerRef = useRef(null);
-  const printFrameRef = useRef(null);
+  const hasPrintedRef = useRef(false);
 
   useEffect(() => {
     if (companyId) {
@@ -22,18 +20,18 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
     }
   }, [companyId]);
 
-  // Auto-print on mount - Silent printing for kiosk mode
+  // Auto-print immediately when component mounts and payment is ready
   useEffect(() => {
-    if (payment && stampData !== null && !autoPrinted) {
-      // Wait a moment for the receipt to render, then auto-print
-      const autoPrintTimer = setTimeout(() => {
-        handleSilentPrint();
-        setAutoPrinted(true);
-      }, 1000);
-      return () => clearTimeout(autoPrintTimer);
+    if (payment && !hasPrintedRef.current) {
+      hasPrintedRef.current = true;
+      // Small delay to ensure receipt is rendered
+      setTimeout(() => {
+        triggerAutoPrint();
+      }, 800);
     }
-  }, [payment, stampData, autoPrinted]);
+  }, [payment]);
 
+  // Countdown timer
   useEffect(() => {
     if (!payment) return;
 
@@ -55,131 +53,47 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
 
   const kwNr = payment.kwitantie_nummer || payment.receipt_number || '';
 
-  // Silent print function - works with Chrome --kiosk-printing flag
-  const handleSilentPrint = () => {
-    setIsPrinting(true);
+  // Trigger automatic print - works with Chrome --kiosk-printing flag
+  const triggerAutoPrint = () => {
     setPrintStatus('printing');
-    clearInterval(timerRef.current);
-
-    const printContent = document.getElementById('receipt-print-content');
-    if (!printContent) {
-      setIsPrinting(false);
-      setPrintStatus('done');
-      return;
-    }
-
-    // Create a new window for printing (works better with kiosk mode)
-    const printWindow = window.open('', '_blank', 'width=794,height=1123');
     
-    if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Kwitantie ${kwNr}</title>
-            <style>
-              @page {
-                size: A4;
-                margin: 0;
-              }
-              * {
-                margin: 0;
-                padding: 0;
-                box-sizing: border-box;
-              }
-              body {
-                font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-                color-adjust: exact !important;
-              }
-              @media print {
-                body {
-                  -webkit-print-color-adjust: exact !important;
-                  print-color-adjust: exact !important;
-                }
-              }
-            </style>
-          </head>
-          <body>
-            ${printContent.innerHTML}
-            <script>
-              // Auto-print and close - Chrome kiosk mode will print silently
-              window.onload = function() {
-                window.print();
-                // Close window after print (will work in kiosk mode)
-                setTimeout(function() { window.close(); }, 500);
-              };
-            </script>
-          </body>
-        </html>
-      `);
-      printWindow.document.close();
-    } else {
-      // Fallback: use iframe method
-      let printFrame = printFrameRef.current;
-      if (!printFrame) {
-        printFrame = document.createElement('iframe');
-        printFrame.style.position = 'absolute';
-        printFrame.style.top = '-9999px';
-        printFrame.style.left = '-9999px';
-        printFrame.style.width = '210mm';
-        printFrame.style.height = '297mm';
-        document.body.appendChild(printFrame);
-        printFrameRef.current = printFrame;
-      }
-
-      const doc = printFrame.contentWindow.document;
-      doc.open();
-      doc.write(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Kwitantie ${kwNr}</title>
-            <style>
-              @page { size: A4; margin: 0; }
-              * { margin: 0; padding: 0; box-sizing: border-box; }
-              body {
-                font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-              }
-            </style>
-          </head>
-          <body>${printContent.innerHTML}</body>
-        </html>
-      `);
-      doc.close();
-
-      printFrame.onload = () => {
-        printFrame.contentWindow.print();
-      };
-    }
-
-    // Mark as done after a short delay
+    // Direct window.print() - Chrome kiosk mode will handle it silently
+    // The --kiosk-printing flag makes this print without dialog
     setTimeout(() => {
-      setIsPrinting(false);
+      window.print();
       setPrintStatus('done');
       
-      // Restart countdown
+      // Reset countdown after print
       setCountdown(10);
-      timerRef.current = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(timerRef.current);
-            onDone();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }, 2000);
+    }, 200);
+  };
+
+  // Manual reprint function
+  const handleManualPrint = () => {
+    setPrintStatus('printing');
+    clearInterval(timerRef.current);
+    
+    window.print();
+    
+    setPrintStatus('done');
+    setCountdown(8);
+    
+    timerRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          onDone();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   return (
     <div className="kiosk-fullscreen flex bg-slate-50">
       {/* Left Panel - Success */}
-      <div className="w-1/2 bg-gradient-to-br from-green-500 to-green-600 flex flex-col items-center justify-center p-12 text-white relative overflow-hidden">
+      <div className="w-1/2 bg-gradient-to-br from-green-500 to-green-600 flex flex-col items-center justify-center p-12 text-white relative overflow-hidden print:hidden">
         {/* Decorative circles */}
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-white/10 rounded-full" />
         <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-green-400/30 rounded-full" />
@@ -194,31 +108,30 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
             {printStatus === 'waiting' && (
               <p className="text-xl text-green-200 flex items-center justify-center gap-2">
                 <Printer className="w-6 h-6" />
-                Voorbereiden om te printen...
+                Voorbereiden...
               </p>
             )}
             {printStatus === 'printing' && (
               <p className="text-xl text-yellow-200 flex items-center justify-center gap-2 animate-pulse">
                 <Printer className="w-6 h-6" />
-                Kwitantie wordt geprint...
+                Kwitantie wordt afgedrukt...
               </p>
             )}
             {printStatus === 'done' && (
               <p className="text-xl text-green-200 flex items-center justify-center gap-2">
                 <Check className="w-6 h-6" />
-                Kwitantie geprint!
+                Kwitantie afgedrukt!
               </p>
             )}
           </div>
           
           <div className="flex flex-col gap-4">
             <button
-              onClick={handleSilentPrint}
-              disabled={isPrinting}
-              className="kiosk-btn-xl bg-white text-green-600 hover:bg-green-50 shadow-lg disabled:opacity-50"
+              onClick={handleManualPrint}
+              className="kiosk-btn-xl bg-white text-green-600 hover:bg-green-50 shadow-lg"
             >
               <Printer className="w-8 h-8" />
-              <span>{isPrinting ? 'Bezig met printen...' : 'Kwitantie opnieuw printen'}</span>
+              <span>Opnieuw afdrukken</span>
             </button>
             
             <button
@@ -238,8 +151,8 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
         </div>
       </div>
 
-      {/* Right Panel - Receipt Preview */}
-      <div className="w-1/2 bg-slate-100 flex items-center justify-center p-8 overflow-auto">
+      {/* Right Panel - Receipt Preview (hidden when printing) */}
+      <div className="w-1/2 bg-slate-100 flex items-center justify-center p-8 overflow-auto print:hidden">
         <div className="text-center">
           <p className="text-slate-500 mb-6 text-lg font-medium">Kwitantie voorbeeld</p>
           <div className="bg-white shadow-2xl rounded-lg overflow-hidden border border-slate-200">
@@ -248,8 +161,8 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
         </div>
       </div>
 
-      {/* Hidden print content */}
-      <div id="receipt-print-content" style={{ display: 'none' }}>
+      {/* Print version - only visible when printing */}
+      <div className="hidden print:block print:w-full">
         <ReceiptTicket payment={payment} tenant={tenant} preview={false} stampData={stampData} />
       </div>
     </div>

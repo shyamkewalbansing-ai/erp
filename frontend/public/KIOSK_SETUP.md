@@ -1,102 +1,125 @@
-# Kiosk Setup Handleiding - Silent Printing
+# Kiosk Setup Handleiding - Automatisch Printen
 
-## Chrome/Chromium Kiosk Mode met Automatisch Printen
+## BELANGRIJK: Automatisch Printen Instellen
 
-Om de kwitanties **automatisch te printen zonder print dialoog**, moet Chrome in kiosk mode gestart worden met speciale flags.
-
-### Windows
-
-Maak een snelkoppeling met het volgende commando:
-
-```
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing --disable-pinch --overscroll-history-navigation=0 --disable-features=TranslateUI --noerrdialogs --disable-infobars --disable-session-crashed-bubble --disable-restore-session-state https://UW-DOMEIN.com/vastgoed/UW-COMPANY-ID
-```
-
-### Linux (Raspberry Pi / Ubuntu)
-
-```bash
-chromium-browser --kiosk --kiosk-printing --disable-pinch --overscroll-history-navigation=0 --disable-features=TranslateUI --noerrdialogs --disable-infobars --disable-session-crashed-bubble "https://UW-DOMEIN.com/vastgoed/UW-COMPANY-ID"
-```
-
-### macOS
-
-```bash
-/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --kiosk --kiosk-printing --disable-pinch "https://UW-DOMEIN.com/vastgoed/UW-COMPANY-ID"
-```
+Om kwitanties **100% automatisch af te drukken zonder klikken**, moet Chrome in kiosk mode draaien.
 
 ---
 
-## Belangrijke Chrome Flags
+## Snelle Start
 
-| Flag | Beschrijving |
-|------|-------------|
-| `--kiosk` | Start Chrome in fullscreen kiosk mode |
-| `--kiosk-printing` | **Print automatisch naar standaard printer zonder dialoog** |
-| `--disable-pinch` | Schakelt zoom uit (voor touchscreen) |
-| `--noerrdialogs` | Verbergt error dialogen |
-| `--disable-infobars` | Verbergt info balken |
-| `--disable-session-crashed-bubble` | Verbergt crash herstel meldingen |
+### Windows
+1. Download `START_KIOSK.bat` van uw kiosk URL
+2. Open het bestand met Kladblok
+3. Pas de URL aan: `SET KIOSK_URL=https://uw-domein.com/vastgoed/uw-company-id`
+4. Sla op en dubbelklik om te starten
+
+### Linux
+1. Download `start_kiosk.sh`
+2. Pas de URL aan in het bestand
+3. Maak uitvoerbaar: `chmod +x start_kiosk.sh`
+4. Start: `./start_kiosk.sh`
 
 ---
 
-## Printer Instellen als Standaard
+## Handmatige Start
 
-### Windows
-1. Open **Instellingen** > **Apparaten** > **Printers en scanners**
-2. Klik op uw bonprinter
-3. Klik op **Beheren** > **Als standaard instellen**
+### Windows (CMD of PowerShell)
+```batch
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing "https://UW-DOMEIN/vastgoed/COMPANY-ID"
+```
 
 ### Linux
 ```bash
-# Lijst alle printers
-lpstat -p -d
+chromium-browser --kiosk --kiosk-printing "https://UW-DOMEIN/vastgoed/COMPANY-ID"
+```
 
-# Stel standaard printer in
-lpoptions -d PRINTER_NAAM
+### macOS
+```bash
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --kiosk --kiosk-printing "https://UW-DOMEIN/vastgoed/COMPANY-ID"
 ```
 
 ---
 
-## Aanbevolen Hardware
+## Alle Chrome Flags Uitgelegd
 
-- **Bonprinter**: Epson TM-T20III of Star TSP143III
-- **Touchscreen**: 15-22 inch capacitief touchscreen
-- **Computer**: Mini PC (Intel NUC) of Raspberry Pi 4
+| Flag | Functie |
+|------|---------|
+| `--kiosk` | Volledig scherm, geen adresbalk |
+| `--kiosk-printing` | **AUTOMATISCH PRINTEN zonder dialoog** |
+| `--disable-pinch` | Geen zoom met vingers (touchscreen) |
+| `--noerrdialogs` | Geen foutmeldingen tonen |
+| `--disable-infobars` | Geen info balken |
+| `--disable-session-crashed-bubble` | Geen herstel popup |
 
 ---
 
-## Autostart op Boot (Linux)
+## Printer Instellen
 
+### Stap 1: Stel uw bonprinter in als STANDAARD printer
+
+**Windows:**
+1. Instellingen → Apparaten → Printers
+2. Klik op uw printer → Beheren → Als standaard instellen
+
+**Linux:**
+```bash
+lpstat -p -d          # Lijst printers
+lpoptions -d PRINTER  # Stel standaard in
+```
+
+### Stap 2: Test de printer
+Print een testpagina om te controleren dat de printer werkt.
+
+---
+
+## Autostart bij Opstarten
+
+### Windows
+1. Druk `Win+R`, typ `shell:startup`
+2. Maak snelkoppeling naar `START_KIOSK.bat`
+
+### Linux (Raspberry Pi)
 Maak bestand: `~/.config/autostart/kiosk.desktop`
-
 ```ini
 [Desktop Entry]
 Type=Application
-Name=Kiosk
-Exec=chromium-browser --kiosk --kiosk-printing "https://UW-DOMEIN.com/vastgoed/UW-COMPANY-ID"
+Name=Appartement Kiosk
+Exec=/pad/naar/start_kiosk.sh
 X-GNOME-Autostart-enabled=true
 ```
 
 ---
 
-## Troubleshooting
+## Afsluiten
 
-### Print dialoog verschijnt nog steeds
-- Controleer of `--kiosk-printing` flag correct is toegevoegd
-- Herstart Chrome volledig (alle vensters sluiten)
-- Controleer of de standaard printer correct is ingesteld
-
-### Printer print niet
-- Test de printer met een andere applicatie
-- Controleer printer verbinding (USB/Netwerk)
-- Controleer papier en inkt/lint
-
-### Kiosk sluit niet af
-- Druk `Alt+F4` (Windows) of `Cmd+Q` (Mac)
-- Of gebruik `Ctrl+Alt+Delete` om taakbeheer te openen
+- **Windows**: `Ctrl+Shift+Q` of `Alt+F4`
+- **Linux**: `Alt+F4`
+- **Nood**: `Ctrl+Alt+Delete` → Taakbeheer
 
 ---
 
-## Support
+## Problemen Oplossen
 
-Voor vragen over de kiosk setup, neem contact op met uw systeembeheerder.
+### Print dialoog verschijnt nog steeds
+- Controleer of `--kiosk-printing` correct is toegevoegd
+- Sluit ALLE Chrome vensters en start opnieuw
+- Controleer of standaard printer is ingesteld
+
+### Printer print niet
+- Test printer met andere software
+- Controleer papier en inkt
+- Controleer USB/netwerk verbinding
+
+### Kiosk start niet op
+- Controleer Chrome pad in script
+- Controleer internet verbinding
+- Controleer of URL correct is
+
+---
+
+## Aanbevolen Hardware
+
+- **Bonprinter**: Epson TM-T20III, Star TSP143III
+- **Touchscreen**: 15-22 inch capacitief
+- **Computer**: Mini PC of Raspberry Pi 4
