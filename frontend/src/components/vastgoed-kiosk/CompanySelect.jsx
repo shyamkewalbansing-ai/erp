@@ -100,8 +100,10 @@ export default function KioskLanding() {
           <div className="relative z-10">
             <button 
               onClick={handleLogout}
-              className="text-slate-400 hover:text-slate-600 text-base lg:text-lg"
+              data-testid="kiosk-logout-button"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-slate-500 hover:text-red-600 hover:bg-red-50 text-base lg:text-lg transition"
             >
+              <LogIn className="w-4 h-4 lg:w-5 lg:h-5 rotate-180" />
               Uitloggen
             </button>
           </div>
@@ -114,7 +116,7 @@ export default function KioskLanding() {
               <Building2 className="w-12 h-12 lg:w-16 lg:h-16 text-orange-500" />
             </div>
             <h3 className="text-2xl lg:text-4xl font-bold text-slate-900 mb-3 lg:mb-4">Uw Kiosk URL</h3>
-            <p className="text-slate-500 text-lg lg:text-xl mb-6 lg:mb-8">Deel deze URL met uw huurders</p>
+            <p className="text-slate-500 text-lg lg:text-xl mb-6 lg:mb-8">Plaats deze URL op uw kiosk apparaat</p>
             
             <div className="bg-white rounded-xl lg:rounded-2xl p-4 lg:p-6 border-2 border-slate-200 shadow-sm">
               <code className="text-orange-600 text-sm lg:text-lg font-mono break-all">
@@ -126,6 +128,7 @@ export default function KioskLanding() {
               onClick={() => {
                 navigator.clipboard.writeText(`${window.location.origin}/vastgoed/${company.company_id}`);
               }}
+              data-testid="copy-kiosk-url"
               className="mt-4 lg:mt-6 px-6 lg:px-8 py-3 lg:py-4 bg-white hover:bg-slate-50 text-slate-700 border-2 border-slate-200 rounded-xl text-base lg:text-lg font-medium transition shadow-sm"
             >
               Kopieer URL
@@ -161,11 +164,11 @@ export default function KioskLanding() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col justify-center relative z-10 py-4 lg:py-0">
           <h2 className="text-3xl lg:text-5xl font-bold text-slate-900 mb-3 lg:mb-6 leading-tight">
-            Huur Betalings<br />
+            Appartement<br />
             <span className="text-orange-500">Kiosk</span>
           </h2>
           <p className="text-base lg:text-xl text-slate-500 mb-6 lg:mb-10 leading-relaxed max-w-md hidden lg:block">
-            Zelfbedieningskiosk voor uw huurders. Beheer meerdere panden vanuit één platform.
+            Beheer uw appartementen en ontvang huurbetalingen vanuit één platform.
           </p>
         </div>
       </div>
@@ -304,7 +307,10 @@ function KioskAuthForm({ onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeField, setActiveField] = useState('email'); // Default to email
-  const [showKeyboard, setShowKeyboard] = useState(false);
+  const [showKeyboard, setShowKeyboard] = useState(() => {
+    // Auto-detect touchscreen
+    return typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0;
+  });
 
   const handleKeyPress = (key) => {
     switch(activeField) {
@@ -380,8 +386,10 @@ function KioskAuthForm({ onSuccess }) {
 
   return (
     <div className="flex-1 flex flex-col overflow-auto" data-testid="kiosk-auth-form">
-      {/* Form area - centered with max width */}
-      <div className="w-full max-w-lg mx-auto px-4 lg:px-6 pt-4 lg:pt-6">
+      {/* Form area - vertically centered when no keyboard, shifts up when keyboard open */}
+      <div className={`w-full max-w-lg mx-auto px-4 lg:px-6 transition-all duration-300 ease-in-out ${
+        showKeyboard ? 'pt-3' : 'flex-1 flex flex-col justify-center'
+      }`}>
         {/* Title */}
         <div className="text-center mb-4">
           <h2 className="text-2xl font-bold text-slate-900">
@@ -553,7 +561,7 @@ function KioskAuthForm({ onSuccess }) {
 
       {/* Virtual Keyboard - FULL WIDTH of right panel, outside max-w-lg */}
       {showKeyboard && (
-        <div className="flex-1 flex flex-col justify-end px-4 lg:px-6 pb-3" data-testid="virtual-keyboard-container">
+        <div className="px-4 lg:px-6 pb-3" data-testid="virtual-keyboard-container">
           <VirtualKeyboard 
             onKeyPress={handleKeyPress}
             onBackspace={handleBackspace}

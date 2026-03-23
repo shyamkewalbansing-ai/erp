@@ -35,7 +35,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
             Welkom
           </h2>
           <p className="text-lg lg:text-2xl text-slate-500 mb-6 lg:mb-12 leading-relaxed max-w-md">
-            Betaal uw huur, servicekosten en meer via deze zelfbedieningskiosk.
+            Beheer huurbetalingen, servicekosten en meer via deze zelfbedieningskiosk.
           </p>
           
           <button
@@ -67,7 +67,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
             {companyName || 'Huurbetalingen'}
           </h3>
           <p className="text-lg lg:text-2xl text-slate-500 mb-6 lg:mb-12">
-            Snel, eenvoudig en veilig uw huur betalen
+            Snel, eenvoudig en veilig huurbetalingen ontvangen
           </p>
 
           <p className="text-xs lg:text-sm font-semibold text-slate-400 uppercase tracking-widest mb-4 lg:mb-6">
