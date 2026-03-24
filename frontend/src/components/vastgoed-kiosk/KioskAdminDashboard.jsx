@@ -299,34 +299,28 @@ function DashboardTab({ dashboard, payments, formatSRD }) {
   if (!dashboard) return null;
 
   const stats = [
-    { icon: Home, label: 'Appartementen', value: dashboard.total_apartments, accent: 'from-blue-500/20 to-blue-500/5', border: 'border-blue-200/50', iconBg: 'bg-blue-500/15 backdrop-blur', iconColor: 'text-blue-600' },
-    { icon: Users, label: 'Actieve Huurders', value: dashboard.total_tenants, accent: 'from-purple-500/20 to-purple-500/5', border: 'border-purple-200/50', iconBg: 'bg-purple-500/15 backdrop-blur', iconColor: 'text-purple-600' },
-    { icon: DollarSign, label: 'Openstaande Huur', value: formatSRD(dashboard.total_outstanding), accent: 'from-red-500/20 to-red-500/5', border: 'border-red-200/50', iconBg: 'bg-red-500/15 backdrop-blur', iconColor: 'text-red-500' },
-    { icon: FileText, label: 'Open Servicekosten', value: formatSRD(dashboard.total_service_costs), accent: 'from-orange-500/20 to-orange-500/5', border: 'border-orange-200/50', iconBg: 'bg-orange-500/15 backdrop-blur', iconColor: 'text-orange-600' },
-    { icon: AlertTriangle, label: 'Open Boetes', value: formatSRD(dashboard.total_fines), accent: 'from-yellow-500/20 to-yellow-500/5', border: 'border-yellow-200/50', iconBg: 'bg-yellow-500/15 backdrop-blur', iconColor: 'text-yellow-600' },
-    { icon: CreditCard, label: 'Ontvangen (maand)', value: formatSRD(dashboard.total_received_month), accent: 'from-green-500/20 to-green-500/5', border: 'border-green-200/50', iconBg: 'bg-green-500/15 backdrop-blur', iconColor: 'text-green-600' },
+    { icon: Home, label: 'Appartementen', value: dashboard.total_apartments },
+    { icon: Users, label: 'Actieve Huurders', value: dashboard.total_tenants },
+    { icon: DollarSign, label: 'Openstaande Huur', value: formatSRD(dashboard.total_outstanding) },
+    { icon: FileText, label: 'Open Servicekosten', value: formatSRD(dashboard.total_service_costs) },
+    { icon: AlertTriangle, label: 'Open Boetes', value: formatSRD(dashboard.total_fines) },
+    { icon: CreditCard, label: 'Ontvangen (maand)', value: formatSRD(dashboard.total_received_month) },
   ];
 
   const recentPayments = (payments || []).slice(0, 6);
 
   return (
     <div>
-      {/* Stat Cards - Glasmorfisme */}
+      {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {stats.map((stat, i) => (
-          <div
-            key={i}
-            className={`relative overflow-hidden rounded-2xl border ${stat.border} bg-white/70 backdrop-blur-xl p-5 transition-all duration-300 hover:shadow-lg hover:scale-[1.02] hover:bg-white/90`}
-          >
-            <div className={`absolute inset-0 bg-gradient-to-br ${stat.accent} pointer-events-none`} />
-            <div className="relative flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-2xl ${stat.iconBg} flex items-center justify-center flex-shrink-0`}>
-                <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
-              </div>
-              <div>
-                <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{stat.label}</p>
-                <p className="text-xl font-black text-slate-900 mt-0.5">{stat.value}</p>
-              </div>
+          <div key={i} className="bg-white rounded-2xl border border-orange-100 p-5 flex items-center gap-4 hover:shadow-lg hover:border-orange-200 transition-all">
+            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
+              <stat.icon className="w-5 h-5 text-orange-500" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">{stat.label}</p>
+              <p className="text-xl font-black text-slate-900 mt-0.5">{stat.value}</p>
             </div>
           </div>
         ))}
@@ -335,16 +329,16 @@ function DashboardTab({ dashboard, payments, formatSRD }) {
       {/* Recente betalingen */}
       <h3 className="text-lg font-bold text-slate-900 mb-4">Recente betalingen</h3>
       {recentPayments.length === 0 ? (
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-200/50 p-8 text-center text-slate-400">
+        <div className="bg-white rounded-2xl border border-orange-100 p-8 text-center text-slate-400">
           Nog geen betalingen
         </div>
       ) : (
-        <div className="bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-200/50 overflow-hidden">
+        <div className="bg-white rounded-2xl border border-orange-100 overflow-hidden">
           {recentPayments.map((p, i) => (
-            <div key={p.payment_id || i} className={`px-5 py-4 flex items-center justify-between hover:bg-white/80 transition ${i !== 0 ? 'border-t border-slate-100' : ''}`}>
+            <div key={p.payment_id || i} className={`px-5 py-4 flex items-center justify-between hover:bg-orange-50/40 transition ${i !== 0 ? 'border-t border-orange-50' : ''}`}>
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-slate-500/10 backdrop-blur flex items-center justify-center flex-shrink-0">
-                  <CreditCard className="w-5 h-5 text-slate-500" />
+                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
+                  <CreditCard className="w-5 h-5 text-orange-400" />
                 </div>
                 <div>
                   <p className="font-bold text-slate-900">{p.tenant_name}</p>
@@ -361,7 +355,7 @@ function DashboardTab({ dashboard, payments, formatSRD }) {
                 </div>
               </div>
               <div className="text-right">
-                <p className="font-bold text-green-600">{formatSRD(p.amount)}</p>
+                <p className="font-bold text-orange-600">{formatSRD(p.amount)}</p>
                 <p className="text-xs text-slate-400 font-mono">{p.kwitantie_nummer}</p>
               </div>
             </div>
