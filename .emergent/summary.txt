@@ -1,30 +1,43 @@
 <analysis>**original_problem_statement**: 
-The user wants to migrate a standalone React/Python KIOSK application (for real estate/apartment rent payments) into their existing full-stack ERP system. It must run completely locally under the route . It requires a True Kiosk Mode, Admin Dashboard, isolated authentication, silent/automatic receipt printing, and robust touchscreen support (including on-screen keyboards and PIN-based quick access).
+The user wants to migrate a standalone React/Python KIOSK application (for real estate/apartment rent payments) into their existing full-stack ERP system. It requires a True Kiosk Mode, Admin Dashboard, isolated authentication, silent/automatic receipt printing, robust touchscreen support, and subdomain routing ().
 
-**User's preferred language**: Dutch (INSTRUCT next agent to respond in Dutch ONLY)
+**User's preferred language**: Dutch (You MUST respond in Dutch ONLY)
 
 **what currently exists?** 
-A fully functional, locally integrated Vastgoed Kiosk module. The backend handles isolated JWT auth, apartments, tenants, payments, and a new 4-digit PIN authentication system. The frontend includes a redesigned landing page with an integrated virtual keyboard, a PIN-entry screen, a fullscreen Admin Dashboard, and an interactive Kiosk payment flow. Automatic receipt printing is configured with precise  scaling and dynamic company data.
+A fully functional, locally integrated Vastgoed Kiosk module running on a subdomain (). The backend handles JWT auth, unique PIN validation, apartments, tenants, and payments. The frontend features a touchscreen-friendly login page (with both email/password and unique PIN options), a secure Kiosk flow (blocked if no PIN is set), scrollable pages, receipt printing, and a newly modernized Admin Dashboard. The system automatically handles subdomain routing, rendering the kiosk at the root path when accessed via the  subdomain.
 
 **Last working item**: 
-    - Last item agent was working: Adjusting the Virtual Keyboard on the  landing page. The user requested the on-screen keyboard to stretch wider to fill the available space in the right panel. Additionally, the user reported that physical keyboard typing was disabled; the agent just removed the  attributes from the input fields to fix this.
-    - Status: IN PROGRESS / TESTING PENDING
-    - Agent Testing Done: N (Code was modified via  but no screenshots were taken yet to verify the fix).
-    - Which testing method agent to use? Screenshot tool (to visually verify the keyboard width and confirm physical/virtual typing works).
+    - Last item agent was working: Redesigning the Tenant cards in the Admin Dashboard (). The user provided 4 screenshots of a specific layout and requested the cards be styled exactly like the images, using an orange color scheme to match the rest of the Dashboard. The agent analyzed the images but has not yet written the code.
+    - Status: IN PROGRESS
+    - Agent Testing Done: N
+    - Which testing method agent to use? Screenshot tool (to visually verify that the new card layout strictly matches the user's provided screenshots).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:  
-  - Issue 1: Virtual Keyboard Width and Physical Input - P0
-     - Attempted fixes: Agent removed  from the email and password inputs and added  to the keyboard container in .
-     - Next debug checklist: Check . Verify that typing with a physical keyboard works. Verify visually (via screenshot) that the virtual keyboard fills the empty space at the bottom of the right panel without looking cramped.
-     - Why fix this issue and what will be achieved with the fix? Ensures the kiosk is usable on both pure touchscreens and traditional laptop/desktop setups.
-     - Status: TESTING PENDING
-     - Is recurring issue? Y (Keyboard layout has been adjusted 3 times based on visual feedback).
-     - Should Test frontend/backend/both after fix? Frontend
+  Issue 1: Match Tenant Card Design to User Screenshots - P0
+  Issue 2: Modernize Appartementen en Kwitanties tabs - P2
+
+  Issues Detail:
+  - Issue 1: 
+     - Attempted fixes: Agent used  to understand the provided UI screenshots but hasn't implemented the React/Tailwind code yet.
+     - Next debug checklist: Check  (specifically the  and tenant card rendering). Implement the exact layout, typography, and orange accents seen in the user's screenshots.
+     - Why fix this issue and what will be achieved with the fix? Fulfills the user's explicit design request for a modern, kiosk-style tenant management interface.
+     - Status: IN PROGRESS
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend (Screenshot tool)
      - Blocked on other issue: None
 
+  - Issue 2: 
+     - Attempted fixes: None yet. Agent suggested this to the user earlier.
+     - Next debug checklist: Update the UI of the Appartementen and Kwitanties tabs in  to match the new modern, orange-accented style applied to the Dashboard and Tenants tabs.
+     - Why fix this issue and what will be achieved with the fix? Ensures UI consistency across the entire Admin Dashboard.
+     - Status: NOT STARTED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend (Screenshot tool)
+     - Blocked on other issue: Issue 1
+
 **In progress Task List**: 
-None. Active development is focused on finalizing the UI of the landing page keyboard.
+None active besides the UI styling mentioned above.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
@@ -37,82 +50,92 @@ None. Active development is focused on finalizing the UI of the landing page key
     - P2: Multi-building support per bedrijf.
 
 **Completed work in this session**
-- Receipt UI: Replaced hardcoded AK APPARTEMENT KIOSK with dynamic company name.
-- Receipt UI: Added a prominent Rent Month display box for full and partial payments.
-- Layout: Fixed  so the Volgende (Next) button is always visible on smaller screens.
-- Print Logic: Fixed blank page issue during receipt generation by correcting  CSS and iframe injection logic.
-- Auth/Security: Built a 4-digit PIN system for kiosk access. Users can set a PIN in the Admin Dashboard.
-- Auth/Routing: Enabled direct login to the Admin Dashboard via PIN (bypassing the need for email/password if already authenticated in Kiosk mode).
-- UI/UX: Redesigned the  landing page. Removed the Waarom Appartement Kiosk? section and embedded the login/register forms directly into the right panel.
-- UI/UX: Created a custom inline Virtual Keyboard for touchscreen logins.
+- UI/UX: Fixed virtual keyboard width to fill the right panel and ensured physical typing works concurrently.
+- UI/UX: Centered login form, added a House logo, and implemented smooth shift-up on virtual keyboard open.
+- UX: Enabled touchscreen auto-detect to automatically open the virtual keyboard.
+- Routing: Removed intermediate Welkom terug page; login now redirects directly to the Kiosk or Dashboard.
+- Auth: Added PIN-based login directly on the landing page with an auto-submit numeric keypad.
+- Auth: Made PIN inputs square blocks with visible digits (removed dot-masking) and made keypad buttons perfectly square.
+- Security: Enforced unique PINs per company in the backend.
+- Security: Completely blocked Kiosk access if a company has not set up a PIN.
+- Security: Bypassed PIN verification on the Kiosk if the user just logged in via Email/Password.
+- Bug Fix: Fixed global scrolling issues by removing  from  and .
+- Content: Removed the Borgsom (Deposit) UI section from the Kiosk Tenant Overview.
+- DevOps & Routing: Modified  and  (Nginx/SSL) to fully support the  subdomain, removing the need for a  URL path.
+- UI/UX: Began modernizing the Admin Dashboard (Dashboard stats and general layout).
 
 **Earlier issues found/mentioned but not fixed**
    *None*
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: N/A
+  - Issue recurrence in previous fork: None
   - Recurrence count: 0
   - Status: NOT STARTED
 
 **Code Architecture**
-
+vastgoed.*.kiosk-fullscreen
 
 **Key Technical Concepts**
-- Hybrid Authentication: The app uses standard JWT email/password auth for initial setup, and a separate PIN-based token generation () for daily operational access to the Kiosk and Admin Dashboard.
-- Controlled Components vs ReadOnly: Handling React state for inputs that can be modified by *both* a physical keyboard (onChange) and a custom virtual QWERTY keyboard (onClick appends).
+- Subdomain Routing:  checks . If it starts with , the root paths map directly to the kiosk components instead of standard ERP routes.
+- Dual Authentication: Users can log in via Email/Password OR a unique 4-digit PIN. Session storage flags () manage whether the PIN prompt is shown in the kiosk flow.
 
 **key DB schema**
-  - : added  (string/hashed) field.
+  - :  (string, must be unique across all active companies).
 
 **changes in tech stack**
   - None.
 
 **All files of reference** 
-  -  (Updated: Contains the active task for the Virtual Keyboard).
-  -  (Created)
-  -  (Updated)
-  -  (Updated)
-  -  (Updated)
+  -  (ACTIVE: Needs UI update for Tenant cards).
+  - 
+  - 
+  - 
+  - 
 
 **Areas that need refactoring**: 
- has grown significantly (700+ lines) as it now contains the landing page layout, login form, registration form, and a complex Virtual Keyboard matrix. The Virtual Keyboard logic should ideally be extracted into its own reusable component ().
+ is quite large due to combining Email Login, PIN Login, Registration, and Virtual Keyboard. Breaking the Keypad and Virtual Keyboard into separate components would improve maintainability.
 
 **key api endpoints**
-  -  (Validates 4-digit PIN and returns an auth token).
-  -  (Returns public data, including boolean ).
+  - 
+  -  (New: Allows full login via unique PIN)
+  - 
 
 **Critical Info for New Agent** 
-- **Keyboard Handling:** The user specifically wants the kiosk to function seamlessly for *both* touchscreen-only users and laptop users. Do not use  on inputs, as it breaks physical keyboards. Manage the cursor/focus state carefully so the virtual keyboard appends text correctly.
-- **Visual Accuracy:** The user uploads screenshots with annotations. Ensure visual elements (like keyboard width) span the requested CSS containers using tools like Tailwind's . Always use the screenshot tool to verify changes before declaring success.
+- **Design Matching:** The user uploaded 4 specific screenshots for the Tenant Cards. You MUST strictly adhere to this layout and use an orange accent color. 
+- **Subdomain Routing:** The app now intercepts  subdomains. Keep this in mind if testing routing locally or in the preview environment.
+- **Scroll Fix Preservation:** Do not reintroduce  or  on main wrapper containers. Use  and  to ensure dashboards and long lists remain scrollable.
 
 **documents and test reports created in this job** 
   - 
+  - 
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. User: wat wilt u betalen ik zie hele page niet meer goed knop wijst niet van volgende (Next button missing on payment page) -> *Fixed*
- 2. User: Kwitantie afdruk is leeg... Ik wil dat alle bedrijven op hun Kiosk URL kunnen gaan en met hun eigen 4 cijverige pincode... (Blank print and requested PIN access) -> *Fixed*
- 3. User: Ik wil dat waneer je via de pincode inlog en op beheerder klikt moet ik ook op de dashboard komen... zonder inloggen (Bypass admin login if PIN is entered) -> *Fixed*
- 4. User: /vastgoed page wil ik anders dit moet weg Waarom Appartement Kiosk? inplaats van dat moet daarin Inloggen komen... (Redesign landing page) -> *Fixed*
- 5. User: ik zie dat de Inloggen niet hele page wijst aan de rechterkant en registeren komt er een popup... en wat als iemand deze kiosk mode gebruikt zonder muis en keyboard dan moet nog kaybord te zien zijn (Fill right side, no popups, add virtual keyboard) -> *Fixed*
- 6. User: Nee het ziet er niet goed uit kijk op de foto is helemaal boven en niet in de midden... en de schermkeyboard moet full open gaan (Center form, make keyboard larger) -> *Fixed*
- 7. User: Nee niet zo Schermtoetsenbord openen moet niet full page open gaan maar het moet open gaan in het vakje van rechterkant... (Make keyboard inline in right panel, text isn't typing) -> *Fixed*
- 8. User: Het is fout kijk waar de legen velden zijn waar ik kruis heb gezet tot daar moet de toetsenbord wijzen en ik heb opgemerkt nu kan ik niet meer met me toetsenboard typen... (Make virtual keyboard wider to fill space, physical keyboard typing is broken). -> *Agent edited code, Testing Pending.*
+ 1. User: Wants the Borgsom section removed from the Kiosk. -> *Done*
+ 2. User: Asks if the kiosk can run on a subdomain () instead of a  path. -> *Done*
+ 3. Agent: Explains DNS/Server setup and offers to prepare code/Nginx config.
+ 4. User: Jha (Yes). -> *Agent prepares Nginx script and frontend subdomain redirect.*
+ 5. User: Clarifies they DO NOT want a redirect to . They want the app to run directly on the root  of the subdomain. -> *Done*
+ 6. User: Asks how to run the install script again.
+ 7. Agent: Provides explicit terminal commands and options (GitHub vs SFTP).
+ 8. User: Notes the Dashboard huurder page (Tenants tab) doesn't look modern/kiosk-like. Asks for a redesign. -> *Agent does initial modern redesign.*
+ 9. User: Uploads 4 screenshots of a specific Tenant card design. Asks the agent to match it EXACTLY, but with orange colors to match the Dashboard. -> *Pending Action Item*
 
 **Project Health Check:**
 - Broken: None.
-- Mocked: Tuya API breaker logic.
+- Mocked: Tuya API circuit breaker logic.
 
 **3rd Party Integrations** 
 - None actively integrated yet.
 
 **Testing status**
-  - Testing agent used after significant changes: NO.
+  - Testing agent used after significant changes: YES (Iterations 67-73).
   - Troubleshoot agent used after agent stuck in loop: NO.
-  - Test files created: []
-  - Known regressions: Physical keyboard input was temporarily broken by  state on login fields (Fix applied, pending verification).
+  - Test files created: None.
+  - Known regressions: None currently.
 
 **Credentials to test flow:**
-Use UI at  to register a dummy account or log in with test account. A Kiosk PIN was set to  during testing.
+Use UI at root  (if on vastgoed subdomain) or  to login. 
+Email:  (from logs) / PIN: Set via Admin Dashboard.
 
 **What agent forgot to execute**
-The agent modified  to fix the keyboard issues but stopped execution before running the screenshot tool to verify the physical input and the updated width of the virtual keyboard. Testing is required immediately.</analysis>
+The agent analyzed the 4 user-provided screenshots using  but stopped before writing the actual React/Tailwind code to update . Implementation of the exact Tenant Card UI is the immediate next step.</analysis>
