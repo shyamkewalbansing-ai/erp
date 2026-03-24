@@ -4,7 +4,7 @@ import {
   Building2, Users, CreditCard, Home, Plus, Pencil, Trash2, 
   ArrowLeft, DollarSign, Loader2, Settings, ExternalLink,
   Copy, Check, Receipt, Zap, Crown, Search, Calendar,
-  AlertTriangle, User, Banknote, FileText, Save, Eye, LogIn,
+  AlertTriangle, User, Banknote, FileText, Save, Eye, LogIn, MessageSquare,
   Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase
 } from 'lucide-react';
 import axios from 'axios';
@@ -610,6 +610,24 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                           <button onClick={() => onAddRent(tenant)} data-testid={`add-rent-${tenant.tenant_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Maandhuur toevoegen">
                             <DollarSign className="w-4 h-4" />
                           </button>
+                          {total > 0 && (
+                            <button 
+                              onClick={async () => {
+                                if (!confirm(`WhatsApp herinnering sturen naar ${tenant.name}?`)) return;
+                                try {
+                                  const res = await axios.post(`${API}/admin/whatsapp/send`, { tenant_id: tenant.tenant_id, message_type: 'overdue' }, { headers: { Authorization: `Bearer ${token}` } });
+                                  alert(res.data.message);
+                                } catch (err) {
+                                  alert(err.response?.data?.detail || 'Bericht versturen mislukt. Configureer WhatsApp in Instellingen.');
+                                }
+                              }}
+                              data-testid={`wa-send-${tenant.tenant_id}`} 
+                              className="text-slate-400 hover:text-green-500 p-1" 
+                              title="WhatsApp herinnering sturen"
+                            >
+                              <MessageSquare className="w-4 h-4" />
+                            </button>
+                          )}
                           <button onClick={() => onEditTenant(tenant)} data-testid={`edit-tenant-${tenant.tenant_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Bewerken">
                             <Pencil className="w-4 h-4" />
                           </button>
@@ -811,7 +829,11 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     stamp_company_name: company.stamp_company_name || company.name,
     stamp_address: company.stamp_address || company.adres || '',
     stamp_phone: company.stamp_phone || company.telefoon || '',
-    stamp_whatsapp: company.stamp_whatsapp || ''
+    stamp_whatsapp: company.stamp_whatsapp || '',
+    bank_name: company.bank_name || '',
+    bank_account_name: company.bank_account_name || '',
+    bank_account_number: company.bank_account_number || '',
+    bank_description: company.bank_description || '',
   } : null;
 
   const handlePrint = () => {
@@ -948,6 +970,18 @@ function SettingsTab({ company, token, onRefresh }) {
   const [showPin, setShowPin] = useState(false);
   const [saving, setSaving] = useState(false);
   const [applyingFines, setApplyingFines] = useState(false);
+  // Bank/betaalmethode
+  const [bankName, setBankName] = useState(company?.bank_name || '');
+  const [bankAccountName, setBankAccountName] = useState(company?.bank_account_name || '');
+  const [bankAccountNumber, setBankAccountNumber] = useState(company?.bank_account_number || '');
+  const [bankDescription, setBankDescription] = useState(company?.bank_description || '');
+  // WhatsApp Business API
+  const [waApiUrl, setWaApiUrl] = useState(company?.wa_api_url || 'https://graph.facebook.com/v21.0');
+  const [waApiToken, setWaApiToken] = useState(company?.wa_api_token || '');
+  const [waPhoneId, setWaPhoneId] = useState(company?.wa_phone_id || '');
+  const [waEnabled, setWaEnabled] = useState(company?.wa_enabled || false);
+  const [waTesting, setWaTesting] = useState(false);
+  const [waTestResult, setWaTestResult] = useState(null);
 
   const handleSaveStamp = async () => {
     setSaving(true);
@@ -963,6 +997,55 @@ function SettingsTab({ company, token, onRefresh }) {
       alert(err.response?.data?.detail || 'Opslaan mislukt');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveBank = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/auth/settings`, {
+        bank_name: bankName,
+        bank_account_name: bankAccountName,
+        bank_account_number: bankAccountNumber,
+        bank_description: bankDescription,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      onRefresh();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Opslaan mislukt');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveWhatsApp = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/auth/settings`, {
+        wa_api_url: waApiUrl,
+        wa_api_token: waApiToken,
+        wa_phone_id: waPhoneId,
+        wa_enabled: waEnabled,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      onRefresh();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Opslaan mislukt');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTestWhatsApp = async () => {
+    setWaTesting(true);
+    setWaTestResult(null);
+    try {
+      // Save first, then test
+      await handleSaveWhatsApp();
+      const res = await axios.post(`${API}/admin/whatsapp/test`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      setWaTestResult(res.data);
+    } catch (err) {
+      setWaTestResult({ status: 'error', message: 'Test mislukt' });
+    } finally {
+      setWaTesting(false);
     }
   };
 
@@ -1274,6 +1357,124 @@ function SettingsTab({ company, token, onRefresh }) {
           <Save className="w-4 h-4" />
           {saving ? 'Opslaan...' : 'Stempel opslaan'}
         </button>
+      </div>
+
+      {/* Betaalmethoden / Bankoverschrijving */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+            <CreditCard className="w-5 h-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Betaalmethoden</h3>
+            <p className="text-sm text-slate-500">Bankgegevens voor overschrijving — wordt getoond op kwitanties</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Banknaam</label>
+            <input type="text" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="bijv. De Surinaamsche Bank" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Rekeninghouder</label>
+            <input type="text" value={bankAccountName} onChange={e => setBankAccountName(e.target.value)} placeholder="bijv. Uw Bedrijfsnaam" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Rekeningnummer</label>
+            <input type="text" value={bankAccountNumber} onChange={e => setBankAccountNumber(e.target.value)} placeholder="bijv. 1234567890" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500 font-mono" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Omschrijving (optioneel)</label>
+            <input type="text" value={bankDescription} onChange={e => setBankDescription(e.target.value)} placeholder="bijv. Vermeld uw huurderscode" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500" />
+          </div>
+        </div>
+        {(bankName || bankAccountNumber) && (
+          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p className="text-sm font-bold text-blue-800 mb-2">Voorbeeld op kwitantie:</p>
+            <div className="text-sm text-blue-700">
+              <p>Bank: {bankName || '—'}</p>
+              <p>Rekening: {bankAccountNumber || '—'}</p>
+              <p>T.n.v.: {bankAccountName || '—'}</p>
+              {bankDescription && <p className="text-xs text-blue-500 mt-1">{bankDescription}</p>}
+            </div>
+          </div>
+        )}
+        <button onClick={handleSaveBank} disabled={saving} className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 mt-4">
+          <Save className="w-4 h-4" />
+          {saving ? 'Opslaan...' : 'Bankgegevens opslaan'}
+        </button>
+      </div>
+
+      {/* WhatsApp Business API */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+            <ExternalLink className="w-5 h-5 text-green-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">WhatsApp Business API</h3>
+            <p className="text-sm text-slate-500">Stuur automatisch herinneringen en boete-meldingen naar huurders</p>
+          </div>
+        </div>
+
+        {/* Enable toggle */}
+        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-4">
+          <div>
+            <p className="font-medium text-slate-800">WhatsApp berichten activeren</p>
+            <p className="text-xs text-slate-500">Schakel in om berichten te kunnen versturen via uw WhatsApp Business account</p>
+          </div>
+          <button onClick={() => setWaEnabled(!waEnabled)} className={`w-12 h-6 rounded-full transition-all relative ${waEnabled ? 'bg-green-500' : 'bg-slate-300'}`}>
+            <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all shadow ${waEnabled ? 'left-[26px]' : 'left-0.5'}`} />
+          </button>
+        </div>
+
+        {waEnabled && (
+          <>
+            <div className="space-y-4 mb-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">API URL</label>
+                <input type="text" value={waApiUrl} onChange={e => setWaApiUrl(e.target.value)} placeholder="https://graph.facebook.com/v21.0" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500 font-mono text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Access Token</label>
+                <input type="password" value={waApiToken} onChange={e => setWaApiToken(e.target.value)} placeholder="Uw WhatsApp Business API token" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500 font-mono text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number ID</label>
+                <input type="text" value={waPhoneId} onChange={e => setWaPhoneId(e.target.value)} placeholder="bijv. 123456789012345" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500 font-mono text-sm" />
+              </div>
+            </div>
+
+            {/* Test result */}
+            {waTestResult && (
+              <div className={`mb-4 p-3 rounded-xl text-sm font-medium ${waTestResult.status === 'connected' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                {waTestResult.message}
+              </div>
+            )}
+
+            {/* Setup guide */}
+            <div className="bg-slate-50 rounded-xl p-4 mb-4">
+              <p className="font-medium text-slate-700 text-sm mb-2">Hoe krijgt u deze gegevens?</p>
+              <ol className="text-xs text-slate-500 space-y-1.5 list-decimal pl-4">
+                <li>Ga naar <span className="font-mono text-slate-700">developers.facebook.com</span> en maak een Meta app aan</li>
+                <li>Voeg de <b>WhatsApp</b> product toe aan uw app</li>
+                <li>Kopieer de <b>Phone Number ID</b> en <b>Permanent Access Token</b></li>
+                <li>Voeg uw bedrijfs WhatsApp nummer toe en verifieer het</li>
+              </ol>
+            </div>
+
+            <div className="flex gap-3">
+              <button onClick={handleTestWhatsApp} disabled={waTesting || !waApiToken || !waPhoneId} className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 disabled:opacity-50 text-sm font-medium">
+                {waTesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                {waTesting ? 'Testen...' : 'Verbinding testen'}
+              </button>
+              <button onClick={handleSaveWhatsApp} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 text-sm font-medium">
+                <Save className="w-4 h-4" />
+                {saving ? 'Opslaan...' : 'WhatsApp opslaan'}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -1758,15 +1959,15 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
   return (
     <div className="space-y-6">
       {/* Main Panel - Realistic circuit breaker box */}
-      <div className="rounded-xl overflow-hidden" style={{ background: 'linear-gradient(180deg, #374151 0%, #1f2937 100%)', boxShadow: '0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)' }}>
+      <div className="rounded-xl overflow-hidden border border-slate-200 bg-white">
         {/* Panel header strip */}
-        <div className="px-6 py-3 flex items-center justify-between" style={{ background: 'linear-gradient(180deg, #4b5563 0%, #374151 100%)', borderBottom: '2px solid #111827' }}>
+        <div className="px-6 py-3 flex items-center justify-between bg-slate-100 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse shadow-lg shadow-green-400/50" />
-            <span className="text-sm font-bold text-slate-300 tracking-wider uppercase">Stroombrekers Paneel</span>
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-sm font-bold text-slate-700 tracking-wider uppercase">Stroombrekers Paneel</span>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={handleRefreshAll} disabled={updating === 'all'} className="text-xs text-slate-400 hover:text-white transition flex items-center gap-1.5 px-3 py-1.5 bg-slate-700/50 rounded-md">
+            <button onClick={handleRefreshAll} disabled={updating === 'all'} className="text-xs text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-md">
               <Loader2 className={`w-3.5 h-3.5 ${updating === 'all' ? 'animate-spin' : ''}`} />
               Status verversen
             </button>
@@ -1778,12 +1979,12 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
         </div>
 
         {/* Breaker grid */}
-        <div className="p-6">
+        <div className="p-6 bg-slate-50">
           {shellyDevices.length === 0 ? (
             <div className="text-center py-12">
-              <Zap className="w-12 h-12 text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-400 text-lg font-medium mb-2">Geen Shelly apparaten gekoppeld</p>
-              <p className="text-slate-500 text-sm mb-6">Voeg Shelly relais toe om stroombrekers per appartement te bedienen</p>
+              <Zap className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+              <p className="text-slate-500 text-lg font-medium mb-2">Geen Shelly apparaten gekoppeld</p>
+              <p className="text-slate-400 text-sm mb-6">Voeg Shelly relais toe om stroombrekers per appartement te bedienen</p>
               <button onClick={() => setShowAddModal(true)} className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium">
                 <Plus className="w-4 h-4 inline mr-2" />
                 Eerste apparaat toevoegen
@@ -1891,8 +2092,8 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
 
                     {/* Label */}
                     <div className="mt-3 text-center">
-                      <p className="text-sm font-bold text-slate-200">Appt. {apt?.number || '?'}</p>
-                      <p className="text-xs text-slate-500">{tenant?.name || 'Geen huurder'}</p>
+                      <p className="text-sm font-bold text-slate-800">Appt. {apt?.number || '?'}</p>
+                      <p className="text-xs text-slate-400">{tenant?.name || 'Geen huurder'}</p>
                       <span className={`text-[10px] font-bold tracking-wider ${
                         unknown || unreachable ? 'text-yellow-400' :
                         powerOn ? 'text-green-400' : 'text-red-400'
@@ -1918,9 +2119,9 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
         </div>
 
         {/* Panel footer */}
-        <div className="px-6 py-3 flex items-center justify-between" style={{ background: '#111827', borderTop: '1px solid #374151' }}>
-          <span className="text-[10px] text-slate-600 font-mono">{shellyDevices.length} apparaten gekoppeld</span>
-          <span className="text-[10px] text-slate-600">SHELLY LOCAL API</span>
+        <div className="px-6 py-3 flex items-center justify-between bg-slate-100 border-t border-slate-200">
+          <span className="text-[10px] text-slate-400 font-mono">{shellyDevices.length} apparaten gekoppeld</span>
+          <span className="text-[10px] text-slate-400">SHELLY LOCAL API</span>
         </div>
       </div>
 

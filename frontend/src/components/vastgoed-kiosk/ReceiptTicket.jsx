@@ -273,6 +273,19 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
         </div>
       </div>
 
+      {/* ====== BANK INFO (als ingesteld) ====== */}
+      {stampData && stampData.bank_name && stampData.bank_account_number && (
+        <div style={{ padding: `${2 * s}mm ${15 * s}mm` }}>
+          <div style={{ background: '#eff6ff', border: `${0.4 * s}mm solid #bfdbfe`, borderRadius: `${2 * s}mm`, padding: `${3 * s}mm` }}>
+            <p style={{ fontSize: `${2.5 * s}mm`, fontWeight: 'bold', color: '#1e40af', margin: 0, marginBottom: `${1.5 * s}mm`, textTransform: 'uppercase' }}>Bankgegevens voor overschrijving</p>
+            <p style={{ fontSize: `${2.5 * s}mm`, color: '#1e3a5f', margin: 0 }}>Bank: {stampData.bank_name}</p>
+            <p style={{ fontSize: `${2.5 * s}mm`, color: '#1e3a5f', margin: 0 }}>Rekening: {stampData.bank_account_number}</p>
+            {stampData.bank_account_name && <p style={{ fontSize: `${2.5 * s}mm`, color: '#1e3a5f', margin: 0 }}>T.n.v.: {stampData.bank_account_name}</p>}
+            {stampData.bank_description && <p style={{ fontSize: `${2.2 * s}mm`, color: '#64748b', margin: 0, marginTop: `${1 * s}mm` }}>{stampData.bank_description}</p>}
+          </div>
+        </div>
+      )}
+
       {/* ====== FOOTER - 20mm ====== */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${20 * s}mm`, overflow: 'hidden' }}>
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${16 * s}mm`, background: '#1e293b', clipPath: 'polygon(0 40%, 100% 0, 100% 100%, 0 100%)' }}></div>

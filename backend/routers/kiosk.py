@@ -90,6 +90,16 @@ class CompanyUpdate(BaseModel):
     stamp_phone: Optional[str] = None
     stamp_whatsapp: Optional[str] = None
     kiosk_pin: Optional[str] = None  # 4-digit PIN for kiosk access
+    # Bank/betaalmethode
+    bank_name: Optional[str] = None
+    bank_account_name: Optional[str] = None
+    bank_account_number: Optional[str] = None
+    bank_description: Optional[str] = None
+    # WhatsApp Business API
+    wa_api_url: Optional[str] = None
+    wa_api_token: Optional[str] = None
+    wa_phone_id: Optional[str] = None
+    wa_enabled: Optional[bool] = None
 
 class KioskPinVerify(BaseModel):
     pin: str  # 4-digit PIN
@@ -2323,3 +2333,175 @@ async def refresh_all_shelly(company: dict = Depends(get_current_company)):
                 results.append({"device_id": dev["device_id"], "status": dev.get("last_status", "unknown"), "online": False})
     
     return results
+
+
+
+# ============== WHATSAPP BUSINESS API ==============
+
+class WhatsAppMessage(BaseModel):
+    tenant_id: str
+    message_type: str  # reminder, fine, overdue, custom
+    custom_message: Optional[str] = None
+
+@router.post("/admin/whatsapp/send")
+async def send_whatsapp_message(data: WhatsAppMessage, company: dict = Depends(get_current_company)):
+    """Send WhatsApp message to tenant via Business API"""
+    comp = await db.kiosk_companies.find_one({"company_id": company["company_id"]}, {"_id": 0})
+    
+    if not comp.get("wa_enabled") or not comp.get("wa_api_token") or not comp.get("wa_phone_id"):
+        raise HTTPException(status_code=400, detail="WhatsApp Business API is niet geconfigureerd. Ga naar Instellingen.")
+    
+    tenant = await db.kiosk_tenants.find_one({"tenant_id": data.tenant_id, "company_id": company["company_id"]}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    phone = tenant.get("phone", "")
+    if not phone:
+        raise HTTPException(status_code=400, detail="Huurder heeft geen telefoonnummer")
+    
+    # Clean phone number
+    phone_clean = phone.replace(" ", "").replace("-", "").replace("+", "")
+    if not phone_clean.startswith("597"):
+        phone_clean = "597" + phone_clean
+    
+    company_name = comp.get("stamp_company_name") or comp.get("name", "")
+    tenant_name = tenant.get("name", "")
+    outstanding = tenant.get("outstanding_rent", 0) + tenant.get("service_costs", 0) + tenant.get("fines", 0)
+    
+    # Build message based on type
+    if data.message_type == "reminder":
+        message = (f"Beste {tenant_name},\n\n"
+                   f"Dit is een herinnering van {company_name}.\n"
+                   f"Uw openstaand saldo is SRD {outstanding:,.2f}.\n"
+                   f"Gelieve zo spoedig mogelijk te betalen.\n\n"
+                   f"Met vriendelijke groet,\n{company_name}")
+    elif data.message_type == "fine":
+        message = (f"Beste {tenant_name},\n\n"
+                   f"Er is een boete toegepast op uw account bij {company_name}.\n"
+                   f"Uw totaal openstaand saldo is nu SRD {outstanding:,.2f}.\n"
+                   f"Neem contact op voor vragen.\n\n"
+                   f"Met vriendelijke groet,\n{company_name}")
+    elif data.message_type == "overdue":
+        overdue_months = tenant.get("overdue_months", [])
+        months_str = ", ".join(overdue_months) if overdue_months else "onbekend"
+        message = (f"Beste {tenant_name},\n\n"
+                   f"Uw huur bij {company_name} is achterstallig.\n"
+                   f"Achterstand maanden: {months_str}\n"
+                   f"Totaal openstaand: SRD {outstanding:,.2f}\n\n"
+                   f"Gelieve zo spoedig mogelijk te betalen om verdere maatregelen te voorkomen.\n\n"
+                   f"Met vriendelijke groet,\n{company_name}")
+    elif data.message_type == "custom" and data.custom_message:
+        message = data.custom_message
+    else:
+        raise HTTPException(status_code=400, detail="Ongeldig berichttype")
+    
+    # Add bank info if available
+    bank_name = comp.get("bank_name")
+    bank_account = comp.get("bank_account_number")
+    bank_holder = comp.get("bank_account_name")
+    if bank_name and bank_account:
+        message += f"\n\n--- Bankgegevens ---\nBank: {bank_name}\nRekening: {bank_account}"
+        if bank_holder:
+            message += f"\nT.n.v.: {bank_holder}"
+    
+    # Send via WhatsApp Business Cloud API
+    wa_url = comp.get("wa_api_url", "https://graph.facebook.com/v21.0")
+    wa_token = comp["wa_api_token"]
+    wa_phone_id = comp["wa_phone_id"]
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.post(
+                f"{wa_url}/{wa_phone_id}/messages",
+                headers={
+                    "Authorization": f"Bearer {wa_token}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "messaging_product": "whatsapp",
+                    "to": phone_clean,
+                    "type": "text",
+                    "text": {"body": message}
+                }
+            )
+            result = resp.json()
+        
+        # Log the message
+        await db.kiosk_wa_messages.insert_one({
+            "message_id": generate_uuid(),
+            "company_id": company["company_id"],
+            "tenant_id": data.tenant_id,
+            "tenant_name": tenant_name,
+            "phone": phone_clean,
+            "message_type": data.message_type,
+            "message": message,
+            "status": "sent" if resp.status_code == 200 else "failed",
+            "api_response": str(result),
+            "created_at": datetime.now(timezone.utc)
+        })
+        
+        if resp.status_code == 200:
+            return {"status": "sent", "message": f"Bericht verstuurd naar {tenant_name}"}
+        else:
+            return {"status": "failed", "message": f"Verzending mislukt: {result.get('error', {}).get('message', 'Onbekende fout')}"}
+    
+    except Exception as e:
+        return {"status": "error", "message": f"Fout bij verzending: {str(e)}"}
+
+@router.post("/admin/whatsapp/send-bulk")
+async def send_bulk_whatsapp(message_type: str = "overdue", company: dict = Depends(get_current_company)):
+    """Send WhatsApp to all tenants with outstanding balance"""
+    comp = await db.kiosk_companies.find_one({"company_id": company["company_id"]}, {"_id": 0})
+    
+    if not comp.get("wa_enabled") or not comp.get("wa_api_token"):
+        raise HTTPException(status_code=400, detail="WhatsApp Business API is niet geconfigureerd")
+    
+    tenants = await db.kiosk_tenants.find({"company_id": company["company_id"], "status": "active"}, {"_id": 0}).to_list(500)
+    
+    sent = 0
+    failed = 0
+    for tenant in tenants:
+        outstanding = (tenant.get("outstanding_rent", 0) + tenant.get("service_costs", 0) + tenant.get("fines", 0))
+        if outstanding <= 0 or not tenant.get("phone"):
+            continue
+        try:
+            msg_data = WhatsAppMessage(tenant_id=tenant["tenant_id"], message_type=message_type)
+            await send_whatsapp_message(msg_data, company)
+            sent += 1
+        except Exception:
+            failed += 1
+    
+    return {"sent": sent, "failed": failed, "message": f"{sent} berichten verstuurd, {failed} mislukt"}
+
+@router.get("/admin/whatsapp/history")
+async def get_whatsapp_history(company: dict = Depends(get_current_company)):
+    """Get WhatsApp message history"""
+    messages = await db.kiosk_wa_messages.find(
+        {"company_id": company["company_id"]}, {"_id": 0}
+    ).sort("created_at", -1).limit(50).to_list(50)
+    return messages
+
+@router.post("/admin/whatsapp/test")
+async def test_whatsapp_connection(company: dict = Depends(get_current_company)):
+    """Test WhatsApp Business API connection"""
+    comp = await db.kiosk_companies.find_one({"company_id": company["company_id"]}, {"_id": 0})
+    
+    wa_token = comp.get("wa_api_token")
+    wa_phone_id = comp.get("wa_phone_id")
+    wa_url = comp.get("wa_api_url", "https://graph.facebook.com/v21.0")
+    
+    if not wa_token or not wa_phone_id:
+        return {"status": "not_configured", "message": "API token en Phone ID zijn vereist"}
+    
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(
+                f"{wa_url}/{wa_phone_id}",
+                headers={"Authorization": f"Bearer {wa_token}"}
+            )
+            if resp.status_code == 200:
+                return {"status": "connected", "message": "Verbinding succesvol!"}
+            else:
+                return {"status": "error", "message": f"API fout: {resp.status_code}"}
+    except Exception as e:
+        return {"status": "error", "message": f"Verbinding mislukt: {str(e)}"}
