@@ -158,6 +158,9 @@ class CompanyUpdate(BaseModel):
     sumup_enabled: Optional[bool] = None
     sumup_currency: Optional[str] = None
     sumup_exchange_rate: Optional[float] = None
+    # Mope Payment Integration
+    mope_api_key: Optional[str] = None
+    mope_enabled: Optional[bool] = None
 
 class KioskPinVerify(BaseModel):
     pin: str  # 4-digit PIN
@@ -359,7 +362,9 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "sumup_merchant_code": company.get("sumup_merchant_code", ""),
         "sumup_enabled": company.get("sumup_enabled", False),
         "sumup_currency": company.get("sumup_currency", "EUR"),
-        "sumup_exchange_rate": company.get("sumup_exchange_rate", 1.0)
+        "sumup_exchange_rate": company.get("sumup_exchange_rate", 1.0),
+        "mope_api_key": company.get("mope_api_key", ""),
+        "mope_enabled": company.get("mope_enabled", False)
     }
 
 @router.put("/auth/settings")
@@ -493,6 +498,149 @@ async def check_sumup_enabled(company_id: str):
         "currency": company.get("sumup_currency", "EUR"),
         "exchange_rate": company.get("sumup_exchange_rate", 1.0)
     }
+
+
+# ============== MOPE CHECKOUT ENDPOINTS ==============
+
+class MopeCheckoutRequest(BaseModel):
+    amount: float
+    description: str
+    tenant_id: str
+    payment_type: str
+
+@router.get("/public/{company_id}/mope/enabled")
+async def check_mope_enabled(company_id: str):
+    """Check if Mope is enabled for this company"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    return {
+        "enabled": bool(company.get("mope_enabled") and company.get("mope_api_key"))
+    }
+
+@router.post("/public/{company_id}/mope/checkout")
+async def create_mope_checkout(company_id: str, data: MopeCheckoutRequest):
+    """Create a Mope payment request"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    api_key = company.get("mope_api_key", "")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="Mope is niet geconfigureerd. Stel de API key in via Instellingen.")
+    
+    order_id = f"KIOSK-{company_id[:8]}-{uuid.uuid4().hex[:8]}"
+    amount_cents = int(round(data.amount * 100))
+    redirect_url = f"{os.environ.get('APP_URL', 'https://facturatie.sr')}/vastgoed/{company_id}?mope_done=1&order={order_id}"
+    
+    # Mock mode: if key starts with mock_, simulate Mope response
+    if api_key.startswith("mock_"):
+        mock_id = str(uuid.uuid4())
+        mock_url = f"https://mope.sr/p/{mock_id}"
+        # Store mock payment in DB for status polling
+        await db.mope_mock_payments.insert_one({
+            "payment_id": mock_id,
+            "company_id": company_id,
+            "amount": data.amount,
+            "amount_cents": amount_cents,
+            "status": "open",
+            "created_at": datetime.now(timezone.utc),
+            "tenant_id": data.tenant_id,
+            "order_id": order_id,
+        })
+        return {
+            "payment_id": mock_id,
+            "payment_url": mock_url,
+            "order_id": order_id,
+            "amount": data.amount,
+            "amount_cents": amount_cents,
+            "mock": True
+        }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.mope.sr/api/shop/payment_request",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "description": f"{data.description} ({data.tenant_id[:8]})",
+                    "amount": amount_cents,
+                    "order_id": order_id,
+                    "currency": "SRD",
+                    "redirect_url": redirect_url
+                }
+            )
+            
+            if response.status_code not in (200, 201):
+                detail = response.text
+                raise HTTPException(status_code=400, detail=f"Mope fout: {detail}")
+            
+            mope_data = response.json()
+            
+            return {
+                "payment_id": mope_data.get("id"),
+                "payment_url": mope_data.get("url"),
+                "order_id": order_id,
+                "amount": data.amount,
+                "amount_cents": amount_cents
+            }
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"Verbinding met Mope mislukt: {str(e)}")
+
+@router.get("/public/{company_id}/mope/status/{payment_id}")
+async def get_mope_payment_status(company_id: str, payment_id: str):
+    """Check status of a Mope payment request"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    api_key = company.get("mope_api_key", "")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="Mope niet geconfigureerd")
+    
+    # Mock mode
+    if api_key.startswith("mock_"):
+        mock_payment = await db.mope_mock_payments.find_one({"payment_id": payment_id}, {"_id": 0})
+        if not mock_payment:
+            raise HTTPException(status_code=404, detail="Betaalverzoek niet gevonden")
+        # Auto-transition: after 8 seconds from creation -> scanned, after 12 seconds -> paid
+        created = mock_payment.get("created_at", datetime.now(timezone.utc))
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        elapsed = (datetime.now(timezone.utc) - created).total_seconds()
+        if elapsed > 12:
+            status = "paid"
+        elif elapsed > 8:
+            status = "scanned"
+        else:
+            status = "open"
+        return {
+            "status": status,
+            "amount": mock_payment.get("amount_cents"),
+            "payment_id": payment_id
+        }
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.mope.sr/api/shop/payment_request/{payment_id}",
+                headers={"Authorization": f"Bearer {api_key}"}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail="Kon status niet ophalen")
+            
+            pdata = response.json()
+            return {
+                "status": pdata.get("status", "open"),
+                "amount": pdata.get("amount"),
+                "payment_id": pdata.get("id")
+            }
+    except httpx.RequestError:
+        raise HTTPException(status_code=500, detail="Verbinding met Mope mislukt")
 
 
 # ============== PUBLIC KIOSK ENDPOINTS (for huurders) ==============
@@ -1361,7 +1509,7 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     }
     type_label = type_labels.get(payment_type, payment_type.replace("_", " ").title())
     
-    method_labels = {"cash": "Contant", "bank": "Bank", "pin": "PIN"}
+    method_labels = {"cash": "Contant", "bank": "Bank", "pin": "PIN", "card": "Pinpas (SumUp)", "mope": "Mope"}
     method_label = method_labels.get(payment_method, payment_method)
     
     # Format rent month

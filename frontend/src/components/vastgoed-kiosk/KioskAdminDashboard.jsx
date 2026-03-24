@@ -1040,6 +1040,9 @@ function SettingsTab({ company, token, onRefresh }) {
   const [sumupEnabled, setSumupEnabled] = useState(company?.sumup_enabled || false);
   const [sumupCurrency, setSumupCurrency] = useState(company?.sumup_currency || 'EUR');
   const [sumupExchangeRate, setSumupExchangeRate] = useState(company?.sumup_exchange_rate || '');
+  // Mope Payment Integration
+  const [mopeApiKey, setMopeApiKey] = useState(company?.mope_api_key || '');
+  const [mopeEnabled, setMopeEnabled] = useState(company?.mope_enabled || false);
 
   const handleSaveStamp = async () => {
     setSaving(true);
@@ -1119,6 +1122,22 @@ function SettingsTab({ company, token, onRefresh }) {
       }, { headers: { Authorization: `Bearer ${token}` } });
       onRefresh();
       alert('SumUp instellingen opgeslagen!');
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Opslaan mislukt');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveMope = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/auth/settings`, {
+        mope_api_key: mopeApiKey,
+        mope_enabled: mopeEnabled,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      onRefresh();
+      alert('Mope instellingen opgeslagen!');
     } catch (err) {
       alert(err.response?.data?.detail || 'Opslaan mislukt');
     } finally {
@@ -1662,6 +1681,47 @@ function SettingsTab({ company, token, onRefresh }) {
               <button onClick={handleSaveSumUp} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50 text-sm font-medium">
                 <Save className="w-4 h-4" />
                 {saving ? 'Opslaan...' : 'SumUp opslaan'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Mope Payment Integration */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-bold text-slate-900">Mope Betaling</h3>
+            <p className="text-sm text-slate-500">Koppel Mope voor QR-code betalingen op de kiosk (SRD)</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-slate-500">Schakel in om Mope betalingen te activeren</p>
+            <button onClick={() => setMopeEnabled(!mopeEnabled)} className={`w-12 h-6 rounded-full transition-all relative ${mopeEnabled ? 'bg-green-500' : 'bg-slate-300'}`} data-testid="mope-toggle">
+              <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all shadow ${mopeEnabled ? 'left-[26px]' : 'left-0.5'}`} />
+            </button>
+          </div>
+        </div>
+        {mopeEnabled && (
+          <>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-slate-600 mb-1 block">API Key</label>
+                <input 
+                  type="password" 
+                  value={mopeApiKey} 
+                  onChange={e => setMopeApiKey(e.target.value)} 
+                  placeholder="test_9b0ba11923bc45b5be82eb4f3117ba0a" 
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-green-500 font-mono text-sm" 
+                  data-testid="mope-api-key"
+                />
+                <p className="text-xs text-slate-400 mt-1">Ontvangen van Mope/Hakrinbank na activatie webshop functionaliteit</p>
+                <p className="text-xs text-blue-500 mt-1">Tip: Gebruik een key met <code>test_</code> prefix om te testen zonder echte betalingen</p>
+              </div>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button onClick={handleSaveMope} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 text-sm font-medium" data-testid="mope-save-btn">
+                <Save className="w-4 h-4" />
+                {saving ? 'Opslaan...' : 'Mope opslaan'}
               </button>
             </div>
           </>

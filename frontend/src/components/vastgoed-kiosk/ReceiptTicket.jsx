@@ -12,6 +12,14 @@ const TYPE_LABELS = {
   deposit: 'Borgsom',
 };
 
+const METHOD_LABELS = {
+  cash: 'Contant',
+  card: 'Pinpas (SumUp)',
+  mope: 'Mope',
+  bank: 'Bank',
+  pin: 'PIN',
+};
+
 export default function ReceiptTicket({ payment, tenant, preview = false, stampData = null }) {
   if (!payment) return null;
 
@@ -163,7 +171,7 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
               <td style={{ padding: `${4 * s}mm ${3 * s}mm`, fontSize: `${4 * s}mm`, color: '#0f172a', fontWeight: '500' }}>
                 {TYPE_LABELS[payment.payment_type] || payment.payment_type}
               </td>
-              <td style={{ padding: `${4 * s}mm ${3 * s}mm`, textAlign: 'center', fontSize: `${3.5 * s}mm`, color: '#64748b' }}>Contant</td>
+              <td style={{ padding: `${4 * s}mm ${3 * s}mm`, textAlign: 'center', fontSize: `${3.5 * s}mm`, color: '#64748b' }}>{METHOD_LABELS[payment.payment_method] || payment.payment_method || 'Contant'}</td>
               <td style={{ padding: `${4 * s}mm ${3 * s}mm`, textAlign: 'right', fontSize: `${4 * s}mm`, color: '#0f172a', fontWeight: '600' }}>{formatSRD(payment.amount)}</td>
             </tr>
           </tbody>

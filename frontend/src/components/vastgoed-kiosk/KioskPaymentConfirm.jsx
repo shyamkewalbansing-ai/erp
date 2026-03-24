@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ArrowLeft, Banknote, CheckCircle, Loader2, User, CreditCard, Wifi } from 'lucide-react';
+import { ArrowLeft, Banknote, CheckCircle, Loader2, User, CreditCard, Wifi, Smartphone, QrCode } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
@@ -12,17 +13,24 @@ const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijke betaling', serv
 export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuccess, companyId }) {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [payMethod, setPayMethod] = useState(null); // null = choose, 'cash', 'card'
+  const [payMethod, setPayMethod] = useState(null); // null = choose, 'cash', 'card', 'mope'
   const [sumupEnabled, setSumupEnabled] = useState(false);
   const [sumupCurrency, setSumupCurrency] = useState('EUR');
   const [sumupExchangeRate, setSumupExchangeRate] = useState(1);
   const [sumupLoading, setSumupLoading] = useState(true);
-  const [cardStatus, setCardStatus] = useState('idle'); // idle, creating, widget, polling, done, error
+  const [cardStatus, setCardStatus] = useState('idle');
   const [checkoutId, setCheckoutId] = useState(null);
   const widgetMounted = useRef(false);
   const pollRef = useRef(null);
+  // Mope state
+  const [mopeEnabled, setMopeEnabled] = useState(false);
+  const [mopeLoading, setMopeLoading] = useState(true);
+  const [mopeStatus, setMopeStatus] = useState('idle'); // idle, creating, qr, polling, done, error
+  const [mopePaymentUrl, setMopePaymentUrl] = useState('');
+  const [mopePaymentId, setMopePaymentId] = useState(null);
+  const mopePollRef = useRef(null);
 
-  // Check if SumUp is enabled for this company
+  // Check if SumUp is enabled
   useEffect(() => {
     if (!companyId) return;
     axios.get(`${API}/public/${companyId}/sumup/enabled`)
@@ -35,9 +43,21 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       .finally(() => setSumupLoading(false));
   }, [companyId]);
 
+  // Check if Mope is enabled
+  useEffect(() => {
+    if (!companyId) return;
+    axios.get(`${API}/public/${companyId}/mope/enabled`)
+      .then(res => setMopeEnabled(res.data.enabled))
+      .catch(() => {})
+      .finally(() => setMopeLoading(false));
+  }, [companyId]);
+
   // Cleanup polling on unmount
   useEffect(() => {
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
+    return () => { 
+      if (pollRef.current) clearInterval(pollRef.current);
+      if (mopePollRef.current) clearInterval(mopePollRef.current);
+    };
   }, []);
 
   if (!tenant || !paymentData) return null;
@@ -156,7 +176,6 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
 
   const handleCardSuccess = async () => {
     setCardStatus('done');
-    // Register the payment in our system
     try {
       const res = await axios.post(`${API}/public/${companyId}/payments`, {
         tenant_id: tenant.tenant_id, amount: paymentData.amount,
@@ -167,6 +186,62 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       setTimeout(() => onSuccess(res.data), 1000);
     } catch {
       setError('Betaling geregistreerd bij SumUp maar opslaan mislukt.');
+    }
+  };
+
+  // ============== MOPE FUNCTIONS ==============
+  const handleMopePayment = async () => {
+    setMopeStatus('creating'); setError('');
+    try {
+      const res = await axios.post(`${API}/public/${companyId}/mope/checkout`, {
+        amount: paymentData.amount,
+        description: paymentData.description || TYPE_LABELS[paymentData.payment_type],
+        tenant_id: tenant.tenant_id,
+        payment_type: paymentData.payment_type,
+      });
+      setMopePaymentId(res.data.payment_id);
+      setMopePaymentUrl(res.data.payment_url);
+      setMopeStatus('qr');
+      // Start polling for payment status
+      startMopePolling(res.data.payment_id);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Kon Mope betaalverzoek niet aanmaken');
+      setMopeStatus('error');
+    }
+  };
+
+  const startMopePolling = (payId) => {
+    let attempts = 0;
+    mopePollRef.current = setInterval(async () => {
+      attempts++;
+      if (attempts > 180) { // 6 min timeout (payment requests last 1 day but don't wait forever)
+        clearInterval(mopePollRef.current);
+        setError('Betaling timeout. Probeer opnieuw.');
+        setMopeStatus('error');
+        return;
+      }
+      try {
+        const res = await axios.get(`${API}/public/${companyId}/mope/status/${payId}`);
+        if (res.data.status === 'paid') {
+          clearInterval(mopePollRef.current);
+          handleMopeSuccess();
+        }
+      } catch {}
+    }, 2000);
+  };
+
+  const handleMopeSuccess = async () => {
+    setMopeStatus('done');
+    try {
+      const res = await axios.post(`${API}/public/${companyId}/payments`, {
+        tenant_id: tenant.tenant_id, amount: paymentData.amount,
+        payment_type: paymentData.payment_type, payment_method: 'mope',
+        description: `${paymentData.description} (Mope)`,
+        rent_month: paymentData.rent_month || null,
+      });
+      setTimeout(() => onSuccess(res.data), 1000);
+    } catch {
+      setError('Betaling geregistreerd bij Mope maar opslaan mislukt.');
     }
   };
 
@@ -193,10 +268,10 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           <p className="text-white/70 mt-2 text-lg">{formatSRD(paymentData.amount)}</p>
         </div>
 
-        <div className="relative z-10 flex flex-col sm:flex-row gap-5 px-6 w-full max-w-2xl">
+        <div className="relative z-10 flex flex-col sm:flex-row gap-5 px-6 w-full max-w-3xl flex-wrap justify-center">
           {/* Cash option */}
           <button onClick={() => setPayMethod('cash')} data-testid="pay-method-cash"
-            className="flex-1 bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 flex flex-col items-center text-center border border-white/50 hover:scale-[1.02] transition active:scale-[0.98]">
+            className="flex-1 min-w-[200px] bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 flex flex-col items-center text-center border border-white/50 hover:scale-[1.02] transition active:scale-[0.98]">
             <div className="w-20 h-20 rounded-2xl bg-green-50 flex items-center justify-center mb-5 shadow-sm border border-green-100">
               <Banknote className="w-10 h-10 text-green-500" />
             </div>
@@ -204,10 +279,23 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
             <p className="text-sm text-slate-400">Betaal met contant geld</p>
           </button>
 
+          {/* Mope option */}
+          {!mopeLoading && mopeEnabled && (
+            <button onClick={() => { setPayMethod('mope'); handleMopePayment(); }} data-testid="pay-method-mope"
+              className="flex-1 min-w-[200px] bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 flex flex-col items-center text-center border border-white/50 hover:scale-[1.02] transition active:scale-[0.98]">
+              <div className="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5 shadow-sm border border-emerald-100">
+                <QrCode className="w-10 h-10 text-emerald-600" />
+              </div>
+              <p className="text-2xl font-extrabold text-slate-900 mb-2">Mope</p>
+              <p className="text-sm text-slate-400">Scan QR-code met Mope app</p>
+              <p className="text-xs text-emerald-600 font-semibold mt-1">{formatSRD(paymentData.amount)}</p>
+            </button>
+          )}
+
           {/* Card option */}
           {!sumupLoading && sumupEnabled && (
             <button onClick={() => { setPayMethod('card'); handleCardPayment(); }} data-testid="pay-method-card"
-              className="flex-1 bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 flex flex-col items-center text-center border border-white/50 hover:scale-[1.02] transition active:scale-[0.98]">
+              className="flex-1 min-w-[200px] bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 flex flex-col items-center text-center border border-white/50 hover:scale-[1.02] transition active:scale-[0.98]">
               <div className="w-20 h-20 rounded-2xl bg-blue-50 flex items-center justify-center mb-5 shadow-sm border border-blue-100">
                 <CreditCard className="w-10 h-10 text-blue-500" />
               </div>
@@ -273,6 +361,92 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
             {processing ? (<><Loader2 className="w-6 h-6 animate-spin" /><span>Verwerken...</span></>) : (<><CheckCircle className="w-6 h-6" /><span>Bevestig betaling</span></>)}
           </button>
           <p className="text-center text-slate-400 text-sm mt-4">Contant bedrag is ontvangen</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Mope QR code payment screen
+  if (payMethod === 'mope') {
+    return (
+      <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
+          <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
+          <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
+          <div className="absolute bottom-[15%] left-[10%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
+          <div className="absolute top-0 left-[45%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
+        </div>
+
+        <div className="absolute top-5 left-8 z-20">
+          <button onClick={() => { setPayMethod(null); setMopeStatus('idle'); setError(''); if (mopePollRef.current) clearInterval(mopePollRef.current); }}
+            className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
+            <ArrowLeft className="w-5 h-5" /><span>Terug</span>
+          </button>
+        </div>
+
+        <div className="relative z-10 text-center mb-8">
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Mope Betaling</h1>
+          <p className="text-white/70 mt-2 text-lg whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
+        </div>
+
+        <div className="relative z-10 bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6 border border-white/50">
+          {mopeStatus === 'creating' && (
+            <div className="text-center py-8">
+              <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto mb-4" />
+              <p className="text-lg font-bold text-slate-900">Betaalverzoek aanmaken...</p>
+              <p className="text-sm text-slate-400 mt-1">Even geduld</p>
+            </div>
+          )}
+
+          {mopeStatus === 'qr' && mopePaymentUrl && (
+            <div className="text-center" data-testid="mope-qr-screen">
+              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-5 text-center mb-6 shadow-lg">
+                <QrCode className="w-8 h-8 text-white mx-auto mb-2" />
+                <p className="text-2xl font-extrabold text-white whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
+                <p className="text-emerald-100 text-sm mt-1">{tenant.name} · Appt. {tenant.apartment_number}</p>
+              </div>
+
+              <div className="bg-white border-2 border-emerald-200 rounded-2xl p-6 mb-5 inline-block" data-testid="mope-qr-code">
+                <QRCodeSVG 
+                  value={mopePaymentUrl} 
+                  size={220} 
+                  level="H"
+                  includeMargin={true}
+                  bgColor="#ffffff"
+                  fgColor="#000000"
+                />
+              </div>
+
+              <p className="text-lg font-bold text-slate-900 mb-1">Scan met uw Mope app</p>
+              <p className="text-sm text-slate-400 mb-4">Open de Mope app en scan deze QR-code om te betalen</p>
+
+              <div className="flex items-center justify-center gap-3 text-emerald-500 py-3 animate-pulse">
+                <Smartphone className="w-5 h-5" />
+                <p className="text-base font-semibold">Wacht op betaling...</p>
+              </div>
+            </div>
+          )}
+
+          {mopeStatus === 'done' && (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+              <p className="text-xl font-extrabold text-green-700">Betaling geslaagd!</p>
+              <p className="text-sm text-slate-400 mt-1">Kwitantie wordt afgedrukt...</p>
+            </div>
+          )}
+
+          {mopeStatus === 'error' && (
+            <div className="text-center py-6">
+              {error && <div className="mb-5 p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-center font-semibold">{error}</div>}
+              <button onClick={() => { setMopeStatus('idle'); setError(''); handleMopePayment(); }}
+                className="px-8 py-4 rounded-2xl text-lg font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl shadow-emerald-500/30 transition" data-testid="mope-retry-btn">
+                Opnieuw proberen
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );
