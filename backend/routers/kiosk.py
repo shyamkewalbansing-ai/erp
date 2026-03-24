@@ -1130,7 +1130,7 @@ async def delete_lease(lease_id: str, company: dict = Depends(get_current_compan
 
 @router.get("/admin/leases/{lease_id}/document")
 async def generate_lease_document(lease_id: str, token: Optional[str] = None):
-    """Generate lease document HTML - accepts token via query param for new tab"""
+    """Generate professional Suriname lease document HTML with company stamp"""
     if not token:
         raise HTTPException(status_code=401, detail="Token vereist")
     try:
@@ -1144,70 +1144,465 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
     
     comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
     company_name = comp.get("name", "Onbekend") if comp else "Onbekend"
-    company_address = comp.get("adres", "") if comp else ""
-    company_phone = comp.get("telefoon", "") if comp else ""
+    company_address = comp.get("adres") or "Paramaribo, Suriname" if comp else "Paramaribo, Suriname"
+    company_phone = comp.get("telefoon") or "" if comp else ""
+    company_email = comp.get("email") or "" if comp else ""
+    
+    tenant_name = lease.get("tenant_name", "")
+    apartment_number = lease.get("apartment_number", "")
+    start_date = lease.get("start_date", "")
+    end_date = lease.get("end_date", "")
+    monthly_rent = lease.get("monthly_rent", 0)
+    voorwaarden = lease.get("voorwaarden", "")
+    
+    # Format dates to Dutch
+    def fmt_date(d):
+        if not d:
+            return "-"
+        try:
+            dt = datetime.strptime(d, "%Y-%m-%d")
+            months = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+            return f"{dt.day} {months[dt.month-1]} {dt.year}"
+        except Exception:
+            return d
+    
+    start_fmt = fmt_date(start_date)
+    end_fmt = fmt_date(end_date)
+    gen_date = datetime.now(timezone.utc).strftime('%d-%m-%Y')
+    
+    # Company initials for stamp
+    initials = "".join([w[0] for w in company_name.split()[:3] if w]).upper()
 
     html = f"""<!DOCTYPE html>
 <html lang="nl">
-<head><meta charset="UTF-8"><title>Huurovereenkomst</title>
+<head>
+<meta charset="UTF-8">
+<title>Huurovereenkomst - {tenant_name}</title>
 <style>
-body {{ font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; line-height: 1.7; }}
-h1 {{ text-align: center; font-size: 22px; border-bottom: 2px solid #ea580c; padding-bottom: 10px; }}
-h2 {{ font-size: 16px; margin-top: 30px; color: #ea580c; }}
-.header {{ text-align: center; margin-bottom: 30px; }}
-.header p {{ margin: 2px 0; font-size: 13px; color: #666; }}
-table {{ width: 100%; border-collapse: collapse; margin: 15px 0; }}
-td {{ padding: 6px 12px; border: 1px solid #ddd; font-size: 14px; }}
-td:first-child {{ background: #f9f9f9; font-weight: bold; width: 200px; }}
-.voorwaarden {{ white-space: pre-wrap; font-size: 14px; background: #fafafa; padding: 15px; border: 1px solid #eee; border-radius: 4px; }}
-.signatures {{ display: flex; justify-content: space-between; margin-top: 60px; }}
-.sig-block {{ width: 45%; text-align: center; }}
-.sig-line {{ border-top: 1px solid #333; margin-top: 50px; padding-top: 8px; font-size: 13px; }}
-.footer {{ text-align: center; margin-top: 40px; font-size: 11px; color: #999; }}
-@media print {{ body {{ margin: 20px; }} }}
-</style></head>
+  @page {{ size: A4; margin: 25mm 20mm 25mm 20mm; }}
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 12pt;
+    line-height: 1.6;
+    color: #1a1a1a;
+    max-width: 210mm;
+    margin: 0 auto;
+    padding: 30px 40px;
+    background: #fff;
+  }}
+  
+  /* Header / Briefhoofd */
+  .letterhead {{
+    border-bottom: 3px double #2c3e50;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+    position: relative;
+  }}
+  .letterhead-left {{
+    display: inline-block;
+    vertical-align: top;
+    width: 60%;
+  }}
+  .company-name {{
+    font-size: 22pt;
+    font-weight: bold;
+    color: #2c3e50;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }}
+  .company-subtitle {{
+    font-size: 9pt;
+    color: #7f8c8d;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }}
+  .company-details {{
+    font-size: 9pt;
+    color: #555;
+    margin-top: 8px;
+    line-height: 1.5;
+  }}
+  .letterhead-right {{
+    display: inline-block;
+    vertical-align: top;
+    width: 38%;
+    text-align: right;
+  }}
+  
+  /* Document titel */
+  .doc-title {{
+    text-align: center;
+    margin: 25px 0 10px 0;
+  }}
+  .doc-title h1 {{
+    font-size: 18pt;
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    color: #2c3e50;
+    border-top: 1px solid #bdc3c7;
+    border-bottom: 1px solid #bdc3c7;
+    padding: 8px 0;
+    display: inline-block;
+  }}
+  .doc-subtitle {{
+    text-align: center;
+    font-size: 10pt;
+    color: #7f8c8d;
+    margin-bottom: 25px;
+  }}
+  
+  /* Artikelen */
+  .artikel {{
+    margin-bottom: 20px;
+    page-break-inside: avoid;
+  }}
+  .artikel h2 {{
+    font-size: 11pt;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #2c3e50;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+  }}
+  .artikel p {{
+    font-size: 11pt;
+    text-align: justify;
+    margin-bottom: 6px;
+  }}
+  .artikel .field {{
+    font-weight: bold;
+  }}
+  
+  /* Data tabel */
+  .data-table {{
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 11pt;
+  }}
+  .data-table td {{
+    padding: 8px 12px;
+    border: 1px solid #d5d8dc;
+    vertical-align: top;
+  }}
+  .data-table td:first-child {{
+    background: #f8f9fa;
+    font-weight: bold;
+    width: 180px;
+    color: #2c3e50;
+  }}
+  
+  /* Voorwaarden */
+  .voorwaarden-box {{
+    background: #fafbfc;
+    border: 1px solid #d5d8dc;
+    border-left: 4px solid #2c3e50;
+    padding: 15px 18px;
+    font-size: 10.5pt;
+    line-height: 1.7;
+    white-space: pre-wrap;
+    margin: 10px 0;
+  }}
+  
+  /* Handtekeningen */
+  .signatures-section {{
+    margin-top: 50px;
+    page-break-inside: avoid;
+  }}
+  .sig-row {{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+  }}
+  .sig-block {{
+    width: 42%;
+    text-align: center;
+  }}
+  .sig-space {{
+    height: 70px;
+    border-bottom: 1px solid #333;
+    margin-bottom: 5px;
+    position: relative;
+  }}
+  .sig-label {{
+    font-size: 10pt;
+    color: #555;
+  }}
+  .sig-name {{
+    font-size: 11pt;
+    font-weight: bold;
+    margin-top: 3px;
+  }}
+  .sig-date {{
+    font-size: 9pt;
+    color: #999;
+    margin-top: 2px;
+  }}
+  
+  /* Bedrijfsstempel */
+  .stamp {{
+    position: relative;
+    display: inline-block;
+    margin-top: 15px;
+  }}
+  .stamp-circle {{
+    width: 120px;
+    height: 120px;
+    border: 3px solid #c0392b;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transform: rotate(-12deg);
+    opacity: 0.8;
+  }}
+  .stamp-circle::before {{
+    content: '';
+    position: absolute;
+    top: 4px; left: 4px; right: 4px; bottom: 4px;
+    border: 1.5px solid #c0392b;
+    border-radius: 50%;
+  }}
+  .stamp-text-top {{
+    font-size: 7pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #c0392b;
+    letter-spacing: 1.5px;
+    position: absolute;
+    top: 15px;
+  }}
+  .stamp-initials {{
+    font-size: 22pt;
+    font-weight: bold;
+    color: #c0392b;
+    letter-spacing: 2px;
+  }}
+  .stamp-text-bottom {{
+    font-size: 6.5pt;
+    text-transform: uppercase;
+    color: #c0392b;
+    letter-spacing: 1px;
+    position: absolute;
+    bottom: 15px;
+  }}
+  .stamp-star {{
+    font-size: 8pt;
+    color: #c0392b;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }}
+  .stamp-star-left {{ left: 10px; }}
+  .stamp-star-right {{ right: 10px; }}
+  
+  /* Footer */
+  .doc-footer {{
+    margin-top: 40px;
+    padding-top: 15px;
+    border-top: 1px solid #ddd;
+    font-size: 8pt;
+    color: #aaa;
+    text-align: center;
+    line-height: 1.5;
+  }}
+  
+  /* Print */
+  @media print {{
+    body {{ padding: 0; margin: 0; }}
+    .no-print {{ display: none; }}
+  }}
+  
+  /* Print button */
+  .print-bar {{
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: #2c3e50;
+    padding: 10px 20px;
+    text-align: center;
+    z-index: 1000;
+  }}
+  .print-bar button {{
+    background: #e67e22;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 0 5px;
+  }}
+  .print-bar button:hover {{ background: #d35400; }}
+</style>
+</head>
 <body>
-<div class="header">
-  <h1>HUUROVEREENKOMST</h1>
-  <p><strong>{company_name}</strong></p>
-  <p>{company_address}</p>
-  <p>{company_phone}</p>
+<div class="print-bar no-print">
+  <button onclick="window.print()">Afdrukken / Print</button>
+  <button onclick="window.close()">Sluiten</button>
 </div>
 
-<h2>Artikel 1 - Partijen</h2>
-<table>
-  <tr><td>Verhuurder</td><td>{company_name}</td></tr>
-  <tr><td>Huurder</td><td>{lease.get('tenant_name', '')}</td></tr>
-  <tr><td>Appartement</td><td>{lease.get('apartment_number', '')}</td></tr>
-</table>
+<div style="margin-top: 50px;">
 
-<h2>Artikel 2 - Huurperiode</h2>
-<table>
-  <tr><td>Ingangsdatum</td><td>{lease.get('start_date', '')}</td></tr>
-  <tr><td>Einddatum</td><td>{lease.get('end_date', '')}</td></tr>
-</table>
-
-<h2>Artikel 3 - Huurprijs</h2>
-<table>
-  <tr><td>Maandelijkse huur</td><td>SRD {lease.get('monthly_rent', 0):,.2f}</td></tr>
-</table>
-
-<h2>Artikel 4 - Voorwaarden</h2>
-<div class="voorwaarden">{lease.get('voorwaarden', 'Geen aanvullende voorwaarden.')}</div>
-
-<div class="signatures">
-  <div class="sig-block">
-    <div class="sig-line">Verhuurder<br/>{company_name}</div>
+<!-- BRIEFHOOFD -->
+<div class="letterhead">
+  <div class="letterhead-left">
+    <div class="company-name">{company_name}</div>
+    <div class="company-subtitle">Vastgoedbeheer &amp; Verhuur</div>
+    <div class="company-details">
+      {company_address}<br/>
+      {('Tel: ' + company_phone + '<br/>') if company_phone else ''}
+      {('E-mail: ' + company_email) if company_email else ''}
+    </div>
   </div>
-  <div class="sig-block">
-    <div class="sig-line">Huurder<br/>{lease.get('tenant_name', '')}</div>
+  <div class="letterhead-right">
+    <div class="stamp">
+      <div class="stamp-circle">
+        <span class="stamp-text-top">Suriname</span>
+        <span class="stamp-star stamp-star-left">&starf;</span>
+        <span class="stamp-initials">{initials}</span>
+        <span class="stamp-star stamp-star-right">&starf;</span>
+        <span class="stamp-text-bottom">Paramaribo</span>
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="footer">
-  Overeenkomst-ID: {lease_id} | Gegenereerd op: {datetime.now(timezone.utc).strftime('%d-%m-%Y %H:%M')} UTC
+<!-- TITEL -->
+<div class="doc-title">
+  <h1>Huurovereenkomst</h1>
 </div>
-</body></html>"""
+<div class="doc-subtitle">
+  Woonruimte &mdash; Overeenkomst Nr. {lease_id[:8].upper()}
+</div>
+
+<!-- ARTIKEL 1: PARTIJEN -->
+<div class="artikel">
+  <h2>Artikel 1 &mdash; De Ondergetekenden</h2>
+  <p>De ondergetekenden:</p>
+  <table class="data-table">
+    <tr><td>Verhuurder</td><td><span class="field">{company_name}</span>, gevestigd te {company_address or 'Paramaribo, Suriname'}, hierna te noemen "Verhuurder"</td></tr>
+    <tr><td>Huurder</td><td><span class="field">{tenant_name}</span>, hierna te noemen "Huurder"</td></tr>
+  </table>
+  <p>Zijn overeengekomen als volgt:</p>
+</div>
+
+<!-- ARTIKEL 2: HET GEHUURDE -->
+<div class="artikel">
+  <h2>Artikel 2 &mdash; Het Gehuurde</h2>
+  <p>Verhuurder verhuurt aan Huurder en Huurder huurt van Verhuurder het navolgende:</p>
+  <table class="data-table">
+    <tr><td>Object</td><td>Appartement <span class="field">{apartment_number}</span></td></tr>
+    <tr><td>Adres</td><td>{company_address or 'Paramaribo, Suriname'}</td></tr>
+    <tr><td>Bestemming</td><td>Uitsluitend als woonruimte ten behoeve van Huurder</td></tr>
+  </table>
+</div>
+
+<!-- ARTIKEL 3: HUURPERIODE -->
+<div class="artikel">
+  <h2>Artikel 3 &mdash; Duur van de Overeenkomst</h2>
+  <p>Deze huurovereenkomst is aangegaan voor de volgende periode:</p>
+  <table class="data-table">
+    <tr><td>Ingangsdatum</td><td><span class="field">{start_fmt}</span></td></tr>
+    <tr><td>Einddatum</td><td><span class="field">{end_fmt}</span></td></tr>
+  </table>
+  <p>Na afloop van de hierboven genoemde periode wordt de overeenkomst voortgezet voor onbepaalde tijd, tenzij een der partijen uiterlijk &eacute;&eacute;n (1) maand voor het verstrijken van enige termijn schriftelijk opzegt.</p>
+</div>
+
+<!-- ARTIKEL 4: HUURPRIJS -->
+<div class="artikel">
+  <h2>Artikel 4 &mdash; Huurprijs en Betaling</h2>
+  <table class="data-table">
+    <tr><td>Maandelijkse huur</td><td><span class="field">SRD {monthly_rent:,.2f}</span> (Surinaamse Dollar)</td></tr>
+    <tr><td>Betalingswijze</td><td>Per maand, bij vooruitbetaling v&oacute;&oacute;r de eerste van elke kalendermaand</td></tr>
+  </table>
+  <p>Bij niet tijdige betaling is Huurder van rechtswege in verzuim en is Huurder een boete verschuldigd conform de geldende bedrijfsvoorwaarden van Verhuurder.</p>
+</div>
+
+<!-- ARTIKEL 5: BORG -->
+<div class="artikel">
+  <h2>Artikel 5 &mdash; Waarborgsom</h2>
+  <p>Huurder betaalt bij aanvang van de huurovereenkomst een waarborgsom ter grootte van <span class="field">&eacute;&eacute;n (1) maand huur</span>, zijnde <span class="field">SRD {monthly_rent:,.2f}</span>. Deze borg wordt na be&euml;indiging van de huurovereenkomst terugbetaald, onder aftrek van eventuele kosten of schade.</p>
+</div>
+
+<!-- ARTIKEL 6: VERPLICHTINGEN -->
+<div class="artikel">
+  <h2>Artikel 6 &mdash; Verplichtingen van de Huurder</h2>
+  <p>Huurder verplicht zich:</p>
+  <p style="padding-left: 20px;">
+    a) het gehuurde als een goed huurder te gebruiken en te onderhouden;<br/>
+    b) geen wijzigingen aan te brengen aan het gehuurde zonder schriftelijke toestemming van Verhuurder;<br/>
+    c) het gehuurde uitsluitend te gebruiken voor het in Artikel 2 genoemde doel;<br/>
+    d) geen overlast te veroorzaken aan medebewoners of omwonenden;<br/>
+    e) de Verhuurder toegang te verlenen voor noodzakelijk onderhoud of inspectie, na voorafgaande kennisgeving.
+  </p>
+</div>
+
+<!-- ARTIKEL 7: ONDERHOUD -->
+<div class="artikel">
+  <h2>Artikel 7 &mdash; Onderhoud en Reparaties</h2>
+  <p>Klein onderhoud en dagelijkse reparaties komen voor rekening van Huurder. Groot onderhoud en structurele reparaties komen voor rekening van Verhuurder, tenzij de schade is veroorzaakt door toedoen of nalatigheid van Huurder.</p>
+</div>
+
+<!-- ARTIKEL 8: BEEINDIGING -->
+<div class="artikel">
+  <h2>Artikel 8 &mdash; Be&euml;indiging</h2>
+  <p>Deze overeenkomst kan worden be&euml;indigd:</p>
+  <p style="padding-left: 20px;">
+    a) door het verstrijken van de overeengekomen termijn;<br/>
+    b) door schriftelijke opzegging met inachtneming van een opzegtermijn van ten minste &eacute;&eacute;n (1) maand;<br/>
+    c) door ontbinding wegens wanprestatie van een der partijen, waaronder begrepen het niet nakomen van de betalingsverplichtingen.
+  </p>
+</div>
+
+{'<div class="artikel"><h2>Artikel 9 &mdash; Bijzondere Voorwaarden</h2><div class="voorwaarden-box">' + voorwaarden + '</div></div>' if voorwaarden else ''}
+
+<!-- ARTIKEL 9/10: TOEPASSELIJK RECHT -->
+<div class="artikel">
+  <h2>Artikel {'10' if voorwaarden else '9'} &mdash; Toepasselijk Recht</h2>
+  <p>Op deze huurovereenkomst is het <span class="field">Surinaams recht</span> van toepassing. Geschillen voortvloeiend uit deze overeenkomst worden voorgelegd aan de bevoegde rechter in het Kanton Paramaribo.</p>
+</div>
+
+<!-- ONDERTEKENING -->
+<div class="signatures-section">
+  <p style="font-size: 11pt; margin-bottom: 5px;">Aldus opgemaakt en ondertekend in tweevoud te <span class="field">Paramaribo</span>, op <span class="field">{gen_date}</span>.</p>
+  
+  <div class="sig-row">
+    <div class="sig-block">
+      <div class="sig-space">
+        <div class="stamp" style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%) rotate(-15deg); opacity: 0.6;">
+          <div class="stamp-circle" style="width: 80px; height: 80px;">
+            <span class="stamp-text-top" style="font-size: 5pt; top: 10px;">Suriname</span>
+            <span class="stamp-initials" style="font-size: 14pt;">{initials}</span>
+            <span class="stamp-text-bottom" style="font-size: 5pt; bottom: 10px;">Paramaribo</span>
+          </div>
+        </div>
+      </div>
+      <div class="sig-label">Verhuurder</div>
+      <div class="sig-name">{company_name}</div>
+    </div>
+    <div class="sig-block">
+      <div class="sig-space"></div>
+      <div class="sig-label">Huurder</div>
+      <div class="sig-name">{tenant_name}</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  {company_name} &bull; Vastgoedbeheer &bull; {company_address or 'Paramaribo, Suriname'}<br/>
+  Overeenkomst-ID: {lease_id} &bull; Datum: {gen_date}
+</div>
+
+</div>
+</body>
+</html>"""
     
     return Response(content=html, media_type="text/html")
 
