@@ -1541,36 +1541,49 @@ function KasTab({ token, tenants, formatSRD }) {
 
   return (
     <div className="space-y-6">
-      {/* Kas Samenvatting */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-green-200 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-green-600" />
-            </div>
-            <p className="text-sm text-slate-500">Huurinkomsten</p>
-          </div>
-          <p className="text-2xl font-bold text-green-600" data-testid="kas-income">{formatSRD(totals.total_income)}</p>
+      {/* Kas Samenvatting - zelfde stijl als Dashboard Overzicht */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="p-4 border-b border-slate-200">
+          <h2 className="font-semibold text-slate-900">Kas Overzicht</h2>
         </div>
-        <div className="bg-white rounded-xl border border-red-200 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-              <TrendingDown className="w-5 h-5 text-red-600" />
-            </div>
-            <p className="text-sm text-slate-500">Totale Uitgaven</p>
-          </div>
-          <p className="text-2xl font-bold text-red-600" data-testid="kas-expense">{formatSRD(totals.total_expense)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-orange-200 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-              <Landmark className="w-5 h-5 text-orange-600" />
-            </div>
-            <p className="text-sm text-slate-500">Kassaldo</p>
-          </div>
-          <p className={`text-2xl font-bold ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`} data-testid="kas-balance">
-            {formatSRD(totals.balance)}
-          </p>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="p-4 text-sm font-medium text-slate-500 text-left">Huurinkomsten</th>
+                <th className="p-4 text-sm font-medium text-slate-500 text-left">Totale Uitgaven</th>
+                <th className="p-4 text-sm font-medium text-slate-500 text-left">Kassaldo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-slate-100">
+                <td className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                      <TrendingUp className="w-4 h-4 text-green-600" />
+                    </div>
+                    <p className="text-lg font-bold text-green-600" data-testid="kas-income">{formatSRD(totals.total_income)}</p>
+                  </div>
+                </td>
+                <td className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                      <TrendingDown className="w-4 h-4 text-red-600" />
+                    </div>
+                    <p className="text-lg font-bold text-red-600" data-testid="kas-expense">{formatSRD(totals.total_expense)}</p>
+                  </div>
+                </td>
+                <td className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                      <Landmark className="w-4 h-4 text-orange-500" />
+                    </div>
+                    <p className={`text-lg font-bold ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`} data-testid="kas-balance">{formatSRD(totals.balance)}</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -1756,34 +1769,49 @@ function EmployeesTab({ token, formatSRD }) {
 
   return (
     <div className="space-y-6">
-      {/* Samenvatting */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600" />
-            </div>
-            <p className="text-sm text-slate-500">Werknemers</p>
-          </div>
-          <p className="text-2xl font-bold text-slate-900">{activeEmps.length}</p>
+      {/* Samenvatting - zelfde stijl als Dashboard Overzicht */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="p-4 border-b border-slate-200">
+          <h2 className="font-semibold text-slate-900">Werknemers Overzicht</h2>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-              <Banknote className="w-5 h-5 text-purple-600" />
-            </div>
-            <p className="text-sm text-slate-500">Totaal Maandloon</p>
-          </div>
-          <p className="text-2xl font-bold text-purple-600">{formatSRD(totalLoon)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-green-600" />
-            </div>
-            <p className="text-sm text-slate-500">Totaal Uitbetaald</p>
-          </div>
-          <p className="text-2xl font-bold text-green-600">{formatSRD(activeEmps.reduce((s, e) => s + (e.total_paid || 0), 0))}</p>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="p-4 text-sm font-medium text-slate-500 text-left">Werknemers</th>
+                <th className="p-4 text-sm font-medium text-slate-500 text-left">Totaal Maandloon</th>
+                <th className="p-4 text-sm font-medium text-slate-500 text-left">Totaal Uitbetaald</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-slate-100">
+                <td className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-4 h-4 text-blue-600" />
+                    </div>
+                    <p className="text-lg font-bold text-slate-900">{activeEmps.length}</p>
+                  </div>
+                </td>
+                <td className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                      <Banknote className="w-4 h-4 text-purple-600" />
+                    </div>
+                    <p className="text-lg font-bold text-purple-600">{formatSRD(totalLoon)}</p>
+                  </div>
+                </td>
+                <td className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                      <DollarSign className="w-4 h-4 text-green-600" />
+                    </div>
+                    <p className="text-lg font-bold text-green-600">{formatSRD(activeEmps.reduce((s, e) => s + (e.total_paid || 0), 0))}</p>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
