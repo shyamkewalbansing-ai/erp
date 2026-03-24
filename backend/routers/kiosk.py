@@ -961,6 +961,335 @@ async def get_payment(payment_id: str, company: dict = Depends(get_current_compa
     }
 
 
+@router.get("/admin/payments/{payment_id}/receipt")
+async def generate_receipt(payment_id: str, token: Optional[str] = None):
+    """Generate printable receipt/kwitantie HTML"""
+    if not token:
+        raise HTTPException(status_code=401, detail="Token vereist")
+    try:
+        payload = decode_token(token)
+        company_id = payload["company_id"]
+    except Exception:
+        raise HTTPException(status_code=401, detail="Ongeldig token")
+    
+    payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    
+    comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+    
+    # Use stamp settings from Instellingen, fallback to company name
+    stamp_name = comp.get("stamp_company_name") or comp.get("name", "Onbekend")
+    stamp_address = comp.get("stamp_address") or comp.get("adres") or "Paramaribo, Suriname"
+    stamp_phone = comp.get("stamp_phone") or comp.get("telefoon") or ""
+    stamp_whatsapp = comp.get("stamp_whatsapp") or ""
+    company_email = comp.get("email", "")
+    
+    # Stamp initials
+    initials = "".join([w[0] for w in stamp_name.split()[:3] if w]).upper()
+    
+    tenant_name = payment.get("tenant_name", "Onbekend")
+    tenant_code = payment.get("tenant_code", "")
+    apartment_number = payment.get("apartment_number", "")
+    amount = payment.get("amount", 0)
+    payment_type = payment.get("payment_type", "")
+    payment_method = payment.get("payment_method", "cash")
+    description = payment.get("description", "")
+    rent_month = payment.get("rent_month", "")
+    kwitantie_nummer = payment.get("kwitantie_nummer", "")
+    created_at = payment.get("created_at")
+    
+    # Format date
+    if created_at:
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        months_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+        date_fmt = f"{created_at.day} {months_nl[created_at.month-1]} {created_at.year}"
+        time_fmt = created_at.strftime("%H:%M")
+    else:
+        date_fmt = "-"
+        time_fmt = ""
+    
+    # Payment type label
+    type_labels = {
+        "monthly_rent": "Maandhuur",
+        "service_costs": "Servicekosten",
+        "deposit": "Borg",
+        "fine": "Boete",
+        "other": "Overig"
+    }
+    type_label = type_labels.get(payment_type, payment_type.replace("_", " ").title())
+    
+    method_labels = {"cash": "Contant", "bank": "Bank", "pin": "PIN"}
+    method_label = method_labels.get(payment_method, payment_method)
+    
+    # Format rent month
+    rent_month_label = ""
+    if rent_month:
+        try:
+            y, m = rent_month.split("-")
+            months_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+            rent_month_label = f"{months_nl[int(m)-1]} {y}"
+        except Exception:
+            rent_month_label = rent_month
+
+    html = f"""<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Kwitantie {kwitantie_nummer}</title>
+<style>
+  @page {{ size: A5; margin: 15mm; }}
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #1a1a1a;
+    max-width: 160mm;
+    margin: 0 auto;
+    padding: 25px 30px;
+    background: #fff;
+  }}
+  .header {{
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }}
+  .header-left {{ flex: 1; }}
+  .company-name {{
+    font-size: 16pt;
+    font-weight: bold;
+    color: #2c3e50;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }}
+  .company-info {{
+    font-size: 8pt;
+    color: #7f8c8d;
+    margin-top: 4px;
+    line-height: 1.4;
+  }}
+  .receipt-title {{
+    text-align: center;
+    margin-bottom: 20px;
+  }}
+  .receipt-title h1 {{
+    font-size: 18pt;
+    color: #2c3e50;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }}
+  .receipt-number {{
+    font-size: 10pt;
+    color: #e67e22;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    margin-top: 4px;
+  }}
+  .details-table {{
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }}
+  .details-table td {{
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    font-size: 10pt;
+  }}
+  .details-table td:first-child {{
+    color: #7f8c8d;
+    width: 35%;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }}
+  .details-table td:last-child {{
+    font-weight: 600;
+    color: #1a1a1a;
+  }}
+  .amount-row {{
+    background: #f8f9fa;
+    border-top: 2px solid #2c3e50 !important;
+    border-bottom: 2px solid #2c3e50 !important;
+  }}
+  .amount-row td {{
+    padding: 12px;
+    font-size: 14pt !important;
+    font-weight: bold !important;
+  }}
+  .amount-row td:last-child {{
+    color: #27ae60;
+    text-align: right;
+    font-size: 16pt !important;
+  }}
+  .stamp-section {{
+    text-align: center;
+    margin: 25px 0 15px;
+  }}
+  .stamp-circle {{
+    width: 100px;
+    height: 100px;
+    border: 3px solid #c0392b;
+    border-radius: 50%;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transform: rotate(-12deg);
+    opacity: 0.75;
+  }}
+  .stamp-circle::before {{
+    content: '';
+    position: absolute;
+    top: 4px; left: 4px; right: 4px; bottom: 4px;
+    border: 1.5px solid #c0392b;
+    border-radius: 50%;
+  }}
+  .stamp-text-top {{
+    font-size: 6pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #c0392b;
+    letter-spacing: 1.5px;
+    position: absolute;
+    top: 12px;
+  }}
+  .stamp-initials {{
+    font-size: 18pt;
+    font-weight: bold;
+    color: #c0392b;
+    letter-spacing: 2px;
+  }}
+  .stamp-text-bottom {{
+    font-size: 5.5pt;
+    text-transform: uppercase;
+    color: #c0392b;
+    letter-spacing: 1px;
+    position: absolute;
+    bottom: 12px;
+  }}
+  .stamp-star {{
+    font-size: 7pt;
+    color: #c0392b;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+  }}
+  .stamp-star-left {{ left: 8px; }}
+  .stamp-star-right {{ right: 8px; }}
+  .footer {{
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
+    font-size: 7.5pt;
+    color: #aaa;
+    text-align: center;
+    line-height: 1.4;
+  }}
+  .print-bar {{
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: #2c3e50;
+    padding: 10px 20px;
+    text-align: center;
+    z-index: 1000;
+  }}
+  .print-bar button {{
+    background: #e67e22;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 0 5px;
+  }}
+  .print-bar button:hover {{ background: #d35400; }}
+  @media print {{
+    .print-bar {{ display: none; }}
+    body {{ padding: 0; margin: 0; }}
+  }}
+</style>
+</head>
+<body>
+<div class="print-bar">
+  <button onclick="window.print()">Afdrukken / Print</button>
+  <button onclick="window.close()">Sluiten</button>
+</div>
+
+<div style="margin-top: 50px;">
+
+<div class="header">
+  <div class="header-left">
+    <div class="company-name">{stamp_name}</div>
+    <div class="company-info">
+      {stamp_address}<br/>
+      {('Tel: ' + stamp_phone) if stamp_phone else ''}{(' | WhatsApp: ' + stamp_whatsapp) if stamp_whatsapp else ''}<br/>
+      {company_email}
+    </div>
+  </div>
+</div>
+
+<div class="receipt-title">
+  <h1>Kwitantie</h1>
+  <div class="receipt-number">{kwitantie_nummer}</div>
+</div>
+
+<table class="details-table">
+  <tr>
+    <td>Datum</td>
+    <td>{date_fmt}{(' om ' + time_fmt) if time_fmt else ''}</td>
+  </tr>
+  <tr>
+    <td>Huurder</td>
+    <td>{tenant_name} {('(' + tenant_code + ')') if tenant_code else ''}</td>
+  </tr>
+  <tr>
+    <td>Appartement</td>
+    <td>{apartment_number}</td>
+  </tr>
+  <tr>
+    <td>Type betaling</td>
+    <td>{type_label}</td>
+  </tr>
+  {f'<tr><td>Huurmaand</td><td>{rent_month_label}</td></tr>' if rent_month_label else ''}
+  <tr>
+    <td>Betalingswijze</td>
+    <td>{method_label}</td>
+  </tr>
+  {f'<tr><td>Omschrijving</td><td>{description}</td></tr>' if description else ''}
+  <tr class="amount-row">
+    <td>Ontvangen bedrag</td>
+    <td>SRD {amount:,.2f}</td>
+  </tr>
+</table>
+
+<div class="stamp-section">
+  <div class="stamp-circle">
+    <span class="stamp-text-top">{stamp_name.split()[0] if stamp_name else 'Suriname'}</span>
+    <span class="stamp-star stamp-star-left">&starf;</span>
+    <span class="stamp-initials">{initials}</span>
+    <span class="stamp-star stamp-star-right">&starf;</span>
+    <span class="stamp-text-bottom">Paramaribo</span>
+  </div>
+</div>
+
+<div class="footer">
+  {stamp_name} &bull; {stamp_address}<br/>
+  Kwitantie {kwitantie_nummer} &bull; Betaling-ID: {payment_id}
+</div>
+
+</div>
+</body>
+</html>"""
+    
+    return Response(content=html, media_type="text/html")
 
 # ============== APPLY FINES ==============
 
@@ -1131,6 +1460,11 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
     company_phone = comp.get("telefoon") or "" if comp else ""
     company_email = comp.get("email") or "" if comp else ""
     
+    # Use official stamp from settings
+    stamp_name = comp.get("stamp_company_name") or company_name if comp else company_name
+    stamp_address = comp.get("stamp_address") or company_address if comp else company_address
+    stamp_phone_val = comp.get("stamp_phone") or company_phone if comp else company_phone
+    
     tenant_name = lease.get("tenant_name", "")
     apartment_number = lease.get("apartment_number", "")
     start_date = lease.get("start_date", "")
@@ -1153,8 +1487,8 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
     end_fmt = fmt_date(end_date)
     gen_date = datetime.now(timezone.utc).strftime('%d-%m-%Y')
     
-    # Company initials for stamp
-    initials = "".join([w[0] for w in company_name.split()[:3] if w]).upper()
+    # Company initials for stamp - use stamp name from settings
+    initials = "".join([w[0] for w in stamp_name.split()[:3] if w]).upper()
 
     html = f"""<!DOCTYPE html>
 <html lang="nl">
@@ -1446,11 +1780,11 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
   <div class="letterhead-right">
     <div class="stamp">
       <div class="stamp-circle">
-        <span class="stamp-text-top">Suriname</span>
+        <span class="stamp-text-top">{stamp_name.split()[0] if stamp_name else 'Suriname'}</span>
         <span class="stamp-star stamp-star-left">&starf;</span>
         <span class="stamp-initials">{initials}</span>
         <span class="stamp-star stamp-star-right">&starf;</span>
-        <span class="stamp-text-bottom">Paramaribo</span>
+        <span class="stamp-text-bottom">{stamp_address.split(',')[0] if stamp_address else 'Paramaribo'}</span>
       </div>
     </div>
   </div>
@@ -1560,9 +1894,9 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
       <div class="sig-space">
         <div class="stamp" style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%) rotate(-15deg); opacity: 0.6;">
           <div class="stamp-circle" style="width: 80px; height: 80px;">
-            <span class="stamp-text-top" style="font-size: 5pt; top: 10px;">Suriname</span>
+            <span class="stamp-text-top" style="font-size: 5pt; top: 10px;">{stamp_name.split()[0] if stamp_name else 'Suriname'}</span>
             <span class="stamp-initials" style="font-size: 14pt;">{initials}</span>
-            <span class="stamp-text-bottom" style="font-size: 5pt; bottom: 10px;">Paramaribo</span>
+            <span class="stamp-text-bottom" style="font-size: 5pt; bottom: 10px;">{stamp_address.split(',')[0] if stamp_address else 'Paramaribo'}</span>
           </div>
         </div>
       </div>

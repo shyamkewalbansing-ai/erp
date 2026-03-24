@@ -252,6 +252,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             selectedMonth={selectedMonth}
             setSelectedMonth={setSelectedMonth}
             formatSRD={formatSRD}
+            token={token}
           />
         )}
 
@@ -792,7 +793,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit }) {
 }
 
 // ============== PAYMENTS/KWITANTIES TAB ==============
-function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD }) {
+function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token }) {
   const months = [];
   for (let i = 0; i < 12; i++) {
     const d = new Date();
@@ -852,6 +853,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Appt</th>
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
                 <th className="text-right p-4 text-sm font-medium text-slate-500">Bedrag</th>
+                <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
               </tr>
             </thead>
             <tbody>
@@ -864,11 +866,21 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   <td className="p-4 font-medium text-slate-900">{p.tenant_name}</td>
                   <td className="p-4 text-slate-600">{p.apartment_number}</td>
                   <td className="p-4">
-                    <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs capitalize">
-                      {p.payment_type?.replace('_', ' ')}
+                    <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs">
+                      {{monthly_rent:'Maandhuur',service_costs:'Servicekosten',deposit:'Borg',fine:'Boete',partial_rent:'Deelbetaling',other:'Overig'}[p.payment_type] || p.payment_type?.replace('_', ' ')}
                     </span>
                   </td>
-                  <td className="p-4 text-right font-bold text-green-600">{formatSRD(p.amount)}</td>
+                  <td className="p-4 text-right font-bold text-slate-800">{formatSRD(p.amount)}</td>
+                  <td className="p-4 text-right">
+                    <button
+                      onClick={() => window.open(`${API}/admin/payments/${p.payment_id}/receipt?token=${token}`, '_blank')}
+                      data-testid={`receipt-view-${p.payment_id}`}
+                      className="text-slate-400 hover:text-orange-500 p-1"
+                      title="Kwitantie bekijken / afdrukken"
+                    >
+                      <FileText className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
