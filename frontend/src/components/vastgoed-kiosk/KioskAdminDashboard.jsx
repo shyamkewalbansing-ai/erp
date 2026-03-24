@@ -8,6 +8,7 @@ import {
   Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase
 } from 'lucide-react';
 import axios from 'axios';
+import ReceiptTicket from './ReceiptTicket';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
@@ -253,6 +254,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             setSelectedMonth={setSelectedMonth}
             formatSRD={formatSRD}
             token={token}
+            company={company}
           />
         )}
 
@@ -793,7 +795,8 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit }) {
 }
 
 // ============== PAYMENTS/KWITANTIES TAB ==============
-function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token }) {
+function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company }) {
+  const [selectedPayment, setSelectedPayment] = useState(null);
   const months = [];
   for (let i = 0; i < 12; i++) {
     const d = new Date();
@@ -804,7 +807,19 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     });
   }
 
+  const stampData = company ? {
+    stamp_company_name: company.stamp_company_name || company.name,
+    stamp_address: company.stamp_address || company.adres || '',
+    stamp_phone: company.stamp_phone || company.telefoon || '',
+    stamp_whatsapp: company.stamp_whatsapp || ''
+  } : null;
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
+    <>
     <div className="bg-white rounded-xl border border-slate-200">
       {/* Filters */}
       <div className="p-4 border-b border-slate-200 flex items-center gap-4">
@@ -873,7 +888,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   <td className="p-4 text-right font-bold text-slate-800">{formatSRD(p.amount)}</td>
                   <td className="p-4 text-right">
                     <button
-                      onClick={() => window.open(`${API}/admin/payments/${p.payment_id}/receipt?token=${token}`, '_blank')}
+                      onClick={() => setSelectedPayment(p)}
                       data-testid={`receipt-view-${p.payment_id}`}
                       className="text-slate-400 hover:text-orange-500 p-1"
                       title="Kwitantie bekijken / afdrukken"
@@ -888,6 +903,35 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
         )}
       </div>
     </div>
+
+    {/* Kwitantie Preview Modal */}
+    {selectedPayment && (
+      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 print:p-0 print:bg-white" onClick={() => setSelectedPayment(null)}>
+        <div className="bg-slate-100 rounded-2xl shadow-2xl max-w-[520px] w-full max-h-[95vh] overflow-auto print:max-w-none print:rounded-none print:shadow-none print:bg-white" onClick={(e) => e.stopPropagation()}>
+          {/* Toolbar */}
+          <div className="flex items-center justify-between p-3 bg-slate-800 rounded-t-2xl print:hidden">
+            <p className="text-white text-sm font-medium">Kwitantie {selectedPayment.kwitantie_nummer}</p>
+            <div className="flex items-center gap-2">
+              <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600">
+                <Receipt className="w-4 h-4" /> Afdrukken
+              </button>
+              <button onClick={() => setSelectedPayment(null)} className="px-3 py-2 text-slate-400 hover:text-white text-sm">
+                Sluiten
+              </button>
+            </div>
+          </div>
+          {/* Receipt */}
+          <div className="p-4 print:p-0 flex justify-center">
+            <ReceiptTicket payment={selectedPayment} tenant={null} preview={true} stampData={stampData} />
+          </div>
+        </div>
+        {/* Hidden full-size for printing */}
+        <div className="hidden print:block print:fixed print:inset-0 print:bg-white print:z-[9999]">
+          <ReceiptTicket payment={selectedPayment} tenant={null} preview={false} stampData={stampData} />
+        </div>
+      </div>
+    )}
+    </>
   );
 }
 

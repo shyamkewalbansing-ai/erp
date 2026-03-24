@@ -4,9 +4,11 @@ function formatSRD(amount) {
 
 const TYPE_LABELS = {
   rent: 'Huurbetaling',
+  monthly_rent: 'Huurbetaling',
   partial_rent: 'Gedeeltelijke huurbetaling',
   service_costs: 'Servicekosten (water/stroom)',
   fines: 'Boetes / Achterstand',
+  fine: 'Boetes / Achterstand',
   deposit: 'Borgsom',
 };
 
@@ -102,7 +104,7 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
       </div>
 
       {/* ====== HUURMAAND INFO (alleen bij huur betalingen) ====== */}
-      {rentMonth && (payment.payment_type === 'rent' || payment.payment_type === 'partial_rent') && (
+      {rentMonth && (payment.payment_type === 'rent' || payment.payment_type === 'monthly_rent' || payment.payment_type === 'partial_rent') && (
         <div style={{ padding: `${3 * s}mm ${15 * s}mm` }}>
           <div style={{ 
             background: '#fff7ed', 

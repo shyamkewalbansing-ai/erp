@@ -27,8 +27,8 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 - [2026-03-24] Zoekbalk toegevoegd bij Huurders en Appartementen tabs
 - [2026-03-24] Kwitanties maandfilter standaard op huidige maand
 - [2026-03-24] Appartementen status: "Bewoond" -> "Bezet"
-- [2026-03-24] Kwitantie preview/print: professionele kwitantie HTML met bedrijfsstempel, afdrukken en sluiten knoppen
-- [2026-03-24] Kwitantie type labels vertaald naar Nederlands (Maandhuur, Servicekosten, etc.)
+- [2026-03-24] Kwitantie preview/print: gebruikt nu exact dezelfde ReceiptTicket component als de Kiosk, met modal in admin
+- [2026-03-24] ReceiptTicket type labels uitgebreid (monthly_rent, fine) voor compatibiliteit
 - [2026-03-24] Huurovereenkomst stempel gebruikt nu officiële bedrijfsstempel uit Instellingen
 
 ## Database Schema
