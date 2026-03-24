@@ -161,21 +161,33 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
 
 ### Updates 24 maart 2026 - Sessie 5
 
-#### Huurders Kaarten Redesign ✅
-- Tenant Cards in Admin Dashboard volledig herontworpen op basis van 4 screenshots van gebruiker
-- Oranje kleurschema consistent met rest van Dashboard
-- Nieuwe layout: avatar + naam/info + contactgegevens + 5 financiële blokken + actiebalk
-- Elementen: Maand | Huur | Service | Boetes | Totaal met kleurcodering
-- "+ Maandhuur" knop en "Achterstand" indicator per kaart
-- Bewerk- en Verwijder-knoppen per huurder
-- 19/19 frontend tests geslaagd (iteration_74)
+#### Huurders Kaarten Redesign -> Tabel Layout ✅
+- Huurders tab omgebouwd van kaarten naar tabel (zelfde stijl als Appartementen)
+- Kolommen: Huurder, Appartement, Contact, Huur, Service, Boetes, Totaal, Status, Acties
+
+#### Dashboard Tab Redesign ✅
+- Stats in tabel-formaat (Overzicht container) i.p.v. losse kaarten
+- "Recente betalingen" sectie toegevoegd als tabel onderaan het dashboard
+
+#### Stroombrekers Redesign ✅ 
+- Realistische fysieke stroombreker design met metalen behuizing, schroeven, LED indicators
+- Oranje hendel met grip-lijnen, ON/OFF markering in schakelgroef
+
+#### Huurovereenkomsten Feature ✅ (NIEUW)
+- Volledige CRUD voor huurovereenkomsten (backend + frontend)
+- Huurovereenkomsten tabel in de Huurders tab
+- Formulier: huurder, appartement, startdatum, einddatum, maandhuur, voorwaarden
+- Automatische HTML document generatie (opent in nieuw tabblad)
+- Backend endpoints: GET/POST/PUT/DELETE /api/kiosk/admin/leases + /document
+- 26/26 tests geslaagd (iteration_75)
 
 #### Gewijzigde Bestanden
-- `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - TenantsTab volledig herschreven + Phone/Mail iconen
+- `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - DashboardTab, TenantsTab, PowerTab, LeaseModal
+- `backend/routers/kiosk.py` - LeaseCreate/LeaseUpdate models, 5 lease endpoints
 
 ### Toekomstige Taken (Backlog)
-- P2: Appartementen & Kwitanties tabs moderniseren (zelfde oranje stijl)
 - P1: Tuya API integratie voor echte stroombrekers
+- P2: Appartementen & Kwitanties tabs moderniseren (zelfde stijl)
 - P2: SMS/WhatsApp herinneringen
 - P2: CSV/PDF export van betalingsrapporten
 - P2: Multi-building support per bedrijf
