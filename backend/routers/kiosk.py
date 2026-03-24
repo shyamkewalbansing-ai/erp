@@ -597,48 +597,59 @@ async def delete_apartment(apartment_id: str, company: dict = Depends(get_curren
 # Tenants CRUD
 @router.get("/admin/tenants")
 async def list_tenants(company: dict = Depends(get_current_company)):
-    """List all tenants - auto-bills new months if needed"""
-    tenants = await db.kiosk_tenants.find({"company_id": company["company_id"]}).to_list(1000)
+    """List all tenants - auto-bills new months based on billing_day setting"""
+    company_id = company["company_id"]
+    tenants = await db.kiosk_tenants.find({"company_id": company_id}).to_list(1000)
+    
+    # Get company billing_day setting
+    comp = await db.kiosk_companies.find_one({"company_id": company_id})
+    billing_day = comp.get("billing_day", 1) if comp else 1
     
     now = datetime.now(timezone.utc)
-    current_month = now.strftime("%Y-%m")  # e.g. "2026-04"
+    current_month = now.strftime("%Y-%m")
     
     result = []
     for t in tenants:
-        # Auto-bill: check if we need to add rent for new months
         billed_through = t.get("rent_billed_through", "")
         monthly_rent = t.get("monthly_rent", 0)
         outstanding = t.get("outstanding_rent", 0)
         
-        if t.get("status") == "active" and monthly_rent > 0 and billed_through and billed_through < current_month:
-            # Calculate months to bill
-            billed_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
-            current_date = datetime.strptime(current_month + "-01", "%Y-%m-%d")
-            months_to_bill = 0
-            check = billed_date + relativedelta(months=1)
-            while check <= current_date:
-                months_to_bill += 1
-                check += relativedelta(months=1)
-            
-            if months_to_bill > 0:
-                new_outstanding = outstanding + (monthly_rent * months_to_bill)
+        if t.get("status") == "active" and monthly_rent > 0:
+            if not billed_through:
+                # Initialize for existing tenants
+                billed_through = current_month
                 await db.kiosk_tenants.update_one(
                     {"tenant_id": t["tenant_id"]},
-                    {"$set": {
-                        "outstanding_rent": new_outstanding,
-                        "rent_billed_through": current_month,
-                        "updated_at": now
-                    }}
+                    {"$set": {"rent_billed_through": current_month}}
                 )
-                outstanding = new_outstanding
-                billed_through = current_month
-        elif t.get("status") == "active" and not billed_through:
-            # Initialize rent_billed_through for existing tenants
-            billed_through = current_month
-            await db.kiosk_tenants.update_one(
-                {"tenant_id": t["tenant_id"]},
-                {"$set": {"rent_billed_through": current_month}}
-            )
+            else:
+                # Auto-bill: check if billing_day of a new month has passed
+                billed_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+                next_bill_month = billed_date + relativedelta(months=1)
+                
+                # Bill new months if we're past the billing_day of the next month
+                months_billed = 0
+                while True:
+                    bill_due_date = next_bill_month.replace(day=min(billing_day, 28))
+                    if now >= bill_due_date.replace(tzinfo=timezone.utc):
+                        months_billed += 1
+                        next_bill_month += relativedelta(months=1)
+                    else:
+                        break
+                
+                if months_billed > 0:
+                    new_outstanding = outstanding + (monthly_rent * months_billed)
+                    new_billed = (billed_date + relativedelta(months=months_billed)).strftime("%Y-%m")
+                    await db.kiosk_tenants.update_one(
+                        {"tenant_id": t["tenant_id"]},
+                        {"$set": {
+                            "outstanding_rent": new_outstanding,
+                            "rent_billed_through": new_billed,
+                            "updated_at": now
+                        }}
+                    )
+                    outstanding = new_outstanding
+                    billed_through = new_billed
         
         result.append({
             "tenant_id": t["tenant_id"],
@@ -885,6 +896,49 @@ async def apply_fines(company: dict = Depends(get_current_company)):
         "amount_per_tenant": fine_amount,
         "tenants_affected": updated_count
     }
+
+
+@router.post("/admin/tenants/{tenant_id}/advance-month")
+async def advance_tenant_month(tenant_id: str, company: dict = Depends(get_current_company)):
+    """Manually advance tenant billing to next month: adds monthly_rent to outstanding"""
+    company_id = company["company_id"]
+    tenant = await db.kiosk_tenants.find_one({"tenant_id": tenant_id, "company_id": company_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    monthly_rent = tenant.get("monthly_rent", 0)
+    outstanding = tenant.get("outstanding_rent", 0)
+    billed_through = tenant.get("rent_billed_through", "")
+    
+    if not billed_through:
+        billed_through = datetime.now(timezone.utc).strftime("%Y-%m")
+    
+    # Advance to next month
+    billed_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+    next_month = billed_date + relativedelta(months=1)
+    new_billed = next_month.strftime("%Y-%m")
+    new_outstanding = outstanding + monthly_rent
+    
+    await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant_id},
+        {"$set": {
+            "outstanding_rent": new_outstanding,
+            "rent_billed_through": new_billed,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # Format month name
+    month_names_nl = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+    month_label = f"{month_names_nl[next_month.month - 1]} {next_month.year}"
+    
+    return {
+        "message": f"Huur voor {month_label} toegevoegd",
+        "rent_billed_through": new_billed,
+        "outstanding_rent": new_outstanding,
+        "monthly_rent_added": monthly_rent
+    }
+
 
 # ============== LEASE AGREEMENTS ==============
 

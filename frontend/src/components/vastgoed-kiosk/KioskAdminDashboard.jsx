@@ -1584,25 +1584,37 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
   const [type, setType] = useState('rent');
   const [loading, setLoading] = useState(false);
 
+  // Calculate next month label
+  const billedThrough = tenant?.rent_billed_through || '';
+  let nextMonthLabel = '';
+  if (billedThrough) {
+    const [y, m] = billedThrough.split('-');
+    const nextDate = new Date(parseInt(y), parseInt(m)); // month is 0-indexed, so parseInt(m) = next month
+    nextMonthLabel = nextDate.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const update = {};
-      if (type === 'rent') {
-        update.outstanding_rent = (tenant.outstanding_rent || 0) + parseFloat(amount);
-      } else if (type === 'service') {
-        update.service_costs = (tenant.service_costs || 0) + parseFloat(amount);
-      } else if (type === 'fine') {
-        update.fines = (tenant.fines || 0) + parseFloat(amount);
-      }
+      const headers = { Authorization: `Bearer ${token}` };
       
-      await axios.put(`${API}/admin/tenants/${tenant.tenant_id}`, update, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      if (type === 'rent') {
+        // Use advance-month endpoint: adds monthly rent and moves to next month
+        await axios.post(`${API}/admin/tenants/${tenant.tenant_id}/advance-month`, {}, { headers });
+      } else {
+        // Service costs or fines: add to existing balance
+        const update = {};
+        if (type === 'service') {
+          update.service_costs = (tenant.service_costs || 0) + parseFloat(amount);
+        } else if (type === 'fine') {
+          update.fines = (tenant.fines || 0) + parseFloat(amount);
+        }
+        await axios.put(`${API}/admin/tenants/${tenant.tenant_id}`, update, { headers });
+      }
       onSave();
     } catch (err) {
-      alert('Toevoegen mislukt');
+      alert(err.response?.data?.detail || 'Toevoegen mislukt');
     } finally {
       setLoading(false);
     }
@@ -1638,21 +1650,45 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
               ))}
             </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Bedrag (SRD)</label>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl text-2xl font-bold text-center"
-            />
-          </div>
+
+          {type === 'rent' ? (
+            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+              <p className="text-sm text-slate-700 mb-2">
+                Gefactureerd t/m: <span className="font-bold">{billedThrough || '-'}</span>
+              </p>
+              <p className="text-sm text-slate-700 mb-2">
+                Openstaand saldo: <span className="font-bold text-red-600">SRD {(tenant.outstanding_rent || 0).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</span>
+              </p>
+              <div className="border-t border-orange-200 pt-2 mt-2">
+                <p className="text-sm text-slate-700">
+                  Nieuwe maand: <span className="font-bold text-orange-700">{nextMonthLabel}</span>
+                </p>
+                <p className="text-sm text-slate-700">
+                  Maandhuur: <span className="font-bold">SRD {(tenant.monthly_rent || 0).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</span>
+                </p>
+                <p className="text-sm font-bold text-slate-900 mt-1">
+                  Nieuw totaal: SRD {((tenant.outstanding_rent || 0) + (tenant.monthly_rent || 0)).toLocaleString('nl-NL', {minimumFractionDigits: 2})}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium mb-1">Bedrag (SRD)</label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full px-4 py-3 border rounded-xl text-2xl font-bold text-center"
+              />
+            </div>
+          )}
+
           <div className="flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">
               Annuleren
             </button>
             <button type="submit" disabled={loading} className="flex-1 py-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">
-              {loading ? 'Toevoegen...' : 'Toevoegen'}
+              {loading ? 'Toevoegen...' : type === 'rent' ? `Huur ${nextMonthLabel} toevoegen` : 'Toevoegen'}
             </button>
           </div>
         </form>
