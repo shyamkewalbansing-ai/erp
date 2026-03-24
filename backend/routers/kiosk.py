@@ -626,17 +626,23 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                     {"$set": {"rent_billed_through": current_month}}
                 )
             else:
-                # Auto-bill: check if billing_day of a new month has passed
+                # Auto-bill: check if billing deadline has passed
                 billed_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
-                next_bill_month = billed_date + relativedelta(months=1)
                 
-                # Bill new months if we're past the billing_day of the next month
                 months_billed = 0
+                check_month = billed_date + relativedelta(months=1)
+                
                 while True:
-                    bill_due_date = next_bill_month.replace(day=min(billing_day, 28))
-                    if now >= bill_due_date.replace(tzinfo=timezone.utc):
+                    if billing_next_month:
+                        # March rent due on billing_day of April
+                        due_date = (check_month + relativedelta(months=1)).replace(day=min(billing_day, 28))
+                    else:
+                        # March rent due on billing_day of March
+                        due_date = check_month.replace(day=min(billing_day, 28))
+                    
+                    if now >= due_date.replace(tzinfo=timezone.utc):
                         months_billed += 1
-                        next_bill_month += relativedelta(months=1)
+                        check_month += relativedelta(months=1)
                     else:
                         break
                 
