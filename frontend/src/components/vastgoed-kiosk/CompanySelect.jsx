@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Building2, LogIn, UserPlus, ArrowRight, X, Eye, EyeOff, Loader2, Home, Users, CreditCard, Lock, Delete } from 'lucide-react';
+import { Building2, LogIn, UserPlus, ArrowRight, X, Eye, EyeOff, Loader2, Home, Users, CreditCard, Lock, Delete, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -231,7 +231,8 @@ function VirtualKeyboard({ onKeyPress, onBackspace, onEnter }) {
 
 // Full Auth Form - Centered, Clean design with inline keyboard
 function KioskAuthForm({ onSuccess }) {
-  const [mode, setMode] = useState('login'); // 'login', 'register', or 'pin'
+  const navigate = useNavigate();
+  const [mode, setMode] = useState('login'); // 'login', 'register', 'pin', or 'superadmin'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -307,6 +308,11 @@ function KioskAuthForm({ onSuccess }) {
         localStorage.setItem('kiosk_token', res.data.token);
         sessionStorage.setItem(`kiosk_pin_verified_${res.data.company_id}`, 'true');
         onSuccess(res.data);
+      } else if (mode === 'superadmin') {
+        const res = await axios.post(`${API}/superadmin/login`, { email, password });
+        localStorage.setItem('superadmin_token', res.data.token);
+        navigate('/vastgoed/superadmin');
+        return;
       }
     } catch (err) {
       const detail = err.response?.data?.detail;
@@ -381,6 +387,82 @@ function KioskAuthForm({ onSuccess }) {
       setLoading(false);
     }
   };
+
+  // Superadmin login screen
+  if (mode === 'superadmin') {
+    return (
+      <div className="flex-1 flex flex-col overflow-auto" data-testid="superadmin-auth-form">
+        <div className="w-full max-w-md mx-auto px-4 lg:px-6 flex-1 flex flex-col justify-center">
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-red-600 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-red-600/30">
+              <Shield className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-900">Super Admin</h2>
+            <p className="text-slate-500 text-sm mt-1">Platform beheer login</p>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-2 bg-red-50 border border-red-200 text-red-600 rounded-lg text-center text-sm" data-testid="superadmin-error">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                data-testid="superadmin-email"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500"
+                placeholder="admin@facturatie.sr"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Wachtwoord</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  data-testid="superadmin-password"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500 pr-12"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              data-testid="superadmin-login-btn"
+              className="w-full py-3 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition disabled:opacity-50"
+            >
+              {loading ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : 'Inloggen als Admin'}
+            </button>
+          </form>
+
+          <p className="text-center text-slate-500 mt-4 text-sm">
+            <button
+              onClick={() => { setMode('login'); setError(''); }}
+              className="text-orange-500 font-semibold hover:underline"
+              data-testid="switch-back-from-superadmin"
+            >
+              Terug naar bedrijfslogin
+            </button>
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // PIN login screen
   if (mode === 'pin') {
@@ -647,6 +729,20 @@ function KioskAuthForm({ onSuccess }) {
             >
               <Lock className="w-3.5 h-3.5" />
               Inloggen met PIN code
+            </button>
+          </div>
+        )}
+
+        {/* Superadmin link */}
+        {mode === 'login' && (
+          <div className="mt-2 text-center">
+            <button 
+              onClick={() => { setMode('superadmin'); setError(''); setEmail(''); setPassword(''); setActiveField('email'); }}
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 hover:text-red-500 transition"
+              data-testid="switch-to-superadmin"
+            >
+              <Shield className="w-3 h-3" />
+              Superadmin
             </button>
           </div>
         )}
