@@ -6,7 +6,7 @@
 
 # === CONFIGURATIE ===
 # Pas deze URL aan naar uw eigen domein
-KIOSK_URL="https://tenant-card-update.preview.emergentagent.com/vastgoed"
+KIOSK_URL="https://lease-sync.preview.emergentagent.com/vastgoed"
 
 # === CHROME/CHROMIUM DETECTIE ===
 if command -v chromium-browser &> /dev/null; then

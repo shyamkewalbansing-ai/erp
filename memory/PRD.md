@@ -1,292 +1,84 @@
-# Facturatie.sr - Product Requirements Document
+# Facturatie.sr - Vastgoed Kiosk ERP
 
-## Originele Probleemstelling
-Bouw en verbeter een volledige Boekhouding (Accounting) applicatie met Nederlandse interface. De focus ligt op het repareren en verbeteren van de Verkoop, Debiteuren, en Crediteuren functionaliteiten.
+## Origineel Probleem
+Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/appartement huurbetalingen) naar een bestaand full-stack ERP systeem. Vereist: True Kiosk Mode, Admin Dashboard, geïsoleerde authenticatie, stille/automatische bon-printing, robuuste touchscreen ondersteuning, en subdomain routing.
 
----
-
-## Vastgoed Kiosk Module (23 maart 2026) ✅ VOLTOOID
-
-### Beschrijving
-Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de lokale `/vastgoed` route. De module functioneert als een "Mini-SaaS" binnen het bestaande ERP-systeem met eigen authenticatie.
-
-### Voltooide Functionaliteiten
-
-#### Landing Page & Auth
-- ✅ Light Mode landing page met Kiosk styling
-- ✅ Registratie en login modal (Nederlands)
-- ✅ JWT-based authenticatie met `company_id`
-- ✅ Kiosk URL generatie voor huurders
-
-#### Admin Dashboard (7 Tabs)
-1. ✅ **Dashboard** - Statistieken: Appartementen, Huurders, Openstaande Huur, Boetes, Ontvangen
-2. ✅ **Huurders** - Beheer van huurders per bedrijf
-3. ✅ **Appartementen** - Appartementenbeheer met status
-4. ✅ **Kwitanties** - Betalingshistorie met zoek- en filteropties
-5. ✅ **Instellingen** - Facturering, boetes, bedrijfsstempel
-6. ✅ **Stroombrekers** - Stroomstatus per appartement (GEMOCKT - Tuya integratie nodig)
-7. ✅ **Abonnement** - Plan overzicht (Gratis Plan)
-
-#### Kiosk Mode (Fullscreen)
-- ✅ Welkom scherm met bedrijfsnaam en datum
-- ✅ Appartement selectie
-- ✅ Huurder identificatie (tenant code)
-- ✅ Betalingstype selectie (Maandhuur, Servicekosten, Boetes)
-- ✅ Betaling bevestiging
-- ✅ Kwitantie generatie
-
-### Technische Details
-
-**Backend:** `/app/backend/routers/kiosk.py`
-**Frontend:** `/app/frontend/src/components/vastgoed-kiosk/`
-
-**Database Collections:**
-- `kiosk_companies` - Bedrijfsaccounts
-- `kiosk_apartments` - Appartementen
-- `kiosk_tenants` - Huurders
-- `kiosk_payments` - Betalingen
-
-**API Endpoints:**
-- `POST /api/kiosk/auth/register` & `/login`
-- `GET /api/kiosk/public/{company_id}/company`
-- `GET /api/kiosk/public/{company_id}/tenants`
-- `POST /api/kiosk/public/{company_id}/payment`
-- `GET /api/kiosk/admin/dashboard`
-- `POST /api/kiosk/admin/apply-fines`
-
-### Updates 23 maart 2026 - Sessie 2
-
-#### Beheerder Toegang via PIN ✅
-- Als je via PIN bent ingelogd op de kiosk, kun je nu direct naar het Admin Dashboard via de "Beheerder" knop
-- Geen email/wachtwoord nodig als PIN al is geverifieerd
-- Token wordt automatisch gegenereerd bij PIN verificatie
-- "Terug naar Kiosk" knop in Admin Dashboard header
-
-#### Responsive Design Verbeteringen ✅
-- Alle kiosk schermen nu responsive voor kleine laptop schermen (1366x768 en kleiner)
-- PIN invoer scherm: kleinere invoervelden en keypad op mobiel
-- Welkom scherm: gestapelde layout op kleine schermen
-- Appartement selectie: 2 kolommen op mobiel, 4 op desktop
-- Admin Dashboard header: aangepast voor kleine schermen
-
-#### Gewijzigde Bestanden
-- `frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx` - Responsive + onAdmin callback
-- `frontend/src/components/vastgoed-kiosk/KioskPinEntry.jsx` - Responsive + token opslag
-- `frontend/src/components/vastgoed-kiosk/KioskApartmentSelect.jsx` - Responsive grid
-- `frontend/src/components/vastgoed-kiosk/KioskLayout.jsx` - Admin step toegevoegd
-- `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - PIN auth support + responsive header
-- `backend/routers/kiosk.py` - Token generatie bij PIN verificatie
-
-### Updates 23 maart 2026 - Sessie 1
-
-#### Kwitantie Verbeteringen ✅
-1. **Maand weergave toegevoegd** - Bij gedeeltelijke/volledige huurbetalingen wordt nu de betalingsmaand duidelijk getoond:
-   - Nieuwe "Voor welke maand?" sectie in betalingsflow
-   - Maand keuze uit huidige maand + 3 voorgaande maanden
-   - Maand getoond in bevestigingsscherm
-   - **Prominente oranje box** op kwitantie: "HUURBETALING VOOR [Maand]"
-   
-2. **Dynamische bedrijfsnaam** - De kwitantie toont nu de echte bedrijfsnaam van de gebruiker:
-   - Header toont bedrijfsnaam in plaats van "APPARTEMENT KIOSK SURINAME"
-   - Initialen worden automatisch gegenereerd uit bedrijfsnaam
-   - Bedrijfsstempel rechtsonder met bedrijfsnaam
-
-3. **Layout fix betalingsscherm** - "Volgende" knop nu altijd zichtbaar onderaan scherm
-
-#### Kiosk PIN Beveiliging ✅
-1. **4-cijferige PIN code** voor kiosk toegang:
-   - Admin kan PIN instellen in Instellingen tab
-   - Huurders moeten PIN invoeren voordat ze de kiosk kunnen gebruiken
-   - PIN wordt opgeslagen per bedrijf
-   - Session-based verificatie (hoeft maar 1x per sessie)
-
-2. **PIN invoer scherm**:
-   - Professioneel beveiligd scherm met bedrijfsnaam
-   - Nummerpad voor PIN invoer
-   - Foutmelding bij verkeerde PIN
-   - "Terug naar home" optie
-
-#### Verbeterde Print Functie ✅
-- Print functie nu via iframe (betrouwbaarder dan popup)
-- Betere error handling
-- A4 formaat met exacte kleuren
-
-#### Gewijzigde Bestanden
-- `frontend/src/components/vastgoed-kiosk/ReceiptTicket.jsx` - Dynamische bedrijfsnaam, prominente maand box
-- `frontend/src/components/vastgoed-kiosk/KioskPaymentSelect.jsx` - Maand selectie, vaste Volgende knop
-- `frontend/src/components/vastgoed-kiosk/KioskPaymentConfirm.jsx` - Maand weergave
-- `frontend/src/components/vastgoed-kiosk/KioskPinEntry.jsx` - NIEUW: PIN invoer component
-- `frontend/src/components/vastgoed-kiosk/KioskLayout.jsx` - PIN verificatie flow
-- `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - PIN instellingen sectie
-- `frontend/src/components/vastgoed-kiosk/KioskReceipt.jsx` - Verbeterde print functie
-- `backend/routers/kiosk.py` - PIN endpoints en /auth/me uitgebreid
-
-### Updates 23 maart 2026 - Sessie 3
-
-#### Virtueel Toetsenbord & Input Fix ✅
-1. **Toetsenbord breedte** - Virtueel toetsenbord vult nu de volledige breedte van het rechterpaneel
-   - Toetsenbord verplaatst buiten de `max-w-lg` container
-   - Formuliervelden blijven gecentreerd op comfortabele breedte
-2. **Fysiek toetsenbord** - Werkt correct op alle invoervelden (readOnly verwijderd)
-3. **Foutafhandeling** - FastAPI validatiefouten worden correct geparsed
-4. **Data-testid attributen** - Toegevoegd aan alle interactieve elementen
-
-#### Formulier Centrering & Tekst Correcties ✅
-1. **Formulier gecentreerd** - Inlogformulier verticaal gecentreerd in rechterpaneel
-   - Schuift omhoog wanneer toetsenbord opengaat (smooth transitie)
-   - Schuift terug naar midden wanneer toetsenbord sluit
-2. **Touchscreen auto-detect** - Schermtoetsenbord opent automatisch op touchscreen apparaten
-3. **Tekst verhuurder perspectief** - Alle teksten aangepast van huurder naar verhuurder perspectief:
-   - Landing: "Appartement Kiosk" + "Beheer uw appartementen en ontvang huurbetalingen"
-   - Kiosk welkom: "Beheer huurbetalingen, servicekosten en meer"
-   - Kiosk rechts: "Snel, eenvoudig en veilig huurbetalingen ontvangen"
-   - Kiosk URL: "Plaats deze URL op uw kiosk apparaat"
-4. **Uitloggen knop** - Prominenter gemaakt met icoon op ingelogde pagina
-
-#### PIN Login Feature ✅
-1. **PIN login op landing pagina** - Bedrijven kunnen inloggen met 4-cijferige PIN of wachtwoord
-   - Nieuw backend endpoint: `POST /api/kiosk/auth/pin`
-   - PIN keypad met vierkante blokken en zichtbare cijfers
-   - Auto-submit bij 4 cijfers, direct redirect naar kiosk
-2. **Unieke PIN** - Backend valideert dat geen twee bedrijven dezelfde PIN hebben
-3. **Kiosk PIN beveiliging** - Kiosk pagina vraagt PIN bij direct URL bezoek
-   - SessionStorage wordt gewist bij uitloggen
-   - Zonder PIN is kiosk GEBLOKKEERD ("Kiosk Niet Beschikbaar")
-4. **Logout verbeterd** - Wist zowel localStorage (token) als sessionStorage (PIN verificatie)
-
-#### Gewijzigde Bestanden
-- `frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` - Direct redirect na login, auto-redirect
-- `frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx` - Uitloggen knop toegevoegd
-- `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - Uitloggen knop in header
-
-### Updates 24 maart 2026 - Sessie 5
-
-#### Huurders Kaarten Redesign -> Tabel Layout ✅
-- Huurders tab omgebouwd van kaarten naar tabel (zelfde stijl als Appartementen)
-- Kolommen: Huurder, Appartement, Contact, Huur, Service, Boetes, Totaal, Status, Acties
-
-#### Dashboard Tab Redesign ✅
-- Stats in tabel-formaat (Overzicht container) i.p.v. losse kaarten
-- "Recente betalingen" sectie toegevoegd als tabel onderaan het dashboard
-
-#### Stroombrekers Redesign ✅ 
-- Realistische fysieke stroombreker design met metalen behuizing, schroeven, LED indicators
-- Oranje hendel met grip-lijnen, ON/OFF markering in schakelgroef
-
-#### Huurovereenkomsten Feature ✅ (NIEUW)
-- Volledige CRUD voor huurovereenkomsten (backend + frontend)
-- Huurovereenkomsten tabel in de Huurders tab
-- Formulier: huurder, appartement, startdatum, einddatum, maandhuur, voorwaarden
-- Automatische HTML document generatie (opent in nieuw tabblad)
-- Backend endpoints: GET/POST/PUT/DELETE /api/kiosk/admin/leases + /document
-- 26/26 tests geslaagd (iteration_75)
-
-#### Automatische Huurovereenkomst bij Nieuwe Huurder ✅ (NIEUW)
-- Startdatum + Einddatum velden in het huurder-formulier (alleen bij nieuwe huurder)
-- Backend maakt automatisch een huurovereenkomst aan wanneer beide datums ingevuld zijn
-- Helpertekst: "Automatisch een huurovereenkomst aanmaken"
-
-#### Dashboard Verlopen Waarschuwingen ✅ (NIEUW)
-- Rode banner als huurovereenkomsten al verlopen zijn
-- Oranje banner als overeenkomsten binnen 30 dagen verlopen
-- Toont huurder namen en einddatums
-- 16/16 tests geslaagd (iteration_76)
-
-### Toekomstige Taken (Backlog)
-- P1: Tuya API integratie voor echte stroombrekers
-- P2: Appartementen & Kwitanties tabs moderniseren (zelfde stijl)
-- P2: SMS/WhatsApp herinneringen
-- P2: CSV/PDF export van betalingsrapporten
-- P2: Multi-building support per bedrijf
-- P2: Wachtwoord vergeten functionaliteit
-- P2: E-mail notificaties voor verlopen abonnementen
-
----
-
-## Huidige Sessie Updates (9 maart 2026)
-
-### Voltooide Werkzaamheden
-
-#### 1. Verkoop Pagina Fixes
-- ✅ **Email modal met bewerkbare velden** - Gebruiker kan nu onderwerp en bericht aanpassen voor verzending
-- ✅ **Factuurnummer en datum weergave** - Nu correct weergegeven in de facturen lijst
-- ✅ **Print functie** - Opent nu direct een print dialoog in plaats van PDF download
-- ✅ **Email versturen** - Retourneert nu correcte success response (was eerder fout)
-- ✅ **debiteur_email** - Email adres wordt nu correct opgehaald van klantgegevens
-
-#### 2. PDF Design Verbeteringen
-- ✅ **Nieuw design** gebaseerd op gebruiker referentie:
-  - Logo met initialen in groene cirkel
-  - Bedrijfsnaam naast logo
-  - "FACTUUR" titel prominent
-  - Donkerblauwe diagonale streep rechtsboven
-  - Groene diagonale streep rechtsonder
-  - Tabel met groene header
-  - Betalingsvoorwaarden sectie
-  - Totaal met groene achtergrond
-  - Handtekening sectie
-
-#### 3. Email Service Fixes
-- ✅ MIME structuur gecorrigeerd voor emails met bijlagen
-- ✅ Betere Nederlandse foutmeldingen voor SMTP errors
-- ✅ Consistente UnifiedEmailService gebruikt voor alle emails
-
-#### 4. Backend Data Normalisatie
-- ✅ `nummer` en `datum` velden worden nu consistent teruggegeven naast `factuurnummer` en `factuurdatum`
-- ✅ `debiteur_email` wordt dynamisch opgehaald als niet aanwezig in factuur
-
-### Gewijzigde Bestanden
-- `backend/routers/boekhouding_legacy.py` - Email endpoint, data normalisatie
-- `backend/services/pdf_generator.py` - Volledig nieuw design met decoratieve elementen
-- `backend/services/unified_email_service.py` - MIME fix voor bijlagen
-- `frontend/src/pages/boekhouding/VerkoopPage.js` - Email modal, print functie, data display
-
-## Nog Te Verifiëren Door Gebruiker
-
-### P1 - Verificatie Vereist
-1. **Debiteuren pagina** - Delete button en View modal
-2. **Crediteuren pagina** - Delete button en View modal
-3. **HRM/Grootboek integratie** - Loonbelasting (2360) en AOV (2380) journaalposten
-4. **Kostenplaatsen** - Pagina en functionaliteit
-
-## Bekende Problemen (Backlog)
-
-### P2 - PWA Offline Functionaliteit
-- Service worker is defect
-- Offline data synchronisatie (`offlineDb.js`) werkt niet
-- Twee redundante offline indicators moeten worden geconsolideerd
-
-### P3 - Live Chat Systeem
-- Niet afgemaakt
-
-## Technische Architectuur
-
-### Frontend
-- React met Tailwind CSS
-- Shadcn UI componenten
-- lucide-react iconen
-
-### Backend
-- FastAPI (Python)
-- MongoDB database
-
-### Key Collections
-- `boekhouding_verkoopfacturen`
-- `boekhouding_debiteuren`
-- `boekhouding_crediteuren`
-- `boekhouding_offertes`
-- `boekhouding_journaal`
-
-## Deployment Instructies
-
-Om updates naar productie te deployen:
-```bash
-cd /home/facturatie/htdocs/facturatie.sr
-git pull origin main
-cd frontend && yarn build
-sudo supervisorctl restart facturatie-backend facturatie-frontend
+## Architectuur
+```
+/app/
+├── backend/
+│   ├── routers/
+│   │   └── kiosk.py                 # Core billing logic, Lease endpoints, Auth
+│   ├── tests/
+│   │   └── test_billing.py          # 8 pytest regressietests voor billing engine
+│   └── .env
+├── frontend/
+│   ├── src/
+│   │   └── components/
+│   │       └── vastgoed-kiosk/
+│   │           └── KioskAdminDashboard.jsx  # Admin dashboard met alle tabs
+│   └── .env
+└── memory/
+    └── PRD.md
 ```
 
-## Test Credentials
-- Email: demo@facturatie.sr
-- Password: demo2024
+## Kern Features (Geïmplementeerd)
+- Kiosk modus voor huurbetalingen (PIN login)
+- Admin Dashboard met tabs: Dashboard, Huurders, Appartementen, Kwitanties, Instellingen, Stroombrekers, Abonnement
+- Huurovereenkomsten (Lease Agreements) module met CRUD en auto-generatie
+- Automatische billing engine (side-effect op GET /admin/tenants)
+- Configureerbare "Huur vervalt op dag" (billing_day) + "Dezelfde/Volgende maand" toggle
+- Boete-systeem op basis van vervaldatum
+- Skeuomorphic Stroombrekers UI (NIET AANPASSEN)
+- Dashboard waarschuwingen voor aflopende huurcontracten
+
+## Billing Engine Semantiek
+- **billing_next_month=True ("Volgende maand")**: Due date = billing_day van de VOLGENDE maand. Feb huur vervalt op 24 maart.
+- **billing_next_month=False ("Dezelfde maand")**: Due date = billing_day van DEZELFDE maand. Feb huur vervalt op 24 feb.
+- Boete wordt toegepast als: openstaand > 0 EN vervaldatum gepasseerd EN nog niet eerder beboet voor die periode
+- Idempotent: meerdere aanroepen produceren geen dubbele facturering/boetes
+
+## Sleutel DB Schema
+- `kiosk_companies`: billing_day (int), billing_next_month (bool), fine_amount (float)
+- `kiosk_tenants`: rent_billed_through (YYYY-MM), last_fine_month (YYYY-MM), outstanding_rent, fines, monthly_rent
+- `kiosk_leases`: start_date, end_date, monthly_rent, terms
+
+## API Endpoints
+- `GET /api/kiosk/admin/tenants` - Triggers auto-billing side-effects
+- `POST /api/kiosk/admin/leases`
+- `PUT /api/kiosk/auth/settings`
+- `POST /api/kiosk/admin/tenants/{id}/advance-month`
+
+## Wat is Geïmplementeerd
+| Datum | Feature/Fix |
+|-------|-------------|
+| 2026-03 | UI/UX herontwerp Admin Dashboard tabs |
+| 2026-03 | Skeuomorphic Stroombrekers interface |
+| 2026-03 | Huurovereenkomsten module (CRUD + auto-generatie) |
+| 2026-03 | Start/eind datum velden voor huurders → automatische lease |
+| 2026-03 | Dashboard waarschuwingsbanner voor aflopende leases |
+| 2026-03 | Bewerkbare financiële velden in Edit Tenant modal |
+| 2026-03 | Auto-billing engine met rent_billed_through tracking |
+| 2026-03 | "Huur vervalt op dag" instelling + Dezelfde/Volgende maand toggle |
+| 2026-03-24 | P0 Bug Fix: Billing engine geverifieerd met 8 pytest tests (alle scenario's + idempotency) |
+
+## Gemockt
+- Tuya API voor stroombrekers (backend)
+
+## Backlog (Geprioriteerd)
+### P1
+- Tuya API integratie voor stroombrekers
+
+### P2
+- Moderniseer "Kwitanties" tab (uniforme tabelstijl + zoeken/filteren)
+- SMS/WhatsApp herinneringen
+- CSV/PDF export van betalingsrapporten
+- Wachtwoord vergeten functionaliteit
+- Multi-building support per bedrijf
+
+### Refactoring
+- KioskAdminDashboard.jsx opsplitsen in kleinere componenten (>1600 regels)
+
+## Testgegevens
+- PIN login: 7755 (KEWALBANSING)
+- Email: shyam@kewalbansing.com, sushsital@hotmail.com

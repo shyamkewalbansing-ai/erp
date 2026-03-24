@@ -12,7 +12,7 @@
   "test_results": {
     "service_worker_registration": {
       "status": "PASS",
-      "details": "SW v7 registered at scope https://tenant-card-update.preview.emergentagent.com/, state: activated"
+      "details": "SW v7 registered at scope https://lease-sync.preview.emergentagent.com/, state: activated"
     },
     "index_html_caching": {
       "status": "PASS",

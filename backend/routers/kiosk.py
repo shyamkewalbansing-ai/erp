@@ -625,17 +625,21 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                 billed_through = current_month
                 updates["rent_billed_through"] = current_month
             else:
-                # Auto-bill: check if billing deadline has passed
+                # Auto-billing engine
+                # How it works:
+                #   billed_through = last month whose rent was added to outstanding
+                #   check_month = next month to potentially bill (billed_through + 1)
+                #   The due date determines WHEN the next month's rent gets added:
+                #     billing_next_month=True  ("Volgende maand"): due_date = check_month's billing_day
+                #       -> Feb rent due March 24. After March 24: bill March.
+                #     billing_next_month=False ("Dezelfde maand"): due_date = prev_month's billing_day
+                #       -> Feb rent due Feb 24. After Feb 24: bill March.
                 billed_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
                 
                 months_billed = 0
                 check_month = billed_date + relativedelta(months=1)
                 
                 while True:
-                    # check_month = month we want to bill (e.g. April)
-                    # We bill it when the deadline for the PREVIOUS month has passed
-                    # billing_next_month=True: March rent due on April's billing_day
-                    # billing_next_month=False: March rent due on March's billing_day
                     prev_month = check_month - relativedelta(months=1)
                     if billing_next_month:
                         due_date = check_month.replace(day=min(billing_day, 28))
@@ -649,11 +653,10 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                         break
                 
                 if months_billed > 0:
-                    # Check if there was outstanding rent before billing - apply fine
+                    # Apply fine for existing outstanding BEFORE adding new rent
                     if outstanding > 0 and fine_amount > 0:
-                        # Tenant had unpaid rent when deadline passed -> add fine once
                         last_fine_month = t.get("last_fine_month", "")
-                        fine_due_month = billed_through  # The month they failed to pay
+                        fine_due_month = billed_through  # The period they failed to pay
                         if last_fine_month != fine_due_month:
                             current_fines += fine_amount
                             updates["fines"] = current_fines
@@ -664,7 +667,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                     updates["outstanding_rent"] = outstanding
                     updates["rent_billed_through"] = billed_through
             
-            # Check: is current month's rent overdue? Apply fine if so
+            # Catch-up fine: apply fine when no new billing happened but rent is overdue
             if outstanding > 0 and fine_amount > 0 and not updates.get("last_fine_month"):
                 billed_dt = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
                 if billing_next_month:
