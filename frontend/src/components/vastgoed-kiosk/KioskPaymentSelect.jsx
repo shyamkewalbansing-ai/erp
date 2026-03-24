@@ -41,12 +41,22 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
 
   return (
     <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[55%] h-full bg-orange-600/30 rounded-l-[100px] pointer-events-none" />
+      {/* Background decorations */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
+        <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
+        <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
+        <div className="absolute bottom-[10%] left-[8%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
+        <div className="absolute top-[50%] right-[5%] w-28 h-28 border-[3px] border-white/8 rounded-full" />
+        <div className="absolute top-0 left-[35%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
+        <div className="absolute top-[40%] left-[3%] w-3 h-3 bg-white/15 rounded-full" />
+        <div className="absolute top-[25%] right-[20%] w-4 h-4 bg-white/10 rounded-full" />
+      </div>
 
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-8 lg:px-12 py-5">
-        <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white transition font-medium">
-          <ArrowLeft className="w-6 h-6" /><span className="text-base">Terug</span>
+        <button onClick={onBack} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
+          <ArrowLeft className="w-5 h-5" /><span>Terug</span>
         </button>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Wat wilt u betalen?</h1>
         <div className="text-right hidden sm:block">

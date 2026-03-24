@@ -57,24 +57,35 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
 
   return (
     <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[55%] h-full bg-orange-600/30 rounded-l-[100px] pointer-events-none" />
-      <div className="absolute bottom-0 left-[20%] w-60 h-60 bg-white/5 rounded-full pointer-events-none" />
+      {/* Background decorations */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
+        <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
+        <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
+        <div className="absolute bottom-[8%] left-[12%] w-40 h-40 border-[3px] border-white/10 rounded-full" />
+        <div className="absolute bottom-[12%] left-[14%] w-24 h-24 bg-white/5 rounded-full" />
+        <div className="absolute top-[50%] right-[5%] w-32 h-32 border-[3px] border-white/8 rounded-full" />
+        <div className="absolute top-0 left-[35%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
+        <div className="absolute top-0 left-[75%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent -rotate-6 origin-top" />
+        <div className="absolute top-[30%] left-[3%] w-3 h-3 bg-white/15 rounded-full" />
+        <div className="absolute top-[65%] right-[18%] w-4 h-4 bg-white/10 rounded-full" />
+      </div>
 
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-8 lg:px-12 py-5">
-        <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white transition font-medium">
-          <ArrowLeft className="w-6 h-6" /><span className="text-base">Terug</span>
+        <button onClick={onBack} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
+          <ArrowLeft className="w-5 h-5" /><span>Terug</span>
         </button>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Kies uw appartement</h1>
-        <div className="flex gap-1.5 bg-white/20 backdrop-blur-sm rounded-2xl p-1.5 border border-white/10">
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">Kies uw appartement</h1>
+        <div className="flex gap-1.5 bg-white/20 backdrop-blur-sm rounded-2xl p-1.5 border border-white/20 shadow-lg">
           <button onClick={() => { setMode('grid'); setError(''); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition ${
-              mode === 'grid' ? 'bg-white text-orange-600 shadow-md' : 'text-white/80 hover:text-white'}`}>
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
+              mode === 'grid' ? 'bg-white text-orange-600 shadow-md' : 'text-white hover:bg-white/10'}`}>
             <Building2 className="w-4 h-4" /><span className="hidden sm:inline">Appartement</span>
           </button>
           <button onClick={() => { setMode('code'); setError(''); }}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition ${
-              mode === 'code' ? 'bg-white text-orange-600 shadow-md' : 'text-white/80 hover:text-white'}`}>
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
+              mode === 'code' ? 'bg-white text-orange-600 shadow-md' : 'text-white hover:bg-white/10'}`}>
             <Keyboard className="w-4 h-4" /><span className="hidden sm:inline">Code</span>
           </button>
         </div>

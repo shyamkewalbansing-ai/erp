@@ -7,13 +7,11 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
-
 const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijke betaling', service_costs: 'Servicekosten', fines: 'Boetes' };
 
 export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuccess, companyId }) {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
-
   if (!tenant || !paymentData) return null;
 
   const handlePayment = async () => {
@@ -25,41 +23,41 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
         description: paymentData.description, rent_month: paymentData.rent_month || null,
       });
       setTimeout(() => onSuccess(res.data), 800);
-    } catch {
-      setError('Betaling mislukt. Probeer opnieuw.');
-      setProcessing(false);
-    }
+    } catch { setError('Betaling mislukt. Probeer opnieuw.'); setProcessing(false); }
   };
 
   return (
     <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col items-center justify-center relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[55%] h-full bg-orange-600/30 rounded-l-[100px] pointer-events-none" />
-      <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/5 rounded-full pointer-events-none" />
+      {/* Background decorations */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
+        <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
+        <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
+        <div className="absolute bottom-[15%] left-[10%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
+        <div className="absolute top-[40%] right-[8%] w-24 h-24 bg-white/5 rounded-full" />
+        <div className="absolute top-0 left-[45%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
+        <div className="absolute top-[55%] left-[5%] w-3 h-3 bg-white/15 rounded-full" />
+      </div>
 
       <div className="absolute top-5 left-8 z-20">
-        <button onClick={onBack} disabled={processing} className="flex items-center gap-2 text-white/80 hover:text-white transition font-medium disabled:opacity-50">
-          <ArrowLeft className="w-6 h-6" /><span className="text-base">Terug</span>
+        <button onClick={onBack} disabled={processing} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm disabled:opacity-50">
+          <ArrowLeft className="w-5 h-5" /><span>Terug</span>
         </button>
       </div>
 
       <div className="relative z-10 text-center mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Bevestig betaling</h1>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Bevestig betaling</h1>
       </div>
 
       <div className="relative z-10 bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6 border border-white/50">
-        {/* Amount */}
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 sm:p-10 text-center mb-6 shadow-xl shadow-orange-500/20">
           <p className="text-orange-100 text-base mb-2">Te betalen bedrag</p>
-          <p className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-3 tracking-tight" data-testid="confirm-amount">
-            {formatSRD(paymentData.amount)}
-          </p>
+          <p className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-3 tracking-tight" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
           <div className="flex items-center justify-center gap-2 text-orange-100 text-sm">
-            <Banknote className="w-5 h-5" />
-            <span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
+            <Banknote className="w-5 h-5" /><span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
           </div>
         </div>
 
-        {/* Tenant */}
         <div className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/50 border border-slate-100 mb-5">
           <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center flex-shrink-0 shadow-sm">
             <User className="w-6 h-6" />
@@ -70,7 +68,6 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           </div>
         </div>
 
-        {/* Summary */}
         <div className="rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/50 border border-slate-100 p-5 sm:p-6 mb-6">
           <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-widest">Overzicht</h4>
           <div className="space-y-3 text-base">

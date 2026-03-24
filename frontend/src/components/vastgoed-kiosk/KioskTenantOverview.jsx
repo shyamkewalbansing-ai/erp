@@ -4,6 +4,20 @@ function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+const BG_DECOR = () => (
+  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+    <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
+    <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
+    <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
+    <div className="absolute bottom-[10%] left-[8%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
+    <div className="absolute bottom-[14%] left-[10%] w-20 h-20 bg-white/5 rounded-full" />
+    <div className="absolute top-[45%] right-[6%] w-28 h-28 border-[3px] border-white/8 rounded-full" />
+    <div className="absolute top-0 left-[40%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
+    <div className="absolute top-[35%] left-[4%] w-3 h-3 bg-white/15 rounded-full" />
+    <div className="absolute top-[60%] right-[15%] w-4 h-4 bg-white/10 rounded-full" />
+  </div>
+);
+
 export default function KioskTenantOverview({ tenant, onBack, onPay }) {
   if (!tenant) return null;
 
@@ -18,15 +32,14 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
 
   return (
     <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[55%] h-full bg-orange-600/30 rounded-l-[100px] pointer-events-none" />
-      <div className="absolute bottom-[10%] left-[5%] w-48 h-48 bg-white/5 rounded-full pointer-events-none" />
+      <BG_DECOR />
 
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-8 lg:px-12 py-5">
-        <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white transition font-medium">
-          <ArrowLeft className="w-6 h-6" /><span className="text-base">Terug</span>
+        <button onClick={onBack} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
+          <ArrowLeft className="w-5 h-5" /><span>Terug</span>
         </button>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Uw overzicht</h1>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">Uw overzicht</h1>
         <div className="w-20" />
       </div>
 
@@ -44,7 +57,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
               <p className="text-sm text-slate-400">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
             </div>
             <div className="text-right flex-shrink-0">
-              <p className="text-xs text-slate-400">Maandhuur</p>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider">Maandhuur</p>
               <p className="text-lg sm:text-xl font-extrabold text-slate-900">{formatSRD(tenant.monthly_rent)}</p>
             </div>
           </div>
@@ -107,8 +120,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
               <p className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-8 tracking-tight">{formatSRD(total)}</p>
               <button onClick={onPay} data-testid="pay-btn"
                 className="w-full py-5 sm:py-6 px-8 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/30 transition active:scale-[0.98]">
-                <CreditCard className="w-6 h-6" />
-                Betalen
+                <CreditCard className="w-6 h-6" /> Betalen
               </button>
             </>
           ) : (

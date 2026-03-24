@@ -19,10 +19,14 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 
 ## Kiosk Design Stijl
 - **Albert Heijn zelfscankassa stijl** - Echte kiosk look & feel
-- **Achtergrond:** Dikke oranje gradient (from-orange-500 via-orange-500 to-orange-600) vult het hele scherm
-- **Kaarten:** Witte zwevende kaarten (rounded-3xl, shadow-2xl) voor alle content
-- **Knoppen:** Groot, touch-friendly (py-4 px-6 rounded-2xl)
-- **Decoratieve elementen:** Subtiele overlays voor visueel diepte
+- **Achtergrond:** Dikke oranje gradient (from-orange-500 via-orange-500 to-orange-600) met rijke decoratie:
+  - Decoratieve cirkels met witte borders (3D diepte)
+  - Glow effecten (blur-3xl)
+  - Diagonale lijnen
+  - Gradient overlays
+- **Kaarten:** Witte zwevende kaarten (rounded-[2rem], shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)])
+- **Knoppen:** Groot, touch-friendly (py-5/py-6, rounded-2xl)
+- **Header knoppen:** bg-white/20 backdrop-blur-sm border border-white/20 (glasachtig, goed zichtbaar)
 - **Receipt pagina:** Groene gradient achtergrond
 
 ## Voltooide Features
@@ -31,25 +35,22 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 - [2026-03-23] Realistische Huurovereenkomst met rode bedrijfsstempel (Suriname)
 - [2026-03-23] Werknemers tab (CRUD + salarisbetalingen)
 - [2026-03-23] Bank/Kas tab (dynamische inkomsten, alleen uitgaven in kas tabel)
-- [2026-03-24] Kleurfix Huurders tabel: bedragen standaard zwart, alleen oranje/rood bij achterstand
-- [2026-03-24] Zoekbalk toegevoegd bij Huurders en Appartementen tabs
+- [2026-03-24] Kleurfix Huurders tabel
+- [2026-03-24] Zoekbalk bij Huurders en Appartementen tabs
 - [2026-03-24] Kwitanties maandfilter standaard op huidige maand
-- [2026-03-24] Appartementen status: "Bewoond" -> "Bezet"
-- [2026-03-24] Kwitantie preview/print: gebruikt nu exact dezelfde ReceiptTicket component als de Kiosk
-- [2026-03-24] ReceiptTicket type labels uitgebreid (monthly_rent, fine)
-- [2026-03-24] Kiosk betaalpagina: meerdere items tegelijk selecteerbaar, "Alles betalen", "Ander bedrag" keypad
-- [2026-03-24] Bedrijfsstempel geheel vernieuwd: rechthoekig formaat met huis-icoon
-- [2026-03-24] Betaalmethoden sectie: bankgegevens getoond op kwitanties
-- [2026-03-24] WhatsApp Business API: self-service configuratie, berichten versturen
-- [2026-03-24] WhatsApp Berichten tab: berichtengeschiedenis
-- [2026-03-24] Stroombreker auto-cutoff instelling
-- [2026-03-24] Tabs navigatie: horizontaal scrollbaar
-- [2026-03-24] Superadmin Dashboard (SaaS management)
+- [2026-03-24] Kwitantie preview/print ReceiptTicket component
+- [2026-03-24] Kiosk betaalpagina meerdere items selecteerbaar
+- [2026-03-24] Bedrijfsstempel vernieuwd
+- [2026-03-24] WhatsApp Business API + Berichten tab
+- [2026-03-24] Stroombreker auto-cutoff
+- [2026-03-24] Superadmin Dashboard
 - [2026-03-24] Virtual Keyboard voor touch devices
-- [2026-03-24] Tenant code management (handmatig + A-Z keypad)
-- [2026-03-24] Delete buttons voor Appartementen en Kwitanties
+- [2026-03-24] Tenant code management
+- [2026-03-24] Delete buttons Appartementen/Kwitanties
 - [2026-03-24] Responsive UI overhaul
-- **[2026-03-24] KIOSK REDESIGN: Albert Heijn stijl - Oranje gradient achtergrond, witte zwevende kaarten, echte kiosk look (alle 7 pagina's)**
+- **[2026-03-24] KIOSK REDESIGN V1: Albert Heijn stijl - Oranje gradient, witte zwevende kaarten**
+- **[2026-03-24] KIOSK REDESIGN V2: Grotere kaarten, mooiere schaduwen, grotere tekst/knoppen**
+- **[2026-03-24] KIOSK REDESIGN V3: Rijkere achtergrond (cirkels, glow, lijnen, stippen) + zichtbare glasachtige knoppen**
 
 ## Database Schema
 - `kiosk_employees`: name, role, salary, hire_date, status
@@ -58,37 +59,29 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 - `kiosk_companies`: subscription_plan, is_active, power_cutoff_days
 - `kiosk_tenants`: tenant_code (handmatig instelbaar)
 
-## Kas Logica
-- Totale Inkomsten = dynamisch uit kiosk_payments (status=completed)
-- Totale Uitgaven = som uit kiosk_kas collection
-- Kassaldo = Inkomsten - Uitgaven
-- NOOIT income entries schrijven naar kiosk_kas
-
 ## Bestanden
 - `/app/backend/routers/kiosk.py` - Alle backend logica
 - `/app/frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - Admin UI
-- `/app/frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx` - Kiosk welkom (oranje bg + witte kaart)
-- `/app/frontend/src/components/vastgoed-kiosk/KioskApartmentSelect.jsx` - Appartement selectie
-- `/app/frontend/src/components/vastgoed-kiosk/KioskTenantOverview.jsx` - Huurder overzicht
-- `/app/frontend/src/components/vastgoed-kiosk/KioskPaymentSelect.jsx` - Betaling selectie
-- `/app/frontend/src/components/vastgoed-kiosk/KioskPaymentConfirm.jsx` - Betaling bevestiging
-- `/app/frontend/src/components/vastgoed-kiosk/KioskReceipt.jsx` - Kwitantie/succes
-- `/app/frontend/src/components/vastgoed-kiosk/KioskPinEntry.jsx` - PIN invoer
-- `/app/backend/tests/test_billing.py` - Pytest billing tests
+- `/app/frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/KioskApartmentSelect.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/KioskTenantOverview.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/KioskPaymentSelect.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/KioskPaymentConfirm.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/KioskReceipt.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/KioskPinEntry.jsx`
 
 ## Credentials
 - Email: demo@facturatie.sr | Wachtwoord: demo2024
 - Superadmin: admin@facturatie.sr | Wachtwoord: Bharat7755
-- Login via: /vastgoed
 
 ## Backlog (Geprioriteerd)
 ### P2
-- Kwitanties tab moderniseren (unified table, zoek/filter)
-- Maandelijks financieel rapport (Kas inkomsten, uitgaven, salarissen)
+- Kwitanties tab moderniseren
+- Maandelijks financieel rapport
 - CSV/PDF export betalingsrapporten
 - Wachtwoord vergeten functionaliteit
 - Multi-building support per bedrijf
 
 ## Refactoring Nodig
-- KioskAdminDashboard.jsx (3000+ regels) opsplitsen in aparte tab-componenten
-- kiosk.py (2800+ regels) opsplitsen in aparte routers
+- KioskAdminDashboard.jsx (3000+ regels) opsplitsen
+- kiosk.py (2800+ regels) opsplitsen
