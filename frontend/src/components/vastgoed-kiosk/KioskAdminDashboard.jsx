@@ -5,7 +5,7 @@ import {
   ArrowLeft, DollarSign, Loader2, Settings, ExternalLink,
   Copy, Check, Receipt, Zap, Crown, Search, Calendar,
   AlertTriangle, User, Banknote, FileText, Save, Eye, LogIn,
-  Phone, Mail
+  Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -137,6 +137,8 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'tenants', label: 'Huurders', icon: Users },
     { id: 'apartments', label: 'Appartementen', icon: Home },
     { id: 'payments', label: 'Kwitanties', icon: Receipt },
+    { id: 'kas', label: 'Bank/Kas', icon: Landmark },
+    { id: 'employees', label: 'Werknemers', icon: Briefcase },
     { id: 'settings', label: 'Instellingen', icon: Settings },
     { id: 'power', label: 'Stroombrekers', icon: Zap },
     { id: 'subscription', label: 'Abonnement', icon: Crown },
@@ -253,6 +255,16 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <SettingsTab company={company} token={token} onRefresh={loadData} />
+        )}
+
+        {/* Bank/Kas Tab */}
+        {activeTab === 'kas' && (
+          <KasTab token={token} tenants={tenants} formatSRD={formatSRD} />
+        )}
+
+        {/* Werknemers Tab */}
+        {activeTab === 'employees' && (
+          <EmployeesTab token={token} formatSRD={formatSRD} />
         )}
 
         {/* Power/Stroombrekers Tab */}
@@ -518,6 +530,9 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                     billedLabel = d.toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
                   }
 
+                  // Overdue months from API
+                  const overdueMonths = tenant.overdue_months || [];
+
                   return (
                     <tr key={tenant.tenant_id} className="border-t border-slate-100 hover:bg-slate-50" data-testid={`tenant-row-${tenant.tenant_id}`}>
                       <td className="p-4">
@@ -536,6 +551,13 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                         <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-semibold">
                           t/m {billedLabel}
                         </span>
+                        {overdueMonths.length > 0 && (
+                          <div className="mt-1">
+                            <span className="text-[11px] text-red-500 font-medium">
+                              Achterstand: {overdueMonths.join(', ')}
+                            </span>
+                          </div>
+                        )}
                       </td>
                       <td className={`p-4 text-right font-bold ${rent > 0 ? 'text-red-600' : 'text-green-600'}`}>
                         {formatSRD(rent)}
@@ -1110,6 +1132,426 @@ function SettingsTab({ company, token, onRefresh }) {
     </div>
   );
 }
+
+// ============== BANK/KAS TAB ==============
+function KasTab({ token, tenants, formatSRD }) {
+  const [entries, setEntries] = useState([]);
+  const [totals, setTotals] = useState({ total_income: 0, total_expense: 0, balance: 0 });
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [formType, setFormType] = useState('income');
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [category, setCategory] = useState('other');
+  const [relatedTenant, setRelatedTenant] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const loadKas = async () => {
+    try {
+      const resp = await axios.get(`${API}/admin/kas`, { headers: { Authorization: `Bearer ${token}` } });
+      setEntries(resp.data.entries || []);
+      setTotals({ total_income: resp.data.total_income, total_expense: resp.data.total_expense, balance: resp.data.balance });
+    } catch { /* skip */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadKas(); }, []);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!amount || parseFloat(amount) <= 0) return;
+    setSaving(true);
+    try {
+      await axios.post(`${API}/admin/kas`, {
+        entry_type: formType,
+        amount: parseFloat(amount),
+        description,
+        category,
+        related_tenant_id: relatedTenant || null
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      setShowForm(false);
+      setAmount(''); setDescription(''); setCategory('other'); setRelatedTenant('');
+      loadKas();
+    } catch { alert('Boeking mislukt'); }
+    setSaving(false);
+  };
+
+  const handleDelete = async (entryId) => {
+    if (!window.confirm('Boeking verwijderen?')) return;
+    try {
+      await axios.delete(`${API}/admin/kas/${entryId}`, { headers: { Authorization: `Bearer ${token}` } });
+      loadKas();
+    } catch { alert('Verwijderen mislukt'); }
+  };
+
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>;
+
+  return (
+    <div className="space-y-6">
+      {/* Kas Samenvatting */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl border border-green-200 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-green-600" />
+            </div>
+            <p className="text-sm text-slate-500">Totale Inkomsten</p>
+          </div>
+          <p className="text-2xl font-bold text-green-600" data-testid="kas-income">{formatSRD(totals.total_income)}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-red-200 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+              <TrendingDown className="w-5 h-5 text-red-600" />
+            </div>
+            <p className="text-sm text-slate-500">Totale Uitgaven</p>
+          </div>
+          <p className="text-2xl font-bold text-red-600" data-testid="kas-expense">{formatSRD(totals.total_expense)}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-orange-200 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+              <Landmark className="w-5 h-5 text-orange-600" />
+            </div>
+            <p className="text-sm text-slate-500">Kassaldo</p>
+          </div>
+          <p className={`text-2xl font-bold ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`} data-testid="kas-balance">
+            {formatSRD(totals.balance)}
+          </p>
+        </div>
+      </div>
+
+      {/* Boekingen Tabel */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="p-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3">
+          <h2 className="font-semibold text-slate-900">Kas Boekingen</h2>
+          <div className="flex gap-2">
+            <button onClick={() => { setFormType('income'); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600" data-testid="add-income-btn">
+              <TrendingUp className="w-4 h-4" /> Inkomst
+            </button>
+            <button onClick={() => { setFormType('expense'); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600" data-testid="add-expense-btn">
+              <TrendingDown className="w-4 h-4" /> Uitgave
+            </button>
+          </div>
+        </div>
+
+        {/* Inline Form */}
+        {showForm && (
+          <form onSubmit={handleSubmit} className="p-4 border-b border-slate-200 bg-slate-50">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag (SRD)</label>
+                <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="0.00" required data-testid="kas-amount-input" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Omschrijving</label>
+                <input value={description} onChange={e => setDescription(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Bijv. Onderhoud dak" required data-testid="kas-description-input" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Categorie</label>
+                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white" data-testid="kas-category-select">
+                  {formType === 'income' ? (
+                    <>
+                      <option value="rent">Huur</option>
+                      <option value="other">Overig</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="maintenance">Onderhoud</option>
+                      <option value="utilities">Nutsvoorzieningen</option>
+                      <option value="other">Overig</option>
+                    </>
+                  )}
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" disabled={saving} className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50" data-testid="kas-submit-btn">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Opslaan'}
+                </button>
+                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300">
+                  Annuleer
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {entries.length === 0 ? (
+          <div className="p-12 text-center">
+            <Landmark className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-400">Nog geen boekingen</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Datum</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Omschrijving</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Categorie</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Bedrag</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map(e => (
+                  <tr key={e.entry_id} className="border-t border-slate-100 hover:bg-slate-50">
+                    <td className="p-4 text-sm text-slate-600">
+                      {e.created_at ? new Date(e.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                    </td>
+                    <td className="p-4">
+                      {e.entry_type === 'income' && <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">Inkomst</span>}
+                      {e.entry_type === 'expense' && <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold">Uitgave</span>}
+                      {e.entry_type === 'salary' && <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-semibold">Loon</span>}
+                    </td>
+                    <td className="p-4 text-sm text-slate-900">
+                      {e.description}
+                      {e.related_tenant_name && <span className="text-xs text-slate-400 ml-2">({e.related_tenant_name})</span>}
+                      {e.related_employee_name && <span className="text-xs text-slate-400 ml-2">({e.related_employee_name})</span>}
+                    </td>
+                    <td className="p-4">
+                      <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs capitalize">{e.category}</span>
+                    </td>
+                    <td className={`p-4 text-right font-bold ${e.entry_type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                      {e.entry_type === 'income' ? '+' : '-'} {formatSRD(e.amount)}
+                    </td>
+                    <td className="p-4 text-right">
+                      <button onClick={() => handleDelete(e.entry_id)} className="text-slate-400 hover:text-red-500 p-1" title="Verwijderen">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============== WERKNEMERS TAB ==============
+function EmployeesTab({ token, formatSRD }) {
+  const [employees, setEmployees] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingEmp, setEditingEmp] = useState(null);
+  const [name, setName] = useState('');
+  const [functie, setFunctie] = useState('');
+  const [maandloon, setMaandloon] = useState('');
+  const [telefoon, setTelefoon] = useState('');
+  const [email, setEmail] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [paying, setPaying] = useState(null);
+
+  const loadEmployees = async () => {
+    try {
+      const resp = await axios.get(`${API}/admin/employees`, { headers: { Authorization: `Bearer ${token}` } });
+      setEmployees(resp.data || []);
+    } catch { /* skip */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadEmployees(); }, []);
+
+  const resetForm = () => {
+    setName(''); setFunctie(''); setMaandloon(''); setTelefoon(''); setEmail('');
+    setEditingEmp(null); setShowForm(false);
+  };
+
+  const openEdit = (emp) => {
+    setEditingEmp(emp);
+    setName(emp.name); setFunctie(emp.functie || ''); setMaandloon(emp.maandloon?.toString() || '');
+    setTelefoon(emp.telefoon || ''); setEmail(emp.email || '');
+    setShowForm(true);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      if (editingEmp) {
+        await axios.put(`${API}/admin/employees/${editingEmp.employee_id}`, {
+          name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email
+        }, { headers: { Authorization: `Bearer ${token}` } });
+      } else {
+        await axios.post(`${API}/admin/employees`, {
+          name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email
+        }, { headers: { Authorization: `Bearer ${token}` } });
+      }
+      resetForm();
+      loadEmployees();
+    } catch { alert('Opslaan mislukt'); }
+    setSaving(false);
+  };
+
+  const handleDelete = async (emp) => {
+    if (!window.confirm(`"${emp.name}" verwijderen?`)) return;
+    try {
+      await axios.delete(`${API}/admin/employees/${emp.employee_id}`, { headers: { Authorization: `Bearer ${token}` } });
+      loadEmployees();
+    } catch { alert('Verwijderen mislukt'); }
+  };
+
+  const handlePay = async (emp) => {
+    if (!window.confirm(`Loon uitbetalen aan ${emp.name}: SRD ${emp.maandloon?.toFixed(2)}?\nDit wordt afgeschreven van de kas.`)) return;
+    setPaying(emp.employee_id);
+    try {
+      await axios.post(`${API}/admin/employees/${emp.employee_id}/pay`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      loadEmployees();
+      alert(`Loon uitbetaald: SRD ${emp.maandloon?.toFixed(2)}`);
+    } catch { alert('Uitbetaling mislukt'); }
+    setPaying(null);
+  };
+
+  const activeEmps = employees.filter(e => e.status === 'active');
+  const totalLoon = activeEmps.reduce((sum, e) => sum + (e.maandloon || 0), 0);
+
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>;
+
+  return (
+    <div className="space-y-6">
+      {/* Samenvatting */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Users className="w-5 h-5 text-blue-600" />
+            </div>
+            <p className="text-sm text-slate-500">Werknemers</p>
+          </div>
+          <p className="text-2xl font-bold text-slate-900">{activeEmps.length}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+              <Banknote className="w-5 h-5 text-purple-600" />
+            </div>
+            <p className="text-sm text-slate-500">Totaal Maandloon</p>
+          </div>
+          <p className="text-2xl font-bold text-purple-600">{formatSRD(totalLoon)}</p>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-green-600" />
+            </div>
+            <p className="text-sm text-slate-500">Totaal Uitbetaald</p>
+          </div>
+          <p className="text-2xl font-bold text-green-600">{formatSRD(activeEmps.reduce((s, e) => s + (e.total_paid || 0), 0))}</p>
+        </div>
+      </div>
+
+      {/* Werknemers Tabel */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+          <h2 className="font-semibold text-slate-900">Werknemers ({activeEmps.length})</h2>
+          <button onClick={() => { resetForm(); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600" data-testid="add-employee-btn">
+            <Plus className="w-4 h-4" /> Nieuwe Werknemer
+          </button>
+        </div>
+
+        {/* Form */}
+        {showForm && (
+          <form onSubmit={handleSubmit} className="p-4 border-b border-slate-200 bg-slate-50">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Naam *</label>
+                <input value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" required data-testid="emp-name-input" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Functie</label>
+                <input value={functie} onChange={e => setFunctie(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" data-testid="emp-functie-input" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Maandloon (SRD)</label>
+                <input type="number" step="0.01" value={maandloon} onChange={e => setMaandloon(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" data-testid="emp-loon-input" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Telefoon</label>
+                <input value={telefoon} onChange={e => setTelefoon(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
+              </div>
+              <div className="flex gap-2">
+                <button type="submit" disabled={saving} className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50" data-testid="emp-submit-btn">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (editingEmp ? 'Bijwerken' : 'Opslaan')}
+                </button>
+                <button type="button" onClick={resetForm} className="px-4 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300">
+                  Annuleer
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        {activeEmps.length === 0 ? (
+          <div className="p-12 text-center">
+            <Briefcase className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-400">Nog geen werknemers</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Werknemer</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Functie</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Maandloon</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Totaal Betaald</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Telefoon</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeEmps.map(emp => (
+                  <tr key={emp.employee_id} className="border-t border-slate-100 hover:bg-slate-50">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-blue-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                          {emp.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <div>
+                          <p className="font-bold text-slate-900">{emp.name}</p>
+                          {emp.email && <p className="text-xs text-slate-400">{emp.email}</p>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 text-slate-600">{emp.functie || '-'}</td>
+                    <td className="p-4 text-right font-bold text-slate-900">{formatSRD(emp.maandloon)}</td>
+                    <td className="p-4 text-right font-bold text-green-600">{formatSRD(emp.total_paid || 0)}</td>
+                    <td className="p-4 text-slate-600">{emp.telefoon || '-'}</td>
+                    <td className="p-4 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => handlePay(emp)}
+                          disabled={paying === emp.employee_id || !emp.maandloon}
+                          className="text-green-500 hover:text-green-700 p-1.5 rounded hover:bg-green-50 disabled:opacity-50"
+                          title="Loon uitbetalen"
+                          data-testid={`pay-emp-${emp.employee_id}`}
+                        >
+                          {paying === emp.employee_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Banknote className="w-4 h-4" />}
+                        </button>
+                        <button onClick={() => openEdit(emp)} className="text-slate-400 hover:text-orange-500 p-1" title="Bewerken">
+                          <Pencil className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDelete(emp)} className="text-slate-400 hover:text-red-500 p-1" title="Verwijderen">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 
 // ============== POWER/STROOMBREKERS TAB ==============
 function PowerTab({ apartments, tenants, token, onRefresh }) {

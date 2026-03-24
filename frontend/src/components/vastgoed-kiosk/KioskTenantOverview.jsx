@@ -53,7 +53,10 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
               <div>
                 <p className="text-xl font-bold text-amber-700">Achterstand</p>
                 <p className="text-amber-600">
-                  {formatSRD((tenant.outstanding_rent || 0) - (tenant.monthly_rent || 0))} boven huidige maandhuur
+                  {tenant.overdue_months && tenant.overdue_months.length > 0
+                    ? `Onbetaalde maanden: ${tenant.overdue_months.join(', ')}`
+                    : `${formatSRD((tenant.outstanding_rent || 0) - (tenant.monthly_rent || 0))} boven huidige maandhuur`
+                  }
                 </p>
               </div>
             </div>
@@ -92,7 +95,10 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
                 <div>
                   <p className="text-xl font-bold text-slate-900">Maandhuur</p>
                   <p className="text-slate-500">
-                    {new Date().toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' })}
+                    Gefactureerd t/m {tenant.rent_billed_through ? (() => {
+                      const [y, m] = tenant.rent_billed_through.split('-');
+                      return new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
+                    })() : new Date().toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' })}
                   </p>
                 </div>
               </div>
@@ -111,6 +117,11 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
                 </div>
                 <div>
                   <p className="text-xl font-bold text-slate-900">Openstaande huur</p>
+                  {tenant.overdue_months && tenant.overdue_months.length > 0 && (
+                    <p className="text-sm text-red-500 font-medium mt-0.5">
+                      Achterstand: {tenant.overdue_months.join(', ')}
+                    </p>
+                  )}
                 </div>
               </div>
               <p className={`text-3xl font-bold ${(tenant.outstanding_rent || 0) > 0 ? 'text-red-600' : 'text-green-600'}`} data-testid="outstanding-rent">

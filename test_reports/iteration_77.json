@@ -1,0 +1,48 @@
+{
+  "summary": "Tested new Vastgoed Kiosk ERP features: Bank/Kas tab, Werknemers tab, and overdue_months display. All backend APIs working correctly. Fixed public tenants endpoint to include overdue_months and rent_billed_through fields.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/test_reports/iteration_77.json"],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": ["/app/backend/routers/kiosk.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "Created and cleaned up TEST_Werknemer employee and TEST_Income kas entry for testing",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All new features tested and working: 1) Huurders tab shows overdue_months in red text, 2) Bank/Kas tab with income/expense tracking and totals, 3) Werknemers tab with employee CRUD and salary payment, 4) Kiosk tenant overview shows 'Gefactureerd t/m' and overdue months. Fixed public tenants endpoint to return overdue_months array.",
+  "features_tested": {
+    "backend_apis": [
+      {"endpoint": "POST /api/kiosk/auth/pin", "status": "PASS", "notes": "PIN login works with 7755"},
+      {"endpoint": "GET /api/kiosk/admin/tenants", "status": "PASS", "notes": "Returns overdue_months array correctly"},
+      {"endpoint": "GET /api/kiosk/admin/kas", "status": "PASS", "notes": "Returns entries with totals"},
+      {"endpoint": "POST /api/kiosk/admin/kas", "status": "PASS", "notes": "Creates income/expense entries"},
+      {"endpoint": "DELETE /api/kiosk/admin/kas/{id}", "status": "PASS", "notes": "Deletes entries correctly"},
+      {"endpoint": "GET /api/kiosk/admin/employees", "status": "PASS", "notes": "Returns employee list with total_paid"},
+      {"endpoint": "POST /api/kiosk/admin/employees", "status": "PASS", "notes": "Creates new employee"},
+      {"endpoint": "PUT /api/kiosk/admin/employees/{id}", "status": "PASS", "notes": "Updates employee"},
+      {"endpoint": "DELETE /api/kiosk/admin/employees/{id}", "status": "PASS", "notes": "Deletes employee"},
+      {"endpoint": "POST /api/kiosk/admin/employees/{id}/pay", "status": "PASS", "notes": "Creates salary kas entry"},
+      {"endpoint": "GET /api/kiosk/public/{company_id}/tenants", "status": "PASS", "notes": "Fixed to return overdue_months and rent_billed_through"}
+    ],
+    "frontend_ui": [
+      {"feature": "Huurders tab overdue_months display", "status": "PASS", "notes": "Shows 'Achterstand: april 2026, mei 2026' in red text"},
+      {"feature": "Bank/Kas tab totals", "status": "PASS", "notes": "Shows Totale Inkomsten, Totale Uitgaven, Kassaldo"},
+      {"feature": "Bank/Kas inline form", "status": "PASS", "notes": "Income/expense entry creation works"},
+      {"feature": "Werknemers tab", "status": "PASS", "notes": "Shows employee list with Totaal Maandloon and Totaal Uitbetaald"},
+      {"feature": "Werknemers inline form", "status": "PASS", "notes": "Employee creation works"},
+      {"feature": "Kiosk tenant overview", "status": "PASS", "notes": "Shows 'Gefactureerd t/m' and overdue months after fix"}
+    ]
+  },
+  "bug_fix_applied": {
+    "file": "/app/backend/routers/kiosk.py",
+    "description": "Added overdue_months and rent_billed_through fields to GET /public/{company_id}/tenants endpoint so Kiosk tenant overview can display which months are overdue"
+  }
+}

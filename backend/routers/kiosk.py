@@ -137,6 +137,31 @@ class PaymentCreate(BaseModel):
     description: Optional[str] = None
     rent_month: Optional[str] = None
 
+class CashEntryCreate(BaseModel):
+    entry_type: str  # income, expense, salary
+    amount: float
+    description: str
+    category: Optional[str] = None  # rent, maintenance, salary, utilities, other
+    related_tenant_id: Optional[str] = None
+    related_employee_id: Optional[str] = None
+    payment_id: Optional[str] = None
+
+class EmployeeCreate(BaseModel):
+    name: str
+    functie: Optional[str] = None
+    maandloon: float = 0
+    telefoon: Optional[str] = None
+    email: Optional[str] = None
+    start_date: Optional[str] = None
+
+class EmployeeUpdate(BaseModel):
+    name: Optional[str] = None
+    functie: Optional[str] = None
+    maandloon: Optional[float] = None
+    telefoon: Optional[str] = None
+    email: Optional[str] = None
+    status: Optional[str] = None
+
 class LeaseCreate(BaseModel):
     tenant_id: str
     apartment_id: str
@@ -354,20 +379,45 @@ async def get_tenants_public(company_id: str):
         "status": "active"
     }).to_list(1000)
     
-    return [{
-        "tenant_id": t["tenant_id"],
-        "name": t["name"],
-        "apartment_id": t["apartment_id"],
-        "apartment_number": t.get("apartment_number", ""),
-        "tenant_code": t.get("tenant_code", ""),
-        "monthly_rent": t.get("monthly_rent", 0),
-        "outstanding_rent": t.get("outstanding_rent", 0),
-        "service_costs": t.get("service_costs", 0),
-        "fines": t.get("fines", 0),
-        "deposit_required": t.get("deposit_required", 0),
-        "deposit_paid": t.get("deposit_paid", 0),
-        "status": t["status"]
-    } for t in tenants]
+    result = []
+    for t in tenants:
+        monthly_rent = t.get("monthly_rent", 0)
+        outstanding = t.get("outstanding_rent", 0)
+        billed_through = t.get("rent_billed_through", "")
+        
+        # Calculate overdue months
+        overdue_months = []
+        if billed_through and monthly_rent > 0 and outstanding > 0:
+            bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+            months_owed = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
+            remainder = outstanding - (months_owed * monthly_rent)
+            if remainder > 0:
+                months_owed += 1
+            month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+            for i in range(months_owed):
+                m_date = bt_date - relativedelta(months=i)
+                m_name = month_names_nl[m_date.month - 1]
+                overdue_months.append(f"{m_name} {m_date.year}")
+            overdue_months.reverse()
+        
+        result.append({
+            "tenant_id": t["tenant_id"],
+            "name": t["name"],
+            "apartment_id": t["apartment_id"],
+            "apartment_number": t.get("apartment_number", ""),
+            "tenant_code": t.get("tenant_code", ""),
+            "monthly_rent": monthly_rent,
+            "outstanding_rent": outstanding,
+            "service_costs": t.get("service_costs", 0),
+            "fines": t.get("fines", 0),
+            "deposit_required": t.get("deposit_required", 0),
+            "deposit_paid": t.get("deposit_paid", 0),
+            "rent_billed_through": billed_through,
+            "overdue_months": overdue_months,
+            "status": t["status"]
+        })
+    
+    return result
 
 @router.get("/public/{company_id}/tenants/lookup/{code}")
 async def lookup_tenant_by_code(company_id: str, code: str):
@@ -452,6 +502,23 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
     }
     
     await db.kiosk_payments.insert_one(payment)
+    
+    # Auto-register payment in Kas (cash register)
+    kas_entry = {
+        "entry_id": generate_uuid(),
+        "company_id": company_id,
+        "entry_type": "income",
+        "amount": data.amount,
+        "description": f"Huur {tenant['name']} - {data.rent_month or data.payment_type}",
+        "category": "rent",
+        "related_tenant_id": data.tenant_id,
+        "related_tenant_name": tenant["name"],
+        "related_employee_id": "",
+        "related_employee_name": "",
+        "payment_id": payment_id,
+        "created_at": now
+    }
+    await db.kiosk_kas.insert_one(kas_entry)
     
     # Update tenant balances
     update_fields = {}
@@ -689,6 +756,26 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                 {"$set": updates}
             )
         
+        # Calculate billing details for display
+        overdue_months = []
+        current_billing_month = ""
+        if billed_through and monthly_rent > 0:
+            bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+            current_billing_month = billed_through
+            # Calculate how many months of rent are in outstanding
+            if outstanding > 0:
+                months_owed = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
+                remainder = outstanding - (months_owed * monthly_rent)
+                if remainder > 0:
+                    months_owed += 1
+                # List the overdue months (counting back from billed_through)
+                for i in range(months_owed):
+                    m_date = bt_date - relativedelta(months=i)
+                    month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+                    m_name = month_names_nl[m_date.month - 1]
+                    overdue_months.append(f"{m_name} {m_date.year}")
+                overdue_months.reverse()
+
         result.append({
             "tenant_id": t["tenant_id"],
             "name": t["name"],
@@ -704,6 +791,8 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             "deposit_required": t.get("deposit_required", 0),
             "deposit_paid": t.get("deposit_paid", 0),
             "rent_billed_through": billed_through,
+            "current_billing_month": current_billing_month,
+            "overdue_months": overdue_months,
             "status": t.get("status", "active"),
             "created_at": t.get("created_at")
         })
@@ -1122,3 +1211,194 @@ td:first-child {{ background: #f9f9f9; font-weight: bold; width: 200px; }}
     
     return Response(content=html, media_type="text/html")
 
+
+
+# ============== BANK/KAS ENDPOINTS ==============
+
+@router.get("/admin/kas")
+async def list_kas_entries(company: dict = Depends(get_current_company)):
+    """List all cash register entries"""
+    company_id = company["company_id"]
+    entries = await db.kiosk_kas.find({"company_id": company_id}).sort("created_at", -1).to_list(1000)
+    
+    # Calculate totals
+    total_income = sum(e.get("amount", 0) for e in entries if e.get("entry_type") == "income")
+    total_expense = sum(e.get("amount", 0) for e in entries if e.get("entry_type") in ("expense", "salary"))
+    balance = total_income - total_expense
+    
+    result_entries = []
+    for e in entries:
+        result_entries.append({
+            "entry_id": e["entry_id"],
+            "entry_type": e["entry_type"],
+            "amount": e["amount"],
+            "description": e["description"],
+            "category": e.get("category", ""),
+            "related_tenant_name": e.get("related_tenant_name", ""),
+            "related_employee_name": e.get("related_employee_name", ""),
+            "payment_id": e.get("payment_id", ""),
+            "created_at": e.get("created_at")
+        })
+    
+    return {
+        "entries": result_entries,
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "balance": balance
+    }
+
+@router.post("/admin/kas")
+async def create_kas_entry(data: CashEntryCreate, company: dict = Depends(get_current_company)):
+    """Create a cash register entry"""
+    entry_id = generate_uuid()
+    now = datetime.now(timezone.utc)
+    
+    entry = {
+        "entry_id": entry_id,
+        "company_id": company["company_id"],
+        "entry_type": data.entry_type,
+        "amount": data.amount,
+        "description": data.description,
+        "category": data.category or ("rent" if data.entry_type == "income" else "other"),
+        "related_tenant_id": data.related_tenant_id or "",
+        "related_tenant_name": "",
+        "related_employee_id": data.related_employee_id or "",
+        "related_employee_name": "",
+        "payment_id": data.payment_id or "",
+        "created_at": now
+    }
+    
+    # Look up related names
+    if data.related_tenant_id:
+        t = await db.kiosk_tenants.find_one({"tenant_id": data.related_tenant_id})
+        if t:
+            entry["related_tenant_name"] = t.get("name", "")
+    if data.related_employee_id:
+        emp = await db.kiosk_employees.find_one({"employee_id": data.related_employee_id})
+        if emp:
+            entry["related_employee_name"] = emp.get("name", "")
+    
+    await db.kiosk_kas.insert_one(entry)
+    return {"entry_id": entry_id, "message": "Kas boeking aangemaakt"}
+
+@router.delete("/admin/kas/{entry_id}")
+async def delete_kas_entry(entry_id: str, company: dict = Depends(get_current_company)):
+    """Delete a cash register entry"""
+    result = await db.kiosk_kas.delete_one({"entry_id": entry_id, "company_id": company["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Boeking niet gevonden")
+    return {"message": "Boeking verwijderd"}
+
+
+# ============== WERKNEMERS ENDPOINTS ==============
+
+@router.get("/admin/employees")
+async def list_employees(company: dict = Depends(get_current_company)):
+    """List all employees"""
+    company_id = company["company_id"]
+    employees = await db.kiosk_employees.find({"company_id": company_id}).to_list(1000)
+    
+    result = []
+    for e in employees:
+        # Get total paid
+        payments = await db.kiosk_kas.find({
+            "company_id": company_id,
+            "related_employee_id": e["employee_id"],
+            "entry_type": "salary"
+        }).to_list(1000)
+        total_paid = sum(p.get("amount", 0) for p in payments)
+        
+        result.append({
+            "employee_id": e["employee_id"],
+            "name": e["name"],
+            "functie": e.get("functie", ""),
+            "maandloon": e.get("maandloon", 0),
+            "telefoon": e.get("telefoon", ""),
+            "email": e.get("email", ""),
+            "start_date": e.get("start_date", ""),
+            "status": e.get("status", "active"),
+            "total_paid": total_paid,
+            "created_at": e.get("created_at")
+        })
+    
+    return result
+
+@router.post("/admin/employees")
+async def create_employee(data: EmployeeCreate, company: dict = Depends(get_current_company)):
+    """Create a new employee"""
+    employee_id = generate_uuid()
+    now = datetime.now(timezone.utc)
+    
+    employee = {
+        "employee_id": employee_id,
+        "company_id": company["company_id"],
+        "name": data.name,
+        "functie": data.functie or "",
+        "maandloon": data.maandloon,
+        "telefoon": data.telefoon or "",
+        "email": data.email or "",
+        "start_date": data.start_date or now.strftime("%Y-%m-%d"),
+        "status": "active",
+        "created_at": now
+    }
+    
+    await db.kiosk_employees.insert_one(employee)
+    return {"employee_id": employee_id, "message": "Werknemer aangemaakt"}
+
+@router.put("/admin/employees/{employee_id}")
+async def update_employee(employee_id: str, data: EmployeeUpdate, company: dict = Depends(get_current_company)):
+    """Update an employee"""
+    updates = {k: v for k, v in data.dict().items() if v is not None}
+    if not updates:
+        raise HTTPException(status_code=400, detail="Geen wijzigingen")
+    updates["updated_at"] = datetime.now(timezone.utc)
+    
+    result = await db.kiosk_employees.update_one(
+        {"employee_id": employee_id, "company_id": company["company_id"]},
+        {"$set": updates}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    return {"message": "Werknemer bijgewerkt"}
+
+@router.delete("/admin/employees/{employee_id}")
+async def delete_employee(employee_id: str, company: dict = Depends(get_current_company)):
+    """Delete an employee"""
+    result = await db.kiosk_employees.delete_one(
+        {"employee_id": employee_id, "company_id": company["company_id"]}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    return {"message": "Werknemer verwijderd"}
+
+@router.post("/admin/employees/{employee_id}/pay")
+async def pay_employee(employee_id: str, company: dict = Depends(get_current_company)):
+    """Pay an employee's monthly salary - creates a kas entry"""
+    emp = await db.kiosk_employees.find_one({
+        "employee_id": employee_id,
+        "company_id": company["company_id"]
+    })
+    if not emp:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    
+    now = datetime.now(timezone.utc)
+    month_label = now.strftime("%B %Y")
+    
+    entry_id = generate_uuid()
+    entry = {
+        "entry_id": entry_id,
+        "company_id": company["company_id"],
+        "entry_type": "salary",
+        "amount": emp["maandloon"],
+        "description": f"Loon {emp['name']} - {month_label}",
+        "category": "salary",
+        "related_employee_id": employee_id,
+        "related_employee_name": emp["name"],
+        "related_tenant_id": "",
+        "related_tenant_name": "",
+        "payment_id": "",
+        "created_at": now
+    }
+    
+    await db.kiosk_kas.insert_one(entry)
+    return {"entry_id": entry_id, "amount": emp["maandloon"], "message": f"Loon uitbetaald: SRD {emp['maandloon']:.2f}"}
