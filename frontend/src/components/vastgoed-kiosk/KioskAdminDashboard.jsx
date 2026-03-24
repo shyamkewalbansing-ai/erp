@@ -1195,7 +1195,7 @@ function KasTab({ token, tenants, formatSRD }) {
             <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
               <TrendingUp className="w-5 h-5 text-green-600" />
             </div>
-            <p className="text-sm text-slate-500">Totale Inkomsten</p>
+            <p className="text-sm text-slate-500">Huurinkomsten</p>
           </div>
           <p className="text-2xl font-bold text-green-600" data-testid="kas-income">{formatSRD(totals.total_income)}</p>
         </div>
@@ -1224,13 +1224,10 @@ function KasTab({ token, tenants, formatSRD }) {
       {/* Boekingen Tabel */}
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3">
-          <h2 className="font-semibold text-slate-900">Kas Boekingen</h2>
+          <h2 className="font-semibold text-slate-900">Uitgaven Overzicht</h2>
           <div className="flex gap-2">
-            <button onClick={() => { setFormType('income'); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600" data-testid="add-income-btn">
-              <TrendingUp className="w-4 h-4" /> Inkomst
-            </button>
             <button onClick={() => { setFormType('expense'); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600" data-testid="add-expense-btn">
-              <TrendingDown className="w-4 h-4" /> Uitgave
+              <TrendingDown className="w-4 h-4" /> Uitgave Registreren
             </button>
           </div>
         </div>
@@ -1250,18 +1247,10 @@ function KasTab({ token, tenants, formatSRD }) {
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Categorie</label>
                 <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white" data-testid="kas-category-select">
-                  {formType === 'income' ? (
-                    <>
-                      <option value="rent">Huur</option>
-                      <option value="other">Overig</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="maintenance">Onderhoud</option>
-                      <option value="utilities">Nutsvoorzieningen</option>
-                      <option value="other">Overig</option>
-                    </>
-                  )}
+                  <option value="maintenance">Onderhoud</option>
+                  <option value="utilities">Nutsvoorzieningen</option>
+                  <option value="supplies">Materialen</option>
+                  <option value="other">Overig</option>
                 </select>
               </div>
               <div className="flex gap-2">

@@ -503,23 +503,6 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
     
     await db.kiosk_payments.insert_one(payment)
     
-    # Auto-register payment in Kas (cash register)
-    kas_entry = {
-        "entry_id": generate_uuid(),
-        "company_id": company_id,
-        "entry_type": "income",
-        "amount": data.amount,
-        "description": f"Huur {tenant['name']} - {data.rent_month or data.payment_type}",
-        "category": "rent",
-        "related_tenant_id": data.tenant_id,
-        "related_tenant_name": tenant["name"],
-        "related_employee_id": "",
-        "related_employee_name": "",
-        "payment_id": payment_id,
-        "created_at": now
-    }
-    await db.kiosk_kas.insert_one(kas_entry)
-    
     # Update tenant balances
     update_fields = {}
     if data.payment_type in ["rent", "partial_rent"]:
@@ -1612,17 +1595,24 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
 
 @router.get("/admin/kas")
 async def list_kas_entries(company: dict = Depends(get_current_company)):
-    """List all cash register entries"""
+    """List all cash register entries - expenses only. Income comes from payments."""
     company_id = company["company_id"]
+    
+    # Kas entries = only expenses and salaries
     entries = await db.kiosk_kas.find({"company_id": company_id}).sort("created_at", -1).to_list(1000)
     
-    # Calculate totals
-    total_income = sum(e.get("amount", 0) for e in entries if e.get("entry_type") == "income")
+    # Total income = sum of all rent payments (from kiosk_payments)
+    payments = await db.kiosk_payments.find({"company_id": company_id}).to_list(10000)
+    total_income = sum(p.get("amount", 0) for p in payments)
+    
+    # Total expense = sum of all kas entries (expenses + salaries)
     total_expense = sum(e.get("amount", 0) for e in entries if e.get("entry_type") in ("expense", "salary"))
     balance = total_income - total_expense
     
     result_entries = []
     for e in entries:
+        if e.get("entry_type") == "income":
+            continue  # Skip old income entries
         result_entries.append({
             "entry_id": e["entry_id"],
             "entry_type": e["entry_type"],
