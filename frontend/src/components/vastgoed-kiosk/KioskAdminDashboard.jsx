@@ -958,58 +958,86 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
   const activeTenants = tenants.filter(t => t.status === 'active');
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200">
-      <div className="p-4 border-b border-slate-200">
+    <div>
+      {/* Panel header */}
+      <div className="bg-slate-800 rounded-t-xl px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-yellow-100 flex items-center justify-center">
-            <Zap className="w-5 h-5 text-yellow-600" />
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-900">Stroombrekers</h3>
-            <p className="text-sm text-slate-500">Beheer de stroomstatus per appartement</p>
-          </div>
+          <Zap className="w-5 h-5 text-yellow-400" />
+          <h3 className="font-bold text-white">Stroombrekers Paneel</h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          <span className="text-xs text-slate-400">SYSTEEM ACTIEF</span>
         </div>
       </div>
 
-      <div className="p-4 grid grid-cols-3 gap-4">
-        {activeTenants.map(tenant => {
-          const apt = apartments.find(a => a.apartment_id === tenant.apartment_id);
-          const powerOn = tenant.power_status !== 'off';
-          const hasDebt = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0) > 0;
+      {/* Breaker panel body */}
+      <div className="bg-slate-700 rounded-b-xl p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {activeTenants.map(tenant => {
+            const apt = apartments.find(a => a.apartment_id === tenant.apartment_id);
+            const powerOn = tenant.power_status !== 'off';
+            const hasDebt = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0) > 0;
+            const isUpdating = updating === tenant.tenant_id;
 
-          return (
-            <div key={tenant.tenant_id} className={`rounded-xl border-2 p-4 ${
-              powerOn ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'
-            }`}>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="font-bold text-slate-900">Appt. {apt?.number}</p>
-                  <p className="text-sm text-slate-500">{tenant.name}</p>
-                </div>
-                <div className={`w-4 h-4 rounded-full ${powerOn ? 'bg-green-500' : 'bg-red-500'}`} />
-              </div>
-              
-              {hasDebt && (
-                <p className="text-xs text-red-600 mb-3">
-                  <AlertTriangle className="w-3 h-3 inline mr-1" />
-                  Openstaand saldo
-                </p>
-              )}
-
-              <button
-                onClick={() => togglePower(tenant.tenant_id, powerOn ? 'on' : 'off')}
-                disabled={updating === tenant.tenant_id}
-                className={`w-full py-2 rounded-lg font-medium text-sm transition ${
-                  powerOn 
-                    ? 'bg-red-500 text-white hover:bg-red-600' 
-                    : 'bg-green-500 text-white hover:bg-green-600'
-                } disabled:opacity-50`}
+            return (
+              <div
+                key={tenant.tenant_id}
+                data-testid={`breaker-${tenant.tenant_id}`}
+                className="bg-slate-600 rounded-lg border border-slate-500 overflow-hidden"
               >
-                {updating === tenant.tenant_id ? 'Bezig...' : powerOn ? 'Stroom UIT' : 'Stroom AAN'}
-              </button>
-            </div>
-          );
-        })}
+                {/* Label strip */}
+                <div className="bg-slate-800 px-3 py-2 flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-300 tracking-wider">APPT. {apt?.number}</span>
+                  <div className={`w-2.5 h-2.5 rounded-full ${powerOn ? 'bg-green-400 shadow-sm shadow-green-400/50' : 'bg-red-500 shadow-sm shadow-red-500/50'}`} />
+                </div>
+
+                {/* Breaker body */}
+                <div className="p-4 flex flex-col items-center">
+                  {/* Toggle switch */}
+                  <button
+                    onClick={() => togglePower(tenant.tenant_id, powerOn ? 'on' : 'off')}
+                    disabled={isUpdating}
+                    data-testid={`breaker-toggle-${tenant.tenant_id}`}
+                    className="relative w-14 h-24 rounded-md bg-slate-800 border-2 border-slate-500 mb-3 cursor-pointer hover:border-slate-400 transition disabled:opacity-50 disabled:cursor-wait overflow-hidden group"
+                  >
+                    {/* Switch track groove */}
+                    <div className="absolute inset-x-2 inset-y-1 rounded bg-slate-900" />
+                    {/* Switch handle */}
+                    <div className={`absolute left-1.5 right-1.5 h-10 rounded transition-all duration-300 ${
+                      powerOn
+                        ? 'top-1.5 bg-gradient-to-b from-orange-400 to-orange-600 shadow-md shadow-orange-500/30'
+                        : 'bottom-1.5 bg-gradient-to-b from-slate-400 to-slate-500 shadow-md shadow-black/30'
+                    }`}>
+                      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
+                        <div className="w-6 h-0.5 rounded bg-white/30" />
+                      </div>
+                    </div>
+                    {/* ON/OFF labels */}
+                    <span className={`absolute top-1 left-0 right-0 text-center text-[9px] font-black tracking-widest ${powerOn ? 'text-transparent' : 'text-green-400/60'}`}>ON</span>
+                    <span className={`absolute bottom-1 left-0 right-0 text-center text-[9px] font-black tracking-widest ${powerOn ? 'text-red-400/60' : 'text-transparent'}`}>OFF</span>
+                  </button>
+
+                  {/* Status */}
+                  <span className={`text-xs font-bold tracking-wider ${powerOn ? 'text-green-400' : 'text-red-400'}`}>
+                    {isUpdating ? 'BEZIG...' : powerOn ? 'AAN' : 'UIT'}
+                  </span>
+
+                  {/* Tenant name */}
+                  <p className="text-xs text-slate-400 mt-1.5 text-center truncate w-full">{tenant.name}</p>
+
+                  {/* Debt warning */}
+                  {hasDebt && (
+                    <div className="flex items-center gap-1 mt-2">
+                      <AlertTriangle className="w-3 h-3 text-yellow-400" />
+                      <span className="text-[10px] text-yellow-400 font-medium">SCHULD</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
