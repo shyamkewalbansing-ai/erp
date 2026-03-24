@@ -152,6 +152,10 @@ class CompanyUpdate(BaseModel):
     wa_api_token: Optional[str] = None
     wa_phone_id: Optional[str] = None
     wa_enabled: Optional[bool] = None
+    # SumUp Payment Integration
+    sumup_api_key: Optional[str] = None
+    sumup_merchant_code: Optional[str] = None
+    sumup_enabled: Optional[bool] = None
 
 class KioskPinVerify(BaseModel):
     pin: str  # 4-digit PIN
@@ -348,7 +352,10 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "wa_api_url": company.get("wa_api_url", "https://graph.facebook.com/v21.0"),
         "wa_api_token": company.get("wa_api_token", ""),
         "wa_phone_id": company.get("wa_phone_id", ""),
-        "wa_enabled": company.get("wa_enabled", False)
+        "wa_enabled": company.get("wa_enabled", False),
+        "sumup_api_key": company.get("sumup_api_key", ""),
+        "sumup_merchant_code": company.get("sumup_merchant_code", ""),
+        "sumup_enabled": company.get("sumup_enabled", False)
     }
 
 @router.put("/auth/settings")
@@ -372,6 +379,103 @@ async def update_company_settings(data: CompanyUpdate, company: dict = Depends(g
     )
     
     return {"message": "Instellingen bijgewerkt"}
+
+
+# ============== SUMUP CHECKOUT ENDPOINTS ==============
+
+class SumUpCheckoutRequest(BaseModel):
+    amount: float
+    description: str
+    tenant_id: str
+    payment_type: str
+
+@router.post("/public/{company_id}/sumup/checkout")
+async def create_sumup_checkout(company_id: str, data: SumUpCheckoutRequest):
+    """Create a SumUp checkout for card payment"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    api_key = company.get("sumup_api_key", "")
+    merchant_code = company.get("sumup_merchant_code", "")
+    
+    if not api_key or not merchant_code:
+        raise HTTPException(status_code=400, detail="SumUp is niet geconfigureerd. Stel de API key en merchant code in via Instellingen.")
+    
+    checkout_ref = f"KIOSK-{company_id}-{uuid.uuid4().hex[:8]}"
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                "https://api.sumup.com/v0.1/checkouts",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "checkout_reference": checkout_ref,
+                    "amount": round(data.amount, 2),
+                    "currency": "EUR",
+                    "merchant_code": merchant_code,
+                    "description": data.description,
+                }
+            )
+            
+            if response.status_code not in (200, 201):
+                detail = response.text
+                raise HTTPException(status_code=400, detail=f"SumUp fout: {detail}")
+            
+            checkout_data = response.json()
+            
+            return {
+                "checkout_id": checkout_data.get("id"),
+                "checkout_reference": checkout_ref,
+                "amount": data.amount,
+                "status": checkout_data.get("status", "PENDING")
+            }
+    except httpx.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"Verbinding met SumUp mislukt: {str(e)}")
+
+@router.get("/public/{company_id}/sumup/checkout/{checkout_id}/status")
+async def get_sumup_checkout_status(company_id: str, checkout_id: str):
+    """Check status of a SumUp checkout"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    api_key = company.get("sumup_api_key", "")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="SumUp niet geconfigureerd")
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"https://api.sumup.com/v0.1/checkouts/{checkout_id}",
+                headers={"Authorization": f"Bearer {api_key}"}
+            )
+            
+            if response.status_code != 200:
+                raise HTTPException(status_code=400, detail="Kon status niet ophalen")
+            
+            data = response.json()
+            return {
+                "status": data.get("status", "PENDING"),
+                "transaction_id": data.get("transaction_id"),
+                "amount": data.get("amount"),
+            }
+    except httpx.RequestError:
+        raise HTTPException(status_code=500, detail="Verbinding met SumUp mislukt")
+
+@router.get("/public/{company_id}/sumup/enabled")
+async def check_sumup_enabled(company_id: str):
+    """Check if SumUp is enabled for this company"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    return {
+        "enabled": bool(company.get("sumup_enabled") and company.get("sumup_api_key") and company.get("sumup_merchant_code"))
+    }
+
 
 # ============== PUBLIC KIOSK ENDPOINTS (for huurders) ==============
 

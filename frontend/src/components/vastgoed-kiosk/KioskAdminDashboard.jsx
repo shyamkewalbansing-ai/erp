@@ -1034,6 +1034,10 @@ function SettingsTab({ company, token, onRefresh }) {
   const [waEnabled, setWaEnabled] = useState(company?.wa_enabled || false);
   const [waTesting, setWaTesting] = useState(false);
   const [waTestResult, setWaTestResult] = useState(null);
+  // SumUp Payment Integration
+  const [sumupApiKey, setSumupApiKey] = useState(company?.sumup_api_key || '');
+  const [sumupMerchantCode, setSumupMerchantCode] = useState(company?.sumup_merchant_code || '');
+  const [sumupEnabled, setSumupEnabled] = useState(company?.sumup_enabled || false);
 
   const handleSaveStamp = async () => {
     setSaving(true);
@@ -1098,6 +1102,23 @@ function SettingsTab({ company, token, onRefresh }) {
       setWaTestResult({ status: 'error', message: 'Test mislukt' });
     } finally {
       setWaTesting(false);
+    }
+  };
+
+  const handleSaveSumUp = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/auth/settings`, {
+        sumup_api_key: sumupApiKey,
+        sumup_merchant_code: sumupMerchantCode,
+        sumup_enabled: sumupEnabled
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      onRefresh();
+      alert('SumUp instellingen opgeslagen!');
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Opslaan mislukt');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -1553,6 +1574,58 @@ function SettingsTab({ company, token, onRefresh }) {
               <button onClick={handleSaveWhatsApp} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 text-sm font-medium">
                 <Save className="w-4 h-4" />
                 {saving ? 'Opslaan...' : 'WhatsApp opslaan'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* SumUp Payment Integration */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-bold text-slate-900">SumUp Pinbetaling</h3>
+            <p className="text-sm text-slate-500">Koppel SumUp voor kaartbetalingen op de kiosk</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-slate-500">Schakel in om pinbetalingen via SumUp te activeren</p>
+            <button onClick={() => setSumupEnabled(!sumupEnabled)} className={`w-12 h-6 rounded-full transition-all relative ${sumupEnabled ? 'bg-orange-500' : 'bg-slate-300'}`}>
+              <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all shadow ${sumupEnabled ? 'left-[26px]' : 'left-0.5'}`} />
+            </button>
+          </div>
+        </div>
+        {sumupEnabled && (
+          <>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-slate-600 mb-1 block">API Key</label>
+                <input 
+                  type="password" 
+                  value={sumupApiKey} 
+                  onChange={e => setSumupApiKey(e.target.value)} 
+                  placeholder="sup_sk_..." 
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 font-mono text-sm" 
+                  data-testid="sumup-api-key"
+                />
+                <p className="text-xs text-slate-400 mt-1">Te vinden in SumUp Dashboard &rarr; Ontwikkelaars &rarr; API Keys</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-slate-600 mb-1 block">Merchant Code</label>
+                <input 
+                  type="text" 
+                  value={sumupMerchantCode} 
+                  onChange={e => setSumupMerchantCode(e.target.value)} 
+                  placeholder="bijv. MH4H92C7" 
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 font-mono text-sm" 
+                  data-testid="sumup-merchant-code"
+                />
+                <p className="text-xs text-slate-400 mt-1">Te vinden in SumUp Dashboard &rarr; Profiel</p>
+              </div>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button onClick={handleSaveSumUp} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50 text-sm font-medium">
+                <Save className="w-4 h-4" />
+                {saving ? 'Opslaan...' : 'SumUp opslaan'}
               </button>
             </div>
           </>
