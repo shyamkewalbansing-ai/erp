@@ -944,6 +944,7 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "receipt_number": kwitantie_nummer,
         "amount": data.amount,
         "payment_type": data.payment_type,
+        "payment_method": data.payment_method,
         "tenant_name": tenant["name"],
         "tenant_code": tenant.get("tenant_code", ""),
         "apartment_number": tenant.get("apartment_number", ""),
