@@ -2131,40 +2131,6 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
         </div>
       </div>
 
-      {/* Setup Guide */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
-            <Settings className="w-5 h-5 text-blue-600" />
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-900">Shelly Installatie Handleiding</h3>
-            <p className="text-sm text-slate-500">Zelf koppelen zonder technische kennis</p>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm mb-2">1</div>
-            <p className="font-medium text-slate-800 text-sm">Shelly kopen</p>
-            <p className="text-xs text-slate-500 mt-1">Koop een Shelly 1 (Gen1) of Shelly Plus 1 (Gen2) relais per appartement</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm mb-2">2</div>
-            <p className="font-medium text-slate-800 text-sm">WiFi verbinden</p>
-            <p className="text-xs text-slate-500 mt-1">Verbind de Shelly met uw WiFi netwerk via de Shelly app. Noteer het IP-adres</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm mb-2">3</div>
-            <p className="font-medium text-slate-800 text-sm">Installeren</p>
-            <p className="text-xs text-slate-500 mt-1">Laat een elektricien de Shelly in de meterkast aansluiten op de groep van het appartement</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-4">
-            <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm mb-2">4</div>
-            <p className="font-medium text-slate-800 text-sm">Koppelen</p>
-            <p className="text-xs text-slate-500 mt-1">Klik "Shelly toevoegen" hierboven, vul het IP-adres en appartement in. Klaar!</p>
-          </div>
-        </div>
-      </div>
 
       {/* Add Device Modal */}
       {showAddModal && (
