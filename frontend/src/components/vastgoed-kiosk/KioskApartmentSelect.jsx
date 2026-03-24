@@ -80,12 +80,12 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
         <div className="flex gap-1.5 bg-white/20 backdrop-blur-sm rounded-2xl p-1.5 border border-white/20 shadow-lg">
           <button onClick={() => { setMode('grid'); setError(''); }}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
-              mode === 'grid' ? 'bg-white text-orange-600 shadow-md' : 'text-white hover:bg-white/10'}`}>
+              mode === 'grid' ? 'bg-white text-orange-600 shadow-md' : 'bg-white/15 text-white hover:bg-white/25'}`}>
             <Building2 className="w-4 h-4" /><span className="hidden sm:inline">Appartement</span>
           </button>
           <button onClick={() => { setMode('code'); setError(''); }}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
-              mode === 'code' ? 'bg-white text-orange-600 shadow-md' : 'text-white hover:bg-white/10'}`}>
+              mode === 'code' ? 'bg-white text-orange-600 shadow-md' : 'bg-white/15 text-white hover:bg-white/25'}`}>
             <Keyboard className="w-4 h-4" /><span className="hidden sm:inline">Code</span>
           </button>
         </div>

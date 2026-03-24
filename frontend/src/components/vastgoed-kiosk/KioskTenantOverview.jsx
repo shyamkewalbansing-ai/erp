@@ -1,4 +1,4 @@
-import { ArrowLeft, User, AlertTriangle, CreditCard, Wallet, FileText, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, AlertTriangle, CreditCard, Wallet, FileText, CheckCircle, Home } from 'lucide-react';
 
 function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -120,7 +120,8 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
               <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-8 tracking-tight whitespace-nowrap">{formatSRD(total)}</p>
               <button onClick={onPay} data-testid="pay-btn"
                 className="w-full py-5 sm:py-6 px-8 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/30 transition active:scale-[0.98]">
-                <CreditCard className="w-6 h-6" /> Betalen
+                Volgende
+                <ArrowRight className="w-6 h-6" />
               </button>
             </>
           ) : (
@@ -129,7 +130,12 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
                 <CheckCircle className="w-10 h-10 text-green-500" />
               </div>
               <p className="text-3xl sm:text-4xl font-extrabold text-green-700 mb-2 tracking-tight">Alles betaald!</p>
-              <p className="text-base text-green-500">Geen openstaand saldo</p>
+              <p className="text-base text-green-500 mb-8">Geen openstaand saldo</p>
+              <button onClick={onBack} data-testid="back-home-btn"
+                className="w-full py-5 sm:py-6 px-8 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/30 transition active:scale-[0.98]">
+                <Home className="w-6 h-6" />
+                Terug naar start
+              </button>
             </>
           )}
         </div>
