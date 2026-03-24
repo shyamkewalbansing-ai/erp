@@ -19,7 +19,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
   };
 
   return (
-    <div className="kiosk-fullscreen flex flex-col lg:flex-row bg-slate-50">
+    <div className="min-h-full flex flex-col lg:flex-row bg-slate-50">
       {/* Left Panel - White with accent */}
       <div className="w-full lg:w-2/5 bg-white p-6 lg:p-12 flex flex-col relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-200 min-h-[50vh] lg:min-h-0">
         {/* Decorative circles */}

@@ -56,7 +56,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   };
 
   return (
-    <div className="kiosk-fullscreen bg-slate-50 flex flex-col">
+    <div className="min-h-full bg-slate-50 flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 p-6 flex items-center justify-between">
         <button onClick={onBack} disabled={processing} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-lg font-medium disabled:opacity-50">

@@ -65,14 +65,14 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
 
   if (loading) {
     return (
-      <div className="kiosk-fullscreen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-full bg-slate-50 flex items-center justify-center">
         <div className="w-16 h-16 border-4 border-slate-200 border-t-orange-500 rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="kiosk-fullscreen bg-slate-50 flex flex-col overflow-hidden">
+    <div className="min-h-full bg-slate-50 flex flex-col">
       {/* Header - Light */}
       <div className="bg-white border-b border-slate-200 p-4 lg:p-6 flex items-center justify-between shrink-0">
         <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-base lg:text-lg font-medium">

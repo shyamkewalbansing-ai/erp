@@ -93,7 +93,7 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
   });
 
   return (
-    <div className="kiosk-fullscreen flex flex-col lg:flex-row bg-slate-50">
+    <div className="min-h-full flex flex-col lg:flex-row bg-slate-50">
       {/* Left Panel */}
       <div className="w-full lg:w-2/5 bg-gradient-to-br from-slate-800 to-slate-900 p-6 lg:p-12 flex flex-col relative overflow-hidden min-h-[40vh] lg:min-h-0">
         {/* Decorative elements */}

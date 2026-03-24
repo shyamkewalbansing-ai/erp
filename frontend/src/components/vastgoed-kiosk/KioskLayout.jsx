@@ -65,12 +65,10 @@ export default function KioskLayout() {
     }
   }, [companyId]);
 
-  // Disable scroll and set fullscreen kiosk mode
+  // Set fullscreen kiosk mode (allow scrolling for content pages)
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
+    document.body.style.touchAction = 'manipulation';
     return () => {
-      document.body.style.overflow = '';
       document.body.style.touchAction = '';
     };
   }, []);
@@ -86,7 +84,7 @@ export default function KioskLayout() {
 
   if (companyNotFound) {
     return (
-      <div className="kiosk-fullscreen kiosk-bg-gradient flex items-center justify-center">
+      <div className="min-h-full kiosk-bg-gradient flex items-center justify-center">
         <div className="text-center text-white">
           <div className="text-9xl mb-8">🏢</div>
           <h1 className="text-5xl font-bold mb-4">Bedrijf niet gevonden</h1>
@@ -106,7 +104,7 @@ export default function KioskLayout() {
     switch (step) {
       case 'loading':
         return (
-          <div className="kiosk-fullscreen bg-slate-50 flex items-center justify-center">
+          <div className="min-h-full bg-slate-50 flex items-center justify-center">
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-xl text-slate-500">Laden...</p>
@@ -115,7 +113,7 @@ export default function KioskLayout() {
         );
       case 'no-pin':
         return (
-          <div className="kiosk-fullscreen bg-slate-50 flex items-center justify-center">
+          <div className="min-h-full bg-slate-50 flex items-center justify-center">
             <div className="text-center max-w-md px-6">
               <div className="w-20 h-20 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-6">
                 <Lock className="w-10 h-10 text-red-500" />
@@ -223,7 +221,7 @@ export default function KioskLayout() {
           animate="center"
           exit="exit"
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="kiosk-fullscreen"
+          className="absolute inset-0 overflow-y-auto overflow-x-hidden"
         >
           {renderStep()}
         </motion.div>

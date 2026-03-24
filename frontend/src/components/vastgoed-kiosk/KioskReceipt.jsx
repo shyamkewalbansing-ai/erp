@@ -260,7 +260,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   };
 
   return (
-    <div className="kiosk-fullscreen flex bg-slate-50">
+    <div className="min-h-full flex bg-slate-50">
       {/* Left Panel - Success */}
       <div className="w-1/2 bg-gradient-to-br from-green-500 to-green-600 flex flex-col items-center justify-center p-12 text-white relative overflow-hidden print:hidden">
         {/* Decorative circles */}
