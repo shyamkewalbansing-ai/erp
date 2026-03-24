@@ -632,10 +632,15 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                 check_month = billed_date + relativedelta(months=1)
                 
                 while True:
+                    # check_month = month we want to bill (e.g. April)
+                    # We bill it when the deadline for the PREVIOUS month has passed
+                    # billing_next_month=True: March rent due on April's billing_day
+                    # billing_next_month=False: March rent due on March's billing_day
+                    prev_month = check_month - relativedelta(months=1)
                     if billing_next_month:
-                        due_date = (check_month + relativedelta(months=1)).replace(day=min(billing_day, 28))
-                    else:
                         due_date = check_month.replace(day=min(billing_day, 28))
+                    else:
+                        due_date = prev_month.replace(day=min(billing_day, 28))
                     
                     if now >= due_date.replace(tzinfo=timezone.utc):
                         months_billed += 1
@@ -659,13 +664,13 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                     updates["outstanding_rent"] = outstanding
                     updates["rent_billed_through"] = billed_through
             
-            # Also check: is current month's rent overdue right now? (for fine display)
+            # Check: is current month's rent overdue? Apply fine if so
             if outstanding > 0 and fine_amount > 0 and not updates.get("last_fine_month"):
+                billed_dt = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
                 if billing_next_month:
-                    current_due = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
-                    current_due = (current_due + relativedelta(months=1)).replace(day=min(billing_day, 28))
+                    current_due = (billed_dt + relativedelta(months=1)).replace(day=min(billing_day, 28))
                 else:
-                    current_due = datetime.strptime(billed_through + "-01", "%Y-%m-%d").replace(day=min(billing_day, 28))
+                    current_due = billed_dt.replace(day=min(billing_day, 28))
                 
                 if now >= current_due.replace(tzinfo=timezone.utc):
                     last_fine_month = t.get("last_fine_month", "")
