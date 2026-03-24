@@ -311,57 +311,81 @@ function DashboardTab({ dashboard, payments, formatSRD }) {
 
   return (
     <div>
-      {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        {stats.map((stat, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-orange-100 p-5 flex items-center gap-4 hover:shadow-lg hover:border-orange-200 transition-all">
-            <div className="w-12 h-12 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
-              <stat.icon className="w-5 h-5 text-orange-500" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">{stat.label}</p>
-              <p className="text-xl font-black text-slate-900 mt-0.5">{stat.value}</p>
-            </div>
-          </div>
-        ))}
+      {/* Stat Cards - zelfde witte container als Huurders/Appartementen */}
+      <div className="bg-white rounded-xl border border-slate-200 mb-6">
+        <div className="p-4 border-b border-slate-200">
+          <h2 className="font-semibold text-slate-900">Overzicht</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-slate-50">
+              <tr>
+                {stats.map((stat, i) => (
+                  <th key={i} className="p-4 text-sm font-medium text-slate-500 text-left">{stat.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-t border-slate-100">
+                {stats.map((stat, i) => (
+                  <td key={i} className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                        <stat.icon className="w-4 h-4 text-orange-500" />
+                      </div>
+                      <p className="text-lg font-bold text-slate-900">{stat.value}</p>
+                    </div>
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* Recente betalingen */}
-      <h3 className="text-lg font-bold text-slate-900 mb-4">Recente betalingen</h3>
-      {recentPayments.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-orange-100 p-8 text-center text-slate-400">
-          Nog geen betalingen
+      {/* Recente betalingen - zelfde tabel-stijl */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="p-4 border-b border-slate-200">
+          <h2 className="font-semibold text-slate-900">Recente betalingen</h2>
         </div>
-      ) : (
-        <div className="bg-white rounded-2xl border border-orange-100 overflow-hidden">
-          {recentPayments.map((p, i) => (
-            <div key={p.payment_id || i} className={`px-5 py-4 flex items-center justify-between hover:bg-orange-50/40 transition ${i !== 0 ? 'border-t border-orange-50' : ''}`}>
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center flex-shrink-0">
-                  <CreditCard className="w-5 h-5 text-orange-400" />
-                </div>
-                <div>
-                  <p className="font-bold text-slate-900">{p.tenant_name}</p>
-                  <p className="text-sm text-slate-400">
-                    Appt. {p.apartment_number} &middot; {
-                      p.payment_type === 'rent' ? 'Huur'
-                      : p.payment_type === 'service' ? 'Service'
-                      : p.payment_type === 'fine' ? 'Boetes'
-                      : p.payment_type === 'partial_rent' ? 'Gedeeltelijke huur'
-                      : p.payment_type === 'deposit' ? 'Borgsom'
-                      : p.payment_type?.replace('_', ' ')
-                    }
-                  </p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-bold text-orange-600">{formatSRD(p.amount)}</p>
-                <p className="text-xs text-slate-400 font-mono">{p.kwitantie_nummer}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+        {recentPayments.length === 0 ? (
+          <div className="p-12 text-center text-slate-400">Nog geen betalingen</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Appartement</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Bedrag</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Kwitantie</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentPayments.map((p, i) => (
+                  <tr key={p.payment_id || i} className="border-t border-slate-100 hover:bg-slate-50">
+                    <td className="p-4 font-bold text-slate-900">{p.tenant_name}</td>
+                    <td className="p-4 text-slate-600">{p.apartment_number}</td>
+                    <td className="p-4">
+                      <span className="px-2 py-1 bg-orange-50 text-orange-600 rounded text-xs font-semibold">
+                        {p.payment_type === 'rent' ? 'Huur'
+                          : p.payment_type === 'service' ? 'Service'
+                          : p.payment_type === 'fine' ? 'Boetes'
+                          : p.payment_type === 'partial_rent' ? 'Gedeeltelijke huur'
+                          : p.payment_type === 'deposit' ? 'Borgsom'
+                          : p.payment_type?.replace('_', ' ')}
+                      </span>
+                    </td>
+                    <td className="p-4 text-right font-bold text-green-600">{formatSRD(p.amount)}</td>
+                    <td className="p-4 text-right text-sm text-slate-400 font-mono">{p.kwitantie_nummer}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
