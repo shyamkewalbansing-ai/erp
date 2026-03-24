@@ -35,6 +35,9 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 - [2026-03-24] WhatsApp Business API: self-service configuratie, berichten versturen (herinnering/boete/achterstand), bulk versturen, berichtengeschiedenis
 - [2026-03-24] WhatsApp knop bij huurders met schuld voor directe herinnering
 - [2026-03-24] WhatsApp Berichten tab: berichtengeschiedenis met statistieken, zoek/filter op type en status, expandable berichten
+- [2026-03-24] Stroombreker auto-cutoff: instelling voor automatisch uitschakelen na X dagen na vervaldatum
+- [2026-03-24] Shelly installatie handleiding verwijderd uit Stroombrekers tab
+- [2026-03-24] Tabs navigatie: horizontaal scrollbaar (geen wrapping meer)
 
 ## Database Schema
 - `kiosk_employees`: name, role, salary, hire_date, status
