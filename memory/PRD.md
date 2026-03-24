@@ -151,6 +151,7 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
 2. **Unieke PIN** - Backend valideert dat geen twee bedrijven dezelfde PIN hebben
 3. **Kiosk PIN beveiliging** - Kiosk pagina vraagt PIN bij direct URL bezoek
    - SessionStorage wordt gewist bij uitloggen
+   - Zonder PIN is kiosk GEBLOKKEERD ("Kiosk Niet Beschikbaar")
 4. **Logout verbeterd** - Wist zowel localStorage (token) als sessionStorage (PIN verificatie)
 
 #### Gewijzigde Bestanden
