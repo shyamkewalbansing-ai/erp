@@ -23,7 +23,9 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 - [2026-03-23] Realistische Huurovereenkomst met rode bedrijfsstempel (Suriname)
 - [2026-03-23] Werknemers tab (CRUD + salarisbetalingen)
 - [2026-03-23] Bank/Kas tab (dynamische inkomsten, alleen uitgaven in kas tabel)
-- [2026-03-24] Kleurfix Huurders tabel: bedragen standaard zwart, alleen oranje/rood bij achterstand (groen verwijderd)
+- [2026-03-24] Kleurfix Huurders tabel: bedragen standaard zwart, alleen oranje/rood bij achterstand
+- [2026-03-24] Zoekbalk toegevoegd bij Huurders en Appartementen tabs
+- [2026-03-24] Kwitanties maandfilter standaard op huidige maand
 
 ## Database Schema
 - `kiosk_employees`: name, role, salary, hire_date, status

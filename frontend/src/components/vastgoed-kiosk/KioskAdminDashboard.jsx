@@ -32,7 +32,10 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState('all');
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
 
   const token = localStorage.getItem('kiosk_token');
 
@@ -441,7 +444,15 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
 
 // ============== TENANTS TAB ==============
 function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAddTenant, onEditTenant, onAddRent, onRefresh, token }) {
-  const activeTenants = tenants.filter(t => t.status === 'active');
+  const [tenantSearch, setTenantSearch] = useState('');
+  const activeTenants = tenants.filter(t => {
+    if (t.status !== 'active') return false;
+    if (!tenantSearch) return true;
+    const q = tenantSearch.toLowerCase();
+    return t.name?.toLowerCase().includes(q) ||
+      t.apartment_number?.toLowerCase().includes(q) ||
+      t.tenant_code?.toLowerCase().includes(q);
+  });
   const [deleting, setDeleting] = useState(null);
   const [showLeaseModal, setShowLeaseModal] = useState(false);
   const [editingLease, setEditingLease] = useState(null);
@@ -481,12 +492,23 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
     <div className="space-y-6">
       {/* Huurders tabel */}
       <div className="bg-white rounded-xl border border-slate-200">
-        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
-          <h2 className="font-semibold text-slate-900">Huurders ({activeTenants.length})</h2>
+        <div className="p-4 border-b border-slate-200 flex items-center gap-4">
+          <div className="flex-1 relative">
+            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={tenantSearch}
+              onChange={(e) => setTenantSearch(e.target.value)}
+              placeholder="Zoek op naam, appartement, code..."
+              data-testid="tenant-search-input"
+              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-orange-500"
+            />
+          </div>
+          <span className="text-sm text-slate-500 whitespace-nowrap">{activeTenants.length} huurder{activeTenants.length !== 1 ? 's' : ''}</span>
           <button
             onClick={onAddTenant}
             data-testid="add-tenant-button"
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
             Nieuwe Huurder
@@ -693,13 +715,34 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
 
 // ============== APARTMENTS TAB ==============
 function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit }) {
+  const [aptSearch, setAptSearch] = useState('');
+  const filteredApartments = apartments.filter(apt => {
+    if (!aptSearch) return true;
+    const q = aptSearch.toLowerCase();
+    const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
+    return apt.number?.toLowerCase().includes(q) ||
+      apt.description?.toLowerCase().includes(q) ||
+      tenant?.name?.toLowerCase().includes(q);
+  });
+
   return (
     <div className="bg-white rounded-xl border border-slate-200">
-      <div className="p-4 border-b border-slate-200 flex justify-between items-center">
-        <h2 className="font-semibold text-slate-900">Appartementen ({apartments.length})</h2>
+      <div className="p-4 border-b border-slate-200 flex items-center gap-4">
+        <div className="flex-1 relative">
+          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={aptSearch}
+            onChange={(e) => setAptSearch(e.target.value)}
+            placeholder="Zoek op nummer, omschrijving, huurder..."
+            data-testid="apartment-search-input"
+            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-orange-500"
+          />
+        </div>
+        <span className="text-sm text-slate-500 whitespace-nowrap">{filteredApartments.length} appartement{filteredApartments.length !== 1 ? 'en' : ''}</span>
         <button
           onClick={onAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap"
         >
           <Plus className="w-4 h-4" />
           Nieuw Appartement
@@ -718,7 +761,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit }) {
             </tr>
           </thead>
           <tbody>
-            {apartments.map(apt => {
+            {filteredApartments.map(apt => {
               const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
               return (
                 <tr key={apt.apartment_id} className="border-t border-slate-100">
