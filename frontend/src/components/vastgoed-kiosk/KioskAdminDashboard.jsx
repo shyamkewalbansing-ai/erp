@@ -968,6 +968,7 @@ function SettingsTab({ company, token, onRefresh }) {
   const [billingDay, setBillingDay] = useState(company?.billing_day || 1);
   const [billingNextMonth, setBillingNextMonth] = useState(company?.billing_next_month !== false);
   const [fineAmount, setFineAmount] = useState(company?.fine_amount || 0);
+  const [powerCutoffDays, setPowerCutoffDays] = useState(company?.power_cutoff_days || 0);
   const [stampName, setStampName] = useState(company?.stamp_company_name || '');
   const [stampAddress, setStampAddress] = useState(company?.stamp_address || '');
   const [stampPhone, setStampPhone] = useState(company?.stamp_phone || '');
@@ -1061,7 +1062,8 @@ function SettingsTab({ company, token, onRefresh }) {
       await axios.put(`${API}/auth/settings`, {
         billing_day: billingDay,
         billing_next_month: billingNextMonth,
-        fine_amount: fineAmount
+        fine_amount: fineAmount,
+        power_cutoff_days: powerCutoffDays
       }, { headers: { Authorization: `Bearer ${token}` } });
       onRefresh();
     } catch (err) {
@@ -1152,6 +1154,35 @@ function SettingsTab({ company, token, onRefresh }) {
               onChange={(e) => setFineAmount(parseFloat(e.target.value))}
               className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              <div className="flex items-center gap-2">
+                <Zap className="w-4 h-4 text-red-500" />
+                Stroombreker automatisch uitschakelen
+              </div>
+            </label>
+            <p className="text-xs text-slate-400 mb-2">Aantal dagen na de vervaldatum waarna de stroombreker automatisch wordt uitgeschakeld. Zet op 0 om uit te schakelen.</p>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min="0"
+                max="90"
+                value={powerCutoffDays}
+                onChange={(e) => setPowerCutoffDays(parseInt(e.target.value) || 0)}
+                data-testid="power-cutoff-days"
+                className="w-24 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-center text-lg font-bold"
+              />
+              <span className="text-sm text-slate-500">dagen na vervaldatum</span>
+            </div>
+            {powerCutoffDays > 0 && (
+              <div className="bg-red-50 rounded-lg p-3 text-sm text-red-700 mt-3 flex items-start gap-2">
+                <Zap className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                <span>
+                  <span className="font-medium">Let op:</span> Als een huurder {powerCutoffDays} dag{powerCutoffDays !== 1 ? 'en' : ''} na de vervaldatum nog niet betaald heeft, wordt de stroombreker van het gekoppelde appartement automatisch uitgeschakeld.
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

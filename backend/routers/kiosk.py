@@ -136,6 +136,7 @@ class CompanyUpdate(BaseModel):
     billing_day: Optional[int] = None  # 1-28
     billing_next_month: Optional[bool] = None  # True = deadline is next month
     fine_amount: Optional[float] = None
+    power_cutoff_days: Optional[int] = None  # Days after due date to auto-cut power (0 = disabled)
     stamp_company_name: Optional[str] = None
     stamp_address: Optional[str] = None
     stamp_phone: Optional[str] = None
@@ -262,6 +263,7 @@ async def register_company(data: CompanyRegister):
         "adres": data.adres,
         "billing_day": 1,
         "fine_amount": 0,
+        "power_cutoff_days": 0,
         "stamp_company_name": data.name,
         "stamp_address": data.adres or "",
         "stamp_phone": data.telefoon or "",
@@ -332,6 +334,7 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "billing_day": company.get("billing_day", 1),
         "billing_next_month": company.get("billing_next_month", True),
         "fine_amount": company.get("fine_amount", 0),
+        "power_cutoff_days": company.get("power_cutoff_days", 0),
         "stamp_company_name": company.get("stamp_company_name", ""),
         "stamp_address": company.get("stamp_address", ""),
         "stamp_phone": company.get("stamp_phone", ""),
@@ -899,6 +902,43 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                                    f"Gelieve zo spoedig mogelijk te betalen.\n\n"
                                    f"Met vriendelijke groet,\n{company_name_for_wa}")
                     await _send_wa_auto(company_id, t_phone, wa_fine_msg, t["tenant_id"], t["name"], "fine_applied")
+        
+        # === AUTO POWER CUTOFF: Turn off Shelly when overdue past cutoff days ===
+        power_cutoff_days = comp.get("power_cutoff_days", 0) if comp else 0
+        if power_cutoff_days > 0 and t.get("status") == "active":
+            total_debt = (updates.get("outstanding_rent", outstanding) + 
+                         t.get("service_costs", 0) + 
+                         (updates.get("fines", current_fines)))
+            if total_debt > 0 and billed_through:
+                try:
+                    bt_dt = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+                    if billing_next_month:
+                        due_dt = (bt_dt + relativedelta(months=1)).replace(day=min(billing_day, 28))
+                    else:
+                        due_dt = bt_dt.replace(day=min(billing_day, 28))
+                    cutoff_dt = due_dt + timedelta(days=power_cutoff_days)
+                    if now >= cutoff_dt.replace(tzinfo=timezone.utc):
+                        shelly = await db.kiosk_shelly_devices.find_one(
+                            {"company_id": company_id, "apartment_id": t.get("apartment_id")}, {"_id": 0}
+                        )
+                        if shelly and shelly.get("last_status") != "off":
+                            ip = shelly["device_ip"]
+                            ch = shelly.get("channel", 0)
+                            dtype = shelly.get("device_type", "gen1")
+                            try:
+                                async with httpx.AsyncClient(timeout=5.0) as client:
+                                    if dtype == "gen2":
+                                        await client.get(f"http://{ip}/rpc/switch.set?id={ch}&on=false")
+                                    else:
+                                        await client.get(f"http://{ip}/relay/{ch}?turn=off")
+                                await db.kiosk_shelly_devices.update_one(
+                                    {"device_id": shelly["device_id"]},
+                                    {"$set": {"last_status": "off", "last_check": now, "auto_cutoff": True}}
+                                )
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
         
         # Calculate billing details for display
         overdue_months = []
