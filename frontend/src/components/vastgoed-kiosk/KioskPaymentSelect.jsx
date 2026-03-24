@@ -1,43 +1,20 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Banknote, Wallet, Droplets, AlertCircle, CheckCircle, Calendar } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Banknote, Wallet, Droplets, AlertCircle, CheckCircle } from 'lucide-react';
 
 function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-// Generate month options for selection
-function getMonthOptions() {
-  const months = [];
-  const now = new Date();
-  const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
-                      'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
-  
-  // Current month and 3 previous months
-  for (let i = 0; i < 4; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const label = `${monthNames[d.getMonth()]} ${d.getFullYear()}`;
-    months.push({ value, label });
-  }
-  return months;
-}
-
 const PAYMENT_TYPES = [
-  { id: 'rent', label: 'Volledige huur', icon: Banknote, desc: 'Betaal het volledige openstaande huurbedrag' },
-  { id: 'partial_rent', label: 'Gedeeltelijk', icon: Wallet, desc: 'Betaal een deel van de huur' },
-  { id: 'service_costs', label: 'Servicekosten', icon: Droplets, desc: 'Water, stroom en overige kosten' },
-  { id: 'fines', label: 'Boetes', icon: AlertCircle, desc: 'Openstaande boetes betalen' },
+  { id: 'rent', label: 'Huur', icon: Banknote, desc: 'Openstaand huurbedrag' },
+  { id: 'service_costs', label: 'Servicekosten', icon: Droplets, desc: 'Water, stroom en overige' },
+  { id: 'fines', label: 'Boetes', icon: AlertCircle, desc: 'Openstaande boetes' },
 ];
 
 export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
-  const [selectedType, setSelectedType] = useState(null);
+  const [selectedTypes, setSelectedTypes] = useState(new Set());
+  const [useCustomAmount, setUseCustomAmount] = useState(false);
   const [customAmount, setCustomAmount] = useState('');
-  const [selectedMonth, setSelectedMonth] = useState(() => {
-    const now = new Date();
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  });
-  
-  const monthOptions = getMonthOptions();
 
   if (!tenant) return null;
 
@@ -50,44 +27,79 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
     }
   };
 
-  const isTypeDisabled = (type) => {
-    if (type === 'partial_rent') return (tenant.outstanding_rent || 0) <= 0;
-    return getAmountForType(type) <= 0;
+  const isTypeDisabled = (type) => getAmountForType(type) <= 0;
+
+  const toggleType = (typeId) => {
+    if (useCustomAmount) return;
+    const next = new Set(selectedTypes);
+    if (next.has(typeId)) {
+      next.delete(typeId);
+    } else {
+      next.add(typeId);
+    }
+    setSelectedTypes(next);
+  };
+
+  const toggleCustom = () => {
+    if (!useCustomAmount) {
+      setSelectedTypes(new Set());
+      setUseCustomAmount(true);
+    } else {
+      setUseCustomAmount(false);
+      setCustomAmount('');
+    }
+  };
+
+  // Calculate total from selected types
+  const selectedTotal = [...selectedTypes].reduce((sum, t) => sum + getAmountForType(t), 0);
+
+  // Build description
+  const buildDescription = () => {
+    const labels = [];
+    if (selectedTypes.has('rent')) labels.push('Huur');
+    if (selectedTypes.has('service_costs')) labels.push('Servicekosten');
+    if (selectedTypes.has('fines')) labels.push('Boetes');
+    return labels.join(' + ');
+  };
+
+  // Determine payment type for API
+  const getPaymentType = () => {
+    if (useCustomAmount) return 'partial_rent';
+    if (selectedTypes.size === 1) {
+      const t = [...selectedTypes][0];
+      if (t === 'rent') return 'rent';
+      if (t === 'service_costs') return 'service_costs';
+      if (t === 'fines') return 'fines';
+    }
+    return 'rent'; // combined
   };
 
   const handleConfirm = () => {
-    let amount = 0;
-    let description = '';
-    const selectedMonthLabel = monthOptions.find(m => m.value === selectedMonth)?.label || selectedMonth;
-    
-    if (selectedType === 'rent') {
-      amount = tenant.outstanding_rent;
-      description = `Volledige huurbetaling - ${selectedMonthLabel}`;
-    } else if (selectedType === 'partial_rent') {
+    let amount, description, paymentType;
+
+    if (useCustomAmount) {
       amount = parseFloat(customAmount);
-      if (isNaN(amount) || amount <= 0 || amount > tenant.outstanding_rent) return;
-      description = `Gedeeltelijke huurbetaling - ${selectedMonthLabel}`;
-    } else if (selectedType === 'service_costs') {
-      amount = tenant.service_costs;
-      description = 'Servicekosten betaling';
-    } else if (selectedType === 'fines') {
-      amount = tenant.fines;
-      description = 'Boetes betaling';
+      if (isNaN(amount) || amount <= 0) return;
+      description = `Gedeeltelijke betaling - ${formatSRD(amount)}`;
+      paymentType = 'partial_rent';
+    } else {
+      amount = selectedTotal;
+      description = buildDescription();
+      paymentType = getPaymentType();
     }
-    
-    onConfirm({ 
-      payment_type: selectedType, 
-      amount, 
-      description, 
-      payment_method: 'cash', 
-      rent_month: (selectedType === 'rent' || selectedType === 'partial_rent') ? selectedMonth : null 
+
+    onConfirm({
+      payment_type: paymentType,
+      amount,
+      description,
+      payment_method: 'cash',
+      rent_month: null,
     });
   };
 
-  const canProceed = selectedType && (
-    selectedType !== 'partial_rent' || 
-    (customAmount && parseFloat(customAmount) > 0 && parseFloat(customAmount) <= tenant.outstanding_rent)
-  );
+  const canProceed = useCustomAmount
+    ? (customAmount && parseFloat(customAmount) > 0)
+    : selectedTypes.size > 0;
 
   const handleKeypadPress = (val) => {
     if (val === 'DEL') {
@@ -98,6 +110,20 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
       setCustomAmount(prev => prev + val);
     }
   };
+
+  const totalDebt = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0);
+
+  // Select all available types
+  const selectAll = () => {
+    if (useCustomAmount) return;
+    const all = new Set();
+    PAYMENT_TYPES.forEach(t => {
+      if (!isTypeDisabled(t.id)) all.add(t.id);
+    });
+    setSelectedTypes(all);
+  };
+
+  const allSelected = PAYMENT_TYPES.filter(t => !isTypeDisabled(t.id)).every(t => selectedTypes.has(t.id));
 
   return (
     <div className="min-h-full bg-slate-50 flex flex-col">
@@ -114,14 +140,37 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
         </div>
       </div>
 
-      {/* Content - Scrollable */}
+      {/* Content */}
       <div className="flex-1 p-6 flex gap-6 overflow-auto">
         {/* Left - Payment Options */}
         <div className="flex-1 flex flex-col min-w-0">
+          {/* Select All */}
+          {!useCustomAmount && PAYMENT_TYPES.filter(t => !isTypeDisabled(t.id)).length > 1 && (
+            <button
+              onClick={allSelected ? () => setSelectedTypes(new Set()) : selectAll}
+              className={`mb-3 p-3 rounded-xl border-2 transition flex items-center justify-between ${
+                allSelected
+                  ? 'bg-orange-50 border-orange-500'
+                  : 'bg-white border-slate-200 hover:border-orange-300'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${
+                  allSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
+                }`}>
+                  {allSelected && <CheckCircle className="w-4 h-4 text-white" />}
+                </div>
+                <span className="text-lg font-bold text-slate-900">Alles betalen</span>
+              </div>
+              <span className="text-xl font-bold text-orange-600">{formatSRD(totalDebt)}</span>
+            </button>
+          )}
+
+          {/* Individual options */}
           <div className="space-y-3">
             {PAYMENT_TYPES.map((type) => {
-              const disabled = isTypeDisabled(type.id);
-              const isSelected = selectedType === type.id;
+              const disabled = isTypeDisabled(type.id) || useCustomAmount;
+              const isSelected = selectedTypes.has(type.id);
               const amount = getAmountForType(type.id);
               const Icon = type.icon;
 
@@ -129,16 +178,22 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                 <button
                   key={type.id}
                   disabled={disabled}
-                  onClick={() => setSelectedType(type.id)}
+                  onClick={() => toggleType(type.id)}
+                  data-testid={`pay-type-${type.id}`}
                   className={`flex items-center justify-between w-full p-4 rounded-xl border-2 transition ${
-                    disabled 
-                      ? 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed' 
-                      : isSelected 
-                        ? 'bg-orange-50 border-orange-500' 
+                    disabled
+                      ? 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed'
+                      : isSelected
+                        ? 'bg-orange-50 border-orange-500'
                         : 'bg-white border-slate-200 hover:border-orange-300'
                   }`}
                 >
                   <div className="flex items-center gap-4">
+                    <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${
+                      isSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
+                    }`}>
+                      {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
+                    </div>
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                       isSelected ? 'bg-orange-100' : 'bg-slate-100'
                     }`}>
@@ -149,52 +204,60 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                       <p className="text-sm text-slate-500">{type.desc}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {type.id !== 'partial_rent' && (
-                      <p className={`text-xl font-bold ${disabled ? 'text-slate-400' : 'text-slate-900'}`}>
-                        {formatSRD(amount)}
-                      </p>
-                    )}
-                    {isSelected && <CheckCircle className="w-6 h-6 text-orange-500" />}
-                  </div>
+                  <p className={`text-xl font-bold ${disabled ? 'text-slate-400' : isSelected ? 'text-orange-600' : 'text-slate-900'}`}>
+                    {formatSRD(amount)}
+                  </p>
                 </button>
               );
             })}
           </div>
 
-          {/* Month Selection - shown when rent or partial_rent selected */}
-          {(selectedType === 'rent' || selectedType === 'partial_rent') && (
-            <div className="bg-white rounded-xl p-4 border-2 border-slate-100 shadow-sm mt-4">
-              <div className="flex items-center gap-2 mb-3">
-                <Calendar className="w-5 h-5 text-orange-500" />
-                <h4 className="text-lg font-bold text-slate-900">Voor welke maand?</h4>
+          {/* Custom amount toggle */}
+          <button
+            onClick={toggleCustom}
+            data-testid="pay-type-custom"
+            className={`mt-3 flex items-center justify-between w-full p-4 rounded-xl border-2 transition ${
+              useCustomAmount
+                ? 'bg-orange-50 border-orange-500'
+                : 'bg-white border-slate-200 hover:border-orange-300'
+            }`}
+          >
+            <div className="flex items-center gap-4">
+              <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${
+                useCustomAmount ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
+              }`}>
+                {useCustomAmount && <CheckCircle className="w-4 h-4 text-white" />}
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {monthOptions.map((month) => (
-                  <button
-                    key={month.value}
-                    onClick={() => setSelectedMonth(month.value)}
-                    className={`p-3 rounded-lg text-left transition ${
-                      selectedMonth === month.value
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-slate-50 text-slate-900 hover:bg-slate-100'
-                    }`}
-                  >
-                    <p className="font-semibold text-sm">{month.label}</p>
-                  </button>
-                ))}
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                useCustomAmount ? 'bg-orange-100' : 'bg-slate-100'
+              }`}>
+                <Wallet className={`w-6 h-6 ${useCustomAmount ? 'text-orange-500' : 'text-slate-500'}`} />
               </div>
+              <div className="text-left">
+                <p className="text-lg font-bold text-slate-900">Ander bedrag</p>
+                <p className="text-sm text-slate-500">Voer zelf een bedrag in</p>
+              </div>
+            </div>
+          </button>
+
+          {/* Selected total summary */}
+          {!useCustomAmount && selectedTypes.size > 0 && (
+            <div className="mt-4 bg-slate-800 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-slate-400 text-sm">{selectedTypes.size} item{selectedTypes.size > 1 ? 's' : ''} geselecteerd</p>
+                <p className="text-white text-sm">{buildDescription()}</p>
+              </div>
+              <p className="text-2xl font-bold text-white">{formatSRD(selectedTotal)}</p>
             </div>
           )}
         </div>
 
-        {/* Right - Custom Amount Keypad (only for partial) */}
-        {selectedType === 'partial_rent' && (
+        {/* Right - Custom Amount Keypad */}
+        {useCustomAmount && (
           <div className="w-80 bg-white rounded-2xl p-6 border-2 border-slate-100 shadow-sm shrink-0">
             <h4 className="text-xl font-bold text-slate-900 mb-1">Bedrag invoeren</h4>
-            <p className="text-slate-500 text-sm mb-4">Max: {formatSRD(tenant.outstanding_rent)}</p>
+            <p className="text-slate-500 text-sm mb-4">Totaal openstaand: {formatSRD(totalDebt)}</p>
 
-            {/* Amount Display */}
             <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-4 mb-4">
               <p className="text-slate-500 text-xs mb-1">SRD</p>
               <p className="text-3xl font-bold text-slate-900 font-mono">
@@ -202,15 +265,14 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
               </p>
             </div>
 
-            {/* Keypad */}
             <div className="grid grid-cols-3 gap-2">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
                 <button
                   key={key}
                   onClick={() => handleKeypadPress(key)}
                   className={`h-12 text-lg font-bold rounded-lg transition active:scale-95 ${
-                    key === 'DEL' 
-                      ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                    key === 'DEL'
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200'
                       : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
                   }`}
                 >
@@ -222,14 +284,15 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
         )}
       </div>
 
-      {/* Fixed Bottom - Confirm Button */}
+      {/* Fixed Bottom - Confirm */}
       <div className="bg-white border-t border-slate-200 p-4 shrink-0">
         <button
           onClick={handleConfirm}
           disabled={!canProceed}
+          data-testid="payment-next-btn"
           className="w-full py-4 px-8 rounded-xl text-xl font-bold flex items-center justify-center gap-3 transition bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:text-slate-500 text-white shadow-lg shadow-orange-500/30"
         >
-          <span>Volgende</span>
+          <span>Volgende — {formatSRD(useCustomAmount ? (parseFloat(customAmount) || 0) : selectedTotal)}</span>
           <ArrowRight className="w-6 h-6" />
         </button>
       </div>

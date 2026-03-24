@@ -9,7 +9,7 @@ function formatSRD(amount) {
 }
 
 const TYPE_LABELS = {
-  rent: 'Volledige huur',
+  rent: 'Huur',
   partial_rent: 'Gedeeltelijke betaling',
   service_costs: 'Servicekosten',
   fines: 'Boetes',
@@ -77,7 +77,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           </p>
           <div className="flex items-center gap-3 text-orange-100 text-xl">
             <Banknote className="w-6 h-6" />
-            <span>{TYPE_LABELS[paymentData.payment_type]}</span>
+            <span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
           </div>
           <p className="text-orange-200 mt-4">Betaalmethode: Contant</p>
         </div>
@@ -101,14 +101,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="text-slate-500">Type</span>
-                <span className="text-slate-900">{TYPE_LABELS[paymentData.payment_type]}</span>
+                <span className="text-slate-900">{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
               </div>
-              {paymentData.rent_month && (paymentData.payment_type === 'rent' || paymentData.payment_type === 'partial_rent') && (
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Maand</span>
-                  <span className="text-orange-500 font-bold">{formatRentMonth(paymentData.rent_month)}</span>
-                </div>
-              )}
               <div className="flex justify-between">
                 <span className="text-slate-500">Bedrag</span>
                 <span className="text-slate-900 font-bold">{formatSRD(paymentData.amount)}</span>
