@@ -773,7 +773,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit }) {
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       apt.status === 'occupied' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
                     }`}>
-                      {apt.status === 'occupied' ? 'Bewoond' : 'Beschikbaar'}
+                      {apt.status === 'occupied' ? 'Bezet' : 'Beschikbaar'}
                     </span>
                   </td>
                   <td className="p-4 text-right">
