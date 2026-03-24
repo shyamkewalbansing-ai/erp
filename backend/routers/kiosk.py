@@ -110,6 +110,8 @@ class TenantCreate(BaseModel):
     telefoon: Optional[str] = None
     monthly_rent: float = 0
     deposit_required: float = 0
+    lease_start_date: Optional[str] = None  # YYYY-MM-DD
+    lease_end_date: Optional[str] = None  # YYYY-MM-DD
 
 class TenantUpdate(BaseModel):
     name: Optional[str] = None
@@ -661,7 +663,28 @@ async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_
         {"$set": {"status": "occupied", "updated_at": now}}
     )
     
-    return {"tenant_id": tenant_id, "tenant_code": tenant_code, "message": "Huurder aangemaakt"}
+    # Auto-create lease if dates provided
+    lease_id = None
+    if data.lease_start_date and data.lease_end_date:
+        lease_id = generate_uuid()
+        lease = {
+            "lease_id": lease_id,
+            "company_id": company["company_id"],
+            "tenant_id": tenant_id,
+            "tenant_name": data.name,
+            "apartment_id": data.apartment_id,
+            "apartment_number": apt["number"],
+            "start_date": data.lease_start_date,
+            "end_date": data.lease_end_date,
+            "monthly_rent": data.monthly_rent,
+            "voorwaarden": "",
+            "status": "active",
+            "created_at": now,
+            "updated_at": now,
+        }
+        await db.kiosk_leases.insert_one(lease)
+    
+    return {"tenant_id": tenant_id, "tenant_code": tenant_code, "lease_id": lease_id, "message": "Huurder aangemaakt"}
 
 @router.put("/admin/tenants/{tenant_id}")
 async def update_tenant(tenant_id: str, data: TenantUpdate, company: dict = Depends(get_current_company)):

@@ -1,0 +1,77 @@
+{
+  "summary": "Tested two new features: 1) Auto-create lease when creating tenant with lease dates, 2) Dashboard warning banners for expiring/expired leases. All features working correctly. Backend API tests: 6 passed, 3 skipped (no available apartment). Frontend UI tests: All passed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_results": {
+    "backend_api": {
+      "login": "PASS - test1774285001@test.com / test123",
+      "POST_tenants_with_lease_dates": "PASS - Creates both tenant and lease when lease_start_date AND lease_end_date provided",
+      "POST_tenants_without_lease_dates": "PASS - Creates tenant only, lease_id is null",
+      "POST_tenants_partial_dates": "PASS - Only start_date provided, no lease created",
+      "GET_leases": "PASS - Returns end_date, start_date, tenant_name, status for expiry check",
+      "POST_leases": "PASS - Direct lease creation still works",
+      "PUT_leases": "PASS - Lease update works correctly",
+      "DELETE_leases": "PASS - Lease deletion works correctly",
+      "GET_lease_document": "PASS - HTML document generation works"
+    },
+    "frontend_ui": {
+      "login_flow": "PASS",
+      "navigation_to_admin": "PASS - Beheerder button works",
+      "tenant_modal_lease_fields": "PASS - Shows 'Huurovereenkomst' section with Startdatum and Einddatum fields",
+      "tenant_modal_helper_text": "PASS - Shows 'Automatisch een huurovereenkomst aanmaken'",
+      "lease_fields_only_for_new": "PASS - Lease date fields hidden when editing existing tenant",
+      "dashboard_expired_warning": "PASS - Red banner shows '1 huurovereenkomst verlopen - Maria Tester'",
+      "dashboard_expiring_warning": "PASS - Orange banner shows '1 huurovereenkomst verlopen binnen 30 dagen - Peter de Huurder (2026-04-15)'",
+      "huurovereenkomsten_table": "PASS - Shows leases with correct status badges (Actief/Verlopen)",
+      "lease_crud_buttons": "PASS - Eye (document), Edit, Delete buttons present"
+    }
+  },
+  "features_tested": [
+    "Login with test1774285001@test.com / test123",
+    "Navigate to Admin Dashboard via Beheerder button",
+    "TenantModal shows Startdatum and Einddatum fields under 'Huurovereenkomst' section (only for new tenants)",
+    "Backend POST /api/kiosk/admin/tenants with lease_start_date and lease_end_date creates both tenant and lease",
+    "Backend returns lease_id in response when lease is auto-created",
+    "Dashboard shows red warning banner for expired leases",
+    "Dashboard shows orange warning banner for leases expiring within 30 days",
+    "Huurovereenkomsten table shows lease status (Actief/Verlopen)",
+    "Existing lease CRUD still works (create, edit, delete, document generation)"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_tenant_lease_auto_create.py",
+    "/app/test_reports/pytest/pytest_tenant_lease_auto_create.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "TenantModal (lines 1437-1544) correctly implements lease date fields with data-testid='tenant-lease-start' and 'tenant-lease-end'",
+    "Lease fields only shown for new tenants (!tenant condition on line 1512)",
+    "Backend create_tenant (lines 618-687 in kiosk.py) auto-creates lease when both lease_start_date AND lease_end_date provided",
+    "DashboardTab (lines 302-427) correctly filters expired and expiring leases with proper date comparison",
+    "Warning banners use correct data-testid: 'expired-leases-warning' and 'expiring-leases-warning'"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_tenant_lease_auto_create.py"
+  ],
+  "success_rate": {
+    "backend": "100% (6/6 passed, 3 skipped due to no available apartment)",
+    "frontend": "100% (10/10 UI checks passed)"
+  },
+  "test_credentials": {
+    "email": "test1774285001@test.com",
+    "password": "test123"
+  },
+  "seed_data_creation": "Created and deleted test leases (Maria Tester expired, Peter de Huurder expiring) and apartment E505 for testing. Cleaned up after tests.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Two new features tested and working: 1) TenantModal has lease date fields (Startdatum/Einddatum) that auto-create lease when creating new tenant. 2) Dashboard shows warning banners for expired (red) and expiring within 30 days (orange) leases. 1 lease exists for Jan de Test (A101, 2026-01-01 to 2027-01-01). 4 apartments all occupied. Tuya circuit breaker API is MOCKED.",
+  "mocked_apis": {
+    "note": "Tuya circuit breaker API in kiosk.py is MOCKED"
+  }
+}

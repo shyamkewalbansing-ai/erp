@@ -208,7 +208,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         </div>
 
         {/* Dashboard Tab */}
-        {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} payments={payments} formatSRD={formatSRD} />}
+        {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} payments={payments} leases={leases} formatSRD={formatSRD} />}
 
         {/* Tenants Tab */}
         {activeTab === 'tenants' && (
@@ -299,8 +299,21 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 }
 
 // ============== DASHBOARD TAB ==============
-function DashboardTab({ dashboard, payments, formatSRD }) {
+function DashboardTab({ dashboard, payments, leases, formatSRD }) {
   if (!dashboard) return null;
+
+  // Check expiring leases (within 30 days)
+  const now = new Date();
+  const in30days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const expiringLeases = (leases || []).filter(l => {
+    if (l.status === 'terminated') return false;
+    const end = new Date(l.end_date);
+    return end >= now && end <= in30days;
+  });
+  const expiredLeases = (leases || []).filter(l => {
+    if (l.status === 'terminated') return false;
+    return new Date(l.end_date) < now;
+  });
 
   const stats = [
     { icon: Home, label: 'Appartementen', value: dashboard.total_apartments },
@@ -315,6 +328,26 @@ function DashboardTab({ dashboard, payments, formatSRD }) {
 
   return (
     <div>
+      {/* Lease expiry warnings */}
+      {expiredLeases.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4 mb-4 flex items-center gap-3" data-testid="expired-leases-warning">
+          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+          <div>
+            <p className="font-bold text-red-700">{expiredLeases.length} huurovereenkomst{expiredLeases.length !== 1 ? 'en' : ''} verlopen</p>
+            <p className="text-sm text-red-600">{expiredLeases.map(l => l.tenant_name).join(', ')}</p>
+          </div>
+        </div>
+      )}
+      {expiringLeases.length > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl px-5 py-4 mb-4 flex items-center gap-3" data-testid="expiring-leases-warning">
+          <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />
+          <div>
+            <p className="font-bold text-orange-700">{expiringLeases.length} huurovereenkomst{expiringLeases.length !== 1 ? 'en' : ''} verlopen binnen 30 dagen</p>
+            <p className="text-sm text-orange-600">{expiringLeases.map(l => `${l.tenant_name} (${l.end_date})`).join(', ')}</p>
+          </div>
+        </div>
+      )}
+
       {/* Stat Cards - zelfde witte container als Huurders/Appartementen */}
       <div className="bg-white rounded-xl border border-slate-200 mb-6">
         <div className="p-4 border-b border-slate-200">
@@ -1408,6 +1441,8 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   const [telefoon, setTelefoon] = useState(tenant?.telefoon || '');
   const [monthlyRent, setMonthlyRent] = useState(tenant?.monthly_rent || 0);
   const [depositRequired, setDepositRequired] = useState(tenant?.deposit_required || 0);
+  const [leaseStart, setLeaseStart] = useState('');
+  const [leaseEnd, setLeaseEnd] = useState('');
   const [loading, setLoading] = useState(false);
 
   const availableApartments = apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id);
@@ -1422,6 +1457,10 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
       if (tenant) {
         await axios.put(`${API}/admin/tenants/${tenant.tenant_id}`, data, { headers });
       } else {
+        if (leaseStart && leaseEnd) {
+          data.lease_start_date = leaseStart;
+          data.lease_end_date = leaseEnd;
+        }
         await axios.post(`${API}/admin/tenants`, data, { headers });
       }
       onSave();
@@ -1470,6 +1509,28 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
             <input type="number" value={depositRequired} onChange={(e) => setDepositRequired(e.target.value)}
               className="w-full px-4 py-3 border rounded-xl" />
           </div>
+          {!tenant && (
+            <>
+              <div className="border-t border-slate-200 pt-4">
+                <p className="text-sm font-semibold text-slate-700 mb-3">Huurovereenkomst</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Startdatum</label>
+                    <input type="date" value={leaseStart} onChange={(e) => setLeaseStart(e.target.value)}
+                      data-testid="tenant-lease-start"
+                      className="w-full px-3 py-2.5 border rounded-xl text-sm" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1">Einddatum</label>
+                    <input type="date" value={leaseEnd} onChange={(e) => setLeaseEnd(e.target.value)}
+                      data-testid="tenant-lease-end"
+                      className="w-full px-3 py-2.5 border rounded-xl text-sm" />
+                  </div>
+                </div>
+                <p className="text-xs text-slate-400 mt-1">Automatisch een huurovereenkomst aanmaken</p>
+              </div>
+            </>
+          )}
           <div className="flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">Annuleren</button>
             <button type="submit" disabled={loading} className="flex-1 py-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">
