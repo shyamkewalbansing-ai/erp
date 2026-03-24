@@ -17,6 +17,14 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 5. Werknemers beheer met salarisbetalingen
 6. Bank/Kas financieel dashboard (dynamische inkomsten uit kiosk_payments)
 
+## Kiosk Design Stijl
+- **Albert Heijn zelfscankassa stijl** - Echte kiosk look & feel
+- **Achtergrond:** Dikke oranje gradient (from-orange-500 via-orange-500 to-orange-600) vult het hele scherm
+- **Kaarten:** Witte zwevende kaarten (rounded-3xl, shadow-2xl) voor alle content
+- **Knoppen:** Groot, touch-friendly (py-4 px-6 rounded-2xl)
+- **Decoratieve elementen:** Subtiele overlays voor visueel diepte
+- **Receipt pagina:** Groene gradient achtergrond
+
 ## Voltooide Features
 - [2026-03-23] Auto-billing logica gerepareerd + 8 pytest tests
 - [2026-03-23] Achterstand maanden specifiek weergegeven
@@ -27,22 +35,28 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 - [2026-03-24] Zoekbalk toegevoegd bij Huurders en Appartementen tabs
 - [2026-03-24] Kwitanties maandfilter standaard op huidige maand
 - [2026-03-24] Appartementen status: "Bewoond" -> "Bezet"
-- [2026-03-24] Kwitantie preview/print: gebruikt nu exact dezelfde ReceiptTicket component als de Kiosk, met modal in admin
-- [2026-03-24] ReceiptTicket type labels uitgebreid (monthly_rent, fine) voor compatibiliteit
-- [2026-03-24] Kiosk betaalpagina: maandselectie verwijderd, meerdere items tegelijk selecteerbaar (checkboxes), "Alles betalen" optie, "Ander bedrag" keypad
-- [2026-03-24] Bedrijfsstempel geheel vernieuwd: rechthoekig formaat met huis-icoon (SVG), schuin gestempeld, donkerrood kleur, matching met fysieke stempel
-- [2026-03-24] Betaalmethoden sectie: bankgegevens (naam, rekening, rekeninghouder) getoond op kwitanties
-- [2026-03-24] WhatsApp Business API: self-service configuratie, berichten versturen (herinnering/boete/achterstand), bulk versturen, berichtengeschiedenis
-- [2026-03-24] WhatsApp knop bij huurders met schuld voor directe herinnering
-- [2026-03-24] WhatsApp Berichten tab: berichtengeschiedenis met statistieken, zoek/filter op type en status, expandable berichten
-- [2026-03-24] Stroombreker auto-cutoff: instelling voor automatisch uitschakelen na X dagen na vervaldatum
-- [2026-03-24] Shelly installatie handleiding verwijderd uit Stroombrekers tab
-- [2026-03-24] Tabs navigatie: horizontaal scrollbaar (geen wrapping meer)
+- [2026-03-24] Kwitantie preview/print: gebruikt nu exact dezelfde ReceiptTicket component als de Kiosk
+- [2026-03-24] ReceiptTicket type labels uitgebreid (monthly_rent, fine)
+- [2026-03-24] Kiosk betaalpagina: meerdere items tegelijk selecteerbaar, "Alles betalen", "Ander bedrag" keypad
+- [2026-03-24] Bedrijfsstempel geheel vernieuwd: rechthoekig formaat met huis-icoon
+- [2026-03-24] Betaalmethoden sectie: bankgegevens getoond op kwitanties
+- [2026-03-24] WhatsApp Business API: self-service configuratie, berichten versturen
+- [2026-03-24] WhatsApp Berichten tab: berichtengeschiedenis
+- [2026-03-24] Stroombreker auto-cutoff instelling
+- [2026-03-24] Tabs navigatie: horizontaal scrollbaar
+- [2026-03-24] Superadmin Dashboard (SaaS management)
+- [2026-03-24] Virtual Keyboard voor touch devices
+- [2026-03-24] Tenant code management (handmatig + A-Z keypad)
+- [2026-03-24] Delete buttons voor Appartementen en Kwitanties
+- [2026-03-24] Responsive UI overhaul
+- **[2026-03-24] KIOSK REDESIGN: Albert Heijn stijl - Oranje gradient achtergrond, witte zwevende kaarten, echte kiosk look (alle 7 pagina's)**
 
 ## Database Schema
 - `kiosk_employees`: name, role, salary, hire_date, status
 - `kiosk_kas`: amount, entry_type (expense/salary), category, description
 - `kiosk_payments`: source of truth voor alle huurinkomsten
+- `kiosk_companies`: subscription_plan, is_active, power_cutoff_days
+- `kiosk_tenants`: tenant_code (handmatig instelbaar)
 
 ## Kas Logica
 - Totale Inkomsten = dynamisch uit kiosk_payments (status=completed)
@@ -53,11 +67,18 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 ## Bestanden
 - `/app/backend/routers/kiosk.py` - Alle backend logica
 - `/app/frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - Admin UI
-- `/app/frontend/src/components/vastgoed-kiosk/KioskTenantOverview.jsx` - Kiosk UI
+- `/app/frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx` - Kiosk welkom (oranje bg + witte kaart)
+- `/app/frontend/src/components/vastgoed-kiosk/KioskApartmentSelect.jsx` - Appartement selectie
+- `/app/frontend/src/components/vastgoed-kiosk/KioskTenantOverview.jsx` - Huurder overzicht
+- `/app/frontend/src/components/vastgoed-kiosk/KioskPaymentSelect.jsx` - Betaling selectie
+- `/app/frontend/src/components/vastgoed-kiosk/KioskPaymentConfirm.jsx` - Betaling bevestiging
+- `/app/frontend/src/components/vastgoed-kiosk/KioskReceipt.jsx` - Kwitantie/succes
+- `/app/frontend/src/components/vastgoed-kiosk/KioskPinEntry.jsx` - PIN invoer
 - `/app/backend/tests/test_billing.py` - Pytest billing tests
 
 ## Credentials
 - Email: demo@facturatie.sr | Wachtwoord: demo2024
+- Superadmin: admin@facturatie.sr | Wachtwoord: Bharat7755
 - Login via: /vastgoed
 
 ## Backlog (Geprioriteerd)
@@ -69,5 +90,5 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 - Multi-building support per bedrijf
 
 ## Refactoring Nodig
-- KioskAdminDashboard.jsx (2800+ regels) opsplitsen in aparte tab-componenten
-- kiosk.py (2600+ regels) opsplitsen in aparte routers
+- KioskAdminDashboard.jsx (3000+ regels) opsplitsen in aparte tab-componenten
+- kiosk.py (2800+ regels) opsplitsen in aparte routers
