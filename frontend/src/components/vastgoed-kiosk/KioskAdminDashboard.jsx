@@ -1181,7 +1181,7 @@ function SettingsTab({ company, token, onRefresh }) {
                 type="text"
                 value={stampName}
                 onChange={(e) => setStampName(e.target.value)}
-                placeholder="bijv. Stichting Perraysarbha"
+                placeholder="bijv. Uw Bedrijfsnaam"
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500"
               />
             </div>
@@ -1191,7 +1191,7 @@ function SettingsTab({ company, token, onRefresh }) {
                 type="text"
                 value={stampAddress}
                 onChange={(e) => setStampAddress(e.target.value)}
-                placeholder="bijv. Kewalbasingweg nr.7"
+                placeholder="bijv. Straatnaam nr.1"
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500"
               />
             </div>
@@ -1201,7 +1201,7 @@ function SettingsTab({ company, token, onRefresh }) {
                 type="text"
                 value={stampPhone}
                 onChange={(e) => setStampPhone(e.target.value)}
-                placeholder="bijv. 8624141"
+                placeholder="bijv. 1234567"
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500"
               />
             </div>
@@ -1211,7 +1211,7 @@ function SettingsTab({ company, token, onRefresh }) {
                 type="text"
                 value={stampWhatsapp}
                 onChange={(e) => setStampWhatsapp(e.target.value)}
-                placeholder="bijv. 0620540162"
+                placeholder="bijv. 0000000000"
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500"
               />
             </div>
