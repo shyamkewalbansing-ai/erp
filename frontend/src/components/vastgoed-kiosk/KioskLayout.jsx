@@ -11,6 +11,7 @@ import KioskPaymentSelect from './KioskPaymentSelect';
 import KioskPaymentConfirm from './KioskPaymentConfirm';
 import KioskReceipt from './KioskReceipt';
 import KioskAdminDashboard from './KioskAdminDashboard';
+import VirtualKeyboard from './VirtualKeyboard';
 
 // Local API
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
@@ -226,6 +227,7 @@ export default function KioskLayout() {
           {renderStep()}
         </motion.div>
       </AnimatePresence>
+      <VirtualKeyboard />
     </div>
   );
 }

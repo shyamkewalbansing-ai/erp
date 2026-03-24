@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import ReceiptTicket from './ReceiptTicket';
+import VirtualKeyboard from './VirtualKeyboard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
@@ -318,6 +319,8 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
           token={token}
         />
       )}
+
+      <VirtualKeyboard />
     </div>
   );
 }
