@@ -242,6 +242,13 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             formatSRD={formatSRD}
             onAdd={() => { setEditingItem(null); setShowApartmentModal(true); }}
             onEdit={(a) => { setEditingItem(a); setShowApartmentModal(true); }}
+            onDelete={async (id) => {
+              if (!confirm('Weet u zeker dat u dit appartement wilt verwijderen?')) return;
+              try {
+                await axios.delete(`${API}/admin/apartments/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                loadData();
+              } catch { alert('Verwijderen mislukt'); }
+            }}
           />
         )}
 
@@ -257,6 +264,13 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             formatSRD={formatSRD}
             token={token}
             company={company}
+            onDeletePayment={async (id) => {
+              if (!confirm('Weet u zeker dat u deze betaling wilt verwijderen?')) return;
+              try {
+                await axios.delete(`${API}/admin/payments/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+                loadData();
+              } catch { alert('Verwijderen mislukt'); }
+            }}
           />
         )}
 
@@ -744,7 +758,7 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
 }
 
 // ============== APARTMENTS TAB ==============
-function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit }) {
+function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete }) {
   const [aptSearch, setAptSearch] = useState('');
   const filteredApartments = apartments.filter(apt => {
     if (!aptSearch) return true;
@@ -807,9 +821,14 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit }) {
                     </span>
                   </td>
                   <td className="p-4 text-right">
-                    <button onClick={() => onEdit(apt)} className="text-slate-400 hover:text-orange-500 p-1">
-                      <Pencil className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button onClick={() => onEdit(apt)} className="text-slate-400 hover:text-orange-500 p-1">
+                        <Pencil className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => onDelete(apt.apartment_id)} className="text-slate-400 hover:text-red-500 p-1" data-testid={`delete-apt-${apt.apartment_id}`}>
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -822,7 +841,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit }) {
 }
 
 // ============== PAYMENTS/KWITANTIES TAB ==============
-function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company }) {
+function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company, onDeletePayment }) {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const months = [];
   for (let i = 0; i < 12; i++) {
@@ -918,14 +937,24 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   </td>
                   <td className="p-4 text-right font-bold text-slate-800">{formatSRD(p.amount)}</td>
                   <td className="p-4 text-right">
-                    <button
-                      onClick={() => setSelectedPayment(p)}
-                      data-testid={`receipt-view-${p.payment_id}`}
-                      className="text-slate-400 hover:text-orange-500 p-1"
-                      title="Kwitantie bekijken / afdrukken"
-                    >
-                      <FileText className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => setSelectedPayment(p)}
+                        data-testid={`receipt-view-${p.payment_id}`}
+                        className="text-slate-400 hover:text-orange-500 p-1"
+                        title="Kwitantie bekijken"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => onDeletePayment(p.payment_id)}
+                        data-testid={`delete-payment-${p.payment_id}`}
+                        className="text-slate-400 hover:text-red-500 p-1"
+                        title="Verwijderen"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

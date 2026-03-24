@@ -1498,6 +1498,14 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     
     return Response(content=html, media_type="text/html")
 
+
+@router.delete("/admin/payments/{payment_id}")
+async def delete_payment(payment_id: str, company: dict = Depends(get_current_company)):
+    result = await db.kiosk_payments.delete_one({"payment_id": payment_id, "company_id": company["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    return {"message": "Betaling verwijderd"}
+
 # ============== APPLY FINES ==============
 
 @router.post("/admin/apply-fines")
