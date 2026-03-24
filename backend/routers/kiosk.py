@@ -157,6 +157,7 @@ class CompanyUpdate(BaseModel):
     sumup_merchant_code: Optional[str] = None
     sumup_enabled: Optional[bool] = None
     sumup_currency: Optional[str] = None
+    sumup_exchange_rate: Optional[float] = None
 
 class KioskPinVerify(BaseModel):
     pin: str  # 4-digit PIN
@@ -357,7 +358,8 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "sumup_api_key": company.get("sumup_api_key", ""),
         "sumup_merchant_code": company.get("sumup_merchant_code", ""),
         "sumup_enabled": company.get("sumup_enabled", False),
-        "sumup_currency": company.get("sumup_currency", "EUR")
+        "sumup_currency": company.get("sumup_currency", "EUR"),
+        "sumup_exchange_rate": company.get("sumup_exchange_rate", 1.0)
     }
 
 @router.put("/auth/settings")
@@ -401,9 +403,17 @@ async def create_sumup_checkout(company_id: str, data: SumUpCheckoutRequest):
     api_key = company.get("sumup_api_key", "")
     merchant_code = company.get("sumup_merchant_code", "")
     currency = company.get("sumup_currency", "EUR")
+    exchange_rate = company.get("sumup_exchange_rate", 1.0)
     
     if not api_key or not merchant_code:
         raise HTTPException(status_code=400, detail="SumUp is niet geconfigureerd. Stel de API key en merchant code in via Instellingen.")
+    
+    if not exchange_rate or exchange_rate <= 0:
+        raise HTTPException(status_code=400, detail="Wisselkoers is niet ingesteld. Stel deze in via Instellingen.")
+    
+    # Convert SRD amount to SumUp currency using exchange rate
+    # exchange_rate = how many SRD per 1 unit of SumUp currency (e.g. 40 SRD = 1 EUR)
+    converted_amount = round(data.amount / exchange_rate, 2)
     
     checkout_ref = f"KIOSK-{company_id}-{uuid.uuid4().hex[:8]}"
     
@@ -417,10 +427,10 @@ async def create_sumup_checkout(company_id: str, data: SumUpCheckoutRequest):
                 },
                 json={
                     "checkout_reference": checkout_ref,
-                    "amount": round(data.amount, 2),
+                    "amount": converted_amount,
                     "currency": currency,
                     "merchant_code": merchant_code,
-                    "description": data.description,
+                    "description": f"{data.description} (SRD {data.amount:.2f})",
                 }
             )
             
@@ -433,7 +443,10 @@ async def create_sumup_checkout(company_id: str, data: SumUpCheckoutRequest):
             return {
                 "checkout_id": checkout_data.get("id"),
                 "checkout_reference": checkout_ref,
-                "amount": data.amount,
+                "amount_srd": data.amount,
+                "amount_converted": converted_amount,
+                "currency": currency,
+                "exchange_rate": exchange_rate,
                 "status": checkout_data.get("status", "PENDING")
             }
     except httpx.RequestError as e:
@@ -477,7 +490,8 @@ async def check_sumup_enabled(company_id: str):
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
     return {
         "enabled": bool(company.get("sumup_enabled") and company.get("sumup_api_key") and company.get("sumup_merchant_code")),
-        "currency": company.get("sumup_currency", "EUR")
+        "currency": company.get("sumup_currency", "EUR"),
+        "exchange_rate": company.get("sumup_exchange_rate", 1.0)
     }
 
 

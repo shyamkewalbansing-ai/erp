@@ -1039,6 +1039,7 @@ function SettingsTab({ company, token, onRefresh }) {
   const [sumupMerchantCode, setSumupMerchantCode] = useState(company?.sumup_merchant_code || '');
   const [sumupEnabled, setSumupEnabled] = useState(company?.sumup_enabled || false);
   const [sumupCurrency, setSumupCurrency] = useState(company?.sumup_currency || 'EUR');
+  const [sumupExchangeRate, setSumupExchangeRate] = useState(company?.sumup_exchange_rate || '');
 
   const handleSaveStamp = async () => {
     setSaving(true);
@@ -1113,7 +1114,8 @@ function SettingsTab({ company, token, onRefresh }) {
         sumup_api_key: sumupApiKey,
         sumup_merchant_code: sumupMerchantCode,
         sumup_enabled: sumupEnabled,
-        sumup_currency: sumupCurrency
+        sumup_currency: sumupCurrency,
+        sumup_exchange_rate: parseFloat(sumupExchangeRate) || 1.0
       }, { headers: { Authorization: `Bearer ${token}` } });
       onRefresh();
       alert('SumUp instellingen opgeslagen!');
@@ -1637,6 +1639,23 @@ function SettingsTab({ company, token, onRefresh }) {
                   <option value="BRL">BRL - Braziliaanse Real</option>
                 </select>
                 <p className="text-xs text-slate-400 mt-1">Valuta van uw SumUp account (SRD wordt niet ondersteund door SumUp)</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-slate-600 mb-1 block">Wisselkoers (SRD per 1 {sumupCurrency})</label>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  min="0.01"
+                  value={sumupExchangeRate} 
+                  onChange={e => setSumupExchangeRate(e.target.value)} 
+                  placeholder="bijv. 40 (als 40 SRD = 1 EUR)" 
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-sm" 
+                  data-testid="sumup-exchange-rate"
+                />
+                <p className="text-xs text-slate-400 mt-1">Hoeveel SRD is 1 {sumupCurrency}? Bijv. als 1 EUR = 40 SRD, vul dan 40 in</p>
+                {sumupExchangeRate && parseFloat(sumupExchangeRate) > 0 && (
+                  <p className="text-xs text-orange-600 mt-1 font-medium">Voorbeeld: SRD 100,00 = {sumupCurrency} {(100 / parseFloat(sumupExchangeRate)).toFixed(2)}</p>
+                )}
               </div>
             </div>
             <div className="flex justify-end mt-4">

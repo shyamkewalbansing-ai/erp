@@ -15,6 +15,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   const [payMethod, setPayMethod] = useState(null); // null = choose, 'cash', 'card'
   const [sumupEnabled, setSumupEnabled] = useState(false);
   const [sumupCurrency, setSumupCurrency] = useState('EUR');
+  const [sumupExchangeRate, setSumupExchangeRate] = useState(1);
   const [sumupLoading, setSumupLoading] = useState(true);
   const [cardStatus, setCardStatus] = useState('idle'); // idle, creating, widget, polling, done, error
   const [checkoutId, setCheckoutId] = useState(null);
@@ -25,7 +26,11 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   useEffect(() => {
     if (!companyId) return;
     axios.get(`${API}/public/${companyId}/sumup/enabled`)
-      .then(res => { setSumupEnabled(res.data.enabled); setSumupCurrency(res.data.currency || 'EUR'); })
+      .then(res => { 
+        setSumupEnabled(res.data.enabled); 
+        setSumupCurrency(res.data.currency || 'EUR'); 
+        setSumupExchangeRate(res.data.exchange_rate || 1);
+      })
       .catch(() => {})
       .finally(() => setSumupLoading(false));
   }, [companyId]);
@@ -207,7 +212,12 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
                 <CreditCard className="w-10 h-10 text-blue-500" />
               </div>
               <p className="text-2xl font-extrabold text-slate-900 mb-2">Pinpas</p>
-              <p className="text-sm text-slate-400">Betaal met pinpas via SumUp ({sumupCurrency})</p>
+              <p className="text-sm text-slate-400">Betaal met pinpas via SumUp</p>
+              {sumupExchangeRate > 1 && (
+                <p className="text-xs text-blue-600 font-semibold mt-1 whitespace-nowrap">
+                  {formatSRD(paymentData.amount)} = {sumupCurrency} {(paymentData.amount / sumupExchangeRate).toFixed(2)}
+                </p>
+              )}
             </button>
           )}
         </div>
@@ -305,6 +315,11 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
             <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-center mb-6 shadow-lg">
               <CreditCard className="w-10 h-10 text-white mx-auto mb-3" />
               <p className="text-2xl font-extrabold text-white whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
+              {sumupExchangeRate > 1 && (
+                <p className="text-lg font-bold text-blue-100 mt-1 whitespace-nowrap">
+                  = {sumupCurrency} {(paymentData.amount / sumupExchangeRate).toFixed(2)}
+                </p>
+              )}
               <p className="text-blue-100 text-sm mt-1">{tenant.name} · Appt. {tenant.apartment_number}</p>
             </div>
             

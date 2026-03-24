@@ -6,7 +6,7 @@
 
 # === CONFIGURATIE ===
 # Pas deze URL aan naar uw eigen domein
-KIOSK_URL="https://real-estate-breaker.preview.emergentagent.com/vastgoed"
+KIOSK_URL="https://kiosk-sumup-test.preview.emergentagent.com/vastgoed"
 
 # === CHROME/CHROMIUM DETECTIE ===
 if command -v chromium-browser &> /dev/null; then
