@@ -20,6 +20,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const [apartments, setApartments] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [payments, setPayments] = useState([]);
+  const [leases, setLeases] = useState([]);
   const [copied, setCopied] = useState(false);
 
   // Modal states
@@ -66,18 +67,20 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const loadData = async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const [meRes, dashRes, aptRes, tenRes, payRes] = await Promise.all([
+      const [meRes, dashRes, aptRes, tenRes, payRes, leaseRes] = await Promise.all([
         axios.get(`${API}/auth/me`, { headers }),
         axios.get(`${API}/admin/dashboard`, { headers }),
         axios.get(`${API}/admin/apartments`, { headers }),
         axios.get(`${API}/admin/tenants`, { headers }),
-        axios.get(`${API}/admin/payments`, { headers })
+        axios.get(`${API}/admin/payments`, { headers }),
+        axios.get(`${API}/admin/leases`, { headers })
       ]);
       setCompany(meRes.data);
       setDashboard(dashRes.data);
       setApartments(aptRes.data);
       setTenants(tenRes.data);
       setPayments(payRes.data);
+      setLeases(leaseRes.data);
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem('kiosk_token');
@@ -212,6 +215,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
           <TenantsTab 
             tenants={tenants}
             apartments={apartments}
+            leases={leases}
             formatSRD={formatSRD}
             getInitials={getInitials}
             onAddTenant={() => { setEditingItem(null); setShowTenantModal(true); }}
@@ -391,9 +395,11 @@ function DashboardTab({ dashboard, payments, formatSRD }) {
 }
 
 // ============== TENANTS TAB ==============
-function TenantsTab({ tenants, apartments, formatSRD, getInitials, onAddTenant, onEditTenant, onAddRent, onRefresh, token }) {
+function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAddTenant, onEditTenant, onAddRent, onRefresh, token }) {
   const activeTenants = tenants.filter(t => t.status === 'active');
   const [deleting, setDeleting] = useState(null);
+  const [showLeaseModal, setShowLeaseModal] = useState(false);
+  const [editingLease, setEditingLease] = useState(null);
 
   const handleDelete = async (tenant) => {
     if (!window.confirm(`Weet u zeker dat u "${tenant.name}" wilt verwijderen?`)) return;
@@ -410,108 +416,213 @@ function TenantsTab({ tenants, apartments, formatSRD, getInitials, onAddTenant, 
     }
   };
 
-  return (
-    <div className="bg-white rounded-xl border border-slate-200">
-      <div className="p-4 border-b border-slate-200 flex justify-between items-center">
-        <h2 className="font-semibold text-slate-900">Huurders ({activeTenants.length})</h2>
-        <button
-          onClick={onAddTenant}
-          data-testid="add-tenant-button"
-          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
-        >
-          <Plus className="w-4 h-4" />
-          Nieuwe Huurder
-        </button>
-      </div>
-      {activeTenants.length === 0 ? (
-        <div className="p-12 text-center">
-          <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-          <p className="text-slate-400">Nog geen huurders</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-slate-50">
-              <tr>
-                <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
-                <th className="text-left p-4 text-sm font-medium text-slate-500">Appartement</th>
-                <th className="text-left p-4 text-sm font-medium text-slate-500">Contact</th>
-                <th className="text-right p-4 text-sm font-medium text-slate-500">Huur</th>
-                <th className="text-right p-4 text-sm font-medium text-slate-500">Service</th>
-                <th className="text-right p-4 text-sm font-medium text-slate-500">Boetes</th>
-                <th className="text-right p-4 text-sm font-medium text-slate-500">Totaal</th>
-                <th className="text-left p-4 text-sm font-medium text-slate-500">Status</th>
-                <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
-              </tr>
-            </thead>
-            <tbody>
-              {activeTenants.map(tenant => {
-                const rent = tenant.outstanding_rent || 0;
-                const service = tenant.service_costs || 0;
-                const fines = tenant.fines || 0;
-                const total = rent + service + fines;
-                const hasArrears = rent > (tenant.monthly_rent || 0);
+  const handleDeleteLease = async (leaseId) => {
+    if (!window.confirm('Weet u zeker dat u deze huurovereenkomst wilt verwijderen?')) return;
+    try {
+      await axios.delete(`${API}/admin/leases/${leaseId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      onRefresh();
+    } catch {
+      alert('Verwijderen mislukt');
+    }
+  };
 
-                return (
-                  <tr key={tenant.tenant_id} className="border-t border-slate-100 hover:bg-slate-50" data-testid={`tenant-row-${tenant.tenant_id}`}>
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-lg bg-orange-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                          {getInitials(tenant.name)}
-                        </div>
-                        <div>
-                          <p className="font-bold text-slate-900">{tenant.name}</p>
-                          <p className="text-xs text-slate-400">{tenant.tenant_code}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 text-slate-600">{tenant.apartment_number}</td>
-                    <td className="p-4">
-                      <div className="text-sm">
-                        {tenant.telefoon && <p className="text-slate-500">{tenant.telefoon}</p>}
-                        {tenant.email && <p className="text-slate-400 truncate max-w-[180px]">{tenant.email}</p>}
-                      </div>
-                    </td>
-                    <td className={`p-4 text-right font-bold ${rent > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {formatSRD(rent)}
-                    </td>
-                    <td className={`p-4 text-right font-bold ${service > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-                      {formatSRD(service)}
-                    </td>
-                    <td className={`p-4 text-right font-bold ${fines > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                      {formatSRD(fines)}
-                    </td>
-                    <td className={`p-4 text-right font-black ${total > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-                      {formatSRD(total)}
-                    </td>
-                    <td className="p-4">
-                      {hasArrears ? (
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600">Achterstand</span>
-                      ) : total === 0 ? (
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-600">Betaald</span>
-                      ) : (
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-600">Open</span>
-                      )}
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => onAddRent(tenant)} data-testid={`add-rent-${tenant.tenant_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Maandhuur toevoegen">
-                          <DollarSign className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => onEditTenant(tenant)} data-testid={`edit-tenant-${tenant.tenant_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Bewerken">
-                          <Pencil className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDelete(tenant)} data-testid={`delete-tenant-${tenant.tenant_id}`} disabled={deleting === tenant.tenant_id} className="text-slate-400 hover:text-red-500 p-1 disabled:opacity-50" title="Verwijderen">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+  const openLeaseDoc = (leaseId) => {
+    window.open(`${API}/admin/leases/${leaseId}/document?token=${token}`, '_blank');
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Huurders tabel */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+          <h2 className="font-semibold text-slate-900">Huurders ({activeTenants.length})</h2>
+          <button
+            onClick={onAddTenant}
+            data-testid="add-tenant-button"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+          >
+            <Plus className="w-4 h-4" />
+            Nieuwe Huurder
+          </button>
         </div>
+        {activeTenants.length === 0 ? (
+          <div className="p-12 text-center">
+            <Users className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-400">Nog geen huurders</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Appartement</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Contact</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Huur</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Service</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Boetes</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Totaal</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Status</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
+                </tr>
+              </thead>
+              <tbody>
+                {activeTenants.map(tenant => {
+                  const rent = tenant.outstanding_rent || 0;
+                  const service = tenant.service_costs || 0;
+                  const fines = tenant.fines || 0;
+                  const total = rent + service + fines;
+                  const hasArrears = rent > (tenant.monthly_rent || 0);
+
+                  return (
+                    <tr key={tenant.tenant_id} className="border-t border-slate-100 hover:bg-slate-50" data-testid={`tenant-row-${tenant.tenant_id}`}>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-orange-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                            {getInitials(tenant.name)}
+                          </div>
+                          <div>
+                            <p className="font-bold text-slate-900">{tenant.name}</p>
+                            <p className="text-xs text-slate-400">{tenant.tenant_code}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 text-slate-600">{tenant.apartment_number}</td>
+                      <td className="p-4">
+                        <div className="text-sm">
+                          {tenant.telefoon && <p className="text-slate-500">{tenant.telefoon}</p>}
+                          {tenant.email && <p className="text-slate-400 truncate max-w-[180px]">{tenant.email}</p>}
+                        </div>
+                      </td>
+                      <td className={`p-4 text-right font-bold ${rent > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {formatSRD(rent)}
+                      </td>
+                      <td className={`p-4 text-right font-bold ${service > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                        {formatSRD(service)}
+                      </td>
+                      <td className={`p-4 text-right font-bold ${fines > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                        {formatSRD(fines)}
+                      </td>
+                      <td className={`p-4 text-right font-black ${total > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                        {formatSRD(total)}
+                      </td>
+                      <td className="p-4">
+                        {hasArrears ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600">Achterstand</span>
+                        ) : total === 0 ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-600">Betaald</span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-600">Open</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => onAddRent(tenant)} data-testid={`add-rent-${tenant.tenant_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Maandhuur toevoegen">
+                            <DollarSign className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => onEditTenant(tenant)} data-testid={`edit-tenant-${tenant.tenant_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Bewerken">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleDelete(tenant)} data-testid={`delete-tenant-${tenant.tenant_id}`} disabled={deleting === tenant.tenant_id} className="text-slate-400 hover:text-red-500 p-1 disabled:opacity-50" title="Verwijderen">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Huurovereenkomsten tabel */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+          <h2 className="font-semibold text-slate-900">Huurovereenkomsten ({(leases || []).length})</h2>
+          <button
+            onClick={() => { setEditingLease(null); setShowLeaseModal(true); }}
+            data-testid="add-lease-button"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+          >
+            <Plus className="w-4 h-4" />
+            Nieuwe Overeenkomst
+          </button>
+        </div>
+        {(leases || []).length === 0 ? (
+          <div className="p-12 text-center">
+            <FileText className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+            <p className="text-slate-400">Nog geen huurovereenkomsten</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Appartement</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Startdatum</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Einddatum</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Maandhuur</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Status</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(leases || []).map(lease => {
+                  const isExpired = new Date(lease.end_date) < new Date();
+                  const status = lease.status === 'terminated' ? 'terminated' : isExpired ? 'expired' : 'active';
+                  return (
+                    <tr key={lease.lease_id} className="border-t border-slate-100 hover:bg-slate-50" data-testid={`lease-row-${lease.lease_id}`}>
+                      <td className="p-4 font-bold text-slate-900">{lease.tenant_name}</td>
+                      <td className="p-4 text-slate-600">{lease.apartment_number}</td>
+                      <td className="p-4 text-slate-600">{lease.start_date}</td>
+                      <td className="p-4 text-slate-600">{lease.end_date}</td>
+                      <td className="p-4 text-right font-bold text-slate-900">{formatSRD(lease.monthly_rent)}</td>
+                      <td className="p-4">
+                        {status === 'active' ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-600">Actief</span>
+                        ) : status === 'expired' ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600">Verlopen</span>
+                        ) : (
+                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">Beëindigd</span>
+                        )}
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button onClick={() => openLeaseDoc(lease.lease_id)} data-testid={`lease-doc-${lease.lease_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Document genereren">
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => { setEditingLease(lease); setShowLeaseModal(true); }} data-testid={`lease-edit-${lease.lease_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Bewerken">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleDeleteLease(lease.lease_id)} data-testid={`lease-delete-${lease.lease_id}`} className="text-slate-400 hover:text-red-500 p-1" title="Verwijderen">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Lease Modal */}
+      {showLeaseModal && (
+        <LeaseModal
+          lease={editingLease}
+          tenants={activeTenants}
+          apartments={apartments}
+          onClose={() => { setShowLeaseModal(false); setEditingLease(null); }}
+          onSave={() => { setShowLeaseModal(false); setEditingLease(null); onRefresh(); }}
+          token={token}
+        />
       )}
     </div>
   );
@@ -1118,6 +1229,120 @@ function SubscriptionTab({ company }) {
 }
 
 // ============== MODALS ==============
+
+
+function LeaseModal({ lease, tenants, apartments, onClose, onSave, token }) {
+  const [tenantId, setTenantId] = useState(lease?.tenant_id || '');
+  const [apartmentId, setApartmentId] = useState(lease?.apartment_id || '');
+  const [startDate, setStartDate] = useState(lease?.start_date || '');
+  const [endDate, setEndDate] = useState(lease?.end_date || '');
+  const [monthlyRent, setMonthlyRent] = useState(lease?.monthly_rent || 0);
+  const [voorwaarden, setVoorwaarden] = useState(lease?.voorwaarden || '');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const headers = { Authorization: `Bearer ${token}` };
+      if (lease) {
+        await axios.put(`${API}/admin/leases/${lease.lease_id}`, {
+          start_date: startDate, end_date: endDate, monthly_rent: parseFloat(monthlyRent), voorwaarden
+        }, { headers });
+      } else {
+        await axios.post(`${API}/admin/leases`, {
+          tenant_id: tenantId, apartment_id: apartmentId,
+          start_date: startDate, end_date: endDate, monthly_rent: parseFloat(monthlyRent), voorwaarden
+        }, { headers });
+      }
+      onSave();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Opslaan mislukt');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Auto-fill apartment when tenant selected
+  const handleTenantChange = (tid) => {
+    setTenantId(tid);
+    const t = tenants.find(x => x.tenant_id === tid);
+    if (t) {
+      setApartmentId(t.apartment_id);
+      setMonthlyRent(t.monthly_rent || 0);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <div className="bg-white rounded-xl w-full max-w-lg shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="p-6 border-b border-slate-200">
+          <h3 className="text-lg font-bold text-slate-900">{lease ? 'Huurovereenkomst Bewerken' : 'Nieuwe Huurovereenkomst'}</h3>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {!lease && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Huurder</label>
+                <select value={tenantId} onChange={e => handleTenantChange(e.target.value)} required
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                  data-testid="lease-tenant-select">
+                  <option value="">Selecteer huurder...</option>
+                  {tenants.map(t => <option key={t.tenant_id} value={t.tenant_id}>{t.name} - {t.apartment_number}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Appartement</label>
+                <select value={apartmentId} onChange={e => setApartmentId(e.target.value)} required
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                  data-testid="lease-apartment-select">
+                  <option value="">Selecteer appartement...</option>
+                  {apartments.map(a => <option key={a.apartment_id} value={a.apartment_id}>{a.number} - {a.description}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Startdatum</label>
+              <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                data-testid="lease-start-date" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Einddatum</label>
+              <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} required
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+                data-testid="lease-end-date" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Maandhuur (SRD)</label>
+            <input type="number" step="0.01" value={monthlyRent} onChange={e => setMonthlyRent(e.target.value)} required
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none"
+              data-testid="lease-monthly-rent" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Voorwaarden</label>
+            <textarea value={voorwaarden} onChange={e => setVoorwaarden(e.target.value)} rows={4} placeholder="Aanvullende voorwaarden van de huurovereenkomst..."
+              className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none resize-none"
+              data-testid="lease-voorwaarden" />
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+              Annuleren
+            </button>
+            <button type="submit" disabled={loading} data-testid="lease-submit"
+              className="flex-1 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 disabled:opacity-50">
+              {loading ? 'Opslaan...' : lease ? 'Bijwerken' : 'Aanmaken'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 
 function ApartmentModal({ apartment, onClose, onSave, token }) {
   const [number, setNumber] = useState(apartment?.number || '');

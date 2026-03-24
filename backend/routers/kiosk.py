@@ -132,6 +132,22 @@ class PaymentCreate(BaseModel):
     description: Optional[str] = None
     rent_month: Optional[str] = None
 
+class LeaseCreate(BaseModel):
+    tenant_id: str
+    apartment_id: str
+    start_date: str  # YYYY-MM-DD
+    end_date: str  # YYYY-MM-DD
+    monthly_rent: float
+    voorwaarden: Optional[str] = None
+
+class LeaseUpdate(BaseModel):
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    monthly_rent: Optional[float] = None
+    voorwaarden: Optional[str] = None
+    status: Optional[str] = None  # active, expired, terminated
+
+
 # ============== AUTH ENDPOINTS ==============
 
 @router.post("/auth/register")
@@ -799,3 +815,148 @@ async def apply_fines(company: dict = Depends(get_current_company)):
         "amount_per_tenant": fine_amount,
         "tenants_affected": updated_count
     }
+
+# ============== LEASE AGREEMENTS ==============
+
+@router.get("/admin/leases")
+async def list_leases(company: dict = Depends(get_current_company)):
+    company_id = company["company_id"]
+    leases = await db.kiosk_leases.find(
+        {"company_id": company_id}, {"_id": 0}
+    ).sort("created_at", -1).to_list(1000)
+    return leases
+
+@router.post("/admin/leases")
+async def create_lease(data: LeaseCreate, company: dict = Depends(get_current_company)):
+    company_id = company["company_id"]
+    tenant = await db.kiosk_tenants.find_one({"tenant_id": data.tenant_id, "company_id": company_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    apt = await db.kiosk_apartments.find_one({"apartment_id": data.apartment_id, "company_id": company_id})
+    if not apt:
+        raise HTTPException(status_code=404, detail="Appartement niet gevonden")
+
+    now = datetime.now(timezone.utc)
+    lease = {
+        "lease_id": generate_uuid(),
+        "company_id": company_id,
+        "tenant_id": data.tenant_id,
+        "tenant_name": tenant["name"],
+        "apartment_id": data.apartment_id,
+        "apartment_number": apt["number"],
+        "start_date": data.start_date,
+        "end_date": data.end_date,
+        "monthly_rent": data.monthly_rent,
+        "voorwaarden": data.voorwaarden or "",
+        "status": "active",
+        "created_at": now,
+        "updated_at": now,
+    }
+    await db.kiosk_leases.insert_one(lease)
+    lease.pop("_id", None)
+    return lease
+
+@router.put("/admin/leases/{lease_id}")
+async def update_lease(lease_id: str, data: LeaseUpdate, company: dict = Depends(get_current_company)):
+    company_id = company["company_id"]
+    existing = await db.kiosk_leases.find_one({"lease_id": lease_id, "company_id": company_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Huurovereenkomst niet gevonden")
+
+    updates = {k: v for k, v in data.dict().items() if v is not None}
+    updates["updated_at"] = datetime.now(timezone.utc)
+    await db.kiosk_leases.update_one({"lease_id": lease_id}, {"$set": updates})
+    updated = await db.kiosk_leases.find_one({"lease_id": lease_id}, {"_id": 0})
+    return updated
+
+@router.delete("/admin/leases/{lease_id}")
+async def delete_lease(lease_id: str, company: dict = Depends(get_current_company)):
+    company_id = company["company_id"]
+    result = await db.kiosk_leases.delete_one({"lease_id": lease_id, "company_id": company_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Huurovereenkomst niet gevonden")
+    return {"message": "Huurovereenkomst verwijderd"}
+
+@router.get("/admin/leases/{lease_id}/document")
+async def generate_lease_document(lease_id: str, token: Optional[str] = None):
+    """Generate lease document HTML - accepts token via query param for new tab"""
+    if not token:
+        raise HTTPException(status_code=401, detail="Token vereist")
+    try:
+        payload = decode_token(token)
+        company_id = payload["company_id"]
+    except Exception:
+        raise HTTPException(status_code=401, detail="Ongeldig token")
+    lease = await db.kiosk_leases.find_one({"lease_id": lease_id, "company_id": company_id}, {"_id": 0})
+    if not lease:
+        raise HTTPException(status_code=404, detail="Huurovereenkomst niet gevonden")
+    
+    comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+    company_name = comp.get("name", "Onbekend") if comp else "Onbekend"
+    company_address = comp.get("adres", "") if comp else ""
+    company_phone = comp.get("telefoon", "") if comp else ""
+
+    html = f"""<!DOCTYPE html>
+<html lang="nl">
+<head><meta charset="UTF-8"><title>Huurovereenkomst</title>
+<style>
+body {{ font-family: Georgia, serif; max-width: 800px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; line-height: 1.7; }}
+h1 {{ text-align: center; font-size: 22px; border-bottom: 2px solid #ea580c; padding-bottom: 10px; }}
+h2 {{ font-size: 16px; margin-top: 30px; color: #ea580c; }}
+.header {{ text-align: center; margin-bottom: 30px; }}
+.header p {{ margin: 2px 0; font-size: 13px; color: #666; }}
+table {{ width: 100%; border-collapse: collapse; margin: 15px 0; }}
+td {{ padding: 6px 12px; border: 1px solid #ddd; font-size: 14px; }}
+td:first-child {{ background: #f9f9f9; font-weight: bold; width: 200px; }}
+.voorwaarden {{ white-space: pre-wrap; font-size: 14px; background: #fafafa; padding: 15px; border: 1px solid #eee; border-radius: 4px; }}
+.signatures {{ display: flex; justify-content: space-between; margin-top: 60px; }}
+.sig-block {{ width: 45%; text-align: center; }}
+.sig-line {{ border-top: 1px solid #333; margin-top: 50px; padding-top: 8px; font-size: 13px; }}
+.footer {{ text-align: center; margin-top: 40px; font-size: 11px; color: #999; }}
+@media print {{ body {{ margin: 20px; }} }}
+</style></head>
+<body>
+<div class="header">
+  <h1>HUUROVEREENKOMST</h1>
+  <p><strong>{company_name}</strong></p>
+  <p>{company_address}</p>
+  <p>{company_phone}</p>
+</div>
+
+<h2>Artikel 1 - Partijen</h2>
+<table>
+  <tr><td>Verhuurder</td><td>{company_name}</td></tr>
+  <tr><td>Huurder</td><td>{lease.get('tenant_name', '')}</td></tr>
+  <tr><td>Appartement</td><td>{lease.get('apartment_number', '')}</td></tr>
+</table>
+
+<h2>Artikel 2 - Huurperiode</h2>
+<table>
+  <tr><td>Ingangsdatum</td><td>{lease.get('start_date', '')}</td></tr>
+  <tr><td>Einddatum</td><td>{lease.get('end_date', '')}</td></tr>
+</table>
+
+<h2>Artikel 3 - Huurprijs</h2>
+<table>
+  <tr><td>Maandelijkse huur</td><td>SRD {lease.get('monthly_rent', 0):,.2f}</td></tr>
+</table>
+
+<h2>Artikel 4 - Voorwaarden</h2>
+<div class="voorwaarden">{lease.get('voorwaarden', 'Geen aanvullende voorwaarden.')}</div>
+
+<div class="signatures">
+  <div class="sig-block">
+    <div class="sig-line">Verhuurder<br/>{company_name}</div>
+  </div>
+  <div class="sig-block">
+    <div class="sig-line">Huurder<br/>{lease.get('tenant_name', '')}</div>
+  </div>
+</div>
+
+<div class="footer">
+  Overeenkomst-ID: {lease_id} | Gegenereerd op: {datetime.now(timezone.utc).strftime('%d-%m-%Y %H:%M')} UTC
+</div>
+</body></html>"""
+    
+    return Response(content=html, media_type="text/html")
+
