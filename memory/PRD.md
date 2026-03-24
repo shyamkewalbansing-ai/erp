@@ -181,9 +181,16 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
 - Backend endpoints: GET/POST/PUT/DELETE /api/kiosk/admin/leases + /document
 - 26/26 tests geslaagd (iteration_75)
 
-#### Gewijzigde Bestanden
-- `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - DashboardTab, TenantsTab, PowerTab, LeaseModal
-- `backend/routers/kiosk.py` - LeaseCreate/LeaseUpdate models, 5 lease endpoints
+#### Automatische Huurovereenkomst bij Nieuwe Huurder ✅ (NIEUW)
+- Startdatum + Einddatum velden in het huurder-formulier (alleen bij nieuwe huurder)
+- Backend maakt automatisch een huurovereenkomst aan wanneer beide datums ingevuld zijn
+- Helpertekst: "Automatisch een huurovereenkomst aanmaken"
+
+#### Dashboard Verlopen Waarschuwingen ✅ (NIEUW)
+- Rode banner als huurovereenkomsten al verlopen zijn
+- Oranje banner als overeenkomsten binnen 30 dagen verlopen
+- Toont huurder namen en einddatums
+- 16/16 tests geslaagd (iteration_76)
 
 ### Toekomstige Taken (Backlog)
 - P1: Tuya API integratie voor echte stroombrekers
