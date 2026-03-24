@@ -1,91 +1,63 @@
-# Facturatie.sr - Vastgoed Kiosk ERP
+# Vastgoed Kiosk ERP - Product Requirements Document
 
-## Origineel Probleem
-Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/appartement huurbetalingen) naar een bestaand full-stack ERP systeem. Vereist: True Kiosk Mode, Admin Dashboard, geïsoleerde authenticatie, stille/automatische bon-printing, robuuste touchscreen ondersteuning.
+## Origineel Probleemstelling
+Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/appartement huurbetalingen) naar een bestaand full-stack ERP systeem. Het systeem vereist een "True Kiosk Mode", Admin Dashboard, geisoleerde authenticatie, geautomatiseerde factureringsengines, en robuuste touchscreen ondersteuning.
 
 ## Architectuur
-```
-/app/
-├── backend/
-│   ├── routers/
-│   │   └── kiosk.py                 # Core billing, Kas, Employees, Leases
-│   ├── tests/
-│   │   └── test_billing.py          # 8 pytest regressietests
-│   └── .env
-├── frontend/
-│   ├── src/
-│   │   └── components/
-│   │       └── vastgoed-kiosk/
-│   │           ├── KioskAdminDashboard.jsx  # Admin met tabs: Dashboard, Huurders, Appartementen, Kwitanties, Bank/Kas, Werknemers, Instellingen, Stroombrekers, Abonnement
-│   │           └── KioskTenantOverview.jsx  # Kiosk huurder overzicht met achterstand maanden
-│   └── .env
-└── memory/
-    └── PRD.md
-```
+- **Frontend:** React (CRA) met Tailwind CSS + Shadcn/UI
+- **Backend:** FastAPI (Python)
+- **Database:** MongoDB
+- **Route prefix:** /api/kiosk/
 
-## Kern Features (Geïmplementeerd)
-- Kiosk modus voor huurbetalingen (PIN login)
-- Admin Dashboard met 9 tabs
-- Automatische billing engine met fine/rent berekening
-- Configureerbare "Huur vervalt op dag" + "Dezelfde/Volgende maand" toggle
-- Achterstand details per maand (welke maanden onbetaald)
-- Bank/Kas systeem (inkomsten, uitgaven, kassaldo)
-- Werknemers beheer (aanmaken, loon uitbetalen via Kas)
-- Professionele huurovereenkomst met bedrijfsstempel (Surinaams recht)
-- Huurovereenkomsten module (CRUD + auto-generatie)
-- Skeuomorphic Stroombrekers UI (NIET AANPASSEN)
-- Dashboard waarschuwingen voor aflopende huurcontracten
-- Automatische kas-boekingen bij huurbetalingen
+## Kernfuncties
+1. Kiosk modus voor huurders (touchscreen betaling)
+2. Admin Dashboard met tabs: Dashboard, Huurders, Appartementen, Kwitanties, Bank/Kas, Werknemers, Instellingen, Stroombrekers, Abonnement
+3. Auto-billing engine (huur + boetes)
+4. Huurovereenkomsten generatie met bedrijfsstempel
+5. Werknemers beheer met salarisbetalingen
+6. Bank/Kas financieel dashboard (dynamische inkomsten uit kiosk_payments)
 
-## Billing Engine Semantiek
-- **billing_next_month=True ("Volgende maand")**: Due date = billing_day van de VOLGENDE maand
-- **billing_next_month=False ("Dezelfde maand")**: Due date = billing_day van DEZELFDE maand
-- Boete bij: openstaand > 0 EN vervaldatum gepasseerd
-- Idempotent: meerdere aanroepen = geen dubbele facturering
+## Voltooide Features
+- [2026-03-23] Auto-billing logica gerepareerd + 8 pytest tests
+- [2026-03-23] Achterstand maanden specifiek weergegeven
+- [2026-03-23] Realistische Huurovereenkomst met rode bedrijfsstempel (Suriname)
+- [2026-03-23] Werknemers tab (CRUD + salarisbetalingen)
+- [2026-03-23] Bank/Kas tab (dynamische inkomsten, alleen uitgaven in kas tabel)
+- [2026-03-24] Kleurfix Huurders tabel: bedragen standaard zwart, alleen oranje/rood bij achterstand (groen verwijderd)
 
-## Sleutel DB Schema
-- `kiosk_companies`: billing_day, billing_next_month, fine_amount
-- `kiosk_tenants`: rent_billed_through, last_fine_month, outstanding_rent, fines, monthly_rent
-- `kiosk_leases`: start_date, end_date, monthly_rent, voorwaarden
-- `kiosk_kas`: entry_id, entry_type (income/expense/salary), amount, description, category
-- `kiosk_employees`: employee_id, name, functie, maandloon, status
+## Database Schema
+- `kiosk_employees`: name, role, salary, hire_date, status
+- `kiosk_kas`: amount, entry_type (expense/salary), category, description
+- `kiosk_payments`: source of truth voor alle huurinkomsten
 
-## API Endpoints
-- `GET /api/kiosk/admin/tenants` - Triggers auto-billing, returns overdue_months
-- `GET /api/kiosk/admin/kas` - Kas boekingen + totalen
-- `POST /api/kiosk/admin/kas` - Nieuwe boeking
-- `GET /api/kiosk/admin/employees` - Werknemers lijst
-- `POST /api/kiosk/admin/employees` - Nieuwe werknemer
-- `POST /api/kiosk/admin/employees/{id}/pay` - Loon uitbetalen (via Kas)
-- `GET /api/kiosk/admin/leases/{id}/document` - Professionele huurovereenkomst HTML
+## Kas Logica
+- Totale Inkomsten = dynamisch uit kiosk_payments (status=completed)
+- Totale Uitgaven = som uit kiosk_kas collection
+- Kassaldo = Inkomsten - Uitgaven
+- NOOIT income entries schrijven naar kiosk_kas
 
-## Wat is Geïmplementeerd
-| Datum | Feature/Fix |
-|-------|-------------|
-| 2026-03 | UI/UX herontwerp Admin Dashboard tabs |
-| 2026-03 | Skeuomorphic Stroombrekers interface |
-| 2026-03 | Huurovereenkomsten module (CRUD + auto-generatie) |
-| 2026-03 | Auto-billing engine + Instellingen |
-| 2026-03-24 | P0: Billing engine geverifieerd (8 pytest tests) |
-| 2026-03-24 | Achterstand details per maand in Huurders tab + Kiosk overzicht |
-| 2026-03-24 | Bank/Kas tab (inkomsten, uitgaven, kassaldo) |
-| 2026-03-24 | Werknemers tab (CRUD + loon uitbetaling via Kas) |
-| 2026-03-24 | Professionele huurovereenkomst met bedrijfsstempel |
-| 2026-03-24 | Automatische kas-boekingen bij huurbetalingen |
+## Bestanden
+- `/app/backend/routers/kiosk.py` - Alle backend logica
+- `/app/frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - Admin UI
+- `/app/frontend/src/components/vastgoed-kiosk/KioskTenantOverview.jsx` - Kiosk UI
+- `/app/backend/tests/test_billing.py` - Pytest billing tests
 
-## Gemockt
-- Tuya API voor stroombrekers
+## Credentials
+- Email: demo@facturatie.sr | Wachtwoord: demo2024
+- Login via: /vastgoed
 
 ## Backlog (Geprioriteerd)
 ### P1
-- Tuya API integratie voor stroombrekers
+- Tuya API integratie voor stroombrekers (momenteel gemocked)
 
 ### P2
-- Moderniseer "Kwitanties" tab (uniforme tabelstijl + zoeken/filteren)
-- SMS/WhatsApp herinneringen
-- CSV/PDF export van betalingsrapporten
+- Kwitanties tab moderniseren (unified table, zoek/filter)
+- SMS/WhatsApp herinneringen (3 dagen voor vervaldatum)
+- Maandelijks financieel rapport
+- CSV/PDF export betalingsrapporten
 - Wachtwoord vergeten functionaliteit
 - Multi-building support per bedrijf
 
-### Refactoring
-- KioskAdminDashboard.jsx opsplitsen in kleinere componenten
+## Refactoring Nodig
+- KioskAdminDashboard.jsx (1700+ regels) opsplitsen
+- kiosk.py (1800+ regels) opsplitsen

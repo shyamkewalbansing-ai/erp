@@ -10,7 +10,7 @@ import requests
 import os
 import uuid
 
-API_URL = os.environ.get("API_URL", "https://lease-sync.preview.emergentagent.com")
+API_URL = os.environ.get("API_URL", "https://rental-erp-system.preview.emergentagent.com")
 JWT_SECRET = "suri-rentals-secure-jwt-secret-2024"
 MONGO_URL = "mongodb://localhost:27017"
 DB_NAME = "erp_db"

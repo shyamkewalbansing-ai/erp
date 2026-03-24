@@ -559,16 +559,16 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                           </div>
                         )}
                       </td>
-                      <td className={`p-4 text-right font-bold ${rent > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      <td className={`p-4 text-right font-bold ${rent > 0 ? 'text-red-600' : 'text-slate-800'}`}>
                         {formatSRD(rent)}
                       </td>
-                      <td className={`p-4 text-right font-bold ${service > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                      <td className={`p-4 text-right font-bold ${service > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
                         {formatSRD(service)}
                       </td>
-                      <td className={`p-4 text-right font-bold ${fines > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      <td className={`p-4 text-right font-bold ${fines > 0 ? 'text-red-600' : 'text-slate-800'}`}>
                         {formatSRD(fines)}
                       </td>
-                      <td className={`p-4 text-right font-black ${total > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                      <td className={`p-4 text-right font-black ${total > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
                         {formatSRD(total)}
                       </td>
                       <td className="p-4">
