@@ -139,62 +139,62 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-100">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 py-3 lg:py-4 px-4 lg:px-8">
+      <header className="bg-white border-b border-slate-200 py-4 px-4 lg:px-8 shadow-sm">
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-3 lg:gap-4">
-            <button onClick={handleBack} className="text-slate-400 hover:text-slate-600">
+            <button onClick={handleBack} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 lg:gap-3">
-              <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg lg:rounded-xl bg-orange-500 flex items-center justify-center">
-                <Building2 className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-sm shadow-orange-500/30">
+                <Building2 className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h1 className="text-base lg:text-lg font-bold text-slate-900">{company?.name}</h1>
-                <p className="text-xs lg:text-sm text-slate-500">Beheerder</p>
+                <p className="text-xs text-slate-500">Admin Dashboard</p>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 lg:gap-3">
             <button
               onClick={copyKioskUrl}
-              className="hidden sm:flex items-center gap-2 px-3 lg:px-4 py-2 bg-slate-100 border border-slate-200 rounded-lg text-xs lg:text-sm hover:bg-slate-200 transition"
+              className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs lg:text-sm font-medium hover:bg-slate-200 transition"
             >
               {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-              <span className="hidden md:inline">Kopieer Kiosk URL</span>
+              <span className="hidden md:inline">Kopieer URL</span>
             </button>
             <button
               onClick={handleBack}
-              className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-orange-500 text-white rounded-lg text-xs lg:text-sm hover:bg-orange-600 transition"
+              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-xl text-xs lg:text-sm font-bold hover:bg-orange-600 transition shadow-sm shadow-orange-500/20"
             >
               <ExternalLink className="w-4 h-4" />
-              <span className="hidden sm:inline">Terug naar Kiosk</span>
+              <span className="hidden sm:inline">Kiosk</span>
             </button>
             <button
               onClick={handleLogout}
               data-testid="admin-logout-button"
-              className="flex items-center gap-2 px-3 lg:px-4 py-2 bg-slate-100 border border-slate-200 text-slate-600 rounded-lg text-xs lg:text-sm hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"
+              className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs lg:text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"
             >
               <LogIn className="w-4 h-4 rotate-180" />
-              <span className="hidden sm:inline">Uitloggen</span>
+              <span className="hidden sm:inline">Uit</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="w-full px-8 py-6">
+      <div className="w-full px-4 lg:px-8 py-6">
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-8 flex-wrap">
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition active:scale-95 ${
                 activeTab === tab.id 
-                  ? 'bg-orange-500 text-white' 
-                  : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                  ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' 
+                  : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
               }`}
             >
               <tab.icon className="w-4 h-4" />
@@ -307,23 +307,32 @@ function DashboardTab({ dashboard, formatSRD }) {
   ];
 
   const colors = {
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    red: 'bg-red-50 text-red-600',
-    orange: 'bg-orange-50 text-orange-600',
-    purple: 'bg-purple-50 text-purple-600',
-    emerald: 'bg-emerald-50 text-emerald-600'
+    blue: 'bg-blue-500/10 text-blue-600 border-blue-200',
+    green: 'bg-green-500/10 text-green-600 border-green-200',
+    red: 'bg-red-500/10 text-red-600 border-red-200',
+    orange: 'bg-orange-500/10 text-orange-600 border-orange-200',
+    purple: 'bg-purple-500/10 text-purple-600 border-purple-200',
+    emerald: 'bg-emerald-500/10 text-emerald-600 border-emerald-200'
+  };
+
+  const iconColors = {
+    blue: 'bg-blue-500',
+    green: 'bg-green-500',
+    red: 'bg-red-500',
+    orange: 'bg-orange-500',
+    purple: 'bg-purple-500',
+    emerald: 'bg-emerald-500'
   };
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
       {stats.map((stat, i) => (
-        <div key={i} className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className={`w-12 h-12 rounded-lg ${colors[stat.color]} flex items-center justify-center mb-4`}>
-            <stat.icon className="w-6 h-6" />
+        <div key={i} className={`bg-white rounded-2xl border-2 ${colors[stat.color]} p-6 transition-all hover:shadow-lg`}>
+          <div className={`w-12 h-12 rounded-xl ${iconColors[stat.color]} flex items-center justify-center mb-4 shadow-sm`}>
+            <stat.icon className="w-6 h-6 text-white" />
           </div>
-          <p className="text-sm text-slate-500 mb-1">{stat.label}</p>
-          <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+          <p className="text-sm text-slate-500 font-medium mb-1">{stat.label}</p>
+          <p className="text-2xl font-black text-slate-900">{stat.value}</p>
         </div>
       ))}
     </div>
@@ -336,92 +345,137 @@ function TenantsTab({ tenants, apartments, formatSRD, getInitials, onAddTenant, 
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold text-slate-900">Huurders ({activeTenants.length})</h2>
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-slate-900">Huurders</h2>
+          <p className="text-slate-500 mt-1">{activeTenants.length} actieve huurder{activeTenants.length !== 1 ? 's' : ''}</p>
+        </div>
         <button
           onClick={onAddTenant}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+          className="flex items-center gap-2 px-5 py-3 bg-orange-500 text-white rounded-xl text-sm font-bold hover:bg-orange-600 transition shadow-lg shadow-orange-500/20 active:scale-95"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-5 h-5" />
           Nieuwe Huurder
         </button>
       </div>
 
-      <div className="space-y-4">
-        {activeTenants.map(tenant => {
-          const total = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0);
-          const hasArrears = (tenant.outstanding_rent || 0) > (tenant.monthly_rent || 0);
-          const currentMonth = new Date().toLocaleDateString('nl-NL', { month: 'short' });
+      {activeTenants.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+          <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-4">
+            <Users className="w-10 h-10 text-slate-400" />
+          </div>
+          <h3 className="text-xl font-bold text-slate-900 mb-2">Nog geen huurders</h3>
+          <p className="text-slate-500 mb-6">Voeg uw eerste huurder toe om te beginnen.</p>
+          <button
+            onClick={onAddTenant}
+            className="px-6 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition"
+          >
+            <Plus className="w-4 h-4 inline mr-2" />
+            Huurder Toevoegen
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+          {activeTenants.map(tenant => {
+            const total = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0);
+            const hasArrears = (tenant.outstanding_rent || 0) > (tenant.monthly_rent || 0);
+            const isPaid = total === 0;
 
-          return (
-            <div key={tenant.tenant_id} className="bg-white rounded-xl border border-slate-200 p-5 w-full">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-slate-900 text-white flex items-center justify-center text-lg font-bold">
-                    {getInitials(tenant.name)}
+            return (
+              <div 
+                key={tenant.tenant_id} 
+                className={`bg-white rounded-2xl border-2 p-6 transition-all hover:shadow-lg ${
+                  hasArrears 
+                    ? 'border-red-200 hover:border-red-300' 
+                    : isPaid 
+                      ? 'border-green-200 hover:border-green-300'
+                      : 'border-slate-200 hover:border-orange-200'
+                }`}
+              >
+                {/* Top row: avatar + name + status */}
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center text-lg font-black ${
+                      hasArrears 
+                        ? 'bg-red-500 text-white' 
+                        : isPaid 
+                          ? 'bg-green-500 text-white'
+                          : 'bg-slate-900 text-white'
+                    }`}>
+                      {getInitials(tenant.name)}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-slate-900 text-lg">{tenant.name}</h3>
+                      <p className="text-slate-400 text-sm">
+                        Appt. {tenant.apartment_number} &middot; {tenant.tenant_code}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-lg">{tenant.name}</h3>
-                    <p className="text-slate-500">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
+                  {hasArrears ? (
+                    <span className="px-3 py-1.5 bg-red-100 text-red-600 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      Achterstand
+                    </span>
+                  ) : isPaid ? (
+                    <span className="px-3 py-1.5 bg-green-100 text-green-600 rounded-lg text-xs font-bold flex items-center gap-1.5">
+                      <Check className="w-3.5 h-3.5" />
+                      Betaald
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Financial breakdown */}
+                <div className="grid grid-cols-4 gap-3 mb-5">
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
+                    <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Huur</p>
+                    <p className={`text-base font-bold ${(tenant.outstanding_rent || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {formatSRD(tenant.outstanding_rent).replace('SRD ', '')}
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
+                    <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Service</p>
+                    <p className={`text-base font-bold ${(tenant.service_costs || 0) > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                      {formatSRD(tenant.service_costs).replace('SRD ', '')}
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-3 text-center">
+                    <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider mb-1">Boetes</p>
+                    <p className={`text-base font-bold ${(tenant.fines || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {formatSRD(tenant.fines).replace('SRD ', '')}
+                    </p>
+                  </div>
+                  <div className={`rounded-xl p-3 text-center ${
+                    total > 0 ? 'bg-orange-50 border border-orange-200' : 'bg-green-50 border border-green-200'
+                  }`}>
+                    <p className={`text-[11px] font-semibold uppercase tracking-wider mb-1 ${total > 0 ? 'text-orange-500' : 'text-green-500'}`}>Totaal</p>
+                    <p className={`text-base font-black ${total > 0 ? 'text-orange-600' : 'text-green-600'}`}>
+                      {formatSRD(total).replace('SRD ', '')}
+                    </p>
                   </div>
                 </div>
-                {hasArrears && (
-                  <span className="px-3 py-1 bg-red-100 text-red-600 rounded-full text-xs font-semibold">
-                    Achterstand
-                  </span>
-                )}
-              </div>
 
-              {/* Financial Grid */}
-              <div className="grid grid-cols-5 gap-2 mb-4 text-center">
-                <div className="bg-slate-50 rounded-lg p-2">
-                  <p className="text-xs text-slate-400 uppercase">Maand</p>
-                  <p className="font-semibold text-slate-900">{currentMonth}</p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-2">
-                  <p className="text-xs text-slate-400 uppercase">Huur</p>
-                  <p className={`font-semibold ${(tenant.outstanding_rent || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {formatSRD(tenant.outstanding_rent).replace('SRD ', '')}
-                  </p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-2">
-                  <p className="text-xs text-slate-400 uppercase">Service</p>
-                  <p className={`font-semibold ${(tenant.service_costs || 0) > 0 ? 'text-orange-600' : 'text-green-600'}`}>
-                    {formatSRD(tenant.service_costs).replace('SRD ', '')}
-                  </p>
-                </div>
-                <div className="bg-slate-50 rounded-lg p-2">
-                  <p className="text-xs text-slate-400 uppercase">Boetes</p>
-                  <p className={`font-semibold ${(tenant.fines || 0) > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {formatSRD(tenant.fines).replace('SRD ', '')}
-                  </p>
-                </div>
-                <div className="bg-orange-50 rounded-lg p-2">
-                  <p className="text-xs text-orange-600 uppercase">Totaal</p>
-                  <p className="font-bold text-orange-600">{formatSRD(total).replace('SRD ', '')}</p>
+                {/* Actions */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => onAddRent(tenant)}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-orange-500 text-white rounded-xl text-sm font-bold hover:bg-orange-600 transition active:scale-95 shadow-sm"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Maandhuur Toevoegen
+                  </button>
+                  <button
+                    onClick={() => onEditTenant(tenant)}
+                    className="px-4 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition active:scale-95"
+                  >
+                    <Pencil className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => onAddRent(tenant)}
-                  className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
-                >
-                  <Plus className="w-4 h-4" />
-                  Maandhuur
-                </button>
-                <button
-                  onClick={() => onEditTenant(tenant)}
-                  className="px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
