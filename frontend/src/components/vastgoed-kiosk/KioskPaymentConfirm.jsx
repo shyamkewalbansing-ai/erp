@@ -53,90 +53,92 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   };
 
   return (
-    <div className="min-h-full bg-slate-50 flex flex-col">
+    <div className="min-h-full bg-white flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 p-3 sm:p-6 flex items-center justify-between">
-        <button onClick={onBack} disabled={processing} className="flex items-center gap-1 sm:gap-2 text-slate-500 hover:text-slate-900 transition text-sm sm:text-lg font-medium disabled:opacity-50">
-          <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+      <div className="w-full px-6 py-4 flex items-center justify-between border-b border-slate-100">
+        <button onClick={onBack} disabled={processing} className="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition text-sm font-medium disabled:opacity-50">
+          <ArrowLeft className="w-5 h-5" />
           <span>Terug</span>
         </button>
-        <h1 className="text-lg sm:text-3xl font-bold text-slate-900">Bevestig betaling</h1>
-        <div className="w-16 sm:w-32" />
+        <h1 className="text-lg sm:text-xl font-bold text-slate-900">Bevestig betaling</h1>
+        <div className="w-16" />
       </div>
 
-      {/* Content */}
-      <div className="flex-1 p-3 sm:p-6 lg:p-8 flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
-        {/* Left - Amount Display */}
-        <div className="flex-1 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl sm:rounded-3xl p-6 sm:p-12 flex flex-col items-center justify-center shadow-lg shadow-orange-500/30">
-          <p className="text-orange-100 text-base sm:text-2xl mb-2 sm:mb-4">Te betalen bedrag</p>
-          <p className="text-4xl sm:text-7xl lg:text-8xl font-bold text-white mb-3 sm:mb-6" data-testid="confirm-amount">
-            {formatSRD(paymentData.amount)}
-          </p>
-          <div className="flex items-center gap-2 sm:gap-3 text-orange-100 text-sm sm:text-xl">
-            <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
-            <span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
+      {/* Content - centered */}
+      <div className="flex-1 flex flex-col items-center px-4 sm:px-6 py-6 overflow-auto">
+        <div className="w-full max-w-md">
+          {/* Amount display */}
+          <div className="bg-orange-500 rounded-2xl p-8 text-center mb-6 shadow-lg shadow-orange-500/20">
+            <p className="text-orange-100 text-sm mb-2">Te betalen bedrag</p>
+            <p className="text-4xl sm:text-5xl font-bold text-white mb-3" data-testid="confirm-amount">
+              {formatSRD(paymentData.amount)}
+            </p>
+            <div className="flex items-center justify-center gap-2 text-orange-100 text-sm">
+              <Banknote className="w-4 h-4" />
+              <span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
+            </div>
           </div>
-          <p className="text-orange-200 mt-2 sm:mt-4 text-xs sm:text-base">Betaalmethode: Contant</p>
-        </div>
 
-        {/* Right - Details + Confirm */}
-        <div className="w-full lg:w-[450px] flex flex-col">
-          {/* Tenant Card */}
-          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 flex items-center gap-3 sm:gap-6 mb-4 sm:mb-6 border-2 border-slate-100 shadow-sm">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center flex-shrink-0">
-              <User className="w-6 h-6 sm:w-8 sm:h-8" />
+          {/* Tenant */}
+          <div className="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100 mb-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center flex-shrink-0">
+              <User className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-base sm:text-xl font-bold text-slate-900">{tenant.name}</p>
-              <p className="text-xs sm:text-base text-slate-500">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
+              <p className="text-sm font-bold text-slate-900">{tenant.name}</p>
+              <p className="text-xs text-slate-400">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
             </div>
           </div>
 
-          {/* Payment Summary */}
-          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-slate-100 shadow-sm flex-1">
-            <h4 className="text-sm sm:text-lg font-bold text-slate-900 mb-3 sm:mb-4">Betalingsoverzicht</h4>
-            <div className="space-y-2 sm:space-y-3 text-sm sm:text-base">
+          {/* Payment details */}
+          <div className="rounded-2xl bg-slate-50 border border-slate-100 p-4 mb-6">
+            <h4 className="text-sm font-bold text-slate-900 mb-3">Betalingsoverzicht</h4>
+            <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-500">Type</span>
+                <span className="text-slate-400">Type</span>
                 <span className="text-slate-900">{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Bedrag</span>
+                <span className="text-slate-400">Bedrag</span>
                 <span className="text-slate-900 font-bold">{formatSRD(paymentData.amount)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Methode</span>
+                <span className="text-slate-400">Methode</span>
                 <span className="text-slate-900">Contant</span>
               </div>
             </div>
           </div>
 
           {error && (
-            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border-2 border-red-200 text-red-600 rounded-xl text-center font-medium text-sm sm:text-base">
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center font-medium text-sm">
               {error}
             </div>
           )}
+        </div>
+      </div>
 
-          {/* Confirm Button */}
+      {/* Bottom action */}
+      <div className="px-4 sm:px-6 py-4 border-t border-slate-100">
+        <div className="max-w-md mx-auto space-y-2">
           <button
             onClick={handlePayment}
             disabled={processing}
             data-testid="confirm-payment-btn"
-            className="kiosk-btn-xl bg-green-500 hover:bg-green-600 disabled:bg-slate-300 text-white shadow-lg shadow-green-500/30"
+            className="w-full py-4 px-6 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 transition bg-green-500 hover:bg-green-600 disabled:bg-slate-200 disabled:text-slate-400 text-white shadow-lg shadow-green-500/25 active:scale-[0.98]"
           >
             {processing ? (
               <>
-                <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin" />
+                <Loader2 className="w-5 h-5 animate-spin" />
                 <span>Verwerken...</span>
               </>
             ) : (
               <>
-                <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8" />
+                <CheckCircle className="w-5 h-5" />
                 <span>Bevestig betaling</span>
               </>
             )}
           </button>
-          <p className="text-center text-slate-500 mt-3 sm:mt-4 text-xs sm:text-base">
+          <p className="text-center text-slate-400 text-xs">
             Door te bevestigen geeft u aan dat het contante bedrag is ontvangen
           </p>
         </div>

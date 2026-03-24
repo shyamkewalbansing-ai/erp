@@ -97,46 +97,46 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
   const allSelected = PAYMENT_TYPES.filter(t => !isTypeDisabled(t.id)).every(t => selectedTypes.has(t.id));
 
   return (
-    <div className="min-h-full bg-slate-50 flex flex-col">
+    <div className="min-h-full bg-white flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 p-3 sm:p-4 flex items-center justify-between shrink-0">
-        <button onClick={onBack} className="flex items-center gap-1 sm:gap-2 text-slate-500 hover:text-slate-900 transition text-sm sm:text-lg font-medium">
-          <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+      <div className="w-full px-6 py-4 flex items-center justify-between border-b border-slate-100">
+        <button onClick={onBack} className="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition text-sm font-medium">
+          <ArrowLeft className="w-5 h-5" />
           <span>Terug</span>
         </button>
-        <h1 className="text-base sm:text-2xl font-bold text-slate-900">Wat wilt u betalen?</h1>
+        <h1 className="text-lg sm:text-xl font-bold text-slate-900">Wat wilt u betalen?</h1>
         <div className="text-right hidden sm:block">
-          <p className="text-slate-900 font-medium">{tenant.name}</p>
-          <p className="text-slate-500">Appt. {tenant.apartment_number}</p>
+          <p className="text-sm text-slate-900 font-medium">{tenant.name}</p>
+          <p className="text-xs text-slate-400">Appt. {tenant.apartment_number}</p>
         </div>
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-3 sm:p-6 flex flex-col lg:flex-row gap-4 sm:gap-6 overflow-auto">
+      <div className="flex-1 flex flex-col lg:flex-row items-start px-4 sm:px-6 py-6 gap-6 overflow-auto">
         {/* Left - Payment Options */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 w-full max-w-lg mx-auto lg:mx-0">
           {/* Select All */}
           {!useCustomAmount && PAYMENT_TYPES.filter(t => !isTypeDisabled(t.id)).length > 1 && (
             <button
               onClick={allSelected ? () => setSelectedTypes(new Set()) : selectAll}
-              className={`mb-3 p-3 rounded-xl border-2 transition flex items-center justify-between ${
-                allSelected ? 'bg-orange-50 border-orange-500' : 'bg-white border-slate-200 hover:border-orange-300'
+              className={`w-full mb-3 p-3.5 rounded-2xl border transition flex items-center justify-between ${
+                allSelected ? 'bg-orange-50 border-orange-400' : 'bg-white border-slate-100 hover:border-orange-200 shadow-sm'
               }`}
             >
-              <div className="flex items-center gap-2 sm:gap-3">
-                <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md border-2 flex items-center justify-center ${
+              <div className="flex items-center gap-2.5">
+                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${
                   allSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
                 }`}>
-                  {allSelected && <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />}
+                  {allSelected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
                 </div>
-                <span className="text-sm sm:text-lg font-bold text-slate-900">Alles betalen</span>
+                <span className="text-sm font-bold text-slate-900">Alles betalen</span>
               </div>
-              <span className="text-base sm:text-xl font-bold text-orange-600">{formatSRD(totalDebt)}</span>
+              <span className="text-base font-bold text-orange-600">{formatSRD(totalDebt)}</span>
             </button>
           )}
 
           {/* Individual options */}
-          <div className="space-y-2 sm:space-y-3">
+          <div className="space-y-2.5">
             {PAYMENT_TYPES.map((type) => {
               const disabled = isTypeDisabled(type.id) || useCustomAmount;
               const isSelected = selectedTypes.has(type.id);
@@ -148,28 +148,28 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                   disabled={disabled}
                   onClick={() => toggleType(type.id)}
                   data-testid={`pay-type-${type.id}`}
-                  className={`flex items-center justify-between w-full p-3 sm:p-4 rounded-xl border-2 transition ${
-                    disabled ? 'bg-slate-100 border-slate-200 opacity-50 cursor-not-allowed'
-                      : isSelected ? 'bg-orange-50 border-orange-500' : 'bg-white border-slate-200 hover:border-orange-300'
+                  className={`flex items-center justify-between w-full p-4 rounded-2xl border transition ${
+                    disabled ? 'bg-slate-50 border-slate-100 opacity-40 cursor-not-allowed'
+                      : isSelected ? 'bg-orange-50 border-orange-400' : 'bg-white border-slate-100 hover:border-orange-200 shadow-sm'
                   }`}
                 >
-                  <div className="flex items-center gap-2 sm:gap-4">
-                    <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
+                  <div className="flex items-center gap-3">
+                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 ${
                       isSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
                     }`}>
-                      {isSelected && <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />}
+                      {isSelected && <CheckCircle className="w-3.5 h-3.5 text-white" />}
                     </div>
-                    <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 ${
-                      isSelected ? 'bg-orange-100' : 'bg-slate-100'
+                    <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                      isSelected ? 'bg-orange-100' : 'bg-slate-50'
                     }`}>
-                      <Icon className={`w-4 h-4 sm:w-6 sm:h-6 ${isSelected ? 'text-orange-500' : 'text-slate-500'}`} />
+                      <Icon className={`w-5 h-5 ${isSelected ? 'text-orange-500' : 'text-slate-400'}`} />
                     </div>
                     <div className="text-left">
-                      <p className="text-sm sm:text-lg font-bold text-slate-900">{type.label}</p>
-                      <p className="text-xs sm:text-sm text-slate-500 hidden sm:block">{type.desc}</p>
+                      <p className="text-sm font-bold text-slate-900">{type.label}</p>
+                      <p className="text-xs text-slate-400 hidden sm:block">{type.desc}</p>
                     </div>
                   </div>
-                  <p className={`text-base sm:text-xl font-bold flex-shrink-0 ml-2 ${disabled ? 'text-slate-400' : isSelected ? 'text-orange-600' : 'text-slate-900'}`}>
+                  <p className={`text-base font-bold flex-shrink-0 ml-2 ${disabled ? 'text-slate-300' : isSelected ? 'text-orange-600' : 'text-slate-900'}`}>
                     {formatSRD(amount)}
                   </p>
                 </button>
@@ -181,56 +181,56 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
           <button
             onClick={toggleCustom}
             data-testid="pay-type-custom"
-            className={`mt-2 sm:mt-3 flex items-center justify-between w-full p-3 sm:p-4 rounded-xl border-2 transition ${
-              useCustomAmount ? 'bg-orange-50 border-orange-500' : 'bg-white border-slate-200 hover:border-orange-300'
+            className={`mt-2.5 flex items-center justify-between w-full p-4 rounded-2xl border transition ${
+              useCustomAmount ? 'bg-orange-50 border-orange-400' : 'bg-white border-slate-100 hover:border-orange-200 shadow-sm'
             }`}
           >
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className={`w-5 h-5 sm:w-6 sm:h-6 rounded-md border-2 flex items-center justify-center ${
+            <div className="flex items-center gap-3">
+              <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${
                 useCustomAmount ? 'bg-orange-500 border-orange-500' : 'border-slate-300'
               }`}>
-                {useCustomAmount && <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-white" />}
+                {useCustomAmount && <CheckCircle className="w-3.5 h-3.5 text-white" />}
               </div>
-              <div className={`w-8 h-8 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center ${
-                useCustomAmount ? 'bg-orange-100' : 'bg-slate-100'
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${
+                useCustomAmount ? 'bg-orange-100' : 'bg-slate-50'
               }`}>
-                <Wallet className={`w-4 h-4 sm:w-6 sm:h-6 ${useCustomAmount ? 'text-orange-500' : 'text-slate-500'}`} />
+                <Wallet className={`w-5 h-5 ${useCustomAmount ? 'text-orange-500' : 'text-slate-400'}`} />
               </div>
               <div className="text-left">
-                <p className="text-sm sm:text-lg font-bold text-slate-900">Ander bedrag</p>
-                <p className="text-xs sm:text-sm text-slate-500 hidden sm:block">Voer zelf een bedrag in</p>
+                <p className="text-sm font-bold text-slate-900">Ander bedrag</p>
+                <p className="text-xs text-slate-400 hidden sm:block">Voer zelf een bedrag in</p>
               </div>
             </div>
           </button>
 
-          {/* Selected total summary */}
+          {/* Selected total */}
           {!useCustomAmount && selectedTypes.size > 0 && (
-            <div className="mt-3 sm:mt-4 bg-slate-800 rounded-xl p-3 sm:p-4 flex items-center justify-between">
+            <div className="mt-3 rounded-2xl bg-slate-900 p-4 flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-xs sm:text-sm">{selectedTypes.size} item{selectedTypes.size > 1 ? 's' : ''} geselecteerd</p>
-                <p className="text-white text-xs sm:text-sm">{buildDescription()}</p>
+                <p className="text-slate-400 text-xs">{selectedTypes.size} item{selectedTypes.size > 1 ? 's' : ''} geselecteerd</p>
+                <p className="text-white text-xs">{buildDescription()}</p>
               </div>
-              <p className="text-xl sm:text-2xl font-bold text-white">{formatSRD(selectedTotal)}</p>
+              <p className="text-xl font-bold text-white">{formatSRD(selectedTotal)}</p>
             </div>
           )}
         </div>
 
-        {/* Right - Custom Amount Keypad */}
+        {/* Right - Custom Keypad */}
         {useCustomAmount && (
-          <div className="w-full lg:w-80 bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-slate-100 shadow-sm shrink-0">
-            <h4 className="text-base sm:text-xl font-bold text-slate-900 mb-1">Bedrag invoeren</h4>
-            <p className="text-slate-500 text-xs sm:text-sm mb-3 sm:mb-4">Totaal openstaand: {formatSRD(totalDebt)}</p>
-            <div className="bg-slate-50 border-2 border-slate-200 rounded-xl p-3 sm:p-4 mb-3 sm:mb-4">
-              <p className="text-slate-500 text-xs mb-1">SRD</p>
-              <p className="text-2xl sm:text-3xl font-bold text-slate-900 font-mono">{customAmount || '0.00'}</p>
+          <div className="w-full lg:w-72 bg-slate-50 rounded-2xl p-5 border border-slate-100 mx-auto lg:mx-0 max-w-md">
+            <h4 className="text-sm font-bold text-slate-900 mb-1">Bedrag invoeren</h4>
+            <p className="text-xs text-slate-400 mb-3">Totaal openstaand: {formatSRD(totalDebt)}</p>
+            <div className="bg-white border border-slate-200 rounded-xl p-3 mb-3">
+              <p className="text-slate-400 text-xs mb-1">SRD</p>
+              <p className="text-2xl font-bold text-slate-900 font-mono">{customAmount || '0.00'}</p>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'DEL'].map((key) => (
                 <button
                   key={key}
                   onClick={() => handleKeypadPress(key)}
-                  className={`h-10 sm:h-12 text-base sm:text-lg font-bold rounded-lg transition active:scale-95 ${
-                    key === 'DEL' ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                  className={`h-11 text-base font-bold rounded-lg transition active:scale-95 ${
+                    key === 'DEL' ? 'bg-slate-200 text-red-500 hover:bg-red-50' : 'bg-white text-slate-900 hover:bg-orange-50 hover:text-orange-600 border border-slate-100'
                   }`}
                 >
                   {key}
@@ -241,17 +241,19 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
         )}
       </div>
 
-      {/* Fixed Bottom - Confirm */}
-      <div className="bg-white border-t border-slate-200 p-3 sm:p-4 shrink-0">
-        <button
-          onClick={handleConfirm}
-          disabled={!canProceed}
-          data-testid="payment-next-btn"
-          className="w-full py-3 sm:py-4 px-4 sm:px-8 rounded-xl text-base sm:text-xl font-bold flex items-center justify-center gap-2 sm:gap-3 transition bg-orange-500 hover:bg-orange-600 disabled:bg-slate-300 disabled:text-slate-500 text-white shadow-lg shadow-orange-500/30"
-        >
-          <span>Volgende — {formatSRD(useCustomAmount ? (parseFloat(customAmount) || 0) : selectedTotal)}</span>
-          <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
+      {/* Bottom */}
+      <div className="px-4 sm:px-6 py-4 border-t border-slate-100">
+        <div className="max-w-lg mx-auto lg:max-w-none">
+          <button
+            onClick={handleConfirm}
+            disabled={!canProceed}
+            data-testid="payment-next-btn"
+            className="w-full py-4 px-6 rounded-2xl text-lg font-bold flex items-center justify-center gap-3 transition bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 text-white shadow-lg shadow-orange-500/25 active:scale-[0.98]"
+          >
+            <span>Volgende — {formatSRD(useCustomAmount ? (parseFloat(customAmount) || 0) : selectedTotal)}</span>
+            <ArrowRight className="w-5 h-5" />
+          </button>
+        </div>
       </div>
     </div>
   );
