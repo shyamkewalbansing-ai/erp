@@ -205,7 +205,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         </div>
 
         {/* Dashboard Tab */}
-        {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} formatSRD={formatSRD} />}
+        {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} payments={payments} formatSRD={formatSRD} />}
 
         {/* Tenants Tab */}
         {activeTab === 'tenants' && (
@@ -295,47 +295,73 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 }
 
 // ============== DASHBOARD TAB ==============
-function DashboardTab({ dashboard, formatSRD }) {
+function DashboardTab({ dashboard, payments, formatSRD }) {
   if (!dashboard) return null;
 
   const stats = [
-    { icon: Home, label: 'Appartementen', value: dashboard.total_apartments, color: 'blue' },
-    { icon: Users, label: 'Actieve Huurders', value: dashboard.total_tenants, color: 'green' },
-    { icon: DollarSign, label: 'Openstaande Huur', value: formatSRD(dashboard.total_outstanding), color: 'red' },
-    { icon: FileText, label: 'Open Servicekosten', value: formatSRD(dashboard.total_service_costs), color: 'orange' },
-    { icon: AlertTriangle, label: 'Open Boetes', value: formatSRD(dashboard.total_fines), color: 'purple' },
-    { icon: CreditCard, label: 'Ontvangen (maand)', value: formatSRD(dashboard.total_received_month), color: 'emerald' },
+    { icon: Home, label: 'Appartementen', value: dashboard.total_apartments, iconBg: 'bg-blue-100', iconColor: 'text-blue-600' },
+    { icon: Users, label: 'Actieve Huurders', value: dashboard.total_tenants, iconBg: 'bg-purple-100', iconColor: 'text-purple-600' },
+    { icon: DollarSign, label: 'Openstaande Huur', value: formatSRD(dashboard.total_outstanding), iconBg: 'bg-red-100', iconColor: 'text-red-500' },
+    { icon: FileText, label: 'Open Servicekosten', value: formatSRD(dashboard.total_service_costs), iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
+    { icon: AlertTriangle, label: 'Open Boetes', value: formatSRD(dashboard.total_fines), iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600' },
+    { icon: CreditCard, label: 'Ontvangen (maand)', value: formatSRD(dashboard.total_received_month), iconBg: 'bg-green-100', iconColor: 'text-green-600' },
   ];
 
-  const colors = {
-    blue: 'bg-blue-500/10 text-blue-600 border-blue-200',
-    green: 'bg-green-500/10 text-green-600 border-green-200',
-    red: 'bg-red-500/10 text-red-600 border-red-200',
-    orange: 'bg-orange-500/10 text-orange-600 border-orange-200',
-    purple: 'bg-purple-500/10 text-purple-600 border-purple-200',
-    emerald: 'bg-emerald-500/10 text-emerald-600 border-emerald-200'
-  };
-
-  const iconColors = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    red: 'bg-red-500',
-    orange: 'bg-orange-500',
-    purple: 'bg-purple-500',
-    emerald: 'bg-emerald-500'
-  };
+  const recentPayments = (payments || []).slice(0, 6);
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
-      {stats.map((stat, i) => (
-        <div key={i} className={`bg-white rounded-2xl border-2 ${colors[stat.color]} p-6 transition-all hover:shadow-lg`}>
-          <div className={`w-12 h-12 rounded-xl ${iconColors[stat.color]} flex items-center justify-center mb-4 shadow-sm`}>
-            <stat.icon className="w-6 h-6 text-white" />
+    <div>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        {stats.map((stat, i) => (
+          <div key={i} className="bg-white rounded-xl border border-slate-200 p-5 flex items-center gap-4 hover:shadow-md transition-all">
+            <div className={`w-12 h-12 rounded-full ${stat.iconBg} flex items-center justify-center flex-shrink-0`}>
+              <stat.icon className={`w-5 h-5 ${stat.iconColor}`} />
+            </div>
+            <div>
+              <p className="text-sm text-slate-500 font-medium">{stat.label}</p>
+              <p className="text-xl font-black text-slate-900">{stat.value}</p>
+            </div>
           </div>
-          <p className="text-sm text-slate-500 font-medium mb-1">{stat.label}</p>
-          <p className="text-2xl font-black text-slate-900">{stat.value}</p>
+        ))}
+      </div>
+
+      {/* Recente betalingen */}
+      <h3 className="text-lg font-bold text-slate-900 mb-4">Recente betalingen</h3>
+      {recentPayments.length === 0 ? (
+        <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+          Nog geen betalingen
         </div>
-      ))}
+      ) : (
+        <div className="space-y-3">
+          {recentPayments.map((p, i) => (
+            <div key={p.payment_id || i} className="bg-white rounded-xl border border-slate-200 px-5 py-4 flex items-center justify-between hover:shadow-sm transition">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                  <CreditCard className="w-5 h-5 text-slate-500" />
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900">{p.tenant_name}</p>
+                  <p className="text-sm text-slate-400">
+                    Appt. {p.apartment_number} &middot; {
+                      p.payment_type === 'rent' ? 'Huur' 
+                      : p.payment_type === 'service' ? 'Service' 
+                      : p.payment_type === 'fine' ? 'Boetes' 
+                      : p.payment_type === 'partial_rent' ? 'Gedeeltelijke huur' 
+                      : p.payment_type === 'deposit' ? 'Borgsom' 
+                      : p.payment_type?.replace('_', ' ')
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-bold text-green-600">{formatSRD(p.amount)}</p>
+                <p className="text-xs text-slate-400 font-mono">{p.kwitantie_nummer}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
