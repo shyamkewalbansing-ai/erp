@@ -34,6 +34,7 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 - [2026-03-24] Betaalmethoden sectie: bankgegevens (naam, rekening, rekeninghouder) getoond op kwitanties
 - [2026-03-24] WhatsApp Business API: self-service configuratie, berichten versturen (herinnering/boete/achterstand), bulk versturen, berichtengeschiedenis
 - [2026-03-24] WhatsApp knop bij huurders met schuld voor directe herinnering
+- [2026-03-24] WhatsApp Berichten tab: berichtengeschiedenis met statistieken, zoek/filter op type en status, expandable berichten
 
 ## Database Schema
 - `kiosk_employees`: name, role, salary, hire_date, status
@@ -57,17 +58,13 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 - Login via: /vastgoed
 
 ## Backlog (Geprioriteerd)
-### P1
-- Tuya API integratie voor stroombrekers (momenteel gemocked)
-
 ### P2
 - Kwitanties tab moderniseren (unified table, zoek/filter)
-- SMS/WhatsApp herinneringen (3 dagen voor vervaldatum)
-- Maandelijks financieel rapport
+- Maandelijks financieel rapport (Kas inkomsten, uitgaven, salarissen)
 - CSV/PDF export betalingsrapporten
 - Wachtwoord vergeten functionaliteit
 - Multi-building support per bedrijf
 
 ## Refactoring Nodig
-- KioskAdminDashboard.jsx (1700+ regels) opsplitsen
-- kiosk.py (1800+ regels) opsplitsen
+- KioskAdminDashboard.jsx (2800+ regels) opsplitsen in aparte tab-componenten
+- kiosk.py (2600+ regels) opsplitsen in aparte routers
