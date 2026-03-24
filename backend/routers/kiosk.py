@@ -1171,58 +1171,33 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     text-align: center;
     margin: 25px 0 15px;
   }}
-  .stamp-circle {{
-    width: 100px;
-    height: 100px;
-    border: 3px solid #c0392b;
-    border-radius: 50%;
+  .stamp-rect {{
     display: inline-flex;
-    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    position: relative;
-    transform: rotate(-12deg);
-    opacity: 0.75;
+    gap: 10px;
+    border: 2.5px solid #991b1b;
+    padding: 10px 16px;
+    transform: rotate(-5deg);
+    opacity: 0.8;
+    background: rgba(255,255,255,0.5);
   }}
-  .stamp-circle::before {{
-    content: '';
-    position: absolute;
-    top: 4px; left: 4px; right: 4px; bottom: 4px;
-    border: 1.5px solid #c0392b;
-    border-radius: 50%;
+  .stamp-house {{
+    flex-shrink: 0;
   }}
-  .stamp-text-top {{
-    font-size: 6pt;
+  .stamp-info p {{
+    margin: 0;
+    line-height: 1.4;
+  }}
+  .stamp-info .stamp-name {{
+    color: #991b1b;
     font-weight: bold;
-    text-transform: uppercase;
-    color: #c0392b;
-    letter-spacing: 1.5px;
-    position: absolute;
-    top: 12px;
+    font-size: 9pt;
   }}
-  .stamp-initials {{
-    font-size: 18pt;
-    font-weight: bold;
-    color: #c0392b;
-    letter-spacing: 2px;
+  .stamp-info .stamp-detail {{
+    color: #1a1a1a;
+    font-size: 8pt;
+    font-weight: 500;
   }}
-  .stamp-text-bottom {{
-    font-size: 5.5pt;
-    text-transform: uppercase;
-    color: #c0392b;
-    letter-spacing: 1px;
-    position: absolute;
-    bottom: 12px;
-  }}
-  .stamp-star {{
-    font-size: 7pt;
-    color: #c0392b;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-  }}
-  .stamp-star-left {{ left: 8px; }}
-  .stamp-star-right {{ right: 8px; }}
   .footer {{
     margin-top: 20px;
     padding-top: 10px;
@@ -1312,12 +1287,25 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
 </table>
 
 <div class="stamp-section">
-  <div class="stamp-circle">
-    <span class="stamp-text-top">{stamp_name.split()[0] if stamp_name else 'Suriname'}</span>
-    <span class="stamp-star stamp-star-left">&starf;</span>
-    <span class="stamp-initials">{initials}</span>
-    <span class="stamp-star stamp-star-right">&starf;</span>
-    <span class="stamp-text-bottom">Paramaribo</span>
+  <div class="stamp-rect">
+    <svg class="stamp-house" width="40" height="36" viewBox="0 0 52 48" fill="none">
+      <polygon points="12,18 28,6 44,18" fill="#991b1b"/>
+      <rect x="14" y="18" width="28" height="20" fill="#991b1b"/>
+      <rect x="18" y="22" width="6" height="6" fill="white"/>
+      <rect x="28" y="22" width="6" height="6" fill="white"/>
+      <polygon points="2,28 16,18 30,28" fill="#7f1d1d"/>
+      <rect x="4" y="28" width="24" height="16" fill="#7f1d1d"/>
+      <rect x="8" y="31" width="5" height="5" fill="white"/>
+      <rect x="16" y="31" width="5" height="5" fill="white"/>
+      <rect x="8" y="38" width="5" height="6" fill="white"/>
+      <rect x="16" y="38" width="5" height="6" fill="white"/>
+    </svg>
+    <div class="stamp-info">
+      <p class="stamp-name">Stichting : {stamp_name}</p>
+      <p class="stamp-detail">{stamp_address}</p>
+      <p class="stamp-detail">Tel : {stamp_phone}</p>
+      {f'<p class="stamp-detail">Whatsapp : {stamp_whatsapp}</p>' if stamp_whatsapp else ''}
+    </div>
   </div>
 </div>
 
@@ -1706,58 +1694,33 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
     display: inline-block;
     margin-top: 15px;
   }}
-  .stamp-circle {{
-    width: 120px;
-    height: 120px;
-    border: 3px solid #c0392b;
-    border-radius: 50%;
-    display: flex;
-    flex-direction: column;
+  .stamp-rect {{
+    display: inline-flex;
     align-items: center;
-    justify-content: center;
-    position: relative;
-    transform: rotate(-12deg);
+    gap: 12px;
+    border: 3px solid #991b1b;
+    padding: 12px 18px;
+    transform: rotate(-5deg);
     opacity: 0.8;
+    background: rgba(255,255,255,0.5);
   }}
-  .stamp-circle::before {{
-    content: '';
-    position: absolute;
-    top: 4px; left: 4px; right: 4px; bottom: 4px;
-    border: 1.5px solid #c0392b;
-    border-radius: 50%;
+  .stamp-house {{
+    flex-shrink: 0;
   }}
-  .stamp-text-top {{
-    font-size: 7pt;
+  .stamp-info p {{
+    margin: 0;
+    line-height: 1.4;
+  }}
+  .stamp-info .stamp-name {{
+    color: #991b1b;
     font-weight: bold;
-    text-transform: uppercase;
-    color: #c0392b;
-    letter-spacing: 1.5px;
-    position: absolute;
-    top: 15px;
+    font-size: 10pt;
   }}
-  .stamp-initials {{
-    font-size: 22pt;
-    font-weight: bold;
-    color: #c0392b;
-    letter-spacing: 2px;
+  .stamp-info .stamp-detail {{
+    color: #1a1a1a;
+    font-size: 9pt;
+    font-weight: 500;
   }}
-  .stamp-text-bottom {{
-    font-size: 6.5pt;
-    text-transform: uppercase;
-    color: #c0392b;
-    letter-spacing: 1px;
-    position: absolute;
-    bottom: 15px;
-  }}
-  .stamp-star {{
-    font-size: 8pt;
-    color: #c0392b;
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-  }}
-  .stamp-star-left {{ left: 10px; }}
-  .stamp-star-right {{ right: 10px; }}
   
   /* Footer */
   .doc-footer {{
@@ -1820,12 +1783,25 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
   </div>
   <div class="letterhead-right">
     <div class="stamp">
-      <div class="stamp-circle">
-        <span class="stamp-text-top">{stamp_name.split()[0] if stamp_name else 'Suriname'}</span>
-        <span class="stamp-star stamp-star-left">&starf;</span>
-        <span class="stamp-initials">{initials}</span>
-        <span class="stamp-star stamp-star-right">&starf;</span>
-        <span class="stamp-text-bottom">{stamp_address.split(',')[0] if stamp_address else 'Paramaribo'}</span>
+      <div class="stamp-rect">
+        <svg class="stamp-house" width="46" height="42" viewBox="0 0 52 48" fill="none">
+          <polygon points="12,18 28,6 44,18" fill="#991b1b"/>
+          <rect x="14" y="18" width="28" height="20" fill="#991b1b"/>
+          <rect x="18" y="22" width="6" height="6" fill="white"/>
+          <rect x="28" y="22" width="6" height="6" fill="white"/>
+          <polygon points="2,28 16,18 30,28" fill="#7f1d1d"/>
+          <rect x="4" y="28" width="24" height="16" fill="#7f1d1d"/>
+          <rect x="8" y="31" width="5" height="5" fill="white"/>
+          <rect x="16" y="31" width="5" height="5" fill="white"/>
+          <rect x="8" y="38" width="5" height="6" fill="white"/>
+          <rect x="16" y="38" width="5" height="6" fill="white"/>
+        </svg>
+        <div class="stamp-info">
+          <p class="stamp-name">Stichting : {stamp_name}</p>
+          <p class="stamp-detail">{stamp_address}</p>
+          <p class="stamp-detail">Tel : {stamp_phone_val}</p>
+          {f'<p class="stamp-detail">Whatsapp : {comp.get("stamp_whatsapp", "")}</p>' if comp.get("stamp_whatsapp") else ''}
+        </div>
       </div>
     </div>
   </div>
@@ -1933,11 +1909,22 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
   <div class="sig-row">
     <div class="sig-block">
       <div class="sig-space">
-        <div class="stamp" style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%) rotate(-15deg); opacity: 0.6;">
-          <div class="stamp-circle" style="width: 80px; height: 80px;">
-            <span class="stamp-text-top" style="font-size: 5pt; top: 10px;">{stamp_name.split()[0] if stamp_name else 'Suriname'}</span>
-            <span class="stamp-initials" style="font-size: 14pt;">{initials}</span>
-            <span class="stamp-text-bottom" style="font-size: 5pt; bottom: 10px;">{stamp_address.split(',')[0] if stamp_address else 'Paramaribo'}</span>
+        <div style="position: absolute; top: 5px; left: 10px; transform: rotate(-5deg); opacity: 0.6;">
+          <div class="stamp-rect" style="padding: 6px 10px; gap: 6px; border-width: 2px;">
+            <svg width="24" height="22" viewBox="0 0 52 48" fill="none">
+              <polygon points="12,18 28,6 44,18" fill="#991b1b"/>
+              <rect x="14" y="18" width="28" height="20" fill="#991b1b"/>
+              <rect x="18" y="22" width="6" height="6" fill="white"/>
+              <rect x="28" y="22" width="6" height="6" fill="white"/>
+              <polygon points="2,28 16,18 30,28" fill="#7f1d1d"/>
+              <rect x="4" y="28" width="24" height="16" fill="#7f1d1d"/>
+              <rect x="8" y="31" width="5" height="5" fill="white"/>
+              <rect x="16" y="31" width="5" height="5" fill="white"/>
+            </svg>
+            <div style="line-height:1.2;">
+              <p style="color:#991b1b;font-weight:bold;font-size:6pt;margin:0;">Stichting : {stamp_name}</p>
+              <p style="color:#1a1a1a;font-size:5.5pt;margin:0;">{stamp_address}</p>
+            </div>
           </div>
         </div>
       </div>

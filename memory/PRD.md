@@ -30,7 +30,8 @@ Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/apparte
 - [2026-03-24] Kwitantie preview/print: gebruikt nu exact dezelfde ReceiptTicket component als de Kiosk, met modal in admin
 - [2026-03-24] ReceiptTicket type labels uitgebreid (monthly_rent, fine) voor compatibiliteit
 - [2026-03-24] Kiosk betaalpagina: maandselectie verwijderd, meerdere items tegelijk selecteerbaar (checkboxes), "Alles betalen" optie, "Ander bedrag" keypad
-- [2026-03-24] Kwitantie toont automatisch voor welke maand(en) de huur betaald is (covered_months berekend door backend)
+- [2026-03-24] Bedrijfsstempel geheel vernieuwd: rechthoekig formaat met huis-icoon (SVG), schuin gestempeld, donkerrood kleur, matching met fysieke stempel
+- [2026-03-24] Stempel opslaan knop apart gemaakt + stempel consistent op kwitanties, huurovereenkomsten en instellingen
 
 ## Database Schema
 - `kiosk_employees`: name, role, salary, hire_date, status

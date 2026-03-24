@@ -287,15 +287,38 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
             Betalingen zijn niet restitueerbaar.
           </p>
         </div>
-        <div style={{ width: `${45 * s}mm`, textAlign: 'center' }}>
+        <div style={{ width: `${55 * s}mm`, textAlign: 'center' }}>
           {stampData && stampData.stamp_company_name ? (
-            <div style={{ border: `${0.5 * s}mm solid #1e293b`, borderRadius: `${2 * s}mm`, padding: `${3 * s}mm`, background: '#f8fafc' }}>
-              <p style={{ fontSize: `${3.2 * s}mm`, fontWeight: 'bold', color: '#1e293b', margin: 0 }}>{stampData.stamp_company_name}</p>
-              {stampData.stamp_phone && <p style={{ fontSize: `${2.5 * s}mm`, color: '#64748b', margin: 0 }}>Tel: {stampData.stamp_phone}</p>}
+            <div style={{ transform: 'rotate(-5deg)', display: 'inline-block' }}>
+              <div style={{
+                border: `${0.6 * s}mm solid #991b1b`,
+                padding: `${2.5 * s}mm ${3.5 * s}mm`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: `${2.5 * s}mm`,
+                background: 'rgba(255,255,255,0.5)',
+              }}>
+                <svg width={12 * s} height={11 * s} viewBox="0 0 52 48" fill="none" style={{ flexShrink: 0 }}>
+                  <polygon points="12,18 28,6 44,18" fill="#991b1b"/>
+                  <rect x="14" y="18" width="28" height="20" fill="#991b1b"/>
+                  <rect x="18" y="22" width="6" height="6" fill="white"/>
+                  <rect x="28" y="22" width="6" height="6" fill="white"/>
+                  <polygon points="2,28 16,18 30,28" fill="#7f1d1d"/>
+                  <rect x="4" y="28" width="24" height="16" fill="#7f1d1d"/>
+                  <rect x="8" y="31" width="5" height="5" fill="white"/>
+                  <rect x="16" y="31" width="5" height="5" fill="white"/>
+                </svg>
+                <div style={{ lineHeight: 1.3, textAlign: 'left' }}>
+                  <p style={{ color: '#991b1b', fontWeight: 'bold', fontSize: `${2.8 * s}mm`, margin: 0 }}>Stichting : {stampData.stamp_company_name}</p>
+                  {stampData.stamp_address && <p style={{ color: '#1a1a1a', fontSize: `${2.3 * s}mm`, margin: 0, fontWeight: 500 }}>{stampData.stamp_address}</p>}
+                  {stampData.stamp_phone && <p style={{ color: '#1a1a1a', fontSize: `${2.3 * s}mm`, margin: 0, fontWeight: 500 }}>Tel : {stampData.stamp_phone}</p>}
+                  {stampData.stamp_whatsapp && <p style={{ color: '#1a1a1a', fontSize: `${2.3 * s}mm`, margin: 0, fontWeight: 500 }}>Whatsapp : {stampData.stamp_whatsapp}</p>}
+                </div>
+              </div>
             </div>
           ) : (
             <div style={{ border: `${0.5 * s}mm dashed #94a3b8`, borderRadius: `${2 * s}mm`, padding: `${3 * s}mm`, background: '#f8fafc' }}>
-              <p style={{ fontSize: `${3.5 * s}mm`, fontWeight: 'bold', color: '#16a34a', margin: 0 }}>BETAALD ✓</p>
+              <p style={{ fontSize: `${3.5 * s}mm`, fontWeight: 'bold', color: '#16a34a', margin: 0 }}>BETAALD</p>
             </div>
           )}
         </div>

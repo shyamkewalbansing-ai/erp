@@ -949,6 +949,23 @@ function SettingsTab({ company, token, onRefresh }) {
   const [saving, setSaving] = useState(false);
   const [applyingFines, setApplyingFines] = useState(false);
 
+  const handleSaveStamp = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/auth/settings`, {
+        stamp_company_name: stampName,
+        stamp_address: stampAddress,
+        stamp_phone: stampPhone,
+        stamp_whatsapp: stampWhatsapp,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      onRefresh();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Opslaan mislukt');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -1147,12 +1164,12 @@ function SettingsTab({ company, token, onRefresh }) {
       {/* Bedrijfsstempel */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-            <FileText className="w-5 h-5 text-orange-600" />
+          <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+            <FileText className="w-5 h-5 text-red-700" />
           </div>
           <div>
             <h3 className="font-bold text-slate-900">Bedrijfsstempel</h3>
-            <p className="text-sm text-slate-500">Configureer de stempel die op kwitanties wordt getoond</p>
+            <p className="text-sm text-slate-500">Configureer de stempel die op kwitanties en huurovereenkomsten wordt getoond</p>
           </div>
         </div>
 
@@ -1165,7 +1182,7 @@ function SettingsTab({ company, token, onRefresh }) {
                 value={stampName}
                 onChange={(e) => setStampName(e.target.value)}
                 placeholder="bijv. Stichting Perraysarbha"
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500"
               />
             </div>
             <div>
@@ -1175,7 +1192,7 @@ function SettingsTab({ company, token, onRefresh }) {
                 value={stampAddress}
                 onChange={(e) => setStampAddress(e.target.value)}
                 placeholder="bijv. Kewalbasingweg nr.7"
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500"
               />
             </div>
             <div>
@@ -1185,7 +1202,7 @@ function SettingsTab({ company, token, onRefresh }) {
                 value={stampPhone}
                 onChange={(e) => setStampPhone(e.target.value)}
                 placeholder="bijv. 8624141"
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500"
               />
             </div>
             <div>
@@ -1194,38 +1211,68 @@ function SettingsTab({ company, token, onRefresh }) {
                 type="text"
                 value={stampWhatsapp}
                 onChange={(e) => setStampWhatsapp(e.target.value)}
-                placeholder="bijv. +597 8624141"
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
+                placeholder="bijv. 0620540162"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500"
               />
             </div>
           </div>
 
-          {/* Preview */}
+          {/* Stamp Preview - matches physical stamp */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Voorbeeld</label>
-            <div className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-              {stampName || stampAddress || stampPhone ? (
-                <div className="border border-slate-300 rounded-lg p-4 text-center">
-                  <Home className="w-8 h-8 mx-auto mb-2 text-slate-700" />
-                  {stampName && <p className="font-bold text-slate-900">{stampName}</p>}
-                  {stampAddress && <p className="text-sm text-slate-500">{stampAddress}</p>}
-                  {stampPhone && <p className="text-sm text-slate-500">Tel: {stampPhone}</p>}
-                  {stampWhatsapp && <p className="text-sm text-slate-500">WhatsApp: {stampWhatsapp}</p>}
+            <div className="bg-slate-50 rounded-xl p-8 border border-slate-200 flex items-center justify-center min-h-[220px]">
+              <div style={{ transform: 'rotate(-5deg)' }}>
+                <div style={{
+                  border: '2.5px solid #991b1b',
+                  padding: '12px 18px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  background: 'rgba(255,255,255,0.6)',
+                }}>
+                  {/* House icon - SVG matching the physical stamp */}
+                  <svg width="52" height="48" viewBox="0 0 52 48" fill="none" style={{ flexShrink: 0 }}>
+                    {/* Back house */}
+                    <polygon points="12,18 28,6 44,18" fill="#991b1b"/>
+                    <rect x="14" y="18" width="28" height="20" fill="#991b1b"/>
+                    <rect x="18" y="22" width="6" height="6" fill="white" rx="0.5"/>
+                    <rect x="28" y="22" width="6" height="6" fill="white" rx="0.5"/>
+                    {/* Front house */}
+                    <polygon points="2,28 16,18 30,28" fill="#7f1d1d"/>
+                    <rect x="4" y="28" width="24" height="16" fill="#7f1d1d"/>
+                    <rect x="8" y="31" width="5" height="5" fill="white" rx="0.5"/>
+                    <rect x="16" y="31" width="5" height="5" fill="white" rx="0.5"/>
+                    <rect x="8" y="38" width="5" height="6" fill="white" rx="0.5"/>
+                    <rect x="16" y="38" width="5" height="6" fill="white" rx="0.5"/>
+                  </svg>
+                  {/* Text */}
+                  <div style={{ lineHeight: 1.4 }}>
+                    <p style={{ color: '#991b1b', fontWeight: 700, fontSize: '13px', margin: 0 }}>
+                      Stichting : {stampName || 'Bedrijfsnaam'}
+                    </p>
+                    <p style={{ color: '#1a1a1a', fontSize: '12px', margin: 0, fontWeight: 500 }}>
+                      {stampAddress || 'Adres'}
+                    </p>
+                    <p style={{ color: '#1a1a1a', fontSize: '12px', margin: 0, fontWeight: 500 }}>
+                      Tel : {stampPhone || '0000000'}
+                    </p>
+                    <p style={{ color: '#1a1a1a', fontSize: '12px', margin: 0, fontWeight: 500 }}>
+                      Whatsapp : {stampWhatsapp || '0000000'}
+                    </p>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-center text-slate-400">Vul de velden in om een voorbeeld te zien</p>
-              )}
+              </div>
             </div>
           </div>
         </div>
 
         <button
-          onClick={handleSave}
+          onClick={handleSaveStamp}
           disabled={saving}
-          className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:opacity-50 mt-6"
+          className="flex items-center gap-2 px-6 py-3 bg-red-700 text-white rounded-xl hover:bg-red-800 disabled:opacity-50 mt-6"
         >
           <Save className="w-4 h-4" />
-          {saving ? 'Opslaan...' : 'Opslaan'}
+          {saving ? 'Opslaan...' : 'Stempel opslaan'}
         </button>
       </div>
     </div>
