@@ -2679,49 +2679,55 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-bold mb-4">{tenant ? 'Bewerk' : 'Nieuwe'} Huurder</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Naam *</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
-              className="w-full px-4 py-3 border rounded-xl" />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Naam *</label>
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
+                className="w-full px-4 py-3 border rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Appartement *</label>
+              <select value={apartmentId} onChange={(e) => setApartmentId(e.target.value)} required
+                className="w-full px-4 py-3 border rounded-xl">
+                <option value="">Selecteer...</option>
+                {availableApartments.map(a => <option key={a.apartment_id} value={a.apartment_id}>{a.number}</option>)}
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Appartement *</label>
-            <select value={apartmentId} onChange={(e) => setApartmentId(e.target.value)} required
-              className="w-full px-4 py-3 border rounded-xl">
-              <option value="">Selecteer...</option>
-              {availableApartments.map(a => <option key={a.apartment_id} value={a.apartment_id}>{a.number}</option>)}
-            </select>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">E-mail</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-3 border rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Telefoon</label>
+              <input type="tel" value={telefoon} onChange={(e) => setTelefoon(e.target.value)}
+                className="w-full px-4 py-3 border rounded-xl" />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">E-mail</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Telefoon</label>
-            <input type="tel" value={telefoon} onChange={(e) => setTelefoon(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Huurderscode</label>
-            <input type="text" value={tenantCode} onChange={(e) => setTenantCode(e.target.value.toUpperCase())}
-              placeholder="bijv. A101 (leeg = automatisch)"
-              data-testid="tenant-code-input"
-              className="w-full px-4 py-3 border rounded-xl font-mono uppercase" />
-            <p className="text-xs text-slate-400 mt-1">Laat leeg voor automatische code</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Maandhuur (SRD)</label>
-            <input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Borgsom (SRD)</label>
-            <input type="number" value={depositRequired} onChange={(e) => setDepositRequired(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl" />
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Huurderscode</label>
+              <input type="text" value={tenantCode} onChange={(e) => setTenantCode(e.target.value.toUpperCase())}
+                placeholder="bijv. A101"
+                data-testid="tenant-code-input"
+                className="w-full px-4 py-3 border rounded-xl font-mono uppercase" />
+              <p className="text-xs text-slate-400 mt-1">Leeg = automatisch</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Maandhuur (SRD)</label>
+              <input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)}
+                className="w-full px-4 py-3 border rounded-xl" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Borgsom (SRD)</label>
+              <input type="number" value={depositRequired} onChange={(e) => setDepositRequired(e.target.value)}
+                className="w-full px-4 py-3 border rounded-xl" />
+            </div>
           </div>
           {tenant && (
             <div className="border-t border-slate-200 pt-4">
