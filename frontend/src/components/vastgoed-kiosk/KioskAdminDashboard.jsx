@@ -973,7 +973,7 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
 
       {/* Breaker panel body */}
       <div className="bg-slate-100 rounded-b-xl p-6 border border-slate-300 border-t-0">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
           {activeTenants.map(tenant => {
             const apt = apartments.find(a => a.apartment_id === tenant.apartment_id);
             const powerOn = tenant.power_status !== 'off';
@@ -984,51 +984,82 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
               <div
                 key={tenant.tenant_id}
                 data-testid={`breaker-${tenant.tenant_id}`}
-                className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm"
+                className="flex flex-col items-center"
               >
-                {/* Label strip */}
-                <div className="bg-slate-50 px-3 py-2 flex items-center justify-between border-b border-slate-200">
-                  <span className="text-xs font-bold text-slate-600 tracking-wider">APPT. {apt?.number}</span>
-                  <div className={`w-2.5 h-2.5 rounded-full ${powerOn ? 'bg-green-500 shadow-sm shadow-green-500/50' : 'bg-red-500 shadow-sm shadow-red-500/50'}`} />
-                </div>
-
-                {/* Breaker body */}
-                <div className="p-4 flex flex-col items-center">
-                  {/* Toggle switch */}
-                  <button
-                    onClick={() => togglePower(tenant.tenant_id, powerOn ? 'on' : 'off')}
-                    disabled={isUpdating}
-                    data-testid={`breaker-toggle-${tenant.tenant_id}`}
-                    className="relative w-14 h-24 rounded-md bg-slate-200 border-2 border-slate-300 mb-3 cursor-pointer hover:border-orange-300 transition disabled:opacity-50 disabled:cursor-wait overflow-hidden"
-                  >
-                    {/* Switch track groove */}
-                    <div className="absolute inset-x-2 inset-y-1 rounded bg-slate-300" />
-                    {/* Switch handle */}
-                    <div className={`absolute left-1.5 right-1.5 h-10 rounded transition-all duration-300 ${
-                      powerOn
-                        ? 'top-1.5 bg-gradient-to-b from-orange-400 to-orange-600 shadow-md shadow-orange-500/30'
-                        : 'bottom-1.5 bg-gradient-to-b from-slate-400 to-slate-500 shadow-md shadow-black/20'
-                    }`}>
-                      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
-                        <div className="w-6 h-0.5 rounded bg-white/40" />
+                {/* Breaker unit */}
+                <div className="w-28 rounded-md overflow-hidden" style={{background:'linear-gradient(180deg,#e8e8e8 0%,#d4d4d4 100%)', boxShadow:'0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.6)'}}>
+                  {/* Top screw */}
+                  <div className="flex justify-center pt-2">
+                    <div className="w-3.5 h-3.5 rounded-full" style={{background:'linear-gradient(135deg,#bbb 0%,#888 100%)', boxShadow:'inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.4)'}}>
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-2 h-[1px] bg-slate-500/60 rotate-45" />
                       </div>
                     </div>
-                    {/* ON/OFF labels */}
-                    <span className={`absolute top-1 left-0 right-0 text-center text-[9px] font-black tracking-widest ${powerOn ? 'text-transparent' : 'text-green-500/60'}`}>ON</span>
-                    <span className={`absolute bottom-1 left-0 right-0 text-center text-[9px] font-black tracking-widest ${powerOn ? 'text-red-400/60' : 'text-transparent'}`}>OFF</span>
-                  </button>
+                  </div>
 
-                  {/* Status */}
-                  <span className={`text-xs font-bold tracking-wider ${powerOn ? 'text-green-600' : 'text-red-500'}`}>
+                  {/* Switch housing */}
+                  <div className="px-3 py-2">
+                    <div className="relative w-full h-28 rounded" style={{background:'linear-gradient(180deg,#c0c0c0 0%,#a0a0a0 100%)', boxShadow:'inset 0 2px 4px rgba(0,0,0,0.2), inset 0 -1px 0 rgba(255,255,255,0.3)'}}>
+                      {/* ON label */}
+                      <div className="absolute top-1.5 left-0 right-0 text-center">
+                        <span className="text-[8px] font-black text-slate-500/70 tracking-widest">ON</span>
+                        <div className="w-3.5 h-[1.5px] bg-slate-500/40 mx-auto mt-0.5" />
+                      </div>
+                      {/* OFF label */}
+                      <div className="absolute bottom-1.5 left-0 right-0 text-center">
+                        <div className="w-3.5 h-[1.5px] bg-slate-500/40 mx-auto mb-0.5" />
+                        <span className="text-[8px] font-black text-slate-500/70 tracking-widest">OFF</span>
+                      </div>
+
+                      {/* Toggle lever */}
+                      <button
+                        onClick={() => togglePower(tenant.tenant_id, powerOn ? 'on' : 'off')}
+                        disabled={isUpdating}
+                        data-testid={`breaker-toggle-${tenant.tenant_id}`}
+                        className="absolute left-2 right-2 h-12 cursor-pointer transition-all duration-300 disabled:cursor-wait"
+                        style={{
+                          top: powerOn ? '10px' : 'auto',
+                          bottom: powerOn ? 'auto' : '10px',
+                          background: powerOn
+                            ? 'linear-gradient(180deg, #fb923c 0%, #ea580c 40%, #c2410c 100%)'
+                            : 'linear-gradient(180deg, #94a3b8 0%, #64748b 40%, #475569 100%)',
+                          borderRadius: '4px',
+                          boxShadow: powerOn
+                            ? '0 4px 8px rgba(234,88,12,0.4), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -1px 2px rgba(0,0,0,0.2)'
+                            : '0 4px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 2px rgba(0,0,0,0.2)',
+                        }}
+                      >
+                        {/* Lever grip lines */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-[3px]">
+                          <div className="w-8 h-[1.5px] rounded-full bg-white/25" />
+                          <div className="w-8 h-[1.5px] rounded-full bg-white/25" />
+                          <div className="w-8 h-[1.5px] rounded-full bg-white/25" />
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Bottom screw + LED */}
+                  <div className="flex items-center justify-between px-4 pb-2">
+                    <div className="w-3.5 h-3.5 rounded-full" style={{background:'linear-gradient(135deg,#bbb 0%,#888 100%)', boxShadow:'inset 0 1px 2px rgba(0,0,0,0.3), 0 1px 0 rgba(255,255,255,0.4)'}}>
+                      <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-2 h-[1px] bg-slate-500/60 -rotate-45" />
+                      </div>
+                    </div>
+                    {/* LED indicator */}
+                    <div className={`w-3 h-3 rounded-full border ${powerOn ? 'bg-green-400 border-green-500' : 'bg-red-500 border-red-600'}`} style={{boxShadow: powerOn ? '0 0 6px rgba(74,222,128,0.6)' : '0 0 6px rgba(239,68,68,0.5)'}} />
+                  </div>
+                </div>
+
+                {/* Label below */}
+                <div className="mt-3 text-center">
+                  <p className="text-sm font-bold text-slate-700">Appt. {apt?.number}</p>
+                  <p className="text-xs text-slate-400">{tenant.name}</p>
+                  <span className={`text-[10px] font-bold tracking-wider ${powerOn ? 'text-green-600' : 'text-red-500'}`}>
                     {isUpdating ? 'BEZIG...' : powerOn ? 'AAN' : 'UIT'}
                   </span>
-
-                  {/* Tenant name */}
-                  <p className="text-xs text-slate-400 mt-1.5 text-center truncate w-full">{tenant.name}</p>
-
-                  {/* Debt warning */}
                   {hasDebt && (
-                    <div className="flex items-center gap-1 mt-2">
+                    <div className="flex items-center justify-center gap-1 mt-0.5">
                       <AlertTriangle className="w-3 h-3 text-orange-500" />
                       <span className="text-[10px] text-orange-500 font-medium">SCHULD</span>
                     </div>
