@@ -58,7 +58,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
             </div>
             <div className="text-right flex-shrink-0">
               <p className="text-[10px] text-slate-400 uppercase tracking-wider">Maandhuur</p>
-              <p className="text-lg sm:text-xl font-extrabold text-slate-900">{formatSRD(tenant.monthly_rent)}</p>
+              <p className="text-lg sm:text-xl font-extrabold text-slate-900 whitespace-nowrap">{formatSRD(tenant.monthly_rent)}</p>
             </div>
           </div>
 
@@ -94,7 +94,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
                       <p className="text-sm text-slate-400">{item.desc}</p>
                     </div>
                   </div>
-                  <p className={`text-lg sm:text-xl font-extrabold flex-shrink-0 ml-3 ${hasAmount ? 'text-red-500' : 'text-green-500'}`}>
+                  <p className={`text-base sm:text-lg font-extrabold flex-shrink-0 ml-3 whitespace-nowrap ${hasAmount ? 'text-red-500' : 'text-green-500'}`}>
                     {formatSRD(item.amount)}
                   </p>
                 </div>
@@ -105,7 +105,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
           {/* Total */}
           <div className="rounded-2xl bg-slate-900 p-5 sm:p-6 flex items-center justify-between">
             <p className="text-slate-400 text-base">Totaal openstaand</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-white" data-testid="total-amount">{formatSRD(total)}</p>
+            <p className="text-2xl sm:text-3xl font-extrabold text-white whitespace-nowrap" data-testid="total-amount">{formatSRD(total)}</p>
           </div>
         </div>
 
@@ -117,7 +117,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
                 <CreditCard className="w-10 h-10 text-orange-500" />
               </div>
               <p className="text-base text-slate-400 mb-2">Te betalen</p>
-              <p className="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-8 tracking-tight">{formatSRD(total)}</p>
+              <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-8 tracking-tight whitespace-nowrap">{formatSRD(total)}</p>
               <button onClick={onPay} data-testid="pay-btn"
                 className="w-full py-5 sm:py-6 px-8 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/30 transition active:scale-[0.98]">
                 <CreditCard className="w-6 h-6" /> Betalen

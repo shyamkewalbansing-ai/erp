@@ -52,7 +52,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       <div className="relative z-10 bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6 border border-white/50">
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 sm:p-10 text-center mb-6 shadow-xl shadow-orange-500/20">
           <p className="text-orange-100 text-base mb-2">Te betalen bedrag</p>
-          <p className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-3 tracking-tight" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
+          <p className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-3 tracking-tight whitespace-nowrap" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
           <div className="flex items-center justify-center gap-2 text-orange-100 text-sm">
             <Banknote className="w-5 h-5" /><span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
           </div>

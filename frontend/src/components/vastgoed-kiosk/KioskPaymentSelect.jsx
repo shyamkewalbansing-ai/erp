@@ -80,7 +80,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                 </div>
                 <span className="text-base sm:text-lg font-bold text-slate-900">Alles betalen</span>
               </div>
-              <span className="text-lg sm:text-xl font-extrabold text-orange-600">{formatSRD(totalDebt)}</span>
+              <span className="text-lg sm:text-xl font-extrabold text-orange-600 whitespace-nowrap">{formatSRD(totalDebt)}</span>
             </button>
           )}
 
@@ -109,7 +109,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                       <p className="text-sm text-slate-400 hidden sm:block">{type.desc}</p>
                     </div>
                   </div>
-                  <p className={`text-lg sm:text-xl font-extrabold flex-shrink-0 ml-3 ${disabled ? 'text-slate-300' : isSelected ? 'text-orange-600' : 'text-slate-900'}`}>
+                  <p className={`text-lg sm:text-xl font-extrabold flex-shrink-0 ml-3 whitespace-nowrap ${disabled ? 'text-slate-300' : isSelected ? 'text-orange-600' : 'text-slate-900'}`}>
                     {formatSRD(amount)}
                   </p>
                 </button>
@@ -142,7 +142,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                 <p className="text-slate-400 text-sm">{selectedTypes.size} item{selectedTypes.size > 1 ? 's' : ''} geselecteerd</p>
                 <p className="text-white text-sm">{buildDescription()}</p>
               </div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-white">{formatSRD(selectedTotal)}</p>
+              <p className="text-2xl sm:text-3xl font-extrabold text-white whitespace-nowrap">{formatSRD(selectedTotal)}</p>
             </div>
           )}
 
