@@ -492,7 +492,7 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                 <tr>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Appartement</th>
-                  <th className="text-left p-4 text-sm font-medium text-slate-500">Contact</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Huurmaand</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Huur</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Service</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Boetes</th>
@@ -509,6 +509,15 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                   const total = rent + service + fines;
                   const hasArrears = rent > (tenant.monthly_rent || 0);
 
+                  // Format billed month
+                  const billedMonth = tenant.rent_billed_through || '';
+                  let billedLabel = '';
+                  if (billedMonth) {
+                    const [y, m] = billedMonth.split('-');
+                    const d = new Date(parseInt(y), parseInt(m) - 1);
+                    billedLabel = d.toLocaleDateString('nl-NL', { month: 'short', year: 'numeric' });
+                  }
+
                   return (
                     <tr key={tenant.tenant_id} className="border-t border-slate-100 hover:bg-slate-50" data-testid={`tenant-row-${tenant.tenant_id}`}>
                       <td className="p-4">
@@ -524,10 +533,9 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                       </td>
                       <td className="p-4 text-slate-600">{tenant.apartment_number}</td>
                       <td className="p-4">
-                        <div className="text-sm">
-                          {tenant.telefoon && <p className="text-slate-500">{tenant.telefoon}</p>}
-                          {tenant.email && <p className="text-slate-400 truncate max-w-[180px]">{tenant.email}</p>}
-                        </div>
+                        <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-semibold">
+                          t/m {billedLabel}
+                        </span>
                       </td>
                       <td className={`p-4 text-right font-bold ${rent > 0 ? 'text-red-600' : 'text-green-600'}`}>
                         {formatSRD(rent)}

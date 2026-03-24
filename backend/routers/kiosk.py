@@ -7,6 +7,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from datetime import datetime, timezone, timedelta
+from dateutil.relativedelta import relativedelta
 import jwt
 import bcrypt
 import os
@@ -125,6 +126,7 @@ class TenantUpdate(BaseModel):
     fines: Optional[float] = None
     deposit_required: Optional[float] = None
     deposit_paid: Optional[float] = None
+    rent_billed_through: Optional[str] = None  # YYYY-MM
 
 class PaymentCreate(BaseModel):
     tenant_id: str
@@ -595,25 +597,69 @@ async def delete_apartment(apartment_id: str, company: dict = Depends(get_curren
 # Tenants CRUD
 @router.get("/admin/tenants")
 async def list_tenants(company: dict = Depends(get_current_company)):
-    """List all tenants"""
+    """List all tenants - auto-bills new months if needed"""
     tenants = await db.kiosk_tenants.find({"company_id": company["company_id"]}).to_list(1000)
-    return [{
-        "tenant_id": t["tenant_id"],
-        "name": t["name"],
-        "apartment_id": t["apartment_id"],
-        "apartment_number": t.get("apartment_number", ""),
-        "tenant_code": t.get("tenant_code", ""),
-        "email": t.get("email"),
-        "telefoon": t.get("telefoon"),
-        "monthly_rent": t.get("monthly_rent", 0),
-        "outstanding_rent": t.get("outstanding_rent", 0),
-        "service_costs": t.get("service_costs", 0),
-        "fines": t.get("fines", 0),
-        "deposit_required": t.get("deposit_required", 0),
-        "deposit_paid": t.get("deposit_paid", 0),
-        "status": t.get("status", "active"),
-        "created_at": t.get("created_at")
-    } for t in tenants]
+    
+    now = datetime.now(timezone.utc)
+    current_month = now.strftime("%Y-%m")  # e.g. "2026-04"
+    
+    result = []
+    for t in tenants:
+        # Auto-bill: check if we need to add rent for new months
+        billed_through = t.get("rent_billed_through", "")
+        monthly_rent = t.get("monthly_rent", 0)
+        outstanding = t.get("outstanding_rent", 0)
+        
+        if t.get("status") == "active" and monthly_rent > 0 and billed_through and billed_through < current_month:
+            # Calculate months to bill
+            billed_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+            current_date = datetime.strptime(current_month + "-01", "%Y-%m-%d")
+            months_to_bill = 0
+            check = billed_date + relativedelta(months=1)
+            while check <= current_date:
+                months_to_bill += 1
+                check += relativedelta(months=1)
+            
+            if months_to_bill > 0:
+                new_outstanding = outstanding + (monthly_rent * months_to_bill)
+                await db.kiosk_tenants.update_one(
+                    {"tenant_id": t["tenant_id"]},
+                    {"$set": {
+                        "outstanding_rent": new_outstanding,
+                        "rent_billed_through": current_month,
+                        "updated_at": now
+                    }}
+                )
+                outstanding = new_outstanding
+                billed_through = current_month
+        elif t.get("status") == "active" and not billed_through:
+            # Initialize rent_billed_through for existing tenants
+            billed_through = current_month
+            await db.kiosk_tenants.update_one(
+                {"tenant_id": t["tenant_id"]},
+                {"$set": {"rent_billed_through": current_month}}
+            )
+        
+        result.append({
+            "tenant_id": t["tenant_id"],
+            "name": t["name"],
+            "apartment_id": t["apartment_id"],
+            "apartment_number": t.get("apartment_number", ""),
+            "tenant_code": t.get("tenant_code", ""),
+            "email": t.get("email"),
+            "telefoon": t.get("telefoon"),
+            "monthly_rent": monthly_rent,
+            "outstanding_rent": outstanding,
+            "service_costs": t.get("service_costs", 0),
+            "fines": t.get("fines", 0),
+            "deposit_required": t.get("deposit_required", 0),
+            "deposit_paid": t.get("deposit_paid", 0),
+            "rent_billed_through": billed_through,
+            "status": t.get("status", "active"),
+            "created_at": t.get("created_at")
+        })
+    
+    return result
 
 @router.post("/admin/tenants")
 async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_company)):
@@ -650,6 +696,7 @@ async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_
         "fines": 0,
         "deposit_required": data.deposit_required,
         "deposit_paid": 0,
+        "rent_billed_through": now.strftime("%Y-%m"),  # Current month
         "status": "active",
         "created_at": now,
         "updated_at": now
