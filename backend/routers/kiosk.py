@@ -340,7 +340,15 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "stamp_phone": company.get("stamp_phone", ""),
         "stamp_whatsapp": company.get("stamp_whatsapp", ""),
         "kiosk_pin": company.get("kiosk_pin", ""),
-        "status": company.get("status")
+        "status": company.get("status"),
+        "bank_name": company.get("bank_name", ""),
+        "bank_account_name": company.get("bank_account_name", ""),
+        "bank_account_number": company.get("bank_account_number", ""),
+        "bank_description": company.get("bank_description", ""),
+        "wa_api_url": company.get("wa_api_url", "https://graph.facebook.com/v21.0"),
+        "wa_api_token": company.get("wa_api_token", ""),
+        "wa_phone_id": company.get("wa_phone_id", ""),
+        "wa_enabled": company.get("wa_enabled", False)
     }
 
 @router.put("/auth/settings")
