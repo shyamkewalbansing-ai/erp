@@ -85,16 +85,16 @@ export default function KioskLayout() {
 
   if (companyNotFound) {
     return (
-      <div className="min-h-full bg-white flex items-center justify-center">
-        <div className="text-center px-6">
-          <div className="w-20 h-20 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-6">
-            <Building2 className="w-10 h-10 text-slate-400" />
+      <div className="min-h-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm mx-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto mb-5">
+            <Building2 className="w-8 h-8 text-slate-400" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Bedrijf niet gevonden</h1>
-          <p className="text-base text-slate-400 mb-8">Deze kiosk is niet geconfigureerd.</p>
+          <h1 className="text-xl font-bold text-slate-900 mb-2">Bedrijf niet gevonden</h1>
+          <p className="text-sm text-slate-400 mb-6">Deze kiosk is niet geconfigureerd.</p>
           <button 
             onClick={() => navigate('/vastgoed')}
-            className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition shadow-lg shadow-orange-500/25"
+            className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition shadow-lg shadow-orange-500/25"
           >
             Terug naar Home
           </button>
@@ -107,27 +107,25 @@ export default function KioskLayout() {
     switch (step) {
       case 'loading':
         return (
-          <div className="min-h-full bg-white flex items-center justify-center">
+          <div className="min-h-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
             <div className="text-center">
-              <div className="w-12 h-12 border-3 border-slate-200 border-t-orange-500 rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-base text-slate-400">Laden...</p>
+              <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-base text-white/80">Laden...</p>
             </div>
           </div>
         );
       case 'no-pin':
         return (
-          <div className="min-h-full bg-white flex items-center justify-center">
-            <div className="text-center max-w-md px-6">
-              <div className="w-20 h-20 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-6">
-                <Lock className="w-10 h-10 text-red-400" />
+          <div className="min-h-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm mx-6 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
+                <Lock className="w-8 h-8 text-red-400" />
               </div>
-              <h1 className="text-2xl font-bold text-slate-900 mb-2">Kiosk Niet Beschikbaar</h1>
-              <p className="text-base text-slate-400 mb-8">
-                De beheerder heeft nog geen PIN code ingesteld.
-              </p>
+              <h1 className="text-xl font-bold text-slate-900 mb-2">Kiosk Niet Beschikbaar</h1>
+              <p className="text-sm text-slate-400 mb-6">De beheerder heeft nog geen PIN code ingesteld.</p>
               <button 
                 onClick={() => navigate('/vastgoed')}
-                className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition shadow-lg shadow-orange-500/25"
+                className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition shadow-lg shadow-orange-500/25"
               >
                 Terug naar Home
               </button>
