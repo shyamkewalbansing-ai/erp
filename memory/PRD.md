@@ -159,11 +159,27 @@ Volledige migratie van een externe KIOSK applicatie voor huurbetalingen naar de 
 - `frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx` - Uitloggen knop toegevoegd
 - `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - Uitloggen knop in header
 
+### Updates 24 maart 2026 - Sessie 5
+
+#### Huurders Kaarten Redesign ✅
+- Tenant Cards in Admin Dashboard volledig herontworpen op basis van 4 screenshots van gebruiker
+- Oranje kleurschema consistent met rest van Dashboard
+- Nieuwe layout: avatar + naam/info + contactgegevens + 5 financiële blokken + actiebalk
+- Elementen: Maand | Huur | Service | Boetes | Totaal met kleurcodering
+- "+ Maandhuur" knop en "Achterstand" indicator per kaart
+- Bewerk- en Verwijder-knoppen per huurder
+- 19/19 frontend tests geslaagd (iteration_74)
+
+#### Gewijzigde Bestanden
+- `frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` - TenantsTab volledig herschreven + Phone/Mail iconen
+
 ### Toekomstige Taken (Backlog)
+- P2: Appartementen & Kwitanties tabs moderniseren (zelfde oranje stijl)
 - P1: Tuya API integratie voor echte stroombrekers
 - P2: SMS/WhatsApp herinneringen
 - P2: CSV/PDF export van betalingsrapporten
 - P2: Multi-building support per bedrijf
+- P2: Wachtwoord vergeten functionaliteit
 - P2: E-mail notificaties voor verlopen abonnementen
 
 ---
