@@ -8,12 +8,7 @@ function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-const TYPE_LABELS = {
-  rent: 'Huur',
-  partial_rent: 'Gedeeltelijke betaling',
-  service_costs: 'Servicekosten',
-  fines: 'Boetes',
-};
+const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijke betaling', service_costs: 'Servicekosten', fines: 'Boetes' };
 
 export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuccess, companyId }) {
   const [processing, setProcessing] = useState(false);
@@ -38,75 +33,60 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
 
   return (
     <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col items-center justify-center relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[50%] h-full bg-orange-600/30 rounded-l-[80px] pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[55%] h-full bg-orange-600/30 rounded-l-[100px] pointer-events-none" />
+      <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-white/5 rounded-full pointer-events-none" />
 
-      {/* Back */}
-      <div className="absolute top-5 left-6 z-20">
-        <button onClick={onBack} disabled={processing} className="flex items-center gap-2 text-white/80 hover:text-white transition text-sm font-medium disabled:opacity-50">
-          <ArrowLeft className="w-5 h-5" /><span>Terug</span>
+      <div className="absolute top-5 left-8 z-20">
+        <button onClick={onBack} disabled={processing} className="flex items-center gap-2 text-white/80 hover:text-white transition font-medium disabled:opacity-50">
+          <ArrowLeft className="w-6 h-6" /><span className="text-base">Terug</span>
         </button>
       </div>
 
-      {/* Title */}
-      <div className="relative z-10 text-center mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white">Bevestig betaling</h1>
+      <div className="relative z-10 text-center mb-8">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">Bevestig betaling</h1>
       </div>
 
-      {/* Main card */}
-      <div className="relative z-10 bg-white rounded-3xl shadow-2xl p-6 sm:p-8 w-full max-w-md mx-6">
+      <div className="relative z-10 bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6 border border-white/50">
         {/* Amount */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-6 text-center mb-5 shadow-lg shadow-orange-500/20">
-          <p className="text-orange-100 text-sm mb-1">Te betalen bedrag</p>
-          <p className="text-3xl sm:text-4xl font-bold text-white mb-2" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
-          <div className="flex items-center justify-center gap-2 text-orange-100 text-xs">
-            <Banknote className="w-4 h-4" />
+        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 sm:p-10 text-center mb-6 shadow-xl shadow-orange-500/20">
+          <p className="text-orange-100 text-base mb-2">Te betalen bedrag</p>
+          <p className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-3 tracking-tight" data-testid="confirm-amount">
+            {formatSRD(paymentData.amount)}
+          </p>
+          <div className="flex items-center justify-center gap-2 text-orange-100 text-sm">
+            <Banknote className="w-5 h-5" />
             <span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
           </div>
         </div>
 
         {/* Tenant */}
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center flex-shrink-0">
-            <User className="w-5 h-5" />
+        <div className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/50 border border-slate-100 mb-5">
+          <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <User className="w-6 h-6" />
           </div>
           <div>
-            <p className="text-sm font-bold text-slate-900">{tenant.name}</p>
-            <p className="text-xs text-slate-400">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
+            <p className="text-base sm:text-lg font-bold text-slate-900">{tenant.name}</p>
+            <p className="text-sm text-slate-400">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
           </div>
         </div>
 
         {/* Summary */}
-        <div className="rounded-2xl bg-slate-50 p-4 mb-5">
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-slate-400">Type</span>
-              <span className="text-slate-900">{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Bedrag</span>
-              <span className="text-slate-900 font-bold">{formatSRD(paymentData.amount)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-400">Methode</span>
-              <span className="text-slate-900">Contant</span>
-            </div>
+        <div className="rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/50 border border-slate-100 p-5 sm:p-6 mb-6">
+          <h4 className="text-sm font-bold text-slate-900 mb-4 uppercase tracking-widest">Overzicht</h4>
+          <div className="space-y-3 text-base">
+            <div className="flex justify-between"><span className="text-slate-400">Type</span><span className="text-slate-900 font-semibold">{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">Bedrag</span><span className="text-slate-900 font-extrabold text-lg">{formatSRD(paymentData.amount)}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">Methode</span><span className="text-slate-900 font-semibold">Contant</span></div>
           </div>
         </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center text-sm font-medium">{error}</div>
-        )}
+        {error && <div className="mb-5 p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-center font-semibold">{error}</div>}
 
-        {/* Confirm */}
         <button onClick={handlePayment} disabled={processing} data-testid="confirm-payment-btn"
-          className="w-full py-4 px-6 rounded-2xl text-lg font-bold flex items-center justify-center gap-2 transition bg-green-500 hover:bg-green-600 disabled:bg-slate-200 disabled:text-slate-400 text-white shadow-lg shadow-green-500/25 active:scale-[0.98]">
-          {processing ? (
-            <><Loader2 className="w-5 h-5 animate-spin" /><span>Verwerken...</span></>
-          ) : (
-            <><CheckCircle className="w-5 h-5" /><span>Bevestig betaling</span></>
-          )}
+          className="w-full py-5 sm:py-6 px-8 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 transition bg-green-500 hover:bg-green-600 disabled:bg-slate-200 disabled:text-slate-400 text-white shadow-xl shadow-green-500/25 active:scale-[0.98]">
+          {processing ? (<><Loader2 className="w-6 h-6 animate-spin" /><span>Verwerken...</span></>) : (<><CheckCircle className="w-6 h-6" /><span>Bevestig betaling</span></>)}
         </button>
-        <p className="text-center text-slate-400 text-xs mt-3">Contant bedrag is ontvangen</p>
+        <p className="text-center text-slate-400 text-sm mt-4">Contant bedrag is ontvangen</p>
       </div>
     </div>
   );

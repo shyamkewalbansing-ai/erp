@@ -52,79 +52,58 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
 
   return (
     <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Decorative */}
-      <div className="absolute top-0 right-0 w-[50%] h-full bg-orange-600/30 rounded-l-[80px] pointer-events-none" />
-      <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-orange-400/20 rounded-full pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[50%] h-full bg-orange-600/30 rounded-l-[100px] pointer-events-none" />
+      <div className="absolute -bottom-20 -left-20 w-96 h-96 bg-orange-400/20 rounded-full pointer-events-none" />
 
-      {/* Back button */}
       {onBack && (
-        <div className="absolute top-5 left-6 z-20">
-          <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white transition text-sm font-medium">
-            <ArrowLeft className="w-5 h-5" />
-            <span>Terug</span>
+        <div className="absolute top-5 left-8 z-20">
+          <button onClick={onBack} className="flex items-center gap-2 text-white/80 hover:text-white transition font-medium">
+            <ArrowLeft className="w-6 h-6" /><span className="text-base">Terug</span>
           </button>
         </div>
       )}
 
-      {/* Main card */}
-      <div className="relative z-10 bg-white rounded-3xl shadow-2xl p-8 sm:p-10 w-full max-w-sm mx-6">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-orange-500 flex items-center justify-center shadow-md shadow-orange-500/30">
-            <Building2 className="w-6 h-6 text-white" />
+      <div className="relative z-10 bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-10 sm:p-12 lg:p-14 w-full max-w-md mx-6 border border-white/50">
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+            <Building2 className="w-7 h-7 text-white" />
           </div>
           <div>
-            <p className="text-lg font-bold text-slate-900">{companyName || 'Kiosk'}</p>
-            <p className="text-xs text-slate-400">Beveiligde toegang</p>
+            <p className="text-xl font-bold text-slate-900">{companyName || 'Kiosk'}</p>
+            <p className="text-sm text-slate-400">Beveiligde toegang</p>
           </div>
         </div>
 
-        <h2 className="text-2xl font-bold text-slate-900 mb-1">Voer PIN in</h2>
-        <p className="text-sm text-slate-400 mb-6">4-cijferige toegangscode</p>
+        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">Voer PIN in</h2>
+        <p className="text-base text-slate-400 mb-8">4-cijferige toegangscode</p>
 
-        {/* PIN inputs */}
-        <div className="flex justify-center gap-3 mb-4">
+        <div className="flex justify-center gap-4 mb-6">
           {pin.map((digit, index) => (
-            <input
-              key={index}
-              ref={inputRefs[index]}
-              type="password"
-              inputMode="numeric"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handlePinChange(index, e.target.value)}
-              onKeyDown={(e) => handleKeyDown(index, e)}
-              className={`w-14 h-16 text-center text-2xl font-bold rounded-2xl border-2 transition-all outline-none ${
-                error ? 'border-red-400 bg-red-50' 
-                  : digit ? 'border-orange-500 bg-orange-50' 
-                  : 'border-slate-200 bg-slate-50 focus:border-orange-500'
-              }`}
-              disabled={loading}
-            />
+            <input key={index} ref={inputRefs[index]} type="password" inputMode="numeric" maxLength={1}
+              value={digit} onChange={(e) => handlePinChange(index, e.target.value)} onKeyDown={(e) => handleKeyDown(index, e)}
+              className={`w-16 h-20 sm:w-20 sm:h-24 text-center text-3xl font-bold rounded-2xl border-2 transition-all outline-none ${
+                error ? 'border-red-400 bg-red-50' : digit ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-slate-50 focus:border-orange-500'
+              }`} disabled={loading} />
           ))}
         </div>
 
-        {error && <p className="text-red-500 text-center font-medium mb-3 text-sm">{error}</p>}
+        {error && <p className="text-red-500 text-center font-semibold mb-4">{error}</p>}
 
-        {/* Keypad */}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-3">
           {['1','2','3','4','5','6','7','8','9','_e','0','DEL'].map((key) => (
             key === '_e' ? <div key={key} /> : (
-              <button
-                key={key}
-                onClick={() => handleKeypadPress(key)}
-                disabled={loading}
-                className={`h-14 text-xl font-bold rounded-xl transition active:scale-95 disabled:opacity-50 ${
-                  key === 'DEL' ? 'bg-slate-100 text-red-500 hover:bg-red-50 flex items-center justify-center' 
-                  : 'bg-slate-50 text-slate-900 hover:bg-orange-50 hover:text-orange-600'
-                }`}
-              >
-                {key === 'DEL' ? <Delete className="w-5 h-5" /> : key}
+              <button key={key} onClick={() => handleKeypadPress(key)} disabled={loading}
+                className={`h-16 sm:h-18 text-2xl font-bold rounded-2xl transition active:scale-95 disabled:opacity-50 ${
+                  key === 'DEL' ? 'bg-slate-100 text-red-500 hover:bg-red-50 flex items-center justify-center'
+                  : 'bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900 hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 border border-slate-100'
+                }`}>
+                {key === 'DEL' ? <Delete className="w-6 h-6" /> : key}
               </button>
             )
           ))}
         </div>
 
-        {loading && <p className="text-center text-slate-400 mt-4 animate-pulse text-sm">Verifi&euml;ren...</p>}
+        {loading && <p className="text-center text-slate-400 mt-6 animate-pulse">Verifi&euml;ren...</p>}
       </div>
     </div>
   );
