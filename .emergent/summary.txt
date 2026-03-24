@@ -1,41 +1,43 @@
 <analysis>**original_problem_statement**: 
-The user wants to migrate a standalone React/Python KIOSK application (for real estate/apartment rent payments) into their existing full-stack ERP system. Features require a True Kiosk Mode, Admin Dashboard, isolated authentication, automated billing engines, and robust touchscreen support.
-*New Product Requirements from this session:*
-- UI/UX tweaks: Adjust text colors (black default, red/orange for arrears), change Bewoond to Bezet, and add search bars to Tenants/Apartments.
-- Admin Receipts must look exactly like the Kiosk-generated thermal receipts, including a highly specific diagonal red company stamp with a house icon (matching a physical photo provided by the user).
-- Simplify the Kiosk payment flow: Remove manual month selection and allow multi-selection via checkboxes. Backend must auto-calculate which months are being paid based on outstanding debt.
-- Replace Tuya API placeholder with **Shelly API** for the Circuit Breakers (Stroombrekers) and create a realistic, light-themed, self-service panel.
-- Add Bank Transfer instructions to settings and display them on the receipt.
-- Integrate **WhatsApp Business API** to automatically send messages to tenants for: Fines applied, New rent month billed, and Payments received (with receipt).
+The user wants to migrate a standalone React/Python KIOSK application (for real estate/apartment rent payments) into their existing full-stack ERP system.
+
+New Product Requirements from this session:
+- Implement a **Superadmin Dashboard** to manage the entire application as a SaaS product. This includes viewing all companies, managing their subscription status (PRO plan at SRD 3,500/month), and activating/deactivating them.
+- Add an automated function to disable a tenant's **Shelly power breaker** if their rent is overdue by a configurable number of days.
+- Add a **virtual on-screen keyboard** that appears on touch-only devices for all input fields across the Kiosk, Admin, and Superadmin dashboards.
+- Allow companies to manually set a **tenant code (Huurderscode)** when creating a new tenant. Expand the Kiosk's tenant code keypad to support the full A-Z alphabet.
+- Add **delete buttons** for individual Apartments and Receipts (Kwitanties) in the admin dashboard.
+- Make the entire application (Kiosk, Admin, Superadmin) fully **responsive** and usable on mobile phones.
+- Fix an issue where bank/WhatsApp settings weren't showing after being saved.
+- Iteratively redesign the Kiosk's **Uw overzicht (Tenant Overview) page** to match the visual style of other Kiosk pages, specifically the card-based layout of the Wat wilt u betalen? page.
 
 **User's preferred language**: Dutch (You MUST INSTRUCT the next agent to respond in Dutch ONLY)
 
 **what currently exists?** 
-A robust full-stack Vastgoed Kiosk ERP. Features include an automated billing engine, a realistic Shelly-integrated Circuit Breaker UI, identical thermal-style Kiosk/Admin receipts with custom diagonal stamps, a streamlined multi-select Kiosk payment flow, Bank Transfer settings, and a newly implemented backend trigger system for automated WhatsApp Business messaging.
+A full-stack Vastgoed Kiosk ERP. Features include a tenant-facing Kiosk for payments, an Admin Dashboard for company-level management, and a Superadmin Dashboard for SaaS-level management. The system is integrated with Shelly for power control and has backend triggers for WhatsApp messaging. Recent work focused on implementing a superadmin role, an auto-power-cutoff feature, a system-wide virtual keyboard for touch devices, and a major responsive UI overhaul.
 
 **Last working item**: 
-    - Last item agent was working: Implementing the WhatsApp Business API automation. The agent successfully built the backend logic ( helper) and attached the triggers to the payment engine, fine engine, and billing engine. The agent fixed a database field mapping issue ( vs ) and verified messages are being logged to the database. The agent was just about to update the Frontend (to visually show a WhatsApp message history/log) but the context window filled up.
-    - Status: IN PROGRESS
-    - Agent Testing Done: Y (Backend tested via Python bash scripts)
-    - Which testing method agent to use? Frontend testing agent or manual screenshot tool to verify the new WhatsApp UI once built.
+    - Last item agent was working: The user is iterating on the UI design of the Kiosk's Uw overzicht (Tenant Overview) page. They want it to have the same large, touch-friendly, card-based style as the Wat wilt u betalen? (Payment Select) page. The agent has made several attempts and the last action was to present a new design that mimics the card style.
+    - Status: USER VERIFICATION PENDING
+    - Agent Testing Done: Y (via screenshot)
+    - Which testing method agent to use? Screenshot tool to get visual feedback from the user.
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:  
-  Issue 1: Frontend UI for WhatsApp Message History (P0)
-     - Attempted fixes: Backend logic and DB logging are fully functional. The frontend component to display these logs is missing.
-     - Next debug checklist: Modify  (potentially inside  or a new ) to fetch and display the  collection so admins can verify auto-sent messages.
-     - Why fix this issue and what will be achieved with the fix? Completes the WhatsApp integration feature by giving the admin visibility into what messages were sent, failed, or delivered.
-     - Status: IN PROGRESS
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Frontend
+  Issue 1: Finalize the UI design of the Uw overzicht (Tenant Overview) Kiosk page (P0)
+     - Attempted fixes: The agent tried several designs: a narrow centered layout, a full-width two-column layout, and a minimalist table layout. All were rejected by the user. The latest attempt completely rewrote the page to use the large, icon-driven card components from , which the user pointed to as the desired style.
+     - Next debug checklist: 
+        1. Await user feedback on the last screenshot, which shows the new card-based design.
+        2. If the user is still not satisfied, ask for specific elements they feel are missing or incorrect compared to the Wat wilt u betalen? page.
+        3. Modify  based on the feedback.
+     - Why fix this issue and what will be achieved with the fix? To achieve a consistent and user-approved UI/UX across the entire tenant-facing Kiosk payment flow.
+     - Status:  USER VERIFICATION PENDING
+     - Is recurring issue? Y
+     - Should Test frontend/backend/both after fix? Frontend (via screenshot tool).
+     - Blocked on other issue: None.
 
 **In progress Task List**: 
-  Task 1: Build WhatsApp Message Logs UI
-     - Where to resume: . Create a way to view the messages generated by the backend WhatsApp triggers.
-     - What will be achieved with this? Admin transparency for the automated messaging system.
-     - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? Frontend
-     - Blocked on something: None.
+  - None.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
@@ -46,89 +48,98 @@ A robust full-stack Vastgoed Kiosk ERP. Features include an automated billing en
     - P2: CSV/PDF export van betalingsrapporten.
     - P2: Wachtwoord vergeten functionaliteit (Backend/Email).
     - P2: Multi-building support per bedrijf.
+    - **Refactoring**:  (~3000 lines) and  (~2800 lines) are becoming unmaintainable and should be broken down into smaller, feature-specific files.
 
 **Completed work in this session**
-- UI: Fixed amount colors (black instead of green for zero), changed Bewoond to Bezet, added search bars to Tenants/Apartments. (DONE)
-- Feature: Kiosk Payment Flow simplified. Removed manual month selection, added multi-select checkboxes. Backend now auto-calculates  based on arrears. (DONE)
-- Feature: Replaced Admin receipt table with the exact  thermal design used in the Kiosk. (DONE)
-- Design: Created a highly specific CSS/HTML diagonal red company stamp with a house icon for receipts and leases. Removed Betalingsregistratie and Stichting: text. (DONE)
-- Feature: Built **Shelly API** integration for Circuit Breakers (Stroombrekers). Fully working backend HTTP relay control and a realistic, light-themed frontend panel with self-service IP config. (DONE)
-- Feature: Added Bank Transfer details to Settings and appended them to the receipt footer. (DONE)
-- Backend: Integrated WhatsApp Business API settings and automated triggers for payments/fines/billing. (DONE)
+- **Feature: Superadmin Dashboard**: Built a full SaaS management module with a separate login, company/subscription management, and global payment overview. (DONE)
+- **Feature: Shelly Auto-Cutoff**: Implemented backend logic and a frontend setting to automatically disable power for tenants with overdue rent. (DONE)
+- **Feature: Virtual Keyboard**: Added a reusable on-screen keyboard that auto-appears on touch devices for all Kiosk and Dashboard input fields. (DONE)
+- **Feature: Tenant Code Management**: Expanded the Kiosk keypad to A-Z and added a manual  field in the admin tenant creation form. (DONE)
+- **Feature: Delete Buttons**: Added delete functionality for both Apartments and Receipts (Kwitanties) in the Admin Dashboard. (DONE)
+- **Feature: Responsive UI Overhaul**: Performed a major refactor of all Kiosk and Dashboard pages to make them responsive and usable on mobile devices. (DONE)
+- **Feature: WhatsApp History UI**: Built a Berichten tab in the Admin Dashboard for viewing automated WhatsApp message logs. (DONE)
+- **Bug Fix**: Corrected an issue where Bank & WhatsApp settings did not appear after saving. (DONE)
+- **UI Fixes**: Made the Admin tabs scrollable, removed unneeded text, and widened the New Tenant modal. (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-   *None*
+   - None.
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: None
-  - Recurrence count: 0
-  - Status: NOT STARTED
+  - None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Auto-Calculated Payment Months:** Because users no longer select the month they are paying for,  auto-calculates  by cross-referencing the payment amount against  and .
-- **Shelly Integration:** Operates via local HTTP API requests from the backend to the Shelly device IPs.
-- **WhatsApp Triggers:** Managed via  helper in , called asynchronously during payment creation and auto-billing cycles.
+- **SaaS Superadmin:** A hardcoded user role () with access to a separate dashboard () to manage all companies. Logic is added directly to .
+- **Shelly Auto-Cutoff:** A cron-like job implemented within the  endpoint. It checks for overdue tenants and triggers the Shelly HTTP API to turn off power.
+- **Touch-Only Detection:** The virtual keyboard appears when  and an input is focused.
+- **Responsive Design:** Extensive use of Tailwind's responsive prefixes (e.g., , ) to adapt layouts. All tables now use  to be scrollable on mobile.
 
 **key DB schema**
-  - : Field is named , though some logic has been aliased to handle  as well.
-  - : Stores , , , .
-  - : Newly utilized for logging automated WhatsApp messages.
+  - : Added  ('free'/'pro'),  (boolean), and  fields.
+  - : The  field can now be manually set on creation.
 
 **changes in tech stack**
-  - None, but introduced HTTP communication specifically tailored for Shelly Smart Relays.
+  - None.
 
 **All files of reference** 
-  - 
-  - 
-  - 
+-  (File being actively redesigned)
+-  (Reference file for UI style)
+-  (Heavily modified for new features and responsiveness)
+-  (Heavily modified with superadmin, auto-cutoff, and new delete endpoints)
+-  (New file)
+-  (New file)
 
 **Areas that need refactoring**: 
- has grown massively (>2600 lines) and desperately needs to be broken down into separate component files per tab (SettingsTab, PowerTab, TenantsTab, etc.).  is also over 2600 lines. Refactoring is strongly recommended before adding more major features.
+ and  are now extremely large and handle too many responsibilities. They desperately need to be broken down into smaller, feature-specific components and routers to improve maintainability.
 
 **key api endpoints**
-  - 
-  - 
-  - 
-  -  (Now handles bank and WA settings)
+- 
+- 
+- 
+- 
+- 
 
 **Critical Info for New Agent** 
 - **Language:** ALWAYS reply in Dutch.
-- **Phone mapping:** Pay close attention to  vs  when handling tenant data. The DB natively uses .
-- **Do not alter the stamp:** The company stamp CSS/HTML (diagonal, red, house icon) was explicitly tuned to match the user's physical stamp. Leave it as-is.
+- **Current Task:** The immediate priority is the UI design of the Uw overzicht (Tenant Overview) page. The user is very specific that it must match the card style of the Wat wilt u betalen? page. Wait for their feedback on the latest screenshot before making more changes.
+- **Refactoring Debt:** Be aware that the main backend router () and frontend admin component () are monolithic and very large. Adding new features may be difficult.
+- **Screenshot Tool Limitation:** The environment's screenshot tool seems to force a desktop viewport (1920px), making it impossible to visually verify mobile responsiveness. The previous agent implemented responsive classes but could not see the result. Trust the code but be prepared for the user to report responsive issues.
 
 **documents and test reports created in this job** 
+  -  (updated)
   - 
 
 **Last 10 User Messages and any pending HUMAN messages** 
- 1. User: Requested Kiosk payment flow to remove manual month selection and allow multi-selection.
- 2. Agent: Updated payment flow components.
- 3. User: Complained the receipt no longer showed the specific month paid for.
- 4. Agent: Updated backend to auto-calculate  and displayed it on the receipt.
- 5. User: Uploaded a photo of a physical company stamp; requested the digital stamp to match exactly.
- 6. Agent: Rewrote stamp CSS/HTML to match the photo.
- 7. User: Asked to remove real placeholder data, remove Stichting: prefix, and remove Betalingsregistratie section.
- 8. Agent: Completed all requested text removals.
- 9. User: Asked to implement Shelly API for breakers and make the panel light-themed/realistic.
- 10. Agent: Implemented Shelly API and new panel.
- 11. User: Requested Bank Transfer instructions in settings and WhatsApp Business API integration for automatic fine/invoice/payment messaging.
- 12. Agent: Implemented Bank settings and WA backend triggers. *Context exhausted before finishing WA Frontend UI.*
+ 1. User: The Uw overzicht page doesn't match the Kiosk style, make it more business-like.
+ 2. Agent: Redesigned the page to be a clean, minimalist table.
+ 3. User: No, that's not nice. It should look *exactly* like the Wat wilt u betalen? page, real kiosk style.
+ 4. Agent: Re-analyzed the reference page and copied its card-based component style.
+ 5. Assistant: Presented the new card-based design and asked if it was better. (Awaiting response)
+ 6. User: The app is not responsive on phones.
+ 7. Agent: Implemented a major responsive overhaul across all Kiosk and Dashboard pages.
+ 8. User: I don't see delete buttons for Apartments or Receipts.
+ 9. Agent: Added delete buttons and backend logic for both.
+ 10. User: The app needs an on-screen keyboard for touch-only devices.
+ 11. Agent: Implemented a system-wide virtual keyboard.
 
 **Project Health Check:**
-- Broken: None.
-- Mocked: None. Shelly is actively using HTTP APIs.
+- Broken: None
+- Mocked: None
 
 **3rd Party Integrations** 
 - Shelly Smart Relays (Local HTTP API) - Requires User/Local network setup.
-- WhatsApp Business API - Requires User API Key/Token (Settings fields provided).
+- WhatsApp Business API - Requires User API Key/Token.
 
 **Testing status**
-  - Testing agent used after significant changes: NO (Agent relied on bash scripts and screenshots to preserve context).
+  - Testing agent used after significant changes: YES (for WhatsApp feature)
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: None this session.
+  - Test files created: None.
   - Known regressions: None.
 
+**Credentials to test flow:**
+- **Superadmin:**  / 
+
 **What agent forgot to execute**
-The agent successfully built the backend logic for automated WhatsApp messaging and verified it via terminal, but the context window ended right after taking a frontend screenshot to start building the UI to display the WhatsApp Message History. The next agent must prioritize building this UI so the admin can see the automated messages.</analysis>
+The agent successfully addressed all user requests but was unable to visually verify the mobile responsiveness fixes due to an environment limitation with the screenshot tool.</analysis>
