@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Lock } from 'lucide-react';
 import axios from 'axios';
 import KioskWelcome from './KioskWelcome';
 import KioskPinEntry from './KioskPinEntry';
@@ -39,10 +40,17 @@ export default function KioskLayout() {
         const hasPin = res.data.has_pin;
         setRequiresPin(hasPin);
         
+        if (!hasPin) {
+          // No PIN set - block kiosk access
+          setCompanyNotFound(false);
+          setStep('no-pin');
+          return;
+        }
+        
         // Check if already verified in this session
         const alreadyVerified = sessionStorage.getItem(`kiosk_pin_verified_${companyId}`) === 'true';
         
-        if (hasPin && !alreadyVerified) {
+        if (!alreadyVerified) {
           setStep('pin');
         } else {
           setPinVerified(true);
@@ -100,6 +108,26 @@ export default function KioskLayout() {
             <div className="text-center">
               <div className="w-16 h-16 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
               <p className="text-xl text-slate-500">Laden...</p>
+            </div>
+          </div>
+        );
+      case 'no-pin':
+        return (
+          <div className="kiosk-fullscreen bg-slate-50 flex items-center justify-center">
+            <div className="text-center max-w-md px-6">
+              <div className="w-20 h-20 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-6">
+                <Lock className="w-10 h-10 text-red-500" />
+              </div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-3">Kiosk Niet Beschikbaar</h1>
+              <p className="text-lg text-slate-500 mb-8">
+                De beheerder heeft nog geen PIN code ingesteld. Neem contact op met de beheerder om de kiosk te activeren.
+              </p>
+              <button 
+                onClick={() => navigate('/vastgoed')}
+                className="px-8 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition shadow-lg shadow-orange-500/30"
+              >
+                Terug naar Home
+              </button>
             </div>
           </div>
         );

@@ -411,7 +411,7 @@ function KioskAuthForm({ onSuccess }) {
                 onChange={(e) => handlePinChange(index, e.target.value)}
                 onKeyDown={(e) => handlePinKeyDown(index, e)}
                 data-testid={`pin-input-${index}`}
-                className={`w-16 h-16 lg:w-20 lg:h-20 text-center text-3xl lg:text-4xl font-black rounded-2xl border-3 transition-all outline-none shadow-sm ${
+                className={`w-16 h-16 lg:w-20 lg:h-20 text-center text-3xl lg:text-4xl font-black rounded-lg border-3 transition-all outline-none shadow-sm ${
                   error 
                     ? 'border-red-400 bg-red-50 text-red-600' 
                     : digit 
@@ -423,11 +423,11 @@ function KioskAuthForm({ onSuccess }) {
             ))}
           </div>
 
-          {/* Numeric Keypad - Larger square buttons */}
+          {/* Numeric Keypad - Square buttons */}
           <div className="grid grid-cols-3 gap-3 max-w-[280px] mx-auto mb-6">
             {['1','2','3','4','5','6','7','8','9','_empty','0','DEL'].map((key) => (
               key === '_empty' ? (
-                <div key={key} className="h-16" />
+                <div key={key} className="aspect-square" />
               ) : (
                 <button
                   key={key}
@@ -435,7 +435,7 @@ function KioskAuthForm({ onSuccess }) {
                   onClick={() => handlePinKeypad(key)}
                   disabled={loading}
                   data-testid={`pin-key-${key}`}
-                  className={`h-16 text-2xl font-bold rounded-2xl transition active:scale-95 disabled:opacity-50 shadow-sm ${
+                  className={`aspect-square text-2xl font-bold rounded-lg transition active:scale-95 disabled:opacity-50 shadow-sm ${
                     key === 'DEL' 
                       ? 'bg-red-100 text-red-600 hover:bg-red-200 border border-red-200 flex items-center justify-center' 
                       : 'bg-white text-slate-900 hover:bg-slate-100 border border-slate-200'

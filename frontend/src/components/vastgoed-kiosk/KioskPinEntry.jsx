@@ -176,24 +176,24 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
             <p className="text-red-500 text-center font-medium mb-6">{error}</p>
           )}
 
-          {/* Keypad */}
-          <div className="grid grid-cols-3 gap-2 lg:gap-3 max-w-xs mx-auto">
-            {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'DEL'].map((key, idx) => (
-              key ? (
+          {/* Keypad - Square buttons */}
+          <div className="grid grid-cols-3 gap-3 max-w-[280px] mx-auto">
+            {['1', '2', '3', '4', '5', '6', '7', '8', '9', '_empty', '0', 'DEL'].map((key) => (
+              key === '_empty' ? (
+                <div key={key} className="aspect-square" />
+              ) : (
                 <button
                   key={key}
                   onClick={() => handleKeypadPress(key)}
                   disabled={loading}
-                  className={`h-12 lg:h-16 text-xl lg:text-2xl font-bold rounded-lg lg:rounded-xl transition active:scale-95 disabled:opacity-50 ${
+                  className={`aspect-square text-2xl font-bold rounded-lg transition active:scale-95 disabled:opacity-50 shadow-sm ${
                     key === 'DEL' 
-                      ? 'bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center' 
-                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200 border border-red-200 flex items-center justify-center' 
+                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200 border border-slate-200'
                   }`}
                 >
-                  {key === 'DEL' ? <Delete className="w-5 h-5 lg:w-6 lg:h-6" /> : key}
+                  {key === 'DEL' ? <Delete className="w-6 h-6" /> : key}
                 </button>
-              ) : (
-                <div key={idx} className="h-12 lg:h-16" />
               )
             ))}
           </div>
