@@ -197,12 +197,12 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 
       <div className="w-full px-4 lg:px-8 py-6">
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 flex-wrap">
+        <div className="flex gap-2 mb-8 overflow-x-auto pb-1 scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm transition active:scale-95 ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition active:scale-95 whitespace-nowrap flex-shrink-0 ${
                 activeTab === tab.id 
                   ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' 
                   : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
