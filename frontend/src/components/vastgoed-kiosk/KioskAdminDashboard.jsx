@@ -1441,6 +1441,9 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   const [telefoon, setTelefoon] = useState(tenant?.telefoon || '');
   const [monthlyRent, setMonthlyRent] = useState(tenant?.monthly_rent || 0);
   const [depositRequired, setDepositRequired] = useState(tenant?.deposit_required || 0);
+  const [outstandingRent, setOutstandingRent] = useState(tenant?.outstanding_rent || 0);
+  const [serviceCosts, setServiceCosts] = useState(tenant?.service_costs || 0);
+  const [fines, setFines] = useState(tenant?.fines || 0);
   const [leaseStart, setLeaseStart] = useState('');
   const [leaseEnd, setLeaseEnd] = useState('');
   const [loading, setLoading] = useState(false);
@@ -1455,6 +1458,9 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
       const data = { name, apartment_id: apartmentId, email: email || null, telefoon: telefoon || null,
         monthly_rent: parseFloat(monthlyRent), deposit_required: parseFloat(depositRequired) };
       if (tenant) {
+        data.outstanding_rent = parseFloat(outstandingRent);
+        data.service_costs = parseFloat(serviceCosts);
+        data.fines = parseFloat(fines);
         await axios.put(`${API}/admin/tenants/${tenant.tenant_id}`, data, { headers });
       } else {
         if (leaseStart && leaseEnd) {
@@ -1509,6 +1515,28 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
             <input type="number" value={depositRequired} onChange={(e) => setDepositRequired(e.target.value)}
               className="w-full px-4 py-3 border rounded-xl" />
           </div>
+          {tenant && (
+            <div className="border-t border-slate-200 pt-4">
+              <p className="text-sm font-semibold text-slate-700 mb-3">Financieel</p>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Openstaande huur</label>
+                  <input type="number" step="0.01" value={outstandingRent} onChange={(e) => setOutstandingRent(e.target.value)}
+                    className="w-full px-3 py-2.5 border rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Servicekosten</label>
+                  <input type="number" step="0.01" value={serviceCosts} onChange={(e) => setServiceCosts(e.target.value)}
+                    className="w-full px-3 py-2.5 border rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Boetes</label>
+                  <input type="number" step="0.01" value={fines} onChange={(e) => setFines(e.target.value)}
+                    className="w-full px-3 py-2.5 border rounded-xl text-sm" />
+                </div>
+              </div>
+            </div>
+          )}
           {!tenant && (
             <>
               <div className="border-t border-slate-200 pt-4">
