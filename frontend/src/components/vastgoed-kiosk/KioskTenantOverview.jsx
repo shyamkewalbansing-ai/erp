@@ -10,161 +10,133 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
   const total = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0);
   const hasDebt = total > 0;
 
-  const items = [
-    {
-      label: 'Maandhuur',
-      sub: `Gefactureerd t/m ${tenant.rent_billed_through ? (() => {
-        const [y, m] = tenant.rent_billed_through.split('-');
-        return new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
-      })() : new Date().toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' })}`,
-      amount: tenant.monthly_rent || 0,
-      icon: Home,
-      iconBg: 'bg-indigo-100',
-      iconColor: 'text-indigo-600',
-      borderColor: 'border-slate-200',
-      amountColor: 'text-slate-900',
-    },
-    {
-      label: 'Openstaande huur',
-      sub: tenant.overdue_months?.length > 0 ? `Achterstand: ${tenant.overdue_months.join(', ')}` : null,
-      amount: tenant.outstanding_rent || 0,
-      icon: Wallet,
-      iconBg: (tenant.outstanding_rent || 0) > 0 ? 'bg-red-100' : 'bg-green-100',
-      iconColor: (tenant.outstanding_rent || 0) > 0 ? 'text-red-600' : 'text-green-600',
-      borderColor: (tenant.outstanding_rent || 0) > 0 ? 'border-red-200' : 'border-green-200',
-      amountColor: (tenant.outstanding_rent || 0) > 0 ? 'text-red-600' : 'text-green-600',
-    },
-    {
-      label: 'Servicekosten',
-      sub: 'Water, stroom, overig',
-      amount: tenant.service_costs || 0,
-      icon: FileText,
-      iconBg: (tenant.service_costs || 0) > 0 ? 'bg-orange-100' : 'bg-green-100',
-      iconColor: (tenant.service_costs || 0) > 0 ? 'text-orange-600' : 'text-green-600',
-      borderColor: (tenant.service_costs || 0) > 0 ? 'border-orange-200' : 'border-green-200',
-      amountColor: (tenant.service_costs || 0) > 0 ? 'text-orange-600' : 'text-green-600',
-    },
-    {
-      label: 'Boetes',
-      amount: tenant.fines || 0,
-      icon: AlertTriangle,
-      iconBg: (tenant.fines || 0) > 0 ? 'bg-red-100' : 'bg-green-100',
-      iconColor: (tenant.fines || 0) > 0 ? 'text-red-600' : 'text-green-600',
-      borderColor: (tenant.fines || 0) > 0 ? 'border-red-200' : 'border-green-200',
-      amountColor: (tenant.fines || 0) > 0 ? 'text-red-600' : 'text-green-600',
-    },
-  ];
-
   return (
-    <div className="min-h-full bg-slate-50 flex flex-col">
-      {/* Header — zelfde als "Wat wilt u betalen?" */}
-      <div className="bg-white border-b border-slate-200 p-3 sm:p-4 flex items-center justify-between shrink-0">
-        <button onClick={onBack} className="flex items-center gap-1 sm:gap-2 text-slate-500 hover:text-slate-900 transition text-sm sm:text-lg font-medium">
+    <div className="min-h-full bg-white flex flex-col">
+      {/* Header — zelfde als alle kiosk pagina's */}
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-8 py-4 sm:py-5 flex items-center justify-between shrink-0">
+        <button onClick={onBack} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-sm sm:text-lg font-medium">
           <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
           <span>Terug</span>
         </button>
-        <h1 className="text-base sm:text-2xl font-bold text-slate-900">Uw overzicht</h1>
-        <div className="text-right">
-          <p className="text-slate-900 font-medium text-sm sm:text-base">{tenant.name}</p>
-          <p className="text-slate-500 text-xs sm:text-sm">Appt. {tenant.apartment_number}</p>
-        </div>
+        <h1 className="text-lg sm:text-2xl font-bold text-slate-900">Uw overzicht</h1>
+        <div className="w-20" />
       </div>
 
-      {/* Content — fullwidth, zelfde padding als andere pagina's */}
-      <div className="flex-1 p-3 sm:p-6 flex flex-col lg:flex-row gap-4 sm:gap-6 overflow-auto">
-        {/* Links: Profiel + Totaal */}
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Profiel kaart */}
-          <div className="bg-white rounded-xl p-4 border-2 border-slate-100 flex items-center gap-4 mb-3">
-            <div className="w-14 h-14 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center flex-shrink-0">
-              <User className="w-7 h-7" />
-            </div>
-            <div>
-              <p className="text-xl font-bold text-slate-900">{tenant.name}</p>
-              <p className="text-slate-500">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
-            </div>
+      {/* Content */}
+      <div className="flex-1 px-4 sm:px-8 lg:px-16 xl:px-32 py-6 sm:py-8 overflow-auto">
+        {/* Profiel */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center flex-shrink-0">
+            <User className="w-7 h-7 sm:w-8 sm:h-8" />
           </div>
+          <div>
+            <p className="text-xl sm:text-2xl font-bold text-slate-900">{tenant.name}</p>
+            <p className="text-sm sm:text-base text-slate-400">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
+          </div>
+        </div>
 
-          {/* Financieel items — zelfde stijl als betaaltype knoppen */}
-          <div className="space-y-2 sm:space-y-3">
-            {items.map((item) => {
-              const Icon = item.icon;
-              return (
-                <div
-                  key={item.label}
-                  className={`flex items-center justify-between w-full p-3 sm:p-4 rounded-xl border-2 bg-white ${item.borderColor}`}
-                >
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${item.iconBg}`}>
-                      <Icon className={`w-5 h-5 sm:w-6 sm:h-6 ${item.iconColor}`} />
-                    </div>
+        {/* Achterstand waarschuwing */}
+        {tenant.overdue_months?.length > 0 && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl px-4 py-3 flex items-center gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+            <p className="text-sm text-red-600">Achterstand: <span className="font-semibold">{tenant.overdue_months.join(', ')}</span></p>
+          </div>
+        )}
+
+        {/* Financieel overzicht — tabel */}
+        <div className="border border-slate-200 rounded-xl overflow-hidden mb-6">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="text-left px-4 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">Omschrijving</th>
+                <th className="text-right px-4 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-500 uppercase tracking-wider">Bedrag</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-slate-100">
+                <td className="px-4 sm:px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <Home className="w-5 h-5 text-slate-400 flex-shrink-0" />
                     <div>
-                      <p className="text-sm sm:text-lg font-bold text-slate-900">{item.label}</p>
-                      {item.sub && <p className="text-xs sm:text-sm text-slate-500">{item.sub}</p>}
+                      <p className="text-sm sm:text-base font-medium text-slate-900">Maandhuur</p>
+                      <p className="text-xs text-slate-400">
+                        Gefactureerd t/m {tenant.rent_billed_through ? (() => {
+                          const [y, m] = tenant.rent_billed_through.split('-');
+                          return new Date(parseInt(y), parseInt(m) - 1).toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
+                        })() : '-'}
+                      </p>
                     </div>
                   </div>
-                  <p className={`text-base sm:text-xl font-bold flex-shrink-0 ml-2 ${item.amountColor}`}>
-                    {formatSRD(item.amount)}
+                </td>
+                <td className="px-4 sm:px-6 py-4 text-right text-sm sm:text-base font-semibold text-slate-900">{formatSRD(tenant.monthly_rent)}</td>
+              </tr>
+              <tr className="border-b border-slate-100">
+                <td className="px-4 sm:px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <Wallet className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <p className="text-sm sm:text-base font-medium text-slate-900">Openstaande huur</p>
+                  </div>
+                </td>
+                <td className={`px-4 sm:px-6 py-4 text-right text-sm sm:text-base font-semibold ${(tenant.outstanding_rent || 0) > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                  {formatSRD(tenant.outstanding_rent)}
+                </td>
+              </tr>
+              <tr className="border-b border-slate-100">
+                <td className="px-4 sm:px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <FileText className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <p className="text-sm sm:text-base font-medium text-slate-900">Servicekosten</p>
+                  </div>
+                </td>
+                <td className={`px-4 sm:px-6 py-4 text-right text-sm sm:text-base font-semibold ${(tenant.service_costs || 0) > 0 ? 'text-orange-600' : 'text-slate-900'}`}>
+                  {formatSRD(tenant.service_costs)}
+                </td>
+              </tr>
+              <tr className="border-b border-slate-100">
+                <td className="px-4 sm:px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <AlertTriangle className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                    <p className="text-sm sm:text-base font-medium text-slate-900">Boetes</p>
+                  </div>
+                </td>
+                <td className={`px-4 sm:px-6 py-4 text-right text-sm sm:text-base font-semibold ${(tenant.fines || 0) > 0 ? 'text-red-600' : 'text-slate-900'}`}>
+                  {formatSRD(tenant.fines)}
+                </td>
+              </tr>
+              {/* Totaal */}
+              <tr className="bg-slate-50">
+                <td className="px-4 sm:px-6 py-4">
+                  <p className="text-sm sm:text-base font-bold text-slate-900">Totaal openstaand</p>
+                </td>
+                <td className="px-4 sm:px-6 py-4 text-right">
+                  <p className={`text-lg sm:text-xl font-bold ${total > 0 ? 'text-red-600' : 'text-green-600'}`} data-testid="total-amount">
+                    {formatSRD(total)}
                   </p>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Achterstand waarschuwing */}
-          {tenant.overdue_months?.length > 0 && (
-            <div className="mt-3 bg-amber-50 border-2 border-amber-200 rounded-xl p-3 sm:p-4 flex items-center gap-3">
-              <AlertTriangle className="w-6 h-6 text-amber-500 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-bold text-amber-700">Achterstand</p>
-                <p className="text-xs text-amber-600">Onbetaalde maanden: {tenant.overdue_months.join(', ')}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Totaal samenvatting — zelfde stijl als de donkere bar in "Wat wilt u betalen?" */}
-          <div className="mt-3 sm:mt-4 bg-slate-800 rounded-xl p-3 sm:p-4 flex items-center justify-between">
-            <div>
-              <p className="text-slate-400 text-xs sm:text-sm">Totaal openstaand</p>
-              <p className="text-white text-xs sm:text-sm">Huur + Servicekosten + Boetes</p>
-            </div>
-            <p className="text-xl sm:text-2xl font-bold text-white" data-testid="total-amount">{formatSRD(total)}</p>
-          </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
 
-        {/* Rechts: Totaal prominent + actie */}
-        <div className="w-full lg:w-80 flex flex-col shrink-0">
-          <div className={`rounded-2xl p-6 sm:p-8 text-center flex-1 flex flex-col items-center justify-center ${
-            hasDebt
-              ? 'bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg shadow-orange-500/30'
-              : 'bg-gradient-to-br from-green-500 to-green-600 shadow-lg shadow-green-500/30'
-          }`}>
-            {hasDebt ? (
-              <>
-                <p className="text-white/80 text-sm sm:text-lg mb-2">Te betalen</p>
-                <p className="text-4xl sm:text-5xl font-bold text-white mb-4">{formatSRD(total)}</p>
-                <CreditCard className="w-10 h-10 text-white/60 mb-4" />
-              </>
-            ) : (
-              <>
-                <CheckCircle className="w-14 h-14 text-white/90 mb-3" />
-                <p className="text-2xl sm:text-3xl font-bold text-white">Alles betaald!</p>
-                <p className="text-white/80 text-sm sm:text-base mt-1">Geen openstaand saldo</p>
-              </>
-            )}
+        {/* Status */}
+        {!hasDebt && (
+          <div className="text-center py-4">
+            <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-2" />
+            <p className="text-lg sm:text-xl font-bold text-green-700">Alles is betaald!</p>
+            <p className="text-sm text-green-600">Geen openstaand saldo</p>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Bottom Action — zelfde als "Wat wilt u betalen?" */}
+      {/* Bottom Action */}
       {hasDebt && (
-        <div className="bg-white border-t border-slate-200 p-3 sm:p-4 shrink-0">
+        <div className="bg-white border-t border-slate-200 px-4 sm:px-8 lg:px-16 xl:px-32 py-4 shrink-0">
           <button
             onClick={onPay}
             data-testid="pay-btn"
-            className="w-full py-3 sm:py-4 px-4 sm:px-8 rounded-xl text-base sm:text-xl font-bold flex items-center justify-center gap-2 sm:gap-3 transition bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-500/30 active:scale-[0.98]"
+            className="w-full py-4 rounded-xl text-lg font-bold flex items-center justify-center gap-3 transition active:scale-[0.98] bg-orange-500 hover:bg-orange-600 text-white"
           >
-            <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />
+            <CreditCard className="w-6 h-6" />
             <span>Betalen — {formatSRD(total)}</span>
           </button>
         </div>
