@@ -960,19 +960,19 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
   return (
     <div>
       {/* Panel header */}
-      <div className="bg-slate-800 rounded-t-xl px-6 py-4 flex items-center justify-between">
+      <div className="bg-slate-200 rounded-t-xl px-6 py-4 flex items-center justify-between border border-slate-300 border-b-0">
         <div className="flex items-center gap-3">
-          <Zap className="w-5 h-5 text-yellow-400" />
-          <h3 className="font-bold text-white">Stroombrekers Paneel</h3>
+          <Zap className="w-5 h-5 text-orange-500" />
+          <h3 className="font-bold text-slate-800">Stroombrekers Paneel</h3>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-xs text-slate-400">SYSTEEM ACTIEF</span>
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+          <span className="text-xs text-slate-500 font-medium">SYSTEEM ACTIEF</span>
         </div>
       </div>
 
       {/* Breaker panel body */}
-      <div className="bg-slate-700 rounded-b-xl p-6">
+      <div className="bg-slate-100 rounded-b-xl p-6 border border-slate-300 border-t-0">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {activeTenants.map(tenant => {
             const apt = apartments.find(a => a.apartment_id === tenant.apartment_id);
@@ -984,12 +984,12 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
               <div
                 key={tenant.tenant_id}
                 data-testid={`breaker-${tenant.tenant_id}`}
-                className="bg-slate-600 rounded-lg border border-slate-500 overflow-hidden"
+                className="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm"
               >
                 {/* Label strip */}
-                <div className="bg-slate-800 px-3 py-2 flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-300 tracking-wider">APPT. {apt?.number}</span>
-                  <div className={`w-2.5 h-2.5 rounded-full ${powerOn ? 'bg-green-400 shadow-sm shadow-green-400/50' : 'bg-red-500 shadow-sm shadow-red-500/50'}`} />
+                <div className="bg-slate-50 px-3 py-2 flex items-center justify-between border-b border-slate-200">
+                  <span className="text-xs font-bold text-slate-600 tracking-wider">APPT. {apt?.number}</span>
+                  <div className={`w-2.5 h-2.5 rounded-full ${powerOn ? 'bg-green-500 shadow-sm shadow-green-500/50' : 'bg-red-500 shadow-sm shadow-red-500/50'}`} />
                 </div>
 
                 {/* Breaker body */}
@@ -999,27 +999,27 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
                     onClick={() => togglePower(tenant.tenant_id, powerOn ? 'on' : 'off')}
                     disabled={isUpdating}
                     data-testid={`breaker-toggle-${tenant.tenant_id}`}
-                    className="relative w-14 h-24 rounded-md bg-slate-800 border-2 border-slate-500 mb-3 cursor-pointer hover:border-slate-400 transition disabled:opacity-50 disabled:cursor-wait overflow-hidden group"
+                    className="relative w-14 h-24 rounded-md bg-slate-200 border-2 border-slate-300 mb-3 cursor-pointer hover:border-orange-300 transition disabled:opacity-50 disabled:cursor-wait overflow-hidden"
                   >
                     {/* Switch track groove */}
-                    <div className="absolute inset-x-2 inset-y-1 rounded bg-slate-900" />
+                    <div className="absolute inset-x-2 inset-y-1 rounded bg-slate-300" />
                     {/* Switch handle */}
                     <div className={`absolute left-1.5 right-1.5 h-10 rounded transition-all duration-300 ${
                       powerOn
                         ? 'top-1.5 bg-gradient-to-b from-orange-400 to-orange-600 shadow-md shadow-orange-500/30'
-                        : 'bottom-1.5 bg-gradient-to-b from-slate-400 to-slate-500 shadow-md shadow-black/30'
+                        : 'bottom-1.5 bg-gradient-to-b from-slate-400 to-slate-500 shadow-md shadow-black/20'
                     }`}>
                       <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex justify-center">
-                        <div className="w-6 h-0.5 rounded bg-white/30" />
+                        <div className="w-6 h-0.5 rounded bg-white/40" />
                       </div>
                     </div>
                     {/* ON/OFF labels */}
-                    <span className={`absolute top-1 left-0 right-0 text-center text-[9px] font-black tracking-widest ${powerOn ? 'text-transparent' : 'text-green-400/60'}`}>ON</span>
+                    <span className={`absolute top-1 left-0 right-0 text-center text-[9px] font-black tracking-widest ${powerOn ? 'text-transparent' : 'text-green-500/60'}`}>ON</span>
                     <span className={`absolute bottom-1 left-0 right-0 text-center text-[9px] font-black tracking-widest ${powerOn ? 'text-red-400/60' : 'text-transparent'}`}>OFF</span>
                   </button>
 
                   {/* Status */}
-                  <span className={`text-xs font-bold tracking-wider ${powerOn ? 'text-green-400' : 'text-red-400'}`}>
+                  <span className={`text-xs font-bold tracking-wider ${powerOn ? 'text-green-600' : 'text-red-500'}`}>
                     {isUpdating ? 'BEZIG...' : powerOn ? 'AAN' : 'UIT'}
                   </span>
 
@@ -1029,8 +1029,8 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
                   {/* Debt warning */}
                   {hasDebt && (
                     <div className="flex items-center gap-1 mt-2">
-                      <AlertTriangle className="w-3 h-3 text-yellow-400" />
-                      <span className="text-[10px] text-yellow-400 font-medium">SCHULD</span>
+                      <AlertTriangle className="w-3 h-3 text-orange-500" />
+                      <span className="text-[10px] text-orange-500 font-medium">SCHULD</span>
                     </div>
                   )}
                 </div>
