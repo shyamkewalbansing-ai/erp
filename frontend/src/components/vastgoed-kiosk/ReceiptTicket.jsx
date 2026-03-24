@@ -226,57 +226,6 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
         </div>
       </div>
 
-      {/* ====== BETALINGSREGISTRATIE - 42mm ====== */}
-      <div style={{ padding: `${4 * s}mm ${15 * s}mm` }}>
-        <div style={{ border: `${0.5 * s}mm solid #e2e8f0`, borderRadius: `${2.5 * s}mm`, overflow: 'hidden' }}>
-          <div style={{ background: '#1e293b', padding: `${3 * s}mm ${4 * s}mm` }}>
-            <p style={{ fontSize: `${3.5 * s}mm`, fontWeight: 'bold', color: 'white', margin: 0, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              Betalingsregistratie
-            </p>
-          </div>
-          <div style={{ padding: `${3 * s}mm ${4 * s}mm`, background: '#f8fafc' }}>
-            <table style={{ width: '100%', fontSize: `${2.8 * s}mm`, borderCollapse: 'collapse' }}>
-              <tbody>
-                <tr>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#64748b', width: '35%' }}>Transactie ID</td>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#0f172a', fontWeight: '500', fontFamily: 'monospace', fontSize: `${2.5 * s}mm` }}>{(payment.payment_id || kwNr).substring(0, 24)}...</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#64748b' }}>Kwitantie Nr.</td>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#f97316', fontWeight: 'bold', fontSize: `${3.2 * s}mm` }}>{kwNr}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#64748b' }}>Datum & Tijd</td>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#0f172a', fontWeight: '500' }}>{dateStr} om {timeStr}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#64748b' }}>Betaalmethode</td>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#0f172a', fontWeight: '500' }}>Contant</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#64748b' }}>Huurder</td>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#0f172a', fontWeight: '500' }}>{payment.tenant_code || tenant?.tenant_code} · Appt. {payment.apartment_number || tenant?.apartment_number}</td>
-                </tr>
-                <tr>
-                  <td style={{ padding: `${1.5 * s}mm 0`, color: '#64748b' }}>Status</td>
-                  <td style={{ padding: `${1.5 * s}mm 0` }}>
-                    <span style={{ 
-                      background: '#dcfce7', 
-                      color: '#16a34a', 
-                      padding: `${0.8 * s}mm ${2.5 * s}mm`, 
-                      borderRadius: `${1 * s}mm`,
-                      fontSize: `${2.8 * s}mm`,
-                      fontWeight: 'bold'
-                    }}>
-                      VERWERKT
-                    </span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
 
       {/* ====== VOORWAARDEN + STEMPEL - 28mm ====== */}
       <div style={{ padding: `${3 * s}mm ${15 * s}mm`, display: 'flex', gap: `${8 * s}mm` }}>
@@ -309,7 +258,7 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
                   <rect x="16" y="31" width="5" height="5" fill="white"/>
                 </svg>
                 <div style={{ lineHeight: 1.3, textAlign: 'left' }}>
-                  <p style={{ color: '#991b1b', fontWeight: 'bold', fontSize: `${2.8 * s}mm`, margin: 0 }}>Stichting : {stampData.stamp_company_name}</p>
+                  <p style={{ color: '#991b1b', fontWeight: 'bold', fontSize: `${2.8 * s}mm`, margin: 0 }}>{stampData.stamp_company_name}</p>
                   {stampData.stamp_address && <p style={{ color: '#1a1a1a', fontSize: `${2.3 * s}mm`, margin: 0, fontWeight: 500 }}>{stampData.stamp_address}</p>}
                   {stampData.stamp_phone && <p style={{ color: '#1a1a1a', fontSize: `${2.3 * s}mm`, margin: 0, fontWeight: 500 }}>Tel : {stampData.stamp_phone}</p>}
                   {stampData.stamp_whatsapp && <p style={{ color: '#1a1a1a', fontSize: `${2.3 * s}mm`, margin: 0, fontWeight: 500 }}>Whatsapp : {stampData.stamp_whatsapp}</p>}

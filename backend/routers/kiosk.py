@@ -1301,7 +1301,7 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
       <rect x="16" y="38" width="5" height="6" fill="white"/>
     </svg>
     <div class="stamp-info">
-      <p class="stamp-name">Stichting : {stamp_name}</p>
+      <p class="stamp-name">{stamp_name}</p>
       <p class="stamp-detail">{stamp_address}</p>
       <p class="stamp-detail">Tel : {stamp_phone}</p>
       {f'<p class="stamp-detail">Whatsapp : {stamp_whatsapp}</p>' if stamp_whatsapp else ''}
@@ -1797,7 +1797,7 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
           <rect x="16" y="38" width="5" height="6" fill="white"/>
         </svg>
         <div class="stamp-info">
-          <p class="stamp-name">Stichting : {stamp_name}</p>
+          <p class="stamp-name">{stamp_name}</p>
           <p class="stamp-detail">{stamp_address}</p>
           <p class="stamp-detail">Tel : {stamp_phone_val}</p>
           {f'<p class="stamp-detail">Whatsapp : {comp.get("stamp_whatsapp", "")}</p>' if comp.get("stamp_whatsapp") else ''}
@@ -1922,7 +1922,7 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
               <rect x="16" y="31" width="5" height="5" fill="white"/>
             </svg>
             <div style="line-height:1.2;">
-              <p style="color:#991b1b;font-weight:bold;font-size:6pt;margin:0;">Stichting : {stamp_name}</p>
+              <p style="color:#991b1b;font-weight:bold;font-size:6pt;margin:0;">{stamp_name}</p>
               <p style="color:#1a1a1a;font-size:5.5pt;margin:0;">{stamp_address}</p>
             </div>
           </div>

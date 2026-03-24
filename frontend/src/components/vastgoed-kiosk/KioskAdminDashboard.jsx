@@ -1248,7 +1248,7 @@ function SettingsTab({ company, token, onRefresh }) {
                   {/* Text */}
                   <div style={{ lineHeight: 1.4 }}>
                     <p style={{ color: '#991b1b', fontWeight: 700, fontSize: '13px', margin: 0 }}>
-                      Stichting : {stampName || 'Bedrijfsnaam'}
+                      {stampName || 'Bedrijfsnaam'}
                     </p>
                     <p style={{ color: '#1a1a1a', fontSize: '12px', margin: 0, fontWeight: 500 }}>
                       {stampAddress || 'Adres'}
