@@ -40,6 +40,9 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
     return monthStr;
   };
   const rentMonth = formatRentMonth(payment.rent_month);
+  
+  // Covered months from backend auto-calculation
+  const coveredMonths = payment.covered_months || [];
 
   // Calculate remaining balance
   const remainingRent = payment.remaining_rent ?? (tenant?.outstanding_rent || 0);
@@ -104,7 +107,7 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
       </div>
 
       {/* ====== HUURMAAND INFO (alleen bij huur betalingen) ====== */}
-      {rentMonth && (payment.payment_type === 'rent' || payment.payment_type === 'monthly_rent' || payment.payment_type === 'partial_rent') && (
+      {(coveredMonths.length > 0 || rentMonth) && (payment.payment_type === 'rent' || payment.payment_type === 'monthly_rent' || payment.payment_type === 'partial_rent') && (
         <div style={{ padding: `${3 * s}mm ${15 * s}mm` }}>
           <div style={{ 
             background: '#fff7ed', 
@@ -122,17 +125,24 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
               borderRadius: `${2 * s}mm`,
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              flexShrink: 0
             }}>
-              <span style={{ fontSize: `${5 * s}mm`, color: 'white', fontWeight: 'bold' }}>📅</span>
+              <span style={{ fontSize: `${5 * s}mm`, color: 'white', fontWeight: 'bold' }}>&#128197;</span>
             </div>
             <div>
               <p style={{ fontSize: `${3 * s}mm`, color: '#9a3412', margin: 0, textTransform: 'uppercase', fontWeight: '600' }}>
                 {payment.payment_type === 'partial_rent' ? 'Gedeeltelijke betaling voor' : 'Huurbetaling voor'}
               </p>
-              <p style={{ fontSize: `${5.5 * s}mm`, color: '#c2410c', margin: 0, fontWeight: 'bold' }}>
-                {rentMonth}
-              </p>
+              {coveredMonths.length > 0 ? (
+                <p style={{ fontSize: `${5 * s}mm`, color: '#c2410c', margin: 0, fontWeight: 'bold' }}>
+                  {coveredMonths.join(', ')}
+                </p>
+              ) : (
+                <p style={{ fontSize: `${5.5 * s}mm`, color: '#c2410c', margin: 0, fontWeight: 'bold' }}>
+                  {rentMonth}
+                </p>
+              )}
             </div>
           </div>
         </div>
