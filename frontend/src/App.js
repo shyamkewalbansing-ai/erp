@@ -466,24 +466,38 @@ function EmployeePortalRoutes() {
   );
 }
 
+// Subdomain detection - redirect vastgoed.* to /vastgoed
+const SubdomainRedirect = ({ children }) => {
+  const hostname = window.location.hostname;
+  const pathname = window.location.pathname;
+  
+  if (hostname.startsWith('vastgoed.') && !pathname.startsWith('/vastgoed')) {
+    return <Navigate to="/vastgoed" replace />;
+  }
+  
+  return children;
+};
+
 // Main App with both portals
 function AppWithRoutes() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
-          {/* Tenant Portal Routes */}
-          <Route path="/huurder/*" element={<TenantPortalRoutes />} />
-          
-          {/* Employee Portal Routes */}
-          <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
-          
-          {/* Auto Dealer Customer Portal Routes */}
-          <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
-          
-          {/* Main App Routes */}
-          <Route path="/*" element={<MainAppRoutes />} />
-        </Routes>
+        <SubdomainRedirect>
+          <Routes>
+            {/* Tenant Portal Routes */}
+            <Route path="/huurder/*" element={<TenantPortalRoutes />} />
+            
+            {/* Employee Portal Routes */}
+            <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
+            
+            {/* Auto Dealer Customer Portal Routes */}
+            <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
+            
+            {/* Main App Routes */}
+            <Route path="/*" element={<MainAppRoutes />} />
+          </Routes>
+        </SubdomainRedirect>
         <Toaster richColors position="top-right" />
         <OfflineSyncIndicator />
         <BoekhoudingOfflineManager />

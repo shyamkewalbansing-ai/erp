@@ -552,6 +552,7 @@ CFEOF
         -d $DOMAIN \
         -d www.$DOMAIN \
         -d app.$DOMAIN \
+        -d vastgoed.$DOMAIN \
         --email $EMAIL \
         --agree-tos \
         --non-interactive \
@@ -559,13 +560,14 @@ CFEOF
         
         log_warning "SSL certificaat aanvraag mislukt"
         log_info "Controleer of DNS records correct zijn geconfigureerd:"
-        log_info "  A   @     -> $SERVER_IP"
-        log_info "  A   www   -> $SERVER_IP"
-        log_info "  A   app   -> $SERVER_IP"
+        log_info "  A   @        -> $SERVER_IP"
+        log_info "  A   www      -> $SERVER_IP"
+        log_info "  A   app      -> $SERVER_IP"
+        log_info "  A   vastgoed -> $SERVER_IP"
         log_info ""
         log_info "Probeer later handmatig:"
         log_info "  sudo systemctl stop nginx"
-        log_info "  sudo certbot certonly --standalone -d $DOMAIN -d www.$DOMAIN -d app.$DOMAIN"
+        log_info "  sudo certbot certonly --standalone -d $DOMAIN -d www.$DOMAIN -d app.$DOMAIN -d vastgoed.$DOMAIN"
         log_info "  sudo systemctl start nginx"
         return 1
     }
@@ -596,7 +598,7 @@ configure_nginx() {
 server {
     listen 80;
     listen [::]:80;
-    server_name $DOMAIN www.$DOMAIN app.$DOMAIN;
+    server_name $DOMAIN www.$DOMAIN app.$DOMAIN vastgoed.$DOMAIN;
     
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -714,6 +716,59 @@ server {
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_set_header Host \$host;
+    }
+}
+
+# VASTGOED SUBDOMAIN - Kiosk Applicatie
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    
+    server_name vastgoed.$DOMAIN;
+    
+    ssl_certificate /etc/letsencrypt/live/$DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/$DOMAIN/privkey.pem;
+    ssl_session_timeout 1d;
+    ssl_session_cache shared:VastgoedSSL:10m;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    
+    # Gzip
+    gzip on;
+    gzip_vary on;
+    gzip_types text/plain text/css text/xml application/json application/javascript;
+    
+    # Root redirect naar /vastgoed
+    location = / {
+        return 301 https://vastgoed.$DOMAIN/vastgoed;
+    }
+    
+    # Frontend
+    location / {
+        proxy_pass http://127.0.0.1:$FRONTEND_PORT;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_cache_bypass \$http_upgrade;
+    }
+    
+    # API routes
+    location /api/ {
+        proxy_pass http://127.0.0.1:$BACKEND_PORT/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+        proxy_read_timeout 300s;
+        client_max_body_size 50M;
     }
 }
 EOF

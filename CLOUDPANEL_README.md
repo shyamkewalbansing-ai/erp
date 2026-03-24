@@ -164,6 +164,7 @@ Zorg dat deze DNS records zijn geconfigureerd **VOOR** je het script uitvoert:
 | A | @ | JE_SERVER_IP |
 | A | www | JE_SERVER_IP |
 | A | app | JE_SERVER_IP |
+| A | vastgoed | JE_SERVER_IP |
 
 ---
 
