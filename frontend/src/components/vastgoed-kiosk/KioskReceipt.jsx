@@ -44,8 +44,6 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
     doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Kwitantie ${kwNr}</title><style>@page{size:A4;margin:0}*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact!important;color-adjust:exact!important;print-color-adjust:exact!important}html,body{width:210mm;min-height:297mm;background:white!important;font-family:'Segoe UI','Inter',system-ui,sans-serif}</style></head><body>${html}</body></html>`);
     doc.close();
     iframe.onload = () => { setTimeout(() => { try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch {} setTimeout(() => { if (iframe.parentNode) document.body.removeChild(iframe); }, 2000); }, 500); };
-    iframe.contentWindow.focus();
-    setTimeout(() => { try { iframe.contentWindow.print(); } catch {} setTimeout(() => { if (iframe.parentNode) document.body.removeChild(iframe); }, 2000); }, 800);
   };
 
   const triggerAutoPrint = async () => {
