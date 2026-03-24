@@ -40,22 +40,24 @@ export default function KioskLayout() {
         const hasPin = res.data.has_pin;
         setRequiresPin(hasPin);
         
+        // Check if already verified in this session (via email+password or PIN login)
+        const alreadyVerified = sessionStorage.getItem(`kiosk_pin_verified_${companyId}`) === 'true';
+        
+        if (alreadyVerified) {
+          // User already authenticated - skip all PIN checks
+          setPinVerified(true);
+          setStep('welcome');
+          return;
+        }
+        
         if (!hasPin) {
-          // No PIN set - block kiosk access
-          setCompanyNotFound(false);
+          // No PIN set and not authenticated - block access
           setStep('no-pin');
           return;
         }
         
-        // Check if already verified in this session
-        const alreadyVerified = sessionStorage.getItem(`kiosk_pin_verified_${companyId}`) === 'true';
-        
-        if (!alreadyVerified) {
-          setStep('pin');
-        } else {
-          setPinVerified(true);
-          setStep('welcome');
-        }
+        // Has PIN but not verified - show PIN entry
+        setStep('pin');
       }).catch(() => {
         setCompanyNotFound(true);
         setStep('welcome');

@@ -294,6 +294,8 @@ function KioskAuthForm({ onSuccess }) {
       if (mode === 'login') {
         const res = await axios.post(`${API}/auth/login`, { email, password });
         localStorage.setItem('kiosk_token', res.data.token);
+        // Already authenticated with password - skip PIN on kiosk page
+        sessionStorage.setItem(`kiosk_pin_verified_${res.data.company_id}`, 'true');
         onSuccess(res.data);
       } else if (mode === 'register') {
         const res = await axios.post(`${API}/auth/register`, { 
@@ -303,6 +305,7 @@ function KioskAuthForm({ onSuccess }) {
           telefoon: telefoon || null
         });
         localStorage.setItem('kiosk_token', res.data.token);
+        sessionStorage.setItem(`kiosk_pin_verified_${res.data.company_id}`, 'true');
         onSuccess(res.data);
       }
     } catch (err) {
