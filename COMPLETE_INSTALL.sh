@@ -741,12 +741,7 @@ server {
     gzip_vary on;
     gzip_types text/plain text/css text/xml application/json application/javascript;
     
-    # Root redirect naar /vastgoed
-    location = / {
-        return 301 https://vastgoed.$DOMAIN/vastgoed;
-    }
-    
-    # Frontend
+    # Frontend - Kiosk draait op root /
     location / {
         proxy_pass http://127.0.0.1:$FRONTEND_PORT;
         proxy_http_version 1.1;

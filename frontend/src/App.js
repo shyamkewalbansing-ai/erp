@@ -466,41 +466,55 @@ function EmployeePortalRoutes() {
   );
 }
 
-// Subdomain detection - redirect vastgoed.* to /vastgoed
-const SubdomainRedirect = ({ children }) => {
-  const hostname = window.location.hostname;
-  const pathname = window.location.pathname;
-  
-  if (hostname.startsWith('vastgoed.') && !pathname.startsWith('/vastgoed')) {
-    return <Navigate to="/vastgoed" replace />;
-  }
-  
-  return children;
-};
+// Check if running on vastgoed subdomain
+const isVastgoedSubdomain = () => window.location.hostname.startsWith('vastgoed.');
+
+// Vastgoed Kiosk routes for subdomain (runs at root /)
+function VastgoedSubdomainRoutes() {
+  return (
+    <SafeSuspense>
+      <Routes>
+        <Route path="/" element={<VastgoedKioskCompanySelect />} />
+        <Route path="/admin" element={<VastgoedKioskAdmin />} />
+        <Route path="/:companyId" element={<VastgoedKioskLayout />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </SafeSuspense>
+  );
+}
 
 // Main App with both portals
 function AppWithRoutes() {
+  const vastgoedSubdomain = isVastgoedSubdomain();
+  
   return (
     <BrowserRouter>
       <AuthProvider>
-        <SubdomainRedirect>
-          <Routes>
-            {/* Tenant Portal Routes */}
-            <Route path="/huurder/*" element={<TenantPortalRoutes />} />
-            
-            {/* Employee Portal Routes */}
-            <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
-            
-            {/* Auto Dealer Customer Portal Routes */}
-            <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
-            
-            {/* Main App Routes */}
-            <Route path="/*" element={<MainAppRoutes />} />
-          </Routes>
-        </SubdomainRedirect>
-        <Toaster richColors position="top-right" />
-        <OfflineSyncIndicator />
-        <BoekhoudingOfflineManager />
+        {vastgoedSubdomain ? (
+          <>
+            <VastgoedSubdomainRoutes />
+            <Toaster richColors position="top-right" />
+          </>
+        ) : (
+          <>
+            <Routes>
+              {/* Tenant Portal Routes */}
+              <Route path="/huurder/*" element={<TenantPortalRoutes />} />
+              
+              {/* Employee Portal Routes */}
+              <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
+              
+              {/* Auto Dealer Customer Portal Routes */}
+              <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
+              
+              {/* Main App Routes */}
+              <Route path="/*" element={<MainAppRoutes />} />
+            </Routes>
+            <Toaster richColors position="top-right" />
+            <OfflineSyncIndicator />
+            <BoekhoudingOfflineManager />
+          </>
+        )}
       </AuthProvider>
     </BrowserRouter>
   );
