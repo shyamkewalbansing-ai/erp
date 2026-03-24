@@ -59,19 +59,6 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
             </div>
           )}
 
-          {/* Deposit Status */}
-          {(tenant.deposit_required || 0) > 0 && (
-            <div className="bg-white border-2 border-slate-100 rounded-2xl p-6 flex items-center gap-4 shadow-sm">
-              <Shield className="w-8 h-8 text-slate-400 flex-shrink-0" />
-              <div>
-                <p className="text-lg font-bold text-slate-900">Borgsom</p>
-                <p className="text-slate-500">
-                  {formatSRD(tenant.deposit_paid || 0)} / {formatSRD(tenant.deposit_required)}
-                </p>
-              </div>
-            </div>
-          )}
-
           {/* Action Button */}
           {hasDebt ? (
             <button 
