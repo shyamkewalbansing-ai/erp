@@ -82,6 +82,7 @@ class CompanyUpdate(BaseModel):
     telefoon: Optional[str] = None
     adres: Optional[str] = None
     billing_day: Optional[int] = None  # 1-28
+    billing_next_month: Optional[bool] = None  # True = deadline is next month
     fine_amount: Optional[float] = None
     stamp_company_name: Optional[str] = None
     stamp_address: Optional[str] = None
@@ -242,6 +243,7 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "telefoon": company.get("telefoon"),
         "adres": company.get("adres"),
         "billing_day": company.get("billing_day", 1),
+        "billing_next_month": company.get("billing_next_month", True),
         "fine_amount": company.get("fine_amount", 0),
         "stamp_company_name": company.get("stamp_company_name", ""),
         "stamp_address": company.get("stamp_address", ""),
@@ -601,9 +603,10 @@ async def list_tenants(company: dict = Depends(get_current_company)):
     company_id = company["company_id"]
     tenants = await db.kiosk_tenants.find({"company_id": company_id}).to_list(1000)
     
-    # Get company billing_day setting
+    # Get company billing settings
     comp = await db.kiosk_companies.find_one({"company_id": company_id})
     billing_day = comp.get("billing_day", 1) if comp else 1
+    billing_next_month = comp.get("billing_next_month", True) if comp else True
     
     now = datetime.now(timezone.utc)
     current_month = now.strftime("%Y-%m")

@@ -817,6 +817,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
 // ============== SETTINGS TAB ==============
 function SettingsTab({ company, token, onRefresh }) {
   const [billingDay, setBillingDay] = useState(company?.billing_day || 1);
+  const [billingNextMonth, setBillingNextMonth] = useState(company?.billing_next_month !== false);
   const [fineAmount, setFineAmount] = useState(company?.fine_amount || 0);
   const [stampName, setStampName] = useState(company?.stamp_company_name || '');
   const [stampAddress, setStampAddress] = useState(company?.stamp_address || '');
@@ -832,6 +833,7 @@ function SettingsTab({ company, token, onRefresh }) {
     try {
       await axios.put(`${API}/auth/settings`, {
         billing_day: billingDay,
+        billing_next_month: billingNextMonth,
         fine_amount: fineAmount,
         stamp_company_name: stampName,
         stamp_address: stampAddress,
@@ -877,20 +879,45 @@ function SettingsTab({ company, token, onRefresh }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Huur vervalt op dag
             </label>
-            <p className="text-xs text-slate-400 mb-2">De dag van de maand waarop de huur betaald moet zijn (1-28)</p>
-            <input
-              type="number"
-              min="1"
-              max="28"
-              value={billingDay}
-              onChange={(e) => setBillingDay(parseInt(e.target.value))}
-              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500"
-            />
+            <div className="flex items-center gap-4 mb-3">
+              <input
+                type="number"
+                min="1"
+                max="28"
+                value={billingDay}
+                onChange={(e) => setBillingDay(parseInt(e.target.value) || 1)}
+                className="w-24 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-center text-lg font-bold"
+              />
+              <span className="text-sm text-slate-500">van de</span>
+              <div className="flex bg-slate-100 rounded-xl p-1">
+                <button
+                  type="button"
+                  onClick={() => setBillingNextMonth(false)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${!billingNextMonth ? 'bg-orange-500 text-white' : 'text-slate-600 hover:text-slate-800'}`}
+                >
+                  Dezelfde maand
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillingNextMonth(true)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition ${billingNextMonth ? 'bg-orange-500 text-white' : 'text-slate-600 hover:text-slate-800'}`}
+                >
+                  Volgende maand
+                </button>
+              </div>
+            </div>
+            <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-600">
+              <span className="font-medium">Voorbeeld:</span> Huur van maart moet betaald zijn voor{' '}
+              <span className="font-bold text-orange-600">
+                {billingDay} {billingNextMonth ? 'april' : 'maart'}
+              </span>
+              . Na die datum wordt de nieuwe maandhuur automatisch bij het saldo opgeteld.
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
