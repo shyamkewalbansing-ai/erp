@@ -2678,6 +2678,7 @@ async def test_whatsapp_connection(company: dict = Depends(get_current_company))
 
 SUPERADMIN_EMAIL = "admin@facturatie.sr"
 SUPERADMIN_PASSWORD = "Bharat7755"
+PRO_PLAN_PRICE = 3500.00
 
 class SuperAdminLogin(BaseModel):
     email: str
@@ -2715,21 +2716,28 @@ async def superadmin_login(data: SuperAdminLogin):
 async def superadmin_stats(admin=Depends(get_superadmin)):
     total_companies = await db.kiosk_companies.count_documents({})
     active_companies = await db.kiosk_companies.count_documents({"status": "active"})
+    pro_companies = await db.kiosk_companies.count_documents({"subscription": "pro"})
     total_tenants = await db.kiosk_tenants.count_documents({})
     total_apartments = await db.kiosk_apartments.count_documents({})
     total_payments = await db.kiosk_payments.count_documents({})
     
     pipeline = [{"$match": {"status": "completed"}}, {"$group": {"_id": None, "total": {"$sum": "$amount"}}}]
     agg = await db.kiosk_payments.aggregate(pipeline).to_list(1)
-    total_revenue = agg[0]["total"] if agg else 0
+    total_rent_revenue = agg[0]["total"] if agg else 0
+    
+    monthly_saas_revenue = pro_companies * PRO_PLAN_PRICE
     
     return {
         "total_companies": total_companies,
         "active_companies": active_companies,
+        "pro_companies": pro_companies,
+        "free_companies": total_companies - pro_companies,
         "total_tenants": total_tenants,
         "total_apartments": total_apartments,
         "total_payments": total_payments,
-        "total_revenue": total_revenue
+        "total_rent_revenue": total_rent_revenue,
+        "monthly_saas_revenue": monthly_saas_revenue,
+        "pro_plan_price": PRO_PLAN_PRICE
     }
 
 @router.get("/superadmin/companies")
@@ -2750,7 +2758,7 @@ async def superadmin_companies(admin=Depends(get_superadmin)):
             "email": c.get("email", ""),
             "telefoon": c.get("telefoon", ""),
             "status": c.get("status", "active"),
-            "subscription": c.get("subscription", "gratis"),
+            "subscription": c.get("subscription", "free"),
             "tenant_count": tenant_count,
             "apartment_count": apt_count,
             "payment_count": payment_count,
@@ -2772,20 +2780,22 @@ async def superadmin_toggle_company(company_id: str, admin=Depends(get_superadmi
     return {"status": new_status, "message": f"Bedrijf {'geactiveerd' if new_status == 'active' else 'gedeactiveerd'}"}
 
 @router.put("/superadmin/companies/{company_id}/subscription")
-async def superadmin_update_subscription(company_id: str, subscription: str = "gratis", admin=Depends(get_superadmin)):
+async def superadmin_update_subscription(company_id: str, admin=Depends(get_superadmin)):
     comp = await db.kiosk_companies.find_one({"company_id": company_id})
     if not comp:
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    current = comp.get("subscription", "free")
+    new_sub = "free" if current == "pro" else "pro"
     await db.kiosk_companies.update_one(
         {"company_id": company_id},
-        {"$set": {"subscription": subscription, "updated_at": datetime.now(timezone.utc)}}
+        {"$set": {"subscription": new_sub, "updated_at": datetime.now(timezone.utc)}}
     )
-    return {"subscription": subscription, "message": f"Abonnement bijgewerkt naar {subscription}"}
+    label = "PRO (SRD 3.500/mnd)" if new_sub == "pro" else "Gratis"
+    return {"subscription": new_sub, "message": f"Abonnement bijgewerkt naar {label}"}
 
 @router.get("/superadmin/payments")
 async def superadmin_payments(admin=Depends(get_superadmin)):
-    payments = await db.kiosk_payments.find({}, {"_id": 0}).sort("created_at", -1).limit(100).to_list(100)
-    # Enrich with company name
+    payments = await db.kiosk_payments.find({}, {"_id": 0}).sort("created_at", -1).limit(200).to_list(200)
     company_cache = {}
     for p in payments:
         cid = p.get("company_id", "")
