@@ -145,6 +145,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'employees', label: 'Werknemers', icon: Briefcase },
     { id: 'settings', label: 'Instellingen', icon: Settings },
     { id: 'power', label: 'Stroombrekers', icon: Zap },
+    { id: 'messages', label: 'Berichten', icon: MessageSquare },
     { id: 'subscription', label: 'Abonnement', icon: Crown },
   ];
 
@@ -276,6 +277,11 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         {/* Power/Stroombrekers Tab */}
         {activeTab === 'power' && (
           <PowerTab apartments={apartments} tenants={tenants} token={token} onRefresh={loadData} />
+        )}
+
+        {/* Berichten/WhatsApp Tab */}
+        {activeTab === 'messages' && (
+          <MessagesTab token={token} />
         )}
 
         {/* Subscription Tab */}
@@ -2207,6 +2213,213 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
 }
 
 // ============== SUBSCRIPTION TAB ==============
+function MessagesTab({ token }) {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filterType, setFilterType] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedId, setExpandedId] = useState(null);
+
+  const loadMessages = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API}/admin/whatsapp/history`, { headers: { Authorization: `Bearer ${token}` } });
+      setMessages(res.data);
+    } catch (err) { console.error(err); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadMessages(); }, []);
+
+  const typeLabels = {
+    payment_confirmation: { label: 'Betaling', color: 'bg-green-100 text-green-700' },
+    new_invoice: { label: 'Factuur', color: 'bg-blue-100 text-blue-700' },
+    fine_applied: { label: 'Boete', color: 'bg-red-100 text-red-700' },
+    overdue: { label: 'Achterstand', color: 'bg-orange-100 text-orange-700' },
+    auto: { label: 'Automatisch', color: 'bg-slate-100 text-slate-600' },
+    manual: { label: 'Handmatig', color: 'bg-purple-100 text-purple-700' },
+  };
+
+  const statusLabels = {
+    sent: { label: 'Verzonden', color: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
+    failed: { label: 'Mislukt', color: 'bg-red-100 text-red-700', dot: 'bg-red-500' },
+    pending: { label: 'Wachtend', color: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500' },
+  };
+
+  const filtered = messages.filter(m => {
+    if (filterType !== 'all' && m.message_type !== filterType) return false;
+    if (filterStatus !== 'all' && m.status !== filterStatus) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return (m.tenant_name || '').toLowerCase().includes(q) || (m.phone || '').includes(q);
+    }
+    return true;
+  });
+
+  const formatDate = (d) => {
+    if (!d) return '-';
+    const dt = new Date(d);
+    return dt.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) + ' ' + dt.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const stats = {
+    total: messages.length,
+    sent: messages.filter(m => m.status === 'sent').length,
+    failed: messages.filter(m => m.status === 'failed').length,
+  };
+
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>;
+
+  return (
+    <div className="space-y-6" data-testid="messages-tab">
+      {/* Stats cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-slate-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-slate-900">{stats.total}</p>
+              <p className="text-xs text-slate-500">Totaal berichten</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
+              <Check className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-green-600">{stats.sent}</p>
+              <p className="text-xs text-slate-500">Verzonden</p>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
+              <AlertTriangle className="w-5 h-5 text-red-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-red-500">{stats.failed}</p>
+              <p className="text-xs text-slate-500">Mislukt</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl border border-slate-200 p-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Zoek op huurder of telefoon..."
+              data-testid="messages-search"
+              className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400"
+            />
+          </div>
+          <select
+            value={filterType}
+            onChange={e => setFilterType(e.target.value)}
+            data-testid="messages-filter-type"
+            className="px-3 py-2.5 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:border-orange-400"
+          >
+            <option value="all">Alle types</option>
+            <option value="payment_confirmation">Betaling</option>
+            <option value="new_invoice">Factuur</option>
+            <option value="fine_applied">Boete</option>
+            <option value="overdue">Achterstand</option>
+            <option value="manual">Handmatig</option>
+          </select>
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            data-testid="messages-filter-status"
+            className="px-3 py-2.5 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:border-orange-400"
+          >
+            <option value="all">Alle statussen</option>
+            <option value="sent">Verzonden</option>
+            <option value="failed">Mislukt</option>
+            <option value="pending">Wachtend</option>
+          </select>
+          <button
+            onClick={loadMessages}
+            data-testid="messages-refresh"
+            className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-medium transition"
+          >
+            <Loader2 className="w-4 h-4" />
+            Vernieuwen
+          </button>
+        </div>
+      </div>
+
+      {/* Messages list */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        {filtered.length === 0 ? (
+          <div className="text-center py-16">
+            <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+            <p className="text-slate-500 font-medium">Geen berichten gevonden</p>
+            <p className="text-sm text-slate-400 mt-1">
+              {messages.length === 0 ? 'WhatsApp berichten verschijnen hier zodra ze automatisch worden verstuurd' : 'Pas uw filters aan om berichten te zien'}
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100">
+            {filtered.map((msg) => {
+              const typeInfo = typeLabels[msg.message_type] || typeLabels.auto;
+              const statusInfo = statusLabels[msg.status] || statusLabels.pending;
+              const isExpanded = expandedId === msg.message_id;
+              return (
+                <div
+                  key={msg.message_id}
+                  data-testid={`message-row-${msg.message_id}`}
+                  className="hover:bg-slate-50 transition cursor-pointer"
+                  onClick={() => setExpandedId(isExpanded ? null : msg.message_id)}
+                >
+                  <div className="px-5 py-4 flex items-center gap-4">
+                    {/* Status dot */}
+                    <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${statusInfo.dot}`} />
+                    {/* Tenant info */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-slate-900 text-sm">{msg.tenant_name || 'Onbekend'}</span>
+                        <span className="text-xs text-slate-400">{msg.phone}</span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-0.5">{formatDate(msg.created_at)}</p>
+                    </div>
+                    {/* Type badge */}
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${typeInfo.color}`}>
+                      {typeInfo.label}
+                    </span>
+                    {/* Status badge */}
+                    <span className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusInfo.color}`}>
+                      {statusInfo.label}
+                    </span>
+                  </div>
+                  {/* Expanded message content */}
+                  {isExpanded && (
+                    <div className="px-5 pb-4 pl-12">
+                      <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-700 whitespace-pre-wrap border border-slate-100">
+                        {msg.message}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SubscriptionTab({ company }) {
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">

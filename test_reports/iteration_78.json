@@ -1,0 +1,52 @@
+{
+  "summary": "Tested WhatsApp Message History/Log (Berichten) tab feature in Vastgoed Kiosk ERP admin dashboard. All backend APIs and frontend UI components working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_whatsapp_history.py",
+    "/app/test_reports/pytest/pytest_whatsapp_history.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": ["/app/backend/tests/test_whatsapp_history.py"],
+  "success_rate": {"backend": "100%", "frontend": "100%"},
+  "seed_data_creation": "Used existing 8 demo WhatsApp messages in kiosk_wa_messages collection",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "WhatsApp Message History feature fully tested. The Berichten tab is accessible from admin dashboard after login (demo@facturatie.sr / demo2024) and clicking Beheerder button. Key test-ids: messages-tab, messages-search, messages-filter-type, messages-filter-status, messages-refresh, message-row-{id}",
+  "features_tested": {
+    "backend_apis": [
+      {"endpoint": "POST /api/kiosk/auth/login", "status": "PASS", "notes": "Login with demo@facturatie.sr / demo2024 works"},
+      {"endpoint": "GET /api/kiosk/admin/whatsapp/history", "status": "PASS", "notes": "Returns array of messages with correct fields (message_id, company_id, tenant_id, tenant_name, phone, message_type, message, status, created_at)"},
+      {"endpoint": "GET /api/kiosk/admin/whatsapp/history (unauthorized)", "status": "PASS", "notes": "Returns 401 without auth token"},
+      {"endpoint": "GET /api/kiosk/admin/whatsapp/history (invalid token)", "status": "PASS", "notes": "Returns 401 with invalid token"}
+    ],
+    "frontend_ui": [
+      {"feature": "Login flow", "status": "PASS", "notes": "Login at /vastgoed with demo credentials works"},
+      {"feature": "Beheerder button", "status": "PASS", "notes": "Button visible at bottom-left after login, navigates to admin dashboard"},
+      {"feature": "Berichten tab visibility", "status": "PASS", "notes": "Tab visible in navigation bar with MessageSquare icon"},
+      {"feature": "Stat cards", "status": "PASS", "notes": "Shows Totaal berichten (8), Verzonden (5), Mislukt (3)"},
+      {"feature": "Messages list", "status": "PASS", "notes": "Shows 8 message rows with tenant name, phone, date, type badge, status badge"},
+      {"feature": "Filter by type", "status": "PASS", "notes": "Selecting 'Betaling' shows only 4 payment messages"},
+      {"feature": "Filter by status", "status": "PASS", "notes": "Selecting 'Mislukt' shows only 3 failed messages"},
+      {"feature": "Search functionality", "status": "PASS", "notes": "Searching 'Bharat' shows only 2 messages for that tenant"},
+      {"feature": "Message expand", "status": "PASS", "notes": "Clicking row expands to show full message text"},
+      {"feature": "Refresh button", "status": "PASS", "notes": "Vernieuwen button reloads messages from API"}
+    ]
+  },
+  "test_data_testids_verified": [
+    "messages-tab",
+    "messages-search",
+    "messages-filter-type",
+    "messages-filter-status",
+    "messages-refresh",
+    "message-row-{id}"
+  ]
+}

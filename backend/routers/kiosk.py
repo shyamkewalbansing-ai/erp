@@ -34,6 +34,57 @@ def set_database(database):
 def generate_uuid():
     return str(uuid.uuid4())
 
+async def _send_wa_auto(company_id: str, phone: str, message: str, tenant_id: str = "", tenant_name: str = "", msg_type: str = "auto"):
+    """Internal helper: send WhatsApp message if enabled for this company"""
+    try:
+        comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+        if not comp or not comp.get("wa_enabled") or not comp.get("wa_api_token") or not comp.get("wa_phone_id"):
+            return  # WhatsApp not configured, skip silently
+        
+        phone_clean = phone.replace(" ", "").replace("-", "").replace("+", "")
+        if not phone_clean.startswith("597"):
+            phone_clean = "597" + phone_clean
+        
+        # Append bank info if available
+        bank_name = comp.get("bank_name")
+        bank_account = comp.get("bank_account_number")
+        bank_holder = comp.get("bank_account_name")
+        if bank_name and bank_account:
+            message += f"\n\n--- Bankgegevens ---\nBank: {bank_name}\nRekening: {bank_account}"
+            if bank_holder:
+                message += f"\nT.n.v.: {bank_holder}"
+        
+        wa_url = comp.get("wa_api_url", "https://graph.facebook.com/v21.0")
+        wa_token = comp["wa_api_token"]
+        wa_phone_id = comp["wa_phone_id"]
+        
+        send_status = "pending"
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    f"{wa_url}/{wa_phone_id}/messages",
+                    headers={"Authorization": f"Bearer {wa_token}", "Content-Type": "application/json"},
+                    json={"messaging_product": "whatsapp", "to": phone_clean, "type": "text", "text": {"body": message}}
+                )
+            send_status = "sent" if resp.status_code == 200 else "failed"
+        except Exception:
+            send_status = "failed"
+        
+        await db.kiosk_wa_messages.insert_one({
+            "message_id": generate_uuid(),
+            "company_id": company_id,
+            "tenant_id": tenant_id,
+            "tenant_name": tenant_name,
+            "phone": phone_clean,
+            "message_type": msg_type,
+            "message": message,
+            "status": send_status,
+            "created_at": datetime.now(timezone.utc)
+        })
+    except Exception:
+        pass  # Auto messages should never break the main flow
+
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
@@ -574,6 +625,38 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
     remaining_service = updated_tenant.get("service_costs", 0) if updated_tenant else 0
     remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
     
+    # === AUTO WHATSAPP: Payment confirmation ===
+    total_remaining = remaining_rent + remaining_service + remaining_fines
+    comp_name = ""
+    try:
+        c = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+        comp_name = c.get("stamp_company_name") or c.get("name", "") if c else ""
+    except Exception:
+        pass
+    
+    type_labels = {"rent": "Huurbetaling", "monthly_rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg"}
+    type_label = type_labels.get(data.payment_type, data.payment_type)
+    covered_str = ", ".join(covered_months) if covered_months else ""
+    
+    if total_remaining <= 0:
+        wa_msg = (f"Beste {tenant['name']},\n\n"
+                  f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
+                  f"Kwitantie: {kwitantie_nummer}\n"
+                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
+                  f"Uw saldo is nu VOLLEDIG VOLDAAN.\n\n"
+                  f"Bedankt voor uw betaling!\n{comp_name}")
+    else:
+        wa_msg = (f"Beste {tenant['name']},\n\n"
+                  f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
+                  f"Kwitantie: {kwitantie_nummer}\n"
+                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
+                  f"Resterend saldo: SRD {total_remaining:,.2f}\n\n"
+                  f"Met vriendelijke groet,\n{comp_name}")
+    
+    if tenant.get("phone") or tenant.get("telefoon"):
+        tenant_phone = tenant.get("phone") or tenant.get("telefoon", "")
+        await _send_wa_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
+    
     return {
         "payment_id": payment_id,
         "kwitantie_nummer": kwitantie_nummer,
@@ -782,6 +865,40 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                 {"tenant_id": t["tenant_id"]},
                 {"$set": updates}
             )
+            
+            # === AUTO WHATSAPP: Billing notifications ===
+            if (t.get("phone") or t.get("telefoon")) and t.get("status") == "active":
+                company_name_for_wa = comp.get("stamp_company_name") or comp.get("name", "") if comp else ""
+                months_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+                t_phone = t.get("phone") or t.get("telefoon", "")
+                
+                # New rent month billed
+                if "outstanding_rent" in updates and updates["outstanding_rent"] > t.get("outstanding_rent", 0):
+                    new_bt = updates.get("rent_billed_through", billed_through)
+                    try:
+                        bt_d = datetime.strptime(new_bt + "-01", "%Y-%m-%d")
+                        month_label = f"{months_nl[bt_d.month - 1]} {bt_d.year}"
+                    except Exception:
+                        month_label = new_bt
+                    wa_rent_msg = (f"Beste {t['name']},\n\n"
+                                   f"De huur voor {month_label} is gefactureerd bij {company_name_for_wa}.\n"
+                                   f"Bedrag: SRD {monthly_rent:,.2f}\n"
+                                   f"Totaal openstaand: SRD {updates['outstanding_rent']:,.2f}\n\n"
+                                   f"Gelieve voor de vervaldatum te betalen.\n\n"
+                                   f"Met vriendelijke groet,\n{company_name_for_wa}")
+                    await _send_wa_auto(company_id, t_phone, wa_rent_msg, t["tenant_id"], t["name"], "new_invoice")
+                
+                # Fine applied
+                if "fines" in updates and updates["fines"] > t.get("fines", 0):
+                    added_fine = updates["fines"] - t.get("fines", 0)
+                    wa_fine_msg = (f"Beste {t['name']},\n\n"
+                                   f"Er is een boete van SRD {added_fine:,.2f} toegepast op uw account bij {company_name_for_wa}.\n"
+                                   f"Reden: Achterstallige huur niet tijdig betaald.\n"
+                                   f"Totaal boetes: SRD {updates['fines']:,.2f}\n"
+                                   f"Totaal openstaand: SRD {(updates.get('outstanding_rent', outstanding) + updates.get('service_costs', t.get('service_costs', 0)) + updates['fines']):,.2f}\n\n"
+                                   f"Gelieve zo spoedig mogelijk te betalen.\n\n"
+                                   f"Met vriendelijke groet,\n{company_name_for_wa}")
+                    await _send_wa_auto(company_id, t_phone, wa_fine_msg, t["tenant_id"], t["name"], "fine_applied")
         
         # Calculate billing details for display
         overdue_months = []
@@ -810,7 +927,8 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             "apartment_number": t.get("apartment_number", ""),
             "tenant_code": t.get("tenant_code", ""),
             "email": t.get("email"),
-            "telefoon": t.get("telefoon"),
+            "telefoon": t.get("telefoon") or t.get("phone"),
+            "phone": t.get("phone") or t.get("telefoon"),
             "monthly_rent": monthly_rent,
             "outstanding_rent": outstanding,
             "service_costs": t.get("service_costs", 0),
@@ -855,6 +973,7 @@ async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_
         "tenant_code": tenant_code.upper(),
         "email": data.email,
         "telefoon": data.telefoon,
+        "phone": data.telefoon,
         "monthly_rent": data.monthly_rent,
         "outstanding_rent": data.monthly_rent,  # Start with first month rent
         "service_costs": 0,
@@ -2355,7 +2474,7 @@ async def send_whatsapp_message(data: WhatsAppMessage, company: dict = Depends(g
     if not tenant:
         raise HTTPException(status_code=404, detail="Huurder niet gevonden")
     
-    phone = tenant.get("phone", "")
+    phone = tenant.get("phone") or tenant.get("telefoon", "")
     if not phone:
         raise HTTPException(status_code=400, detail="Huurder heeft geen telefoonnummer")
     
@@ -2462,7 +2581,7 @@ async def send_bulk_whatsapp(message_type: str = "overdue", company: dict = Depe
     failed = 0
     for tenant in tenants:
         outstanding = (tenant.get("outstanding_rent", 0) + tenant.get("service_costs", 0) + tenant.get("fines", 0))
-        if outstanding <= 0 or not tenant.get("phone"):
+        if outstanding <= 0 or not (tenant.get("phone") or tenant.get("telefoon")):
             continue
         try:
             msg_data = WhatsAppMessage(tenant_id=tenant["tenant_id"], message_type=message_type)
