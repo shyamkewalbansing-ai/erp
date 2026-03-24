@@ -2637,6 +2637,7 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   const [apartmentId, setApartmentId] = useState(tenant?.apartment_id || '');
   const [email, setEmail] = useState(tenant?.email || '');
   const [telefoon, setTelefoon] = useState(tenant?.telefoon || '');
+  const [tenantCode, setTenantCode] = useState(tenant?.tenant_code || '');
   const [monthlyRent, setMonthlyRent] = useState(tenant?.monthly_rent || 0);
   const [depositRequired, setDepositRequired] = useState(tenant?.deposit_required || 0);
   const [outstandingRent, setOutstandingRent] = useState(tenant?.outstanding_rent || 0);
@@ -2654,7 +2655,8 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const data = { name, apartment_id: apartmentId, email: email || null, telefoon: telefoon || null,
-        monthly_rent: parseFloat(monthlyRent), deposit_required: parseFloat(depositRequired) };
+        monthly_rent: parseFloat(monthlyRent), deposit_required: parseFloat(depositRequired),
+        tenant_code: tenantCode || null };
       if (tenant) {
         data.outstanding_rent = parseFloat(outstandingRent);
         data.service_costs = parseFloat(serviceCosts);
@@ -2702,6 +2704,14 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
             <label className="block text-sm font-medium mb-1">Telefoon</label>
             <input type="tel" value={telefoon} onChange={(e) => setTelefoon(e.target.value)}
               className="w-full px-4 py-3 border rounded-xl" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Huurderscode</label>
+            <input type="text" value={tenantCode} onChange={(e) => setTenantCode(e.target.value.toUpperCase())}
+              placeholder="bijv. A101 (leeg = automatisch)"
+              data-testid="tenant-code-input"
+              className="w-full px-4 py-3 border rounded-xl font-mono uppercase" />
+            <p className="text-xs text-slate-400 mt-1">Laat leeg voor automatische code</p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Maandhuur (SRD)</label>

@@ -171,23 +171,44 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
               </span>
             </div>
 
-            {/* Keypad */}
-            <div className="grid grid-cols-3 gap-2 lg:gap-4">
-              {['A', 'B', 'C', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'DEL', '0', 'OK'].map((key) => (
+            {/* Keypad - Letters + Numbers */}
+            <div className="space-y-3">
+              {/* Letter rows */}
+              <div className="grid grid-cols-9 gap-1.5 lg:gap-2">
+                {['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => handleKeypadPress(key)}
+                    className="h-11 lg:h-14 text-base lg:text-lg font-bold rounded-lg transition active:scale-95 bg-white border-2 border-slate-200 text-slate-900 hover:bg-slate-50"
+                  >
+                    {key}
+                  </button>
+                ))}
                 <button
-                  key={key}
-                  onClick={() => handleKeypadPress(key)}
-                  className={`h-14 lg:h-20 text-xl lg:text-2xl font-bold rounded-lg lg:rounded-xl transition active:scale-95 ${
-                    key === 'OK' 
-                      ? 'bg-orange-500 text-white hover:bg-orange-600' 
-                      : key === 'DEL' 
-                        ? 'bg-red-100 text-red-600 hover:bg-red-200' 
-                        : 'bg-white border-2 border-slate-200 text-slate-900 hover:bg-slate-50'
-                  }`}
+                  onClick={() => handleKeypadPress('DEL')}
+                  className="h-11 lg:h-14 text-base lg:text-lg font-bold rounded-lg transition active:scale-95 bg-red-100 text-red-600 hover:bg-red-200"
                 >
-                  {key}
+                  DEL
                 </button>
-              ))}
+              </div>
+              {/* Number row + OK */}
+              <div className="grid grid-cols-6 gap-1.5 lg:gap-2">
+                {['1','2','3','4','5','6','7','8','9','0'].map((key) => (
+                  <button
+                    key={key}
+                    onClick={() => handleKeypadPress(key)}
+                    className="h-12 lg:h-16 text-xl lg:text-2xl font-bold rounded-lg transition active:scale-95 bg-white border-2 border-slate-200 text-slate-900 hover:bg-slate-50"
+                  >
+                    {key}
+                  </button>
+                ))}
+                <button
+                  onClick={() => handleKeypadPress('OK')}
+                  className="h-12 lg:h-16 text-xl lg:text-2xl font-bold rounded-lg transition active:scale-95 bg-orange-500 text-white hover:bg-orange-600 col-span-2"
+                >
+                  OK
+                </button>
+              </div>
             </div>
           </div>
         )}
