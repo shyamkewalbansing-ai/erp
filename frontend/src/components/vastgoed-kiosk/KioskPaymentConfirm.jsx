@@ -15,7 +15,6 @@ const TYPE_LABELS = {
   fines: 'Boetes',
 };
 
-// Format month string to readable Dutch
 function formatRentMonth(monthStr) {
   if (!monthStr) return null;
   if (monthStr.includes('-')) {
@@ -23,9 +22,7 @@ function formatRentMonth(monthStr) {
     const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 
                         'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
     const monthIndex = parseInt(month, 10) - 1;
-    if (monthIndex >= 0 && monthIndex < 12) {
-      return `${monthNames[monthIndex]} ${year}`;
-    }
+    if (monthIndex >= 0 && monthIndex < 12) return `${monthNames[monthIndex]} ${year}`;
   }
   return monthStr;
 }
@@ -58,47 +55,47 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   return (
     <div className="min-h-full bg-slate-50 flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 p-6 flex items-center justify-between">
-        <button onClick={onBack} disabled={processing} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 transition text-lg font-medium disabled:opacity-50">
-          <ArrowLeft className="w-6 h-6" />
+      <div className="bg-white border-b border-slate-200 p-3 sm:p-6 flex items-center justify-between">
+        <button onClick={onBack} disabled={processing} className="flex items-center gap-1 sm:gap-2 text-slate-500 hover:text-slate-900 transition text-sm sm:text-lg font-medium disabled:opacity-50">
+          <ArrowLeft className="w-5 h-5 sm:w-6 sm:h-6" />
           <span>Terug</span>
         </button>
-        <h1 className="text-3xl font-bold text-slate-900">Bevestig betaling</h1>
-        <div className="w-32" />
+        <h1 className="text-lg sm:text-3xl font-bold text-slate-900">Bevestig betaling</h1>
+        <div className="w-16 sm:w-32" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-8 flex gap-8">
+      <div className="flex-1 p-3 sm:p-6 lg:p-8 flex flex-col lg:flex-row gap-4 sm:gap-6 lg:gap-8">
         {/* Left - Amount Display */}
-        <div className="flex-1 bg-gradient-to-br from-orange-500 to-orange-600 rounded-3xl p-12 flex flex-col items-center justify-center shadow-lg shadow-orange-500/30">
-          <p className="text-orange-100 text-2xl mb-4">Te betalen bedrag</p>
-          <p className="text-8xl font-bold text-white mb-6" data-testid="confirm-amount">
+        <div className="flex-1 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl sm:rounded-3xl p-6 sm:p-12 flex flex-col items-center justify-center shadow-lg shadow-orange-500/30">
+          <p className="text-orange-100 text-base sm:text-2xl mb-2 sm:mb-4">Te betalen bedrag</p>
+          <p className="text-4xl sm:text-7xl lg:text-8xl font-bold text-white mb-3 sm:mb-6" data-testid="confirm-amount">
             {formatSRD(paymentData.amount)}
           </p>
-          <div className="flex items-center gap-3 text-orange-100 text-xl">
-            <Banknote className="w-6 h-6" />
+          <div className="flex items-center gap-2 sm:gap-3 text-orange-100 text-sm sm:text-xl">
+            <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />
             <span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
           </div>
-          <p className="text-orange-200 mt-4">Betaalmethode: Contant</p>
+          <p className="text-orange-200 mt-2 sm:mt-4 text-xs sm:text-base">Betaalmethode: Contant</p>
         </div>
 
         {/* Right - Details + Confirm */}
-        <div className="w-[450px] flex flex-col">
+        <div className="w-full lg:w-[450px] flex flex-col">
           {/* Tenant Card */}
-          <div className="bg-white rounded-2xl p-6 flex items-center gap-6 mb-6 border-2 border-slate-100 shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center">
-              <User className="w-8 h-8" />
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 flex items-center gap-3 sm:gap-6 mb-4 sm:mb-6 border-2 border-slate-100 shadow-sm">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center flex-shrink-0">
+              <User className="w-6 h-6 sm:w-8 sm:h-8" />
             </div>
             <div>
-              <p className="text-xl font-bold text-slate-900">{tenant.name}</p>
-              <p className="text-slate-500">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
+              <p className="text-base sm:text-xl font-bold text-slate-900">{tenant.name}</p>
+              <p className="text-xs sm:text-base text-slate-500">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
             </div>
           </div>
 
           {/* Payment Summary */}
-          <div className="bg-white rounded-2xl p-6 mb-6 border-2 border-slate-100 shadow-sm flex-1">
-            <h4 className="text-lg font-bold text-slate-900 mb-4">Betalingsoverzicht</h4>
-            <div className="space-y-3">
+          <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-4 sm:mb-6 border-2 border-slate-100 shadow-sm flex-1">
+            <h4 className="text-sm sm:text-lg font-bold text-slate-900 mb-3 sm:mb-4">Betalingsoverzicht</h4>
+            <div className="space-y-2 sm:space-y-3 text-sm sm:text-base">
               <div className="flex justify-between">
                 <span className="text-slate-500">Type</span>
                 <span className="text-slate-900">{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
@@ -115,7 +112,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           </div>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-2 border-red-200 text-red-600 rounded-xl text-center font-medium">
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-red-50 border-2 border-red-200 text-red-600 rounded-xl text-center font-medium text-sm sm:text-base">
               {error}
             </div>
           )}
@@ -129,17 +126,17 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           >
             {processing ? (
               <>
-                <Loader2 className="w-8 h-8 animate-spin" />
+                <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin" />
                 <span>Verwerken...</span>
               </>
             ) : (
               <>
-                <CheckCircle className="w-8 h-8" />
+                <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8" />
                 <span>Bevestig betaling</span>
               </>
             )}
           </button>
-          <p className="text-center text-slate-500 mt-4">
+          <p className="text-center text-slate-500 mt-3 sm:mt-4 text-xs sm:text-base">
             Door te bevestigen geeft u aan dat het contante bedrag is ontvangen
           </p>
         </div>

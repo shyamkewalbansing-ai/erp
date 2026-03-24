@@ -21,7 +21,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
   return (
     <div className="min-h-full flex flex-col lg:flex-row bg-slate-50">
       {/* Left Panel - White with accent */}
-      <div className="w-full lg:w-2/5 bg-white p-6 lg:p-12 flex flex-col relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-200 min-h-[50vh] lg:min-h-0">
+      <div className="w-full lg:w-2/5 bg-white p-4 sm:p-6 lg:p-12 flex flex-col relative overflow-hidden border-b lg:border-b-0 lg:border-r border-slate-200 min-h-[40vh] lg:min-h-0">
         {/* Decorative circles */}
         <div className="absolute -top-32 -left-32 w-96 h-96 bg-orange-500/5 rounded-full" />
         <div className="absolute -bottom-48 -right-48 w-[500px] h-[500px] bg-orange-500/10 rounded-full" />
@@ -79,7 +79,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
       </div>
 
       {/* Right Panel - Light gray */}
-      <div className="flex-1 bg-slate-50 p-6 lg:p-12 flex flex-col justify-center">
+      <div className="flex-1 bg-slate-50 p-4 sm:p-6 lg:p-12 flex flex-col justify-center">
         <div className="max-w-xl mx-auto w-full">
           <h3 className="text-2xl lg:text-5xl font-bold text-slate-900 mb-2 lg:mb-3">
             {companyName || 'Huurbetalingen'}

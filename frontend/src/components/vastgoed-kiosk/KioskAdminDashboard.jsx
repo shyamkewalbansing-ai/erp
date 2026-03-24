@@ -153,7 +153,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   return (
     <div className="min-h-screen bg-slate-100">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 py-4 px-4 lg:px-8 shadow-sm">
+      <header className="bg-white border-b border-slate-200 py-3 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm">
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-3 lg:gap-4">
             <button onClick={handleBack} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition">
@@ -196,21 +196,21 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         </div>
       </header>
 
-      <div className="w-full px-4 lg:px-8 py-6">
+      <div className="w-full px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
         {/* Tabs */}
-        <div className="flex gap-2 mb-8 overflow-x-auto pb-1 scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+        <div className="flex gap-1.5 sm:gap-2 mb-6 sm:mb-8 overflow-x-auto pb-1 scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
           {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition active:scale-95 whitespace-nowrap flex-shrink-0 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition active:scale-95 whitespace-nowrap flex-shrink-0 ${
                 activeTab === tab.id 
                   ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/20' 
                   : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
               }`}
             >
               <tab.icon className="w-4 h-4" />
-              {tab.label}
+              <span className="hidden sm:inline">{tab.label}</span>
             </button>
           ))}
         </div>
@@ -389,13 +389,26 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
         </div>
       )}
 
-      {/* Stat Cards - zelfde witte container als Huurders/Appartementen */}
+      {/* Stat Cards */}
       <div className="bg-white rounded-xl border border-slate-200 mb-6">
         <div className="p-4 border-b border-slate-200">
           <h2 className="font-semibold text-slate-900">Overzicht</h2>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        {/* Mobile: grid cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:hidden gap-px bg-slate-100">
+          {stats.map((stat, i) => (
+            <div key={i} className="bg-white p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <stat.icon className="w-4 h-4 text-orange-500" />
+                <p className="text-xs text-slate-500">{stat.label}</p>
+              </div>
+              <p className="text-base font-bold text-slate-900">{stat.value}</p>
+            </div>
+          ))}
+        </div>
+        {/* Desktop: table */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-slate-50">
               <tr>
                 {stats.map((stat, i) => (
@@ -430,7 +443,7 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
           <div className="p-12 text-center text-slate-400">Nog geen betalingen</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead className="bg-slate-50">
                 <tr>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
@@ -547,7 +560,7 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead className="bg-slate-50">
                 <tr>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
@@ -688,7 +701,7 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead className="bg-slate-50">
                 <tr>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
@@ -793,7 +806,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
         </button>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[600px]">
           <thead className="bg-slate-50">
             <tr>
               <th className="text-left p-4 text-sm font-medium text-slate-500">Nummer</th>
@@ -909,7 +922,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
             Geen betalingen gevonden
           </div>
         ) : (
-          <table className="w-full">
+          <table className="w-full min-w-[600px]">
             <thead className="bg-slate-50">
               <tr>
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Datum</th>
@@ -1439,7 +1452,7 @@ function SettingsTab({ company, token, onRefresh }) {
             <p className="text-sm text-slate-500">Bankgegevens voor overschrijving — wordt getoond op kwitanties</p>
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Banknaam</label>
             <input type="text" value={bankName} onChange={e => setBankName(e.target.value)} placeholder="bijv. De Surinaamsche Bank" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-500" />
@@ -1688,7 +1701,7 @@ function KasTab({ token, tenants, formatSRD }) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead className="bg-slate-50">
                 <tr>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Datum</th>
@@ -1898,7 +1911,7 @@ function EmployeesTab({ token, formatSRD }) {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[600px]">
               <thead className="bg-slate-50">
                 <tr>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Werknemer</th>
@@ -2198,7 +2211,7 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
       {/* Add Device Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-4 sm:p-6" onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-slate-900 mb-4">Shelly Apparaat Toevoegen</h3>
             <div className="space-y-4">
               <div>
@@ -2216,7 +2229,7 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Naam (optioneel)</label>
                 <input type="text" value={newDevice.device_name} onChange={e => setNewDevice({...newDevice, device_name: e.target.value})} placeholder="bijv. Meterkast A-101" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
                   <select value={newDevice.device_type} onChange={e => setNewDevice({...newDevice, device_type: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500">
@@ -2538,7 +2551,7 @@ function LeaseModal({ lease, tenants, apartments, onClose, onSave, token }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-xl w-full max-w-lg shadow-xl" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-xl w-full max-w-lg mx-4 shadow-xl" onClick={e => e.stopPropagation()}>
         <div className="p-6 border-b border-slate-200">
           <h3 className="text-lg font-bold text-slate-900">{lease ? 'Huurovereenkomst Bewerken' : 'Nieuwe Huurovereenkomst'}</h3>
         </div>
@@ -2565,7 +2578,7 @@ function LeaseModal({ lease, tenants, apartments, onClose, onSave, token }) {
               </div>
             </>
           )}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Startdatum</label>
               <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required
@@ -2634,7 +2647,7 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6">
+      <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-4 sm:p-6">
         <h3 className="text-xl font-bold mb-4">{apartment ? 'Bewerk' : 'Nieuw'} Appartement</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -2711,10 +2724,10 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl w-full max-w-4xl p-6 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl w-full max-w-4xl mx-4 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
         <h3 className="text-xl font-bold mb-4">{tenant ? 'Bewerk' : 'Nieuwe'} Huurder</h3>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Naam *</label>
               <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
@@ -2729,7 +2742,7 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">E-mail</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
@@ -2741,7 +2754,7 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
                 className="w-full px-4 py-3 border rounded-xl" />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium mb-1">Huurderscode</label>
               <input type="text" value={tenantCode} onChange={(e) => setTenantCode(e.target.value.toUpperCase())}
@@ -2860,7 +2873,7 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl w-full max-w-md p-6">
+      <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-4 sm:p-6">
         <h3 className="text-xl font-bold mb-2">Bedrag Toevoegen</h3>
         <p className="text-slate-500 mb-4">{tenant.name} - Appt. {tenant.apartment_number}</p>
         
