@@ -834,16 +834,11 @@ function SettingsTab({ company, token, onRefresh }) {
       await axios.put(`${API}/auth/settings`, {
         billing_day: billingDay,
         billing_next_month: billingNextMonth,
-        fine_amount: fineAmount,
-        stamp_company_name: stampName,
-        stamp_address: stampAddress,
-        stamp_phone: stampPhone,
-        stamp_whatsapp: stampWhatsapp,
-        kiosk_pin: kioskPin || null
+        fine_amount: fineAmount
       }, { headers: { Authorization: `Bearer ${token}` } });
       onRefresh();
     } catch (err) {
-      alert('Opslaan mislukt');
+      alert(err.response?.data?.detail || 'Opslaan mislukt');
     } finally {
       setSaving(false);
     }

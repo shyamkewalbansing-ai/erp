@@ -607,6 +607,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
     comp = await db.kiosk_companies.find_one({"company_id": company_id})
     billing_day = comp.get("billing_day", 1) if comp else 1
     billing_next_month = comp.get("billing_next_month", True) if comp else True
+    fine_amount = comp.get("fine_amount", 0) if comp else 0
     
     now = datetime.now(timezone.utc)
     current_month = now.strftime("%Y-%m")
@@ -616,15 +617,13 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         billed_through = t.get("rent_billed_through", "")
         monthly_rent = t.get("monthly_rent", 0)
         outstanding = t.get("outstanding_rent", 0)
+        current_fines = t.get("fines", 0)
+        updates = {}
         
         if t.get("status") == "active" and monthly_rent > 0:
             if not billed_through:
-                # Initialize for existing tenants
                 billed_through = current_month
-                await db.kiosk_tenants.update_one(
-                    {"tenant_id": t["tenant_id"]},
-                    {"$set": {"rent_billed_through": current_month}}
-                )
+                updates["rent_billed_through"] = current_month
             else:
                 # Auto-bill: check if billing deadline has passed
                 billed_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
@@ -634,10 +633,8 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                 
                 while True:
                     if billing_next_month:
-                        # March rent due on billing_day of April
                         due_date = (check_month + relativedelta(months=1)).replace(day=min(billing_day, 28))
                     else:
-                        # March rent due on billing_day of March
                         due_date = check_month.replace(day=min(billing_day, 28))
                     
                     if now >= due_date.replace(tzinfo=timezone.utc):
@@ -647,18 +644,42 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                         break
                 
                 if months_billed > 0:
-                    new_outstanding = outstanding + (monthly_rent * months_billed)
-                    new_billed = (billed_date + relativedelta(months=months_billed)).strftime("%Y-%m")
-                    await db.kiosk_tenants.update_one(
-                        {"tenant_id": t["tenant_id"]},
-                        {"$set": {
-                            "outstanding_rent": new_outstanding,
-                            "rent_billed_through": new_billed,
-                            "updated_at": now
-                        }}
-                    )
-                    outstanding = new_outstanding
-                    billed_through = new_billed
+                    # Check if there was outstanding rent before billing - apply fine
+                    if outstanding > 0 and fine_amount > 0:
+                        # Tenant had unpaid rent when deadline passed -> add fine once
+                        last_fine_month = t.get("last_fine_month", "")
+                        fine_due_month = billed_through  # The month they failed to pay
+                        if last_fine_month != fine_due_month:
+                            current_fines += fine_amount
+                            updates["fines"] = current_fines
+                            updates["last_fine_month"] = fine_due_month
+                    
+                    outstanding += monthly_rent * months_billed
+                    billed_through = (billed_date + relativedelta(months=months_billed)).strftime("%Y-%m")
+                    updates["outstanding_rent"] = outstanding
+                    updates["rent_billed_through"] = billed_through
+            
+            # Also check: is current month's rent overdue right now? (for fine display)
+            if outstanding > 0 and fine_amount > 0 and not updates.get("last_fine_month"):
+                if billing_next_month:
+                    current_due = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+                    current_due = (current_due + relativedelta(months=1)).replace(day=min(billing_day, 28))
+                else:
+                    current_due = datetime.strptime(billed_through + "-01", "%Y-%m-%d").replace(day=min(billing_day, 28))
+                
+                if now >= current_due.replace(tzinfo=timezone.utc):
+                    last_fine_month = t.get("last_fine_month", "")
+                    if last_fine_month != billed_through:
+                        current_fines += fine_amount
+                        updates["fines"] = current_fines
+                        updates["last_fine_month"] = billed_through
+        
+        if updates:
+            updates["updated_at"] = now
+            await db.kiosk_tenants.update_one(
+                {"tenant_id": t["tenant_id"]},
+                {"$set": updates}
+            )
         
         result.append({
             "tenant_id": t["tenant_id"],
@@ -671,7 +692,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             "monthly_rent": monthly_rent,
             "outstanding_rent": outstanding,
             "service_costs": t.get("service_costs", 0),
-            "fines": t.get("fines", 0),
+            "fines": current_fines,
             "deposit_required": t.get("deposit_required", 0),
             "deposit_paid": t.get("deposit_paid", 0),
             "rent_billed_through": billed_through,
