@@ -14,6 +14,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   const [error, setError] = useState('');
   const [payMethod, setPayMethod] = useState(null); // null = choose, 'cash', 'card'
   const [sumupEnabled, setSumupEnabled] = useState(false);
+  const [sumupCurrency, setSumupCurrency] = useState('EUR');
   const [sumupLoading, setSumupLoading] = useState(true);
   const [cardStatus, setCardStatus] = useState('idle'); // idle, creating, widget, polling, done, error
   const [checkoutId, setCheckoutId] = useState(null);
@@ -24,7 +25,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   useEffect(() => {
     if (!companyId) return;
     axios.get(`${API}/public/${companyId}/sumup/enabled`)
-      .then(res => setSumupEnabled(res.data.enabled))
+      .then(res => { setSumupEnabled(res.data.enabled); setSumupCurrency(res.data.currency || 'EUR'); })
       .catch(() => {})
       .finally(() => setSumupLoading(false));
   }, [companyId]);
@@ -206,7 +207,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
                 <CreditCard className="w-10 h-10 text-blue-500" />
               </div>
               <p className="text-2xl font-extrabold text-slate-900 mb-2">Pinpas</p>
-              <p className="text-sm text-slate-400">Betaal met pinpas via SumUp</p>
+              <p className="text-sm text-slate-400">Betaal met pinpas via SumUp ({sumupCurrency})</p>
             </button>
           )}
         </div>

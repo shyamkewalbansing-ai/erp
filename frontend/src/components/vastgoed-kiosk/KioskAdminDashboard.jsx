@@ -1038,6 +1038,7 @@ function SettingsTab({ company, token, onRefresh }) {
   const [sumupApiKey, setSumupApiKey] = useState(company?.sumup_api_key || '');
   const [sumupMerchantCode, setSumupMerchantCode] = useState(company?.sumup_merchant_code || '');
   const [sumupEnabled, setSumupEnabled] = useState(company?.sumup_enabled || false);
+  const [sumupCurrency, setSumupCurrency] = useState(company?.sumup_currency || 'EUR');
 
   const handleSaveStamp = async () => {
     setSaving(true);
@@ -1111,7 +1112,8 @@ function SettingsTab({ company, token, onRefresh }) {
       await axios.put(`${API}/auth/settings`, {
         sumup_api_key: sumupApiKey,
         sumup_merchant_code: sumupMerchantCode,
-        sumup_enabled: sumupEnabled
+        sumup_enabled: sumupEnabled,
+        sumup_currency: sumupCurrency
       }, { headers: { Authorization: `Bearer ${token}` } });
       onRefresh();
       alert('SumUp instellingen opgeslagen!');
@@ -1620,6 +1622,21 @@ function SettingsTab({ company, token, onRefresh }) {
                   data-testid="sumup-merchant-code"
                 />
                 <p className="text-xs text-slate-400 mt-1">Te vinden in SumUp Dashboard &rarr; Profiel</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-slate-600 mb-1 block">Valuta</label>
+                <select 
+                  value={sumupCurrency} 
+                  onChange={e => setSumupCurrency(e.target.value)} 
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-sm"
+                  data-testid="sumup-currency"
+                >
+                  <option value="EUR">EUR - Euro</option>
+                  <option value="USD">USD - US Dollar</option>
+                  <option value="GBP">GBP - Brits Pond</option>
+                  <option value="BRL">BRL - Braziliaanse Real</option>
+                </select>
+                <p className="text-xs text-slate-400 mt-1">Valuta van uw SumUp account (SRD wordt niet ondersteund door SumUp)</p>
               </div>
             </div>
             <div className="flex justify-end mt-4">

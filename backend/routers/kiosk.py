@@ -156,6 +156,7 @@ class CompanyUpdate(BaseModel):
     sumup_api_key: Optional[str] = None
     sumup_merchant_code: Optional[str] = None
     sumup_enabled: Optional[bool] = None
+    sumup_currency: Optional[str] = None
 
 class KioskPinVerify(BaseModel):
     pin: str  # 4-digit PIN
@@ -355,7 +356,8 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "wa_enabled": company.get("wa_enabled", False),
         "sumup_api_key": company.get("sumup_api_key", ""),
         "sumup_merchant_code": company.get("sumup_merchant_code", ""),
-        "sumup_enabled": company.get("sumup_enabled", False)
+        "sumup_enabled": company.get("sumup_enabled", False),
+        "sumup_currency": company.get("sumup_currency", "EUR")
     }
 
 @router.put("/auth/settings")
@@ -398,6 +400,7 @@ async def create_sumup_checkout(company_id: str, data: SumUpCheckoutRequest):
     
     api_key = company.get("sumup_api_key", "")
     merchant_code = company.get("sumup_merchant_code", "")
+    currency = company.get("sumup_currency", "EUR")
     
     if not api_key or not merchant_code:
         raise HTTPException(status_code=400, detail="SumUp is niet geconfigureerd. Stel de API key en merchant code in via Instellingen.")
@@ -415,7 +418,7 @@ async def create_sumup_checkout(company_id: str, data: SumUpCheckoutRequest):
                 json={
                     "checkout_reference": checkout_ref,
                     "amount": round(data.amount, 2),
-                    "currency": "EUR",
+                    "currency": currency,
                     "merchant_code": merchant_code,
                     "description": data.description,
                 }
@@ -473,7 +476,8 @@ async def check_sumup_enabled(company_id: str):
     if not company:
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
     return {
-        "enabled": bool(company.get("sumup_enabled") and company.get("sumup_api_key") and company.get("sumup_merchant_code"))
+        "enabled": bool(company.get("sumup_enabled") and company.get("sumup_api_key") and company.get("sumup_merchant_code")),
+        "currency": company.get("sumup_currency", "EUR")
     }
 
 
