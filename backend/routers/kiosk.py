@@ -12,6 +12,7 @@ import jwt
 import bcrypt
 import os
 import uuid
+import httpx
 
 router = APIRouter(prefix="/kiosk", tags=["Kiosk System"])
 security = HTTPBearer(auto_error=False)
@@ -2149,3 +2150,176 @@ async def pay_employee(employee_id: str, company: dict = Depends(get_current_com
     
     await db.kiosk_kas.insert_one(entry)
     return {"entry_id": entry_id, "amount": emp["maandloon"], "message": f"Loon uitbetaald: SRD {emp['maandloon']:.2f}"}
+
+
+
+# ============== SHELLY STROOMBREKERS ==============
+
+class ShellyDeviceCreate(BaseModel):
+    apartment_id: str
+    device_ip: str
+    device_name: Optional[str] = None
+    device_type: str = "gen1"  # gen1 or gen2
+    channel: int = 0
+
+class ShellyDeviceUpdate(BaseModel):
+    device_ip: Optional[str] = None
+    device_name: Optional[str] = None
+    device_type: Optional[str] = None
+    channel: Optional[int] = None
+
+@router.get("/admin/shelly-devices")
+async def get_shelly_devices(company: dict = Depends(get_current_company)):
+    devices = await db.kiosk_shelly_devices.find(
+        {"company_id": company["company_id"]}, {"_id": 0}
+    ).to_list(100)
+    return devices
+
+@router.post("/admin/shelly-devices")
+async def add_shelly_device(data: ShellyDeviceCreate, company: dict = Depends(get_current_company)):
+    device_id = generate_uuid()
+    device = {
+        "device_id": device_id,
+        "company_id": company["company_id"],
+        "apartment_id": data.apartment_id,
+        "device_ip": data.device_ip,
+        "device_name": data.device_name or f"Shelly {data.device_ip}",
+        "device_type": data.device_type,
+        "channel": data.channel,
+        "last_status": None,
+        "created_at": datetime.now(timezone.utc)
+    }
+    await db.kiosk_shelly_devices.insert_one(device)
+    return {"device_id": device_id, "message": "Shelly apparaat toegevoegd"}
+
+@router.put("/admin/shelly-devices/{device_id}")
+async def update_shelly_device(device_id: str, data: ShellyDeviceUpdate, company: dict = Depends(get_current_company)):
+    updates = {k: v for k, v in data.dict().items() if v is not None}
+    if not updates:
+        raise HTTPException(status_code=400, detail="Geen wijzigingen")
+    await db.kiosk_shelly_devices.update_one(
+        {"device_id": device_id, "company_id": company["company_id"]},
+        {"$set": updates}
+    )
+    return {"message": "Apparaat bijgewerkt"}
+
+@router.delete("/admin/shelly-devices/{device_id}")
+async def delete_shelly_device(device_id: str, company: dict = Depends(get_current_company)):
+    await db.kiosk_shelly_devices.delete_one(
+        {"device_id": device_id, "company_id": company["company_id"]}
+    )
+    return {"message": "Apparaat verwijderd"}
+
+@router.post("/admin/shelly-devices/{device_id}/control")
+async def control_shelly_device(device_id: str, action: str = "toggle", company: dict = Depends(get_current_company)):
+    """Control a Shelly relay: action = on, off, toggle"""
+    device = await db.kiosk_shelly_devices.find_one(
+        {"device_id": device_id, "company_id": company["company_id"]}, {"_id": 0}
+    )
+    if not device:
+        raise HTTPException(status_code=404, detail="Apparaat niet gevonden")
+    
+    ip = device["device_ip"]
+    ch = device.get("channel", 0)
+    dtype = device.get("device_type", "gen1")
+    
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            if dtype == "gen2":
+                if action == "toggle":
+                    url = f"http://{ip}/rpc/switch.toggle?id={ch}"
+                else:
+                    on_val = "true" if action == "on" else "false"
+                    url = f"http://{ip}/rpc/switch.set?id={ch}&on={on_val}"
+                resp = await client.get(url)
+                result = resp.json()
+                new_status = result.get("was_on") is False if action == "toggle" else (action == "on")
+            else:
+                url = f"http://{ip}/relay/{ch}?turn={action}"
+                resp = await client.get(url)
+                result = resp.json()
+                new_status = result.get("ison", False)
+        
+        status_str = "on" if new_status else "off"
+        await db.kiosk_shelly_devices.update_one(
+            {"device_id": device_id},
+            {"$set": {"last_status": status_str, "last_check": datetime.now(timezone.utc)}}
+        )
+        return {"status": status_str, "message": f"Stroombreker {'AAN' if new_status else 'UIT'}"}
+    
+    except httpx.TimeoutException:
+        return {"status": "unreachable", "message": f"Apparaat {ip} niet bereikbaar (timeout)"}
+    except httpx.ConnectError:
+        return {"status": "unreachable", "message": f"Apparaat {ip} niet bereikbaar (geen verbinding)"}
+    except Exception as e:
+        return {"status": "error", "message": f"Fout: {str(e)}"}
+
+@router.get("/admin/shelly-devices/{device_id}/status")
+async def get_shelly_status(device_id: str, company: dict = Depends(get_current_company)):
+    """Get current status of a Shelly relay"""
+    device = await db.kiosk_shelly_devices.find_one(
+        {"device_id": device_id, "company_id": company["company_id"]}, {"_id": 0}
+    )
+    if not device:
+        raise HTTPException(status_code=404, detail="Apparaat niet gevonden")
+    
+    ip = device["device_ip"]
+    ch = device.get("channel", 0)
+    dtype = device.get("device_type", "gen1")
+    
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            if dtype == "gen2":
+                resp = await client.get(f"http://{ip}/rpc/Switch.GetStatus?id={ch}")
+                result = resp.json()
+                is_on = result.get("output", False)
+                power = result.get("apower", 0)
+            else:
+                resp = await client.get(f"http://{ip}/relay/{ch}")
+                result = resp.json()
+                is_on = result.get("ison", False)
+                power = result.get("power", 0)
+        
+        status_str = "on" if is_on else "off"
+        await db.kiosk_shelly_devices.update_one(
+            {"device_id": device_id},
+            {"$set": {"last_status": status_str, "last_check": datetime.now(timezone.utc)}}
+        )
+        return {"status": status_str, "power_w": power, "online": True}
+    
+    except Exception:
+        return {"status": device.get("last_status", "unknown"), "power_w": 0, "online": False}
+
+@router.post("/admin/shelly-devices/refresh-all")
+async def refresh_all_shelly(company: dict = Depends(get_current_company)):
+    """Refresh status of all Shelly devices"""
+    devices = await db.kiosk_shelly_devices.find(
+        {"company_id": company["company_id"]}, {"_id": 0}
+    ).to_list(100)
+    
+    results = []
+    async with httpx.AsyncClient(timeout=3.0) as client:
+        for dev in devices:
+            ip = dev["device_ip"]
+            ch = dev.get("channel", 0)
+            dtype = dev.get("device_type", "gen1")
+            try:
+                if dtype == "gen2":
+                    resp = await client.get(f"http://{ip}/rpc/Switch.GetStatus?id={ch}")
+                    r = resp.json()
+                    is_on = r.get("output", False)
+                else:
+                    resp = await client.get(f"http://{ip}/relay/{ch}")
+                    r = resp.json()
+                    is_on = r.get("ison", False)
+                
+                status_str = "on" if is_on else "off"
+                await db.kiosk_shelly_devices.update_one(
+                    {"device_id": dev["device_id"]},
+                    {"$set": {"last_status": status_str, "last_check": datetime.now(timezone.utc)}}
+                )
+                results.append({"device_id": dev["device_id"], "status": status_str, "online": True})
+            except Exception:
+                results.append({"device_id": dev["device_id"], "status": dev.get("last_status", "unknown"), "online": False})
+    
+    return results
