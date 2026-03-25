@@ -271,11 +271,8 @@ export default function KioskLayout() {
                 <span className="kiosk-body font-bold text-slate-800">Appt. {tenant.apartment_number}</span>
               </div>
             )}
-            <span className={`kiosk-mode-badge ${kioskMode.isTouch ? 'touch' : 'desktop'}`} data-testid="kiosk-mode-badge">
-              {kioskMode.isTouch
-                ? <><Hand style={{ width: '1.3vh', height: '1.3vh' }} /> Touch</>
-                : <><Monitor style={{ width: '1.3vh', height: '1.3vh' }} /> Desktop</>
-              }
+            <span className={`kiosk-mode-badge ${kioskMode.isTouch ? 'touch' : 'desktop'}`} data-testid="kiosk-mode-badge" style={{ display: kioskMode.isTouch ? 'inline-flex' : 'none' }}>
+              <Hand style={{ width: '1.3vh', height: '1.3vh' }} /> Touch
             </span>
           </div>
         </div>
