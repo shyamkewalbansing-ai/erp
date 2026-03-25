@@ -208,7 +208,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           {/* Cash */}
           <button onClick={() => setPayMethod('cash')} data-testid="pay-method-cash"
             className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1"
-            style={{ width: 'clamp(220px, 26vw, 400px)', height: 'clamp(220px, 46vh, 440px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+            style={{ width: 'clamp(240px, 28vw, 440px)', height: 'clamp(240px, 52vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
             onMouseEnter={e => e.currentTarget.style.borderColor = '#22c55e'}
             onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
             <div className="rounded-full bg-green-50 group-hover:bg-green-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
@@ -222,7 +222,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           {!mopeLoading && mopeEnabled && (
             <button onClick={() => { setPayMethod('mope'); handleMopePayment(); }} data-testid="pay-method-mope"
               className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative"
-              style={{ width: 'clamp(220px, 26vw, 400px)', height: 'clamp(220px, 46vh, 440px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+              style={{ width: 'clamp(240px, 28vw, 440px)', height: 'clamp(240px, 52vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#10b981'}
               onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
               <div className="rounded-full bg-emerald-50 group-hover:bg-emerald-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
@@ -238,7 +238,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           {!sumupLoading && sumupEnabled && (
             <button onClick={() => { setPayMethod('card'); handleCardPayment(); }} data-testid="pay-method-card"
               className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative"
-              style={{ width: 'clamp(220px, 26vw, 400px)', height: 'clamp(220px, 46vh, 440px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+              style={{ width: 'clamp(240px, 28vw, 440px)', height: 'clamp(240px, 52vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'}
               onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
               <div className="rounded-full bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
