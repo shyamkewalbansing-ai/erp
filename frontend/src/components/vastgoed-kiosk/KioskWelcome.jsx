@@ -64,7 +64,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
       {/* Main content */}
       <div className="relative z-10 flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-14 px-6 sm:px-10 lg:px-16 pb-10">
         {/* Left - Main card */}
-        <div className="bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-10 sm:p-12 lg:p-14 w-full max-w-xl border border-white/50">
+        <div className="bg-white rounded-2xl shadow-lg p-10 sm:p-12 lg:p-14 w-full max-w-xl">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 mb-3 leading-tight tracking-tight">
             Welkom
           </h1>

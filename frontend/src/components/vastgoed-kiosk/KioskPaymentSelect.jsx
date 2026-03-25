@@ -68,7 +68,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col md:flex-row items-start justify-center gap-6 md:gap-8 px-6 sm:px-10 lg:px-12 pb-8 overflow-auto">
         {/* Left - Options card */}
-        <div className="bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-7 sm:p-8 lg:p-10 w-full max-w-xl min-w-0 border border-white/50">
+        <div className="bg-white rounded-2xl shadow-lg p-7 sm:p-8 lg:p-10 w-full max-w-xl min-w-0">
           {/* Select All */}
           {!useCustomAmount && PAYMENT_TYPES.filter(t => !isTypeDisabled(t.id)).length > 1 && (
             <button onClick={allSelected ? () => setSelectedTypes(new Set()) : selectAll}
@@ -156,7 +156,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
 
         {/* Right - Keypad card */}
         {useCustomAmount && (
-          <div className="bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-7 sm:p-8 lg:p-10 w-full max-w-sm min-w-0 border border-white/50">
+          <div className="bg-white rounded-2xl shadow-lg p-7 sm:p-8 lg:p-10 w-full max-w-sm min-w-0">
             <h4 className="text-lg font-bold text-slate-900 mb-1">Bedrag invoeren</h4>
             <p className="text-sm text-slate-400 mb-4">Totaal: {formatSRD(totalDebt)}</p>
             <div className="bg-gradient-to-b from-slate-50 to-slate-100/50 border-2 border-slate-200 rounded-2xl p-4 sm:p-5 mb-4">

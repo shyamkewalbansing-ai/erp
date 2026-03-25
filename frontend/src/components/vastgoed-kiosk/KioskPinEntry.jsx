@@ -73,7 +73,7 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
         </div>
       )}
 
-      <div className="relative z-10 bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-10 sm:p-12 lg:p-14 w-full max-w-md mx-6 border border-white/50">
+      <div className="relative z-10 bg-white rounded-2xl shadow-lg p-10 sm:p-12 lg:p-14 w-full max-w-md mx-6">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
             <Building2 className="w-7 h-7 text-white" />

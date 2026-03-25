@@ -224,11 +224,29 @@ export default function KioskLayout() {
           exit="exit"
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           className="absolute inset-0 overflow-y-auto overflow-x-hidden"
+          style={{ paddingBottom: '56px' }}
         >
           {renderStep()}
         </motion.div>
       </AnimatePresence>
       <VirtualKeyboard />
+      {/* Floating bottom bar - kiosk machine style */}
+      {step !== 'loading' && step !== 'not-found' && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 h-14 bg-white/95 backdrop-blur-sm shadow-[0_-2px_16px_rgba(0,0,0,0.08)] flex items-center justify-between px-6 sm:px-10" data-testid="kiosk-bottom-bar">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center">
+              <Building2 className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm font-bold text-slate-700 tracking-wide">{companyName || 'Kiosk'}</span>
+          </div>
+          {tenant && step !== 'welcome' && step !== 'pin' && step !== 'select' && (
+            <div className="flex items-center gap-4 text-sm">
+              <span className="text-slate-400">{tenant.name}</span>
+              <span className="font-bold text-slate-700">Appt. {tenant.apartment_number}</span>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

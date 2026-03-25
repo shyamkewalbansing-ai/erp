@@ -83,7 +83,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
 
       {/* Left - Success card */}
       <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 relative z-10 print:hidden">
-        <div className="bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-10 sm:p-12 lg:p-14 max-w-md w-full text-center border border-white/50">
+        <div className="bg-white rounded-2xl shadow-lg p-10 sm:p-12 lg:p-14 max-w-md w-full text-center">
           <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-5 shadow-sm border border-green-100">
             <CheckCircle className="w-10 h-10 text-green-500" />
           </div>

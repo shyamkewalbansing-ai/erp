@@ -108,7 +108,7 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
                   data-testid={`apt-${apt.number}`}
                   className={`flex flex-col items-center justify-center p-6 sm:p-8 lg:p-10 rounded-[1.5rem] transition min-h-[160px] sm:min-h-[200px] ${
                     hasTenant
-                      ? 'bg-white hover:scale-[1.03] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] cursor-pointer shadow-xl border border-white/50'
+                      ? 'bg-white hover:scale-[1.03] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] cursor-pointer shadow-xl'
                       : 'bg-white/30 backdrop-blur-sm cursor-not-allowed opacity-50'
                   }`}>
                   <span className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-2 tracking-tight">{apt.number}</span>
@@ -129,7 +129,7 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
           </div>
         ) : (
           <div className="flex items-center justify-center">
-            <div className="bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 lg:p-12 w-full max-w-lg border border-white/50">
+            <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-10 lg:p-12 w-full max-w-lg">
               <p className="text-lg text-slate-400 text-center mb-6">Voer uw huurderscode in</p>
               <div className="bg-gradient-to-b from-slate-50 to-slate-100/50 border-2 border-slate-200 rounded-2xl p-5 sm:p-6 mb-6 text-center">
                 <span className="text-3xl sm:text-4xl font-mono font-extrabold text-slate-900 tracking-[0.25em]">
